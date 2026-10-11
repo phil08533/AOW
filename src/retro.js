@@ -132,18 +132,32 @@ const BLOB_MAT = new THREE.MeshBasicMaterial({ map: TEX.blob, transparent: true,
 function blob(obj, r) { const m = new THREE.Mesh(BLOB_GEO, BLOB_MAT); m.scale.setScalar(r * 2); m.position.y = 0.04; m.renderOrder = 1; obj.add(m); return m; }
 
 // =================== RETRO SOUND ===================
-const PREFS = (() => { let p; try { p = Object.assign({ pix: 1, music: 2, sfx: true, voice: true }, JSON.parse(localStorage.getItem('aow-prefs') || '{}')); } catch (_) { p = { pix: 1, music: 2, sfx: true }; } if (p.music === true) p.music = 2; if (p.music === false) p.music = 0; return p; })();
+const PREFS = (() => { let p; try { p = Object.assign({ pix: 2, gfx: 2, music: 2, sfx: true, voice: true }, JSON.parse(localStorage.getItem('aow-prefs') || '{}')); } catch (_) { p = { pix: 2, gfx: 2, music: 2, sfx: true }; } if (p.music === true) p.music = 2; if (p.music === false) p.music = 0; return p; })();
 const MUSIC_NAMES = ['Off', 'Ambient', 'Beep boop'];
 function savePrefs() { try { localStorage.setItem('aow-prefs', JSON.stringify(PREFS)); } catch (_) {} }
 const SFX = (() => {
   let chipGain = null, chipStep = 0, chipNext = 0, chipSong = null, loops = {};
+  let comp = null, wpnGain = null, verb = null, verbSend = null, lastGun = 0;
   let ac = null, master = null, sfxGain = null, musicGain = null, noiseBuf = null, musicTimer = null, bar = 0;
+  // browsers only let sound start inside a tap or key press; the game's Play button can retry from a timer while your save
+  // loads, which left the sound effects stuck "suspended" (music uses its own players, so it still worked). Wake them on any input.
+  let wired = false; const res = () => { try { const p = ac.resume(); if (p && p.catch) p.catch(() => {}); } catch (_) {} };
+  function wire() { if (wired) return; wired = true; const wake = () => { if (!ac) init(); else if (ac.state !== 'running') res(); };
+    ['pointerdown', 'touchend', 'keydown', 'mousedown', 'click'].forEach(ev => window.addEventListener(ev, wake, { capture: true, passive: true }));
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && ac && ac.state !== 'running') res(); }); }
   function init() {
-    if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+    wire(); try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (_) {} // iPhone: play even with the ring switch on silent
+    if (ac) { if (ac.state !== 'running') res(); return; }
     try {
       ac = new (window.AudioContext || window.webkitAudioContext)();
       master = ac.createGain(); master.gain.value = 0.55; master.connect(ac.destination);
-      sfxGain = ac.createGain(); sfxGain.gain.value = PREFS.sfx ? 1 : 0; sfxGain.connect(master);
+      sfxGain = ac.createGain(); sfxGain.gain.value = PREFS.sfx ? 1 : 0;
+      // weapons go through a limiter so loud guns punch through the soundtrack without clipping, plus a short room reverb send
+      comp = ac.createDynamicsCompressor(); comp.threshold.value = -14; comp.knee.value = 8; comp.ratio.value = 6; comp.attack.value = 0.002; comp.release.value = 0.12;
+      sfxGain.connect(comp); comp.connect(master);
+      wpnGain = ac.createGain(); wpnGain.gain.value = 1.35; wpnGain.connect(sfxGain);
+      { const len = Math.floor(ac.sampleRate * 1.1), ir = ac.createBuffer(2, len, ac.sampleRate); for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+        verb = ac.createConvolver(); verb.buffer = ir; verbSend = ac.createGain(); verbSend.gain.value = 0.32; verbSend.connect(verb); verb.connect(sfxGain); }
       musicGain = ac.createGain(); musicGain.gain.value = PREFS.music === 1 ? 0.16 : 0;
       chipGain = ac.createGain(); chipGain.gain.value = PREFS.music === 2 ? 0.11 : 0; const chipLP = ac.createBiquadFilter(); chipLP.type = 'lowpass'; chipLP.frequency.value = 1500; chipGain.connect(chipLP); chipLP.connect(master); musicGain.connect(master);
       noiseBuf = ac.createBuffer(1, ac.sampleRate * 0.6, ac.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -201,6 +215,84 @@ const SFX = (() => {
       chipNext += S2.step; chipStep++;
     }
   }
+  // =================== WEAPON SOUND KIT ===================
+  // every gun is layered from a few parts: a sharp transient, a filtered noise body, a low thump, a pitched "energy" tone,
+  // and a dash of room reverb. Each weapon family mixes them differently, with a little random pitch so no two shots match.
+  const vary = (k) => 1 + (Math.random() - 0.5) * (k || 0.08);
+  function out(dry, wet) { const g = ac.createGain(); g.gain.value = 1; g.connect(wpnGain); if (wet && verbSend) { const w = ac.createGain(); w.gain.value = wet; g.connect(w); w.connect(verbSend); } return g; }
+  // filtered noise burst. type: lowpass/bandpass/highpass; f1 sweeps the filter
+  function nz(dest, t, dur, vol, type, f0, f1, q, att) {
+    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = noiseBuf; s.playbackRate.value = vary(0.2);
+    f.type = type; f.frequency.setValueAtTime(f0, t); if (f1) f.frequency.exponentialRampToValueAtTime(f1, t + dur); f.Q.value = q || 0.8;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + (att || 0.002)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(dest); s.start(t, Math.random() * 0.4); s.stop(t + dur + 0.05);
+  }
+  function os(dest, t, type, f0, f1, dur, vol, att, lp) {
+    const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + (att || 0.003)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    let n = o; if (lp) { const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(lp, t); f.frequency.exponentialRampToValueAtTime(Math.max(80, lp / 6), t + dur); o.connect(f); n = f; }
+    n.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + 0.05);
+  }
+  const thump = (d, t, f, dur, vol) => os(d, t, 'sine', f * vary(), Math.max(25, f * 0.35), dur, vol, 0.002);
+  const click = (d, t, vol, f) => nz(d, t, 0.018, vol, 'highpass', f || 3500, 0, 0.7, 0.0005);
+  // spent casings bouncing on the floor
+  const casing = (t) => { const d = out(1, 0.1); for (let i = 0; i < 2; i++) os(d, t + 0.32 + i * 0.09 + Math.random() * 0.04, 'sine', 3600 * vary(0.2), 0, 0.05, 0.03 - i * 0.01); };
+  // which sound family a gun belongs to
+  function family(g) {
+    if (!g) return 'blaster'; if (g.kind === 'mystic') return 'm_' + (g.elem || 'arcane');
+    if (g.kind) return g.kind === 'carbine' && g.rate < 0.07 ? 'minigun' : g.kind;
+    const n = (g.name || '').toLowerCase();
+    return /hive/.test(n) ? 'hive' : /stinger/.test(n) ? 'stinger' : /frost/.test(n) ? 'frost' : /plasma/.test(n) ? 'plasma' : /rifle/.test(n) ? 'rifle' : /carbine/.test(n) ? 'carbine' : 'blaster';
+  }
+  const GUNSND = {
+    blaster(t) { const d = out(1, 0.25); os(d, t, 'square', 1500 * vary(), 240, 0.13, 0.16, 0.001, 4000); os(d, t, 'sawtooth', 760 * vary(), 160, 0.1, 0.08); thump(d, t, 150, 0.12, 0.45); click(d, t, 0.25); nz(d, t, 0.06, 0.2, 'bandpass', 2400, 900, 1.2); },
+    carbine(t) { const d = out(1, 0.28); click(d, t, 0.35); nz(d, t, 0.07, 0.6, 'bandpass', 2200 * vary(), 800, 0.9); nz(d, t, 0.16, 0.38, 'lowpass', 1300, 300); thump(d, t, 120, 0.13, 0.7); os(d, t, 'square', 900 * vary(), 300, 0.05, 0.05); casing(t); },
+    rifle(t) { const d = out(1, 0.32); click(d, t, 0.45, 4200); nz(d, t, 0.08, 0.75, 'bandpass', 1800 * vary(), 600, 0.8); nz(d, t, 0.24, 0.45, 'lowpass', 1100, 200); thump(d, t, 100, 0.18, 0.85); os(d, t + 0.01, 'sawtooth', 420 * vary(), 90, 0.12, 0.06, 0.002, 1600); casing(t); },
+    minigun(t) { const d = out(1, 0.15); click(d, t, 0.3); nz(d, t, 0.05, 0.5, 'bandpass', 2000 * vary(0.15), 900, 1); thump(d, t, 110, 0.07, 0.55); os(d, t, 'sawtooth', 320 * vary(0.04), 280, 0.06, 0.05); if (Math.random() < 0.4) casing(t); },
+    long(t, g) { const d = out(1, 0.55); click(d, t, 0.6, 5000); nz(d, t, 0.1, 0.9, 'bandpass', 1500, 400, 0.7); nz(d, t, 0.6, 0.45, 'lowpass', 900, 120); thump(d, t, 80, 0.45, 1); nz(d, t + 0.08, 0.9, 0.12, 'lowpass', 600, 90, 0.5, 0.05);
+      if (/rail|phase/i.test(g && g.name || '')) { os(d, t, 'sawtooth', 220, 3200, 0.22, 0.1, 0.002, 6000); os(d, t, 'sine', 4800, 900, 0.35, 0.06); }
+      else { nz(d, t + 0.45, 0.06, 0.12, 'bandpass', 900, 0, 3); nz(d, t + 0.62, 0.05, 0.14, 'bandpass', 1400, 0, 3); casing(t + 0.3); } },
+    scatter(t) { const d = out(1, 0.45); click(d, t, 0.6, 3000); nz(d, t, 0.12, 0.95, 'lowpass', 2600, 500, 0.6); nz(d, t, 0.35, 0.5, 'lowpass', 900, 150); thump(d, t, 90, 0.3, 1); os(d, t, 'square', 600, 120, 0.1, 0.06, 0.002, 2000);
+      // pump: back, then forward
+      nz(d, t + 0.32, 0.07, 0.3, 'bandpass', 1100, 700, 2); nz(d, t + 0.44, 0.06, 0.34, 'bandpass', 1700, 1000, 2); click(d, t + 0.45, 0.2, 2500); casing(t + 0.2); },
+    plasma(t) { const d = out(1, 0.4); os(d, t, 'sawtooth', 900 * vary(), 110, 0.28, 0.2, 0.002, 3500); os(d, t, 'square', 450 * vary(), 70, 0.22, 0.1, 0.002, 1500); thump(d, t, 90, 0.3, 0.9); nz(d, t, 0.22, 0.35, 'bandpass', 1800, 300, 1.4); os(d, t, 'sine', 2600, 500, 0.15, 0.06); },
+    rocket(t) { const d = out(1, 0.45); thump(d, t, 70, 0.4, 1); nz(d, t, 0.1, 0.7, 'lowpass', 1800, 400, 0.6); nz(d, t + 0.02, 0.75, 0.42, 'bandpass', 500, 2600, 1.1, 0.06); nz(d, t + 0.05, 0.9, 0.18, 'highpass', 3000, 6000, 0.7, 0.1); click(d, t, 0.4, 2000); },
+    crossbow(t) { const d = out(1, 0.2); os(d, t, 'triangle', 190 * vary(), 95, 0.22, 0.35, 0.001); os(d, t, 'sawtooth', 380 * vary(), 190, 0.1, 0.08, 0.001, 2500); nz(d, t, 0.05, 0.5, 'highpass', 2500, 0, 0.7, 0.001); nz(d, t + 0.01, 0.2, 0.35, 'bandpass', 700, 1600, 1.2, 0.02); thump(d, t, 130, 0.08, 0.4); },
+    hive(t) { const d = out(1, 0.3); os(d, t, 'sine', 380 * vary(0.15), 70, 0.16, 0.45, 0.003); os(d, t + 0.03, 'sine', 260 * vary(0.15), 90, 0.1, 0.25); nz(d, t, 0.12, 0.45, 'lowpass', 900, 200, 4); click(d, t, 0.2, 2000); thump(d, t, 120, 0.12, 0.5); },
+    stinger(t) { const d = out(1, 0.3); os(d, t, 'sawtooth', 1200 * vary(), 260, 0.12, 0.18, 0.001, 5000); os(d, t, 'square', 1250 * vary(), 300, 0.1, 0.07); nz(d, t, 0.08, 0.5, 'bandpass', 3000, 1200, 2); thump(d, t, 140, 0.1, 0.55); },
+    frost(t) { GUNSND.carbine(t); const d = out(0.6, 0.6); os(d, t, 'sine', 2600 * vary(), 1900, 0.3, 0.09); os(d, t + 0.03, 'sine', 3900 * vary(), 3100, 0.25, 0.05); },
+    // ---- magic: one voice per element ----
+    m_arcane(t) { const d = out(1, 0.6); [880, 1320, 1760].forEach((f, i) => os(d, t + i * 0.025, 'sine', f * vary(0.04), f * 1.5, 0.2, 0.13)); nz(d, t, 0.2, 0.3, 'bandpass', 2400, 5200, 3, 0.01); thump(d, t, 160, 0.12, 0.35); },
+    m_flame(t) { const d = out(1, 0.35); nz(d, t, 0.38, 0.75, 'lowpass', 500, 3000, 0.8, 0.02); nz(d, t + 0.05, 0.3, 0.35, 'bandpass', 1400, 600, 0.7, 0.02); thump(d, t, 110, 0.25, 0.6); for (let i = 0; i < 4; i++) click(d, t + 0.05 + Math.random() * 0.25, 0.25, 2500); },
+    m_storm(t) { const d = out(1, 0.5); for (let i = 0; i < 5; i++) os(d, t + i * 0.025 + Math.random() * 0.015, 'square', 1800 * vary(0.5), 300, 0.05, 0.12, 0.001, 6000); nz(d, t, 0.18, 0.7, 'highpass', 2500, 900, 0.7, 0.001); thump(d, t, 110, 0.35, 0.8); nz(d, t + 0.1, 0.6, 0.2, 'lowpass', 600, 120); },
+    m_frost(t) { const d = out(1, 0.7); [1568, 2093, 2637, 3136].forEach((f, i) => os(d, t + i * 0.03, 'sine', f * vary(0.03), 0, 0.4, 0.09)); nz(d, t, 0.25, 0.4, 'highpass', 5000, 2500, 0.7, 0.01); thump(d, t, 140, 0.12, 0.35); },
+    m_poison(t) { const d = out(1, 0.35); for (let i = 0; i < 5; i++) os(d, t + i * 0.04, 'sine', (300 + Math.random() * 500), 900 + Math.random() * 600, 0.06, 0.18); nz(d, t, 0.25, 0.4, 'lowpass', 700, 300, 5, 0.02); thump(d, t, 120, 0.12, 0.4); },
+    m_spirit(t) { const d = out(1, 0.8); os(d, t, 'sine', 520 * vary(0.04), 1040, 0.4, 0.2, 0.02); os(d, t, 'sine', 780 * vary(0.04), 1560, 0.4, 0.12, 0.02); os(d, t, 'triangle', 190, 95, 0.2, 0.3, 0.001); nz(d, t, 0.06, 0.4, 'highpass', 2500, 0, 0.7, 0.001); },
+    m_void(t) { const d = out(1, 0.7); os(d, t, 'sawtooth', 55, 140, 0.55, 0.28, 0.15, 900); os(d, t, 'sawtooth', 58, 150, 0.55, 0.22, 0.15, 900); os(d, t + 0.1, 'sine', 900, 60, 0.5, 0.12); thump(d, t + 0.12, 70, 0.4, 0.8); nz(d, t, 0.6, 0.3, 'bandpass', 300, 1500, 2, 0.2); },
+    m_sun(t) { const d = out(1, 0.6); [523, 659, 784].forEach(f => os(d, t, 'sawtooth', f * vary(0.02), f * 1.02, 0.45, 0.07, 0.02, 3000)); nz(d, t, 0.4, 0.6, 'lowpass', 800, 4000, 0.7, 0.03); thump(d, t, 100, 0.35, 0.8); },
+    m_blast(t) { const d = out(1, 0.5); thump(d, t, 90, 0.4, 1); nz(d, t, 0.3, 0.8, 'lowpass', 2400, 300, 0.7); os(d, t, 'square', 700, 100, 0.2, 0.1, 0.002, 2500); },
+    m_mend(t) { const d = out(0.8, 0.8); [523, 659, 784, 1047].forEach((f, i) => os(d, t + i * 0.05, 'sine', f, 0, 0.5, 0.12)); nz(d, t, 0.4, 0.15, 'highpass', 4000, 7000, 0.7, 0.05); },
+    m_setsun(t) { const d = out(1, 0.8); [262, 392, 523, 659, 784].forEach(f => os(d, t, 'sawtooth', f * vary(0.015), f, 0.7, 0.06, 0.03, 3500)); thump(d, t, 80, 0.5, 1); nz(d, t, 0.5, 0.5, 'lowpass', 600, 5000, 0.7, 0.05); os(d, t + 0.05, 'sine', 1568, 2093, 0.5, 0.08); }
+  };
+  function gunShot(g) {
+    if (!ac) return; if (ac.state !== 'running') res();
+    const t = ac.currentTime + 0.005, fam = family(g), fn = GUNSND[fam] || GUNSND.blaster;
+    // very fast guns: skip the heavy layers if the last shot was a moment ago, so the mix doesn't turn to mush
+    if (t - lastGun < 0.045 && fam !== 'minigun') { const d = out(0.8, 0.1); click(d, t, 0.3); nz(d, t, 0.05, 0.4, 'bandpass', 2000, 800, 1); thump(d, t, 120, 0.06, 0.4); lastGun = t; return; }
+    lastGun = t; fn(t, g);
+  }
+  function gunReload(g) {
+    if (!ac) return; const t = ac.currentTime, fam = family(g), d = out(0.8, 0.15), dur = (g && g.reload) || 1.2;
+    if (fam.startsWith('m_')) { os(d, t, 'sine', 220, 880, dur * 0.8, 0.1, dur * 0.4); os(d, t, 'triangle', 330, 1320, dur * 0.8, 0.05, dur * 0.4); nz(d, t, dur * 0.8, 0.08, 'bandpass', 800, 4000, 3, dur * 0.4); os(d, t + dur * 0.8, 'sine', 1320, 0, 0.25, 0.1); return; }
+    if (fam === 'scatter') { for (let i = 0; i < 3; i++) { const u = t + 0.15 + i * dur * 0.24; nz(d, u, 0.05, 0.3, 'bandpass', 900, 600, 3); click(d, u + 0.02, 0.15, 2000); } nz(d, t + dur * 0.85, 0.07, 0.35, 'bandpass', 1100, 700, 2); nz(d, t + dur * 0.92, 0.06, 0.38, 'bandpass', 1700, 1000, 2); return; }
+    if (fam === 'crossbow') { os(d, t + 0.1, 'sawtooth', 90, 260, dur * 0.6, 0.05, 0.05, 1200); nz(d, t + dur * 0.8, 0.06, 0.4, 'bandpass', 2000, 0, 2); os(d, t + dur * 0.82, 'triangle', 200, 190, 0.15, 0.2); return; }
+    const heavy = fam === 'rocket' || fam === 'plasma' || fam === 'minigun';
+    // magazine out, magazine in, then the bolt or charge
+    nz(d, t + 0.05, 0.06, 0.3, 'bandpass', heavy ? 700 : 1300, 0, 2); click(d, t + 0.06, 0.2, 3000);
+    nz(d, t + dur * 0.55, 0.08, 0.45, 'bandpass', heavy ? 500 : 900, 0, 2); thump(d, t + dur * 0.55, heavy ? 120 : 200, 0.06, 0.4);
+    if (fam === 'plasma' || fam === 'stinger' || fam === 'blaster' || fam === 'frost') os(d, t + dur * 0.7, 'sine', 300, 1600, dur * 0.25, 0.06, 0.05);
+    else { nz(d, t + dur * 0.82, 0.05, 0.35, 'bandpass', 1500, 900, 2.5); nz(d, t + dur * 0.9, 0.05, 0.4, 'bandpass', 2200, 1300, 2.5); }
+  }
   // a looping engine-style sound we can steer every frame
   function loop(name, type, freq, vol) {
     if (!ac) return; let L = loops[name];
@@ -208,27 +300,29 @@ const SFX = (() => {
     L.o.frequency.setTargetAtTime(freq, ac.currentTime, 0.08); L.g.gain.setTargetAtTime(vol, ac.currentTime, 0.12);
   }
   let hurtT = 0, stepT = 0, babbleT = 0;
+  wire();
   return {
     init,
     setMusic(mode) { const k = PREFS.musicVol == null ? 1 : Math.max(0, Math.min(1, PREFS.musicVol)) / 0.7; if (musicGain) musicGain.gain.value = mode === 1 ? 0.16 * k : 0; if (chipGain) chipGain.gain.value = mode === 2 ? 0.11 * k : 0; },
     setSfx(on) { if (sfxGain) sfxGain.gain.value = on ? 1 : 0; },
-    shot() { noise(0.11, 0.3, 2600); tone('square', 620, 110, 0.09, 0.08); },
-    hit() { tone('square', 980, 640, 0.05, 0.06); },
-    kill() { tone('sawtooth', 320, 50, 0.32, 0.12); noise(0.28, 0.22, 900); },
+    shot(g) { gunShot(g || (typeof gun === 'function' ? gun() : null)); },
+    dry() { if (!ac) return; const d = out(0.6, 0); click(d, ac.currentTime, 0.25, 2500); nz(d, ac.currentTime + 0.01, 0.03, 0.15, 'bandpass', 1200, 0, 3); },
+    hit() { if (!ac) return; const t = ac.currentTime, d = out(0.7, 0); nz(d, t, 0.06, 0.3, 'bandpass', 1400, 500, 1.5); os(d, t, 'square', 1200, 800, 0.04, 0.05); thump(d, t, 180, 0.06, 0.3); },
+    kill() { if (!ac) return; const t = ac.currentTime, d = out(0.8, 0.3); thump(d, t, 140, 0.3, 0.6); nz(d, t, 0.3, 0.35, 'lowpass', 1600, 200); os(d, t + 0.02, 'triangle', 1320, 0, 0.12, 0.1); os(d, t + 0.09, 'triangle', 1760, 0, 0.18, 0.1); },
     coin() { tone('square', 988, 0, 0.06, 0.06); tone('square', 1319, 0, 0.12, 0.06, 0.06); },
     item() { tone('triangle', 660, 0, 0.08, 0.14); tone('triangle', 990, 0, 0.12, 0.14, 0.08); },
     hurt() { if (!ac || ac.currentTime - hurtT < 0.25) return; hurtT = ac.currentTime; tone('sawtooth', 200, 80, 0.2, 0.16); noise(0.12, 0.18, 500); },
-    zap() { tone('square', 340, 180, 0.12, 0.035); },
+    zap() { if (!ac) return; const t = ac.currentTime, d = out(0.35, 0.3); os(d, t, 'square', 700 * vary(0.2), 180, 0.12, 0.08, 0.002, 2500); nz(d, t, 0.06, 0.12, 'bandpass', 1500, 600, 1.2); },
     quest() { arp([523.3, 659.3, 784, 1046.5], 'triangle', 0.09, 0.16); },
     level() { arp([392, 523.3, 659.3, 784, 1046.5, 1318.5], 'square', 0.07, 0.07); },
     ui() { tone('square', 740, 0, 0.035, 0.04); },
     step(surface) { if (!ac || ac.currentTime - stepT < 0.22) return; stepT = ac.currentTime; noise(0.04, surface === 'metal' ? 0.018 : 0.014, surface === 'metal' ? 900 : surface === 'snow' ? 1200 : 320); },
     jump() { tone('square', 220, 440, 0.1, 0.035); }, land() { noise(0.08, 0.12, 400); },
-    reload() { tone('square', 300, 0, 0.03, 0.05); tone('square', 520, 0, 0.04, 0.05, 0.12); noise(0.05, 0.08, 1800, 0.5); tone('square', 700, 0, 0.04, 0.05, 0.55); },
-    swing(saber) { if (saber) { tone('sawtooth', 160, 90, 0.25, 0.05); tone('sine', 620, 300, 0.2, 0.05); } else noise(0.14, 0.12, 1200); },
+    reload(g) { gunReload(g || (typeof gun === 'function' ? gun() : null)); },
+    swing(saber) { if (!ac) return; const t = ac.currentTime, d = out(0.8, 0.2); if (saber) { os(d, t, 'sawtooth', 150 * vary(), 85, 0.3, 0.12, 0.02, 1200); os(d, t, 'sine', 640 * vary(), 280, 0.25, 0.08); nz(d, t, 0.25, 0.15, 'bandpass', 600, 2000, 2, 0.05); } else nz(d, t, 0.2, 0.45, 'bandpass', 500, 2600, 1.6, 0.06); },
     ignite(on) { if (on) { tone('sawtooth', 60, 140, 0.35, 0.07); tone('sine', 300, 900, 0.3, 0.04); } else tone('sawtooth', 140, 50, 0.3, 0.06); },
     block() { tone('sine', 1200, 600, 0.12, 0.08); tone('square', 300, 0, 0.05, 0.04); }, shieldBreak() { tone('sawtooth', 600, 60, 0.5, 0.1); noise(0.3, 0.2, 2000); },
-    boom() { noise(0.6, 0.45, 600); tone('sawtooth', 120, 30, 0.5, 0.15); },
+    boom() { if (!ac) return; const t = ac.currentTime, d = out(1, 0.5); thump(d, t, 75, 0.9, 1); os(d, t, 'sine', 45, 25, 1.2, 0.6); nz(d, t, 0.15, 0.9, 'lowpass', 3500, 600, 0.6); nz(d, t + 0.02, 1.3, 0.55, 'lowpass', 900, 80, 0.5, 0.01); for (let i = 0; i < 6; i++) click(d, t + 0.15 + Math.random() * 0.6, 0.12 + Math.random() * 0.1, 1800); },
     warp() { tone('sine', 200, 1600, 0.6, 0.08); tone('square', 100, 800, 0.6, 0.03); noise(0.6, 0.08, 3000); },
     splash() { noise(0.35, 0.18, 1400); tone('sine', 500, 200, 0.15, 0.05); },
     plop() { tone('sine', 900, 300, 0.12, 0.08); }, bite() { tone('sine', 300, 700, 0.08, 0.1); tone('sine', 300, 700, 0.08, 0.1, 0.12); },

@@ -302,7 +302,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 1.7</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 1.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1120,7 +1120,7 @@ function raySphere(o, d, c, r) { const oc = o.clone().sub(c), b = oc.dot(d), cc 
 function fire() {
   const g = gun();
   if (player.reloading > 0 || player.cool > 0 || inSafe(player.pos)) return;
-  if (!S.clip && player.ammo <= 0) { reload(); return; }
+  if (!S.clip && player.ammo <= 0) { if (player.reloading <= 0) SFX.dry(); reload(); return; }
   if (!S.clip) player.ammo--; player.cool = g.rate * (hasGear('eye') ? 0.85 : 1); kick = 1;
   SFX.shot(); flash.visible = true; flashLight.intensity = 2.2; setTimeout(() => { flash.visible = false; flashLight.intensity = 0; }, 45);
   const o = camera.getWorldPosition(V(0, 0, 0)), base = V(0, 0, 0); camera.getWorldDirection(base);

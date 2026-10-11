@@ -127,3 +127,7 @@ PLAYLISTS.cutscene = ['hymn'];
   if (MUS.list === 'lounge' && LEVEL.id === 'zfloor') { let best = 1e9; for (const [x, z] of LOUNGE_SPK) best = Math.min(best, Math.hypot(player.pos.x - x, player.pos.z - z)); k = Math.max(0.35, Math.min(1, 1.5 / (1 + best / 9))) * ((MUS.tripUntil || 0) > performance.now() ? 1.3 : 1); }
   else if (LEVEL.id === 'ship' && typeof SHIP_SPK !== 'undefined' && SHIP_SPK.length && ['ship', 'drive'].includes(MUS.list)) { let best = 1e9; for (const [x, z] of SHIP_SPK) best = Math.min(best, Math.hypot(player.pos.x - x, player.pos.z - z)); k = Math.max(0.45, Math.min(1, 1.3 / (1 + best / 7))); }
   MUS.spaceK = k; if (MUS.cur && !MUS.fades.some(f => f.el === MUS.cur)) MUS.cur.volume = musVol(); }; }
+// the end credits play the heavenly hymn, then hand the music back when they close
+{ const _rc = rollCredits; rollCredits = function (...a) { const r = _rc.apply(this, a);
+  if (MUS.a && PREFS.music === 3) { MUS.force = 'cutscene'; musTick(); const iv = setInterval(() => { if (!document.getElementById('ending')) { clearInterval(iv); if (MUS.force === 'cutscene') { MUS.force = null; musTick(); } } }, 400); }
+  return r; }; }

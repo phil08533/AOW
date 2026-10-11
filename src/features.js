@@ -183,7 +183,7 @@ function openWardrobe() {
   openDlg('Wardrobe', 'Armor · capes · helmets');
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   let tab = 'a', tryOn = null;
-  const pvTry = nm => setPreview(() => { const g = makePlayerChar(tryOn || myLook(), S.col); g.rotation.y = Math.PI; return g; }, tryOn ? 'Trying on: ' + nm : 'You');
+  const pvTry = nm => setPreview(() => { const g = makePlayerChar(tryOn || myLook(), S.col); g.rotation.y = tab === 'c' ? Math.PI : 0; return g; }, tryOn ? 'Trying on: ' + nm : 'You');
   const render = () => {
     if (tab === 'f') return renderFace(rows, () => setTimeout(pvMe, 0));
     rows.textContent = ''; const L = myLook(), T = tab === 'a' ? ARMORS : tab === 'c' ? CAPES : HELMS;
@@ -209,7 +209,7 @@ function openWardrobe() {
   $('dlgActs').before(rows);
   acts([['Armor', () => { tab = 'a'; render(); }, true], ['Capes', () => { tab = 'c'; render(); }], ['Helmets', () => { tab = 'h'; render(); }], ['Face', () => { tab = 'f'; render(); }], ['Done', closeDlg]]);
   render();
-  showPreviewIn(rows); const pvMe = () => setPreview(() => { const g = makePlayerChar(myLook(), S.col); g.rotation.y = Math.PI; return g; }, 'You');
+  showPreviewIn(rows); const pvMe = () => setPreview(() => { const g = makePlayerChar(myLook(), S.col); g.rotation.y = tab === 'c' ? Math.PI : 0; return g; }, 'You');
   pvMe(); rows.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') setTimeout(pvMe, 0); });
 }
 function announceUnlocks(lv) {

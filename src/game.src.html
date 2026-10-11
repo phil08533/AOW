@@ -731,8 +731,8 @@ const mapC = $('mapC'), mctx = mapC.getContext('2d');
 function drawMap() {
   const S2 = 112, sc = 0.9, cx = S2 / 2, cy = S2 / 2; mctx.clearRect(0, 0, S2, S2); mctx.imageSmoothingEnabled = false;
   mctx.fillStyle = LEVEL.id === 'ship' ? 'rgba(20,24,40,.8)' : (LEVEL.palette.grass + '99'); mctx.fillRect(0, 0, S2, S2);
-  if (LEVEL.fly) { drawSpaceMap(mctx, S2); mctx.fillStyle = '#ff9a3c'; mctx.beginPath(); mctx.moveTo(cx, cy - 6); mctx.lineTo(cx + 4, cy + 4); mctx.lineTo(cx, cy + 2); mctx.lineTo(cx - 4, cy + 4); mctx.closePath(); mctx.fill(); return; }
-  mctx.save(); mctx.translate(cx, cy); mctx.rotate(player.yaw);
+  if (LEVEL.fly) { drawSpaceMap(mctx, S2); mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.translate(-cx, -cy); mctx.fillStyle = '#ff9a3c'; mctx.beginPath(); mctx.moveTo(cx, cy - 6); mctx.lineTo(cx + 4, cy + 4); mctx.lineTo(cx, cy + 2); mctx.lineTo(cx - 4, cy + 4); mctx.closePath(); mctx.fill(); mctx.restore(); return; }
+  mctx.save(); mctx.translate(cx, cy);
   const w2m = (x, z) => [(x - player.pos.x) * sc, (z - player.pos.z) * sc];
   mctx.strokeStyle = 'rgba(168,144,95,.95)'; mctx.lineWidth = 3; mctx.lineCap = 'butt';
   for (const [a, b] of PATHS) { const [ax, az] = w2m(a[0], a[1]), [bx, bz] = w2m(b[0], b[1]); mctx.beginPath(); mctx.moveTo(ax, az); mctx.lineTo(bx, bz); mctx.stroke(); }
@@ -745,7 +745,8 @@ function drawMap() {
   for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible || !N.mark) continue; const [nx, nz] = w2m(N.obj.position.x, N.obj.position.z); mctx.fillStyle = N.mark === '$' ? '#8fe3ff' : '#ffd75e'; mctx.fillRect(nx - 2, nz - 2, 4, 4); }
   for (const r of remotes.values()) { const [rx, rz] = w2m(r.obj.position.x, r.obj.position.z); mctx.fillStyle = '#8fe3ff'; mctx.fillRect(rx - 2, rz - 2, 4, 4); }
   mctx.restore();
-  mctx.fillStyle = '#ff9a3c'; mctx.beginPath(); mctx.moveTo(cx, cy - 6); mctx.lineTo(cx + 4, cy + 4); mctx.lineTo(cx, cy + 2); mctx.lineTo(cx - 4, cy + 4); mctx.closePath(); mctx.fill();
+  mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.translate(-cx, -cy);
+  mctx.fillStyle = '#ff9a3c'; mctx.beginPath(); mctx.moveTo(cx, cy - 6); mctx.lineTo(cx + 4, cy + 4); mctx.lineTo(cx, cy + 2); mctx.lineTo(cx - 4, cy + 4); mctx.closePath(); mctx.fill(); mctx.restore();
 }
 function updateHud() {
   const g = gun(); refreshGunModel();

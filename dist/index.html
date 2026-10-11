@@ -3400,7 +3400,7 @@ function openWardrobe() {
   openDlg('Wardrobe', 'Armor · capes · helmets');
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   let tab = 'a', tryOn = null;
-  const pvTry = nm => setPreview(() => { const g = makePlayerChar(tryOn || myLook(), S.col); g.rotation.y = Math.PI; return g; }, tryOn ? 'Trying on: ' + nm : 'You');
+  const pvTry = nm => setPreview(() => { const g = makePlayerChar(tryOn || myLook(), S.col); g.rotation.y = tab === 'c' ? Math.PI : 0; return g; }, tryOn ? 'Trying on: ' + nm : 'You');
   const render = () => {
     if (tab === 'f') return renderFace(rows, () => setTimeout(pvMe, 0));
     rows.textContent = ''; const L = myLook(), T = tab === 'a' ? ARMORS : tab === 'c' ? CAPES : HELMS;
@@ -3426,7 +3426,7 @@ function openWardrobe() {
   $('dlgActs').before(rows);
   acts([['Armor', () => { tab = 'a'; render(); }, true], ['Capes', () => { tab = 'c'; render(); }], ['Helmets', () => { tab = 'h'; render(); }], ['Face', () => { tab = 'f'; render(); }], ['Done', closeDlg]]);
   render();
-  showPreviewIn(rows); const pvMe = () => setPreview(() => { const g = makePlayerChar(myLook(), S.col); g.rotation.y = Math.PI; return g; }, 'You');
+  showPreviewIn(rows); const pvMe = () => setPreview(() => { const g = makePlayerChar(myLook(), S.col); g.rotation.y = tab === 'c' ? Math.PI : 0; return g; }, 'You');
   pvMe(); rows.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') setTimeout(pvMe, 0); });
 }
 function announceUnlocks(lv) {
@@ -3785,7 +3785,7 @@ function spaceDrop(p, kind, id, n) {
 const maxHpGround = () => Math.round((100 + (S.lvl - 1) * 12) * (hasGear('gaunt') ? 1.25 : 1));
 function drawSpaceMap(mctx, S2) {
   const sc = 0.045, cx = S2 / 2, cy = S2 / 2;
-  mctx.save(); mctx.translate(cx, cy); mctx.rotate(player.yaw);
+  mctx.save(); mctx.translate(cx, cy);
   const w2m = (p) => [(p.x - player.pos.x) * sc, (p.z - player.pos.z) * sc];
   for (const id in SPACE_BODIES) { const P = SPACE_BODIES[id], [x, z] = w2m(P.pos); mctx.fillStyle = P.station ? '#8fe3ff' : P.col; mctx.beginPath(); mctx.arc(x, z, Math.max(3, P.r * sc), 0, 7); mctx.fill(); }
   mctx.fillStyle = 'rgba(184,160,122,.5)'; fly.rockData.forEach((R, i) => { if (i % 3 || R.dead) return; const [x, z] = w2m(R.p); mctx.fillRect(x, z, 1.5, 1.5); });
@@ -7983,7 +7983,7 @@ body.flying .tq { display: none !important; }
 }
 `; document.body.appendChild(st); }
 // ---- new DOM: compass tape, vitals chips, quick-action column ----
-const ctape = document.createElement('div'); ctape.id = 'ctape'; const ctc = document.createElement('canvas'); ctc.width = 520; ctc.height = 80; ctape.appendChild(ctc); $('hud').appendChild(ctape);
+const ctape = document.createElement('div'); ctape.id = 'ctape'; const ctc = document.createElement('canvas'); ctc.width = 300; ctc.height = 80; ctape.appendChild(ctc); $('hud').appendChild(ctape);
 const vchips = document.createElement('div'); vchips.id = 'vchips'; $('vitals').appendChild(vchips);
 const healChip = document.createElement('button'); healChip.className = 'vchip'; healChip.addEventListener('click', () => quickHeal()); vchips.appendChild(healChip);
 const droneChip = document.createElement('button'); droneChip.className = 'vchip'; droneChip.addEventListener('click', () => openDroneStatus()); vchips.appendChild(droneChip);
@@ -8942,6 +8942,19 @@ function padFocusNav(scope, dir) {
 { const _k = kill; kill = function (e) { const r = _k.apply(this, arguments); if (e && e.def && e.def.boss) rumble(1, 1, 600); return r; }; }
 window.addEventListener('gamepadconnected', () => { setTimeout(() => toast('CONTROLLER', 'Tap LB for the bag · hold LB for more · F1 lists everything', 3.5), 3600); });
 
+// =================== HUD layout: right column = minimap (north up) → compass → boss health; helm prompt out of the way ===================
+{ const st = document.createElement('style'); st.textContent = `
+body #ctape { left: auto !important; right: 0 !important; transform: none !important; top: calc(env(safe-area-inset-top, 0px) + 118px) !important; width: 128px !important; height: 34px !important; }
+body #clock { top: calc(env(safe-area-inset-top, 0px) + 152px) !important; }
+body #boss { left: auto !important; right: 8px !important; transform: none !important; top: calc(env(safe-area-inset-top, 0px) + 172px) !important; width: 168px !important; padding: 3px 8px 5px !important; }
+body #boss .n { font-size: 11px !important; letter-spacing: .08em !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body #boss .bar { height: 7px !important; }
+body #clock { white-space: nowrap !important; width: max-content; }
+@media (pointer: coarse) and (max-width: 520px) { body #boss { top: calc(env(safe-area-inset-top, 0px) + 176px) !important; } body #raidBar { top: calc(env(safe-area-inset-top, 0px) + 206px) !important; } }
+body.flying #talk { top: auto !important; left: 12px !important; transform: none !important; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px) !important; font-size: 11px !important; padding: 4px 10px !important; opacity: .8; }
+@media (pointer: coarse) and (max-height: 520px) { body #ctape { top: calc(env(safe-area-inset-top, 0px) + 116px) !important; } body #clock { top: calc(env(safe-area-inset-top, 0px) + 150px) !important; } body #boss { top: calc(env(safe-area-inset-top, 0px) + 168px) !important; } }
+`; document.body.appendChild(st); }
+
 // ---- Update log: each player sees the updates they missed since their last login ----
 const UPDATES = [
   { id: 20, title: 'Laser swords and shields', items: ['Laser swords with custom colors and hilts, previewed in the shop', 'Melee only fires with a melee weapon equipped; the offhand blue shield blocks', 'Saber mod station on your ship'] },
@@ -8990,7 +9003,8 @@ const UPDATES = [
   { id: 63, title: 'The Crucible: raids at Fort Ironrock', items: ['Raids now happen at Fort Ironrock. Use Raid Command (the red terminal by the landing pad, or ask General Hale or Sgt. Torque) to deploy into the Crucible, a hardcore raid arena', 'Pick the deadliness yourself, from Recruit to Apocalypse. Enemies get tougher and hit harder, and the payout grows up to 12×', 'Three waves of elite troops, then the Iron Tyrant with a shockwave you must dodge (get far away or jump). Die and the raid is over', 'Everyone in the Crucible on the same setting fights the same Iron Tyrant: your damage adds up together', 'New healing spells: the Mending Staff (Merla) and Lifebloom Staff (Seer Ixa) heal friends you aim at. Lifebloom also heals friends around them and a little of you', 'Fort Ironrock has its own intro film (replay it in Codex → Cinema), and it only ever plays Tidal Wave']},
   { id: 64, title: 'Game editor (owner only)', items: ['Menu → 🛠 Editor (or F9): place crates, barrels, walls, rocks, trees, lamps, lights, neon signs, platforms and enemy spawns right where you stand', 'Rotate, resize, move, teleport to or delete anything you placed', 'Tune any weapon (damage, fire rate, magazine, price, level) and any enemy (health, speed, XP)', 'Edits save automatically and go live for every player. Save & share copies everything as text']},
   { id: 65, title: 'Gun + staff loadout, and dual wield in New Game+', items: ['Carry a gun and a staff at the same time: equip one of each, then press Y (or tap the ammo box) to switch', 'New Game+ (Ascension 1 and up): switching goes Gun → Staff → BOTH. In both mode you fire your gun and cast your spell together, each with its own ammo and mana', 'The ammo box shows your other weapon and its ammo or mana']},
-  { id: 66, title: 'Characters, body type and controller', items: ['Every character now has a permanent ID. Making a new character never replaces an old one, even with the same callsign', 'Start screen → 👥 Characters: switch between all your characters. Same Claude account on any device = same characters', 'Moving to a different account? Characters → Copy transfer code, then Paste transfer code on the other one', 'Pick ♂ Male or ♀ Female on the start screen', 'Controller: tap LB for the bag, hold LB for gun/staff, heal, codex and dance; R3 heals; D-pad works in menus; A skips cutscenes; rumble when you get hit', 'Wardrobe → Armor: switch Male / Female any time', 'Flying into an asteroid now bounces you off instead of trapping you', 'Removed the old Skip tutorial button']}
+  { id: 66, title: 'Characters, body type and controller', items: ['Every character now has a permanent ID. Making a new character never replaces an old one, even with the same callsign', 'Start screen → 👥 Characters: switch between all your characters. Same Claude account on any device = same characters', 'Moving to a different account? Characters → Copy transfer code, then Paste transfer code on the other one', 'Pick ♂ Male or ♀ Female on the start screen', 'Controller: tap LB for the bag, hold LB for gun/staff, heal, codex and dance; R3 heals; D-pad works in menus; A skips cutscenes; rumble when you get hit', 'Wardrobe → Armor: switch Male / Female any time', 'Flying into an asteroid now bounces you off instead of trapping you', 'Removed the old Skip tutorial button']},
+  { id: 67, title: 'Cleaner screen', items: ['The minimap now stays north-up; your arrow turns instead', 'The compass is smaller and sits under the minimap', 'Boss health moved out of the middle of the screen to the top-right, under the compass', 'Leave the helm (and other flying prompts) moved to a small chip in the bottom-left', 'Wardrobe shows armor, helmets and faces from the front (capes still from the back)']}
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -9184,8 +9198,8 @@ const mapC = $('mapC'), mctx = mapC.getContext('2d');
 function drawMap() {
   const S2 = 112, sc = 0.9, cx = S2 / 2, cy = S2 / 2; mctx.clearRect(0, 0, S2, S2); mctx.imageSmoothingEnabled = false;
   mctx.fillStyle = LEVEL.id === 'ship' ? 'rgba(20,24,40,.8)' : (LEVEL.palette.grass + '99'); mctx.fillRect(0, 0, S2, S2);
-  if (LEVEL.fly) { drawSpaceMap(mctx, S2); mctx.fillStyle = '#ff9a3c'; mctx.beginPath(); mctx.moveTo(cx, cy - 6); mctx.lineTo(cx + 4, cy + 4); mctx.lineTo(cx, cy + 2); mctx.lineTo(cx - 4, cy + 4); mctx.closePath(); mctx.fill(); return; }
-  mctx.save(); mctx.translate(cx, cy); mctx.rotate(player.yaw);
+  if (LEVEL.fly) { drawSpaceMap(mctx, S2); mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.translate(-cx, -cy); mctx.fillStyle = '#ff9a3c'; mctx.beginPath(); mctx.moveTo(cx, cy - 6); mctx.lineTo(cx + 4, cy + 4); mctx.lineTo(cx, cy + 2); mctx.lineTo(cx - 4, cy + 4); mctx.closePath(); mctx.fill(); mctx.restore(); return; }
+  mctx.save(); mctx.translate(cx, cy);
   const w2m = (x, z) => [(x - player.pos.x) * sc, (z - player.pos.z) * sc];
   mctx.strokeStyle = 'rgba(168,144,95,.95)'; mctx.lineWidth = 3; mctx.lineCap = 'butt';
   for (const [a, b] of PATHS) { const [ax, az] = w2m(a[0], a[1]), [bx, bz] = w2m(b[0], b[1]); mctx.beginPath(); mctx.moveTo(ax, az); mctx.lineTo(bx, bz); mctx.stroke(); }
@@ -9198,7 +9212,8 @@ function drawMap() {
   for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible || !N.mark) continue; const [nx, nz] = w2m(N.obj.position.x, N.obj.position.z); mctx.fillStyle = N.mark === '$' ? '#8fe3ff' : '#ffd75e'; mctx.fillRect(nx - 2, nz - 2, 4, 4); }
   for (const r of remotes.values()) { const [rx, rz] = w2m(r.obj.position.x, r.obj.position.z); mctx.fillStyle = '#8fe3ff'; mctx.fillRect(rx - 2, rz - 2, 4, 4); }
   mctx.restore();
-  mctx.fillStyle = '#ff9a3c'; mctx.beginPath(); mctx.moveTo(cx, cy - 6); mctx.lineTo(cx + 4, cy + 4); mctx.lineTo(cx, cy + 2); mctx.lineTo(cx - 4, cy + 4); mctx.closePath(); mctx.fill();
+  mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.translate(-cx, -cy);
+  mctx.fillStyle = '#ff9a3c'; mctx.beginPath(); mctx.moveTo(cx, cy - 6); mctx.lineTo(cx + 4, cy + 4); mctx.lineTo(cx, cy + 2); mctx.lineTo(cx - 4, cy + 4); mctx.closePath(); mctx.fill(); mctx.restore();
 }
 function updateHud() {
   const g = gun(); refreshGunModel();

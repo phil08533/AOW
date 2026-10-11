@@ -141,7 +141,7 @@ body.flying .tq { display: none !important; }
 }
 `; document.body.appendChild(st); }
 // ---- new DOM: compass tape, vitals chips, quick-action column ----
-const ctape = document.createElement('div'); ctape.id = 'ctape'; const ctc = document.createElement('canvas'); ctc.width = 520; ctc.height = 80; ctape.appendChild(ctc); $('hud').appendChild(ctape);
+const ctape = document.createElement('div'); ctape.id = 'ctape'; const ctc = document.createElement('canvas'); ctc.width = 300; ctc.height = 80; ctape.appendChild(ctc); $('hud').appendChild(ctape);
 const vchips = document.createElement('div'); vchips.id = 'vchips'; $('vitals').appendChild(vchips);
 const healChip = document.createElement('button'); healChip.className = 'vchip'; healChip.addEventListener('click', () => quickHeal()); vchips.appendChild(healChip);
 const droneChip = document.createElement('button'); droneChip.className = 'vchip'; droneChip.addEventListener('click', () => openDroneStatus()); vchips.appendChild(droneChip);

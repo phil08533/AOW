@@ -223,7 +223,7 @@ function spaceDrop(p, kind, id, n) {
 const maxHpGround = () => Math.round((100 + (S.lvl - 1) * 12) * (hasGear('gaunt') ? 1.25 : 1));
 function drawSpaceMap(mctx, S2) {
   const sc = 0.045, cx = S2 / 2, cy = S2 / 2;
-  mctx.save(); mctx.translate(cx, cy); mctx.rotate(player.yaw);
+  mctx.save(); mctx.translate(cx, cy);
   const w2m = (p) => [(p.x - player.pos.x) * sc, (p.z - player.pos.z) * sc];
   for (const id in SPACE_BODIES) { const P = SPACE_BODIES[id], [x, z] = w2m(P.pos); mctx.fillStyle = P.station ? '#8fe3ff' : P.col; mctx.beginPath(); mctx.arc(x, z, Math.max(3, P.r * sc), 0, 7); mctx.fill(); }
   mctx.fillStyle = 'rgba(184,160,122,.5)'; fly.rockData.forEach((R, i) => { if (i % 3 || R.dead) return; const [x, z] = w2m(R.p); mctx.fillRect(x, z, 1.5, 1.5); });

@@ -36,7 +36,7 @@ function buildResidential(T, W, D, H, rnd) {
   // twelve apartment fronts, six on each side of the street
   const pal = ['#c8a888', '#8aa8c8', '#c8b0d8', '#a8c8a8', '#d8c098', '#b8b8c8'];
   for (let i = 0; i < 12; i++) {
-    const north = i < 6, k = i % 6, x = -25 + k * 10, z = north ? -D + 4 : D - 4, ry = north ? 0 : Math.PI, rid = Object.keys(ROM_HOME).find(id => ROM_HOME[id] === i);
+    const north = i < 6, k = i % 6, x = north ? -25 + k * 10 : -26 + k * 8, z = north ? -D + 4 : D - 4, ry = north ? 0 : Math.PI, rid = Object.keys(ROM_HOME).find(id => ROM_HOME[id] === i);
     const g = new THREE.Group(); part(g, B(9, 6.2, 6), toon(pal[(i * 7) % pal.length], 'panel'), 0, 3.1, 0); part(g, B(9.2, 0.3, 6.2), '#3a3d44', 0, 6.3, 0);
     part(g, B(1.6, 2.6, 0.1), rid ? toon(ROM_COLORS[rid] || '#5a3a22') : '#5a3a22', 0, 1.3, 3.02); part(g, B(0.12, 0.12, 0.06), '#c9a43a', 0.6, 1.3, 3.08);
     for (const s of [-1, 1]) { part(g, B(1.8, 1.3, 0.06), glow(rnd(i + s) > 0.35 ? '#ffe0a0' : '#2a3a4a'), 2.8 * s, 2.0, 3.02); part(g, B(2.0, 0.12, 0.3), '#3a3d44', 2.8 * s, 1.3, 3.12); part(g, B(1.8, 1.3, 0.06), glow(rnd(i * 3 + s) > 0.5 ? '#ffe0a0' : '#2a3a4a'), 2.8 * s, 4.6, 3.02); }
@@ -49,7 +49,7 @@ function buildResidential(T, W, D, H, rnd) {
     if (rid === 'nyra') part(g, B(1.4, 0.06, 0.4), '#c8402f', -2.2, 0.8, 3.4, 0, 0.3, 0);
     if (rid === 'rhett') for (let q = 0; q < 2; q++) part(g, B(0.7, 0.7, 0.7), toon('#8a6a44', 'wood'), -2.2 + q * 0.8, 0.35, 3.7);
     if (!rid && i % 3 === 0) { part(g, Cy(0.25, 0.2, 0.4, 8), toon('#c9733a', 'stone'), 1.6, 0.2, 3.6); E(g, toon('#4f8a3a', 'leaves'), 1.6, 0.6, 3.6, 0.3, 0.35, 0.3); }
-    at(g, x, z, ry); box(x, z, 4.5, 3);
+    at(g, x, z, ry); if (!north) g.scale.x = 0.82; box(x, z, north ? 4.5 : 3.7, 3); // south row is narrower so the elevator stays clear
     const dz = north ? z + 3.9 : z - 3.9; RES_DOORS.push({ i, x, z: dz, rid });
     INTERACTS.push({ x, z: dz, r: 1.8, label: rid ? `${ROMANCE[rid].name.split(' ')[0]}'s door` : `Apartment #${i + 1}`, fn: () => resDoor(i, rid) });
   }

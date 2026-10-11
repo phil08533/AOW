@@ -117,7 +117,7 @@ function spaceStep(dt, t) {
   const maxSp = SHIP_SYS.engine.lv[sysLv('engine')].sp * F.cruise * (typeof shipMod === 'function' ? shipMod('sp') : 1), boost = (keys.ShiftLeft || keys.ShiftRight) ? 1.8 : 1;
   const th = frozen ? 0 : clamp((keys.KeyW ? 1 : 0) - (keys.KeyS ? 0.6 : 0) + move.y, -0.6, 1), st = frozen ? 0 : clamp((keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x, -1, 1);
   const want = shipFwd.clone().multiplyScalar(th * maxSp * boost).addScaledVector(shipRight, st * maxSp * 0.4);
-  F.vel.lerp(want, Math.min(1, dt * 1.6)); SFX.engine(0.4 + Math.abs(th) * 0.6, F.vel.length() / 200);
+  F.vel.lerp(want, Math.min(1, dt * 1.6 * (gameTime - (F.rockBumpT || -9) < 0.45 ? 0.15 : 1))); SFX.engine(0.4 + Math.abs(th) * 0.6, F.vel.length() / 200);
   player.pos.addScaledVector(F.vel, dt);
   // keep out of planets and rocks
   for (const id in SPACE_BODIES) { const P = SPACE_BODIES[id], d = player.pos.distanceTo(P.pos), m = P.r + (P.station ? 45 : 30);
@@ -128,7 +128,7 @@ function spaceStep(dt, t) {
       const vn = F.vel.dot(out); if (vn < 0) F.vel.addScaledVector(out, -vn * 1.8); F.vel.multiplyScalar(0.5);
       if (!F.bumpT || gameTime - F.bumpT > 3) { F.bumpT = gameTime; SFX.block(); log(!L ? `${bodyName(id)} has no landing site yet. Scan it with E when you're close.` : `${L.name} is locked. Keep following the story to open it.`); }
     } }
-  for (const R of F.rockData) { if (R.dead) continue; const d = player.pos.distanceTo(R.p), m = R.s + 3; if (d < m) { player.pos.copy(R.p).addScaledVector(player.pos.clone().sub(R.p).normalize(), m); if (F.vel.length() > 30) { hurt(F.vel.length() * 0.15); F.shake = 0.4; } F.vel.multiplyScalar(-0.3); } }
+  for (const R of F.rockData) { if (R.dead) continue; const d = player.pos.distanceTo(R.p), m = R.s + 3; if (d < m) { const out = d > 0.01 ? player.pos.clone().sub(R.p).normalize() : V(0, 1, 0); player.pos.copy(R.p).addScaledVector(out, m + 1.5); const vn = F.vel.dot(out); if (vn < 0) { if (-vn > 30 && (!F.rockHitT || gameTime - F.rockHitT > 1)) { F.rockHitT = gameTime; hurt(-vn * 0.15); F.shake = 0.4; } F.vel.addScaledVector(out, -vn * 1.6); } F.vel.addScaledVector(out, 12); F.rockBumpT = gameTime; } }
   if (player.pos.length() > 3200) player.pos.setLength(3200);
   F.mkT = (F.mkT || 0) - dt;
   for (const M of F_markers) { const d = player.pos.distanceTo(M.P.pos), surf = Math.max(0, d - M.P.r);

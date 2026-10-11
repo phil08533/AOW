@@ -302,7 +302,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 1.5</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 1.7</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -323,7 +323,7 @@ body.flying #tBoost { display: grid; }
       <span>Damage numbers</span><button class="pbtn" id="setNums"></button>
     </div>
     <button class="cta win" id="resumeBtn">Resume</button>
-    <button class="pbtn" id="skipBtn">Skip the Earth tutorial</button>
+    <button class="pbtn" id="skipBtn" style="display:none">Skip the Earth tutorial</button>
   </div>
 </div>
 <div class="screen" id="dead" hidden><div class="sheet win"><div class="logo" style="font-size:48px">DOWN</div><p id="deadTxt"></p><button class="cta win" id="respawnBtn">Respawn</button></div></div>
@@ -3405,6 +3405,9 @@ function openWardrobe() {
     if (tab === 'f') return renderFace(rows, () => setTimeout(pvMe, 0));
     rows.textContent = ''; const L = myLook(), T = tab === 'a' ? ARMORS : tab === 'c' ? CAPES : HELMS;
     $('dlgLine').textContent = tab === 'a' ? `Tap a set to try it on. Armor reduces damage. Wearing ${ARMORS[L.a].name} (−${Math.round(ARMORS[L.a].def * 100)}% damage taken). Other players see your look.` : tab === 'c' ? 'Capes show off where you have been.' : 'Helmets.';
+    if (tab === 'a' && typeof setSex === 'function') { const r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.innerHTML = '<b>Body</b>'; const c = document.createElement('span'); c.style.cssText = 'display:flex;gap:6px;margin-left:auto';
+      for (const [t, f] of [['♂ Male', false], ['♀ Female', true]]) { const b = document.createElement('button'); b.className = 'pbtn' + (isFemale(S.look) === f ? ' go' : ''); b.style.padding = '5px 10px'; b.textContent = t; b.addEventListener('click', () => { setSex(f); markDirty(); SFX.item(); sendPresence(true); if (LEVEL.id === 'ship') placeMannequin(); render(); }); c.appendChild(b); }
+      r.append(nm, c); rows.appendChild(r); }
     Object.entries(T).forEach(([id, it]) => {
       const un = lookUnlocked(T, id), on = L[tab] === id, r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = it.col || it.trim || it.visor || '#9aa1aa';
@@ -3542,7 +3545,7 @@ function pollPad(dt) {
 
 function recallToShip() {
   if (state !== 'play' || dlgOpen) return;
-  if (!shipUnlocked()) { log('You get your ship after beating Drome (or skip the tutorial from the Menu).'); return; }
+  if (!shipUnlocked()) { log('You get your ship after beating Drome on Earth.'); return; }
   if (LEVEL.id === 'ship') { log('You are already aboard.'); return; }
   if (!player.alive) return;
   if (LEVEL.fly) { player.hp = player.groundHp != null ? player.groundHp : maxHpGround(); player.groundHp = null; }
@@ -3676,7 +3679,7 @@ function spaceStep(dt, t) {
   const maxSp = SHIP_SYS.engine.lv[sysLv('engine')].sp * F.cruise * (typeof shipMod === 'function' ? shipMod('sp') : 1), boost = (keys.ShiftLeft || keys.ShiftRight) ? 1.8 : 1;
   const th = frozen ? 0 : clamp((keys.KeyW ? 1 : 0) - (keys.KeyS ? 0.6 : 0) + move.y, -0.6, 1), st = frozen ? 0 : clamp((keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x, -1, 1);
   const want = shipFwd.clone().multiplyScalar(th * maxSp * boost).addScaledVector(shipRight, st * maxSp * 0.4);
-  F.vel.lerp(want, Math.min(1, dt * 1.6)); SFX.engine(0.4 + Math.abs(th) * 0.6, F.vel.length() / 200);
+  F.vel.lerp(want, Math.min(1, dt * 1.6 * (gameTime - (F.rockBumpT || -9) < 0.45 ? 0.15 : 1))); SFX.engine(0.4 + Math.abs(th) * 0.6, F.vel.length() / 200);
   player.pos.addScaledVector(F.vel, dt);
   // keep out of planets and rocks
   for (const id in SPACE_BODIES) { const P = SPACE_BODIES[id], d = player.pos.distanceTo(P.pos), m = P.r + (P.station ? 45 : 30);
@@ -3687,7 +3690,7 @@ function spaceStep(dt, t) {
       const vn = F.vel.dot(out); if (vn < 0) F.vel.addScaledVector(out, -vn * 1.8); F.vel.multiplyScalar(0.5);
       if (!F.bumpT || gameTime - F.bumpT > 3) { F.bumpT = gameTime; SFX.block(); log(!L ? `${bodyName(id)} has no landing site yet. Scan it with E when you're close.` : `${L.name} is locked. Keep following the story to open it.`); }
     } }
-  for (const R of F.rockData) { if (R.dead) continue; const d = player.pos.distanceTo(R.p), m = R.s + 3; if (d < m) { player.pos.copy(R.p).addScaledVector(player.pos.clone().sub(R.p).normalize(), m); if (F.vel.length() > 30) { hurt(F.vel.length() * 0.15); F.shake = 0.4; } F.vel.multiplyScalar(-0.3); } }
+  for (const R of F.rockData) { if (R.dead) continue; const d = player.pos.distanceTo(R.p), m = R.s + 3; if (d < m) { const out = d > 0.01 ? player.pos.clone().sub(R.p).normalize() : V(0, 1, 0); player.pos.copy(R.p).addScaledVector(out, m + 1.5); const vn = F.vel.dot(out); if (vn < 0) { if (-vn > 30 && (!F.rockHitT || gameTime - F.rockHitT > 1)) { F.rockHitT = gameTime; hurt(-vn * 0.15); F.shake = 0.4; } F.vel.addScaledVector(out, -vn * 1.6); } F.vel.addScaledVector(out, 12); F.rockBumpT = gameTime; } }
   if (player.pos.length() > 3200) player.pos.setLength(3200);
   F.mkT = (F.mkT || 0) - dt;
   for (const M of F_markers) { const d = player.pos.distanceTo(M.P.pos), surf = Math.max(0, d - M.P.r);
@@ -6449,14 +6452,14 @@ HELMS.face = { name: 'No helmet (show your face)', lvl: 1 };
 function renderFace(rows, refresh) {
   rows.textContent = ''; const F = faceOf(S.look || {});
   $('dlgLine').textContent = 'Build your face. Pick "No helmet" in the Helmets tab to show it off (we switched it on for you).';
-  const set = (k, d, n) => { F[k] = (F[k] + d + n) % n; S.look = Object.assign({}, myLook(), { f: [F.s, F.e, F.m, F.h, F.hc].join('.'), h: 'face' }); markDirty(); sendPresence(true); SFX.ui(); renderFace(rows, refresh); refresh(); };
+  const set = (k, d, n) => { F[k] = (F[k] + d + n) % n; S.look = Object.assign({}, myLook(), { f: [F.s, F.e, F.m, F.h, F.hc].join('.') + sexTag(), h: 'face' }); markDirty(); sendPresence(true); SFX.ui(); renderFace(rows, refresh); refresh(); };
   [['Skin', 's', FACE.skinN], ['Eyes', 'e', FACE.eyesN], ['Mouth', 'm', FACE.mouthN], ['Hair / top', 'h', FACE.hairN], ['Hair color', 'hc', FACE.hairC.map((c, i) => ['Black', 'Brown', 'Blond', 'White', 'Red', 'Blue', 'Green', 'Purple'][i])]].forEach(([lab, k, names]) => {
     const r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.textContent = `${lab}: ${names[F[k] % names.length]}`;
     const a = document.createElement('button'), b = document.createElement('button'); a.className = b.className = 'pbtn'; a.style.padding = b.style.padding = '5px 12px'; a.textContent = '◀'; b.textContent = '▶';
     a.addEventListener('click', () => set(k, -1, names.length)); b.addEventListener('click', () => set(k, 1, names.length)); r.append(nm, a, b); rows.appendChild(r); });
   const r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.textContent = `${FACE.skinN.length * FACE.eyesN.length * FACE.mouthN.length * FACE.hairN.length * FACE.hairC.length} possible faces`;
   const rb = document.createElement('button'); rb.className = 'pbtn'; rb.style.padding = '5px 12px'; rb.textContent = '🎲 Random';
-  rb.addEventListener('click', () => { S.look = Object.assign({}, myLook(), { f: [randi(0, 7), randi(0, 7), randi(0, 5), randi(0, 9), randi(0, 7)].join('.'), h: 'face' }); markDirty(); sendPresence(true); SFX.item(); renderFace(rows, refresh); refresh(); });
+  rb.addEventListener('click', () => { S.look = Object.assign({}, myLook(), { f: [randi(0, 7), randi(0, 7), randi(0, 5), randi(0, 9), randi(0, 7)].join('.') + sexTag(), h: 'face' }); markDirty(); sendPresence(true); SFX.item(); renderFace(rows, refresh); refresh(); });
   r.append(nm, rb); rows.appendChild(r);
 }
 
@@ -7317,14 +7320,14 @@ function openControls() {
   const row = (k, v) => { const r = document.createElement('div'); r.className = 'rowi nodot'; r.innerHTML = `<b style="min-width:120px;display:inline-block">${k}</b><span>${v}</span>`; rows.appendChild(r); };
   if (TOUCH) {
     $('dlgLine').textContent = 'Phone and tablet controls.';
-    sec('On foot'); [['Left stick', 'Move'], ['Drag right side', 'Aim'], ['FIRE', 'Hold to shoot'], ['JUMP · RLD', 'Jump · reload'], ['SWAP · ORDNANCE', 'Gun/melee · fire your ordnance'], ['MENU tab (bottom)', 'Swipe up or tap: ship, quests, bag, vehicle, codex, photo mode, settings']].forEach(r => row(...r));
+    sec('On foot'); [['Left stick', 'Move'], ['Drag right side', 'Aim'], ['FIRE', 'Hold to shoot'], ['JUMP · RLD', 'Jump · reload'], ['SWAP · ORDNANCE', 'Gun/melee · fire your ordnance'], ['Tap the ammo box', 'Switch gun and staff (New Game+: both)'], ['MENU tab (bottom)', 'Swipe up or tap: ship, quests, bag, vehicle, codex, photo mode, settings']].forEach(r => row(...r));
     sec('Flying'); [['Left stick', 'Steer'], ['Drag right side', 'Look'], ['FIRE · BOOST', 'Lasers · afterburner']].forEach(r => row(...r));
   } else {
     $('dlgLine').textContent = 'Keyboard and mouse. A controller works too.';
-    sec('On foot'); [['WASD', 'Move (Shift to sprint)'], ['Mouse', 'Aim · click to fire'], ['Right click', 'Block with a shield'], ['Space', 'Jump'], ['R', 'Reload'], ['Q / F', 'Swap gun and melee'], ['Z', 'Fire your ordnance'], ['H', 'Use a medkit'], ['E', 'Talk · use']].forEach(r => row(...r));
+    sec('On foot'); [['WASD', 'Move (Shift to sprint)'], ['Mouse', 'Aim · click to fire'], ['Right click', 'Block with a shield'], ['Space', 'Jump'], ['R', 'Reload'], ['Q / F', 'Swap gun and melee'], ['Y', 'Switch gun and staff (New Game+: both at once)'], ['Z', 'Fire your ordnance'], ['H', 'Use a medkit'], ['E', 'Talk · use']].forEach(r => row(...r));
     sec('Getting around'); [['X', 'Ride your speed bike'], ['V', 'Drive your vehicle (car, tank or mech)'], ['T', 'Teleport to your ship'], ['L', 'Launch your ship'], ['M', 'Galaxy map (on your ship or in space)']].forEach(r => row(...r));
     sec('Menus'); [['B', 'Bag'], ['J', 'Quest log'], ['C', 'Codex: achievements, dailies, bestiary, lore'], ['G', 'Decorate your ship'], ['Enter', 'Chat (start with ! to shout)'], ['P', 'Photo mode (K saves a picture)'], ['Tab', 'Menu drawer'], ['F1', 'This help'], ['Esc', 'Pause menu and settings']].forEach(r => row(...r));
-    sec('Controller'); [['Left stick · right stick', 'Move · aim'], ['A · X', 'Jump · talk'], ['RT · RB', 'Fire · melee'], ['Y · LB', 'Reload · bag']].forEach(r => row(...r));
+    sec('Controller'); [['Left stick · right stick', 'Move · aim (click L3 to sprint)'], ['A · X', 'Jump · talk / use'], ['RT · LT', 'Fire · block'], ['RB', 'Gun / melee'], ['Y', 'Reload (switches gun/staff when nothing to reload)'], ['R3', 'Heal'], ['Tap LB', 'Bag'], ['Hold LB + Y · X · B · A · RB', 'Gun/staff · heal · codex · dance · melee'], ['D-pad', 'Build · ship · bike · ordnance (moves between buttons in menus)'], ['Back · Start', 'Quest log · pause'], ['Right stick in menus', 'Scroll lists'], ['A or Start in a cutscene', 'Skip']].forEach(r => row(...r));
   }
   $('dlgActs').before(rows); acts([['Got it', closeDlg, true]]);
 }
@@ -8672,6 +8675,273 @@ function fortIntro(replay) {
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); if (id === 'fort' && state === 'play' && !(S.flags && S.flags.fortIntro)) setTimeout(() => { if (LEVEL.id === 'fort' && state === 'play' && !CUT.on) fortIntro(); }, 900); return r; }; }
 SCENES.splice(2, 0, ['fort', '🪖 Fort Ironrock', () => !!(S.flags && S.flags.fortIntro) || DEV_ALL, () => { if (LEVEL.id !== 'fort') loadLevel('fort'); setTimeout(() => fortIntro(true), 600); }]);
 
+// =================== GAME EDITOR (owner only): tune weapons and enemies, place things in worlds, live for everyone ===================
+// Changes are stored in one shared document (world/overrides) that every player loads, plus a local copy.
+const EDIT = { owner: false, ov: { guns: {}, enemies: {}, places: {} }, dirty: false, tab: 'place', sel: 0, kind: 'crate', etype: 'xr17' };
+const BASE_STATS = { guns: {}, enemies: {} };
+for (const id in GUNS) BASE_STATS.guns[id] = { dmg: GUNS[id].dmg, rate: GUNS[id].rate, mag: GUNS[id].mag, price: GUNS[id].price, req: GUNS[id].req };
+for (const id in ENEMY) BASE_STATS.enemies[id] = { hp: ENEMY[id].hp, speed: ENEMY[id].speed, xp: ENEMY[id].xp };
+function edApply() {
+  for (const id in BASE_STATS.guns) if (GUNS[id]) Object.assign(GUNS[id], BASE_STATS.guns[id], EDIT.ov.guns[id] || {});
+  for (const id in BASE_STATS.enemies) if (ENEMY[id]) Object.assign(ENEMY[id], BASE_STATS.enemies[id], EDIT.ov.enemies[id] || {});
+}
+function edSave() { EDIT.dirty = true; try { localStorage.setItem('aow-editor', JSON.stringify(EDIT.ov)); } catch (_) {} clearTimeout(EDIT.t); EDIT.t = setTimeout(async () => { if (db && EDIT.owner) { try { await db.doc('world/overrides').set({ v: 1, t: Date.now(), data: JSON.stringify(EDIT.ov) }); EDIT.dirty = false; toast('EDITOR', 'Saved · live for everyone', 1.2); } catch (e) { toast('EDITOR', 'Saved on this device only', 1.5); } } }, 800); }
+function edLoad(json) { try { const o = JSON.parse(json); EDIT.ov = { guns: o.guns || {}, enemies: o.enemies || {}, places: o.places || {} }; edApply(); } catch (_) {} }
+// load the shared overrides once the cloud is ready (or the local copy when offline)
+if (!window.claude) EDIT.owner = true;
+(async () => { try { const u = window.claude && await window.claude.use('user'); if (u && u.isOwner && u.isOwner()) { EDIT.owner = true; $('editorBtn').hidden = false; } } catch (_) {} })();
+{ let tries = 0; const iv = setInterval(async () => { tries++; if (!db && tries < 20) return; clearInterval(iv);
+  if (db) { try { const s = await db.doc('world/overrides').get(); if (s.exists && s.data() && s.data().data) { edLoad(s.data().data); if (LEVEL) edPlaceAll(); } } catch (_) {} }
+  else { try { const l = localStorage.getItem('aow-editor'); if (l) { edLoad(l); if (LEVEL) edPlaceAll(); } } catch (_) {} }
+  try { const u = window.claude && await window.claude.use('user'); EDIT.owner = !!(u && u.isOwner && u.isOwner()) || DEV_ALL; } catch (_) { EDIT.owner = DEV_ALL; }
+  if (!window.claude) EDIT.owner = true;
+  $('editorBtn').hidden = !EDIT.owner; }, 500); }
+// ---- placeable things ----
+const ED_KINDS = {
+  crate: ['Crate', g => { part(g, B(1, 1, 1), toon('#a07a4a', 'wood'), 0, 0.5, 0); }, 0.6],
+  barrel: ['Barrel', g => { part(g, Cy(0.4, 0.4, 1.1, 10), '#5d636c', 0, 0.55, 0); part(g, Cy(0.42, 0.42, 0.08, 10), '#c8402f', 0, 0.8, 0); }, 0.45],
+  wall: ['Wall block', g => { part(g, B(4, 3, 0.5), toon('#8a8e96', 'hull'), 0, 1.5, 0); }, 0],
+  rock: ['Rock', g => { part(g, new THREE.DodecahedronGeometry(1, 0), toon('#7a7068', 'stone'), 0, 0.6, 0); }, 0.9],
+  tree: ['Tree', g => { part(g, Cy(0.25, 0.35, 3, 6), toon('#5a3a22', 'wood'), 0, 1.5, 0); part(g, new THREE.ConeGeometry(1.6, 3.2, 7), toon('#3f7a2f', 'leaves'), 0, 4, 0); }, 0.4],
+  lamp: ['Street lamp', g => { part(g, Cy(0.07, 0.09, 3.4, 6), '#2b2a2c', 0, 1.7, 0); part(g, B(0.4, 0.3, 0.4), glow('#ffe0a0'), 0, 3.5, 0); }, 0.15],
+  light: ['Coloured light', g => { part(g, new THREE.SphereGeometry(0.25, 8, 6), glow('#4fd2ff'), 0, 2.5, 0); const l = new THREE.PointLight(0x4fd2ff, 1, 14, 1.6); l.position.y = 2.5; g.add(l); }, 0],
+  sign: ['Neon sign', g => { part(g, B(3, 0.9, 0.12), '#1e1c22', 0, 2.6, 0); part(g, B(2.7, 0.6, 0.02), glow('#ff6aa8'), 0, 2.6, 0.07); for (const s of [-1, 1]) part(g, Cy(0.05, 0.05, 2.2, 5), '#2b2a2c', s * 1.3, 1.1, 0); }, 0.1],
+  platform: ['Platform', g => { part(g, B(4, 0.4, 4), toon('#5d636c', 'deck'), 0, 0.2, 0); }, 0],
+  enemy: ['Enemy spawn', null, 0],
+};
+const ED_OBJ = [];
+function edPlaceAll() {
+  for (const o of ED_OBJ) { if (o.g) levelGroup.remove(o.g); if (o.e) { o.e.gone = true; scene.remove(o.e.obj); const i = enemies.indexOf(o.e); if (i >= 0) enemies.splice(i, 1); } } ED_OBJ.length = 0;
+  const list = (EDIT.ov.places[LEVEL.id] || []);
+  list.forEach((p, i) => {
+    if (p.k === 'enemy') { if (!ENEMY[p.type]) return; let zn = ZONES.find(z => Math.hypot(p.x - z.x, p.z - z.z) < z.r); if (!zn) { zn = { id: 'ed' + i, name: LEVEL.name, x: p.x, z: p.z, r: 8 }; ZONES.push(zn); Z[zn.id] = zn; } const e = makeEnemy({ zone: zn.id, type: p.type, n: 1, lv: [p.lv || 5, p.lv || 5], at: [p.x - zn.x, p.z - zn.z] }); ED_OBJ.push({ i, e }); return; }
+    const K = ED_KINDS[p.k]; if (!K) return; const g = new THREE.Group(); K[1](g); g.scale.setScalar(p.s || 1); g.position.set(p.x, (LEVEL.terrain ? groundH(p.x, p.z) : 0) + (p.y || 0), p.z); g.rotation.y = p.ry || 0; levelGroup.add(g);
+    if (p.k === 'wall') box(p.x, p.z, Math.abs(Math.cos(p.ry || 0)) * 2 * (p.s || 1) + 0.25, Math.abs(Math.sin(p.ry || 0)) * 2 * (p.s || 1) + 0.25); else if (p.k === 'platform') SURFACES.push && SURFACES.push([p.x, p.z, 2 * (p.s || 1), 0.4 * (p.s || 1)]); else if (K[2]) solid(p.x, p.z, K[2] * (p.s || 1));
+    ED_OBJ.push({ i, g }); });
+}
+{ const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); try { edPlaceAll(); } catch (e) { console.warn('editor', e); } return r; }; }
+edApply();
+// ---- the editor panel ----
+function openEditor(tab) {
+  if (!EDIT.owner) return; EDIT.tab = tab || EDIT.tab; openDlg('Game editor', { place: `Place · ${LEVEL.name}`, guns: 'Weapons', enemies: 'Enemies', share: 'Save & share' }[EDIT.tab]);
+  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.maxHeight = '50vh'; rows.style.overflowY = 'auto';
+  const row = (label, ctrl, meta) => { const r = document.createElement('div'); r.className = 'rowi nodot'; const a = document.createElement('span'); a.innerHTML = label; const b = document.createElement('span'); b.className = 'meta'; b.style.fontSize = '12px'; b.textContent = meta || ''; const c = document.createElement('span'); c.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end'; [].concat(ctrl).forEach(x => x && c.appendChild(x)); r.append(a, b, c); rows.appendChild(r); };
+  const btn = (t, fn, go) => { const b = document.createElement('button'); b.className = 'pbtn' + (go ? ' go' : ''); b.style.cssText = 'padding:4px 9px;min-width:0'; b.textContent = t; b.addEventListener('click', () => { SFX.ui(); fn(); }); return b; };
+  const num = (v, fn, step) => { const i = document.createElement('input'); i.type = 'number'; i.value = v; i.step = step || 'any'; i.style.cssText = 'width:74px;font:inherit;padding:3px 5px;background:#0a0f2a;color:#fff;border:1px solid rgba(255,255,255,.35)'; i.addEventListener('keydown', e => e.stopPropagation()); i.addEventListener('change', () => { const n = parseFloat(i.value); if (isFinite(n)) fn(n); }); return i; };
+  const sel = (opts, cur, fn) => { const s = document.createElement('select'); s.style.cssText = 'font:inherit;padding:3px;background:#0a0f2a;color:#fff;border:1px solid rgba(255,255,255,.35);max-width:170px'; for (const [v, t] of opts) { const o = document.createElement('option'); o.value = v; o.textContent = t; o.selected = v === cur; s.appendChild(o); } s.addEventListener('change', () => fn(s.value)); return s; };
+  if (EDIT.tab === 'place') {
+    $('dlgLine').textContent = 'Stand where you want it, pick a thing, and press Place. Everything you place here is saved for this world.';
+    row('<b>Thing</b>', [sel(Object.entries(ED_KINDS).map(([k, v]) => [k, v[0]]), EDIT.kind, v => { EDIT.kind = v; openEditor(); })]);
+    if (EDIT.kind === 'enemy') row('<b>Enemy type</b>', [sel(Object.keys(ENEMY).sort().map(k => [k, ENEMY[k].name + (ENEMY[k].boss ? ' ★' : '')]), EDIT.etype, v => { EDIT.etype = v; })]);
+    row('', [btn('＋ Place in front of me', () => { const L = EDIT.ov.places[LEVEL.id] = EDIT.ov.places[LEVEL.id] || []; const d = 3.5, x = player.pos.x - Math.sin(player.yaw) * d, z = player.pos.z - Math.cos(player.yaw) * d; L.push(EDIT.kind === 'enemy' ? { k: 'enemy', type: EDIT.etype, x: +x.toFixed(2), z: +z.toFixed(2), lv: Math.max(1, S.lvl) } : { k: EDIT.kind, x: +x.toFixed(2), z: +z.toFixed(2), ry: +(player.yaw).toFixed(2), s: 1 }); edSave(); edPlaceAll(); openEditor(); }, true)]);
+    const L = EDIT.ov.places[LEVEL.id] || [];
+    const h = document.createElement('div'); h.style.cssText = 'margin:8px 0 2px;color:#ffd36a;font-weight:bold'; h.textContent = `Placed here (${L.length})`; rows.appendChild(h);
+    L.forEach((p, i) => { const nm = p.k === 'enemy' ? `${(ENEMY[p.type] || {}).name || p.type} (Lv ${p.lv})` : ED_KINDS[p.k][0], dist = Math.round(Math.hypot(player.pos.x - p.x, player.pos.z - p.z));
+      const upd = () => { edSave(); edPlaceAll(); openEditor(); };
+      row(`<b>${i + 1}. ${nm}</b>`, [p.k !== 'enemy' && btn('⟲', () => { p.ry = +((p.ry || 0) + Math.PI / 4).toFixed(2); upd(); }), p.k !== 'enemy' && btn('－', () => { p.s = Math.max(0.25, +((p.s || 1) - 0.25).toFixed(2)); upd(); }), p.k !== 'enemy' && btn('＋', () => { p.s = Math.min(6, +((p.s || 1) + 0.25).toFixed(2)); upd(); }), p.k === 'enemy' && num(p.lv, n => { p.lv = Math.max(1, Math.round(n)); upd(); }, 1), btn('Move here', () => { p.x = +(player.pos.x - Math.sin(player.yaw) * 3.5).toFixed(2); p.z = +(player.pos.z - Math.cos(player.yaw) * 3.5).toFixed(2); upd(); }), btn('Go to', () => { player.pos.set(p.x + 2, player.pos.y, p.z + 2); closeDlg(); }), btn('🗑', () => { L.splice(i, 1); upd(); })], `${dist} m away · size ${p.s || 1}`); });
+  }
+  if (EDIT.tab === 'guns') { $('dlgLine').textContent = 'Damage, fire delay (seconds between shots), magazine, price and level needed. Changes apply right away, for everyone.';
+    for (const id of Object.keys(GUNS)) { const G = GUNS[id], o = EDIT.ov.guns[id] = EDIT.ov.guns[id] || {}, set = (k, v) => { o[k] = v; edApply(); edSave(); };
+      row(`<b>${G.name}</b>`, [num(G.dmg, v => set('dmg', v)), num(G.rate, v => set('rate', v), 0.01), num(G.mag, v => set('mag', Math.round(v)), 1), num(G.price, v => set('price', Math.round(v)), 1), num(G.req, v => set('req', Math.round(v)), 1)], 'dmg · delay · mag · price · lvl'); } }
+  if (EDIT.tab === 'enemies') { $('dlgLine').textContent = 'Base health, speed and XP (health still grows with enemy level). Changes apply as enemies respawn.';
+    for (const id of Object.keys(ENEMY).sort()) { const E0 = ENEMY[id], o = EDIT.ov.enemies[id] = EDIT.ov.enemies[id] || {}, set = (k, v) => { o[k] = v; edApply(); edSave(); };
+      row(`<b>${E0.name}</b>${E0.boss ? ' ★' : ''}`, [num(E0.hp, v => set('hp', v), 1), num(E0.speed, v => set('speed', v), 0.1), num(E0.xp, v => set('xp', Math.round(v)), 1)], 'hp · speed · xp'); } }
+  if (EDIT.tab === 'share') { $('dlgLine').textContent = 'Your edits save automatically to the shared world file, so every player gets them. Copy them out to send to Claude to make them permanent, or paste a set in.';
+    const ta = document.createElement('textarea'); ta.value = JSON.stringify(EDIT.ov); ta.style.cssText = 'width:100%;height:140px;font:12px monospace;background:#0a0f2a;color:#fff;border:1px solid rgba(255,255,255,.35)'; ta.addEventListener('keydown', e => e.stopPropagation()); rows.appendChild(ta);
+    row('', [btn('Copy', () => { ta.select(); try { navigator.clipboard.writeText(ta.value); toast('EDITOR', 'Copied', 1); } catch (_) { document.execCommand('copy'); } }), btn('Load pasted', () => { edLoad(ta.value); edSave(); edPlaceAll(); toast('EDITOR', 'Loaded', 1); }), btn('Reset everything', () => { if (!confirm || confirm('Undo every edit for everyone?')) { EDIT.ov = { guns: {}, enemies: {}, places: {} }; edApply(); edSave(); edPlaceAll(); openEditor(); } })]); }
+  $('dlgActs').before(rows);
+  acts([['📍 Place', () => openEditor('place'), EDIT.tab === 'place'], ['🔫 Weapons', () => openEditor('guns'), EDIT.tab === 'guns'], ['👾 Enemies', () => openEditor('enemies'), EDIT.tab === 'enemies'], ['💾 Save & share', () => openEditor('share'), EDIT.tab === 'share'], ['Close', closeDlg]]);
+}
+{ const drop = $('menuDrop'), ref = $('unstuckBtn'); const b = document.createElement('button'); b.className = ref.className; b.id = 'editorBtn'; b.textContent = 'Editor'; b.hidden = true; b.addEventListener('click', () => { drop.hidden = true; document.body.classList.remove('menuopen'); openEditor(); }); drop.insertBefore(b, ref);
+  const st = document.createElement('style'); st.textContent = '#editorBtn::before { content: "🛠"; }'; document.body.appendChild(st); }
+window.addEventListener('keydown', e => { if (e.code === 'F9' && EDIT.owner && state === 'play' && !chatOpen()) { e.preventDefault(); dlgOpen ? closeDlg() : openEditor(); } });
+
+// =================== LOADOUT: carry a gun AND a staff; New Game+ lets you wield both at once ===================
+const isStaffId = id => !!(GUNS[id] && GUNS[id].mana);
+const WMEM = {}; // remembered ammo/mana per weapon, so swapping doesn't refill for free
+const OFF = { id: null, ammo: 0, manaF: null, cool: 0, reloading: 0 };
+let vmOff = null, vmOffId = null;
+function loadoutSlots() { S.slots = S.slots || {}; const g = S.gun; if (GUNS[g] && S.guns.includes(g)) S.slots[isStaffId(g) ? 'staff' : 'gun'] = g;
+  for (const k of ['gun', 'staff']) if (S.slots[k] && !S.guns.includes(S.slots[k])) delete S.slots[k]; return S.slots; }
+const otherSlot = () => { const s = loadoutSlots(); return isStaffId(S.gun) ? s.gun : s.staff; };
+const canDual = () => (S.asc || 0) >= 1;
+const dualOn = () => !!S.dual && canDual() && !!otherSlot() && !LEVEL.fly && !handMelee() && !(typeof inLounge === 'function' && inLounge());
+function swapWeapon() {
+  if (state !== 'play' || dlgOpen || LEVEL.fly) return;
+  const o = otherSlot();
+  if (!o) { log('Carry a gun and a staff: equip one of each (shop or armory) and swap with Y, or tap the ammo box.'); return; }
+  if (handMelee()) swapHand();
+  // New Game+: Gun → Staff → BOTH → Gun …
+  if (canDual() && !S.dual && isStaffId(S.gun)) { S.dual = true; OFF.id = null; SFX.ui(); toast('DUAL WIELD', `${GUNS[S.gun].name} + ${GUNS[o].name}`, 1.4); markDirty(); return; }
+  if (S.dual) { S.dual = false; }
+  WMEM[S.gun] = { ammo: player.ammo, manaF: player.manaF, t: gameTime };
+  S.gun = o; const m = WMEM[o], g = GUNS[o];
+  if (m) { const regen = g.mana ? (gameTime - m.t) * g.mag / (g.reload * 2.2) : 0; player.ammo = Math.min(g.mag, Math.floor((m.manaF != null ? m.manaF : m.ammo) + regen)); player.manaF = g.mana ? player.ammo : null; }
+  else { player.ammo = g.mag; player.manaF = null; }
+  player.reloading = 0; player.cool = Math.max(player.cool, 0.15); firing = false; SFX.ui(); markDirty();
+  log(`${g.name} out.${canDual() ? ' Press Y again for the next mode.' : ''}`);
+}
+window.addEventListener('keydown', e => { if (e.code === 'KeyY' && state === 'play' && !dlgOpen && !chatOpen() && !e.repeat) swapWeapon(); });
+$('ammo').addEventListener('click', e => { if (state === 'play' && !dlgOpen && otherSlot()) { e.stopImmediatePropagation(); swapWeapon(); } }, true);
+// ---- the offhand: its own ammo, mana and cooldown; fires alongside the main hand ----
+function offSync() { const o = otherSlot(); if (OFF.id === o) return; OFF.id = o; const g = GUNS[o]; if (!g) return; const m = WMEM[o]; OFF.ammo = m ? Math.min(g.mag, m.ammo) : g.mag; OFF.manaF = g.mana ? OFF.ammo : null; OFF.cool = 0; OFF.reloading = 0; }
+{ const _f = fire; fire = function () {
+  _f.apply(this, arguments);
+  if (!dualOn()) return; offSync(); if (OFF.cool > 0 || OFF.reloading > 0 || !OFF.id) return;
+  const keep = { gun: S.gun, ammo: player.ammo, manaF: player.manaF, cool: player.cool, reloading: player.reloading, vg: vmGun };
+  S.gun = OFF.id; player.ammo = OFF.ammo; player.manaF = OFF.manaF; player.cool = 0; player.reloading = 0; if (vmOff) vmGun = vmOff;
+  try { _f.apply(this, arguments); } finally {
+    OFF.ammo = player.ammo; OFF.cool = player.cool; OFF.reloading = player.reloading; if (OFF.manaF != null) { const fl = Math.floor(OFF.manaF); if (OFF.ammo < fl) OFF.manaF -= fl - OFF.ammo; }
+    S.gun = keep.gun; player.ammo = keep.ammo; player.manaF = keep.manaF; player.cool = keep.cool; player.reloading = keep.reloading; vmGun = keep.vg; }
+}; }
+{ const _s = step; step = function (dt) { _s(dt); try {
+  const on = state === 'play' && dualOn();
+  if (on) { offSync(); const g = GUNS[OFF.id]; OFF.cool -= dt;
+    if (OFF.reloading > 0) { OFF.reloading -= dt; if (OFF.reloading <= 0) OFF.ammo = g.mag; }
+    else if (!S.clip && !g.mana && OFF.ammo <= 0) OFF.reloading = g.reload;
+    if (g.mana) { if (OFF.manaF == null) OFF.manaF = OFF.ammo; OFF.manaF = Math.min(g.mag, OFF.manaF + dt * g.mag / (g.reload * 2.2)); OFF.ammo = Math.floor(OFF.manaF); }
+    if (vmOffId !== OFF.id) { if (vmOff) camera.remove(vmOff); vmOff = makeGunModel(OFF.id); vmOff.rotation.y = Math.PI; vmOff.scale.setScalar(0.36); vmOff.traverse(o => { if (o.isMesh) { o.castShadow = false; o.renderOrder = 2; } }); camera.add(vmOff); vmOffId = OFF.id; }
+    vmOff.visible = player.alive; vmOff.position.set(-vm.position.x - 0.02, vm.position.y - (OFF.reloading > 0 ? 0.1 : 0), vm.position.z); vmOff.rotation.z = 0.08;
+  } else if (vmOff) vmOff.visible = false;
+  offHud(on);
+} catch (e) { } }; }
+// ---- HUD: a second readout under the ammo counter ----
+const offEl = document.createElement('div'); offEl.id = 'offAmmo'; $('ammo').appendChild(offEl);
+{ const st = document.createElement('style'); st.textContent = '#offAmmo { font: 700 11px var(--mono); color: #c9b8ff; letter-spacing: .04em; margin-top: 2px; } #offAmmo:empty { display: none; } #offAmmo .k { opacity: .7; }'; document.body.appendChild(st); }
+let offTxt = '';
+function offHud(on) { let t = ''; const o = otherSlot();
+  if (on && GUNS[OFF.id]) { const g = GUNS[OFF.id]; t = `+ ${g.mana ? '✦' : '◈'} ${OFF.reloading > 0 ? '…' : S.clip && !g.mana ? '∞' : OFF.ammo + '/' + g.mag}`; }
+  else if (o && state === 'play' && !LEVEL.fly) t = `<span class="k">${TOUCH ? 'tap' : 'Y'} ⇄</span> ${isStaffId(o) ? '✦ staff' : '◈ gun'}${canDual() && isStaffId(S.gun) ? ' · both' : ''}`;
+  if (t !== offTxt) { offTxt = t; offEl.innerHTML = t; } }
+// keep the offhand fresh when you level up or change weapons in a shop
+{ const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); OFF.id = null; return r; }; }
+
+// =================== CHARACTERS: every character has a permanent id; new characters never replace old ones ===================
+// cloud: data/users/<you>/<cid> holds each character; data/users/<you>/save is whichever one you're playing
+const CHAR_LOCAL = 'aow-chars';
+function localChars() { try { return JSON.parse(localStorage.getItem(CHAR_LOCAL) || '{}') || {}; } catch (_) { return {}; } }
+{ const _wl = writeLocal; writeLocal = function () { _wl(); try { if (!S.cid || !S.t) return; const m = localChars(); m[S.cid] = S; const ks = Object.keys(m).sort((a, b) => (m[b].t || 0) - (m[a].t || 0)); for (const k of ks.slice(8)) delete m[k]; localStorage.setItem(CHAR_LOCAL, JSON.stringify(m)); } catch (_) {} }; }
+const shortId = cid => (cid || '').slice(-6).toUpperCase();
+async function listChars() {
+  const all = {}; for (const [k, v] of Object.entries(localChars())) if (v && v.v === 1) all[k] = v;
+  if (db && uid) { try { const snap = await db.collection('data/users/' + uid).get(); for (const d of snap.docs) { const v = d.data(); if (d.id === 'save' || !v || v.v !== 1) continue; const cid = v.cid || d.id; if (!all[cid] || (all[cid].t || 0) < (v.t || 0)) all[cid] = Object.assign({}, v, { cid }); } } catch (_) {} }
+  if (S.t && S.cid) all[S.cid] = S;
+  return Object.values(all).filter(c => c.t).sort((a, b) => (b.t || 0) - (a.t || 0));
+}
+function playChar(c) { if (dirty) { try { flushSave(); } catch (_) {} } adopt(JSON.parse(JSON.stringify(c))); fillStart(); const w = resumeWhere(); if (w !== LEVEL.id) loadLevel(w); dirty = true; S.t = Date.now(); writeLocal(); renderChars(); toast('CHARACTER', `${S.nick} · ID ${shortId(S.cid)}`, 1.4); }
+function newChar() { if (S.t && dirty) { try { flushSave(); } catch (_) {} } S = fresh(); $('nickIn').value = ''; fillStart(); loadLevel(resumeWhere()); renderChars(); toast('NEW CHARACTER', 'Pick a callsign and armor color, then Press Start. Your other characters are kept.', 3); }
+// ---- start screen panel ----
+const charBox = document.createElement('div'); charBox.id = 'charBox'; charBox.hidden = true;
+const charBtn = document.createElement('button'); charBtn.className = 'pbtn'; charBtn.id = 'charBtn'; charBtn.textContent = '👥 Characters';
+$('playBtn').after(charBtn); charBtn.after(charBox);
+{ const st = document.createElement('style'); st.textContent = `#charBtn { align-self: center; padding: 6px 14px; }
+#charBox { display: flex; flex-direction: column; gap: 6px; max-height: 34vh; overflow-y: auto; text-align: left; }
+#charBox[hidden] { display: none; }
+#charBox .ch { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid rgba(255,255,255,.22); background: rgba(10,15,42,.55); }
+#charBox .ch.cur { border-color: #ffd36a; } #charBox .ch b { flex: 1; } #charBox .ch small { opacity: .75; font-family: monospace; }
+#charBox .pbtn { padding: 4px 10px; min-width: 0; }`; document.body.appendChild(st); }
+async function renderChars() {
+  if (charBox.hidden) return; charBox.textContent = 'Loading…';
+  const list = await listChars(); charBox.textContent = '';
+  for (const c of list) { const r = document.createElement('div'); r.className = 'ch' + (c.cid === S.cid ? ' cur' : '');
+    const nm = document.createElement('b'); nm.textContent = `${c.nick || 'Trooper'} · Lv ${c.lvl}${c.asc ? ' · NG+' + c.asc : ''}`;
+    const id = document.createElement('small'); id.textContent = 'ID ' + shortId(c.cid);
+    r.append(nm, id);
+    if (c.cid === S.cid) { const t = document.createElement('small'); t.textContent = 'selected'; r.append(t); }
+    else { const b = document.createElement('button'); b.className = 'pbtn go'; b.textContent = 'Play'; b.addEventListener('click', () => { SFX.ui(); playChar(c); }); r.append(b); }
+    charBox.appendChild(r); }
+  const nb = document.createElement('button'); nb.className = 'pbtn'; nb.textContent = '＋ New character'; nb.addEventListener('click', () => { SFX.ui(); newChar(); }); charBox.appendChild(nb);
+  // move a character to another device or account
+  const tr = document.createElement('div'); tr.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
+  const cp = document.createElement('button'); cp.className = 'pbtn'; cp.textContent = '📤 Copy transfer code'; cp.addEventListener('click', () => { if (!S.t) { toast('TRANSFER', 'Start this character first', 1.5); return; } const code = 'AOW1:' + btoa(unescape(encodeURIComponent(JSON.stringify(S)))); try { navigator.clipboard.writeText(code); toast('TRANSFER', 'Code copied. On the other device: Characters → Paste transfer code', 3); } catch (_) { prompt('Copy this code', code); } });
+  const ps = document.createElement('button'); ps.className = 'pbtn'; ps.textContent = '📥 Paste transfer code'; ps.addEventListener('click', async () => { let code = ''; try { code = await navigator.clipboard.readText(); } catch (_) {} if (!/^AOW1:/.test(code || '')) code = prompt('Paste the transfer code') || ''; try { const c = JSON.parse(decodeURIComponent(escape(atob(code.trim().replace(/^AOW1:/, ''))))); if (!c || c.v !== 1) throw 0; c.cid = c.cid || newCid(); c.t = Date.now(); playChar(c); markDirty(); toast('TRANSFER', `${c.nick} (Lv ${c.lvl}) is on this device now`, 3); } catch (_) { toast('TRANSFER', 'That code did not work', 2); } });
+  tr.append(cp, ps); charBox.appendChild(tr);
+  const hint = document.createElement('small'); hint.textContent = 'Same Claude account on any device = same characters automatically. Different account? Use a transfer code.'; charBox.appendChild(hint);
+  if (!db) { const n = document.createElement('small'); n.textContent = cloudDone ? 'Offline: showing characters saved on this device.' : 'Loading your cloud characters…'; charBox.appendChild(n); }
+}
+charBtn.addEventListener('click', () => { charBox.hidden = !charBox.hidden; renderChars(); });
+function charsReady() { renderChars(); fillStart(); }
+// the save line shows the permanent id
+{ const _fs = fillStart; fillStart = function () { _fs(); if (S.t && S.cid) $('saveNote').textContent += ` · ID ${shortId(S.cid)}`; }; }
+setTimeout(() => { try { fillStart(); } catch (_) {} }, 0);
+
+// =================== BODY TYPE: male or female trooper ===================
+// stored as a 6th part of the face code (look.f = "s.e.m.h.hc.f"), so it travels with presence to other players
+const isFemale = L => String((L && L.f) || '').split('.')[5] === 'f';
+function sexTag() { return isFemale(S.look) ? '.f' : '.m'; }
+function setSex(f) { const p = String((S.look && S.look.f) || '0.0.0.0.0').split('.').slice(0, 5); while (p.length < 5) p.push('0'); S.look = Object.assign({}, S.look || {}, { f: p.join('.') + (f ? '.f' : '.m') }); }
+{ const _mp = makePlayerChar; makePlayerChar = function (look, col) {
+  const g = _mp(look, col); if (!isFemale(look)) return g;
+  for (const c of g.children) { const p = c.position;
+    if (p.y > 1.2 && p.y < 1.62 && Math.abs(p.x) > 0.25) p.x *= 0.86;            // shoulders and arms in
+    else if (p.y > 1.15 && p.y < 1.5 && Math.abs(p.x) < 0.05) c.scale.x *= 0.86;   // slimmer chest plate
+    else if (p.y > 0.95 && p.y < 1.12 && Math.abs(p.x) < 0.05) c.scale.x *= 0.84;  // narrower waist
+    else if (p.y > 0.7 && p.y < 0.9) p.x *= 1.06;                                     // a touch wider at the hips
+  }
+  // contoured chest armor
+  const plate = toon(ARMORS[look.a] && ARMORS[look.a].trim || C.tan);
+  for (const s of [-1, 1]) { const m = part(g, new THREE.SphereGeometry(0.1, 8, 6), plate, 0.09 * s, 1.36, 0.14); m.scale.set(1, 0.85, 0.7); }
+  // ponytail out the back of the helmet
+  const F = typeof faceOf === 'function' ? faceOf(look) : { hc: 0 }, hc = (typeof FACE !== 'undefined' ? FACE.hairC[F.hc % FACE.hairC.length] : '#5a3a22');
+  if (look.h !== 'wizhat') { part(g, Cy(0.05, 0.035, 0.32, 6), toon(hc), 0, 1.6, -0.2, 0.35); part(g, new THREE.SphereGeometry(0.055, 6, 5), toon(hc), 0, 1.75, -0.16); }
+  g.scale.setScalar(0.97);
+  return g; }; }
+// ---- start screen: Male / Female ----
+{ const f = document.createElement('div'); f.className = 'field'; f.innerHTML = '<label>Character</label><div class="swatches" id="sexPick"></div>';
+  const after = $('swatches').closest('.field'); after.after(f);
+  const mk = (t, fem) => { const b = document.createElement('button'); b.className = 'pbtn'; b.style.cssText = 'padding:5px 12px;min-width:0'; b.textContent = t; b.addEventListener('click', () => { setSex(fem); SFX.ui && SFX.ui(); paintSex(); if (S.t) { markDirty(); try { sendPresence(true); } catch (_) {} } }); return b; };
+  const bm = mk('♂ Male', false), bf = mk('♀ Female', true); $('sexPick').append(bm, bf);
+  window.paintSex = () => { const fem = isFemale(S.look); bm.classList.toggle('go', !fem); bf.classList.toggle('go', fem); bm.setAttribute('aria-pressed', String(!fem)); bf.setAttribute('aria-pressed', String(fem)); try { if (typeof placeMannequin === 'function') placeMannequin(); } catch (_) {} };
+  setTimeout(() => { try { paintSex(); } catch (_) {} }, 0); }
+{ const _fs = fillStart; fillStart = function () { _fs(); try { paintSex(); } catch (_) {} }; }
+
+// =================== CONTROLLER 2.0: a full layout on top of the basic gamepad support ===================
+// LB is a modifier: tap LB = bag; hold LB + Y = gun/staff, LB + X = heal, LB + A = dance, LB + B = codex, LB + RB = melee
+// R3 = heal · D-pad in menus · right stick scrolls lists · A/Start skip cutscenes · rumble when hit
+const PAD2 = { lbCombo: false, lbDown: false, prev: [] };
+function padNow() { const pads = navigator.getGamepads ? navigator.getGamepads() : []; for (const p of pads) if (p && p.connected) return p; return null; }
+const rumble = (s, w, ms) => { try { const gp = padNow(); if (gp && gp.vibrationActuator && PAD.active) gp.vibrationActuator.playEffect('dual-rumble', { duration: ms || 120, strongMagnitude: s, weakMagnitude: w }); } catch (_) {} };
+function padFocusNav(scope, dir) {
+  const btns = [...scope.querySelectorAll('button:not(:disabled), input, select')].filter(b => b.offsetParent !== null && !b.hidden);
+  if (!btns.length) return; let i = btns.indexOf(document.activeElement); i = i < 0 ? 0 : (i + dir + btns.length) % btns.length; btns[i].focus(); btns[i].scrollIntoView && btns[i].scrollIntoView({ block: 'nearest' });
+}
+{ const _pp = pollPad; pollPad = function (dt) {
+  const gp = padNow(); if (!gp) return _pp(dt);
+  const b = i => !!(gp.buttons[i] && (gp.buttons[i].pressed || gp.buttons[i].value > 0.5)), hit = i => b(i) && !PAD2.prev[i];
+  const ry = (Math.abs(gp.axes[3] || 0) > 0.25 ? gp.axes[3] : 0);
+  // cutscenes: A or Start presses Skip once it's offered
+  if (typeof CUT !== 'undefined' && CUT.on && (hit(0) || hit(9))) { const sk = [...document.querySelectorAll('button')].find(x => /Skip/.test(x.textContent) && x.offsetParent); if (sk) sk.click(); PAD2.prev = gp.buttons.map(x => x.pressed || x.value > 0.5); PAD.prev = PAD2.prev.slice(); return; }
+  // menus and pause: D-pad moves between buttons, A presses the focused one
+  if (state === 'menu' || state === 'pause') {
+    const scope = $(state === 'menu' ? 'start' : 'pause') || document.body;
+    if (hit(12) || hit(14)) padFocusNav(scope, -1); if (hit(13) || hit(15)) padFocusNav(scope, 1);
+    if (hit(0) && document.activeElement && document.activeElement.tagName === 'BUTTON' && scope.contains(document.activeElement)) { document.activeElement.click(); PAD2.prev = gp.buttons.map(x => x.pressed || x.value > 0.5); PAD.prev = PAD2.prev.slice(); return; }
+    if (hit(1) && state === 'pause') $('resumeBtn').click();
+  }
+  // dialogs: right stick scrolls long lists
+  if (dlgOpen && ry) { const r = $('shopRows') || $('dlg'); if (r) r.scrollTop += ry * 900 * dt; }
+  if (state === 'play' && !dlgOpen) {
+    // LB modifier layer
+    if (b(4)) { if (!PAD2.lbDown) { PAD2.lbDown = true; PAD2.lbCombo = false; }
+      const combo = (i, fn) => { if (hit(i)) { PAD2.lbCombo = true; try { fn(); } catch (_) {} } };
+      combo(3, () => typeof swapWeapon === 'function' && swapWeapon()); combo(2, () => quickHeal()); combo(1, () => openCodex && openCodex());
+      combo(0, () => typeof toggleDance === 'function' && inLounge() ? toggleDance() : null); combo(5, () => swapHand());
+    } else if (PAD2.lbDown) { PAD2.lbDown = false; if (!PAD2.lbCombo) openBag(); }
+    if (hit(11)) quickHeal();
+    // Y with nothing to reload swaps gun/staff instead
+    if (hit(3) && !b(4) && (S.clip || (gun() && gun().mana)) && typeof otherSlot === 'function' && otherSlot()) swapWeapon();
+  }
+  // hide from the base handler what this layer handles: LB taps, R3, and face buttons while LB is held
+  const save = PAD.prev.slice(); const mask = [4, 11]; if (b(4)) mask.push(0, 1, 2, 3, 5);
+  for (const i of mask) PAD.prev[i] = b(i);
+  _pp(dt);
+  PAD2.prev = gp.buttons.map(x => x.pressed || x.value > 0.5);
+  void save;
+}; }
+{ const _h = hurt; hurt = function (dmg, src) { const hp0 = player.hp, r = _h.apply(this, arguments); if (player.hp < hp0) { const k = Math.min(1, (hp0 - player.hp) / Math.max(1, maxHp()) * 4); rumble(0.3 + 0.6 * k, 0.4, 90 + 160 * k); } return r; }; }
+{ const _k = kill; kill = function (e) { const r = _k.apply(this, arguments); if (e && e.def && e.def.boss) rumble(1, 1, 600); return r; }; }
+window.addEventListener('gamepadconnected', () => { setTimeout(() => toast('CONTROLLER', 'Tap LB for the bag · hold LB for more · F1 lists everything', 3.5), 3600); });
+
 // ---- Update log: each player sees the updates they missed since their last login ----
 const UPDATES = [
   { id: 20, title: 'Laser swords and shields', items: ['Laser swords with custom colors and hilts, previewed in the shop', 'Melee only fires with a melee weapon equipped; the offhand blue shield blocks', 'Saber mod station on your ship'] },
@@ -8717,7 +8987,10 @@ const UPDATES = [
   { id: 60, title: 'Music Drive and Cinema', items: ['Ship music now comes from speakers on the bridge, along the corridor and in each room', 'First time in the Starlight Lounge: a short intro film (skippable after a few seconds)', 'The Prologue only plays the very first time you board your ship', 'Codex → Cinema replays every cutscene you have unlocked: the Prologue, the Starlight Lounge and the Ending']},
   { id: 61, title: 'Dance floor rules and a roomier screen', items: ['In the Starlight Lounge your weapons are put away: you get a DANCE button instead (click on desktop)', "The President's Nebula Dust now puts a burning cigarette in your hand, and for 15 seconds the music gets louder", 'Settings → HUD size: Small, Medium or Large (phones default to Medium). Settings → Quest tracker: Compact hides the extra text', 'Fullscreen: Menu → Fullscreen or Settings → Fullscreen. If your app blocks it, open the game link in your phone browser', 'Fixed music going silent on some phones and in the Claude app: if the speaker effects mute the music, the game switches them off and keeps playing']},
   { id: 62, title: 'Music fixed', items: ['Music plays again everywhere. The Music Drive is parked while we rebuild it', 'Ship walls, floors and ceilings no longer slide around as you walk', 'Residential Ring: the apartments no longer block the elevator']},
-  { id: 63, title: 'The Crucible: raids at Fort Ironrock', items: ['Raids now happen at Fort Ironrock. Use Raid Command (the red terminal by the landing pad, or ask General Hale or Sgt. Torque) to deploy into the Crucible, a hardcore raid arena', 'Pick the deadliness yourself, from Recruit to Apocalypse. Enemies get tougher and hit harder, and the payout grows up to 12×', 'Three waves of elite troops, then the Iron Tyrant with a shockwave you must dodge (get far away or jump). Die and the raid is over', 'Everyone in the Crucible on the same setting fights the same Iron Tyrant: your damage adds up together', 'New healing spells: the Mending Staff (Merla) and Lifebloom Staff (Seer Ixa) heal friends you aim at. Lifebloom also heals friends around them and a little of you', 'Fort Ironrock has its own intro film (replay it in Codex → Cinema), and it only ever plays Tidal Wave']}
+  { id: 63, title: 'The Crucible: raids at Fort Ironrock', items: ['Raids now happen at Fort Ironrock. Use Raid Command (the red terminal by the landing pad, or ask General Hale or Sgt. Torque) to deploy into the Crucible, a hardcore raid arena', 'Pick the deadliness yourself, from Recruit to Apocalypse. Enemies get tougher and hit harder, and the payout grows up to 12×', 'Three waves of elite troops, then the Iron Tyrant with a shockwave you must dodge (get far away or jump). Die and the raid is over', 'Everyone in the Crucible on the same setting fights the same Iron Tyrant: your damage adds up together', 'New healing spells: the Mending Staff (Merla) and Lifebloom Staff (Seer Ixa) heal friends you aim at. Lifebloom also heals friends around them and a little of you', 'Fort Ironrock has its own intro film (replay it in Codex → Cinema), and it only ever plays Tidal Wave']},
+  { id: 64, title: 'Game editor (owner only)', items: ['Menu → 🛠 Editor (or F9): place crates, barrels, walls, rocks, trees, lamps, lights, neon signs, platforms and enemy spawns right where you stand', 'Rotate, resize, move, teleport to or delete anything you placed', 'Tune any weapon (damage, fire rate, magazine, price, level) and any enemy (health, speed, XP)', 'Edits save automatically and go live for every player. Save & share copies everything as text']},
+  { id: 65, title: 'Gun + staff loadout, and dual wield in New Game+', items: ['Carry a gun and a staff at the same time: equip one of each, then press Y (or tap the ammo box) to switch', 'New Game+ (Ascension 1 and up): switching goes Gun → Staff → BOTH. In both mode you fire your gun and cast your spell together, each with its own ammo and mana', 'The ammo box shows your other weapon and its ammo or mana']},
+  { id: 66, title: 'Characters, body type and controller', items: ['Every character now has a permanent ID. Making a new character never replaces an old one, even with the same callsign', 'Start screen → 👥 Characters: switch between all your characters. Same Claude account on any device = same characters', 'Moving to a different account? Characters → Copy transfer code, then Paste transfer code on the other one', 'Pick ♂ Male or ♀ Female on the start screen', 'Controller: tap LB for the bag, hold LB for gun/staff, heal, codex and dance; R3 heals; D-pad works in menus; A skips cutscenes; rumble when you get hit', 'Wardrobe → Armor: switch Male / Female any time', 'Flying into an asteroid now bounces you off instead of trapping you', 'Removed the old Skip tutorial button']}
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -8746,7 +9019,8 @@ function updatesOnLogin(isNew) {
 
 // =================== STATE + SAVE ===================
 const COLORS = ['#6f7a3e', '#3b4f7a', '#8a3a2e', '#2f2c33', '#7a6a3a'];
-const fresh = () => ({ v: 1, nick: '', col: COLORS[0], lvl: 1, xp: 0, cr: 0, bank: 0, inv: { medkit: 2 }, guns: ['b1'], gun: 'b1', clip: false, qst: {}, track: null, gear: [], mods: {}, base: [], shipBase: [], ship: { unlocked: false, rooms: ['bridge', 'quarters'] }, where: 'earth', orbit: 'earth', rod: 0, fishLog: {}, look: { a: 'std', c: 'none', h: 'visor' }, melees: ['knife'], melee: 'knife', flags: {}, t: 0 });
+const newCid = () => 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const fresh = () => ({ v: 1, cid: newCid(), nick: '', col: COLORS[0], lvl: 1, xp: 0, cr: 0, bank: 0, inv: { medkit: 2 }, guns: ['b1'], gun: 'b1', clip: false, qst: {}, track: null, gear: [], mods: {}, base: [], shipBase: [], ship: { unlocked: false, rooms: ['bridge', 'quarters'] }, where: 'earth', orbit: 'earth', rod: 0, fishLog: {}, look: { a: 'std', c: 'none', h: 'visor' }, melees: ['knife'], melee: 'knife', flags: {}, t: 0 });
 let S = fresh();
 const player = { pos: V(TOWN.x, 0, TOWN.z + 4), vy: 0, yaw: Math.PI, pitch: 0, hp: 100, alive: true, onGround: true, lastHurt: -99, ammo: 12, reloading: 0, cool: 0 };
 const maxHp = () => LEVEL && LEVEL.fly ? hullMax() : Math.round((100 + (S.lvl - 1) * 12) * (hasGear('gaunt') ? 1.25 : 1));
@@ -8761,7 +9035,7 @@ function markDirty() { dirty = true; S.t = Date.now(); writeLocal(); }
 async function flushSave() {
   if (!dirty || writing || !saveRef) return;
   writing = true; dirty = false;
-  try { await saveRef.set(JSON.parse(JSON.stringify(S))); }
+  try { const snapS = JSON.parse(JSON.stringify(S)); await saveRef.set(snapS); if (db && uid && S.cid) { try { await db.doc('data/users/' + uid + '/' + S.cid).set(snapS); } catch (_) {} } }
   catch (e) { if (e && e.code === 'invalid_argument') saveRef = null; else dirty = true; }
   writing = false; lastWrite = performance.now();
 }
@@ -8773,10 +9047,14 @@ let cloudDone = false; const bootT = Date.now();
     const [d, u] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
     if (!d || !u) { cloudDone = true; return; }
     const id = await u.id(); if (!id) { cloudDone = true; return; }
-    db = d; uid = id; saveRef = db.doc('data/users/' + id + '/save'); watchBases();
+    db = d; uid = id; const ref = db.doc('data/users/' + id + '/save'); watchBases();
     try { const dv = await db.doc('data/users/' + id + '/dev').get(); if (dv.exists && dv.data() && dv.data().all) { DEV_ALL = true; if (S.ship) S.ship.unlocked = true; } } catch (_) {}
-    const snap = await saveRef.get();
-    if (snap.exists) { const s = snap.data(); if (s && s.v === 1 && (s.t || 0) > (S.t || 0) && state === 'menu') { adopt(s); fillStart(); const w = resumeWhere(); if (w !== LEVEL.id) loadLevel(w); } }
+    const snap = await ref.get();
+    if (snap.exists) { const s = snap.data();
+      // keep every character: the active save is also stored under its own permanent id, so a new character never replaces it
+      if (s && s.v === 1 && (s.lvl > 1 || s.xp > 0 || Object.keys(s.qst || {}).length)) { if (!s.cid) { s.cid = 'c' + (s.t || Date.now()).toString(36) + 'old'; } try { const own = await db.doc('data/users/' + id + '/' + s.cid).get(); if (!own.exists || ((own.data() || {}).t || 0) < (s.t || 0)) await db.doc('data/users/' + id + '/' + s.cid).set(s); } catch (_) {} }
+      if (s && s.v === 1 && state === 'menu' && (s.t || 0) > (S.t || 0)) { adopt(s); fillStart(); const w = resumeWhere(); if (w !== LEVEL.id) loadLevel(w); } }
+    saveRef = ref; if (typeof charsReady === 'function') charsReady();
     $('saveNote').textContent = S.nick ? `Cloud save · ${S.nick} · Level ${S.lvl}` : 'Progress saves to your account';
   } catch (_) {}
   cloudDone = true;

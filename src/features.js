@@ -188,6 +188,9 @@ function openWardrobe() {
     if (tab === 'f') return renderFace(rows, () => setTimeout(pvMe, 0));
     rows.textContent = ''; const L = myLook(), T = tab === 'a' ? ARMORS : tab === 'c' ? CAPES : HELMS;
     $('dlgLine').textContent = tab === 'a' ? `Tap a set to try it on. Armor reduces damage. Wearing ${ARMORS[L.a].name} (−${Math.round(ARMORS[L.a].def * 100)}% damage taken). Other players see your look.` : tab === 'c' ? 'Capes show off where you have been.' : 'Helmets.';
+    if (tab === 'a' && typeof setSex === 'function') { const r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.innerHTML = '<b>Body</b>'; const c = document.createElement('span'); c.style.cssText = 'display:flex;gap:6px;margin-left:auto';
+      for (const [t, f] of [['♂ Male', false], ['♀ Female', true]]) { const b = document.createElement('button'); b.className = 'pbtn' + (isFemale(S.look) === f ? ' go' : ''); b.style.padding = '5px 10px'; b.textContent = t; b.addEventListener('click', () => { setSex(f); markDirty(); SFX.item(); sendPresence(true); if (LEVEL.id === 'ship') placeMannequin(); render(); }); c.appendChild(b); }
+      r.append(nm, c); rows.appendChild(r); }
     Object.entries(T).forEach(([id, it]) => {
       const un = lookUnlocked(T, id), on = L[tab] === id, r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = it.col || it.trim || it.visor || '#9aa1aa';
@@ -325,7 +328,7 @@ function pollPad(dt) {
 
 function recallToShip() {
   if (state !== 'play' || dlgOpen) return;
-  if (!shipUnlocked()) { log('You get your ship after beating Drome (or skip the tutorial from the Menu).'); return; }
+  if (!shipUnlocked()) { log('You get your ship after beating Drome on Earth.'); return; }
   if (LEVEL.id === 'ship') { log('You are already aboard.'); return; }
   if (!player.alive) return;
   if (LEVEL.fly) { player.hp = player.groundHp != null ? player.groundHp : maxHpGround(); player.groundHp = null; }

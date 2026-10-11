@@ -302,7 +302,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 1.5</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 1.7</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -323,7 +323,7 @@ body.flying #tBoost { display: grid; }
       <span>Damage numbers</span><button class="pbtn" id="setNums"></button>
     </div>
     <button class="cta win" id="resumeBtn">Resume</button>
-    <button class="pbtn" id="skipBtn">Skip the Earth tutorial</button>
+    <button class="pbtn" id="skipBtn" style="display:none">Skip the Earth tutorial</button>
   </div>
 </div>
 <div class="screen" id="dead" hidden><div class="sheet win"><div class="logo" style="font-size:48px">DOWN</div><p id="deadTxt"></p><button class="cta win" id="respawnBtn">Respawn</button></div></div>
@@ -566,7 +566,8 @@ ENEMY.skyrene.fly = true;
 
 // =================== STATE + SAVE ===================
 const COLORS = ['#6f7a3e', '#3b4f7a', '#8a3a2e', '#2f2c33', '#7a6a3a'];
-const fresh = () => ({ v: 1, nick: '', col: COLORS[0], lvl: 1, xp: 0, cr: 0, bank: 0, inv: { medkit: 2 }, guns: ['b1'], gun: 'b1', clip: false, qst: {}, track: null, gear: [], mods: {}, base: [], shipBase: [], ship: { unlocked: false, rooms: ['bridge', 'quarters'] }, where: 'earth', orbit: 'earth', rod: 0, fishLog: {}, look: { a: 'std', c: 'none', h: 'visor' }, melees: ['knife'], melee: 'knife', flags: {}, t: 0 });
+const newCid = () => 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const fresh = () => ({ v: 1, cid: newCid(), nick: '', col: COLORS[0], lvl: 1, xp: 0, cr: 0, bank: 0, inv: { medkit: 2 }, guns: ['b1'], gun: 'b1', clip: false, qst: {}, track: null, gear: [], mods: {}, base: [], shipBase: [], ship: { unlocked: false, rooms: ['bridge', 'quarters'] }, where: 'earth', orbit: 'earth', rod: 0, fishLog: {}, look: { a: 'std', c: 'none', h: 'visor' }, melees: ['knife'], melee: 'knife', flags: {}, t: 0 });
 let S = fresh();
 const player = { pos: V(TOWN.x, 0, TOWN.z + 4), vy: 0, yaw: Math.PI, pitch: 0, hp: 100, alive: true, onGround: true, lastHurt: -99, ammo: 12, reloading: 0, cool: 0 };
 const maxHp = () => LEVEL && LEVEL.fly ? hullMax() : Math.round((100 + (S.lvl - 1) * 12) * (hasGear('gaunt') ? 1.25 : 1));
@@ -581,7 +582,7 @@ function markDirty() { dirty = true; S.t = Date.now(); writeLocal(); }
 async function flushSave() {
   if (!dirty || writing || !saveRef) return;
   writing = true; dirty = false;
-  try { await saveRef.set(JSON.parse(JSON.stringify(S))); }
+  try { const snapS = JSON.parse(JSON.stringify(S)); await saveRef.set(snapS); if (db && uid && S.cid) { try { await db.doc('data/users/' + uid + '/' + S.cid).set(snapS); } catch (_) {} } }
   catch (e) { if (e && e.code === 'invalid_argument') saveRef = null; else dirty = true; }
   writing = false; lastWrite = performance.now();
 }
@@ -593,10 +594,14 @@ let cloudDone = false; const bootT = Date.now();
     const [d, u] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
     if (!d || !u) { cloudDone = true; return; }
     const id = await u.id(); if (!id) { cloudDone = true; return; }
-    db = d; uid = id; saveRef = db.doc('data/users/' + id + '/save'); watchBases();
+    db = d; uid = id; const ref = db.doc('data/users/' + id + '/save'); watchBases();
     try { const dv = await db.doc('data/users/' + id + '/dev').get(); if (dv.exists && dv.data() && dv.data().all) { DEV_ALL = true; if (S.ship) S.ship.unlocked = true; } } catch (_) {}
-    const snap = await saveRef.get();
-    if (snap.exists) { const s = snap.data(); if (s && s.v === 1 && (s.t || 0) > (S.t || 0) && state === 'menu') { adopt(s); fillStart(); const w = resumeWhere(); if (w !== LEVEL.id) loadLevel(w); } }
+    const snap = await ref.get();
+    if (snap.exists) { const s = snap.data();
+      // keep every character: the active save is also stored under its own permanent id, so a new character never replaces it
+      if (s && s.v === 1 && (s.lvl > 1 || s.xp > 0 || Object.keys(s.qst || {}).length)) { if (!s.cid) { s.cid = 'c' + (s.t || Date.now()).toString(36) + 'old'; } try { const own = await db.doc('data/users/' + id + '/' + s.cid).get(); if (!own.exists || ((own.data() || {}).t || 0) < (s.t || 0)) await db.doc('data/users/' + id + '/' + s.cid).set(s); } catch (_) {} }
+      if (s && s.v === 1 && state === 'menu' && (s.t || 0) > (S.t || 0)) { adopt(s); fillStart(); const w = resumeWhere(); if (w !== LEVEL.id) loadLevel(w); } }
+    saveRef = ref; if (typeof charsReady === 'function') charsReady();
     $('saveNote').textContent = S.nick ? `Cloud save · ${S.nick} · Level ${S.lvl}` : 'Progress saves to your account';
   } catch (_) {}
   cloudDone = true;

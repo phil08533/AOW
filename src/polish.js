@@ -50,14 +50,14 @@ function openControls() {
   const row = (k, v) => { const r = document.createElement('div'); r.className = 'rowi nodot'; r.innerHTML = `<b style="min-width:120px;display:inline-block">${k}</b><span>${v}</span>`; rows.appendChild(r); };
   if (TOUCH) {
     $('dlgLine').textContent = 'Phone and tablet controls.';
-    sec('On foot'); [['Left stick', 'Move'], ['Drag right side', 'Aim'], ['FIRE', 'Hold to shoot'], ['JUMP · RLD', 'Jump · reload'], ['SWAP · ORDNANCE', 'Gun/melee · fire your ordnance'], ['MENU tab (bottom)', 'Swipe up or tap: ship, quests, bag, vehicle, codex, photo mode, settings']].forEach(r => row(...r));
+    sec('On foot'); [['Left stick', 'Move'], ['Drag right side', 'Aim'], ['FIRE', 'Hold to shoot'], ['JUMP · RLD', 'Jump · reload'], ['SWAP · ORDNANCE', 'Gun/melee · fire your ordnance'], ['Tap the ammo box', 'Switch gun and staff (New Game+: both)'], ['MENU tab (bottom)', 'Swipe up or tap: ship, quests, bag, vehicle, codex, photo mode, settings']].forEach(r => row(...r));
     sec('Flying'); [['Left stick', 'Steer'], ['Drag right side', 'Look'], ['FIRE · BOOST', 'Lasers · afterburner']].forEach(r => row(...r));
   } else {
     $('dlgLine').textContent = 'Keyboard and mouse. A controller works too.';
-    sec('On foot'); [['WASD', 'Move (Shift to sprint)'], ['Mouse', 'Aim · click to fire'], ['Right click', 'Block with a shield'], ['Space', 'Jump'], ['R', 'Reload'], ['Q / F', 'Swap gun and melee'], ['Z', 'Fire your ordnance'], ['H', 'Use a medkit'], ['E', 'Talk · use']].forEach(r => row(...r));
+    sec('On foot'); [['WASD', 'Move (Shift to sprint)'], ['Mouse', 'Aim · click to fire'], ['Right click', 'Block with a shield'], ['Space', 'Jump'], ['R', 'Reload'], ['Q / F', 'Swap gun and melee'], ['Y', 'Switch gun and staff (New Game+: both at once)'], ['Z', 'Fire your ordnance'], ['H', 'Use a medkit'], ['E', 'Talk · use']].forEach(r => row(...r));
     sec('Getting around'); [['X', 'Ride your speed bike'], ['V', 'Drive your vehicle (car, tank or mech)'], ['T', 'Teleport to your ship'], ['L', 'Launch your ship'], ['M', 'Galaxy map (on your ship or in space)']].forEach(r => row(...r));
     sec('Menus'); [['B', 'Bag'], ['J', 'Quest log'], ['C', 'Codex: achievements, dailies, bestiary, lore'], ['G', 'Decorate your ship'], ['Enter', 'Chat (start with ! to shout)'], ['P', 'Photo mode (K saves a picture)'], ['Tab', 'Menu drawer'], ['F1', 'This help'], ['Esc', 'Pause menu and settings']].forEach(r => row(...r));
-    sec('Controller'); [['Left stick · right stick', 'Move · aim'], ['A · X', 'Jump · talk'], ['RT · RB', 'Fire · melee'], ['Y · LB', 'Reload · bag']].forEach(r => row(...r));
+    sec('Controller'); [['Left stick · right stick', 'Move · aim (click L3 to sprint)'], ['A · X', 'Jump · talk / use'], ['RT · LT', 'Fire · block'], ['RB', 'Gun / melee'], ['Y', 'Reload (switches gun/staff when nothing to reload)'], ['R3', 'Heal'], ['Tap LB', 'Bag'], ['Hold LB + Y · X · B · A · RB', 'Gun/staff · heal · codex · dance · melee'], ['D-pad', 'Build · ship · bike · ordnance (moves between buttons in menus)'], ['Back · Start', 'Quest log · pause'], ['Right stick in menus', 'Scroll lists'], ['A or Start in a cutscene', 'Skip']].forEach(r => row(...r));
   }
   $('dlgActs').before(rows); acts([['Got it', closeDlg, true]]);
 }

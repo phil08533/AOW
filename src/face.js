@@ -49,13 +49,13 @@ HELMS.face = { name: 'No helmet (show your face)', lvl: 1 };
 function renderFace(rows, refresh) {
   rows.textContent = ''; const F = faceOf(S.look || {});
   $('dlgLine').textContent = 'Build your face. Pick "No helmet" in the Helmets tab to show it off (we switched it on for you).';
-  const set = (k, d, n) => { F[k] = (F[k] + d + n) % n; S.look = Object.assign({}, myLook(), { f: [F.s, F.e, F.m, F.h, F.hc].join('.'), h: 'face' }); markDirty(); sendPresence(true); SFX.ui(); renderFace(rows, refresh); refresh(); };
+  const set = (k, d, n) => { F[k] = (F[k] + d + n) % n; S.look = Object.assign({}, myLook(), { f: [F.s, F.e, F.m, F.h, F.hc].join('.') + sexTag(), h: 'face' }); markDirty(); sendPresence(true); SFX.ui(); renderFace(rows, refresh); refresh(); };
   [['Skin', 's', FACE.skinN], ['Eyes', 'e', FACE.eyesN], ['Mouth', 'm', FACE.mouthN], ['Hair / top', 'h', FACE.hairN], ['Hair color', 'hc', FACE.hairC.map((c, i) => ['Black', 'Brown', 'Blond', 'White', 'Red', 'Blue', 'Green', 'Purple'][i])]].forEach(([lab, k, names]) => {
     const r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.textContent = `${lab}: ${names[F[k] % names.length]}`;
     const a = document.createElement('button'), b = document.createElement('button'); a.className = b.className = 'pbtn'; a.style.padding = b.style.padding = '5px 12px'; a.textContent = '◀'; b.textContent = '▶';
     a.addEventListener('click', () => set(k, -1, names.length)); b.addEventListener('click', () => set(k, 1, names.length)); r.append(nm, a, b); rows.appendChild(r); });
   const r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.textContent = `${FACE.skinN.length * FACE.eyesN.length * FACE.mouthN.length * FACE.hairN.length * FACE.hairC.length} possible faces`;
   const rb = document.createElement('button'); rb.className = 'pbtn'; rb.style.padding = '5px 12px'; rb.textContent = '🎲 Random';
-  rb.addEventListener('click', () => { S.look = Object.assign({}, myLook(), { f: [randi(0, 7), randi(0, 7), randi(0, 5), randi(0, 9), randi(0, 7)].join('.'), h: 'face' }); markDirty(); sendPresence(true); SFX.item(); renderFace(rows, refresh); refresh(); });
+  rb.addEventListener('click', () => { S.look = Object.assign({}, myLook(), { f: [randi(0, 7), randi(0, 7), randi(0, 5), randi(0, 9), randi(0, 7)].join('.') + sexTag(), h: 'face' }); markDirty(); sendPresence(true); SFX.item(); renderFace(rows, refresh); refresh(); });
   r.append(nm, rb); rows.appendChild(r);
 }

@@ -1,0 +1,161 @@
+// =================== VEHICLES: battle car, tank, battle mech (from the notebook's vehicle pages) ===================
+// Drive them on any open planet: V deploys / parks. FIRE shoots the vehicle's gun. They have their own armor.
+function makeBattleCar(col) {
+  const g = new THREE.Group(), dk = '#2b2a2c', c = col || '#8a3a2e';
+  part(g, B(1.7, 0.45, 3.2), c, 0, 0.6, 0); part(g, B(1.4, 0.4, 1.3), c, 0, 1.02, -0.3); part(g, B(1.3, 0.3, 0.05), glow('#4fd2ff'), 0, 1.05, 0.36, -0.4);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const w = part(g, Cy(0.42, 0.42, 0.4, 10), dk, 0.95 * sx, 0.42, 1.05 * sz, 0, 0, Math.PI / 2); for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; part(g, new THREE.ConeGeometry(0.06, 0.22, 4), '#cfd3d8', 1.18 * sx, 0.42 + Math.cos(a) * 0.36, 1.05 * sz + Math.sin(a) * 0.36, 0, 0, -Math.PI / 2 * sx); } }
+  for (let k = 0; k < 5; k++) part(g, new THREE.ConeGeometry(0.07, 0.4, 4), '#cfd3d8', -0.6 + k * 0.3, 0.6, 1.75, Math.PI / 2); // ram spikes
+  for (const s of [-1, 1]) { part(g, B(0.16, 0.16, 0.8), '#3a3d44', 0.45 * s, 1.32, 0.2); part(g, Cy(0.04, 0.04, 0.5, 6), dk, 0.45 * s, 1.32, 0.8, Math.PI / 2); }
+  part(g, B(1.5, 0.08, 0.4), dk, 0, 1.25, -1.5); for (const s of [-1, 1]) part(g, B(0.08, 0.4, 0.08), dk, 0.6 * s, 1.05, -1.5);
+  for (const s of [-1, 1]) part(g, Cy(0.1, 0.12, 0.3, 8), '#5d636c', 0.5 * s, 0.7, -1.7, Math.PI / 2);
+  return g;
+}
+function makeTankModel(col) {
+  const g = new THREE.Group(), dk = '#2b2a2c', c = col || '#5a6a3a';
+  for (const s of [-1, 1]) { part(g, B(0.7, 0.8, 4.2), dk, 1.25 * s, 0.4, 0); for (let k = 0; k < 6; k++) part(g, Cy(0.32, 0.32, 0.72, 10), '#3a3d44', 1.25 * s, 0.38, -1.7 + k * 0.68, 0, 0, Math.PI / 2); part(g, B(0.8, 0.12, 4.3), c, 1.25 * s, 0.86, 0); }
+  part(g, B(1.9, 0.7, 3.8), c, 0, 0.95, 0); part(g, B(1.7, 0.2, 1.2), c, 0, 1.2, 1.7, -0.35);
+  const tur = new THREE.Group(); tur.position.set(0, 1.5, -0.2); g.add(tur);
+  part(tur, Cy(0.95, 1.1, 0.6, 8), c, 0, 0, 0); part(tur, Cy(0.13, 0.15, 2.8, 8), '#3a3d44', 0, 0.05, 1.9, Math.PI / 2); part(tur, Cy(0.2, 0.2, 0.4, 8), dk, 0, 0.05, 3.2, Math.PI / 2);
+  part(tur, Cy(0.35, 0.35, 0.18, 8), '#3a3d44', 0.3, 0.38, -0.2); part(tur, B(0.5, 0.3, 0.06), glow('#ff8a2a'), 0, 0.12, 0.92);
+  part(tur, Cy(0.02, 0.02, 1.4, 4), dk, -0.6, 0.9, -0.5); part(tur, B(0.3, 0.2, 0.02), toon('#b3262c', 'cloth'), -0.45, 1.5, -0.5);
+  g.userData.turret = tur;
+  return g;
+}
+function makeMechModel(col) {
+  const g = new THREE.Group(), dk = '#2b2a2c', c = col || '#5d636c', legs = [];
+  for (const s of [-1, 1]) { const L = new THREE.Group(); L.position.set(0.55 * s, 1.9, 0); g.add(L); legs.push(L);
+    part(L, B(0.45, 1.0, 0.5), c, 0, -0.5, 0); part(L, Cy(0.2, 0.2, 0.5, 8), dk, 0, -1.0, 0, 0, 0, Math.PI / 2); part(L, B(0.38, 0.85, 0.42), c, 0, -1.4, 0.05); part(L, B(0.6, 0.18, 0.9), dk, 0, -1.82, 0.15); }
+  part(g, B(1.7, 1.2, 1.4), c, 0, 2.6, 0); part(g, B(1.2, 0.35, 0.06), glow('#4fd2ff'), 0, 2.85, 0.71); part(g, B(1.1, 0.5, 0.9), '#3a3d44', 0, 2.5, -0.9);
+  for (const s of [-1, 1]) { part(g, B(0.7, 0.7, 0.9), '#3a3d44', 1.15 * s, 3.1, 0); for (let r = 0; r < 2; r++) for (let k = 0; k < 2; k++) part(g, Cy(0.09, 0.09, 0.05, 8), glow('#ff8a2a'), (1.0 + k * 0.28) * s, 3.0 + r * 0.25, 0.46, Math.PI / 2);
+    part(g, B(0.35, 0.35, 1.3), c, 1.0 * s, 2.2, 0.4); part(g, Cy(0.08, 0.08, 0.5, 6), dk, 1.0 * s, 2.2, 1.2, Math.PI / 2); }
+  g.userData.anim = (t) => { legs.forEach((L, i) => { L.rotation.x = Math.sin(t * 3 + i * Math.PI) * 0.25; }); };
+  return g;
+}
+const VEH = {
+  battlecar: { name: 'Battle Car', price: 6000, lvl: 10, top: 32, acc: 20, hp: 900, eye: 1.5, gun: { name: 'Twin MGs', dmg: 55, rate: 0.09, range: 70, col: '#ffd36a' }, ram: true, make: makeBattleCar, desc: 'Fast, spiked wheels, ram damage, twin machine guns.' },
+  tank: { name: 'Battle Tank', price: 15000, lvl: 18, top: 15, acc: 8, hp: 3200, eye: 2.4, gun: { name: 'Main cannon', dmg: 950, rate: 1.3, range: 95, splash: 6, col: '#ff8a2a' }, make: makeTankModel, desc: 'Slow, nearly unkillable, cannon with a big blast.' },
+  mech: { name: 'Battle Mech', price: 26000, lvl: 26, top: 8.5, hp: 4600, eye: 3.2, walk: true, gun: { name: 'Missile pods', dmg: 380, rate: 1.1, range: 85, splash: 4.5, salvo: 4, col: '#ff6a1a' }, make: makeMechModel, desc: 'Walks, strafes and jump-jets. Fires 4-missile salvos.' }
+};
+let VH = { on: false };
+const vehS = () => { S.veh = S.veh || { owned: [], sel: null, res: { arm: 0, wpn: 0, eng: 0 } }; S.veh.res = S.veh.res || { arm: 0, wpn: 0, eng: 0 }; return S.veh; };
+const vehMaxHp = id => Math.round(VEH[id].hp * (1 + vehS().res.arm * 0.25));
+const vehDmg = id => VEH[id].gun.dmg * (1 + vehS().res.wpn * 0.25) * (1 + S.lvl * 0.02);
+const vehTop = id => VEH[id].top * (1 + vehS().res.eng * 0.12);
+// cockpit view models
+const vmVeh = {}; for (const id in VEH) { const g = new THREE.Group(); camera.add(g); g.visible = false; vmVeh[id] = g; }
+{ const g = vmVeh.battlecar; part(g, B(1.6, 0.1, 1.0), '#8a3a2e', 0, -0.75, -1.3); for (const s of [-1, 1]) { part(g, B(0.1, 0.1, 0.7), '#3a3d44', 0.55 * s, -0.55, -1.0); part(g, Cy(0.025, 0.025, 0.4, 6), '#2b2a2c', 0.55 * s, -0.55, -1.5, Math.PI / 2); }
+  for (let k = 0; k < 5; k++) part(g, new THREE.ConeGeometry(0.03, 0.18, 4), '#cfd3d8', -0.5 + k * 0.25, -0.72, -1.85, -Math.PI / 2);
+  g.userData.muz = [V(0.55, -0.55, -1.72), V(-0.55, -0.55, -1.72)]; }
+{ const g = vmVeh.tank; part(g, Cy(0.09, 0.11, 2.2, 8), '#3a3d44', 0, -0.55, -1.6, Math.PI / 2); part(g, Cy(0.14, 0.14, 0.3, 8), '#2b2a2c', 0, -0.55, -2.7, Math.PI / 2);
+  part(g, new THREE.TorusGeometry(0.9, 0.08, 4, 16, Math.PI), '#5a6a3a', 0, -0.95, -0.6, -Math.PI / 2.4); part(g, B(2.4, 0.2, 1.4), '#5a6a3a', 0, -1.15, -1.0);
+  g.userData.muz = [V(0, -0.55, -2.85)]; }
+{ const g = vmVeh.mech; for (const s of [-1, 1]) { part(g, B(0.08, 1.4, 0.08), '#3a3d44', 0.95 * s, 0, -0.9); part(g, B(0.4, 0.3, 0.6), '#5d636c', 0.75 * s, -0.6, -1.1); for (let k = 0; k < 2; k++) part(g, Cy(0.05, 0.05, 0.04, 8), glow('#ff8a2a'), (0.68 + k * 0.14) * s, -0.55, -1.42, Math.PI / 2); }
+  part(g, B(2.0, 0.08, 0.08), '#3a3d44', 0, 0.62, -0.9); part(g, B(2.0, 0.1, 0.4), '#3a3d44', 0, -0.88, -1.0); part(g, B(0.5, 0.04, 0.02), glow('#4fd2ff'), 0, -0.8, -0.8);
+  g.userData.muz = [V(0.68, -0.55, -1.45), V(-0.68, -0.55, -1.45), V(0.82, -0.55, -1.45), V(-0.82, -0.55, -1.45)]; }
+function vehOK() { return LEVEL && LEVEL.terrain && !LEVEL.fly && !['ship', 'zeltac', 'speedway', 'arena'].includes(LEVEL.id) && !S.inSub; }
+function toggleVehicle() {
+  if (state !== 'play' || dlgOpen) return;
+  if (VH.on) return vehPark();
+  const V0 = vehS(); if (!V0.owned.length) { log('You have no war vehicles yet. Fort Ironrock (the asteroid army base) sells them.'); return; }
+  if (!vehOK()) { log("No room for a war vehicle here. Try an open planet."); return; }
+  const id = V0.sel && V0.owned.includes(V0.sel) ? V0.sel : V0.owned[0];
+  const w = (V0.wreck || {})[id]; if (w && Date.now() - w < 45000) { log(`${VEH[id].name} is still being repaired (${Math.ceil(45 - (Date.now() - w) / 1000)}s).`); return; }
+  if (RC.on) return; if (S.riding) S.riding = false;
+  VH = { on: true, id, v: 0, vy: 0, hp: vehMaxHp(id), cd: 0, fuel: 2 };
+  SFX.door(); SFX.horn && SFX.horn(); toast(VEH[id].name.toUpperCase(), `${VEH[id].gun.name} · V to park`, 2.2);
+  log(`${VEH[id].name}: ${VEH[id].walk ? 'WASD walks, Space jump-jets' : 'W/S drive, A/D steer'}, FIRE shoots, V parks.`, 'loot');
+}
+function vehPark(force) {
+  if (!VH.on) return; if (!force && Math.abs(VH.v) > 3 && !VEH[VH.id].walk) { if (!VH.parkReq) log('Braking to park…'); VH.parkReq = true; return; }
+  VH.on = false; for (const id in vmVeh) vmVeh[id].visible = false; SFX.door(); SFX.engine && SFX.engine(0, 0); if (!force) log('Parked.');
+}
+function vehWreck() {
+  const id = VH.id; vehS().wreck = vehS().wreck || {}; vehS().wreck[id] = Date.now();
+  burst(player.pos.clone().add(V(0, 1, 0)), '#ff6a1a', 30, 8); burst(player.pos.clone().add(V(0, 1, 0)), '#2b2a2c', 16, 5); SFX.boom();
+  vehPark(true); toast('VEHICLE DESTROYED', `${VEH[id].name} needs 45s of repairs`, 3); player.vy = 6; markDirty();
+}
+function vehStep(dt, mx, mz) {
+  const D = VEH[VH.id], top = vehTop(VH.id) * ((keys.ShiftLeft || keys.ShiftRight) ? 1.25 : 1);
+  for (const id in vmVeh) vmVeh[id].visible = id === VH.id;
+  const g0 = floorAt(player.pos.x, player.pos.z), air = player.pos.y > g0 + 0.15;
+  if (VH.parkReq) { VH.v *= Math.max(0, 1 - dt * 4); if (Math.abs(VH.v) < 2) { VH.parkReq = false; VH.v = 0; return vehPark(); } }
+  if (D.walk) {
+    const f = V(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)), r = V(Math.cos(player.yaw), 0, -Math.sin(player.yaw));
+    player.pos.addScaledVector(f, mz * top * dt).addScaledVector(r, mx * top * 0.7 * dt); VH.v = Math.hypot(mx, mz) * top;
+    if ((keys.Space || jetHeld) && VH.fuel > 0) { VH.vy = Math.min(VH.vy + 30 * dt, 7); VH.fuel -= dt; if (Math.random() < 0.5) burst(player.pos.clone(), '#ff9a3c', 2, 2); } else if (!air) VH.fuel = Math.min(2, VH.fuel + dt * 0.6);
+    VH.step = (VH.step || 0) + dt * VH.v * 0.35; if (!air && VH.v > 1 && Math.floor(VH.step) !== Math.floor(VH.step - dt * VH.v * 0.35)) { SFX.land(); }
+  } else {
+    const th = (keys.KeyW ? 1 : 0) + Math.max(0, move.y), br = (keys.KeyS ? 1 : 0) + Math.max(0, -move.y), st = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x;
+    if (!air && !VH.parkReq) { VH.v += (th * D.acc - br * 24 - (th ? 0 : 5)) * dt; VH.v = clamp(VH.v, -6, top); }
+    player.yaw -= st * dt * (air ? 0.5 : 1.2 + Math.min(1, Math.abs(VH.v) / 20) * 0.5);
+    const f = V(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)); player.pos.addScaledVector(f, VH.v * dt);
+    SFX.engine && SFX.engine(0.25 + Math.abs(VH.v) / top * 0.6, Math.abs(VH.v) / 30);
+  }
+  const before = player.pos.clone(); collide(player.pos, D.walk ? 1.0 : 1.3, false); if (!D.walk && before.distanceTo(player.pos) > 0.05 && Math.abs(VH.v) > 6) { VH.v *= 0.5; SFX.hit(); }
+  const g1 = floorAt(player.pos.x, player.pos.z);
+  VH.vy -= 20 * (LEVEL.gravity || 1) * dt; player.pos.y += VH.vy * dt;
+  if (player.pos.y <= g1) { if (air && VH.vy < -9) { SFX.land(); burst(player.pos.clone(), '#a08a70', 10, 4); } player.pos.y = g1; VH.vy = D.walk ? 0 : Math.max(0, (g1 - g0) / Math.max(dt, 1e-3)) * 0.6; }
+  player.onGround = player.pos.y <= g1 + 0.05; player.vy = 0;
+  // ramming with the battle car
+  if (D.ram && Math.abs(VH.v) > 10) for (const e of enemies) { if (e.dead) continue; const d = e.obj.position.distanceTo(player.pos); if (d < 2.2 + e.def.r * e.sc && (!e.ramT || gameTime - e.ramT > 0.6)) { e.ramT = gameTime; vehHit(e, Math.abs(VH.v) * 22); VH.v *= 0.7; burst(e.obj.position.clone().add(V(0, 1, 0)), '#cfd3d8', 10, 5); SFX.hit(); } }
+  VH.cd -= dt; if (firing && VH.cd <= 0 && !inSafe(player.pos)) vehFire();
+  const hpk = VH.hp / vehMaxHp(VH.id);
+  $('zoneN').textContent = D.name.toUpperCase(); $('zoneL').textContent = `Armor ${Math.round(hpk * 100)}% · ${Math.round(Math.abs(VH.v) * 3.6)} km/h${D.walk ? ` · jets ${Math.round(VH.fuel / 2 * 100)}%` : ''} · V to park`; $('zone').style.opacity = 1; zoneT = 1;
+}
+function vehHit(e, dmg) { e.hp -= dmg; e.hitT = 0.12; e.aggro = true; e.lastHit = gameTime; if (e.anim) e.anim.hit = 0.14; if (e.hp <= 0) kill(e); else updatePlate(e); }
+function vehFire() {
+  const D = VEH[VH.id], G = D.gun; VH.cd = G.rate; const o = camera.getWorldPosition(V(0, 0, 0)), d0 = V(0, 0, 0); camera.getWorldDirection(d0);
+  const muz = vmVeh[VH.id].userData.muz, shots = G.salvo || 1; let any = false;
+  for (let n = 0; n < shots; n++) {
+    const d = d0.clone(); if (shots > 1 || !G.splash) d.add(V((Math.random() - 0.5) * 0.03, (Math.random() - 0.5) * 0.03, (Math.random() - 0.5) * 0.03)).normalize();
+    let ht = rayClear(o, d, G.range), hit = null;
+    for (const e of enemies) { if (e.dead) continue; const bp = e.obj.position; if (bp.distanceToSquared(o) > G.range * G.range) continue; for (const f of [0.55, 1.15, 1.75]) { const t = raySphere(o, d, V(bp.x, bp.y + e.def.hy * e.sc * f, bp.z), e.def.r * 1.4 * e.sc); if (t > 0 && t < ht) { ht = t; hit = e; } } }
+    if (G.splash && !hit) for (let t = 1; t < ht; t += 0.6) { const q = o.clone().addScaledVector(d, t); if (q.y < groundH(q.x, q.z)) { ht = t; break; } }
+    const end = o.clone().addScaledVector(d, ht), from = vmVeh[VH.id].localToWorld(muz[n % muz.length].clone());
+    tracer(from, end, G.col);
+    if (G.splash) { burst(end, G.col, 18, 7); burst(end, '#ffd36a', 8, 4);
+      for (const e of enemies) { if (e.dead) continue; const dd = e.obj.position.distanceTo(end); if (dd < G.splash + e.def.r * e.sc) { vehHit(e, vehDmg(VH.id) * (1 - 0.5 * dd / (G.splash + 1))); any = true; } }
+    } else if (hit) { burst(end, '#ffd36a', 5, 3); vehHit(hit, vehDmg(VH.id)); any = true; }
+  }
+  G.splash ? SFX.boom() : SFX.laser(); if (any) { hitmark(false); }
+}
+// armor absorbs hits while you're inside
+{ const _h = hurt; hurt = function (dmg, src) { if (VH.on && player.alive && !dlgOpen && !inSafe(player.pos)) { VH.hp -= dmg * 0.8; player.lastHurt = gameTime; SFX.hit(); if (VH.hp <= 0) vehWreck(); return; } return _h(dmg, src); }; }
+{ const _ll = loadLevel; loadLevel = function (id, o) { if (VH.on) vehPark(true); return _ll(id, o); }; }
+document.addEventListener('keydown', e => { if (e.code === 'KeyV' && !e.repeat && !(e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) toggleVehicle(); });
+function openVehicleBay(title) {
+  const V0 = vehS(); openDlg(title || 'Vehicle bay', 'Your war vehicles');
+  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const render = () => { rows.textContent = '';
+    $('dlgLine').textContent = V0.owned.length ? `Pick a vehicle, then press V (or Menu → Vehicle) on an open planet to deploy it. Research: armor ${V0.res.arm}, weapons ${V0.res.wpn}, engines ${V0.res.eng}.` : 'No vehicles yet. Buy one from Quartermaster Brix at Fort Ironrock, the asteroid army base.';
+    V0.owned.forEach(id => { const D = VEH[id], r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.textContent = `${D.name} · ${vehMaxHp(id)} armor · ${D.gun.name}`;
+      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = V0.sel === id ? '✓ Selected' : 'Select'; b.disabled = V0.sel === id; b.addEventListener('click', () => { V0.sel = id; markDirty(); SFX.ui(); render(); setPreview(() => D.make(), D.name); });
+      r.style.cursor = 'pointer'; r.addEventListener('click', () => setPreview(() => D.make(), D.name)); r.append(nm, b); rows.appendChild(r); }); };
+  $('dlgActs').before(rows); render();
+  acts([['Deploy now', () => { closeDlg(); toggleVehicle(); }, true, !V0.owned.length], ['Done', closeDlg]]);
+  if (V0.owned.length) { showPreviewIn(rows); setPreview(() => VEH[V0.sel || V0.owned[0]].make(), VEH[V0.sel || V0.owned[0]].name); }
+}
+function openVehicleShop(n) {
+  const V0 = vehS(); openDlg('Army Shop', n.name);
+  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const render = () => { rows.textContent = ''; $('dlgLine').textContent = 'War vehicles, fresh off the line. Tap one to inspect it. Credits only, no refunds, no test drives. OK, one test drive.';
+    Object.entries(VEH).forEach(([id, D]) => { const own = V0.owned.includes(id), r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.textContent = `${D.name} · ${D.desc}`; const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = own ? 'Owned' : S.lvl < D.lvl ? `Lv ${D.lvl}` : `${D.price} cr`;
+      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = own ? '✓' : 'Buy'; b.disabled = own || S.lvl < D.lvl || S.cr < D.price;
+      b.addEventListener('click', () => { if (S.cr < D.price) return; S.cr -= D.price; V0.owned.push(id); V0.sel = id; SFX.coin(); log(`Bought the ${D.name}! Press V (or Menu → Vehicle) on any open planet to drive it.`, 'loot'); questProgressKill('buyveh_' + id); markDirty(); render(); });
+      r.style.cursor = 'pointer'; r.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') setPreview(() => D.make(), D.name); }); r.append(nm, mt, b); rows.appendChild(r); }); };
+  $('dlgActs').before(rows); render(); acts([['Repair all (free)', () => { V0.wreck = {}; log('All vehicles repaired.'); SFX.item(); markDirty(); }, true], ['Done', closeDlg]]);
+  showPreviewIn(rows); setPreview(() => VEH.battlecar.make(), 'Battle Car');
+}
+const VRES = { arm: { name: 'Composite armor', desc: '+25% vehicle armor per level' }, wpn: { name: 'Weapons research', desc: '+25% vehicle damage per level' }, eng: { name: 'Engine tuning', desc: '+12% top speed per level' } };
+function openResearch(n) {
+  const V0 = vehS(); openDlg('Military Research', n.name);
+  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const cost = lv => ({ cr: 2500 * (lv + 1) * (lv + 1), scrap: 10 * (lv + 1), ore: 5 * (lv + 1) });
+  const render = () => { rows.textContent = ''; $('dlgLine').textContent = 'Science! Mostly explosions, but measured ones. Upgrades apply to every vehicle you own.';
+    for (const [k, R] of Object.entries(VRES)) { const lv = V0.res[k], c = cost(lv), r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.textContent = `${R.name} ${lv}/5 · ${R.desc}`; const mt = document.createElement('span'); mt.className = 'meta';
+      mt.textContent = lv >= 5 ? 'Maxed' : `${c.cr} cr · ${c.scrap} scrap · ${c.ore} ore`; const ok = lv < 5 && S.cr >= c.cr && (S.inv.scrap || 0) >= c.scrap && (S.inv.ore || 0) >= c.ore;
+      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = 'Research'; b.disabled = !ok;
+      b.addEventListener('click', () => { S.cr -= c.cr; S.inv.scrap -= c.scrap; S.inv.ore -= c.ore; V0.res[k]++; SFX.level(); log(`Research complete: ${R.name} ${V0.res[k]}`, 'loot'); markDirty(); render(); });
+      r.append(nm, mt, b); rows.appendChild(r); } };
+  $('dlgActs').before(rows); render(); acts([['Done', closeDlg]]);
+}

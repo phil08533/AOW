@@ -125,7 +125,7 @@ function furnInteracts(pieces) {
   for (const p of cleanPieces(pieces)) { const x = p[1] * CELL, z = p[2] * CELL, t = p[0], add = (label, fn) => INTERACTS.push({ x, z, r: 1.6, label, fn, furn: true, quiet: true });
     if (t === 'bed' || t === 'bunkbed' || t === 'hammock') add('Nap', () => { player.hp = maxHp(); SFX.quest(); toast('ZZZ', 'Fully rested', 1.5); });
     if (t === 'holotv') add('Watch the news', () => openUpdates(false));
-    if (t === 'jukebox') add('Jukebox: Music Drive', () => openMusicDrive());
+    if (t === 'jukebox') add('Jukebox: change music', () => { const order = [3, 1, 2, 0]; PREFS.music = order[(order.indexOf(PREFS.music) + 1) % order.length]; try { savePrefs(); SFX.setMusic(PREFS.music); } catch (_) {} toast('JUKEBOX', MUSIC_NAMES[PREFS.music] || 'Off', 1.5); SFX.ui(); });
     if (t === 'holotable') add('Holo-map', () => openGalaxy());
     if (t === 'arcade') add('Play arcade', () => { const sc = randi(100, 9999); toast('HIGH SCORE?', `You scored ${sc}${sc > 9000 ? '. LEGENDARY.' : '. Not bad.'}`, 2); SFX.coin(); });
     if (t === 'coffee') add('Grab a coffee', () => { player.hp = Math.min(maxHp(), player.hp + 25); toast('COFFEE', 'Wide awake (+25 HP)', 1.5); SFX.item(); });

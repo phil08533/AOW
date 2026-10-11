@@ -16,4 +16,5 @@ python3 tools/build.py        # writes dist/index.html from src/
 ## Layout
 - `src/` game modules (levels, worlds, quests, HUD, music, cutscenes, ...)
 - `dist/` the built game and its music
+- `docs/RELEASE.md` how to host it on your own server
 - `docs/game-bible.md` design bible, story, status log and to-do list

@@ -310,7 +310,7 @@ LEVELS.ship = {
     const tiled = (w, h, d, mat, x, y, z, tu, tv) => { const g = new THREE.BoxGeometry(w, h, d), uv = g.attributes.uv; tu = tu || 2; tv = tv || H;
       const dims = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]]; for (let f = 0; f < 6; f++) { const [a, b] = dims[f], sa = f === 2 || f === 3 ? a / 2 : a / tu, sb = f === 2 || f === 3 ? b / 2 : b / tv; for (let k = 0; k < 4; k++) { const i = f * 4 + k; uv.setXY(i, uv.getX(i) * sa, uv.getY(i) * sb); } }
       const m = new THREE.Mesh(g, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; props.add(m); return m; };
-    const HULL = toon('#9aa0aa', 'hull'), TRIM = toon('#3a3d44', 'deck');
+    const HULL = toonNS('#9aa0aa', 'hull'), TRIM = toonNS('#3a3d44', 'deck');
     const wall = (x1, z1, x2, z2, mat) => { const cx = (x1 + x2) / 2, cz = (z1 + z2) / 2, lx = Math.max(Math.abs(x2 - x1), 0.3), lz = Math.max(Math.abs(z2 - z1), 0.3);
       tiled(lx, H, lz, mat || HULL, cx, H / 2, cz); part(props, B(lx + 0.04, 0.16, lz + 0.04), '#2a2c32', cx, 0.08, cz); part(props, B(lx + 0.04, 0.12, lz + 0.04), '#2a2c32', cx, H - 0.06, cz);
       box(cx, cz, lx / 2, lz / 2); };
@@ -318,12 +318,12 @@ LEVELS.ship = {
     const veneer = (x1, z1, x2, z2, nx, nz, mat) => { const lx = Math.abs(x2 - x1), lz = Math.abs(z2 - z1); if (lx < 0.2 && lz < 0.2) return; tiled(Math.max(lx, 0.04), H - 0.3, Math.max(lz, 0.04), mat, (x1 + x2) / 2 + nx * 0.17, H / 2, (z1 + z2) / 2 + nz * 0.17); };
     const floorQuad = (x0, x1, z0, z1, fmat, cmat, lights) => { const g = new THREE.PlaneGeometry(x1 - x0, z1 - z0, Math.ceil((x1 - x0) / 2.4), Math.ceil((z1 - z0) / 2.4)); g.rotateX(-Math.PI / 2); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * (x1 - x0) / 2, uv.getY(i) * (z1 - z0) / 2);
       const m = new THREE.Mesh(g, fmat); m.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); m.receiveShadow = true; props.add(m);
-      const c = new THREE.Mesh(g.clone(), cmat || toon('#6a6e78', 'ceil')); c.rotation.x = Math.PI; c.position.set((x0 + x1) / 2, H, (z0 + z1) / 2); props.add(c);
+      const c = new THREE.Mesh(g.clone(), cmat || toonNS('#6a6e78', 'ceil')); c.rotation.x = Math.PI; c.position.set((x0 + x1) / 2, H, (z0 + z1) / 2); props.add(c);
       if (lights !== false) for (let z = z0 + 2; z < z1; z += 4) part(props, B(Math.min(3, x1 - x0 - 1), 0.05, 0.25), glow(lights || '#cfe6ff'), (x0 + x1) / 2, H - 0.04, z); };
     const rooms = S.ship.rooms.filter(r => r !== 'bridge');
     const rows = Math.max(1, Math.ceil(rooms.length / 2)), Lz = 4 + (rows - 1) * 11 + 7;
     // ---- the bridge: dark navy deck, curved console row, the big window ----
-    floorQuad(-7, 7, -15, -2, toon('#3a4a6a', 'deck'), toon('#4a5060', 'ceil'), '#8fd0ff');
+    floorQuad(-7, 7, -15, -2, toonNS('#3a4a6a', 'deck'), toonNS('#4a5060', 'ceil'), '#8fd0ff');
     wall(-7, -15, -7, -2); wall(7, -15, 7, -2); wall(-7, -15, -4, -15); wall(4, -15, 7, -15); wall(-7, -2, -2, -2); wall(2, -2, 7, -2);
     const glass = new THREE.Mesh(new THREE.PlaneGeometry(8, H), new THREE.MeshBasicMaterial({ color: '#8fd0ff', transparent: true, opacity: 0.12, depthWrite: false })); glass.position.set(0, H / 2, -15); levelGroup.add(glass); box(0, -15, 4, 0.2);
     part(props, B(8.2, 0.3, 0.5), '#2a2c32', 0, 0.15, -15); part(props, B(8.2, 0.3, 0.5), '#2a2c32', 0, H - 0.15, -15);
@@ -337,7 +337,7 @@ LEVELS.ship = {
     INTERACTS.push({ x: 0, z: -6.6, r: 1.6, label: 'Take the helm (fly)', fn: () => enterSpace(S.orbit || 'earth') });
     { const ch = new THREE.Group(); part(ch, B(0.8, 0.5, 0.8), '#2a2c32', 0, 0.25, 0); part(ch, B(0.8, 1.0, 0.15), toon('#8a3a2e', 'cloth'), 0, 1.0, 0.36); part(ch, B(0.8, 0.12, 0.8), toon('#8a3a2e', 'cloth'), 0, 0.55, 0); for (const s of [-1, 1]) part(ch, B(0.1, 0.25, 0.7), '#2a2c32', 0.42 * s, 0.75, 0); ch.position.set(0, 0, -7.5); props.add(ch); solid(0, -7.5, 0.5); }
     // ---- the corridor: plated deck with a yellow guide line, ribbed hull walls ----
-    floorQuad(-2, 2, -2, Lz, toon('#8a8e96', 'deck'));
+    floorQuad(-2, 2, -2, Lz, toonNS('#8a8e96', 'deck'));
     part(props, B(0.12, 0.01, Lz + 1.8), glow('#c9a43a'), 0, 0.012, (Lz - 2) / 2);
     wall(-2, Lz, 2, Lz);
     const doors = rooms.map((r, k) => roomSlot(k));
@@ -349,13 +349,13 @@ LEVELS.ship = {
     for (let z = 0; z < Lz; z += 3) for (const s of [-1, 1]) part(props, B(0.08, H, 0.18), '#5d636c', 1.84 * s, H / 2, z);
     // ---- rooms: each with its own floor, walls, ceiling, light colour and a job ----
     const LOOK = {
-      quarters: { floor: toon('#7a4a3a', 'carpet'), wall: toon('#a08060', 'woodwall'), ceil: toon('#5a4a40', 'ceil'), light: '#ffd8a0' },
-      armory: { floor: toon('#6a6e76', 'tread'), wall: toon('#5a5e66', 'hull'), ceil: toon('#3a3d44', 'ceil'), light: '#ff8a6a' },
-      cargo: { floor: toon('#8a7a5a', 'grate'), wall: toon('#8a6a4a', 'hull'), ceil: toon('#4a4038', 'ceil'), light: '#ffd36a' },
-      med: { floor: toon('#e8eef2', 'tile'), wall: toon('#d8e8ec', 'tile'), ceil: toon('#e8eef2', 'ceil'), light: '#e8ffff' },
-      trophy: { floor: toon('#d8d2c8', 'marble'), wall: toon('#6a1e24', 'woodwall'), ceil: toon('#3a1e22', 'ceil'), light: '#ffd36a' },
-      garden: { floor: toon('#4a6a3a', 'grass'), wall: toon('#8ab8a0', 'tile'), ceil: toon('#cfe8d8', 'ceil'), light: '#e8ffd8' },
-      hangar: { floor: toon('#6a6a6a', 'grate'), wall: toon('#7a7e86', 'hull'), ceil: toon('#3a3d44', 'ceil'), light: '#ffffff' }
+      quarters: { floor: toonNS('#7a4a3a', 'carpet'), wall: toonNS('#a08060', 'woodwall'), ceil: toonNS('#5a4a40', 'ceil'), light: '#ffd8a0' },
+      armory: { floor: toonNS('#6a6e76', 'tread'), wall: toonNS('#5a5e66', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ff8a6a' },
+      cargo: { floor: toonNS('#8a7a5a', 'grate'), wall: toonNS('#8a6a4a', 'hull'), ceil: toonNS('#4a4038', 'ceil'), light: '#ffd36a' },
+      med: { floor: toonNS('#e8eef2', 'tile'), wall: toonNS('#d8e8ec', 'tile'), ceil: toonNS('#e8eef2', 'ceil'), light: '#e8ffff' },
+      trophy: { floor: toonNS('#d8d2c8', 'marble'), wall: toonNS('#6a1e24', 'woodwall'), ceil: toonNS('#3a1e22', 'ceil'), light: '#ffd36a' },
+      garden: { floor: toonNS('#4a6a3a', 'grass'), wall: toonNS('#8ab8a0', 'tile'), ceil: toonNS('#cfe8d8', 'ceil'), light: '#e8ffd8' },
+      hangar: { floor: toonNS('#6a6a6a', 'grate'), wall: toonNS('#7a7e86', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ffffff' }
     };
     rooms.forEach((id, k) => {
       const s = roomSlot(k); SHIP_ROOMS.push(Object.assign({ id }, s));
@@ -371,15 +371,15 @@ LEVELS.ship = {
       if (id === 'quarters') {
         const bed = new THREE.Group(); part(bed, B(1.5, 0.45, 2.4), '#3a3d44', 0, 0.22, 0); part(bed, B(1.4, 0.2, 2.2), toon('#3b4f7a', 'cloth'), 0, 0.55, 0); part(bed, B(1.2, 0.18, 0.5), toon('#e8e4dc', 'cloth'), 0, 0.72, -0.8); part(bed, B(1.5, 1.1, 0.12), toon('#6a4a3a', 'wood'), 0, 0.75, -1.2); bed.position.set(far, 0, cz - 2.6); props.add(bed); box(far, cz - 2.6, 0.75, 1.25);
         part(props, B(0.7, 0.6, 0.6), toon('#6a4a3a', 'wood'), far, 0.3, cz - 0.8); part(props, Cy(0.08, 0.12, 0.3, 8), glow('#ffd8a0'), far, 0.75, cz - 0.8); box(far, cz - 0.8, 0.35, 0.3);
-        part(props, B(2.6, 0.04, 1.8), toon('#8a3a2e', 'carpet'), cx, 0.02, cz - 2.6);
+        part(props, B(2.6, 0.04, 1.8), toonNS('#8a3a2e', 'carpet'), cx, 0.02, cz - 2.6);
         INTERACTS.push({ x: far - s.side * 1.1, z: cz - 2.6, r: 2.0, label: 'Sleep (full heal + Well Rested)', fn: sleepInBunk });
         term(cx + s.side * 0.5, s.z0 + 0.6, '#ffd8a0', 'Personal log (Codex)', () => openCodex('ach'), 0);
       }
       if (id === 'armory') {
-        const wx = outer - s.side * 0.15; part(props, B(0.05, 1.9, 5.2), toon('#2a2c32', 'deck'), wx - s.side * 0.03, 1.55, cz - 1.0); part(props, B(0.06, 0.08, 5.2), glow('#ff8a6a'), wx - s.side * 0.05, 2.52, cz - 1.0);
+        const wx = outer - s.side * 0.15; part(props, B(0.05, 1.9, 5.2), toonNS('#2a2c32', 'deck'), wx - s.side * 0.03, 1.55, cz - 1.0); part(props, B(0.06, 0.08, 5.2), glow('#ff8a6a'), wx - s.side * 0.05, 2.52, cz - 1.0);
         const ids = Object.keys(GUNS).filter(g => GUNS[g].kind !== 'mystic').filter((g, i, a) => i % Math.max(1, Math.floor(a.length / 6)) === 0).slice(0, 6);
         for (let i = 0; i < 6; i++) { const gn = typeof makeGunModel === 'function' && ids[i] ? makeGunModel(ids[i]) : makeBlaster(); gn.scale.setScalar(1.7); gn.position.set(wx - s.side * 0.16, 1.15 + Math.floor(i / 3) * 0.75, cz - 2.8 + (i % 3) * 1.8); props.add(gn); for (const dz of [-0.25, 0.2]) part(props, B(0.16, 0.04, 0.04), '#9aa1aa', wx - s.side * 0.09, gn.position.y - 0.09, gn.position.z + dz); }
-        part(props, B(2.2, 1.0, 1.0), toon('#5a5e66', 'tread'), cx, 0.5, cz + 2.5); part(props, B(0.6, 0.3, 0.4), '#2a2c32', cx - 0.5, 1.15, cz + 2.5); part(props, B(2.2, 0.04, 1.0), glow('#ff8a6a'), cx, 1.02, cz + 2.5); box(cx, cz + 2.5, 1.1, 0.5);
+        part(props, B(2.2, 1.0, 1.0), toonNS('#5a5e66', 'tread'), cx, 0.5, cz + 2.5); part(props, B(0.6, 0.3, 0.4), '#2a2c32', cx - 0.5, 1.15, cz + 2.5); part(props, B(2.2, 0.04, 1.0), glow('#ff8a6a'), cx, 1.02, cz + 2.5); box(cx, cz + 2.5, 1.1, 0.5);
         INTERACTS.push({ x: cx, z: cz + 1.4, r: 2.0, label: 'Gun workbench', fn: openWorkbench });
         { const rk = new THREE.Group(); part(rk, B(0.8, 1.4, 0.5), '#3a3d44', 0, 0.7, 0); for (let i = 0; i < 3; i++) part(rk, new THREE.SphereGeometry(0.12, 8, 6), '#4a5a3a', -0.22 + i * 0.22, 1.0, 0.18); part(rk, B(0.7, 0.05, 0.05), glow('#ffd36a'), 0, 1.35, 0.26); rk.position.set(cx, 0, s.z1 - 0.6); rk.rotation.y = Math.PI; props.add(rk); solid(cx, s.z1 - 0.6, 0.5);
           INTERACTS.push({ x: cx, z: s.z1 - 1.7, r: 1.8, label: 'Ordnance rack (refill)', fn: refillOrdnance }); }
@@ -398,8 +398,8 @@ LEVELS.ship = {
         term(far, cz + 1.2, '#4fffe0', 'Stim station (armor stim)', useStim, faceIn);
       }
       if (id === 'trophy') {
-        const tro = trophyList(); tro.forEach((tr, i) => { const z = cz - 3.5 + i * 1.4; part(props, Cy(0.35, 0.45, 1.0, 8), toon('#d8d2c8', 'marble'), far, 0.5, z); part(props, Cy(0.38, 0.38, 0.05, 8), toon('#c9a43a'), far, 1.02, z); const m = part(props, new THREE.OctahedronGeometry(0.28, 0), glow(tr.col), far, 1.4, z); levelAnims.push(t => { m.rotation.y = t + i; }); solid(far, z, 0.45); });
-        part(props, B(1.6, 0.04, 8.4), toon('#8a1e24', 'carpet'), cx, 0.02, cz);
+        const tro = trophyList(); tro.forEach((tr, i) => { const z = cz - 3.5 + i * 1.4; part(props, Cy(0.35, 0.45, 1.0, 8), toonNS('#d8d2c8', 'marble'), far, 0.5, z); part(props, Cy(0.38, 0.38, 0.05, 8), toon('#c9a43a'), far, 1.02, z); const m = part(props, new THREE.OctahedronGeometry(0.28, 0), glow(tr.col), far, 1.4, z); levelAnims.push(t => { m.rotation.y = t + i; }); solid(far, z, 0.45); });
+        part(props, B(1.6, 0.04, 8.4), toonNS('#8a1e24', 'carpet'), cx, 0.02, cz);
         INTERACTS.push({ x: far - s.side * 1.2, z: cz, r: 2.4, label: 'Trophies', fn: () => { openDlg('Trophy Hall', 'Your victories'); $('dlgLine').textContent = trophyList().map(t => t.name).join(' · ') || 'Beat bosses to fill the hall.'; acts([['Close', closeDlg]]); } });
         term(cx, s.z0 + 0.6, '#ffd36a', 'Hall of Records (leaderboards)', () => openLeaders(0), 0);
       }
@@ -410,7 +410,7 @@ LEVELS.ship = {
       }
       if (id === 'hangar') {
         part(props, B(0.2, 2.8, 6), toon('#c9a43a', 'hazard'), outer - s.side * 0.12, 1.4, cz);
-        part(props, B(5, 0.012, 5), toon('#ffd36a', 'hazard'), cx, 0.014, cz); part(props, B(4.4, 0.013, 4.4), toon('#6a6a6a', 'grate'), cx, 0.016, cz);
+        part(props, B(5, 0.012, 5), toon('#ffd36a', 'hazard'), cx, 0.014, cz); part(props, B(4.4, 0.013, 4.4), toonNS('#6a6a6a', 'grate'), cx, 0.016, cz);
         if (typeof bikeOwned === 'function' && bikeOwned()) { const bike = new THREE.Group(); part(bike, B(0.6, 0.4, 2), '#8a3a2e', 0, 0.7, 0); part(bike, Cy(0.35, 0.35, 0.2, 10), C.dark, 0, 0.35, 0.8, 0, 0, Math.PI / 2); part(bike, Cy(0.35, 0.35, 0.2, 10), C.dark, 0, 0.35, -0.8, 0, 0, Math.PI / 2); part(bike, B(0.5, 0.3, 0.6), '#3a3d44', 0, 1.0, -0.4); bike.position.set(cx - s.side * 1.2, 0, cz); props.add(bike); box(cx - s.side * 1.2, cz, 0.4, 1.1); }
         term(cx, s.z0 + 0.6, '#4fd2ff', 'Vehicle bay', () => openVehicleBay(), 0);
         term(cx, s.z1 - 0.6, '#ffd36a', 'Launch from the hangar', () => enterSpace(S.orbit || 'earth'), Math.PI);

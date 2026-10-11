@@ -475,6 +475,12 @@ TEX.hazard = canvasTex(32, (x, s) => { x.fillStyle = '#ffd23a'; x.fillRect(0, 0,
 TEX.blob.minFilter = THREE.LinearFilter; TEX.cloud.minFilter = THREE.NearestFilter;
 const matCache = {};
 const TOON_RAMP = (() => { const d = new Uint8Array([90, 90, 90, 160, 160, 160, 225, 225, 225, 255, 255, 255]); const t = new THREE.DataTexture(d, 4, 1, THREE.RGBFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
+// same look as toon() but without PS1 vertex snapping: for big interior surfaces seen up close, where snapping makes textures slide
+function toonNS(hex, tex) {
+  if (RSTYLE !== 'retro') return toon(hex, tex);
+  const key = hex + tex + '_ns'; if (!matCache[key]) matCache[key] = new THREE.MeshLambertMaterial({ color: new THREE.Color(hex).convertSRGBToLinear(), map: TEX[tex] });
+  return matCache[key];
+}
 function toon(hex, tex) {
   if (!tex) { const lc = String(hex).toLowerCase(); if (SKIN_HEX.has(lc)) tex = 'skin'; else if (FUR_HEX.has(lc)) tex = 'fur'; else if (CLOTH_HEX.has(lc)) tex = 'cloth'; else { const c = new THREE.Color(hex), h = {}; c.getHSL(h); tex = h.s < 0.14 ? 'panel' : 'grime'; } }
   const key = hex + tex;
@@ -1889,7 +1895,7 @@ LEVELS.ship = {
     const tiled = (w, h, d, mat, x, y, z, tu, tv) => { const g = new THREE.BoxGeometry(w, h, d), uv = g.attributes.uv; tu = tu || 2; tv = tv || H;
       const dims = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]]; for (let f = 0; f < 6; f++) { const [a, b] = dims[f], sa = f === 2 || f === 3 ? a / 2 : a / tu, sb = f === 2 || f === 3 ? b / 2 : b / tv; for (let k = 0; k < 4; k++) { const i = f * 4 + k; uv.setXY(i, uv.getX(i) * sa, uv.getY(i) * sb); } }
       const m = new THREE.Mesh(g, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; props.add(m); return m; };
-    const HULL = toon('#9aa0aa', 'hull'), TRIM = toon('#3a3d44', 'deck');
+    const HULL = toonNS('#9aa0aa', 'hull'), TRIM = toonNS('#3a3d44', 'deck');
     const wall = (x1, z1, x2, z2, mat) => { const cx = (x1 + x2) / 2, cz = (z1 + z2) / 2, lx = Math.max(Math.abs(x2 - x1), 0.3), lz = Math.max(Math.abs(z2 - z1), 0.3);
       tiled(lx, H, lz, mat || HULL, cx, H / 2, cz); part(props, B(lx + 0.04, 0.16, lz + 0.04), '#2a2c32', cx, 0.08, cz); part(props, B(lx + 0.04, 0.12, lz + 0.04), '#2a2c32', cx, H - 0.06, cz);
       box(cx, cz, lx / 2, lz / 2); };
@@ -1897,12 +1903,12 @@ LEVELS.ship = {
     const veneer = (x1, z1, x2, z2, nx, nz, mat) => { const lx = Math.abs(x2 - x1), lz = Math.abs(z2 - z1); if (lx < 0.2 && lz < 0.2) return; tiled(Math.max(lx, 0.04), H - 0.3, Math.max(lz, 0.04), mat, (x1 + x2) / 2 + nx * 0.17, H / 2, (z1 + z2) / 2 + nz * 0.17); };
     const floorQuad = (x0, x1, z0, z1, fmat, cmat, lights) => { const g = new THREE.PlaneGeometry(x1 - x0, z1 - z0, Math.ceil((x1 - x0) / 2.4), Math.ceil((z1 - z0) / 2.4)); g.rotateX(-Math.PI / 2); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * (x1 - x0) / 2, uv.getY(i) * (z1 - z0) / 2);
       const m = new THREE.Mesh(g, fmat); m.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); m.receiveShadow = true; props.add(m);
-      const c = new THREE.Mesh(g.clone(), cmat || toon('#6a6e78', 'ceil')); c.rotation.x = Math.PI; c.position.set((x0 + x1) / 2, H, (z0 + z1) / 2); props.add(c);
+      const c = new THREE.Mesh(g.clone(), cmat || toonNS('#6a6e78', 'ceil')); c.rotation.x = Math.PI; c.position.set((x0 + x1) / 2, H, (z0 + z1) / 2); props.add(c);
       if (lights !== false) for (let z = z0 + 2; z < z1; z += 4) part(props, B(Math.min(3, x1 - x0 - 1), 0.05, 0.25), glow(lights || '#cfe6ff'), (x0 + x1) / 2, H - 0.04, z); };
     const rooms = S.ship.rooms.filter(r => r !== 'bridge');
     const rows = Math.max(1, Math.ceil(rooms.length / 2)), Lz = 4 + (rows - 1) * 11 + 7;
     // ---- the bridge: dark navy deck, curved console row, the big window ----
-    floorQuad(-7, 7, -15, -2, toon('#3a4a6a', 'deck'), toon('#4a5060', 'ceil'), '#8fd0ff');
+    floorQuad(-7, 7, -15, -2, toonNS('#3a4a6a', 'deck'), toonNS('#4a5060', 'ceil'), '#8fd0ff');
     wall(-7, -15, -7, -2); wall(7, -15, 7, -2); wall(-7, -15, -4, -15); wall(4, -15, 7, -15); wall(-7, -2, -2, -2); wall(2, -2, 7, -2);
     const glass = new THREE.Mesh(new THREE.PlaneGeometry(8, H), new THREE.MeshBasicMaterial({ color: '#8fd0ff', transparent: true, opacity: 0.12, depthWrite: false })); glass.position.set(0, H / 2, -15); levelGroup.add(glass); box(0, -15, 4, 0.2);
     part(props, B(8.2, 0.3, 0.5), '#2a2c32', 0, 0.15, -15); part(props, B(8.2, 0.3, 0.5), '#2a2c32', 0, H - 0.15, -15);
@@ -1916,7 +1922,7 @@ LEVELS.ship = {
     INTERACTS.push({ x: 0, z: -6.6, r: 1.6, label: 'Take the helm (fly)', fn: () => enterSpace(S.orbit || 'earth') });
     { const ch = new THREE.Group(); part(ch, B(0.8, 0.5, 0.8), '#2a2c32', 0, 0.25, 0); part(ch, B(0.8, 1.0, 0.15), toon('#8a3a2e', 'cloth'), 0, 1.0, 0.36); part(ch, B(0.8, 0.12, 0.8), toon('#8a3a2e', 'cloth'), 0, 0.55, 0); for (const s of [-1, 1]) part(ch, B(0.1, 0.25, 0.7), '#2a2c32', 0.42 * s, 0.75, 0); ch.position.set(0, 0, -7.5); props.add(ch); solid(0, -7.5, 0.5); }
     // ---- the corridor: plated deck with a yellow guide line, ribbed hull walls ----
-    floorQuad(-2, 2, -2, Lz, toon('#8a8e96', 'deck'));
+    floorQuad(-2, 2, -2, Lz, toonNS('#8a8e96', 'deck'));
     part(props, B(0.12, 0.01, Lz + 1.8), glow('#c9a43a'), 0, 0.012, (Lz - 2) / 2);
     wall(-2, Lz, 2, Lz);
     const doors = rooms.map((r, k) => roomSlot(k));
@@ -1928,13 +1934,13 @@ LEVELS.ship = {
     for (let z = 0; z < Lz; z += 3) for (const s of [-1, 1]) part(props, B(0.08, H, 0.18), '#5d636c', 1.84 * s, H / 2, z);
     // ---- rooms: each with its own floor, walls, ceiling, light colour and a job ----
     const LOOK = {
-      quarters: { floor: toon('#7a4a3a', 'carpet'), wall: toon('#a08060', 'woodwall'), ceil: toon('#5a4a40', 'ceil'), light: '#ffd8a0' },
-      armory: { floor: toon('#6a6e76', 'tread'), wall: toon('#5a5e66', 'hull'), ceil: toon('#3a3d44', 'ceil'), light: '#ff8a6a' },
-      cargo: { floor: toon('#8a7a5a', 'grate'), wall: toon('#8a6a4a', 'hull'), ceil: toon('#4a4038', 'ceil'), light: '#ffd36a' },
-      med: { floor: toon('#e8eef2', 'tile'), wall: toon('#d8e8ec', 'tile'), ceil: toon('#e8eef2', 'ceil'), light: '#e8ffff' },
-      trophy: { floor: toon('#d8d2c8', 'marble'), wall: toon('#6a1e24', 'woodwall'), ceil: toon('#3a1e22', 'ceil'), light: '#ffd36a' },
-      garden: { floor: toon('#4a6a3a', 'grass'), wall: toon('#8ab8a0', 'tile'), ceil: toon('#cfe8d8', 'ceil'), light: '#e8ffd8' },
-      hangar: { floor: toon('#6a6a6a', 'grate'), wall: toon('#7a7e86', 'hull'), ceil: toon('#3a3d44', 'ceil'), light: '#ffffff' }
+      quarters: { floor: toonNS('#7a4a3a', 'carpet'), wall: toonNS('#a08060', 'woodwall'), ceil: toonNS('#5a4a40', 'ceil'), light: '#ffd8a0' },
+      armory: { floor: toonNS('#6a6e76', 'tread'), wall: toonNS('#5a5e66', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ff8a6a' },
+      cargo: { floor: toonNS('#8a7a5a', 'grate'), wall: toonNS('#8a6a4a', 'hull'), ceil: toonNS('#4a4038', 'ceil'), light: '#ffd36a' },
+      med: { floor: toonNS('#e8eef2', 'tile'), wall: toonNS('#d8e8ec', 'tile'), ceil: toonNS('#e8eef2', 'ceil'), light: '#e8ffff' },
+      trophy: { floor: toonNS('#d8d2c8', 'marble'), wall: toonNS('#6a1e24', 'woodwall'), ceil: toonNS('#3a1e22', 'ceil'), light: '#ffd36a' },
+      garden: { floor: toonNS('#4a6a3a', 'grass'), wall: toonNS('#8ab8a0', 'tile'), ceil: toonNS('#cfe8d8', 'ceil'), light: '#e8ffd8' },
+      hangar: { floor: toonNS('#6a6a6a', 'grate'), wall: toonNS('#7a7e86', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ffffff' }
     };
     rooms.forEach((id, k) => {
       const s = roomSlot(k); SHIP_ROOMS.push(Object.assign({ id }, s));
@@ -1950,15 +1956,15 @@ LEVELS.ship = {
       if (id === 'quarters') {
         const bed = new THREE.Group(); part(bed, B(1.5, 0.45, 2.4), '#3a3d44', 0, 0.22, 0); part(bed, B(1.4, 0.2, 2.2), toon('#3b4f7a', 'cloth'), 0, 0.55, 0); part(bed, B(1.2, 0.18, 0.5), toon('#e8e4dc', 'cloth'), 0, 0.72, -0.8); part(bed, B(1.5, 1.1, 0.12), toon('#6a4a3a', 'wood'), 0, 0.75, -1.2); bed.position.set(far, 0, cz - 2.6); props.add(bed); box(far, cz - 2.6, 0.75, 1.25);
         part(props, B(0.7, 0.6, 0.6), toon('#6a4a3a', 'wood'), far, 0.3, cz - 0.8); part(props, Cy(0.08, 0.12, 0.3, 8), glow('#ffd8a0'), far, 0.75, cz - 0.8); box(far, cz - 0.8, 0.35, 0.3);
-        part(props, B(2.6, 0.04, 1.8), toon('#8a3a2e', 'carpet'), cx, 0.02, cz - 2.6);
+        part(props, B(2.6, 0.04, 1.8), toonNS('#8a3a2e', 'carpet'), cx, 0.02, cz - 2.6);
         INTERACTS.push({ x: far - s.side * 1.1, z: cz - 2.6, r: 2.0, label: 'Sleep (full heal + Well Rested)', fn: sleepInBunk });
         term(cx + s.side * 0.5, s.z0 + 0.6, '#ffd8a0', 'Personal log (Codex)', () => openCodex('ach'), 0);
       }
       if (id === 'armory') {
-        const wx = outer - s.side * 0.15; part(props, B(0.05, 1.9, 5.2), toon('#2a2c32', 'deck'), wx - s.side * 0.03, 1.55, cz - 1.0); part(props, B(0.06, 0.08, 5.2), glow('#ff8a6a'), wx - s.side * 0.05, 2.52, cz - 1.0);
+        const wx = outer - s.side * 0.15; part(props, B(0.05, 1.9, 5.2), toonNS('#2a2c32', 'deck'), wx - s.side * 0.03, 1.55, cz - 1.0); part(props, B(0.06, 0.08, 5.2), glow('#ff8a6a'), wx - s.side * 0.05, 2.52, cz - 1.0);
         const ids = Object.keys(GUNS).filter(g => GUNS[g].kind !== 'mystic').filter((g, i, a) => i % Math.max(1, Math.floor(a.length / 6)) === 0).slice(0, 6);
         for (let i = 0; i < 6; i++) { const gn = typeof makeGunModel === 'function' && ids[i] ? makeGunModel(ids[i]) : makeBlaster(); gn.scale.setScalar(1.7); gn.position.set(wx - s.side * 0.16, 1.15 + Math.floor(i / 3) * 0.75, cz - 2.8 + (i % 3) * 1.8); props.add(gn); for (const dz of [-0.25, 0.2]) part(props, B(0.16, 0.04, 0.04), '#9aa1aa', wx - s.side * 0.09, gn.position.y - 0.09, gn.position.z + dz); }
-        part(props, B(2.2, 1.0, 1.0), toon('#5a5e66', 'tread'), cx, 0.5, cz + 2.5); part(props, B(0.6, 0.3, 0.4), '#2a2c32', cx - 0.5, 1.15, cz + 2.5); part(props, B(2.2, 0.04, 1.0), glow('#ff8a6a'), cx, 1.02, cz + 2.5); box(cx, cz + 2.5, 1.1, 0.5);
+        part(props, B(2.2, 1.0, 1.0), toonNS('#5a5e66', 'tread'), cx, 0.5, cz + 2.5); part(props, B(0.6, 0.3, 0.4), '#2a2c32', cx - 0.5, 1.15, cz + 2.5); part(props, B(2.2, 0.04, 1.0), glow('#ff8a6a'), cx, 1.02, cz + 2.5); box(cx, cz + 2.5, 1.1, 0.5);
         INTERACTS.push({ x: cx, z: cz + 1.4, r: 2.0, label: 'Gun workbench', fn: openWorkbench });
         { const rk = new THREE.Group(); part(rk, B(0.8, 1.4, 0.5), '#3a3d44', 0, 0.7, 0); for (let i = 0; i < 3; i++) part(rk, new THREE.SphereGeometry(0.12, 8, 6), '#4a5a3a', -0.22 + i * 0.22, 1.0, 0.18); part(rk, B(0.7, 0.05, 0.05), glow('#ffd36a'), 0, 1.35, 0.26); rk.position.set(cx, 0, s.z1 - 0.6); rk.rotation.y = Math.PI; props.add(rk); solid(cx, s.z1 - 0.6, 0.5);
           INTERACTS.push({ x: cx, z: s.z1 - 1.7, r: 1.8, label: 'Ordnance rack (refill)', fn: refillOrdnance }); }
@@ -1977,8 +1983,8 @@ LEVELS.ship = {
         term(far, cz + 1.2, '#4fffe0', 'Stim station (armor stim)', useStim, faceIn);
       }
       if (id === 'trophy') {
-        const tro = trophyList(); tro.forEach((tr, i) => { const z = cz - 3.5 + i * 1.4; part(props, Cy(0.35, 0.45, 1.0, 8), toon('#d8d2c8', 'marble'), far, 0.5, z); part(props, Cy(0.38, 0.38, 0.05, 8), toon('#c9a43a'), far, 1.02, z); const m = part(props, new THREE.OctahedronGeometry(0.28, 0), glow(tr.col), far, 1.4, z); levelAnims.push(t => { m.rotation.y = t + i; }); solid(far, z, 0.45); });
-        part(props, B(1.6, 0.04, 8.4), toon('#8a1e24', 'carpet'), cx, 0.02, cz);
+        const tro = trophyList(); tro.forEach((tr, i) => { const z = cz - 3.5 + i * 1.4; part(props, Cy(0.35, 0.45, 1.0, 8), toonNS('#d8d2c8', 'marble'), far, 0.5, z); part(props, Cy(0.38, 0.38, 0.05, 8), toon('#c9a43a'), far, 1.02, z); const m = part(props, new THREE.OctahedronGeometry(0.28, 0), glow(tr.col), far, 1.4, z); levelAnims.push(t => { m.rotation.y = t + i; }); solid(far, z, 0.45); });
+        part(props, B(1.6, 0.04, 8.4), toonNS('#8a1e24', 'carpet'), cx, 0.02, cz);
         INTERACTS.push({ x: far - s.side * 1.2, z: cz, r: 2.4, label: 'Trophies', fn: () => { openDlg('Trophy Hall', 'Your victories'); $('dlgLine').textContent = trophyList().map(t => t.name).join(' · ') || 'Beat bosses to fill the hall.'; acts([['Close', closeDlg]]); } });
         term(cx, s.z0 + 0.6, '#ffd36a', 'Hall of Records (leaderboards)', () => openLeaders(0), 0);
       }
@@ -1989,7 +1995,7 @@ LEVELS.ship = {
       }
       if (id === 'hangar') {
         part(props, B(0.2, 2.8, 6), toon('#c9a43a', 'hazard'), outer - s.side * 0.12, 1.4, cz);
-        part(props, B(5, 0.012, 5), toon('#ffd36a', 'hazard'), cx, 0.014, cz); part(props, B(4.4, 0.013, 4.4), toon('#6a6a6a', 'grate'), cx, 0.016, cz);
+        part(props, B(5, 0.012, 5), toon('#ffd36a', 'hazard'), cx, 0.014, cz); part(props, B(4.4, 0.013, 4.4), toonNS('#6a6a6a', 'grate'), cx, 0.016, cz);
         if (typeof bikeOwned === 'function' && bikeOwned()) { const bike = new THREE.Group(); part(bike, B(0.6, 0.4, 2), '#8a3a2e', 0, 0.7, 0); part(bike, Cy(0.35, 0.35, 0.2, 10), C.dark, 0, 0.35, 0.8, 0, 0, Math.PI / 2); part(bike, Cy(0.35, 0.35, 0.2, 10), C.dark, 0, 0.35, -0.8, 0, 0, Math.PI / 2); part(bike, B(0.5, 0.3, 0.6), '#3a3d44', 0, 1.0, -0.4); bike.position.set(cx - s.side * 1.2, 0, cz); props.add(bike); box(cx - s.side * 1.2, cz, 0.4, 1.1); }
         term(cx, s.z0 + 0.6, '#4fd2ff', 'Vehicle bay', () => openVehicleBay(), 0);
         term(cx, s.z1 - 0.6, '#ffd36a', 'Launch from the hangar', () => enterSpace(S.orbit || 'earth'), Math.PI);
@@ -8271,8 +8277,6 @@ function musStart(list, idx) {
 function musPlay(list) { if (!MUS.a || list === MUS.list) return; const start = list === 'ship' ? Math.floor(Math.random() * 2) : list === 'lounge' ? Math.floor(Math.random() * 4) : 0; musStart(list, start); }
 function musStop() { for (const el of [MUS.a, MUS.b]) if (el) musFade(el, 0, 1.2, () => el.pause()); MUS.list = null; MUS.cur = null; }
 function musUnlock() { if (MUS.unlocked) return; MUS.unlocked = true; MUS.a = musEl(); MUS.b = musEl();
-  try { const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC(); const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 20000; const pan = ac.createStereoPanner ? ac.createStereoPanner() : null; const gn = ac.createGain();
-    for (const el of [MUS.a, MUS.b]) ac.createMediaElementSource(el).connect(lp); const fz = ac.createWaveShaper(); fz.oversample = '2x'; lp.connect(fz); if (pan) { fz.connect(pan); pan.connect(gn); } else fz.connect(gn); MUS.fz = fz; const an = ac.createAnalyser(); an.fftSize = 256; gn.connect(an); gn.connect(ac.destination); MUS.an = an; MUS.ac = ac; MUS.lp = lp; MUS.pan = pan; MUS.gn = gn; ac.resume && ac.resume(); } catch (_) { MUS.ac = null; }
   musTick(true); }
 // in the lounge the music comes out of the DJ's speakers: louder near them, panned toward them, muffled far away
 const LOUNGE_SPK = [[-3.2, 21.6], [3.2, 21.6]];
@@ -8507,40 +8511,7 @@ function openCinema() {
 }
 { const _oc = openCodex; openCodex = function (tab) { const r = _oc(tab); if (tab !== 'lore') { const a = $('dlgActs'), lore = [...a.children].find(b => b.textContent === 'Lore'); const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = '🎬 Cinema'; b.addEventListener('click', () => { SFX.ui(); openCinema(); }); a.insertBefore(b, lore || null); } return r; }; }
 
-// =================== SHIP SOUND: speakers in the walls, songs you collect, and a Music Drive with a queue ===================
-const SONG_NAMES = { hymn: 'Heavenly Hymn', mushroom: 'Mushroom Bar', nebula: 'Nebula Groove', neon: 'Neon Groove', wakeup: 'Wake Up', dancing: 'Still Dancing', apocalyptic: 'The Apocalyptic Build', enchanted: 'The Enchanted Unfolding', low: 'Low', overture: 'Overture', tidal: 'Tidal Wave', iloveyou: 'I <3 You', c4po: 'C4-PO' };
-const SONG_FROM = { hymn: 'Your ship', mushroom: 'Your ship', nebula: 'Starlight Lounge', neon: 'Starlight Lounge', wakeup: 'Starlight Lounge', dancing: 'Starlight Lounge', apocalyptic: 'Boss fights', enchanted: 'Earth', low: 'Battles', overture: 'Velocity', tidal: 'Fort Ironrock', iloveyou: 'Someone special', c4po: 'Out in the galaxy' };
-const drive = () => { S.drive = S.drive || { songs: { hymn: 1, mushroom: 1 }, queue: [] }; S.drive.songs = S.drive.songs || {}; S.drive.queue = S.drive.queue || []; return S.drive; };
-// hearing a song anywhere adds it to your collection
-{ const _ms = musStart; musStart = function (list, idx) { _ms(list, idx); try { const key = PLAYLISTS[list][idx % PLAYLISTS[list].length], D = drive(); if (key && !D.songs[key] && list !== 'drive') { D.songs[key] = 1; markDirty(); setTimeout(() => toast('♪ SONG COLLECTED', `${SONG_NAMES[key]} · play it on your ship's Music Drive`, 3), 1200); } } catch (_) {} }; }
-// on the ship, play your queue if you've made one
-{ const _mc = musContext; musContext = function (dt) { const c = _mc(dt); if (c === 'ship' && drive().queue.length) { PLAYLISTS.drive = drive().queue.slice(); return 'drive'; } return c; }; }
-function driveChanged() { const D = drive(); PLAYLISTS.drive = D.queue.slice(); markDirty();
-  if (LEVEL.id !== 'ship' || !MUS.a) return;
-  if (!D.queue.length) { MUS.list = null; musTick(); return; }
-  const playing = MUS.list === 'drive' && MUS.cur && D.queue.some(k => MUS.cur.src.endsWith(TRACKS[k]));
-  if (!playing) { MUS.list = null; musStart('drive', 0); } else if (MUS.cur) MUS.cur.loop = D.queue.length === 1; }
-// ---- the Music Drive console ----
-function openMusicDrive() {
-  const D = drive(); openDlg('Ship systems', 'Music Drive');
-  const own = Object.keys(SONG_NAMES).filter(k => D.songs[k]);
-  $('dlgLine').textContent = `${own.length} / ${Object.keys(SONG_NAMES).length} songs collected. Add songs to the queue with +, take them out with −. An empty queue plays the ship's own two songs.`;
-  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.maxHeight = '48vh'; rows.style.overflowY = 'auto';
-  const now = MUS.cur && Object.keys(TRACKS).find(k => MUS.cur.src.endsWith(TRACKS[k]));
-  const h = t => { const d = document.createElement('div'); d.style.cssText = 'margin:8px 0 2px;color:#ffd36a;font-weight:bold'; d.textContent = t; rows.appendChild(d); };
-  h(`Queue (${D.queue.length})`);
-  if (!D.queue.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'Empty: the ship plays Mushroom Bar and Heavenly Hymn.'; rows.appendChild(e); }
-  D.queue.forEach((k, i) => { const r = document.createElement('div'); r.className = 'rowi nodot'; const a = document.createElement('span'); a.innerHTML = `<b>${i + 1}. ${SONG_NAMES[k]}</b>${now === k ? ' <small style="color:#6fdc5a">▶ playing</small>' : ''}`; const b = document.createElement('span'); const c = document.createElement('span'); c.style.cssText = 'display:flex;gap:4px';
-    const mk = (t, fn, dis) => { const x = document.createElement('button'); x.className = 'pbtn'; x.style.cssText = 'padding:4px 10px;min-width:0'; x.textContent = t; x.disabled = !!dis; x.addEventListener('click', () => { SFX.ui(); fn(); driveChanged(); openMusicDrive(); }); c.appendChild(x); };
-    mk('▲', () => { D.queue.splice(i, 1); D.queue.splice(i - 1, 0, k); }, i === 0); mk('−', () => D.queue.splice(i, 1)); r.append(a, b, c); rows.appendChild(r); });
-  h('Collection');
-  for (const k of Object.keys(SONG_NAMES)) { const got = !!D.songs[k], r = document.createElement('div'); r.className = 'rowi nodot'; const a = document.createElement('span'); a.innerHTML = got ? `<b>${SONG_NAMES[k]}</b><br><small style="color:var(--dim)">${SONG_FROM[k]}</small>` : `<b style="color:var(--dim)">??? </b><small style="color:var(--dim)">Heard somewhere out there: ${SONG_FROM[k]}</small>`;
-    const b = document.createElement('span'); b.className = 'meta'; b.style.fontSize = '13px'; const n = D.queue.filter(q => q === k).length; b.textContent = n ? `×${n} in queue` : '';
-    const c = document.createElement('span'); c.style.cssText = 'display:flex;gap:4px'; if (got) { for (const [t, fn] of [['+', () => D.queue.push(k)], ['−', () => { const j = D.queue.lastIndexOf(k); if (j >= 0) D.queue.splice(j, 1); }]]) { const x = document.createElement('button'); x.className = 'pbtn'; x.style.cssText = 'padding:4px 12px;min-width:0'; x.textContent = t; x.disabled = t === '−' && !n; x.addEventListener('click', () => { SFX.ui(); fn(); driveChanged(); openMusicDrive(); }); c.appendChild(x); } }
-    r.append(a, b, c); rows.appendChild(r); }
-  $('dlgActs').before(rows);
-  acts([['Clear queue', () => { D.queue.length = 0; driveChanged(); openMusicDrive(); }, false, !D.queue.length], ['Skip song', () => { if (MUS.list === 'drive' || MUS.list === 'ship') { const L = PLAYLISTS[MUS.list]; musStart(MUS.list, (MUS.idx + 1) % L.length); setTimeout(openMusicDrive, 200); } }, false, LEVEL.id !== 'ship'], ['Done', closeDlg, true]]);
-}
+// =================== SHIP SOUND: speakers in the walls (the Music Drive is parked for now) ===================
 // ---- the ship's speakers: on the bridge, along the corridor and in each room ----
 let SHIP_SPK = [];
 { const ob = LEVELS.ship.build; LEVELS.ship.build = function () { ob.call(this); SHIP_SPK = [];
@@ -8548,9 +8519,6 @@ let SHIP_SPK = [];
   spk(-6.6, -14.2, 2.4, Math.PI / 4); spk(6.6, -14.2, 2.4, -Math.PI / 4); spk(-6.75, -3, 2.4, Math.PI / 2); spk(6.75, -3, 2.4, -Math.PI / 2);
   for (const r of SHIP_ROOMS) { const outer = r.side > 0 ? r.x1 : r.x0; spk(outer - r.side * 0.25, r.zc + 3.6, 2.5, r.side > 0 ? -Math.PI / 2 : Math.PI / 2); }
   for (let z = 6; z < 4 + Math.max(1, Math.ceil(SHIP_ROOMS.length / 2)) * 11; z += 11) SHIP_SPK.push([0, z]);
-  // the Music Drive console on the bridge
-  const t = new THREE.Group(); part(t, B(0.9, 1.1, 0.5), '#2a2c32', 0, 0.55, 0); part(t, B(0.75, 0.45, 0.04), glow('#c86aff'), 0, 1.25, 0.2, -0.3); for (let i = 0; i < 5; i++) part(t, B(0.06, 0.08 + (i % 3) * 0.06, 0.02), glow('#ffd36a'), -0.2 + i * 0.1, 1.26, 0.23, -0.3); t.position.set(5.4, 0, -9.6); t.rotation.y = -Math.PI / 2; props.add(t); solid(5.4, -9.6, 0.5);
-  INTERACTS.push({ x: 4.3, z: -9.6, r: 1.6, label: 'Music Drive', fn: openMusicDrive });
 }; }
 { const _sp = musSpace; musSpace = function () { if (!MUS.ac) return _sp();
   if (LEVEL.id === 'ship' && SHIP_SPK.length && ['ship', 'drive'].includes(MUS.list)) { const now = MUS.ac.currentTime, set = (p, v) => p.setTargetAtTime(v, now, 0.15);
@@ -8629,8 +8597,9 @@ const UPDATES = [
   { id: 57, title: '1.1: A proper ship, and real spells', items: ['Your ship has been refitted: plated deck floors, ribbed hull walls and paneled ceilings, all at the right scale, with a guide stripe down the corridor and framed doorways', 'Every room has its own look and lighting: carpeted wood-paneled quarters, a steel armory, a grated cargo bay, a white-tiled med bay, a marble-and-red trophy hall, a greenhouse garden and a hazard-striped hangar', 'Every room has a job. Quarters: sleep for full health and Well Rested (+15% XP for 15 min), wardrobe, personal log. Armory: gun rack, workbench, ordnance rack that refills your charges. Cargo bay: sell loot from the ship. Med bay: healing pod and an armor stim (take 25% less damage for 10 min). Trophy hall: trophies and the Hall of Records leaderboards. Garden: grows medkits, plus a fish tank. Hangar: vehicle bay, your bike, and a launch pad', 'The bridge has a console row and a proper captain\'s chair', 'Staffs and wands now cast named spells (Fireball, Chain Lightning, Ice Shard, Plague Cloud, Blast Wave, Void Rift, Sunburst and more) from a mana bar that refills on its own. No rounds and no reloading', 'Active buffs (Well Rested, Armor Stim) show on the HUD']},
   { id: 58, title: '1.2: The soundtrack', items: ['Real music! New Jamestown has its own theme, Velocity races to an overture, Fort Ironrock rides a tidal wave, and the rest of the galaxy has its own groove', 'Fights switch to battle music, and bosses get their own apocalyptic theme. Music crossfades cleanly between places and moments', 'Your ship alternates between two calm songs. Your love interest has a song too: it fades in when they are close or when you talk', 'The Starlight Lounge is a full party now: light-up dance floor, DJ Nova on the decks, lasers, strobes, a dancing crowd and a four-song playlist. The President of the New United States is there. He is having a great time', 'The first time you board your ship you get a short film of it (skippable after a few seconds)', 'Settings: Music can be Soundtrack, Ambient, Beep boop or Off, plus a music volume slider', 'Menu is now a pull-up drawer: swipe up or tap the MENU tab at the bottom (Tab on keyboard). Buttons are light and see-through']},
   { id: 59, title: 'The Prologue', items: ['The first-time-aboard film is now a Prologue: a tour of the whole galaxy (Earth, Mezar, Capitone, Robot City, the Zeltac Ship), the rise of Drome and his fleet, the eye opening in the dark, and your ship launching from Earth', 'Narrated with subtitles for now (voice coming soon). Replay it any time from the Codex', 'In the Starlight Lounge the music now comes from the DJ speakers: louder and clearer up front, panned toward the stage, muffled at the back of the room']},
-  { id: 60, title: 'Music Drive and Cinema', items: ['Collect songs: every new song you hear out in the galaxy is saved to your collection', "Your ship's Music Drive (on the bridge, or any jukebox you place) lets you build a queue: + adds a song, − takes it out, ▲ moves it up, and you can skip songs", 'Ship music now comes from speakers on the bridge, along the corridor and in each room', 'First time in the Starlight Lounge: a short intro film (skippable after a few seconds)', 'The Prologue only plays the very first time you board your ship', 'Codex → Cinema replays every cutscene you have unlocked: the Prologue, the Starlight Lounge and the Ending']},
-  { id: 61, title: 'Dance floor rules and a roomier screen', items: ['In the Starlight Lounge your weapons are put away: you get a DANCE button instead (click on desktop)', "The President's Nebula Dust now puts a burning cigarette in your hand, and for 15 seconds the music gets louder and fuzzy", 'Settings → HUD size: Small, Medium or Large (phones default to Medium). Settings → Quest tracker: Compact hides the extra text', 'Fullscreen: Menu → Fullscreen or Settings → Fullscreen. If your app blocks it, open the game link in your phone browser', 'Fixed music going silent on some phones and in the Claude app: if the speaker effects mute the music, the game switches them off and keeps playing']}
+  { id: 60, title: 'Music Drive and Cinema', items: ['Ship music now comes from speakers on the bridge, along the corridor and in each room', 'First time in the Starlight Lounge: a short intro film (skippable after a few seconds)', 'The Prologue only plays the very first time you board your ship', 'Codex → Cinema replays every cutscene you have unlocked: the Prologue, the Starlight Lounge and the Ending']},
+  { id: 61, title: 'Dance floor rules and a roomier screen', items: ['In the Starlight Lounge your weapons are put away: you get a DANCE button instead (click on desktop)', "The President's Nebula Dust now puts a burning cigarette in your hand, and for 15 seconds the music gets louder", 'Settings → HUD size: Small, Medium or Large (phones default to Medium). Settings → Quest tracker: Compact hides the extra text', 'Fullscreen: Menu → Fullscreen or Settings → Fullscreen. If your app blocks it, open the game link in your phone browser', 'Fixed music going silent on some phones and in the Claude app: if the speaker effects mute the music, the game switches them off and keeps playing']},
+  { id: 62, title: 'Music fixed', items: ['Music plays again everywhere. The Music Drive is parked while we rebuild it', 'Ship walls, floors and ceilings no longer slide around as you walk']}
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -9357,7 +9326,7 @@ function furnInteracts(pieces) {
   for (const p of cleanPieces(pieces)) { const x = p[1] * CELL, z = p[2] * CELL, t = p[0], add = (label, fn) => INTERACTS.push({ x, z, r: 1.6, label, fn, furn: true, quiet: true });
     if (t === 'bed' || t === 'bunkbed' || t === 'hammock') add('Nap', () => { player.hp = maxHp(); SFX.quest(); toast('ZZZ', 'Fully rested', 1.5); });
     if (t === 'holotv') add('Watch the news', () => openUpdates(false));
-    if (t === 'jukebox') add('Jukebox: Music Drive', () => openMusicDrive());
+    if (t === 'jukebox') add('Jukebox: change music', () => { const order = [3, 1, 2, 0]; PREFS.music = order[(order.indexOf(PREFS.music) + 1) % order.length]; try { savePrefs(); SFX.setMusic(PREFS.music); } catch (_) {} toast('JUKEBOX', MUSIC_NAMES[PREFS.music] || 'Off', 1.5); SFX.ui(); });
     if (t === 'holotable') add('Holo-map', () => openGalaxy());
     if (t === 'arcade') add('Play arcade', () => { const sc = randi(100, 9999); toast('HIGH SCORE?', `You scored ${sc}${sc > 9000 ? '. LEGENDARY.' : '. Not bad.'}`, 2); SFX.coin(); });
     if (t === 'coffee') add('Grab a coffee', () => { player.hp = Math.min(maxHp(), player.hp + 25); toast('COFFEE', 'Wide awake (+25 HP)', 1.5); SFX.item(); });

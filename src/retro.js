@@ -108,6 +108,12 @@ TEX.hazard = canvasTex(32, (x, s) => { x.fillStyle = '#ffd23a'; x.fillRect(0, 0,
 TEX.blob.minFilter = THREE.LinearFilter; TEX.cloud.minFilter = THREE.NearestFilter;
 const matCache = {};
 const TOON_RAMP = (() => { const d = new Uint8Array([90, 90, 90, 160, 160, 160, 225, 225, 225, 255, 255, 255]); const t = new THREE.DataTexture(d, 4, 1, THREE.RGBFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
+// same look as toon() but without PS1 vertex snapping: for big interior surfaces seen up close, where snapping makes textures slide
+function toonNS(hex, tex) {
+  if (RSTYLE !== 'retro') return toon(hex, tex);
+  const key = hex + tex + '_ns'; if (!matCache[key]) matCache[key] = new THREE.MeshLambertMaterial({ color: new THREE.Color(hex).convertSRGBToLinear(), map: TEX[tex] });
+  return matCache[key];
+}
 function toon(hex, tex) {
   if (!tex) { const lc = String(hex).toLowerCase(); if (SKIN_HEX.has(lc)) tex = 'skin'; else if (FUR_HEX.has(lc)) tex = 'fur'; else if (CLOTH_HEX.has(lc)) tex = 'cloth'; else { const c = new THREE.Color(hex), h = {}; c.getHSL(h); tex = h.s < 0.14 ? 'panel' : 'grime'; } }
   const key = hex + tex;

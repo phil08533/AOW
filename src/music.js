@@ -20,8 +20,6 @@ function musStart(list, idx) {
 function musPlay(list) { if (!MUS.a || list === MUS.list) return; const start = list === 'ship' ? Math.floor(Math.random() * 2) : list === 'lounge' ? Math.floor(Math.random() * 4) : 0; musStart(list, start); }
 function musStop() { for (const el of [MUS.a, MUS.b]) if (el) musFade(el, 0, 1.2, () => el.pause()); MUS.list = null; MUS.cur = null; }
 function musUnlock() { if (MUS.unlocked) return; MUS.unlocked = true; MUS.a = musEl(); MUS.b = musEl();
-  try { const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC(); const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 20000; const pan = ac.createStereoPanner ? ac.createStereoPanner() : null; const gn = ac.createGain();
-    for (const el of [MUS.a, MUS.b]) ac.createMediaElementSource(el).connect(lp); const fz = ac.createWaveShaper(); fz.oversample = '2x'; lp.connect(fz); if (pan) { fz.connect(pan); pan.connect(gn); } else fz.connect(gn); MUS.fz = fz; const an = ac.createAnalyser(); an.fftSize = 256; gn.connect(an); gn.connect(ac.destination); MUS.an = an; MUS.ac = ac; MUS.lp = lp; MUS.pan = pan; MUS.gn = gn; ac.resume && ac.resume(); } catch (_) { MUS.ac = null; }
   musTick(true); }
 // in the lounge the music comes out of the DJ's speakers: louder near them, panned toward them, muffled far away
 const LOUNGE_SPK = [[-3.2, 21.6], [3.2, 21.6]];

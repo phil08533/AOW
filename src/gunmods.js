@@ -39,7 +39,7 @@ const ORD = {
   hole: { name: 'Black hole', lvl: 28, col: '#9b6bff', r: 7, dmg: 160, desc: 'Pulls everything in, then pops', pull: 1.8 },
   orbital: { name: 'Orbital strike beacon', lvl: 35, col: '#ff3b2a', r: 8, dmg: 600, desc: 'Marks a spot; the sky answers 2 seconds later', delay: 2 }
 };
-const ORD_MAX = 3, ORD_RECHARGE = 9;
+let ORD_MAX = 3; const ORD_RECHARGE = 9;
 const ordSel = () => { const o = S.ord || 'frag'; return ORD[o] && S.lvl >= ORD[o].lvl ? o : 'frag'; };
 let ordCharges = ORD_MAX, ordT = 0; const grenades = [];
 function throwOrd() {

@@ -30,7 +30,7 @@ function invMeta(key) {
   if (t === 'g') { const g = GUNS[id], kind = gunKind(id), tier = gunTier(id); return { kind: 'gun', id, name: g.name + (tier ? ' ' + '★'.repeat(tier) : ''), cat: 'wpn', sub: kind, rar: rarByLvl(g.req || 1), w: kind === 'heavy' ? 9 : kind === 'staff' ? 2.5 : kind === 'pistol' ? 1.4 : 4, v: g.price || 0, icon: kind === 'staff' ? 'staff' : kind, span: kind === 'pistol' ? 1 : 2, col: g.col || '#e08a2e', n: 1 }; }
   if (t === 'm') { const M = MELEE[id]; return { kind: 'melee', id, name: M.name, cat: 'wpn', sub: 'melee', rar: id === 'knife' ? 'common' : rarByLvl(M.req || 1), w: M.reach > 3 ? 4 : 1.6, v: M.price || 0, icon: /claw|nunchuck/.test(id) ? 'fang' : 'sword', span: M.reach > 3 ? 2 : 1, col: M.col || '#cfd4dc', n: 1 }; }
   if (t === 'o') { const O = ORD[id]; return { kind: 'ord', id, name: O.name, cat: 'wpn', sub: 'ord', rar: rarByLvl(O.lvl), w: 0.5, v: 0, icon: 'grenade', span: 1, col: O.col, n: 1 }; }
-  const I = ITEMS[id] || { name: id, v: 0, col: '#9aa1aa' }, n = S.inv[id] || 0;
+  const I = ITEMS[id] || { name: id, v: 0, col: '#9aa1aa' }, n = (t === 's' ? (S.stash || {})[id] : S.inv[id]) || 0;
   let cat = 'misc', sub = 'junk';
   if (I.quest) { cat = 'quest'; sub = null; }
   else if (id === 'medkit' || I.use) { cat = 'med'; sub = I.sub || 'medkit'; }
@@ -76,11 +76,14 @@ function invSync() { // keep the saved layout in step with what you actually own
   const have = invKeys(), set = new Set(have); S.invOrder = (S.invOrder || []).filter(k => set.has(k)); const placed = new Set(S.invOrder); for (const k of have) if (!placed.has(k)) S.invOrder.push(k);
   S.invT = S.invT || {}; S.quick = S.quick || []; while (S.quick.length < INV_CFG.quick) S.quick.push(null); return S.invOrder;
 }
-const invSlotsUsed = () => Object.keys(S.inv).filter(k => ITEMS[k] && S.inv[k] > 0 && !ITEMS[k].quest).length;
+const invStack = id => id === 'medkit' ? 10 : 25; // how many fit in one slot
+const invSlotsOf = (id, n) => ITEMS[id] && !ITEMS[id].quest && n > 0 ? Math.ceil(n / invStack(id)) : 0;
+const invSlotsUsed = () => Object.keys(S.inv).reduce((a, k) => a + invSlotsOf(k, S.inv[k]), 0);
+const invRoomFor = id => { if (!ITEMS[id]) return 0; if (ITEMS[id].quest) return 1e9; const cur = S.inv[id] || 0, st = invStack(id), free = INV_CFG.cap - invSlotsUsed(); return Math.max(0, (cur ? st * Math.ceil(cur / st) - cur : 0) + Math.max(0, free) * st); };
 const invWeight = () => invKeys().reduce((a, k) => { const m = invMeta(k); return a + m.w * (m.kind === 'item' ? m.n : 1); }, 0);
 function invAdd(id, n, quiet) { // the one safe way to put loot in the bag: stacks, respects the slot limit, never drops anything silently
   if (!ITEMS[id] || !(n > 0)) return false;
-  if (!S.inv[id] && !ITEMS[id].quest && invSlotsUsed() >= INV_CFG.cap) { invFullNote(id); return false; }
+  if (invRoomFor(id) < n) { invFullNote(id); return false; }
   S.inv[id] = (S.inv[id] || 0) + n; S.invT = S.invT || {}; S.invT['i:' + id] = Date.now(); if (!quiet) invPickupNote(id, n); markDirty(); return true;
 }
 function invFullNote(id) { const now = performance.now(); if (now - INVUI.full < 3000) return; INVUI.full = now; SFX.hit(); invChip(invIconHtml(itemIcon(id), ITEMS[id].col), `Bag full · ${ITEMS[id].name} left on the ground`, true); log(`Your bag is full (${INV_CFG.cap} slots). ${ITEMS[id].name} stays on the ground: sell or drop something to make room.`); }
@@ -227,7 +230,7 @@ function invQuickRender() {
     b.innerHTML = invIconHtml(m.icon, m.col) + (TOUCH ? '' : `<span class="k">${i + 4}</span>`) + (m.kind === 'item' ? `<span class="n">${m.n}</span>` : ''); if (m.kind === 'item' && !m.n) b.classList.add('zero');
     b.addEventListener('click', e => { e.stopPropagation(); invQuickUse(i); }); bar.appendChild(b); });
 }
-function invMetaSafe(key) { try { const [t, id] = key.split(':'); if (t === 'g' && !GUNS[id]) return null; if (t === 'm' && !MELEE[id]) return null; if (t === 'o' && !ORD[id]) return null; if (t === 'i' && !ITEMS[id]) return null; return invMeta(key); } catch (_) { return null; } }
+function invMetaSafe(key) { try { const [t, id] = key.split(':'); if (t === 'g' && !GUNS[id]) return null; if (t === 'm' && !MELEE[id]) return null; if (t === 'o' && !ORD[id]) return null; if ((t === 'i' || t === 's') && !ITEMS[id]) return null; return invMeta(key); } catch (_) { return null; } }
 setInterval(() => { try { const bar = document.getElementById('qbar'); const want = state === 'play' && S.quick && S.quick.some(Boolean); if (!bar || bar.hidden === want || want) invQuickRender(); } catch (_) {} }, 500);
 
 // ---- drawing the screen ----
@@ -238,10 +241,11 @@ function invRender() {
   // header
   const used = invSlotsUsed(), hd = mk('div', 'hd'); hd.appendChild(mk('h2', '', 'BACKPACK'));
   const tabs = mk('div', 'tabs'); for (const [k, l] of [['bag', 'Backpack'], ['eq', 'Equipment']]) { const b = mk('button', INVUI.tab === k ? 'on' : ''); b.textContent = l; b.addEventListener('click', () => { INVUI.tab = k; el.className = 'on tab-' + k; invRender(); }); tabs.appendChild(b); } hd.appendChild(tabs);
-  const s1 = mk('span', 'stat' + (used >= INV_CFG.cap ? ' full' : ''), `Slots <b>${used}/${INV_CFG.cap}</b>`); s1.title = 'Loot stacks. Weapons and quest items don\'t use slots.'; hd.appendChild(s1);
+  const s1 = mk('span', 'stat' + (used >= INV_CFG.cap ? ' full' : ''), `Slots <b>${used}/${INV_CFG.cap}</b>`); s1.title = 'Loot stacks of up to 25 (medkits 10). Weapons and quest items don\'t use slots.'; hd.appendChild(s1);
+  if (roomLvl('cargo')) { const sv = mk('button', 'cat' + (INVUI.view === 'stash' ? ' on' : '')); sv.textContent = INVUI.view === 'stash' ? '◂ Back to bag' : 'Ship storage ▸'; sv.addEventListener('click', () => { INVUI.view = INVUI.view === 'stash' ? 'bag' : 'stash'; INVUI.sel = null; INVUI.move = null; INVUI.tab = 'bag'; el.className = 'on tab-bag'; invRender(); }); hd.appendChild(sv); }
   hd.appendChild(mk('span', 'stat', `Weight <b>${invWeight().toFixed(1)} kg</b>`)); hd.appendChild(mk('span', 'stat', `<b>${S.cr.toLocaleString()}</b> cr`));
   const x = mk('button', 'x', '✕'); x.setAttribute('aria-label', 'Close inventory'); x.addEventListener('click', invClose); hd.appendChild(x); frame.appendChild(hd);
-  frame.appendChild(invEquipPanel()); frame.appendChild(invBagPanel(order)); frame.appendChild(invDetailPanel());
+  if (INVUI.view === 'stash' && !roomLvl('cargo')) INVUI.view = 'bag'; frame.appendChild(invEquipPanel()); frame.appendChild(INVUI.view === 'stash' ? invStashPanel() : invBagPanel(order)); frame.appendChild(invDetailPanel());
   // footer: the other gear screens
   const ft = mk('div', 'ft'); const link = (l, fn) => { const b = mk('button', 'btn'); b.textContent = l; b.addEventListener('click', fn); ft.appendChild(b); };
   link('Wardrobe', () => openWardrobe()); link('Gun mods', () => openGunMods()); link('Pets', () => openPets());
@@ -261,7 +265,7 @@ function invEquipPanel() {
   const M = MELEE[S.melee || 'knife'] || MELEE.knife; slot('melee', 'Melee', 'm:' + (S.melee || 'knife'), M.name, `${M.dmg} dmg · ${M.reach} m reach`, invMeta('m:' + (S.melee || 'knife')).icon, M.col || '#cfd4dc');
   for (const [k, t] of [['gun', 'Firearm'], ['staff', 'Staff']]) { const id = sl[k], g = GUNS[id]; if (g) { const m = invMeta('g:' + id); slot(k, t + (S.gun === id && !handMelee() ? ' · in hand' : ''), 'g:' + id, m.name, `${Math.round(g.dmg * (1 + 0.08 * gunTier(id)))} dmg · ${g.mag} ${g.mana ? 'mana' : 'rounds'}`, m.icon, m.col); } else slot(k, t, null, null, k === 'gun' ? 'Buy one at a gunsmith' : 'Buy one from a mage'); }
   const A = ARMORS[L.a] || ARMORS.std; slot('armor', 'Armor', 'slot:armor', A.name, A.def ? `−${Math.round(A.def * 100)}% damage taken` : 'No damage reduction', 'hide', A.trim || '#c9b27c');
-  const O = ORD[ordSel()]; slot('ord', 'Ordnance', 'o:' + ordSel(), O.name, `${O.dmg} dmg · ${typeof ordCharges === 'number' ? Math.floor(ordCharges) : 3}/3 ready`, 'grenade', O.col);
+  const O = ORD[ordSel()]; slot('ord', 'Ordnance', 'o:' + ordSel(), O.name, `${O.dmg} dmg · ${typeof ordCharges === 'number' ? Math.floor(ordCharges) : ORD_MAX}/${ORD_MAX} ready`, 'grenade', O.col);
   if (S.rod && RODS[S.rod]) { const d = document.createElement('div'); d.className = 'slot'; d.innerHTML = `<div class="ic">${invIconHtml('staff', '#c9a43a')}</div><div class="tx"><div class="t1">Fishing rod</div><div class="t2"></div><div class="t3">Used at fishing spots</div></div>`; d.querySelector('.t2').textContent = RODS[S.rod].name; P.appendChild(d); }
   lbl(`Quick slots · keys 4–${3 + INV_CFG.quick}`); const qr = document.createElement('div'); qr.className = 'qrow'; P.appendChild(qr);
   S.quick.forEach((key, i) => { const q = document.createElement('div'); q.className = 'q' + (INVUI.sel === 'q:' + i ? ' sel' : ''); const m = key && invMetaSafe(key);
@@ -324,6 +328,7 @@ function invDetailPanel() {
   const close = document.createElement('button'); close.className = 'btn close'; close.textContent = '✕'; close.setAttribute('aria-label', 'Close details'); close.addEventListener('click', () => { INVUI.sel = null; INVUI.el.classList.remove('showdet'); invRender(); }); P.appendChild(close);
   if (!key) { const p = document.createElement('p'); p.textContent = TOUCH ? 'Tap an item to see what it does. Tap Move, then tap a slot, to put it somewhere.' : 'Select an item to see its details. Drag items onto equipment or quick slots, or drag them around the grid to arrange your bag (with Sort set to My layout).'; P.appendChild(p); return P; }
   if (key === 'slot:armor') return invArmorDetail(P);
+  if (/^s:/.test(key)) return invStashDetail(P, key);
   if (/^slot:|^q:/.test(key)) { const p = document.createElement('p'); p.textContent = /^q:/.test(key) ? 'Empty quick slot. Select a weapon, medkit or ordnance in your bag and choose a quick slot for it.' : 'Empty slot. Pick a matching item from your bag to equip it.'; P.appendChild(p); return P; }
   const m = invMetaSafe(key); if (!m) { INVUI.sel = null; return P; }
   const big = document.createElement('div'); big.className = 'big'; P.appendChild(big);
@@ -343,7 +348,7 @@ function invDetailPanel() {
   else if (m.kind === 'melee') { const M = MELEE[m.id], cur = MELEE[S.melee || 'knife']; const cmp = (v, cv, inv) => cur !== M ? ` <small class="${(inv ? v < cv : v > cv) ? 'up' : 'dn'}">${(v - cv) > 0 ? '+' : ''}${Math.round((v - cv) * 100) / 100}</small>` : '';
     row('Damage per swing', M.dmg + cmp(M.dmg, cur.dmg)); row('Swing time', M.rate + 's' + cmp(M.rate, cur.rate, true)); row('Reach', M.reach + ' m' + cmp(M.reach, cur.reach)); row('Durability', 'Never breaks'); row('Needs level', M.req || 1);
     dtext = 'Melee weapon. Swing with F or right click.' + (cur !== M ? ` Numbers compare it with your ${cur.name}.` : ''); }
-  else if (m.kind === 'ord') { const O = ORD[m.id]; row('Damage', O.dmg); row('Blast radius', O.r + ' m'); row('Charges', '3, recharging every 9s'); row('Unlocks at level', O.lvl); dtext = O.desc + '. Throw with the NADE button or your ordnance key.'; }
+  else if (m.kind === 'ord') { const O = ORD[m.id]; row('Damage', O.dmg); row('Blast radius', O.r + ' m'); row('Charges', `${ORD_MAX}, recharging every 9s`); row('Unlocks at level', O.lvl); dtext = O.desc + '. Throw with the NADE button or your ordnance key.'; }
   else { const I = ITEMS[m.id]; row('Quantity', m.n); row('Weight', (m.w * m.n).toFixed(1) + ' kg' + (m.n > 1 ? ` (${m.w} each)` : '')); if (!I.quest) row('Sells for', `${sellPrice(m.id)} cr each`);
     const uses = []; try { for (const p of Object.values(PIECES)) if (p.cost && p.cost[m.id]) uses.push(p.name); } catch (_) {}
     if (m.id === 'medkit') { row('Effect', '+50 health'); row('Duration', 'Instant'); dtext = 'Patches you up in a hurry. Press H, tap the ✚ button, or put it in a quick slot.'; }
@@ -361,6 +366,7 @@ function invDetailPanel() {
   if (m.kind === 'ord' && !equipped) act('Select', () => invEquip(key), true);
   if (m.id === 'medkit' && m.kind === 'item') act('Use', () => invUse(key), true, player.hp >= maxHp());
   if (m.kind === 'item' && !ITEMS[m.id].quest) { act('Drop 1', () => invDrop(m.id, 1)); if (m.n > 2) act(`Drop ${Math.floor(m.n / 2)}`, () => invDrop(m.id, Math.floor(m.n / 2))); if (m.n > 1) act(`Drop all ${m.n}`, () => invDrop(m.id, m.n)); }
+  if (m.kind === 'item' && !ITEMS[m.id].quest && roomLvl('cargo')) { act('Beam 1 to ship', () => beamUp(m.id, 1)); if (m.n > 1) act(`Beam all ${m.n} to ship`, () => beamUp(m.id, m.n)); }
   if (invQuickOk(key)) { const qi = S.quick.indexOf(key); if (qi >= 0) act(`Remove from quick ${qi + 4}`, () => invAssignQuick(qi, null)); else act('Add to quick slot', () => { const free = S.quick.indexOf(null); invAssignQuick(free >= 0 ? free : INV_CFG.quick - 1, key); }); }
   act(INVUI.move === key ? 'Cancel move' : 'Move', () => { INVUI.move = INVUI.move === key ? null : key; if (INVUI.move && window.innerWidth < 900) INVUI.el.classList.remove('showdet'); invRender(); if (INVUI.move) INVUI.el.classList.remove('showdet'); });
   if (m.kind === 'item' && ITEMS[m.id].quest) { const n = document.createElement('div'); n.className = 'hint'; n.textContent = 'Quest items stay in your bag until the quest takes them.'; P.appendChild(n); }
@@ -374,3 +380,35 @@ function invArmorDetail(P) {
   if (L.a !== 'std') { const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Unequip'; b.addEventListener('click', () => invUnequip('armor')); acts.appendChild(b); }
   const n = document.createElement('div'); n.className = 'hint'; n.textContent = 'Buy more sets, capes and helmets in the Wardrobe.'; P.appendChild(n); return P;
 }
+
+// ---- ship storage view (Cargo Bay): same cells and details, its own counts ----
+function invStashPanel() {
+  const P = document.createElement('div'); P.className = 'pan bag'; const L = roomLvl('cargo'), cap = stashCap(), used = stashSlots();
+  const top = document.createElement('div'); top.className = 'stashTop';
+  top.innerHTML = `<b></b><span></span>`; top.querySelector('b').textContent = L >= 5 ? 'BLACK HOLE BOX' : `CARGO BAY · LEVEL ${L}`;
+  top.querySelector('span').textContent = (cap === Infinity ? `${used} slots used · unlimited` : `${used} / ${cap} slots`) + (beamDownOk() ? ' · beam items down from here' : ' · board your ship to take items out (Cargo Bay level 3 beams them down anywhere)');
+  P.appendChild(top);
+  const tools = document.createElement('div'); tools.className = 'tools'; P.appendChild(tools);
+  const q = document.createElement('input'); q.type = 'search'; q.placeholder = 'Search ship storage'; q.value = INVUI.q; q.setAttribute('aria-label', 'Search ship storage');
+  q.addEventListener('keydown', e => { if (e.code === 'Escape') { q.blur(); return; } e.stopPropagation(); }); q.addEventListener('input', () => { INVUI.q = q.value; const g = P.querySelector('.grid'); if (g) g.replaceWith(grid()); }); tools.appendChild(q);
+  const grid = () => { const G = document.createElement('div'); G.className = 'grid'; const qq = INVUI.q.trim().toLowerCase();
+    const ids = Object.keys(S.stash || {}).filter(id => ITEMS[id] && S.stash[id] > 0 && (!qq || ITEMS[id].name.toLowerCase().includes(qq))).sort((a, b) => ITEMS[a].name.localeCompare(ITEMS[b].name));
+    if (!ids.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = qq ? 'Nothing matches that search.' : 'Nothing stored yet. Select loot in your backpack and choose Beam to ship.'; G.appendChild(e); return G; }
+    for (const id of ids) { const key = 's:' + id, m = invMeta(key), c = document.createElement('div'); c.className = 'cell' + (INVUI.sel === key ? ' sel' : ''); c.dataset.key = key; c.tabIndex = 0; c.setAttribute('role', 'button');
+      c.innerHTML = `<span class="rb" style="background:${RARITY[m.rar][1]}"></span><span class="nm"></span>${invIconHtml(m.icon, m.col)}${m.n > 1 ? `<span class="n">${m.n}</span>` : ''}`; c.querySelector('.nm').textContent = m.name; c.title = `${m.name} ×${m.n}`;
+      c.addEventListener('click', () => { INVUI.sel = key; invRender(); }); c.addEventListener('dblclick', () => beamDown(id, m.n)); G.appendChild(c); }
+    return G; };
+  P.appendChild(grid()); return P;
+}
+function invStashDetail(P, key) {
+  const id = key.slice(2), m = invMetaSafe(key); if (!m || !m.n) { INVUI.sel = null; return P; }
+  const big = document.createElement('div'); big.className = 'big'; big.innerHTML = invIconHtml(m.icon, m.col); P.appendChild(big);
+  const h = document.createElement('h3'); h.textContent = m.name; P.appendChild(h);
+  const tb = document.createElement('table'); for (const [a, b] of [['Stored', m.n], ['In your bag', S.inv[id] || 0], ['Storage slots', invSlotsOf(id, m.n)], ['Sells for', `${sellPrice(id)} cr each`]]) { const tr = document.createElement('tr'); const t1 = document.createElement('td'); t1.textContent = a; const t2 = document.createElement('td'); t2.textContent = b; tr.append(t1, t2); tb.appendChild(tr); } P.appendChild(tb);
+  const A = document.createElement('div'); A.className = 'acts'; P.appendChild(A); const ok = beamDownOk(), room = invRoomFor(id);
+  const act = (l, n) => { const b = document.createElement('button'); b.className = 'btn' + (n === m.n ? ' pri' : ''); b.textContent = l; b.disabled = !ok || room < 1; b.addEventListener('click', () => beamDown(id, n)); A.appendChild(b); };
+  act('Beam 1 down', 1); if (m.n > 2) act(`Beam ${Math.floor(m.n / 2)} down`, Math.floor(m.n / 2)); if (m.n > 1) act(`Beam all ${m.n} down`, m.n);
+  const n = document.createElement('div'); n.className = 'hint'; n.textContent = !ok ? 'You can take items out aboard your ship. Upgrade the Cargo Bay to level 3 to beam them down from anywhere.' : room < m.n ? `Your bag has room for ${room} more.` : 'Beamed items land straight in your backpack.'; P.appendChild(n);
+  return P;
+}
+{ const st = document.createElement('style'); st.textContent = '#inv .stashTop{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #2f343b;border-left:3px solid #8f6ad0;border-radius:4px;background:#1a1820}#inv .stashTop b{font:700 12px system-ui;letter-spacing:.18em;color:#c8a8ff}#inv .stashTop span{font-size:12px;color:#9aa1aa}#inv .hd .cat{margin-left:4px}'; document.head.appendChild(st); }

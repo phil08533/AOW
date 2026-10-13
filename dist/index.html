@@ -328,7 +328,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.6</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.7</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -3972,9 +3972,9 @@ LEVELS.mezar = {
 // ---------------- YOUR SHIP ----------------
 const ROOMS = {
   bridge: { name: 'Bridge', fixed: true },
-  quarters: { name: 'Crew Quarters', cost: {}, desc: 'Sleep for a full heal and Well Rested (+15% XP for 15 min). Wardrobe and personal log.' },
+  quarters: { name: 'Crew Quarters', cost: {}, desc: 'Sleep for a full heal and Well Rested (bonus XP for a while). Wardrobe and personal log.' },
   armory: { name: 'Armory', cost: { cr: 400, circuit: 6 }, desc: 'Gun rack, upgrade workbench and an ordnance rack that refills your charges.' },
-  cargo: { name: 'Cargo Bay', cost: { cr: 300, scrap: 10 }, desc: 'Cargo manifest: sell your loot from the ship. Plenty of room to decorate.' },
+  cargo: { name: 'Cargo Bay', cost: { cr: 300, scrap: 10 }, desc: 'Ship storage: beam loot up from your backpack (100 slots, upgrades to a Black Hole Box). Cargo manifest to sell loot.' },
   med: { name: 'Med Bay', cost: { cr: 350, crystal: 3 }, desc: 'Healing pod and a stim station (take 25% less damage for 10 min).' },
   trophy: { name: 'Trophy Hall', cost: { cr: 600 }, desc: 'Shows off every boss you beat, plus the Hall of Records leaderboards.' },
   garden: { name: 'Hydro Garden', cost: { cr: 450, shell: 6 }, desc: 'Grows medkits over time. Fish tank included.' },
@@ -4072,6 +4072,7 @@ LEVELS.ship = {
         box(far - s.side * 0.5, cz - 0.4, 1.0, 4.2);
         for (const z of [s.z0 + 0.3, s.z1 - 0.3]) part(props, B(Math.abs(s.x1 - s.x0) - 0.6, 0.012, 0.3), toon('#ffd36a', 'hazard'), cx, 0.014, z);
         term(cx - s.side * 1.0, s.z1 - 0.6, '#ffd36a', 'Cargo manifest (sell loot)', () => openStore('sell', 'Cargo manifest'), Math.PI);
+        cargoStorage(s, cx, cz, far, term);
       }
       if (id === 'med') {
         const pod = new THREE.Group(); part(pod, Cy(0.7, 0.7, 0.3, 10), '#d8e8ec', 0, 0.15, 0); const gl = part(pod, Cy(0.6, 0.6, 2.0, 10), glow('#6fdc5a'), 0, 1.2, 0); gl.material = gl.material.clone(); gl.material.transparent = true; gl.material.opacity = 0.35; part(pod, Cy(0.7, 0.7, 0.3, 10), '#d8e8ec', 0, 2.3, 0); pod.position.set(far, 0, cz - 2); props.add(pod); solid(far, cz - 2, 0.7);
@@ -4158,10 +4159,10 @@ function trophyList() {
   return out;
 }
 function harvestGarden() {
-  const now = Date.now(), last = S.ship.garden || 0, ready = Math.floor((now - last) / 600000);
+  const now = Date.now(), last = S.ship.garden || 0, ready = Math.floor((now - last) / gardenEvery()), most = gardenMax();
   openDlg('Hydro Garden', 'Harvest');
-  if (!last) { S.ship.garden = now; $('dlgLine').textContent = 'Seeds planted. A medkit grows every 10 minutes, up to 3 at a time.'; markDirty(); }
-  else if (ready > 0) { const n = Math.min(3, ready); S.inv.medkit = (S.inv.medkit || 0) + n; S.ship.garden = now; $('dlgLine').textContent = `You harvested ${n} medkit${n > 1 ? 's' : ''}.`; SFX.item(); markDirty(); }
+  if (!last) { S.ship.garden = now; $('dlgLine').textContent = `Seeds planted. A medkit grows every ${Math.round(gardenEvery() / 60000)} minutes, up to ${most} at a time.`; markDirty(); }
+  else if (ready > 0) { const n = Math.min(most, ready); S.inv.medkit = (S.inv.medkit || 0) + n; S.ship.garden = now; $('dlgLine').textContent = `You harvested ${n} medkit${n > 1 ? 's' : ''}.`; SFX.item(); markDirty(); }
   else $('dlgLine').textContent = 'Nothing ripe yet. Check back in a few minutes.';
   acts([['Close', closeDlg]]);
 }
@@ -4264,8 +4265,10 @@ function openShipTerminal() {
       const own = S.ship.rooms.includes(id), r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = own ? '#6fdc5a' : '#8fe3ff';
       const nm = document.createElement('span'); nm.textContent = `${R.name} — ${R.desc}`;
-      const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = own ? 'Installed' : costLabel(R.cost);
-      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = own ? '✓' : 'Build'; b.disabled = own || !costOk(R.cost);
+      const lv = roomLvl(id), nc = own && lv < 5 ? roomUpCost(id, lv + 1) : null; if (own) nm.textContent = `${R.name} · Level ${lv}${lv < 5 ? ` → ${lv + 1}: ${roomUpText(id, lv + 1)}` : ' (max): ' + roomUpText(id, 5)}`;
+      const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = own ? (nc ? costLabel(nc) : 'Maxed') : costLabel(R.cost);
+      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = own ? (nc ? 'Upgrade' : '✓') : 'Build'; b.disabled = own ? !nc || !costOk(nc) : !costOk(R.cost);
+      if (own) { if (nc) b.addEventListener('click', () => roomUpgrade(id)); r.append(dot, nm, mt, b); rows.appendChild(r); return; }
       b.addEventListener('click', () => { costPay(R.cost); S.ship.rooms.push(id); markDirty(); SFX.level(); closeDlg(); loadLevel('ship', { at: { x: player.pos.x, z: player.pos.z, yaw: player.yaw } }); toast('ROOM ADDED', R.name); if (typeof burp === 'function') burp('room'); });
       r.append(dot, nm, mt, b); rows.appendChild(r);
     });
@@ -8140,7 +8143,7 @@ const ORD = {
   hole: { name: 'Black hole', lvl: 28, col: '#9b6bff', r: 7, dmg: 160, desc: 'Pulls everything in, then pops', pull: 1.8 },
   orbital: { name: 'Orbital strike beacon', lvl: 35, col: '#ff3b2a', r: 8, dmg: 600, desc: 'Marks a spot; the sky answers 2 seconds later', delay: 2 }
 };
-const ORD_MAX = 3, ORD_RECHARGE = 9;
+let ORD_MAX = 3; const ORD_RECHARGE = 9;
 const ordSel = () => { const o = S.ord || 'frag'; return ORD[o] && S.lvl >= ORD[o].lvl ? o : 'frag'; };
 let ordCharges = ORD_MAX, ordT = 0; const grenades = [];
 function throwOrd() {
@@ -8943,7 +8946,7 @@ let VH = { on: false };
 const vehS = () => { S.veh = S.veh || { owned: [], sel: null, res: { arm: 0, wpn: 0, eng: 0 } }; S.veh.res = S.veh.res || { arm: 0, wpn: 0, eng: 0 }; return S.veh; };
 const vehMaxHp = id => Math.round(VEH[id].hp * (1 + vehS().res.arm * 0.25));
 const vehDmg = id => VEH[id].gun.dmg * (1 + vehS().res.wpn * 0.25) * (1 + S.lvl * 0.02);
-const vehTop = id => VEH[id].top * (1 + vehS().res.eng * 0.12);
+const vehTop = id => VEH[id].top * (1 + vehS().res.eng * 0.12) * (1 + 0.04 * Math.max(0, roomLvl('hangar') - 1));
 // cockpit view models
 const vmVeh = {}; for (const id in VEH) { const g = new THREE.Group(); camera.add(g); g.visible = false; vmVeh[id] = g; }
 { const g = vmVeh.battlecar; part(g, B(1.6, 0.1, 1.0), '#8a3a2e', 0, -0.75, -1.3); for (const s of [-1, 1]) { part(g, B(0.1, 0.1, 0.7), '#3a3d44', 0.55 * s, -0.55, -1.0); part(g, Cy(0.025, 0.025, 0.4, 6), '#2b2a2c', 0.55 * s, -0.55, -1.5, Math.PI / 2); }
@@ -12389,9 +12392,9 @@ for (const id in GUNS) { const G = GUNS[id]; if (G.mana && !/·/.test(G.name)) G
 const buffs = () => { S.buffs = S.buffs || {}; return S.buffs; };
 const buffOn = k => (buffs()[k] || 0) > Date.now();
 function sleepInBunk() {
-  player.hp = maxHp(); buffs().rest = Date.now() + 15 * 60000; markDirty(); SFX.quest();
+  player.hp = maxHp(); buffs().rest = Date.now() + restMin() * 60000; markDirty(); SFX.quest();
   const f = $('fade'); f.hidden = false; f.style.opacity = 1; $('fadeTxt').textContent = 'Zzz…';
-  setTimeout(() => { f.style.opacity = 0; setTimeout(() => { f.hidden = true; }, 400); toast('WELL RESTED', 'Full health · +15% XP for 15 minutes', 3); }, 900);
+  setTimeout(() => { f.style.opacity = 0; setTimeout(() => { f.hidden = true; }, 400); toast('WELL RESTED', `Full health · +${restMin()}% XP for ${restMin()} minutes`, 3); }, 900);
 }
 function refillOrdnance() {
   if (ordCharges >= ORD_MAX) { toast('ORDNANCE', 'Already full', 1.2); return; }
@@ -12401,11 +12404,11 @@ function useStim() {
   const B0 = buffs(), now = Date.now();
   openDlg('Med Bay', 'Stim station');
   if (B0.stimCd && B0.stimCd > now) { $('dlgLine').textContent = `The stim synthesizer is still cooling down. Ready in ${Math.ceil((B0.stimCd - now) / 60000)} min.`; acts([['Close', closeDlg, true]]); return; }
-  $('dlgLine').textContent = 'An armor stim hardens your skin for 10 minutes: you take 25% less damage. One dose every 30 minutes.';
-  acts([['Inject', () => { B0.stim = now + 10 * 60000; B0.stimCd = now + 30 * 60000; markDirty(); closeDlg(); SFX.quest(); toast('ARMOR STIM', '-25% damage taken for 10 minutes', 3); }, true], ['Not now', closeDlg]]);
+  $('dlgLine').textContent = `An armor stim hardens your skin for 10 minutes: you take ${Math.round(stimCut() * 100)}% less damage. One dose every ${stimCd()} minutes.`;
+  acts([['Inject', () => { B0.stim = now + 10 * 60000; B0.stimCd = now + stimCd() * 60000; markDirty(); closeDlg(); SFX.quest(); toast('ARMOR STIM', `-${Math.round(stimCut() * 100)}% damage taken for 10 minutes`, 3); }, true], ['Not now', closeDlg]]);
 }
-{ const _g = gainXp; gainXp = function (n) { return _g(buffOn('rest') ? Math.round(n * 1.15) : n); }; }
-{ const _h = hurt; hurt = function (dmg, src) { return _h(buffOn('stim') ? dmg * 0.75 : dmg, src); }; }
+{ const _g = gainXp; gainXp = function (n) { return _g(buffOn('rest') ? Math.round(n * (1 + restMin() / 100)) : n); }; }
+{ const _h = hurt; hurt = function (dmg, src) { return _h(buffOn('stim') ? dmg * (1 - stimCut()) : dmg, src); }; }
 // show active buffs on the HUD next to the medkit and drone chips
 { const chip = document.createElement('span'); chip.className = 'vchip'; chip.style.cursor = 'default'; chip.hidden = true; const host = document.getElementById('vchips'); if (host) host.appendChild(chip);
   setInterval(() => { const t = []; const now = Date.now(); if (buffOn('rest')) t.push(`💤 ${Math.ceil((buffs().rest - now) / 60000)}m`); if (buffOn('stim')) t.push(`🛡 ${Math.ceil((buffs().stim - now) / 60000)}m`); chip.hidden = !t.length; chip.textContent = t.join(' '); }, 1000); }
@@ -14631,7 +14634,7 @@ function invMeta(key) {
   if (t === 'g') { const g = GUNS[id], kind = gunKind(id), tier = gunTier(id); return { kind: 'gun', id, name: g.name + (tier ? ' ' + '★'.repeat(tier) : ''), cat: 'wpn', sub: kind, rar: rarByLvl(g.req || 1), w: kind === 'heavy' ? 9 : kind === 'staff' ? 2.5 : kind === 'pistol' ? 1.4 : 4, v: g.price || 0, icon: kind === 'staff' ? 'staff' : kind, span: kind === 'pistol' ? 1 : 2, col: g.col || '#e08a2e', n: 1 }; }
   if (t === 'm') { const M = MELEE[id]; return { kind: 'melee', id, name: M.name, cat: 'wpn', sub: 'melee', rar: id === 'knife' ? 'common' : rarByLvl(M.req || 1), w: M.reach > 3 ? 4 : 1.6, v: M.price || 0, icon: /claw|nunchuck/.test(id) ? 'fang' : 'sword', span: M.reach > 3 ? 2 : 1, col: M.col || '#cfd4dc', n: 1 }; }
   if (t === 'o') { const O = ORD[id]; return { kind: 'ord', id, name: O.name, cat: 'wpn', sub: 'ord', rar: rarByLvl(O.lvl), w: 0.5, v: 0, icon: 'grenade', span: 1, col: O.col, n: 1 }; }
-  const I = ITEMS[id] || { name: id, v: 0, col: '#9aa1aa' }, n = S.inv[id] || 0;
+  const I = ITEMS[id] || { name: id, v: 0, col: '#9aa1aa' }, n = (t === 's' ? (S.stash || {})[id] : S.inv[id]) || 0;
   let cat = 'misc', sub = 'junk';
   if (I.quest) { cat = 'quest'; sub = null; }
   else if (id === 'medkit' || I.use) { cat = 'med'; sub = I.sub || 'medkit'; }
@@ -14677,11 +14680,14 @@ function invSync() { // keep the saved layout in step with what you actually own
   const have = invKeys(), set = new Set(have); S.invOrder = (S.invOrder || []).filter(k => set.has(k)); const placed = new Set(S.invOrder); for (const k of have) if (!placed.has(k)) S.invOrder.push(k);
   S.invT = S.invT || {}; S.quick = S.quick || []; while (S.quick.length < INV_CFG.quick) S.quick.push(null); return S.invOrder;
 }
-const invSlotsUsed = () => Object.keys(S.inv).filter(k => ITEMS[k] && S.inv[k] > 0 && !ITEMS[k].quest).length;
+const invStack = id => id === 'medkit' ? 10 : 25; // how many fit in one slot
+const invSlotsOf = (id, n) => ITEMS[id] && !ITEMS[id].quest && n > 0 ? Math.ceil(n / invStack(id)) : 0;
+const invSlotsUsed = () => Object.keys(S.inv).reduce((a, k) => a + invSlotsOf(k, S.inv[k]), 0);
+const invRoomFor = id => { if (!ITEMS[id]) return 0; if (ITEMS[id].quest) return 1e9; const cur = S.inv[id] || 0, st = invStack(id), free = INV_CFG.cap - invSlotsUsed(); return Math.max(0, (cur ? st * Math.ceil(cur / st) - cur : 0) + Math.max(0, free) * st); };
 const invWeight = () => invKeys().reduce((a, k) => { const m = invMeta(k); return a + m.w * (m.kind === 'item' ? m.n : 1); }, 0);
 function invAdd(id, n, quiet) { // the one safe way to put loot in the bag: stacks, respects the slot limit, never drops anything silently
   if (!ITEMS[id] || !(n > 0)) return false;
-  if (!S.inv[id] && !ITEMS[id].quest && invSlotsUsed() >= INV_CFG.cap) { invFullNote(id); return false; }
+  if (invRoomFor(id) < n) { invFullNote(id); return false; }
   S.inv[id] = (S.inv[id] || 0) + n; S.invT = S.invT || {}; S.invT['i:' + id] = Date.now(); if (!quiet) invPickupNote(id, n); markDirty(); return true;
 }
 function invFullNote(id) { const now = performance.now(); if (now - INVUI.full < 3000) return; INVUI.full = now; SFX.hit(); invChip(invIconHtml(itemIcon(id), ITEMS[id].col), `Bag full · ${ITEMS[id].name} left on the ground`, true); log(`Your bag is full (${INV_CFG.cap} slots). ${ITEMS[id].name} stays on the ground: sell or drop something to make room.`); }
@@ -14828,7 +14834,7 @@ function invQuickRender() {
     b.innerHTML = invIconHtml(m.icon, m.col) + (TOUCH ? '' : `<span class="k">${i + 4}</span>`) + (m.kind === 'item' ? `<span class="n">${m.n}</span>` : ''); if (m.kind === 'item' && !m.n) b.classList.add('zero');
     b.addEventListener('click', e => { e.stopPropagation(); invQuickUse(i); }); bar.appendChild(b); });
 }
-function invMetaSafe(key) { try { const [t, id] = key.split(':'); if (t === 'g' && !GUNS[id]) return null; if (t === 'm' && !MELEE[id]) return null; if (t === 'o' && !ORD[id]) return null; if (t === 'i' && !ITEMS[id]) return null; return invMeta(key); } catch (_) { return null; } }
+function invMetaSafe(key) { try { const [t, id] = key.split(':'); if (t === 'g' && !GUNS[id]) return null; if (t === 'm' && !MELEE[id]) return null; if (t === 'o' && !ORD[id]) return null; if ((t === 'i' || t === 's') && !ITEMS[id]) return null; return invMeta(key); } catch (_) { return null; } }
 setInterval(() => { try { const bar = document.getElementById('qbar'); const want = state === 'play' && S.quick && S.quick.some(Boolean); if (!bar || bar.hidden === want || want) invQuickRender(); } catch (_) {} }, 500);
 
 // ---- drawing the screen ----
@@ -14839,10 +14845,11 @@ function invRender() {
   // header
   const used = invSlotsUsed(), hd = mk('div', 'hd'); hd.appendChild(mk('h2', '', 'BACKPACK'));
   const tabs = mk('div', 'tabs'); for (const [k, l] of [['bag', 'Backpack'], ['eq', 'Equipment']]) { const b = mk('button', INVUI.tab === k ? 'on' : ''); b.textContent = l; b.addEventListener('click', () => { INVUI.tab = k; el.className = 'on tab-' + k; invRender(); }); tabs.appendChild(b); } hd.appendChild(tabs);
-  const s1 = mk('span', 'stat' + (used >= INV_CFG.cap ? ' full' : ''), `Slots <b>${used}/${INV_CFG.cap}</b>`); s1.title = 'Loot stacks. Weapons and quest items don\'t use slots.'; hd.appendChild(s1);
+  const s1 = mk('span', 'stat' + (used >= INV_CFG.cap ? ' full' : ''), `Slots <b>${used}/${INV_CFG.cap}</b>`); s1.title = 'Loot stacks of up to 25 (medkits 10). Weapons and quest items don\'t use slots.'; hd.appendChild(s1);
+  if (roomLvl('cargo')) { const sv = mk('button', 'cat' + (INVUI.view === 'stash' ? ' on' : '')); sv.textContent = INVUI.view === 'stash' ? '◂ Back to bag' : 'Ship storage ▸'; sv.addEventListener('click', () => { INVUI.view = INVUI.view === 'stash' ? 'bag' : 'stash'; INVUI.sel = null; INVUI.move = null; INVUI.tab = 'bag'; el.className = 'on tab-bag'; invRender(); }); hd.appendChild(sv); }
   hd.appendChild(mk('span', 'stat', `Weight <b>${invWeight().toFixed(1)} kg</b>`)); hd.appendChild(mk('span', 'stat', `<b>${S.cr.toLocaleString()}</b> cr`));
   const x = mk('button', 'x', '✕'); x.setAttribute('aria-label', 'Close inventory'); x.addEventListener('click', invClose); hd.appendChild(x); frame.appendChild(hd);
-  frame.appendChild(invEquipPanel()); frame.appendChild(invBagPanel(order)); frame.appendChild(invDetailPanel());
+  if (INVUI.view === 'stash' && !roomLvl('cargo')) INVUI.view = 'bag'; frame.appendChild(invEquipPanel()); frame.appendChild(INVUI.view === 'stash' ? invStashPanel() : invBagPanel(order)); frame.appendChild(invDetailPanel());
   // footer: the other gear screens
   const ft = mk('div', 'ft'); const link = (l, fn) => { const b = mk('button', 'btn'); b.textContent = l; b.addEventListener('click', fn); ft.appendChild(b); };
   link('Wardrobe', () => openWardrobe()); link('Gun mods', () => openGunMods()); link('Pets', () => openPets());
@@ -14862,7 +14869,7 @@ function invEquipPanel() {
   const M = MELEE[S.melee || 'knife'] || MELEE.knife; slot('melee', 'Melee', 'm:' + (S.melee || 'knife'), M.name, `${M.dmg} dmg · ${M.reach} m reach`, invMeta('m:' + (S.melee || 'knife')).icon, M.col || '#cfd4dc');
   for (const [k, t] of [['gun', 'Firearm'], ['staff', 'Staff']]) { const id = sl[k], g = GUNS[id]; if (g) { const m = invMeta('g:' + id); slot(k, t + (S.gun === id && !handMelee() ? ' · in hand' : ''), 'g:' + id, m.name, `${Math.round(g.dmg * (1 + 0.08 * gunTier(id)))} dmg · ${g.mag} ${g.mana ? 'mana' : 'rounds'}`, m.icon, m.col); } else slot(k, t, null, null, k === 'gun' ? 'Buy one at a gunsmith' : 'Buy one from a mage'); }
   const A = ARMORS[L.a] || ARMORS.std; slot('armor', 'Armor', 'slot:armor', A.name, A.def ? `−${Math.round(A.def * 100)}% damage taken` : 'No damage reduction', 'hide', A.trim || '#c9b27c');
-  const O = ORD[ordSel()]; slot('ord', 'Ordnance', 'o:' + ordSel(), O.name, `${O.dmg} dmg · ${typeof ordCharges === 'number' ? Math.floor(ordCharges) : 3}/3 ready`, 'grenade', O.col);
+  const O = ORD[ordSel()]; slot('ord', 'Ordnance', 'o:' + ordSel(), O.name, `${O.dmg} dmg · ${typeof ordCharges === 'number' ? Math.floor(ordCharges) : ORD_MAX}/${ORD_MAX} ready`, 'grenade', O.col);
   if (S.rod && RODS[S.rod]) { const d = document.createElement('div'); d.className = 'slot'; d.innerHTML = `<div class="ic">${invIconHtml('staff', '#c9a43a')}</div><div class="tx"><div class="t1">Fishing rod</div><div class="t2"></div><div class="t3">Used at fishing spots</div></div>`; d.querySelector('.t2').textContent = RODS[S.rod].name; P.appendChild(d); }
   lbl(`Quick slots · keys 4–${3 + INV_CFG.quick}`); const qr = document.createElement('div'); qr.className = 'qrow'; P.appendChild(qr);
   S.quick.forEach((key, i) => { const q = document.createElement('div'); q.className = 'q' + (INVUI.sel === 'q:' + i ? ' sel' : ''); const m = key && invMetaSafe(key);
@@ -14925,6 +14932,7 @@ function invDetailPanel() {
   const close = document.createElement('button'); close.className = 'btn close'; close.textContent = '✕'; close.setAttribute('aria-label', 'Close details'); close.addEventListener('click', () => { INVUI.sel = null; INVUI.el.classList.remove('showdet'); invRender(); }); P.appendChild(close);
   if (!key) { const p = document.createElement('p'); p.textContent = TOUCH ? 'Tap an item to see what it does. Tap Move, then tap a slot, to put it somewhere.' : 'Select an item to see its details. Drag items onto equipment or quick slots, or drag them around the grid to arrange your bag (with Sort set to My layout).'; P.appendChild(p); return P; }
   if (key === 'slot:armor') return invArmorDetail(P);
+  if (/^s:/.test(key)) return invStashDetail(P, key);
   if (/^slot:|^q:/.test(key)) { const p = document.createElement('p'); p.textContent = /^q:/.test(key) ? 'Empty quick slot. Select a weapon, medkit or ordnance in your bag and choose a quick slot for it.' : 'Empty slot. Pick a matching item from your bag to equip it.'; P.appendChild(p); return P; }
   const m = invMetaSafe(key); if (!m) { INVUI.sel = null; return P; }
   const big = document.createElement('div'); big.className = 'big'; P.appendChild(big);
@@ -14944,7 +14952,7 @@ function invDetailPanel() {
   else if (m.kind === 'melee') { const M = MELEE[m.id], cur = MELEE[S.melee || 'knife']; const cmp = (v, cv, inv) => cur !== M ? ` <small class="${(inv ? v < cv : v > cv) ? 'up' : 'dn'}">${(v - cv) > 0 ? '+' : ''}${Math.round((v - cv) * 100) / 100}</small>` : '';
     row('Damage per swing', M.dmg + cmp(M.dmg, cur.dmg)); row('Swing time', M.rate + 's' + cmp(M.rate, cur.rate, true)); row('Reach', M.reach + ' m' + cmp(M.reach, cur.reach)); row('Durability', 'Never breaks'); row('Needs level', M.req || 1);
     dtext = 'Melee weapon. Swing with F or right click.' + (cur !== M ? ` Numbers compare it with your ${cur.name}.` : ''); }
-  else if (m.kind === 'ord') { const O = ORD[m.id]; row('Damage', O.dmg); row('Blast radius', O.r + ' m'); row('Charges', '3, recharging every 9s'); row('Unlocks at level', O.lvl); dtext = O.desc + '. Throw with the NADE button or your ordnance key.'; }
+  else if (m.kind === 'ord') { const O = ORD[m.id]; row('Damage', O.dmg); row('Blast radius', O.r + ' m'); row('Charges', `${ORD_MAX}, recharging every 9s`); row('Unlocks at level', O.lvl); dtext = O.desc + '. Throw with the NADE button or your ordnance key.'; }
   else { const I = ITEMS[m.id]; row('Quantity', m.n); row('Weight', (m.w * m.n).toFixed(1) + ' kg' + (m.n > 1 ? ` (${m.w} each)` : '')); if (!I.quest) row('Sells for', `${sellPrice(m.id)} cr each`);
     const uses = []; try { for (const p of Object.values(PIECES)) if (p.cost && p.cost[m.id]) uses.push(p.name); } catch (_) {}
     if (m.id === 'medkit') { row('Effect', '+50 health'); row('Duration', 'Instant'); dtext = 'Patches you up in a hurry. Press H, tap the ✚ button, or put it in a quick slot.'; }
@@ -14962,6 +14970,7 @@ function invDetailPanel() {
   if (m.kind === 'ord' && !equipped) act('Select', () => invEquip(key), true);
   if (m.id === 'medkit' && m.kind === 'item') act('Use', () => invUse(key), true, player.hp >= maxHp());
   if (m.kind === 'item' && !ITEMS[m.id].quest) { act('Drop 1', () => invDrop(m.id, 1)); if (m.n > 2) act(`Drop ${Math.floor(m.n / 2)}`, () => invDrop(m.id, Math.floor(m.n / 2))); if (m.n > 1) act(`Drop all ${m.n}`, () => invDrop(m.id, m.n)); }
+  if (m.kind === 'item' && !ITEMS[m.id].quest && roomLvl('cargo')) { act('Beam 1 to ship', () => beamUp(m.id, 1)); if (m.n > 1) act(`Beam all ${m.n} to ship`, () => beamUp(m.id, m.n)); }
   if (invQuickOk(key)) { const qi = S.quick.indexOf(key); if (qi >= 0) act(`Remove from quick ${qi + 4}`, () => invAssignQuick(qi, null)); else act('Add to quick slot', () => { const free = S.quick.indexOf(null); invAssignQuick(free >= 0 ? free : INV_CFG.quick - 1, key); }); }
   act(INVUI.move === key ? 'Cancel move' : 'Move', () => { INVUI.move = INVUI.move === key ? null : key; if (INVUI.move && window.innerWidth < 900) INVUI.el.classList.remove('showdet'); invRender(); if (INVUI.move) INVUI.el.classList.remove('showdet'); });
   if (m.kind === 'item' && ITEMS[m.id].quest) { const n = document.createElement('div'); n.className = 'hint'; n.textContent = 'Quest items stay in your bag until the quest takes them.'; P.appendChild(n); }
@@ -14975,6 +14984,128 @@ function invArmorDetail(P) {
   if (L.a !== 'std') { const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Unequip'; b.addEventListener('click', () => invUnequip('armor')); acts.appendChild(b); }
   const n = document.createElement('div'); n.className = 'hint'; n.textContent = 'Buy more sets, capes and helmets in the Wardrobe.'; P.appendChild(n); return P;
 }
+
+// ---- ship storage view (Cargo Bay): same cells and details, its own counts ----
+function invStashPanel() {
+  const P = document.createElement('div'); P.className = 'pan bag'; const L = roomLvl('cargo'), cap = stashCap(), used = stashSlots();
+  const top = document.createElement('div'); top.className = 'stashTop';
+  top.innerHTML = `<b></b><span></span>`; top.querySelector('b').textContent = L >= 5 ? 'BLACK HOLE BOX' : `CARGO BAY · LEVEL ${L}`;
+  top.querySelector('span').textContent = (cap === Infinity ? `${used} slots used · unlimited` : `${used} / ${cap} slots`) + (beamDownOk() ? ' · beam items down from here' : ' · board your ship to take items out (Cargo Bay level 3 beams them down anywhere)');
+  P.appendChild(top);
+  const tools = document.createElement('div'); tools.className = 'tools'; P.appendChild(tools);
+  const q = document.createElement('input'); q.type = 'search'; q.placeholder = 'Search ship storage'; q.value = INVUI.q; q.setAttribute('aria-label', 'Search ship storage');
+  q.addEventListener('keydown', e => { if (e.code === 'Escape') { q.blur(); return; } e.stopPropagation(); }); q.addEventListener('input', () => { INVUI.q = q.value; const g = P.querySelector('.grid'); if (g) g.replaceWith(grid()); }); tools.appendChild(q);
+  const grid = () => { const G = document.createElement('div'); G.className = 'grid'; const qq = INVUI.q.trim().toLowerCase();
+    const ids = Object.keys(S.stash || {}).filter(id => ITEMS[id] && S.stash[id] > 0 && (!qq || ITEMS[id].name.toLowerCase().includes(qq))).sort((a, b) => ITEMS[a].name.localeCompare(ITEMS[b].name));
+    if (!ids.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = qq ? 'Nothing matches that search.' : 'Nothing stored yet. Select loot in your backpack and choose Beam to ship.'; G.appendChild(e); return G; }
+    for (const id of ids) { const key = 's:' + id, m = invMeta(key), c = document.createElement('div'); c.className = 'cell' + (INVUI.sel === key ? ' sel' : ''); c.dataset.key = key; c.tabIndex = 0; c.setAttribute('role', 'button');
+      c.innerHTML = `<span class="rb" style="background:${RARITY[m.rar][1]}"></span><span class="nm"></span>${invIconHtml(m.icon, m.col)}${m.n > 1 ? `<span class="n">${m.n}</span>` : ''}`; c.querySelector('.nm').textContent = m.name; c.title = `${m.name} ×${m.n}`;
+      c.addEventListener('click', () => { INVUI.sel = key; invRender(); }); c.addEventListener('dblclick', () => beamDown(id, m.n)); G.appendChild(c); }
+    return G; };
+  P.appendChild(grid()); return P;
+}
+function invStashDetail(P, key) {
+  const id = key.slice(2), m = invMetaSafe(key); if (!m || !m.n) { INVUI.sel = null; return P; }
+  const big = document.createElement('div'); big.className = 'big'; big.innerHTML = invIconHtml(m.icon, m.col); P.appendChild(big);
+  const h = document.createElement('h3'); h.textContent = m.name; P.appendChild(h);
+  const tb = document.createElement('table'); for (const [a, b] of [['Stored', m.n], ['In your bag', S.inv[id] || 0], ['Storage slots', invSlotsOf(id, m.n)], ['Sells for', `${sellPrice(id)} cr each`]]) { const tr = document.createElement('tr'); const t1 = document.createElement('td'); t1.textContent = a; const t2 = document.createElement('td'); t2.textContent = b; tr.append(t1, t2); tb.appendChild(tr); } P.appendChild(tb);
+  const A = document.createElement('div'); A.className = 'acts'; P.appendChild(A); const ok = beamDownOk(), room = invRoomFor(id);
+  const act = (l, n) => { const b = document.createElement('button'); b.className = 'btn' + (n === m.n ? ' pri' : ''); b.textContent = l; b.disabled = !ok || room < 1; b.addEventListener('click', () => beamDown(id, n)); A.appendChild(b); };
+  act('Beam 1 down', 1); if (m.n > 2) act(`Beam ${Math.floor(m.n / 2)} down`, Math.floor(m.n / 2)); if (m.n > 1) act(`Beam all ${m.n} down`, m.n);
+  const n = document.createElement('div'); n.className = 'hint'; n.textContent = !ok ? 'You can take items out aboard your ship. Upgrade the Cargo Bay to level 3 to beam them down from anywhere.' : room < m.n ? `Your bag has room for ${room} more.` : 'Beamed items land straight in your backpack.'; P.appendChild(n);
+  return P;
+}
+{ const st = document.createElement('style'); st.textContent = '#inv .stashTop{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #2f343b;border-left:3px solid #8f6ad0;border-radius:4px;background:#1a1820}#inv .stashTop b{font:700 12px system-ui;letter-spacing:.18em;color:#c8a8ff}#inv .stashTop span{font-size:12px;color:#9aa1aa}#inv .hd .cat{margin-left:4px}'; document.head.appendChild(st); }
+
+// =================== SHIP STORAGE + ROOM LEVELS ===================
+// Every room you build can be upgraded from level 1 to 5 at the Engineering terminal.
+// The Cargo Bay doubles as ship storage: beam loot up from the backpack; level 5 is the Black Hole Box (no limit).
+// New, optional save fields (old saves start empty): S.ship.lvl (room → level), S.stash (item → count).
+const ROOM_MAX = 5;
+function roomLvl(id) { return S.ship && (S.ship.rooms || []).includes(id) ? Math.min(ROOM_MAX, Math.max(1, (S.ship.lvl || {})[id] || 1)) : 0; }
+const lvUp = id => Math.max(0, roomLvl(id) - 1); // levels bought on top of the base room
+const restMin = () => 15 + 5 * lvUp('quarters');            // Well Rested: +X% XP for X minutes
+const stimCut = () => 0.25 + 0.05 * lvUp('med');             // armor stim damage cut
+const stimCd = () => 30 - 5 * lvUp('med');                   // minutes between stims
+const gardenEvery = () => (10 - 1.5 * lvUp('garden')) * 60000; // one medkit per this long
+const gardenMax = () => 3 + 2 * lvUp('garden');
+const STASH_CAP = [0, 100, 200, 400, 800, Infinity];
+const stashCap = () => STASH_CAP[roomLvl('cargo')];
+const stashSlots = () => Object.keys(S.stash || {}).reduce((a, k) => a + invSlotsOf(k, S.stash[k]), 0);
+function stashRoomFor(id) { const cap = stashCap(); if (cap === Infinity) return 1e9; const cur = (S.stash || {})[id] || 0, st = invStack(id); return Math.max(0, (cur ? st * Math.ceil(cur / st) - cur : 0) + Math.max(0, cap - stashSlots()) * st); }
+const beamDownOk = () => roomLvl('cargo') > 0 && (LEVEL.id === 'ship' || roomLvl('cargo') >= 3);
+
+// what the next level of each room gives
+function roomUpText(id, L) {
+  const u = L - 1;
+  return ({
+    quarters: `Well Rested gives +${15 + 5 * u}% XP for ${15 + 5 * u} min`,
+    armory: `${3 + (L >= 3) + (L >= 5)} ordnance charges, gun upgrades ${5 * u}% cheaper`,
+    cargo: L >= 5 ? 'Black Hole Box: unlimited ship storage' : `${STASH_CAP[L]} storage slots${L >= 3 ? ', beam items down from anywhere' : ''}`,
+    med: `Stim cuts damage ${25 + 5 * u}%, ready every ${30 - 5 * u} min`,
+    trophy: `+${4 * u}% credits from bosses`,
+    garden: `A medkit every ${10 - 1.5 * u} min, holds ${3 + 2 * u}`,
+    hangar: `Vehicles ${4 * u}% faster`
+  })[id] || 'Better in every way';
+}
+const ROOM_UP_MATS = { 2: { scrap: 8 }, 3: { circuit: 6 }, 4: { crystal: 5 }, 5: { core: 6 } }, ROOM_UP_MULT = { 2: 2, 3: 4, 4: 8, 5: 15 };
+function roomUpCost(id, L) { const R = ROOMS[id]; if (!R || R.fixed || L < 2 || L > ROOM_MAX) return null; const base = Math.max(300, (R.cost && R.cost.cr) || 0); return Object.assign({ cr: base * ROOM_UP_MULT[L] }, ROOM_UP_MATS[L]); }
+function roomUpgrade(id) {
+  const L = roomLvl(id) + 1, c = roomUpCost(id, L); if (!L || !c || L > ROOM_MAX || !costOk(c)) { SFX.hit(); return; }
+  costPay(c); S.ship.lvl = S.ship.lvl || {}; S.ship.lvl[id] = L; roomApply(); markDirty(); SFX.level();
+  toast(`${ROOMS[id].name.toUpperCase()} · LEVEL ${L}`, roomUpText(id, L), 3);
+  closeDlg(); if (LEVEL.id === 'ship') loadLevel('ship', { at: { x: player.pos.x, z: player.pos.z, yaw: player.yaw } });
+}
+// bonuses that live in other systems' numbers
+const MOD_COST_BASE = MOD_COST.map(c => Object.assign({}, c));
+function roomApply() {
+  const A = roomLvl('armory'), om = 3 + (A >= 3) + (A >= 5); if (ORD_MAX !== om) { ORD_MAX = om; ordCharges = Math.min(ordCharges, ORD_MAX); }
+  const off = 1 - 0.05 * Math.max(0, A - 1); MOD_COST.forEach((c, i) => { c.cr = Math.round(MOD_COST_BASE[i].cr * off); });
+}
+setInterval(() => { try { roomApply(); } catch (_) {} }, 1000);
+{ const _k = kill; kill = function (e) { const r = _k(e); try { const t = lvUp('trophy'); if (t && e.def && e.def.boss && e.def.cr) { const n = Math.round((e.def.cr[0] + e.def.cr[1]) / 2 * (1 + 0.2 * ((e.lv || 1) - 1)) * 0.04 * t); S.cr += n; log(`+${n} cr (Trophy Hall bonus)`, 'loot'); } } catch (_) {} return r; }; }
+
+// ---- beaming: backpack ⇄ ship (each move re-checks the real counts, so rapid taps can't copy or lose items) ----
+function beamFx(up) { try { burst(player.pos.clone().add(V(0, 1.1, 0)), up ? '#8fd0ff' : '#c8a8ff', 16, 2.5); } catch (_) {} SFX.item ? SFX.item() : SFX.ui(); }
+function beamUp(id, n) {
+  if (!invLock()) return; const I = ITEMS[id]; if (!I || I.quest || !roomLvl('cargo')) return;
+  n = Math.min(Math.floor(n), S.inv[id] || 0); if (n < 1) return; const fit = Math.min(n, stashRoomFor(id));
+  if (fit < 1) { SFX.hit(); invChip(invIconHtml(itemIcon(id), I.col), 'Ship storage is full · upgrade the Cargo Bay', true); return; }
+  S.inv[id] -= fit; if (!S.inv[id]) delete S.inv[id]; S.stash = S.stash || {}; S.stash[id] = (S.stash[id] || 0) + fit;
+  beamFx(true); invChip(invIconHtml(itemIcon(id), I.col), `Beamed ${fit} ${I.name} to your ship` + (fit < n ? ' (storage full)' : '')); markDirty(); renderQuest();
+  if (!S.inv[id]) INVUI.sel = null; invRender(); invQuickRender();
+}
+function beamDown(id, n) {
+  if (!invLock()) return; const I = ITEMS[id]; if (!I || !beamDownOk()) { SFX.hit(); return; }
+  n = Math.min(Math.floor(n), (S.stash || {})[id] || 0); if (n < 1) return; const fit = Math.min(n, invRoomFor(id));
+  if (fit < 1) { invFullNote(id); return; }
+  S.stash[id] -= fit; if (!S.stash[id]) delete S.stash[id]; S.inv[id] = (S.inv[id] || 0) + fit; S.invT = S.invT || {}; S.invT['i:' + id] = Date.now();
+  beamFx(false); invChip(invIconHtml(itemIcon(id), I.col), `+${fit} ${I.name} from your ship` + (fit < n ? ' (bag full)' : '')); markDirty(); checkReady(); renderQuest();
+  if (!S.stash[id]) INVUI.sel = null; invRender(); invQuickRender();
+}
+function openShipStorage() { INVUI.view = 'stash'; INVUI.sel = null; INVUI.q = ''; openBag(); }
+
+// ---- the Cargo Bay: a storage terminal, shelving that grows with each level, and the Black Hole Box at level 5 ----
+const BHB = { core: null, ring: null };
+function cargoStorage(s, cx, cz, far, term) {
+  const L = roomLvl('cargo'); BHB.core = BHB.ring = null;
+  term(cx + s.side * 0.5, s.z0 + 0.6, '#c8a8ff', 'Ship storage', openShipStorage, 0);
+  const shelf = (x, z) => { const g = new THREE.Group(); for (let i = 0; i < 3; i++) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.06, 0.5), toon('#5a5e66')); p.position.y = 0.3 + i * 0.6; g.add(p); const c = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.3, 0.35), toon(i % 2 ? '#a07a4a' : '#5d7f99')); c.position.set(-0.2 + (i % 2) * 0.3, 0.48 + i * 0.6, 0); g.add(c); }
+    for (const sx of [-0.43, 0.43]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.7, 0.5), toon('#3a3d44')); post.position.set(sx, 0.85, 0); g.add(post); } g.position.set(x, 0, z); levelGroup.add(g); box(x, z, 0.45, 0.3); };
+  for (let i = 0; i < Math.min(L, 4); i++) shelf(cx - s.side * (1.0 + i * 1.0), s.z0 + 1.9);
+  if (L >= 5) {
+    const x = cx - s.side * 1.0, z = cz + 1.6, g = new THREE.Group(); g.position.set(x, 0, z); levelGroup.add(g);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.0, 0.3, 16), toon('#2a2c32')); base.position.y = 0.15; g.add(base);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.04, 6, 24), glow('#8f6ad0')); rim.rotation.x = Math.PI / 2; rim.position.y = 0.31; g.add(rim);
+    const core = new THREE.Mesh(new THREE.SphereGeometry(0.55, 18, 12), new THREE.MeshBasicMaterial({ color: '#000000' })); core.position.y = 1.6; g.add(core);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.12, 6, 32), new THREE.MeshBasicMaterial({ color: '#c88aff', transparent: true, opacity: 0.85 })); ring.position.y = 1.6; ring.rotation.x = 1.2; g.add(ring);
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.05, 6, 32), glow('#ffd6a0')); halo.position.y = 1.6; halo.rotation.x = 1.2; g.add(halo);
+    const pl = new THREE.PointLight(0xa070ff, 0.9, 7); pl.position.y = 1.6; g.add(pl);
+    BHB.core = core; BHB.ring = ring; BHB.halo = halo; solid(x, z, 1.0);
+    INTERACTS.push({ x, z, r: 2.4, label: 'Black Hole Box (storage)', fn: openShipStorage });
+  }
+}
+{ const _st = step; step = function (dt) { if (BHB.ring && LEVEL.id === 'ship') { const t = performance.now() / 1000; BHB.ring.rotation.z = t * 1.4; BHB.halo.rotation.z = -t * 2.2; BHB.core.scale.setScalar(1 + Math.sin(t * 3) * 0.03); } return _st.apply(this, arguments); }; }
 
 // ---- Update log: each player sees the updates they missed since their last login ----
 const UPDATES = [
@@ -15035,7 +15166,8 @@ const UPDATES = [
   { id: 74, title: '2.3 · The Art of War', items: ['A new opening trailer, The Art of War, set to the Rising Sun song: the battlefield, the general, a lone warrior, the fallen masterpiece and a statue of rubble, then the galaxy and a fleet battle', 'It plays once when you start a new game, and you can replay it any time from Codex, then Cinema', 'The big eye boss, the Watcher in the Maw, now fights to Event Horizon Collapse', 'Cutscenes in the Codex always switch to their own music', 'Cutscenes play their music even when the game music is set to Ambient or Beep boop (Off still keeps them silent)']},
   { id: 75, title: '2.4 · Velocity, the magnet storm planet', items: ['Velocity is now a flat plain of gray glass under a storm that never ends: lightning bolts, rainbow rain and fog that rushes past as you speed up', 'Pit Row floats 20 m above the plain on magnet pylons, with a long ramp bridge down to the start line', 'Hover driving: cars slide on magnets with almost no friction. Hold Space (or DRIFT) to drift, which charges a boost when you let go. Shift boosts', 'C (or CAM) switches between hood, chase and far chase cameras. Your car has headlights', 'Three new courses across the open plain with ring gates: Storm Sprint, Magnet Mile and Thunder Run, on the shared leaderboards', 'Garage Gus sells five levels of Engine, Magnets and Boost, plus stripe colors and patterns', 'Every car is rebuilt with hover pads, lights and paint, and there is a new Hover Bike', 'Other players see you in your car']},
   { id: 76, title: '2.5 · Aim comes right back', items: ['Closing a menu, the bag, a shop or the tablet takes the mouse back for aiming on its own. No cursor on screen and no extra click', 'If the browser blocks it for a moment (right after Esc), the cursor stays hidden and your next click only grabs the mouse, it never fires']},
-  { id: 77, title: '2.6 · New backpack', items: ['The bag (I) is now a full inventory screen: equipment on the left, a 60 slot grid in the middle, item details on the right', 'Filter by Weapons, Medical, Materials, Quest, Valuables or Misc, search by name, and sort by type, rarity, weight, value or newest', 'Equip guns, staffs, melee weapons, armor and ordnance from the bag. Drag items onto slots on PC, or tap Move then tap a slot on phones', 'Four quick slots on keys 4 to 7 (buttons on phones) for medkits, weapons and ordnance. They point at your real items, never copies', 'Pickups show a small card with the item. When the bag is full the loot stays on the ground and tells you, instead of vanishing', 'Drop 1, half or a whole stack. Quest items can never be dropped', 'The lava pit in the Maw on Vector now sits down in the crater floor instead of floating above it', 'The Art of War opening trailer is put away for now. New games start with the usual intro']}
+  { id: 77, title: '2.6 · New backpack', items: ['The bag (I) is now a full inventory screen: equipment on the left, a 60 slot grid in the middle, item details on the right', 'Filter by Weapons, Medical, Materials, Quest, Valuables or Misc, search by name, and sort by type, rarity, weight, value or newest', 'Equip guns, staffs, melee weapons, armor and ordnance from the bag. Drag items onto slots on PC, or tap Move then tap a slot on phones', 'Four quick slots on keys 4 to 7 (buttons on phones) for medkits, weapons and ordnance. They point at your real items, never copies', 'Pickups show a small card with the item. When the bag is full the loot stays on the ground and tells you, instead of vanishing', 'Drop 1, half or a whole stack. Quest items can never be dropped', 'The lava pit in the Maw on Vector now sits down in the crater floor instead of floating above it', 'The Art of War opening trailer is put away for now. New games start with the usual intro']},
+  { id: 78, title: '2.7 · Ship storage and room upgrades', items: ['Own a Cargo Bay? Select loot in your bag and Beam it to your ship. Open Ship storage from the bag or the new terminal in the Cargo Bay', 'Ship storage holds 100 slots and doubles with each Cargo Bay level. Level 5 is the Black Hole Box: unlimited storage, and it sits spinning in your Cargo Bay', 'Take items back out aboard your ship. From Cargo Bay level 3 you can beam them down anywhere', 'Every room now upgrades to level 5 at the Engineering terminal: better rest, more ordnance charges, cheaper gun mods, stronger stims, faster gardens, faster vehicles and boss bonus credits', 'Loot now stacks up to 25 per bag slot (medkits 10), so big hauls fill the bag and storage matters. Nothing you already carry is lost']}
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {

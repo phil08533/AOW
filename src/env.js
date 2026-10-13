@@ -128,7 +128,8 @@ function updateEnv(dt, t) {
   clouds.children.forEach((s, i) => { s.material.color.copy(cloudCol); s.material.opacity = Math.min(0.95, 0.35 + cl * 0.6) * (i % 3 === 0 || cl > 0.4 ? 1 : 0.5); });
   // rain falls around the camera
   const sandy = ENV.sand > 0.02, pk = sandy ? ENV.sand : ENV.rain;
-  rain.visible = pk > 0.02; rain.material.opacity = pk * (sandy ? 0.7 : 0.55); rain.material.color.copy(sandy ? (snowy ? SNOW_COL : SAND_COL) : (LEVEL && LEVEL.weather === 'acid' ? ACID_COL : RAIN_COL)); rain.position.copy(cp);
+  const wVol = (typeof PREFS !== 'undefined' && PREFS.weatherVol != null) ? PREFS.weatherVol : 0.7;
+  rain.visible = pk > 0.02 && (sandy || wVol > 0.01); rain.material.opacity = pk * (sandy ? 0.7 : 0.55) * (sandy ? 1 : Math.min(1, 0.35 + wVol * 0.65)); rain.position.copy(cp);
   if (rain.visible) {
     const arr = rain.geometry.attributes.position.array, fall = (sandy ? (snowy ? 2.2 : 2.5) : 24) * dt, wind = sandy ? (snowy ? 0.8 * dt : 16 * dt) : 2.5 * dt * ENV.storm;
     for (let i = 0; i < RAIN_N; i++) { const o = i * 6; arr[o + 1] -= fall; arr[o + 4] -= fall; arr[o] += wind; arr[o + 3] += wind;

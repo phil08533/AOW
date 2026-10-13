@@ -7,15 +7,126 @@ function makeCrab() {
   return g;
 }
 function makeManta() {
-  const g = new THREE.Group(), b = new THREE.Group(); b.position.y = 1.6; g.add(b);
-  E(b, '#3a5ea8', 0, 0, 0, 0.6, 0.08, 0.4); E(b, '#e8e4dc', 0, -0.04, 0.05, 0.4, 0.04, 0.3);
-  const wings = []; for (const s of [-1, 1]) { const w = new THREE.Group(); w.position.x = 0.4 * s; b.add(w); wings.push(w); E(w, '#3a5ea8', 0.3 * s, 0, 0, 0.4, 0.04, 0.3); E(b, glow('#4fffe0'), 0.12 * s, 0.05, 0.32, 0.03, 0.03, 0.02); }
-  chain(b, [[0, 0, -0.35], [0, 0.02, -0.8], [0, 0.06, -1.1]], 0.03, '#2a3a7a', 0.008);
-  g.userData.anim = (t) => { b.position.y = 1.6 + Math.sin(t * 1.4) * 0.15; wings[0].rotation.z = Math.sin(t * 3) * 0.35; wings[1].rotation.z = -Math.sin(t * 3) * 0.35; };
+  const g = new THREE.Group();
+  const b = new THREE.Group();
+  b.position.y = 1.6;
+  g.add(b);
+
+  // Original palette with high-tech space accents
+  const hullBlue = '#3a5ea8';
+  const hullDk = '#243b6e';
+  const bellyWhite = '#e8e4dc';
+  const tailCol = '#2a3a7a';
+  const cyanPlasma = glow('#4fffe0');
+
+  // 1. Chiseled Aerodynamic Space Hull & Reactor Core
+  E(b, hullBlue, 0, 0, 0, 0.6, 0.08, 0.42);
+  E(b, bellyWhite, 0, -0.04, 0.04, 0.42, 0.04, 0.32);
+
+  // Dorsal reactor spine / energy conduits
+  for (let k = 0; k < 3; k++) {
+    const zPos = 0.14 - k * 0.12;
+    part(b, B(0.18 - k * 0.03, 0.02, 0.07), hullDk, 0, 0.065, zPos);
+    part(b, B(0.08 - k * 0.02, 0.015, 0.035), cyanPlasma, 0, 0.075, zPos);
+  }
+
+  // Ventral retro-thruster exhaust slots
+  for (let k = 0; k < 2; k++) {
+    part(b, B(0.24, 0.01, 0.03), cyanPlasma, 0, -0.065, 0.08 - k * 0.14);
+  }
+
+  // 2. Cephalic Sensor Fins & Optical Clusters
+  for (const s of [-1, 1]) {
+    // Sensor eye optics
+    E(b, cyanPlasma, 0.12 * s, 0.05, 0.32, 0.03, 0.03, 0.02);
+
+    // Forward swept sensor horn / ram-scoop
+    part(b, Cy(0.024, 0.008, 0.22, 5), hullDk, 0.14 * s, -0.01, 0.38, Math.PI / 2.3, 0, 0.25 * s);
+    part(b, new THREE.OctahedronGeometry(0.02, 0), cyanPlasma, 0.17 * s, -0.01, 0.46);
+  }
+
+  // 3. Multi-Segment Spacecraft Foil Wings (Inner Root + Outer Warp Wingtip)
+  const wings = [];
+  for (const s of [-1, 1]) {
+    const w1 = new THREE.Group();
+    w1.position.set(0.38 * s, 0, 0);
+    b.add(w1);
+
+    // Main wing plate
+    E(w1, hullBlue, 0.18 * s, 0, 0, 0.26, 0.038, 0.30);
+    E(w1, bellyWhite, 0.18 * s, -0.02, 0.02, 0.22, 0.024, 0.24);
+
+    // Trailing edge ion trail emitter strip
+    part(w1, B(0.24, 0.01, 0.03), cyanPlasma, 0.18 * s, 0, -0.16, 0, 0.15 * s, 0);
+
+    // Outer tapered warp winglet
+    const w2 = new THREE.Group();
+    w2.position.set(0.32 * s, 0, -0.04);
+    w1.add(w2);
+
+    E(w2, hullDk, 0.16 * s, 0, -0.02, 0.20, 0.025, 0.20);
+    part(w2, new THREE.ConeGeometry(0.018, 0.18, 4), cyanPlasma, 0.26 * s, 0, -0.04, Math.PI / 2, 0, 0.4 * s); // Glowing wingtip needle
+
+    wings.push({ w1, w2, sign: s });
+  }
+
+  // 4. Kinetic Whip Tail & Rear Sub-Light Engine Pod
+  const tailRoot = new THREE.Group();
+  tailRoot.position.set(0, 0.01, -0.35);
+  b.add(tailRoot);
+
+  // Ion thruster bell at tail base
+  part(tailRoot, Cy(0.06, 0.035, 0.14, 8), hullDk, 0, 0.01, 0.04, Math.PI / 2, 0, 0);
+  part(tailRoot, new THREE.OctahedronGeometry(0.04, 0), cyanPlasma, 0, 0.01, -0.04);
+
+  // Articulated tail spine
+  chain(tailRoot, [
+    [0, 0, 0],
+    [0, 0.02, -0.45]
+  ], 0.03, tailCol, 0.016);
+
+  const tailTip = new THREE.Group();
+  tailTip.position.set(0, 0.02, -0.45);
+  tailRoot.add(tailTip);
+
+  chain(tailTip, [
+    [0, 0, 0],
+    [0, 0.04, -0.35]
+  ], 0.016, tailCol, 0.006);
+
+  // Stabilizer fin + plasma node on tail tip
+  part(tailTip, B(0.01, 0.08, 0.12), hullBlue, 0, 0.06, -0.18, 0.3, 0, 0);
+  part(tailTip, new THREE.OctahedronGeometry(0.025, 0), cyanPlasma, 0, 0.04, -0.36);
+
+  // 5. Zero-G Gliding & Wave-Flap Flight Animation
+  g.userData.anim = (t) => {
+    // Zero-g heaving hover with pitch/roll balance
+    b.position.y = 1.6 + Math.sin(t * 1.5) * 0.14;
+    b.rotation.x = Math.sin(t * 1.5 - 0.5) * 0.06;
+    b.rotation.z = Math.cos(t * 0.9) * 0.04;
+
+    // 2-Stage solar-sail wing wave with lagging outer wingtips
+    const wave1 = Math.sin(t * 3.0);
+    const wave2 = Math.sin(t * 3.0 - 0.7);
+
+    for (const w of wings) {
+      w.w1.rotation.z = wave1 * 0.32 * w.sign;
+      w.w1.rotation.y = -Math.cos(t * 3.0) * 0.12 * w.sign; // Aerodynamic sweep
+      w.w2.rotation.z = wave2 * 0.26 * w.sign;
+    }
+
+    // Trailing inertial tail inertia
+    tailRoot.rotation.y = Math.sin(t * 2.0) * 0.16;
+    tailRoot.rotation.x = -Math.sin(t * 1.5 - 0.6) * 0.10;
+    tailTip.rotation.y = Math.sin(t * 2.0 - 0.6) * 0.25;
+    tailTip.rotation.x = -Math.sin(t * 1.5 - 1.1) * 0.14;
+  };
+
+  g.userData.anim(0);
   return g;
 }
 const PETS = {
-  swampfox: { name: 'Swamp Fox', make: () => recolor(makeDog(), { '#7a6a58': '#4f7a3c', '#4a3f35': '#2f4a26' }), rig: 'dog', scale: 0.75, price: 800, dmg: 10 },
+  swampfox: { name: 'Swamp Fox', make: () => recolor(makeDog(), { '#7a6a58': '#4f7a3c', '#4a3f35': '#2f4a26' }), rig: null, scale: 0.75, price: 800, dmg: 10 },
   fertlie: { name: 'Fert-lie (crab)', make: makeCrab, rig: null, scale: 0.9, price: 1200, dmg: 12 },
   robotron: { name: 'Robotron', make: () => recolor(makeXR17(), { '#9aa1aa': '#c9a43a' }), rig: 'xr17', scale: 0.55, price: 2500, dmg: 16, ranged: true },
   rockling: { name: 'Small Rock Monster', make: () => makeChunkMonster('#b39a78', '#8c7658', '#c4ab86', '#3d3530', false), rig: 'chunk', scale: 0.42, price: 3000, dmg: 20, grows: true },
@@ -76,5 +187,6 @@ function toggleBike() {
   if (!bikeOwned()) { log('Build the Hangar on your ship to unlock the speed bike.'); return; }
   if (!LEVEL.terrain && !S.riding) { log('No room to ride in here.'); return; }
   S.riding = !S.riding; SFX.ui(); log(S.riding ? 'Riding the speed bike (X to hop off, no shooting while riding).' : 'You hop off the bike.');
+  if (S.riding && typeof burp === 'function') burp('veh');
 }
 function updateBike() { if (S.riding && (!LEVEL.terrain || LEVEL.fly)) S.riding = false; vmBike.visible = !!S.riding && !LEVEL.fly; if (S.riding) vm.visible = false; }

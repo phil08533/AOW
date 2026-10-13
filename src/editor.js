@@ -12,13 +12,13 @@ function edSave() { EDIT.dirty = true; try { localStorage.setItem('aow-editor', 
 function edLoad(json) { try { const o = JSON.parse(json); EDIT.ov = { guns: o.guns || {}, enemies: o.enemies || {}, places: o.places || {} }; edApply(); } catch (_) {} }
 // load the shared overrides once the cloud is ready (or the local copy when offline)
 if (!window.claude) EDIT.owner = true;
-(async () => { try { const u = window.claude && await window.claude.use('user'); if (u && u.isOwner && u.isOwner()) { EDIT.owner = true; $('editorBtn').hidden = false; } } catch (_) {} })();
+(async () => { try { const u = window.claude && await window.claude.use('user'); if (u && u.isOwner && u.isOwner()) { EDIT.owner = true; if ($('editorBtn')) $('editorBtn').hidden = false; } } catch (_) {} })();
 { let tries = 0; const iv = setInterval(async () => { tries++; if (!db && tries < 20) return; clearInterval(iv);
   if (db) { try { const s = await db.doc('world/overrides').get(); if (s.exists && s.data() && s.data().data) { edLoad(s.data().data); if (LEVEL) edPlaceAll(); } } catch (_) {} }
   else { try { const l = localStorage.getItem('aow-editor'); if (l) { edLoad(l); if (LEVEL) edPlaceAll(); } } catch (_) {} }
   try { const u = window.claude && await window.claude.use('user'); EDIT.owner = !!(u && u.isOwner && u.isOwner()) || DEV_ALL; } catch (_) { EDIT.owner = DEV_ALL; }
   if (!window.claude) EDIT.owner = true;
-  $('editorBtn').hidden = !EDIT.owner; }, 500); }
+  if ($('editorBtn')) $('editorBtn').hidden = !EDIT.owner; }, 500); }
 // ---- placeable things ----
 const ED_KINDS = {
   crate: ['Crate', g => { part(g, B(1, 1, 1), toon('#a07a4a', 'wood'), 0, 0.5, 0); }, 0.6],
@@ -73,8 +73,5 @@ function openEditor(tab) {
     const ta = document.createElement('textarea'); ta.value = JSON.stringify(EDIT.ov); ta.style.cssText = 'width:100%;height:140px;font:12px monospace;background:#0a0f2a;color:#fff;border:1px solid rgba(255,255,255,.35)'; ta.addEventListener('keydown', e => e.stopPropagation()); rows.appendChild(ta);
     row('', [btn('Copy', () => { ta.select(); try { navigator.clipboard.writeText(ta.value); toast('EDITOR', 'Copied', 1); } catch (_) { document.execCommand('copy'); } }), btn('Load pasted', () => { edLoad(ta.value); edSave(); edPlaceAll(); toast('EDITOR', 'Loaded', 1); }), btn('Reset everything', () => { if (!confirm || confirm('Undo every edit for everyone?')) { EDIT.ov = { guns: {}, enemies: {}, places: {} }; edApply(); edSave(); edPlaceAll(); openEditor(); } })]); }
   $('dlgActs').before(rows);
-  acts([['📍 Place', () => openEditor('place'), EDIT.tab === 'place'], ['🔫 Weapons', () => openEditor('guns'), EDIT.tab === 'guns'], ['👾 Enemies', () => openEditor('enemies'), EDIT.tab === 'enemies'], ['💾 Save & share', () => openEditor('share'), EDIT.tab === 'share'], ['Close', closeDlg]]);
+  acts([['📍 Place', () => openEditor('place'), EDIT.tab === 'place'], ['🔫 Weapons', () => openEditor('guns'), EDIT.tab === 'guns'], ['👾 Enemies', () => openEditor('enemies'), EDIT.tab === 'enemies'], ['🎭 Wardrobe / Face', () => { closeDlg(); openWardrobe(); }], ['💾 Save & share', () => openEditor('share'), EDIT.tab === 'share'], ['Close', closeDlg]]);
 }
-{ const drop = $('menuDrop'), ref = $('unstuckBtn'); const b = document.createElement('button'); b.className = ref.className; b.id = 'editorBtn'; b.textContent = 'Editor'; b.hidden = true; b.addEventListener('click', () => { drop.hidden = true; document.body.classList.remove('menuopen'); openEditor(); }); drop.insertBefore(b, ref);
-  const st = document.createElement('style'); st.textContent = '#editorBtn::before { content: "🛠"; }'; document.body.appendChild(st); }
-window.addEventListener('keydown', e => { if (e.code === 'F9' && EDIT.owner && state === 'play' && !chatOpen()) { e.preventDefault(); dlgOpen ? closeDlg() : openEditor(); } });

@@ -10,7 +10,7 @@ function runCutscene(opt) {
   const cap = ov.querySelector('.cc'), ttl = ov.querySelector('.ct'); if (ttl) { setTimeout(() => { ttl.style.opacity = 1; setTimeout(() => { ttl.style.opacity = 0; }, 2400); }, 300); }
   if (opt.music && MUS.a && PREFS.music === 3) { MUS.force = opt.music; musTick(); }
   let si = -1, s0 = performance.now(), done = false; const t0 = performance.now(), lock = opt.lock == null ? 8 : opt.lock;
-  const end = () => { if (done) return; done = true; MUS.force = null; ov.remove(); skip.remove(); CUT.on = false; setState(prevState); vm.visible = true; if (opt.onEnd) opt.onEnd(); };
+  const end = () => { if (done) return; done = true; window.__cutscene_done = true; const cd = document.createElement('div'); cd.id = 'cutscene_done'; document.body.appendChild(cd); MUS.force = null; ov.remove(); skip.remove(); CUT.on = false; setState(prevState); vm.visible = true; if (opt.onEnd) opt.onEnd(); };
   skip.addEventListener('click', end);
   const next = () => { si++; if (si >= opt.shots.length) return end(); s0 = performance.now(); const sh = opt.shots[si]; cap.style.opacity = 0; if (sh.text) setTimeout(() => { if (!done) { cap.textContent = sh.text; cap.style.opacity = 1; } }, 300); };
   next();
@@ -45,3 +45,21 @@ function openCinema() {
   $('dlgActs').before(rows); acts([['Back to Codex', () => openCodex('ach')], ['Close', closeDlg, true]]);
 }
 { const _oc = openCodex; openCodex = function (tab) { const r = _oc(tab); if (tab !== 'lore') { const a = $('dlgActs'), lore = [...a.children].find(b => b.textContent === 'Lore'); const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = '🎬 Cinema'; b.addEventListener('click', () => { SFX.ui(); openCinema(); }); a.insertBefore(b, lore || null); } return r; }; }
+window.addEventListener('load', () => {
+  const p = new URLSearchParams(window.location.search).get('cutscene');
+  if (!p) return;
+  setTimeout(() => {
+    musUnlock();
+    if (p === 'prologue') {
+      if (LEVEL.id !== 'ship') loadLevel('ship');
+      setTimeout(() => shipIntro(true), 500);
+    } else if (p === 'lounge') {
+      S.flags = S.flags || {}; S.flags.loungeIntro = 1;
+      goFloor(ZLIST.indexOf('bar'));
+      setTimeout(() => loungeIntro(true), 600);
+    } else if (p === 'ending') {
+      setTimeout(() => rollCredits(true), 500);
+    }
+  }, 600);
+});
+

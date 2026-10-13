@@ -1,25 +1,363 @@
 // =================== EARTH: the Forest of Life and the Super Swift Arena ===================
 function makeSnapvine() {
-  const g = new THREE.Group(), st = '#3a6a2a', head = new THREE.Group();
-  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; part(g, B(0.5, 0.06, 0.2), toon('#5aa04a', 'leaves'), Math.cos(a) * 0.4, 0.05, Math.sin(a) * 0.4, 0, -a, 0); }
-  chain(g, [[0, 0, 0], [0.1, 0.6, 0.05], [0, 1.2, 0.1]], 0.1, st, 0.07);
-  head.position.set(0, 1.3, 0.15); g.add(head);
-  E(head, '#c8402f', 0, 0.12, 0, 0.32, 0.16, 0.3); E(head, '#c8402f', 0, -0.1, 0, 0.32, 0.14, 0.3); for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; part(head, new THREE.ConeGeometry(0.03, 0.12, 3), '#efe7d6', Math.cos(a) * 0.26, 0, Math.sin(a) * 0.24, Math.PI); }
-  for (let k = 0; k < 6; k++) E(head, '#ffd23a', Math.cos(k) * 0.2, 0.22, Math.sin(k) * 0.2, 0.04, 0.04, 0.04);
-  g.userData.anim = t => { head.rotation.x = Math.sin(t * 3) * 0.2; head.position.y = 1.3 + Math.sin(t * 1.5) * 0.08; };
+  const g = new THREE.Group();
+  const stemCol = '#3a6a2a';
+  const stemDark = '#25441b';
+  const tentacleCol = typeof toon === 'function' ? toon('#3e732d', 'leaves') : '#3e732d';
+  const tentacleUnderside = '#5fa346';
+  const jawOuter = '#c8402f';
+  const jawInner = '#7a1f18';
+  const toothCol = (typeof C !== 'undefined' && C.bone) ? C.bone : '#efe7d6';
+  const bulbGlow = glow('#ffd23a');
+
+  // 1. Sprawling Ground Tentacles (Replacing square leaves)
+  const tentacles = [];
+  const tentacleCount = 6;
+
+  for (let i = 0; i < tentacleCount; i++) {
+    const tentRoot = new THREE.Group();
+    const baseAngle = (i / tentacleCount) * Math.PI * 2;
+    tentRoot.position.set(0, 0.02, 0);
+    tentRoot.rotation.y = baseAngle;
+    g.add(tentRoot);
+
+    // Multi-segment creeping tentacle arm pinned to the floor
+    chain(tentRoot, [
+      [0, 0.02, 0],
+      [0.04, 0.04, 0.22],
+      [0.08, 0.03, 0.44],
+      [0.12, 0.06, 0.62],
+      [0.10, 0.02, 0.76]
+    ], 0.06, tentacleCol, 0.015, true);
+
+    // Pale suction nodes along inner belly
+    for (let s = 1; s <= 3; s++) {
+      part(
+        tentRoot,
+        new THREE.SphereGeometry(0.022 - s * 0.004, 5, 4),
+        tentacleUnderside,
+        0.05 + s * 0.02,
+        0.02,
+        s * 0.18
+      );
+    }
+
+    tentacles.push({ tentRoot, phase: i * 1.1 });
+  }
+
+  // 2. Thickened Winding Stem & Thorn Barbs
+  const stem = new THREE.Group();
+  g.add(stem);
+
+  chain(stem, [
+    [0, 0.01, 0],
+    [0.10, 0.55, 0.04],
+    [-0.04, 0.95, 0.08],
+    [0, 1.26, 0.12]
+  ], 0.09, stemCol, 0.065, true);
+
+  // Thorns protruding from spine
+  for (let i = 0; i < 4; i++) {
+    const side = i % 2 === 0 ? 1 : -1;
+    part(
+      stem,
+      new THREE.ConeGeometry(0.018, 0.08, 4),
+      stemDark,
+      (i * 0.02) * side,
+      0.35 + i * 0.22,
+      0.04 * side,
+      -0.4,
+      0,
+      1.2 * side
+    );
+  }
+
+  // 3. Predatory Snapping Head & Fanged Jaws
+  const head = new THREE.Group();
+  head.position.set(0, 1.28, 0.14);
+  g.add(head);
+
+  // Calyx collar ring
+  part(head, new THREE.TorusGeometry(0.14, 0.03, 4, 10), stemDark, 0, 0, -0.06, Math.PI / 2);
+
+  // Upper Jaw
+  const upperJaw = new THREE.Group();
+  upperJaw.position.set(0, 0.04, 0);
+  head.add(upperJaw);
+
+  E(upperJaw, jawOuter, 0, 0.12, 0.02, 0.30, 0.16, 0.28);
+  E(upperJaw, jawInner, 0, 0.04, 0.04, 0.25, 0.08, 0.23);
+
+  // Glowing seed bulbs
+  for (let k = 0; k < 6; k++) {
+    const a = (k / 6) * Math.PI * 2;
+    E(
+      upperJaw,
+      bulbGlow,
+      Math.cos(a) * 0.16,
+      0.24 + Math.sin(k * 2) * 0.02,
+      Math.sin(a) * 0.15 + 0.02,
+      0.035,
+      0.035,
+      0.035
+    );
+  }
+
+  // Lower Jaw
+  const lowerJaw = new THREE.Group();
+  lowerJaw.position.set(0, -0.04, 0);
+  head.add(lowerJaw);
+
+  E(lowerJaw, jawOuter, 0, -0.10, 0.02, 0.30, 0.14, 0.28);
+  E(lowerJaw, jawInner, 0, -0.03, 0.04, 0.25, 0.07, 0.23);
+
+  // Interlocking teeth
+  const toothCount = 10;
+  for (let k = 0; k < toothCount; k++) {
+    const a = (k / toothCount) * Math.PI * 2;
+    const tx = Math.cos(a) * 0.24;
+    const tz = Math.sin(a) * 0.22 + 0.02;
+
+    if (k % 2 === 0) {
+      part(upperJaw, new THREE.ConeGeometry(0.022, 0.11, 4), toothCol, tx, 0.02, tz, Math.PI);
+    } else {
+      part(lowerJaw, new THREE.ConeGeometry(0.022, 0.11, 4), toothCol, tx, -0.02, tz, 0);
+    }
+  }
+
+  // 4. Creeping Tentacle & Snapping Animation Loop
+  g.userData.anim = (t) => {
+    // Ground tentacles slither and coil
+    tentacles.forEach(tItem => {
+      tItem.tentRoot.rotation.z = Math.sin(t * 2.2 + tItem.phase) * 0.08;
+      tItem.tentRoot.rotation.x = Math.max(0, Math.sin(t * 1.8 + tItem.phase)) * 0.06;
+    });
+
+    // Stem stalking writhe
+    stem.rotation.z = Math.sin(t * 1.6) * 0.05;
+    stem.rotation.x = Math.cos(t * 1.2) * 0.04;
+
+    // Head track bob
+    head.position.y = 1.28 + Math.sin(t * 2.0) * 0.05;
+    head.rotation.x = Math.sin(t * 2.2) * 0.14;
+    head.rotation.y = Math.cos(t * 1.1) * 0.18;
+
+    // Chomp bite motion
+    const bite = Math.sin(t * 3.5);
+    upperJaw.rotation.x = Math.max(0, bite) * 0.24;
+    lowerJaw.rotation.x = -Math.max(0, bite) * 0.24;
+  };
+
+  g.userData.anim(0);
   return g;
 }
 function makeSpriggan() {
-  const g = new THREE.Group(), w = '#6a4a2e', lf = '#5aa04a';
-  for (const s of [-1, 1]) { chain(g, [[0.15 * s, 0.9, 0], [0.18 * s, 0.45, 0.05], [0.14 * s, 0.02, 0.08]], 0.09, w, 0.06); chain(g, [[0.3 * s, 1.6, 0], [0.5 * s, 1.2, 0.1], [0.55 * s, 0.85, 0.2]], 0.07, w, 0.04); for (let k = 0; k < 3; k++) part(g, new THREE.ConeGeometry(0.03, 0.18, 3), w, 0.55 * s + k * 0.03 * s, 0.75, 0.2 + k * 0.03, Math.PI); }
-  E(g, w, 0, 1.3, 0, 0.3, 0.45, 0.22); E(g, w, 0, 1.95, 0.02, 0.18, 0.22, 0.18); for (const s of [-1, 1]) E(g, glow('#7fff6a'), 0.07 * s, 2.0, 0.17, 0.035, 0.035, 0.02);
-  for (let k = 0; k < 7; k++) E(g, toon(lf, 'leaves'), Math.cos(k * 0.9) * 0.2, 2.2 + Math.sin(k) * 0.08, Math.sin(k * 0.9) * 0.16, 0.14, 0.08, 0.14);
+  const g = new THREE.Group();
+  const w = '#5c3e24';        // Deep ancient bark
+  const wDark = '#3d2614';    // Bark fissures / joint cores
+  const lf = '#4e923e';       // Forest foliage
+  const lfLight = '#72b85e';  // Sunlit sprout leaves
+  const magicGlow = glow('#7fff6a'); // Life-essence heart & eyes
+
+  // Main root group for breathing & branch sway
+  const body = new THREE.Group();
+  g.add(body);
+
+  // 1. Twisted Root Legs & Wood-Split Talons
+  for (const s of [-1, 1]) {
+    // Upper thigh into knee
+    chain(body, [
+      [0.16 * s, 0.95, 0],
+      [0.22 * s, 0.52, 0.04],
+      [0.18 * s, 0.06, 0.06]
+    ], 0.095, w, 0.065, true);
+
+    // Knee bark knot / moss node
+    E(body, toon(lf, 'leaves'), 0.22 * s, 0.54, 0.09, 0.065, 0.065, 0.045);
+
+    // Root-claw foot (split talons gripping the ground)
+    part(body, new THREE.ConeGeometry(0.04, 0.22, 4), wDark, 0.14 * s, 0.05, 0.16, Math.PI / 2.2, 0, -0.2 * s);
+    part(body, new THREE.ConeGeometry(0.035, 0.18, 4), wDark, 0.23 * s, 0.05, 0.14, Math.PI / 2.2, 0, 0.2 * s);
+    part(body, new THREE.ConeGeometry(0.03, 0.14, 4), wDark, 0.18 * s, 0.04, -0.06, -Math.PI / 2.3, 0, 0); // rear root anchor
+  }
+
+  // 2. Hollow Trunk Torso & Glowing Forest Heart Core
+  // Deep wooden torso egg
+  E(body, w, 0, 1.32, -0.02, 0.28, 0.46, 0.24);
+
+  // Ribbed bark plates running down torso flanks
+  for (const s of [-1, 1]) {
+    part(body, Cy(0.05, 0.08, 0.52, 5), wDark, 0.24 * s, 1.34, 0.02, 0.1, 0, 0.25 * s);
+  }
+
+  // Hollow chest cavity knot / exposed heartwood
+  part(body, Cy(0.12, 0.08, 0.14, 6), wDark, 0, 1.36, 0.16, Math.PI / 2);
+  // Pulsing magical heart crystal
+  const heart = part(body, new THREE.OctahedronGeometry(0.08, 0), magicGlow, 0, 1.36, 0.18);
+
+  // 3. Ancient Root Arms & Extended Branch Claws
+  const arms = [];
+  for (const s of [-1, 1]) {
+    const armGroup = new THREE.Group();
+    armGroup.position.set(0.28 * s, 1.62, 0);
+    body.add(armGroup);
+    arms.push({ armGroup, sign: s });
+
+    // Shoulder bough knot
+    E(armGroup, w, 0, 0, 0, 0.11, 0.11, 0.11);
+    E(armGroup, toon(lf, 'leaves'), 0.04 * s, 0.08, 0, 0.08, 0.05, 0.08); // Foliage shoulder epaulet
+
+    // Arm limb chain
+    chain(armGroup, [
+      [0, 0, 0],
+      [0.22 * s, -0.38, 0.10],
+      [0.26 * s, -0.74, 0.22]
+    ], 0.075, w, 0.048, true);
+
+    // Gnarled wood pincer / finger claws
+    for (let k = 0; k < 3; k++) {
+      const xOff = 0.24 * s + (k - 1) * 0.04 * s;
+      const zOff = 0.22 + (k - 1) * 0.035;
+      part(
+        armGroup,
+        new THREE.ConeGeometry(0.024, 0.22, 3),
+        wDark,
+        xOff,
+        -0.84,
+        zOff,
+        Math.PI - 0.2,
+        0,
+        (k - 1) * 0.25 * s
+      );
+    }
+  }
+
+  // 4. Head Mask, Antler Branches & Foliage Crown
+  const head = new THREE.Group();
+  head.position.set(0, 1.94, 0.02);
+  body.add(head);
+
+  // Carved wooden cranium / bark mask
+  E(head, w, 0, 0.02, 0, 0.17, 0.22, 0.18);
+  // Chin beak / wooden beard drop
+  part(head, new THREE.ConeGeometry(0.08, 0.18, 4), wDark, 0, -0.16, 0.06, 0.35, 0, 0);
+
+  // Piercing magical spirit eyes
+  for (const s of [-1, 1]) {
+    E(head, magicGlow, 0.075 * s, 0.04, 0.17, 0.035, 0.025, 0.02, 0, 0.2 * s, -0.15 * s);
+  }
+
+  // Branch Antlers (Sprouting upward from skull)
+  for (const s of [-1, 1]) {
+    // Primary antler beam
+    chain(head, [
+      [0.08 * s, 0.16, 0],
+      [0.18 * s, 0.36, -0.04],
+      [0.28 * s, 0.54, 0.02]
+    ], 0.035, wDark, 0.015);
+
+    // Sub-tine branch split
+    part(head, Cy(0.02, 0.012, 0.18, 4), wDark, 0.22 * s, 0.40, 0.04, 0.5, 0, 0.6 * s);
+  }
+
+  // Lush Leaf Crown (Layered clusters atop head and back of neck)
+  const leafClusters = [
+    [0.0, 0.24, 0.08, 0.16, 0.09, 0.16, lf],
+    [-0.14, 0.20, -0.06, 0.14, 0.08, 0.13, lfLight],
+    [0.14, 0.20, -0.06, 0.14, 0.08, 0.13, lf],
+    [0.0, 0.16, -0.15, 0.18, 0.10, 0.14, lfLight],
+    [0.0, 0.30, -0.04, 0.12, 0.08, 0.12, lf]
+  ];
+
+  leafClusters.forEach(([x, y, z, rx, ry, rz, col]) => {
+    E(head, toon(col, 'leaves'), x, y, z, rx, ry, rz);
+  });
+
+  // 5. Lightweight Mobile-Optimized Animation Loop
+  g.userData.anim = (t) => {
+    // Ancient breathing rise & wind sway
+    body.position.y = Math.sin(t * 1.8) * 0.025;
+    body.rotation.z = Math.sin(t * 1.2) * 0.025;
+    body.rotation.x = Math.sin(t * 1.6) * 0.015;
+
+    // Head curious tilt
+    head.rotation.y = Math.sin(t * 0.9) * 0.14;
+    head.rotation.z = Math.cos(t * 1.3) * 0.04;
+
+    // Heartbeat pulse in life essence
+    const pulse = 1.0 + Math.sin(t * 4.0) * 0.15;
+    heart.scale.set(pulse, pulse, pulse);
+
+    // Branch arms menacing sway
+    for (const a of arms) {
+      a.armGroup.rotation.x = Math.sin(t * 1.8 + a.sign * 0.5) * 0.08;
+      a.armGroup.rotation.z = Math.cos(t * 1.4) * 0.04 * a.sign;
+    }
+  };
+
+  g.userData.anim(0);
   return g;
 }
 function makeGlowmoth() {
-  const g = new THREE.Group(), b = new THREE.Group(), wings = []; b.position.y = 1.7; g.add(b);
-  E(b, '#3a2a1e', 0, 0, 0, 0.1, 0.1, 0.32); for (const s of [-1, 1]) { const w = new THREE.Group(); w.position.x = 0.06 * s; b.add(w); wings.push(w); E(w, glow(s > 0 ? '#9fe8ff' : '#7fff6a'), 0.35 * s, 0, 0, 0.35, 0.02, 0.26); E(w, '#2a3a2a', 0.42 * s, 0.01, 0, 0.1, 0.02, 0.08); }
-  g.userData.anim = t => { b.position.y = 1.7 + Math.sin(t * 2) * 0.3; wings[0].rotation.z = Math.sin(t * 14) * 0.6; wings[1].rotation.z = -Math.sin(t * 14) * 0.6; };
+  const g = new THREE.Group();
+  const b = new THREE.Group(); b.position.y = 1.7; g.add(b);
+
+  const bodyCol = '#251a3a';      // Deep twilight violet for contrast
+  const wingCyan = glow('#38ffff'); // High-intensity cyan
+  const wingMint = glow('#7fffb8'); // Soft magical green
+  const eyesGold = glow('#ffb838'); // Bioluminescent eyes
+
+  // 1. Plump Magical Body (Fuzzy head, thorax & abdomen segment)
+  E(b, bodyCol, 0, 0, 0, 0.1, 0.1, 0.14);                    // Thorax
+  E(b, bodyCol, 0, -0.04, -0.16, 0.08, 0.08, 0.16);           // Abdomen
+  E(b, bodyCol, 0, 0.04, 0.12, 0.08, 0.08, 0.08);             // Head
+
+  // Large glowing amber eyes
+  for (const s of [-1, 1]) {
+    E(b, eyesGold, 0.065 * s, 0.05, 0.15, 0.032, 0.032, 0.03);
+  }
+
+  // Curving magical antennae (simplified)
+  for (const s of [-1, 1]) {
+    part(b, Cy(0.015, 0.004, 0.18, 4), wingMint, 0.03 * s, 0.12, 0.14, 0.35, 0, 0.4 * s);
+  }
+
+  // 2. Translucent Double-Wings
+  const wings = [];
+  for (const s of [-1, 1]) {
+    const w = new THREE.Group();
+    w.position.set(0.05 * s, 0.04, 0.02);
+    b.add(w);
+    wings.push({ w, sign: s });
+
+    // Large upper forewing
+    const fw = E(w, wingCyan, 0.34 * s, 0.01, 0.08, 0.34, 0.008, 0.22);
+    fw.rotation.y = -0.15 * s;
+
+    // Small trailing hindwing (tucked back)
+    const hw = E(w, wingMint, 0.22 * s, -0.01, -0.12, 0.20, 0.008, 0.14);
+    hw.rotation.y = 0.18 * s;
+
+    // Bioluminescent center spark (natural eye-spot with high glow)
+    E(w, glow('#ffffff'), 0.26 * s, 0.015, 0.06, 0.04, 0.01, 0.04);
+  }
+
+  // 3. Natural High-Frequency Flutter
+  g.userData.anim = t => {
+    // Air buoyant heave bobbing
+    b.position.y = 1.7 + Math.sin(t * 3.2) * 0.15;
+    b.rotation.x = 0.08 + Math.sin(t * 4.0) * 0.02;
+
+    // Coupled flapping (Z axis) & automatic pitch rotation (Y axis) for fluidity
+    const flap = Math.sin(t * 22.0);
+    const pitch = Math.cos(t * 22.0) * 0.2;
+    for (const item of wings) {
+      item.w.rotation.z = flap * 0.65 * item.sign;
+      item.w.rotation.y = pitch * item.sign;
+    }
+  };
+
+  g.userData.anim(0);
   return g;
 }
 const LIFE = [0, 30];

@@ -22,13 +22,119 @@ function makeTankModel(col) {
   return g;
 }
 function makeMechModel(col) {
-  const g = new THREE.Group(), dk = '#2b2a2c', c = col || '#5d636c', legs = [];
-  for (const s of [-1, 1]) { const L = new THREE.Group(); L.position.set(0.55 * s, 1.9, 0); g.add(L); legs.push(L);
-    part(L, B(0.45, 1.0, 0.5), c, 0, -0.5, 0); part(L, Cy(0.2, 0.2, 0.5, 8), dk, 0, -1.0, 0, 0, 0, Math.PI / 2); part(L, B(0.38, 0.85, 0.42), c, 0, -1.4, 0.05); part(L, B(0.6, 0.18, 0.9), dk, 0, -1.82, 0.15); }
-  part(g, B(1.7, 1.2, 1.4), c, 0, 2.6, 0); part(g, B(1.2, 0.35, 0.06), glow('#4fd2ff'), 0, 2.85, 0.71); part(g, B(1.1, 0.5, 0.9), '#3a3d44', 0, 2.5, -0.9);
-  for (const s of [-1, 1]) { part(g, B(0.7, 0.7, 0.9), '#3a3d44', 1.15 * s, 3.1, 0); for (let r = 0; r < 2; r++) for (let k = 0; k < 2; k++) part(g, Cy(0.09, 0.09, 0.05, 8), glow('#ff8a2a'), (1.0 + k * 0.28) * s, 3.0 + r * 0.25, 0.46, Math.PI / 2);
-    part(g, B(0.35, 0.35, 1.3), c, 1.0 * s, 2.2, 0.4); part(g, Cy(0.08, 0.08, 0.5, 6), dk, 1.0 * s, 2.2, 1.2, Math.PI / 2); }
-  g.userData.anim = (t) => { legs.forEach((L, i) => { L.rotation.x = Math.sin(t * 3 + i * Math.PI) * 0.25; }); };
+  const g = new THREE.Group();
+  const root = new THREE.Group();
+  g.add(root);
+
+  // Palettes (Heavy Assault Mech)
+  const c = col || '#5d636c';
+  const chassisDk = '#25262a';
+  const jointDk = '#1a1b1e';
+  const armorSteel = '#3a3d44';
+  const visorGlow = glow('#4fd2ff');
+  const missileGlow = glow('#ff8a2a');
+  const cannonSteel = '#141518';
+
+  // 1. Articulated Legs & Hydraulic Foot Pads (Grounded at y = 0.0)
+  // Leg group origin set at hip height (y = 1.91)
+  const legs = [];
+  for (const s of [-1, 1]) {
+    const L = new THREE.Group();
+    L.position.set(0.58 * s, 1.91, 0);
+    root.add(L);
+    legs.push(L);
+
+    // Upper thigh armor (y: -0.05 to -0.95 relative to hip)
+    part(L, B(0.44, 0.90, 0.48), c, 0, -0.50, 0);
+    part(L, B(0.46, 0.40, 0.10), armorSteel, 0, -0.45, 0.25); // Front thigh plate
+
+    // Knee actuator hub (y: -0.95 to -1.15)
+    part(L, Cy(0.19, 0.19, 0.48, 8), jointDk, 0, -1.02, 0, 0, 0, Math.PI / 2);
+    part(L, B(0.24, 0.16, 0.08), chassisDk, 0, -1.02, 0.24); // Knee cap armor
+
+    // Lower shin & reinforced greave (y: -1.15 to -1.75)
+    part(L, B(0.38, 0.65, 0.42), c, 0, -1.45, 0.04);
+    part(L, Cy(0.04, 0.04, 0.55, 6), armorSteel, -0.12 * s, -1.45, -0.16); // Rear hydraulic strut
+
+    // Ankle joint hub (y: -1.78)
+    part(L, Cy(0.12, 0.12, 0.36, 6), jointDk, 0, -1.78, 0.08, 0, 0, Math.PI / 2);
+
+    // Grounded tread boot (y: -1.82 to -1.91 -> absolute y = 0.0 to 0.09)
+    part(L, B(0.58, 0.11, 0.92), chassisDk, 0, -1.855, 0.15);
+    part(L, B(0.60, 0.035, 0.94), jointDk, 0, -1.892, 0.15); // Sole rubber grip pad
+  }
+
+  // 2. Pelvis & Heavy Torso Chassis
+  part(root, B(0.82, 0.32, 0.60), jointDk, 0, 1.95, 0); // Pelvic girdle
+  part(root, Cy(0.26, 0.26, 0.18, 8), chassisDk, 0, 2.12, 0); // Torso pivot ring
+
+  const torso = new THREE.Group();
+  torso.position.set(0, 2.65, 0);
+  root.add(torso);
+
+  // Main chassis hull (depth 1.40 -> front at z = +0.70)
+  part(torso, B(1.68, 1.18, 1.38), c, 0, 0, 0);
+
+  // Rear reactor/radiator hump (stepped backward to z = -0.92)
+  part(torso, B(1.10, 0.55, 0.88), armorSteel, 0, -0.05, -0.92);
+  part(torso, B(0.85, 0.12, 0.70), chassisDk, 0, 0.28, -0.92); // Radiator top cowl
+
+  // Sloped command visor (stepped forward: base frame at z = 0.71, lens at z = 0.73)
+  part(torso, B(1.28, 0.42, 0.06), jointDk, 0, 0.25, 0.71);
+  part(torso, B(1.18, 0.32, 0.05), visorGlow, 0, 0.25, 0.74);
+  part(torso, B(1.22, 0.03, 0.06), armorSteel, 0, 0.35, 0.76); // Top visor visor-brow slat
+
+  // 3. Shoulder Missile Pods & Arm-Mounted Heavy Cannons
+  for (const s of [-1, 1]) {
+    // Shoulder missile pod (offset in X and Z so it doesn't touch the torso box)
+    const pod = new THREE.Group();
+    pod.position.set(1.22 * s, 0.52, 0.05);
+    torso.add(pod);
+
+    part(pod, B(0.68, 0.68, 0.88), armorSteel, 0, 0, 0);
+    part(pod, B(0.72, 0.08, 0.90), chassisDk, 0, -0.32, 0); // Under-pod mount bracket
+
+    // 2x2 Missile warhead array (stepped forward at z = 0.46)
+    for (let r = 0; r < 2; r++) {
+      for (let k = 0; k < 2; k++) {
+        const mx = (-0.14 + k * 0.28) * s;
+        const my = -0.13 + r * 0.26;
+        part(pod, Cy(0.09, 0.09, 0.04, 8), jointDk, mx, my, 0.44, Math.PI / 2);
+        part(pod, Cy(0.065, 0.065, 0.06, 8), missileGlow, mx, my, 0.47, Math.PI / 2);
+      }
+    }
+
+    // Arm weapon assembly: underslung autocannon
+    const arm = new THREE.Group();
+    arm.position.set(1.02 * s, -0.42, 0.35);
+    torso.add(arm);
+
+    // Weapon mount receiver
+    part(arm, B(0.34, 0.34, 1.25), c, 0, 0, 0);
+    part(arm, B(0.38, 0.16, 0.60), chassisDk, 0, 0.12, -0.15); // Ammo feed hopper
+
+    // Gun barrel & muzzle shroud (stepped cleanly along +Z)
+    part(arm, Cy(0.075, 0.075, 0.65, 6), cannonSteel, 0, 0, 0.95, Math.PI / 2);
+    part(arm, Cy(0.10, 0.10, 0.12, 8), armorSteel, 0, 0, 1.25, Math.PI / 2); // Muzzle brake
+  }
+
+  // 4. Stomping Walk Cycle & Heavy Recoil Animation Loop
+  g.userData.anim = (t) => {
+    // Heavy chassis step bounce
+    root.position.y = Math.abs(Math.sin(t * 3.0)) * 0.035;
+
+    // Torso counter-twist
+    torso.rotation.y = Math.sin(t * 3.0) * 0.06;
+    torso.rotation.z = Math.cos(t * 3.0) * 0.02;
+
+    // Alternating leg striding
+    legs.forEach((L, i) => {
+      const phase = i * Math.PI;
+      L.rotation.x = Math.sin(t * 3.0 + phase) * 0.25;
+    });
+  };
+
+  g.userData.anim(0);
   return g;
 }
 const VEH = {
@@ -64,6 +170,7 @@ function toggleVehicle() {
   VH = { on: true, id, v: 0, vy: 0, hp: vehMaxHp(id), cd: 0, fuel: 2 };
   SFX.door(); SFX.horn && SFX.horn(); toast(VEH[id].name.toUpperCase(), `${VEH[id].gun.name} · V to park`, 2.2);
   log(`${VEH[id].name}: ${VEH[id].walk ? 'WASD walks, Space jump-jets' : 'W/S drive, A/D steer'}, FIRE shoots, V parks.`, 'loot');
+  if (typeof burp === 'function') burp('veh');
 }
 function vehPark(force) {
   if (!VH.on) return; if (!force && Math.abs(VH.v) > 3 && !VEH[VH.id].walk) { if (!VH.parkReq) log('Braking to park…'); VH.parkReq = true; return; }

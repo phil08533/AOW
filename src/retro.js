@@ -132,7 +132,7 @@ const BLOB_MAT = new THREE.MeshBasicMaterial({ map: TEX.blob, transparent: true,
 function blob(obj, r) { const m = new THREE.Mesh(BLOB_GEO, BLOB_MAT); m.scale.setScalar(r * 2); m.position.y = 0.04; m.renderOrder = 1; obj.add(m); return m; }
 
 // =================== RETRO SOUND ===================
-const PREFS = (() => { let p; try { p = Object.assign({ pix: 2, gfx: 2, music: 2, sfx: true, voice: true }, JSON.parse(localStorage.getItem('aow-prefs') || '{}')); } catch (_) { p = { pix: 2, gfx: 2, music: 2, sfx: true }; } if (p.music === true) p.music = 2; if (p.music === false) p.music = 0; return p; })();
+const PREFS = (() => { let p; try { p = Object.assign({ pix: 2, gfx: 2, music: 2, sfx: true, voice: true, weatherVol: 0.7 }, JSON.parse(localStorage.getItem('aow-prefs') || '{}')); } catch (_) { p = { pix: 2, gfx: 2, music: 2, sfx: true, weatherVol: 0.7 }; } if (p.music === true) p.music = 2; if (p.music === false) p.music = 0; if (p.weatherVol == null) p.weatherVol = 0.7; return p; })();
 const MUSIC_NAMES = ['Off', 'Ambient', 'Beep boop'];
 function savePrefs() { try { localStorage.setItem('aow-prefs', JSON.stringify(PREFS)); } catch (_) {} }
 const SFX = (() => {
@@ -343,13 +343,16 @@ const SFX = (() => {
     talk() { tone('triangle', 520, 0, 0.05, 0.08); tone('triangle', 660, 0, 0.06, 0.08, 0.05); },
     thunder(delay) {
       if (!ac) return; const t = ac.currentTime + (delay || 0);
+      const wVol = PREFS.weatherVol == null ? 0.7 : PREFS.weatherVol;
+      if (wVol <= 0.001) return;
       const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = noiseBuf; s.loop = true; f.type = 'lowpass'; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(120, t + 2.6);
-      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.55, t + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, t + 3.2); s.connect(f); f.connect(g); g.connect(sfxGain); s.start(t); s.stop(t + 3.3);
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.55 * wVol, t + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, t + 3.2); s.connect(f); f.connect(g); g.connect(sfxGain); s.start(t); s.stop(t + 3.3);
     },
     rain(level) {
       if (!ac) return;
+      const wVol = PREFS.weatherVol == null ? 0.7 : PREFS.weatherVol;
       if (!this._rain) { const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = noiseBuf; s.loop = true; f.type = 'bandpass'; f.frequency.value = 1600; f.Q.value = 0.4; g.gain.value = 0; s.connect(f); f.connect(g); g.connect(sfxGain); s.start(); this._rain = g; }
-      this._rain.gain.setTargetAtTime(level * 0.22, ac.currentTime, 0.5);
+      this._rain.gain.setTargetAtTime(level * 0.22 * wVol, ac.currentTime, 0.5);
     }
   };
 })();

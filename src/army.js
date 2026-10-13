@@ -1,18 +1,202 @@
 // =================== FORT IRONROCK: the asteroid army base (vehicle training, research, army shop) ===================
 function makeTrainingDrone() {
-  const g = new THREE.Group(), b = new THREE.Group(); b.position.y = 1.4; g.add(b);
-  part(b, Cy(0.5, 0.5, 0.18, 10), '#ffd36a', 0, 0, 0); for (let k = 0; k < 3; k++) part(b, Cy(0.5 - k * 0.15, 0.5 - k * 0.15, 0.2, 10), k % 2 ? '#ffffff' : '#c8402f', 0, 0, 0.1 + k * 0.02, Math.PI / 2);
-  for (const s of [-1, 1]) { part(b, B(0.6, 0.04, 0.08), '#3a3d44', 0.5 * s, 0.1, 0); part(b, Cy(0.18, 0.18, 0.02, 8), '#9aa1aa', 0.8 * s, 0.14, 0); }
-  g.userData.anim = t => { b.position.y = 1.4 + Math.sin(t * 2) * 0.2; };
+  const g = new THREE.Group();
+  const b = new THREE.Group();
+  b.position.y = 1.4;
+  g.add(b);
+
+  const hullDk = '#23262d';
+  const targetRed = '#c83b2b';
+  const targetWhite = '#f0f2f5';
+  const steelCol = '#4e5564';
+  const rotorGlow = glow('#5ce1e6');
+  const eyeGlow = glow('#ffe066');
+
+  // 1. Thick Layered Target Body Core (Faces forward +Z, no yellow barrel)
+  // Outer red tier
+  part(b, Cy(0.44, 0.44, 0.20, 14), targetRed, 0, 0, 0, Math.PI / 2);
+  part(b, new THREE.TorusGeometry(0.44, 0.028, 4, 16), hullDk, 0, 0, 0); // Protective outer rim
+
+  // Middle white tier
+  part(b, Cy(0.31, 0.31, 0.24, 12), targetWhite, 0, 0, 0.02, Math.PI / 2);
+
+  // Inner red bullseye tier
+  part(b, Cy(0.18, 0.18, 0.28, 10), targetRed, 0, 0, 0.04, Math.PI / 2);
+
+  // Center optical sensor lens
+  part(b, new THREE.SphereGeometry(0.07, 8, 8), eyeGlow, 0, 0, 0.18);
+  part(b, new THREE.TorusGeometry(0.075, 0.016, 4, 10), hullDk, 0, 0, 0.18);
+
+  // Rear propulsion pack
+  part(b, B(0.24, 0.20, 0.14), hullDk, 0, 0, -0.14);
+  part(b, Cy(0.08, 0.05, 0.08, 8), steelCol, 0, 0, -0.22, Math.PI / 2);
+  part(b, new THREE.OctahedronGeometry(0.04, 0), glow('#ff7a36'), 0, 0, -0.26);
+
+  // 2. Outrigger Rotor Nacelles & High-Speed Blades
+  const rotors = [];
+  for (const s of [-1, 1]) {
+    // Structural arm
+    chain(b, [
+      [0.22 * s, 0, 0],
+      [0.46 * s, 0.08, 0],
+      [0.70 * s, 0.10, 0]
+    ], 0.038, hullDk, 0.026, true);
+
+    // Motor pod
+    part(b, Cy(0.07, 0.06, 0.14, 8), steelCol, 0.72 * s, 0.10, 0);
+    part(b, new THREE.OctahedronGeometry(0.03, 0), rotorGlow, 0.72 * s, 0.02, 0);
+
+    // Spinning rotor blade assembly
+    const r = new THREE.Group();
+    r.position.set(0.72 * s, 0.18, 0);
+    b.add(r);
+    rotors.push({ r, dir: s });
+
+    part(r, B(0.38, 0.012, 0.04), '#2a2e36', 0, 0, 0);
+    part(r, B(0.04, 0.012, 0.38), '#2a2e36', 0, 0, 0);
+    part(r, Cy(0.025, 0.025, 0.03, 6), steelCol, 0, 0, 0);
+  }
+
+  // 3. Dual Antenna Aerials & Deflector Skids
+  for (const s of [-1, 1]) {
+    // Upper antenna
+    chain(b, [
+      [0.18 * s, 0.22, -0.04],
+      [0.24 * s, 0.44, -0.10]
+    ], 0.014, steelCol, 0.005);
+    part(b, new THREE.OctahedronGeometry(0.018, 0), rotorGlow, 0.24 * s, 0.45, -0.10);
+
+    // Lower landing skids
+    chain(b, [
+      [0.16 * s, -0.20, 0.06],
+      [0.22 * s, -0.34, 0.04],
+      [0.22 * s, -0.34, -0.10]
+    ], 0.018, hullDk, 0.014);
+  }
+
+  // 4. Hover, Pitch & Spin Animation Loop
+  g.userData.anim = (t) => {
+    b.position.y = 1.4 + Math.sin(t * 3.2) * 0.14;
+    b.rotation.x = Math.sin(t * 2.1) * 0.08 + 0.04;
+    b.rotation.z = Math.cos(t * 2.8) * 0.07;
+    b.rotation.y = Math.sin(t * 1.4) * 0.16;
+
+    for (const item of rotors) {
+      item.r.rotation.y += 0.45 * item.dir;
+    }
+  };
+
+  g.userData.anim(0);
   return g;
 }
 function makeSiegeBot() {
-  const g = new THREE.Group(), c = '#7a2a2a', dk = '#2b2a2c';
-  for (const s of [-1, 1]) { part(g, B(0.4, 1.0, 0.5), dk, 0.4 * s, 0.5, 0); part(g, B(0.5, 0.2, 0.7), c, 0.4 * s, 0.1, 0.08); }
-  part(g, B(1.3, 1.0, 0.9), c, 0, 1.5, 0); part(g, B(0.8, 0.2, 0.05), glow('#ff2a3a'), 0, 1.7, 0.46);
-  part(g, B(0.5, 0.5, 1.4), '#3a3d44', 0.85, 2.05, 0.2); part(g, Cy(0.12, 0.12, 0.6, 8), dk, 0.85, 2.05, 1.1, Math.PI / 2);
-  for (const s of [-1, 1]) part(g, B(0.3, 0.8, 0.3), dk, -0.8, 1.4, 0.1);
-  part(g, new THREE.CircleGeometry(0.16, 3), glow('#ff2a3a'), -0.2, 1.4, 0.46);
+  const g = new THREE.Group();
+  const c = '#7a2a2a';        // Heavy maroon armor
+  const cDark = '#521a1a';    // Armor shadow / bevels
+  const dk = '#232226';       // Chassis / hydraulics
+  const steel = '#4a4d55';    // Heavy weapon frame
+  const hazard = '#d49b28';   // Industrial hazard accents
+  const eyeGlow = glow('#ff2a3a');
+
+  // Root torso container (for recoil and idle animations)
+  const torso = new THREE.Group();
+  torso.position.y = 1.05;
+  g.add(torso);
+
+  // 1. Lower Body: Wide Reverse-Joint / Bipedal Stance (Total ~10 draw calls)
+  const legs = [];
+  for (const s of [-1, 1]) {
+    const hip = new THREE.Group();
+    hip.position.set(0.48 * s, 0, 0);
+    g.add(hip);
+    legs.push({ hip, sign: s });
+
+    // Armored 3-toed / split tread foot base
+    part(hip, B(0.42, 0.14, 0.65), c, 0, 0.07, 0.05);
+    part(hip, B(0.46, 0.06, 0.22), dk, 0, 0.03, 0.32); // Front claw grip
+
+    // Ankle shock piston
+    part(hip, Cy(0.06, 0.06, 0.22, 6), steel, 0, 0.22, -0.05);
+
+    // Backward-canted lower leg
+    part(hip, B(0.24, 0.44, 0.28), dk, 0, 0.42, -0.08, -0.25, 0, 0);
+
+    // Front knee strike plate
+    part(hip, B(0.28, 0.22, 0.12), c, 0, 0.62, 0.06, 0.3, 0, 0);
+
+    // Upper thigh strut angling into hip socket
+    part(hip, B(0.26, 0.42, 0.26), dk, 0, 0.82, 0.02, 0.3, 0, 0);
+    part(hip, Cy(0.09, 0.09, 0.12, 6), steel, 0.12 * s, 0.98, 0, 0, 0, Math.PI / 2);
+  }
+
+  // 2. Chassis Pelvis & Sloped Core Hull
+  part(torso, Cy(0.22, 0.26, 0.8, 8), dk, 0, 0, 0); // Pelvis ring gear
+
+  // Angular, beveled front hull (Upper & lower glacis plates)
+  part(torso, B(1.15, 0.65, 0.9), c, 0, 0.45, 0);
+  part(torso, B(1.22, 0.22, 0.94), cDark, 0, 0.28, 0.01); // Belt skirt
+  part(torso, B(0.95, 0.32, 0.28), c, 0, 0.62, 0.42, -0.4, 0, 0); // Sloped glacis
+
+  // Visor eye slot & armored brow hood
+  part(torso, B(0.72, 0.12, 0.06), eyeGlow, 0, 0.58, 0.54);
+  part(torso, B(0.82, 0.08, 0.18), dk, 0, 0.66, 0.52);
+
+  // Twin rear exhaust stacks
+  for (const s of [-1, 1]) {
+    part(torso, Cy(0.08, 0.08, 0.38, 6), steel, 0.32 * s, 0.88, -0.38);
+    part(torso, Cy(0.09, 0.07, 0.08, 6), dk, 0.32 * s, 1.08, -0.38);
+  }
+
+  // 3. Right Arm: Heavy Siege Mortar / Recoil Cannon
+  const cannonArm = new THREE.Group();
+  cannonArm.position.set(0.85, 0.55, 0.05);
+  torso.add(cannonArm);
+
+  // Shoulder mount & housing
+  part(cannonArm, Cy(0.16, 0.16, 0.24, 8), dk, 0, 0, 0, 0, 0, Math.PI / 2);
+  part(cannonArm, B(0.48, 0.46, 0.95), steel, 0.06, 0.08, 0.12);
+  part(cannonArm, B(0.52, 0.08, 0.35), hazard, 0.06, 0.33, 0.12); // Hazard stripe top
+
+  // Recoil sliding barrel & muzzle brake
+  const barrel = new THREE.Group();
+  barrel.position.set(0.06, 0.08, 0.62);
+  cannonArm.add(barrel);
+
+  part(barrel, Cy(0.15, 0.15, 0.85, 8), dk, 0, 0, 0.42, Math.PI / 2, 0, 0);
+  part(barrel, Cy(0.19, 0.19, 0.22, 8), steel, 0, 0, 0.86, Math.PI / 2, 0, 0); // Muzzle ring
+
+  // 4. Left Arm: Reinforced Siege Breaching Ram / Hydraulic Claw
+  const shieldArm = new THREE.Group();
+  shieldArm.position.set(-0.85, 0.45, 0.05);
+  torso.add(shieldArm);
+
+  part(shieldArm, Cy(0.14, 0.14, 0.22, 8), dk, 0, 0, 0, 0, 0, Math.PI / 2);
+  part(shieldArm, B(0.28, 0.55, 0.32), dk, -0.04, -0.28, 0.08); // Lower arm strut
+
+  // Forward breaching shield plate
+  part(shieldArm, B(0.42, 0.95, 0.12), c, -0.06, -0.28, 0.32, -0.15, 0, 0);
+  part(shieldArm, B(0.32, 0.08, 0.14), hazard, -0.06, -0.12, 0.33);
+
+  // Heavy claw spikes
+  for (const s of [-1, 1]) {
+    part(shieldArm, new THREE.ConeGeometry(0.05, 0.26, 4), steel, -0.06, -0.74, 0.25 + 0.12 * s, Math.PI / 2);
+  }
+
+  // 5. Cheap Mobile-Friendly Idle & Cannon Recoil Animation
+  g.userData.anim = (t) => {
+    // Heavy engine idle rumble
+    torso.position.y = 1.05 + Math.sin(t * 2.5) * 0.015;
+    torso.rotation.y = Math.sin(t * 1.2) * 0.03;
+
+    // Cannon slow breathing aim + spring recoil cycle
+    cannonArm.rotation.x = -0.08 + Math.sin(t * 1.5) * 0.04;
+    const recoil = Math.max(0, Math.sin(t * 3.5));
+    barrel.position.z = 0.62 - Math.pow(recoil, 8) * 0.14;
+
+    // Subtle shield arm guard balance
+    shieldArm.rotation.x = 0.05 + Math.cos(t * 1.5) * 0.03;
+  };
+
   return g;
 }
 function makeKragMech() { const g = makeMechModel('#3a1416'); g.traverse(o => { if (o.isMesh && o.material.isMeshBasicMaterial) o.material = glow('#ff2a3a'); }); for (const s of [-1, 1]) chain(g, [[0.6 * s, 3.2, 0], [0.9 * s, 3.8, -0.1], [0.8 * s, 4.3, -0.3]], 0.1, '#b3262c', 0.02); return g; }

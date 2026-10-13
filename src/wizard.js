@@ -63,7 +63,13 @@ if (!JT_POS.tailor && JT_POS.ada) JT_POS.tailor = JT_POS.ada;
 ARMORS.wizard = { name: 'Wizard Robes', lvl: 5, cost: 900, def: 0.06, body: '#3a2a6a', trim: '#c9a43a', visor: '#9fd8ff', note: 'Long robes with gold trim, from the staff pages' };
 ARMOR_KITS.wizard = (g, A) => { part(g, Cy(0.24, 0.4, 0.95, 10), toon(A.body, 'cloth'), 0, 0.5, 0); part(g, Cy(0.25, 0.25, 0.06, 10), toon(A.trim), 0, 0.92, 0); for (const s of [-1, 1]) part(g, Cy(0.07, 0.12, 0.42, 6), toon(A.body, 'cloth'), 0.34 * s, 1.1, 0); for (let k = 0; k < 5; k++) part(g, new THREE.OctahedronGeometry(0.025, 0), glow('#ffd36a'), Math.cos(k * 1.3) * 0.3, 0.3 + k * 0.12, Math.sin(k * 1.3) * 0.3); };
 HELMS.wizhat = { name: 'Wizard Hat', lvl: 5 };
-{ const _mp = makePlayerChar; makePlayerChar = function (look, col) { const g = _mp(look, col); if (look && look.h === 'wizhat') { part(g, Cy(0.3, 0.3, 0.03, 14), toon('#3a2a6a', 'cloth'), 0, 1.92, 0); part(g, new THREE.ConeGeometry(0.17, 0.55, 10), toon('#3a2a6a', 'cloth'), 0, 2.2, -0.03, -0.18); part(g, Cy(0.172, 0.172, 0.05, 10), toon('#c9a43a'), 0, 1.96, 0); part(g, new THREE.OctahedronGeometry(0.03, 0), glow('#ffd36a'), 0.08, 2.08, 0.12); } return g; }; }
+HELM_KITS.wizhat = function (g) {
+  part(g, Cy(0.3, 0.3, 0.03, 14), toon('#3a2a6a', 'cloth'), 0, 1.92, 0);
+  part(g, new THREE.ConeGeometry(0.17, 0.55, 10), toon('#3a2a6a', 'cloth'), 0, 2.2, -0.03, -0.18);
+  part(g, Cy(0.172, 0.172, 0.05, 10), toon('#c9a43a'), 0, 1.96, 0);
+  part(g, new THREE.OctahedronGeometry(0.03, 0), glow('#ffd36a'), 0.08, 2.08, 0.12);
+};
+{ const _mp = makePlayerChar; makePlayerChar = function (look, col) { const g = _mp(look, col); if (look && look.h === 'wizhat' && !g.userData._wizHat) { g.userData._wizHat = true; HELM_KITS.wizhat(g); } return g; }; }
 // ---- the Wizard's path: three quests from Merla ----
 { const _k = kill; kill = function (e) { const r = _k(e); try { if (!handMelee() && GUNS[S.gun] && GUNS[S.gun].kind === 'mystic') questProgressKill('staffkill'); } catch (_) {} return r; }; }
 const giveGun = id => { if (!S.guns.includes(id)) S.guns.push(id); S.gun = id; log(`${GUNS[id].name} added to your guns and equipped.`, 'loot'); };

@@ -72,6 +72,7 @@ function boardShipW(W) {
   L.spawns = spots.slice(0, n).map((p, i) => ({ zone: 'deck', type: crew[i % crew.length], n: 1, lv, at: p, once: true, board: true }));
   const bt = T.boss(W.lv); if (ENEMY[bt]) L.spawns.push({ zone: 'deck', type: bt, n: 1, lv: [W.lv + (W.type === 'flagship' ? 0 : 1), W.lv + (W.type === 'flagship' ? 0 : 1)], at: [0, -28], once: true, board: true, captain: true });
   travel('boarding');
+  if (typeof burp === 'function') burp('board');
 }
 LEVELS.boarding = {
   id: 'boarding', name: 'Boarded ship', tag: 'Boarding action', lvls: 'Varies', size: 90, center: [0, 0], radius: 200, water: -99, sky: 'space', weather: 'none', indoor: true,
@@ -121,6 +122,7 @@ function boardTick(t) {
 }
 function boardCleared() {
   const C = BOARD.cur, T = HULK_TYPES[C.type]; toast('SHIP CLEARED', `${T.name} is yours. Loot the hold at the bow.`, 3.5); SFX.level();
+  if (typeof burp === 'function') burp('board_clear');
   questProgressKill('board'); questProgressKill('board_' + C.type); ST().boarded = (ST().boarded || 0) + 1;
   if (BOARD.wrecks) BOARD.wrecks = BOARD.wrecks.filter(w => w.id !== C.id);
   const chest = makeSalvageCrate(false); chest.scale.setScalar(1.4); chest.position.set(0, 0, -30); levelGroup.add(chest);

@@ -1,0 +1,2246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Art of War — 3D Asset & Model Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Pixelify+Sans:wght@500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+:root {
+  --bg: #060814;
+  --panel: #0b0f24;
+  --panel-border: rgba(142, 170, 255, 0.22);
+  --accent: #ffd36a;
+  --accent-blue: #4fd2ff;
+  --accent-green: #6fdc5a;
+  --accent-red: #ff4a3d;
+  --text: #e8ecf8;
+  --dim: #8b96c2;
+  --font-mono: "JetBrains Mono", Consolas, Menlo, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header */
+header {
+  height: 50px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "Pixelify Sans", sans-serif;
+  font-size: 19px;
+  color: var(--accent);
+}
+.brand span { color: var(--accent-blue); font-size: 13px; font-family: var(--font-mono); }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+
+.btn {
+  background: rgba(30, 42, 86, 0.8);
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.btn:hover { background: rgba(52, 74, 150, 0.9); border-color: var(--accent-blue); color: #fff; }
+.btn.primary { background: #1c6b35; border-color: #55c773; color: #fff; }
+.btn.primary:hover { background: #238542; border-color: #7df597; }
+.btn.gold { background: #826615; border-color: #ffd36a; color: #fff; }
+.btn.gold:hover { background: #9d7b1b; }
+.btn.blue { background: #184c7a; border-color: #4fd2ff; color: #fff; }
+.btn.blue:hover { background: #22649e; }
+
+/* Main Layout: 3 Columns */
+.layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 310px 1fr 440px;
+  height: calc(100vh - 50px);
+  overflow: hidden;
+}
+
+/* 1. Sidebar: Asset & File Explorer */
+.sidebar {
+  background: #080c1e;
+  border-right: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-header {
+  padding: 10px;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mode-toggle {
+  display: flex;
+  background: #050711;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 2px;
+}
+.mode-btn {
+  flex: 1;
+  padding: 5px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: bold;
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  cursor: pointer;
+  border-radius: 3px;
+  text-align: center;
+}
+.mode-btn.active {
+  background: rgba(79, 210, 255, 0.25);
+  color: #fff;
+}
+.search-box {
+  width: 100%;
+  background: #050711;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+}
+.search-box:focus { border-color: var(--accent-blue); }
+.cat-scroll {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.cat-scroll::-webkit-scrollbar { height: 4px; }
+.cat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+.cat-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--dim);
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cat-btn.active {
+  background: rgba(79, 210, 255, 0.2);
+  border-color: var(--accent-blue);
+  color: #fff;
+}
+.item-list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+}
+.list-item {
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: all 0.1s ease;
+}
+.list-item:hover { background: rgba(79, 210, 255, 0.08); }
+.list-item.active {
+  background: rgba(79, 210, 255, 0.16);
+  border-left: 3px solid var(--accent-blue);
+}
+.item-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+  font-weight: 600;
+}
+.item-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--dim);
+}
+.cat-badge {
+  background: rgba(255, 211, 106, 0.15);
+  color: var(--accent);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 9px;
+}
+
+/* Character Studio Styles */
+.char-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+.char-subtabs {
+  display: flex;
+  background: #050711;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 2px;
+  gap: 2px;
+}
+.char-subtab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  padding: 5px 4px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+}
+.char-subtab.active {
+  background: rgba(255, 211, 106, 0.2);
+  color: var(--accent);
+}
+.char-card {
+  background: rgba(14, 21, 50, 0.5);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.char-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.char-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  gap: 6px;
+}
+.char-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.char-step-btn {
+  background: rgba(30, 42, 86, 0.8);
+  border: 1px solid var(--panel-border);
+  color: #fff;
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+.char-step-btn:hover { background: rgba(79, 210, 255, 0.3); }
+.char-step-btn.active { background: rgba(79, 210, 255, 0.4); border-color: var(--accent-blue); }
+.char-val {
+  min-width: 90px;
+  text-align: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 11px;
+}
+.swatch-group {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.swatch-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.1s;
+}
+.swatch-btn:hover { transform: scale(1.15); }
+.swatch-btn.active { border-color: #fff; box-shadow: 0 0 6px rgba(255,255,255,0.6); }
+.char-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.char-item-row {
+  padding: 7px 10px;
+  background: rgba(5, 7, 17, 0.6);
+  border: 1px solid rgba(142, 170, 255, 0.12);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  transition: all 0.1s;
+}
+.char-item-row:hover { background: rgba(79, 210, 255, 0.1); border-color: var(--accent-blue); }
+.char-item-row.active {
+  background: rgba(79, 210, 255, 0.22);
+  border-color: var(--accent-blue);
+  border-left: 3px solid var(--accent-blue);
+}
+.char-item-name { color: #fff; font-weight: 600; }
+.char-item-meta { font-size: 10px; color: var(--dim); }
+.char-add-btn {
+  width: 100%;
+  padding: 6px;
+  background: rgba(46, 125, 50, 0.2);
+  border: 1px dashed #66bb6a;
+  color: #81c784;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s;
+}
+.char-add-btn:hover { background: rgba(46, 125, 50, 0.4); color: #fff; }
+
+/* 2. Center: Code Editor */
+.editor-pane {
+  display: flex;
+  flex-direction: column;
+  background: #050711;
+  overflow: hidden;
+}
+.editor-bar {
+  height: 38px;
+  background: #090d20;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.editor-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent-blue);
+  font-weight: bold;
+}
+.dirty-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.dirty-dot.visible { opacity: 1; }
+
+.editor-body {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+.line-numbers {
+  width: 48px;
+  padding: 12px 6px 12px 0;
+  text-align: right;
+  background: #050711;
+  color: rgba(255,255,255,0.22);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 20px;
+  user-select: none;
+  overflow: hidden;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.code-area {
+  flex: 1;
+  background: #050711;
+  color: #d1d9f5;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 20px;
+  padding: 12px 14px;
+  border: none;
+  outline: none;
+  resize: none;
+  white-space: pre;
+  overflow: auto;
+  tab-size: 2;
+}
+
+/* Light Theme for Code Editor */
+.editor-pane.light-theme {
+  background: #ffffff;
+}
+.editor-pane.light-theme .editor-bar {
+  background: #f1f5f9;
+  border-bottom: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+.editor-pane.light-theme .editor-title {
+  color: #0f172a;
+}
+.editor-pane.light-theme .line-numbers {
+  background: #f8fafc;
+  color: #64748b;
+  border-right: 1px solid #e2e8f0;
+}
+.editor-pane.light-theme .code-area {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+/* 3. Right: Isolated 3D Studio */
+.studio-pane {
+  background: #080c1e;
+  border-left: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.studio-bar {
+  height: 38px;
+  background: #090d20;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+}
+#canvasContainer {
+  flex: 1;
+  position: relative;
+  background: #020308;
+}
+#threeCanvas { width: 100%; height: 100%; display: block; }
+
+.model-hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(9, 13, 32, 0.85);
+  border: 1px solid var(--panel-border);
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+.model-hud b { color: var(--accent); }
+.model-hud span { color: var(--accent-blue); }
+.model-hud.light-theme {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  color: #0f172a;
+}
+.model-hud.light-theme b { color: #0284c7; }
+.model-hud.light-theme span { color: #2563eb; }
+
+.studio-controls {
+  padding: 10px;
+  background: #090d20;
+  border-top: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.studio-row { display: flex; align-items: center; justify-content: space-between; }
+.studio-row select, .studio-row input {
+  background: #050711;
+  border: 1px solid var(--panel-border);
+  color: #fff;
+  padding: 3px 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border-radius: 3px;
+}
+
+/* Toast */
+#toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #111a3b;
+  border: 1px solid var(--accent-blue);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 999;
+}
+#toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    🎯 ART OF WAR <span>[3D Asset Studio]</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn blue" id="btnPreviewCode" title="Re-render 3D model with current editor code (Ctrl+Enter)">▶ Live Preview</button>
+    <button class="btn gold" id="btnCopyAI" title="Copy code formatted for AI / Claude prompt">📋 Copy for AI</button>
+    <button class="btn primary" id="btnSave" title="Save changes directly to source file & rebuild (Ctrl+S)">💾 Save & Rebuild</button>
+    <button class="btn" id="btnLaunchGame" title="Play game in new window">🎮 Play Game</button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- 1. Left Sidebar: Asset / File Explorer -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="tabModeModels">📦 Assets (<span id="modelCount">0</span>)</button>
+        <button class="mode-btn" id="tabModeFiles">📄 Files (<span id="fileCount">0</span>)</button>
+        <button class="mode-btn" id="tabModeChar">🎭 Face & Armor</button>
+      </div>
+      <input type="text" class="search-box" id="searchFilter" placeholder="Search models or files...">
+      <div class="cat-scroll" id="catScroll">
+        <button class="cat-btn active" data-cat="all">All</button>
+        <button class="cat-btn" data-cat="Creatures & Aliens">Creatures</button>
+        <button class="cat-btn" data-cat="Weapons">Weapons</button>
+        <button class="cat-btn" data-cat="Characters & Troopers">Characters</button>
+        <button class="cat-btn" data-cat="Bosses & Mechs">Bosses</button>
+        <button class="cat-btn" data-cat="Vehicles & Drones">Vehicles</button>
+        <button class="cat-btn" data-cat="Props & Environment">Props</button>
+      </div>
+    </div>
+    <ul class="item-list" id="itemList"></ul>
+
+    <!-- Character Studio Panel -->
+    <div id="charPanel" class="char-container" style="display:none">
+      <div class="char-card">
+        <div class="char-card-title">
+          <span>Trooper Setup</span>
+          <button class="btn" id="btnRandomFace" style="padding:2px 8px;font-size:10px">🎲 Random</button>
+        </div>
+        <div class="char-row">
+          <span>Body Type:</span>
+          <div style="display:flex;gap:4px">
+            <button class="char-step-btn active" id="btnSexMale" style="width:auto;padding:0 8px">♂ Male</button>
+            <button class="char-step-btn" id="btnSexFemale" style="width:auto;padding:0 8px">♀ Female</button>
+          </div>
+        </div>
+        <div class="char-row">
+          <span>Camera Focus:</span>
+          <div style="display:flex;gap:4px">
+            <button class="char-step-btn active" id="btnFocusHead" style="width:auto;padding:0 8px">🔍 Face</button>
+            <button class="char-step-btn" id="btnFocusBody" style="width:auto;padding:0 8px">🧍 Body</button>
+          </div>
+        </div>
+        <div class="char-row">
+          <span>Base Armor:</span>
+          <div style="display:flex;gap:4px">
+            <button class="char-step-btn active" id="btnBaseBare" style="width:auto;padding:0 8px" title="Hide default standard armor plates while editing/viewing custom armor">Undersuit</button>
+            <button class="char-step-btn" id="btnBaseStd" style="width:auto;padding:0 8px" title="Show default standard armor plates underneath">Default</button>
+          </div>
+        </div>
+        <div class="char-row">
+          <span>Weapon:</span>
+          <div style="display:flex;gap:4px">
+            <button class="char-step-btn active" id="btnWeaponNone" style="width:auto;padding:0 8px" title="Hide blaster gun to clearly view chest armor">Hidden</button>
+            <button class="char-step-btn" id="btnWeaponGun" style="width:auto;padding:0 8px" title="Show blaster rifle in trooper hands">Blaster</button>
+          </div>
+        </div>
+        <div class="char-row">
+          <span>Accent Color:</span>
+          <input type="color" id="pickerAccent" value="#4fd2ff" style="background:transparent;border:none;cursor:pointer;width:32px;height:24px">
+        </div>
+      </div>
+
+      <div class="char-subtabs">
+        <button class="char-subtab active" id="subtabFace">🎭 Face</button>
+        <button class="char-subtab" id="subtabHelms">🪖 Helmets</button>
+        <button class="char-subtab" id="subtabArmors">🛡️ Armor</button>
+      </div>
+
+      <!-- Face Features -->
+      <div id="secFace" class="char-card">
+        <div class="char-card-title">Head & Face Features</div>
+        <div class="char-row">
+          <span>Skin Tone:</span>
+          <span class="char-val" id="valSkin">Light</span>
+        </div>
+        <div class="swatch-group" id="swatchesSkin"></div>
+
+        <div class="char-row">
+          <span>Eyes Style:</span>
+          <div class="char-stepper">
+            <button class="char-step-btn" id="btnEyePrev">◀</button>
+            <span class="char-val" id="valEyes">Normal</span>
+            <button class="char-step-btn" id="btnEyeNext">▶</button>
+          </div>
+        </div>
+
+        <div class="char-row">
+          <span>Mouth / Beard:</span>
+          <div class="char-stepper">
+            <button class="char-step-btn" id="btnMouthPrev">◀</button>
+            <span class="char-val" id="valMouth">None</span>
+            <button class="char-step-btn" id="btnMouthNext">▶</button>
+          </div>
+        </div>
+
+        <div class="char-row">
+          <span>Hair / Crest:</span>
+          <div class="char-stepper">
+            <button class="char-step-btn" id="btnHairPrev">◀</button>
+            <span class="char-val" id="valHair">Bald</span>
+            <button class="char-step-btn" id="btnHairNext">▶</button>
+          </div>
+        </div>
+
+        <div class="char-row">
+          <span>Hair Color:</span>
+          <span class="char-val" id="valHairCol">Black</span>
+        </div>
+        <div class="swatch-group" id="swatchesHair"></div>
+
+        <button class="char-add-btn" id="btnAddFaceStyle">➕ Add Face / Hair Option</button>
+      </div>
+
+      <!-- Helmets List -->
+      <div id="secHelms" class="char-card" style="display:none">
+        <div class="char-card-title">
+          <span>Helmets (<span id="helmCount">0</span>)</span>
+        </div>
+        <div class="char-item-list" id="helmList"></div>
+        <button class="char-add-btn" id="btnAddHelmet">➕ Add New Helmet</button>
+      </div>
+
+      <!-- Armor Sets List -->
+      <div id="secArmors" class="char-card" style="display:none">
+        <div class="char-card-title">
+          <span>Armor Sets (<span id="armorCount">0</span>)</span>
+        </div>
+        <div class="char-item-list" id="armorList"></div>
+        <button class="char-add-btn" id="btnAddArmor">➕ Add New Armor Set</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 2. Center: Code Editor -->
+  <main class="editor-pane">
+    <div class="editor-bar">
+      <div class="editor-title">
+        <span id="currentTitle">Select an Asset</span>
+        <span class="dirty-dot" id="dirtyDot" title="Unsaved changes">●</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn" id="btnToggleEditorTheme" style="padding:2px 8px;font-size:10px" title="Toggle Code Editor Background (Dark / White)">☀️ White Code</button>
+        <div style="color:var(--dim);font-size:11px;display:flex;gap:8px">
+          <span id="statPath">src/...</span>
+          <span>•</span>
+          <span id="statLines">0 lines</span>
+        </div>
+      </div>
+    </div>
+    <div class="editor-body">
+      <div class="line-numbers" id="lineNumbers">1</div>
+      <textarea class="code-area" id="codeArea" spellcheck="false" placeholder="// Select an asset from the left to open and view its 3D model and source code..."></textarea>
+    </div>
+  </main>
+
+  <!-- 3. Right: Isolated 3D Studio -->
+  <aside class="studio-pane">
+    <div class="studio-bar">
+      <span>🎨 3D STUDIO PREVIEW</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn" id="btnToggle3dBg" style="padding:2px 8px;font-size:10px;font-weight:600" title="Toggle 3D Viewport Backdrop between Dark and White">☀️ White 3D View</button>
+        <button class="btn" id="btnResetCam" style="padding:2px 8px;font-size:10px">Reset Camera</button>
+      </div>
+    </div>
+    <div id="canvasContainer">
+      <canvas id="threeCanvas"></canvas>
+      <div class="model-hud" id="modelHud">
+        <b id="hudName">No Model Loaded</b><br>
+        <span id="hudDims">0×0×0 m</span> • <span id="hudMeshes">0 meshes</span>
+      </div>
+    </div>
+    <div class="studio-controls">
+      <div class="studio-row">
+        <span>3D Backdrop:</span>
+        <select id="bgSelect">
+          <option value="dark">Dark Space (#040612)</option>
+          <option value="white">Pure White (#ffffff)</option>
+          <option value="grey">Studio Grey (#e2e6ea)</option>
+          <option value="blueprint">Blueprint (#0e1e38)</option>
+        </select>
+      </div>
+      <div class="studio-row">
+        <span>Lighting:</span>
+        <select id="lightSelect">
+          <option value="studio">Studio Neutral</option>
+          <option value="warm">Warm Dramatic</option>
+          <option value="scifi">Sci-Fi Neon</option>
+          <option value="bright">Bright Sunlight</option>
+        </select>
+      </div>
+      <div class="studio-row">
+        <span>Animate Models:</span>
+        <input type="checkbox" id="chkAnim" checked>
+      </div>
+      <div class="studio-row">
+        <span>Auto-Rotate:</span>
+        <input type="checkbox" id="chkSpin">
+      </div>
+      <div class="studio-row">
+        <span>Grid Floor:</span>
+        <input type="checkbox" id="chkGrid" checked>
+      </div>
+      <button class="btn blue" id="btnUpdateStudio" style="width:100%;justify-content:center;margin-top:2px">▶ Re-render 3D Model</button>
+    </div>
+  </aside>
+</div>
+
+<div id="toast">Saved</div>
+
+<script>
+// --- Core 3D Helpers (Identical to Game Engine) ---
+const ramp = new THREE.DataTexture(new Uint8Array([85,85,85,255, 165,165,165,255, 255,255,255,255]), 3, 1, THREE.RGBAFormat);
+ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+const matCache = {};
+function toon(hex, key) {
+  const k = hex + (key || "");
+  if (!matCache[k]) matCache[k] = new THREE.MeshToonMaterial({ color: new THREE.Color(hex).convertSRGBToLinear(), gradientMap: ramp });
+  return matCache[k];
+}
+const glowCache = {};
+function glow(hex) { return glowCache[hex] || (glowCache[hex] = new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).convertSRGBToLinear() })); }
+
+const C = {
+  olive: "#6f7a3e", oliveDk: "#4a5229", tan: "#c9b27c", dark: "#2b2a2c", visor: "#4fd2ff",
+  steel: "#9aa1aa", steelDk: "#5d636c", red: "#c8402f", bone: "#e9e0c8", gunBody: "#3a3d44", gunAcc: "#e08a2e", eye: "#141216"
+};
+const V = (x, y, z) => new THREE.Vector3(x || 0, y || 0, z || 0);
+const UP = V(0, 1, 0);
+
+function part(group, geo, mat, x, y, z, rx, ry, rz) {
+  const m = new THREE.Mesh(geo, typeof mat === "string" ? toon(mat) : mat);
+  m.position.set(x || 0, y || 0, z || 0);
+  m.rotation.set(rx || 0, ry || 0, rz || 0);
+  m.castShadow = true; m.receiveShadow = true;
+  group.add(m); return m;
+}
+const B = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+const Cy = (rt, rb, h, s) => new THREE.CylinderGeometry(rt, rb, h, s || 8);
+const SPH = new THREE.SphereGeometry(1, 12, 9);
+function E(g, col, x, y, z, sx, sy, sz, rx, ry, rz) { const m = part(g, SPH, col, x, y, z, rx, ry, rz); m.scale.set(sx || 1, sy || 1, sz || 1); return m; }
+
+function seg(g, a, b, r, col, r2) {
+  const A = V(...a), Bv = V(...b), dir = Bv.clone().sub(A), len = dir.length();
+  const m = part(g, Cy(r2 == null ? r : r2, r, len, 7), col);
+  m.position.copy(A).add(Bv).multiplyScalar(0.5);
+  m.quaternion.setFromUnitVectors(UP, dir.normalize());
+  return m;
+}
+function chain(g, pts, r, col, rEnd, joints) {
+  for (let i = 0; i < pts.length - 1; i++) {
+    const ra = r + (rEnd - r) * i / (pts.length - 1), rb = r + (rEnd - r) * (i + 1) / (pts.length - 1);
+    seg(g, pts[i], pts[i + 1], ra, col, rb);
+    if (joints && i > 0) E(g, col, ...pts[i], ra, ra, ra);
+  }
+}
+function eyes(g, x, y, z, spread, sx, sy, tilt) {
+  for (const s of [-1, 1]) E(g, C.eye, x + spread * s, y, z, sx, sy, sx * 0.6, 0, 0.35 * s, -(tilt || 0) * s);
+}
+
+const CONE = (r, h, s) => new THREE.ConeGeometry(r, h, s || 4);
+
+function makeBlaster() {
+  const g = new THREE.Group();
+  part(g, B(0.07, 0.07, 0.46), C.gunBody, 0, 0.05, 0.02);
+  part(g, B(0.075, 0.025, 0.30), C.gunAcc, 0, 0.095, 0.0);
+  part(g, B(0.07, 0.05, 0.36), C.gunBody, 0, -0.005, -0.03);
+  part(g, Cy(0.022, 0.022, 0.12, 8), C.dark, 0, 0.05, 0.3, Math.PI / 2);
+  part(g, B(0.065, 0.17, 0.08), C.dark, 0, -0.1, -0.16, -0.35);
+  part(g, B(0.065, 0.08, 0.075), C.dark, 0, -0.2, -0.205, -0.6);
+  part(g, new THREE.TorusGeometry(0.035, 0.009, 6, 10), C.dark, 0, -0.06, -0.07, 0, Math.PI / 2);
+  part(g, B(0.03, 0.03, 0.03), C.gunAcc, 0, 0.11, -0.17);
+  return g;
+}
+
+function makeTrooper(opts) {
+  const g = new THREE.Group();
+  const bare = !!(opts && (opts.bare || opts.noArmor));
+  const noGun = !!(opts && (opts.noGun || opts.noWeapon));
+  for (const s of [-1, 1]) {
+    part(g, B(0.2, 0.16, 0.34), C.dark, 0.13 * s, 0.08, 0.04);
+    if (!bare) { const m = part(g, B(0.22, 0.08, 0.2), C.tan, 0.13 * s, 0.2, 0.02); m.userData.stdArmor = true; }
+    part(g, B(0.17, 0.38, 0.19), C.olive, 0.13 * s, 0.42, 0);
+    if (!bare) { const m = part(g, new THREE.IcosahedronGeometry(0.1, 0), C.tan, 0.13 * s, 0.6, 0.07); m.userData.stdArmor = true; }
+    part(g, B(0.2, 0.38, 0.22), C.olive, 0.13 * s, 0.8, 0);
+  }
+  part(g, B(0.44, 0.16, 0.26), C.dark, 0, 1.0, 0);
+  if (!bare) { const m = part(g, B(0.46, 0.05, 0.28), C.tan, 0, 1.08, 0); m.userData.stdArmor = true; }
+  part(g, B(0.5, 0.48, 0.3), C.olive, 0, 1.32, 0);
+  if (!bare) { const m = part(g, B(0.42, 0.26, 0.06), C.tan, 0, 1.4, 0.16); m.userData.stdArmor = true; }
+  if (!bare) { const m = part(g, B(0.3, 0.36, 0.14), C.oliveDk, 0, 1.34, -0.21); m.userData.stdArmor = true; }
+  for (const s of [-1, 1]) {
+    if (!bare) {
+      const p1 = part(g, new THREE.SphereGeometry(0.15, 8, 6), C.tan, 0.33 * s, 1.52, 0); p1.userData.stdArmor = true;
+      const p2 = part(g, Cy(0.055, 0.055, 0.02, 10), C.dark, 0.46 * s, 1.53, 0.02, 0, 0, Math.PI / 2); p2.userData.stdArmor = true;
+      const p3 = part(g, Cy(0.018, 0.018, 0.025, 6), glow(C.gunAcc), 0.465 * s, 1.53, 0.02, 0, 0, Math.PI / 2); p3.userData.stdArmor = true;
+    }
+    part(g, B(0.14, 0.28, 0.15), C.olive, 0.37 * s, 1.3, 0);
+  }
+  part(g, B(0.13, 0.13, 0.3), C.oliveDk, 0.31, 1.13, 0.13, 0, -0.25);
+  part(g, B(0.1, 0.1, 0.1), C.dark, 0.24, 1.1, 0.29);
+  part(g, B(0.13, 0.13, 0.32), C.oliveDk, -0.25, 1.17, 0.2, 0, 0.55);
+  part(g, B(0.1, 0.1, 0.1), C.dark, -0.12, 1.16, 0.36);
+  if (!noGun) {
+    const gun = makeBlaster(); gun.position.set(0.13, 1.2, 0.36); gun.scale.setScalar(1.15); gun.userData.stdGun = true; g.add(gun);
+  }
+  part(g, Cy(0.08, 0.09, 0.08, 8), C.dark, 0, 1.6, 0);
+  part(g, new THREE.SphereGeometry(0.17, 8, 6), C.olive, 0, 1.76, 0);
+  part(g, B(0.3, 0.07, 0.08), glow(C.visor), 0, 1.79, 0.13);
+  part(g, B(0.12, 0.06, 0.06), C.dark, 0, 1.68, 0.14);
+  part(g, Cy(0.06, 0.06, 0.05, 10), C.dark, 0.17, 1.77, 0, 0, 0, Math.PI / 2);
+  // detail pass: webbing, pouches, antenna, lamp, knee straps
+  if (!bare) {
+    let m;
+    m = part(g, B(0.06, 0.56, 0.03), C.dark, 0.08, 1.33, 0.165, 0, 0, 0.5); m.userData.stdArmor = true;
+    m = part(g, B(0.06, 0.56, 0.03), C.dark, -0.08, 1.33, 0.165, 0, 0, -0.5); m.userData.stdArmor = true;
+    for (const x of [-0.16, -0.05, 0.06, 0.17]) { m = part(g, B(0.09, 0.09, 0.06), C.oliveDk, x, 1.04, 0.15); m.userData.stdArmor = true; }
+    m = part(g, B(0.12, 0.14, 0.08), C.oliveDk, 0.25, 0.98, 0.02); m.userData.stdArmor = true;
+    m = part(g, B(0.12, 0.14, 0.08), C.oliveDk, -0.25, 0.98, 0.02); m.userData.stdArmor = true;
+    m = part(g, Cy(0.006, 0.006, 0.34, 4), C.dark, -0.12, 2.0, -0.06); m.userData.stdArmor = true;
+    m = part(g, new THREE.SphereGeometry(0.018, 5, 4), glow('#ff3b2a'), -0.12, 2.17, -0.06); m.userData.stdArmor = true;
+    m = part(g, B(0.07, 0.05, 0.05), C.dark, -0.33, 1.6, 0.1); m.userData.stdArmor = true;
+    m = part(g, B(0.05, 0.035, 0.02), glow('#fff3c4'), -0.33, 1.6, 0.13); m.userData.stdArmor = true;
+    m = part(g, Cy(0.1, 0.1, 0.03, 8), C.tan, 0, 1.56, 0); m.userData.stdArmor = true;
+    for (const s of [-1, 1]) {
+      m = part(g, B(0.19, 0.03, 0.2), C.dark, 0.13 * s, 0.5, 0); m.userData.stdArmor = true;
+      m = part(g, B(0.21, 0.03, 0.23), C.dark, 0.13 * s, 0.9, 0); m.userData.stdArmor = true;
+      m = part(g, B(0.16, 0.04, 0.08), C.tan, 0.13 * s, 0.14, 0.2); m.userData.stdArmor = true;
+    }
+    m = part(g, B(0.22, 0.05, 0.1), C.tan, 0, 1.47, -0.29); m.userData.stdArmor = true;
+  }
+  return g;
+}
+function stripDefaultArmor(g, opts) {
+  for (let i = g.children.length - 1; i >= 0; i--) {
+    const c = g.children[i];
+    if (c.userData && (c.userData.stdArmor || (opts && opts.noGun && c.userData.stdGun))) {
+      if (c.geometry) c.geometry.dispose();
+      g.remove(c);
+    }
+  }
+  return g;
+}
+
+function swapMats(obj, map) {
+  obj.traverse(o => {
+    if (o.isMesh && map.has(o.material)) o.material = map.get(o.material);
+  });
+}
+
+const FACE = window.FACE = {
+  skin: ['#e0b892', '#c58a64', '#8a5a3a', '#5a3a24', '#7fae63', '#6a9ad8', '#9aa1aa', '#a86ad8'],
+  skinN: ['Light', 'Tan', 'Brown', 'Deep', 'Alien green', 'Alien blue', 'Chrome', 'Violet'],
+  eyesN: ['Normal', 'Angry', 'Visor strip', 'Cyclops', 'Bug eyes', 'Goggles', 'Scar', 'Glowing'],
+  mouthN: ['None', 'Grin', 'Beard', 'Mandibles', 'Respirator', 'Tusks'],
+  hairN: ['Bald', 'Buzz cut', 'Mohawk', 'Spikes', 'Ponytail', 'Antennae', 'Horns', 'Fin crest', 'Afro', 'Topknot'],
+  hairC: ['#1e1a18', '#5a3a22', '#c9a43a', '#e8e4dc', '#c8402f', '#4fd2ff', '#6fdc5a', '#c86aff'],
+  eyesBuild: [
+    (g, y, hc, sk) => { for (const s of [-1, 1]) { E(g, '#ffffff', 0.06 * s, y + 0.03, 0.14, 0.035, 0.035, 0.02); E(g, '#1a1a1e', 0.06 * s, y + 0.03, 0.155, 0.017, 0.017, 0.01); } },
+    (g, y, hc, sk) => { for (const s of [-1, 1]) { E(g, '#ffffff', 0.06 * s, y + 0.03, 0.14, 0.035, 0.035, 0.02); E(g, '#1a1a1e', 0.06 * s, y + 0.03, 0.155, 0.017, 0.017, 0.01); part(g, B(0.08, 0.018, 0.02), hc, 0.06 * s, y + 0.075, 0.15, 0, 0, 0.35 * s); } },
+    (g, y, hc, sk) => { part(g, B(0.28, 0.05, 0.04), glow('#4fd2ff'), 0, y + 0.03, 0.14); },
+    (g, y, hc, sk) => { E(g, '#ffffff', 0, y + 0.03, 0.14, 0.06, 0.06, 0.02); E(g, '#c8402f', 0, y + 0.03, 0.155, 0.03, 0.03, 0.01); },
+    (g, y, hc, sk) => { for (const s of [-1, 1]) for (const k of [0, 1]) E(g, glow(k ? '#ffd23a' : '#ff6a1a'), (0.05 + k * 0.05) * s, y + 0.04 + k * 0.03, 0.13 - k * 0.02, 0.025, 0.025, 0.02); },
+    (g, y, hc, sk) => { for (const s of [-1, 1]) { part(g, Cy(0.045, 0.045, 0.05, 10), '#c9a43a', 0.06 * s, y + 0.03, 0.14, Math.PI / 2); part(g, Cy(0.034, 0.034, 0.052, 10), glow('#ffb347'), 0.06 * s, y + 0.03, 0.145, Math.PI / 2); } part(g, B(0.34, 0.02, 0.02), '#2b2a2c', 0, y + 0.03, 0.05); },
+    (g, y, hc, sk) => { for (const s of [-1, 1]) { E(g, '#ffffff', 0.06 * s, y + 0.03, 0.14, 0.035, 0.035, 0.02); E(g, '#1a1a1e', 0.06 * s, y + 0.03, 0.155, 0.017, 0.017, 0.01); } part(g, B(0.015, 0.12, 0.01), '#8a3a2e', 0.07, y + 0.03, 0.16, 0, 0, 0.3); },
+    (g, y, hc, sk) => { for (const s of [-1, 1]) E(g, glow('#7fff6a'), 0.06 * s, y + 0.03, 0.14, 0.04, 0.025, 0.02); }
+  ],
+  mouthBuild: [
+    () => {},
+    (g, y) => { part(g, B(0.08, 0.014, 0.01), '#3a1a18', 0, y - 0.07, 0.155); },
+    (g, y, hc) => { E(g, hc, 0, y - 0.09, 0.08, 0.13, 0.08, 0.1); },
+    (g, y) => { for (const s of [-1, 1]) part(g, new THREE.ConeGeometry(0.02, 0.1, 4), '#3a2c1c', 0.04 * s, y - 0.12, 0.13, 0.4, 0, -0.4 * s); },
+    (g, y) => { part(g, B(0.14, 0.08, 0.06), '#3a3d44', 0, y - 0.07, 0.14); for (const s of [-1, 1]) part(g, Cy(0.025, 0.025, 0.04, 8), '#5d636c', 0.07 * s, y - 0.08, 0.16, Math.PI / 2); },
+    (g, y) => { for (const s of [-1, 1]) part(g, new THREE.ConeGeometry(0.018, 0.08, 4), '#efe7d6', 0.05 * s, y - 0.06, 0.14); }
+  ],
+  hairBuild: [
+    () => {},
+    (g, y, hc) => { E(g, hc, 0, y + 0.08, -0.01, 0.165, 0.11, 0.165); },
+    (g, y, hc) => { for (let k = 0; k < 6; k++) part(g, B(0.04, 0.1, 0.05), hc, 0, y + 0.19 - Math.abs(k - 2.5) * 0.008, -0.13 + k * 0.05); },
+    (g, y, hc) => { for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2; part(g, new THREE.ConeGeometry(0.03, 0.13, 4), hc, Math.cos(a) * 0.1, y + 0.17, Math.sin(a) * 0.1, Math.sin(a) * 0.4, 0, -Math.cos(a) * 0.4); } },
+    (g, y, hc) => { E(g, hc, 0, y + 0.08, -0.02, 0.165, 0.11, 0.165); chain(g, [[0, y + 0.06, -0.16], [0, y - 0.05, -0.22], [0, y - 0.2, -0.22]], 0.035, hc, 0.02); },
+    (g, y) => { for (const s of [-1, 1]) { part(g, Cy(0.006, 0.006, 0.22, 4), '#2b2a2c', 0.06 * s, y + 0.25, 0, 0, 0, -0.25 * s); E(g, glow('#6fdc5a'), 0.09 * s, y + 0.36, 0, 0.025, 0.025, 0.025); } },
+    (g, y) => { for (const s of [-1, 1]) chain(g, [[0.12 * s, y + 0.1, 0], [0.22 * s, y + 0.18, 0.02], [0.24 * s, y + 0.32, 0.08]], 0.035, '#efe7d6', 0.01); },
+    (g, y, hc, sk) => { for (let k = 0; k < 5; k++) part(g, B(0.02, 0.12 + Math.sin(k / 4 * Math.PI) * 0.08, 0.06), sk, 0, y + 0.18, -0.1 + k * 0.05); },
+    (g, y, hc) => { E(g, hc, 0, y + 0.12, -0.02, 0.24, 0.2, 0.24); },
+    (g, y, hc) => { E(g, hc, 0, y + 0.06, -0.01, 0.165, 0.1, 0.165); E(g, hc, 0, y + 0.22, -0.04, 0.06, 0.06, 0.06); }
+  ]
+};
+
+function faceOf(L) {
+  const p = String((L && L.f) || '0.0.0.0.0').split('.').map(Number);
+  return { s: p[0] || 0, e: p[1] || 0, m: p[2] || 0, h: p[3] || 0, hc: p[4] || 0 };
+}
+const isFemale = L => String((L && L.f) || '').split('.')[5] === 'f';
+
+function buildFace(g, F) {
+  const sk = FACE.skin[F.s % FACE.skin.length], hc = FACE.hairC[F.hc % FACE.hairC.length], y = 1.77;
+  E(g, sk, 0, y, 0.01, 0.16, 0.18, 0.16);
+  const eFn = FACE.eyesBuild[F.e % FACE.eyesBuild.length] || FACE.eyesBuild[0];
+  if (eFn) eFn(g, y, hc, sk);
+  const mFn = FACE.mouthBuild[F.m % FACE.mouthBuild.length] || FACE.mouthBuild[0];
+  if (mFn) mFn(g, y, hc, sk);
+  const hFn = FACE.hairBuild[F.h % FACE.hairBuild.length] || FACE.hairBuild[0];
+  if (hFn) hFn(g, y, hc, sk);
+}
+
+const ARMORS = window.ARMORS = window.ARMORS || {
+  std: { name: 'Standard Combat Rig', lvl: 1, def: 0, trim: '#c9b27c', visor: '#4fd2ff' }
+};
+const ARMOR_KITS = window.ARMOR_KITS = window.ARMOR_KITS || {};
+const HELMS = window.HELMS = window.HELMS || {
+  visor: { name: 'Visor Helmet', lvl: 1 }
+};
+const HELM_KITS = window.HELM_KITS = window.HELM_KITS || {
+  visor(g) {}
+};
+
+function makePlayerChar(look, col, opts) {
+  opts = opts || {};
+  const isStd = !look || !look.a || look.a === 'std';
+  const bare = (opts.bare !== undefined) ? opts.bare : (!isStd && look.a !== 'recon');
+  const noGun = !!(opts.noGun || opts.noWeapon);
+
+  const A = ARMORS[look.a] || ARMORS.std || { trim: C.tan, visor: C.visor };
+  const g = makeTrooper({ bare, noGun });
+  const m = new Map([
+    [toon(C.olive), toon(A.body || col)],
+    [toon(C.oliveDk), toon(A.body ? A.trim : C.oliveDk)],
+    [toon(C.tan), toon(A.trim)],
+    [glow(C.visor), glow(A.visor)]
+  ]);
+  swapMats(g, m);
+
+  if (ARMOR_KITS[look.a]) {
+    try { ARMOR_KITS[look.a](g, A); } catch (e) { console.warn("Armor kit error:", e); }
+  }
+
+  if (look.h === 'face') {
+    for (let i = g.children.length - 1; i >= 0; i--) {
+      const c = g.children[i];
+      if (c.position.y > 1.65 && Math.abs(c.position.x) < 0.26 && Math.abs(c.position.z) < 0.3) g.remove(c);
+    }
+    buildFace(g, faceOf(look));
+  } else if (HELM_KITS[look.h]) {
+    try { HELM_KITS[look.h](g, look, A); } catch (e) { console.warn("Helmet kit error:", e); }
+  }
+
+  if (isFemale(look)) {
+    for (const c of g.children) {
+      const p = c.position;
+      if (p.y > 1.2 && p.y < 1.62 && Math.abs(p.x) > 0.25) p.x *= 0.86;
+      else if (p.y > 1.15 && p.y < 1.5 && Math.abs(p.x) < 0.05) c.scale.x *= 0.86;
+      else if (p.y > 0.95 && p.y < 1.12 && Math.abs(p.x) < 0.05) c.scale.x *= 0.84;
+      else if (p.y > 0.7 && p.y < 0.9) p.x *= 1.06;
+    }
+    if (!bare) {
+      const plate = toon(A.trim || C.tan);
+      for (const s of [-1, 1]) {
+        const sp = part(g, new THREE.SphereGeometry(0.1, 8, 6), plate, 0.09 * s, 1.36, 0.14);
+        sp.scale.set(1, 0.85, 0.7);
+      }
+    }
+    const F = faceOf(look);
+    const hc = (FACE.hairC && FACE.hairC[F.hc % FACE.hairC.length]) || '#5a3a22';
+    if (look.h !== 'wizhat') {
+      part(g, Cy(0.05, 0.035, 0.32, 6), toon(hc), 0, 1.6, -0.2, 0.35);
+      part(g, new THREE.SphereGeometry(0.055, 6, 5), toon(hc), 0, 1.75, -0.16);
+    }
+    g.scale.setScalar(0.97);
+  }
+
+  return g;
+}
+
+// --- Application State ---
+let currentMode = "models"; // "models", "files", "char"
+let modelsList = [];
+let filesList = [];
+let selectedModel = null;
+let selectedFile = null;
+let activeCat = "all";
+let isDirty = false;
+
+// Character Studio State
+let charDataLoaded = false;
+let charData = { helmets: [], armors: [], face: {} };
+let charLook = { a: 'std', h: 'visor', f: '0.0.0.0.0.m', c: 'none' };
+let charCol = '#4fd2ff';
+let charFocus = 'head'; // 'head' or 'body'
+let charSubtab = 'face'; // 'face', 'helms', 'armors'
+let charBaseArmor = 'auto'; // 'auto', 'bare', or 'std'
+let charShowWeapon = false; // default false so weapon doesn't block armor preview
+let selectedCharPart = null; // { type, id, name, file, code, meta }
+
+// DOM Elements
+const tabModeModels = document.getElementById("tabModeModels");
+const tabModeFiles = document.getElementById("tabModeFiles");
+const tabModeChar = document.getElementById("tabModeChar");
+const charPanel = document.getElementById("charPanel");
+const searchFilter = document.getElementById("searchFilter");
+const catScroll = document.getElementById("catScroll");
+const itemList = document.getElementById("itemList");
+const modelCount = document.getElementById("modelCount");
+const fileCount = document.getElementById("fileCount");
+const codeArea = document.getElementById("codeArea");
+const lineNumbers = document.getElementById("lineNumbers");
+const currentTitle = document.getElementById("currentTitle");
+const dirtyDot = document.getElementById("dirtyDot");
+const statPath = document.getElementById("statPath");
+const statLines = document.getElementById("statLines");
+const btnSave = document.getElementById("btnSave");
+const btnCopyAI = document.getElementById("btnCopyAI");
+const btnPreviewCode = document.getElementById("btnPreviewCode");
+const btnUpdateStudio = document.getElementById("btnUpdateStudio");
+const btnLaunchGame = document.getElementById("btnLaunchGame");
+const toast = document.getElementById("toast");
+const hudName = document.getElementById("hudName");
+const hudDims = document.getElementById("hudDims");
+const hudMeshes = document.getElementById("hudMeshes");
+
+// Character Studio DOM Elements
+const btnRandomFace = document.getElementById("btnRandomFace");
+const btnSexMale = document.getElementById("btnSexMale");
+const btnSexFemale = document.getElementById("btnSexFemale");
+const btnFocusHead = document.getElementById("btnFocusHead");
+const btnFocusBody = document.getElementById("btnFocusBody");
+const btnBaseBare = document.getElementById("btnBaseBare");
+const btnBaseStd = document.getElementById("btnBaseStd");
+const btnWeaponNone = document.getElementById("btnWeaponNone");
+const btnWeaponGun = document.getElementById("btnWeaponGun");
+const pickerAccent = document.getElementById("pickerAccent");
+const subtabFace = document.getElementById("subtabFace");
+const subtabHelms = document.getElementById("subtabHelms");
+const subtabArmors = document.getElementById("subtabArmors");
+const secFace = document.getElementById("secFace");
+const secHelms = document.getElementById("secHelms");
+const secArmors = document.getElementById("secArmors");
+const valSkin = document.getElementById("valSkin");
+const swatchesSkin = document.getElementById("swatchesSkin");
+const btnEyePrev = document.getElementById("btnEyePrev");
+const btnEyeNext = document.getElementById("btnEyeNext");
+const valEyes = document.getElementById("valEyes");
+const btnMouthPrev = document.getElementById("btnMouthPrev");
+const btnMouthNext = document.getElementById("btnMouthNext");
+const valMouth = document.getElementById("valMouth");
+const btnHairPrev = document.getElementById("btnHairPrev");
+const btnHairNext = document.getElementById("btnHairNext");
+const valHair = document.getElementById("valHair");
+const valHairCol = document.getElementById("valHairCol");
+const swatchesHair = document.getElementById("swatchesHair");
+const btnAddFaceStyle = document.getElementById("btnAddFaceStyle");
+const helmList = document.getElementById("helmList");
+const helmCount = document.getElementById("helmCount");
+const btnAddHelmet = document.getElementById("btnAddHelmet");
+const armorList = document.getElementById("armorList");
+const armorCount = document.getElementById("armorCount");
+const btnAddArmor = document.getElementById("btnAddArmor");
+
+function showToast(msg, isError = false) {
+  toast.textContent = msg;
+  toast.style.borderColor = isError ? "var(--accent-red)" : "var(--accent-blue)";
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2500);
+}
+
+// --- Fetch Data from API ---
+async function init() {
+  try {
+    const [resModels, resFiles] = await Promise.all([
+      fetch("/api/models").then(r => r.json()),
+      fetch("/api/files").then(r => r.json())
+    ]);
+    modelsList = resModels.models || [];
+    filesList = resFiles.files || [];
+    modelCount.textContent = modelsList.length;
+    fileCount.textContent = filesList.length;
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("mode") === "char" || urlParams.get("tab") === "char" || window.location.hash.startsWith("#char") || urlParams.get("subtab")) {
+      tabModeChar.click();
+      const st = urlParams.get("subtab");
+      if (st === "helms" || st === "helmets") {
+        setTimeout(() => subtabHelms.click(), 50);
+      } else if (st === "armors" || st === "armor") {
+        setTimeout(() => subtabArmors.click(), 50);
+      }
+    } else {
+      // Default select a rich monster model: makeSnorfal or makeAnt or makeBlaster
+      const defaultModel = modelsList.find(m => m.fn === "makeSnorfal") ||
+                           modelsList.find(m => m.fn === "makeAnt") ||
+                           modelsList[0];
+      if (defaultModel) selectModel(defaultModel);
+    }
+    if (urlParams.get("bg")) set3DBackdrop(urlParams.get("bg"));
+    if (urlParams.get("theme")) applyEditorTheme(urlParams.get("theme"));
+  } catch (e) {
+    showToast("Error loading studio data: " + e.message, true);
+  }
+}
+
+// Mode Switching
+tabModeModels.onclick = () => {
+  currentMode = "models";
+  tabModeModels.classList.add("active");
+  tabModeFiles.classList.remove("active");
+  tabModeChar.classList.remove("active");
+  catScroll.style.display = "flex";
+  searchFilter.style.display = "block";
+  itemList.style.display = "block";
+  charPanel.style.display = "none";
+  renderList();
+  if (selectedModel) selectModel(selectedModel);
+};
+tabModeFiles.onclick = () => {
+  currentMode = "files";
+  tabModeFiles.classList.add("active");
+  tabModeModels.classList.remove("active");
+  tabModeChar.classList.remove("active");
+  catScroll.style.display = "none";
+  searchFilter.style.display = "block";
+  itemList.style.display = "block";
+  charPanel.style.display = "none";
+  renderList();
+  if (selectedFile) selectFile(selectedFile);
+};
+tabModeChar.onclick = () => {
+  currentMode = "char";
+  tabModeChar.classList.add("active");
+  tabModeModels.classList.remove("active");
+  tabModeFiles.classList.remove("active");
+  catScroll.style.display = "none";
+  searchFilter.style.display = "none";
+  itemList.style.display = "none";
+  charPanel.style.display = "flex";
+  if (!charDataLoaded) {
+    loadCharacterData();
+  } else {
+    renderCharIn3D();
+  }
+};
+
+// --- Character Studio Logic ---
+async function loadCharacterData() {
+  try {
+    const res = await fetch("/api/character-data").then(r => r.json());
+    charData = res;
+    helmCount.textContent = (charData.helmets && charData.helmets.length) || 0;
+    armorCount.textContent = (charData.armors && charData.armors.length) || 0;
+
+    // Compile helmet generators
+    if (charData.helmets) {
+      charData.helmets.forEach(h => {
+        try {
+          const fn = new Function("THREE", "part", "B", "Cy", "SPH", "E", "seg", "chain", "eyes", "toon", "glow", "C", "V", "UP", "CONE", `return ${h.code}`)(THREE, part, B, Cy, SPH, E, seg, chain, eyes, toon, glow, C, V, UP, CONE);
+          HELM_KITS[h.id] = fn;
+          HELMS[h.id] = { name: h.name, lvl: h.lvl };
+        } catch (e) {
+          console.warn("Error compiling helmet kit:", h.id, e);
+        }
+      });
+    }
+
+    // Compile armor generators
+    if (charData.armors) {
+      charData.armors.forEach(a => {
+        try {
+          const fn = new Function("THREE", "part", "B", "Cy", "SPH", "E", "seg", "chain", "eyes", "toon", "glow", "C", "V", "UP", "CONE", `return ${a.code}`)(THREE, part, B, Cy, SPH, E, seg, chain, eyes, toon, glow, C, V, UP, CONE);
+          ARMOR_KITS[a.id] = fn;
+          ARMORS[a.id] = { name: a.name, lvl: a.lvl, cost: a.cost, def: a.def, trim: a.trim, visor: a.visor, body: a.body, note: a.note };
+        } catch (e) {
+          console.warn("Error compiling armor kit:", a.id, e);
+        }
+      });
+    }
+
+    updateFaceUI();
+    renderHelmList();
+    renderArmorList();
+    charDataLoaded = true;
+
+    selectFaceSubtab();
+  } catch (err) {
+    showToast("Error loading character data: " + err.message, true);
+  }
+}
+
+function getFaceParts() {
+  const parts = String(charLook.f || "0.0.0.0.0.m").split(".");
+  return {
+    s: parseInt(parts[0]) || 0,
+    e: parseInt(parts[1]) || 0,
+    m: parseInt(parts[2]) || 0,
+    h: parseInt(parts[3]) || 0,
+    hc: parseInt(parts[4]) || 0,
+    female: parts[5] === "f"
+  };
+}
+
+function setFaceParts(fp) {
+  charLook.f = [fp.s % 8, fp.e % 8, fp.m % 6, fp.h % 10, fp.hc % 8].join(".") + (fp.female ? ".f" : ".m");
+  updateFaceUI();
+  if (currentMode === "char") renderCharIn3D();
+}
+
+function updateFaceUI() {
+  const fp = getFaceParts();
+  valSkin.textContent = FACE.skinN[fp.s % FACE.skinN.length] || "Skin " + fp.s;
+  valEyes.textContent = FACE.eyesN[fp.e % FACE.eyesN.length] || "Eyes " + fp.e;
+  valMouth.textContent = FACE.mouthN[fp.m % FACE.mouthN.length] || "Mouth " + fp.m;
+  valHair.textContent = FACE.hairN[fp.h % FACE.hairN.length] || "Hair " + fp.h;
+  const hairNames = ["Black", "Brown", "Blond", "White", "Red", "Blue", "Green", "Purple"];
+  valHairCol.textContent = hairNames[fp.hc % hairNames.length] || "Col " + fp.hc;
+
+  // Swatches
+  swatchesSkin.innerHTML = "";
+  FACE.skin.forEach((c, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "swatch-btn" + (fp.s === idx ? " active" : "");
+    btn.style.backgroundColor = c;
+    btn.title = FACE.skinN[idx] || c;
+    btn.onclick = () => {
+      const p = getFaceParts();
+      p.s = idx;
+      setFaceParts(p);
+    };
+    swatchesSkin.appendChild(btn);
+  });
+
+  swatchesHair.innerHTML = "";
+  FACE.hairC.forEach((c, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "swatch-btn" + (fp.hc === idx ? " active" : "");
+    btn.style.backgroundColor = c;
+    btn.title = hairNames[idx] || c;
+    btn.onclick = () => {
+      const p = getFaceParts();
+      p.hc = idx;
+      setFaceParts(p);
+    };
+    swatchesHair.appendChild(btn);
+  });
+}
+
+// Face Steppers
+btnEyePrev.onclick = () => { const p = getFaceParts(); p.e = (p.e - 1 + FACE.eyesN.length) % FACE.eyesN.length; setFaceParts(p); };
+btnEyeNext.onclick = () => { const p = getFaceParts(); p.e = (p.e + 1) % FACE.eyesN.length; setFaceParts(p); };
+btnMouthPrev.onclick = () => { const p = getFaceParts(); p.m = (p.m - 1 + FACE.mouthN.length) % FACE.mouthN.length; setFaceParts(p); };
+btnMouthNext.onclick = () => { const p = getFaceParts(); p.m = (p.m + 1) % FACE.mouthN.length; setFaceParts(p); };
+btnHairPrev.onclick = () => { const p = getFaceParts(); p.h = (p.h - 1 + FACE.hairN.length) % FACE.hairN.length; setFaceParts(p); };
+btnHairNext.onclick = () => { const p = getFaceParts(); p.h = (p.h + 1) % FACE.hairN.length; setFaceParts(p); };
+
+// Profile Card Controls
+btnSexMale.onclick = () => setCharSex(false);
+btnSexFemale.onclick = () => setCharSex(true);
+function setCharSex(female) {
+  const fp = getFaceParts();
+  fp.female = female;
+  btnSexMale.classList.toggle("active", !female);
+  btnSexFemale.classList.toggle("active", female);
+  setFaceParts(fp);
+}
+
+btnFocusHead.onclick = () => setCharFocus("head");
+btnFocusBody.onclick = () => setCharFocus("body");
+function setCharFocus(f) {
+  charFocus = f;
+  btnFocusHead.classList.toggle("active", f === "head");
+  btnFocusBody.classList.toggle("active", f === "body");
+  if (f === "head") {
+    controls.target.set(0, 1.76, 0);
+    camera.position.set(0.35, 1.82, 0.95);
+  } else {
+    controls.target.set(0, 1.0, 0);
+    camera.position.set(1.5, 1.4, 2.5);
+  }
+  controls.update();
+}
+
+pickerAccent.oninput = (e) => {
+  charCol = e.target.value;
+  if (currentMode === "char") renderCharIn3D();
+};
+
+btnBaseBare.onclick = () => {
+  charBaseArmor = "bare";
+  btnBaseBare.classList.add("active");
+  btnBaseStd.classList.remove("active");
+  if (currentMode === "char") renderCharIn3D();
+};
+btnBaseStd.onclick = () => {
+  charBaseArmor = "std";
+  btnBaseStd.classList.add("active");
+  btnBaseBare.classList.remove("active");
+  if (currentMode === "char") renderCharIn3D();
+};
+btnWeaponNone.onclick = () => {
+  charShowWeapon = false;
+  btnWeaponNone.classList.add("active");
+  btnWeaponGun.classList.remove("active");
+  if (currentMode === "char") renderCharIn3D();
+};
+btnWeaponGun.onclick = () => {
+  charShowWeapon = true;
+  btnWeaponGun.classList.add("active");
+  btnWeaponNone.classList.remove("active");
+  if (currentMode === "char") renderCharIn3D();
+};
+
+btnRandomFace.onclick = () => {
+  const fp = {
+    s: Math.floor(Math.random() * FACE.skin.length),
+    e: Math.floor(Math.random() * FACE.eyesN.length),
+    m: Math.floor(Math.random() * FACE.mouthN.length),
+    h: Math.floor(Math.random() * FACE.hairN.length),
+    hc: Math.floor(Math.random() * FACE.hairC.length),
+    female: Math.random() > 0.5
+  };
+  btnSexMale.classList.toggle("active", !fp.female);
+  btnSexFemale.classList.toggle("active", fp.female);
+  setFaceParts(fp);
+  if (charData.helmets && charData.helmets.length) {
+    const rh = charData.helmets[Math.floor(Math.random() * charData.helmets.length)];
+    charLook.h = rh.id;
+  }
+  if (charData.armors && charData.armors.length) {
+    const ra = charData.armors[Math.floor(Math.random() * charData.armors.length)];
+    charLook.a = ra.id;
+  }
+  renderCharIn3D();
+  if (charSubtab === "helms") renderHelmList();
+  if (charSubtab === "armors") renderArmorList();
+  showToast("🎲 Random trooper look generated!");
+};
+
+// Subtabs
+subtabFace.onclick = () => {
+  charSubtab = "face";
+  subtabFace.classList.add("active");
+  subtabHelms.classList.remove("active");
+  subtabArmors.classList.remove("active");
+  secFace.style.display = "block";
+  secHelms.style.display = "none";
+  secArmors.style.display = "none";
+  selectFaceSubtab();
+};
+subtabHelms.onclick = () => {
+  charSubtab = "helms";
+  subtabHelms.classList.add("active");
+  subtabFace.classList.remove("active");
+  subtabArmors.classList.remove("active");
+  secHelms.style.display = "block";
+  secFace.style.display = "none";
+  secArmors.style.display = "none";
+  const curr = (charData.helmets && charData.helmets.find(h => h.id === charLook.h)) || (charData.helmets && charData.helmets[0]);
+  if (curr) selectHelmet(curr);
+};
+subtabArmors.onclick = () => {
+  charSubtab = "armors";
+  subtabArmors.classList.add("active");
+  subtabFace.classList.remove("active");
+  subtabHelms.classList.remove("active");
+  secArmors.style.display = "block";
+  secFace.style.display = "none";
+  secHelms.style.display = "none";
+  const curr = (charData.armors && charData.armors.find(a => a.id === charLook.a)) || (charData.armors && charData.armors[0]);
+  if (curr) selectArmor(curr);
+};
+
+function selectFaceSubtab() {
+  selectedCharPart = { type: "face", id: "face", name: "Face Features", file: "face.js", meta: {} };
+  selectedModel = null;
+  selectedFile = null;
+  charLook.h = "face";
+
+  currentTitle.textContent = "Face Features [src/face.js]";
+  statPath.textContent = "src/face.js";
+  if (charData.faceFile) {
+    codeArea.value = charData.faceFile;
+  }
+  isDirty = false;
+  dirtyDot.classList.remove("visible");
+  updateLineNumbers();
+  updateStats();
+
+  setCharFocus("head");
+  renderCharIn3D();
+}
+
+function renderHelmList() {
+  helmList.innerHTML = "";
+  if (!charData.helmets) return;
+  charData.helmets.forEach(helm => {
+    const div = document.createElement("div");
+    const isEquipped = charLook.h === helm.id;
+    div.className = "char-item-row" + (isEquipped ? " active" : "");
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px">
+        <span>${helm.id === "face" ? "🎭" : "🪖"}</span>
+        <span class="char-item-name">${helm.name}</span>
+      </div>
+      <div class="char-item-meta">
+        <span>Lv.${helm.lvl || 1}</span>
+        <span class="cat-badge" style="font-size:9px">${helm.file}</span>
+      </div>
+    `;
+    div.onclick = () => {
+      if (isDirty && !confirm("Discard unsaved changes?")) return;
+      selectHelmet(helm);
+    };
+    helmList.appendChild(div);
+  });
+}
+
+function selectHelmet(helm) {
+  selectedCharPart = { type: "helmet", id: helm.id, name: helm.name, file: helm.file, meta: { lvl: helm.lvl } };
+  selectedModel = null;
+  selectedFile = null;
+  charLook.h = helm.id;
+
+  currentTitle.textContent = `Helmet: ${helm.name} [${helm.id}]`;
+  statPath.textContent = `src/${helm.file || "face.js"}`;
+  codeArea.value = helm.code || `function (g, look, A) {\n  // Helmet: ${helm.name}\n}`;
+  isDirty = false;
+  dirtyDot.classList.remove("visible");
+  updateLineNumbers();
+  updateStats();
+
+  renderHelmList();
+  setCharFocus("head");
+  renderCharIn3D();
+}
+
+function renderArmorList() {
+  armorList.innerHTML = "";
+  if (!charData.armors) return;
+  charData.armors.forEach(armor => {
+    const div = document.createElement("div");
+    const isEquipped = charLook.a === armor.id;
+    div.className = "char-item-row" + (isEquipped ? " active" : "");
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px">
+        <span>🛡️</span>
+        <span class="char-item-name">${armor.name}</span>
+      </div>
+      <div class="char-item-meta">
+        <span>+${Math.round((armor.def || 0) * 100)}% Def</span>
+        <span>Lv.${armor.lvl || 1}</span>
+      </div>
+    `;
+    div.onclick = () => {
+      if (isDirty && !confirm("Discard unsaved changes?")) return;
+      selectArmor(armor);
+    };
+    armorList.appendChild(div);
+  });
+}
+
+function selectArmor(armor) {
+  selectedCharPart = {
+    type: "armor",
+    id: armor.id,
+    name: armor.name,
+    file: armor.file,
+    meta: {
+      lvl: armor.lvl,
+      cost: armor.cost,
+      def: armor.def,
+      trim: armor.trim,
+      visor: armor.visor,
+      body: armor.body,
+      note: armor.note
+    }
+  };
+  selectedModel = null;
+  selectedFile = null;
+  charLook.a = armor.id;
+
+  if (charBaseArmor === "auto") {
+    const isStd = armor.id === "std" || armor.id === "recon";
+    btnBaseBare.classList.toggle("active", !isStd);
+    btnBaseStd.classList.toggle("active", isStd);
+  }
+
+  currentTitle.textContent = `Armor: ${armor.name} [${armor.id}]`;
+  statPath.textContent = `src/${armor.file || "armor.js"}`;
+  codeArea.value = armor.code || `function (g, A) {\n  // Armor: ${armor.name}\n}`;
+  isDirty = false;
+  dirtyDot.classList.remove("visible");
+  updateLineNumbers();
+  updateStats();
+
+  renderArmorList();
+  setCharFocus("body");
+  renderCharIn3D();
+}
+
+// Add New Helmet
+btnAddHelmet.onclick = () => {
+  const id = prompt("Enter new helmet ID (e.g. cyber_helm):");
+  if (!id) return;
+  const cleanId = id.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+  if (!cleanId) return;
+  const name = prompt("Enter helmet display name:", cleanId.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())) || cleanId;
+  const newHelm = {
+    id: cleanId,
+    name: name.trim(),
+    lvl: 1,
+    file: "face.js",
+    code: `function (g, look, A) {\n  // Helmet: ${name.trim()} (${cleanId})\n  // Trooper head center is at y = 1.76\n  part(g, B(0.32, 0.22, 0.32), '#2b2a2c', 0, 1.82, 0);\n  part(g, B(0.28, 0.06, 0.08), glow('#4fd2ff'), 0, 1.80, 0.16);\n}`
+  };
+  charData.helmets.push(newHelm);
+  helmCount.textContent = charData.helmets.length;
+  try {
+    const fn = new Function("THREE", "part", "B", "Cy", "SPH", "E", "seg", "chain", "eyes", "toon", "glow", "C", "V", "UP", "CONE", `return ${newHelm.code}`)(THREE, part, B, Cy, SPH, E, seg, chain, eyes, toon, glow, C, V, UP, CONE);
+    HELM_KITS[cleanId] = fn;
+    HELMS[cleanId] = { name: newHelm.name, lvl: newHelm.lvl };
+  } catch (e) {
+    console.error("Error compiling new helmet:", e);
+  }
+  selectHelmet(newHelm);
+  isDirty = true;
+  dirtyDot.classList.add("visible");
+  showToast(`Created helmet "${name}". Live preview active! Click Save & Rebuild (Ctrl+S) to persist.`);
+};
+
+// Add New Armor
+btnAddArmor.onclick = () => {
+  const id = prompt("Enter new armor ID (e.g. paladin):");
+  if (!id) return;
+  const cleanId = id.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+  if (!cleanId) return;
+  const name = prompt("Enter armor display name:", cleanId.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())) || cleanId;
+  const newArmor = {
+    id: cleanId,
+    name: name.trim(),
+    lvl: 1,
+    cost: 500,
+    def: 0.05,
+    trim: "#ffd36a",
+    visor: "#4fd2ff",
+    body: "#2b2a2c",
+    note: "",
+    file: "armor.js",
+    code: `function (g, A) {\n  // Armor: ${name.trim()} (${cleanId})\n  // Shoulder pauldrons\n  for (const s of [-1, 1]) {\n    part(g, B(0.32, 0.18, 0.34), A.trim, 0.38 * s, 1.64, 0, 0, 0, 0.25 * s);\n    part(g, Cy(0.04, 0.04, 0.12, 6), glow(A.visor), 0.42 * s, 1.72, 0);\n  }\n  // Chest plate\n  part(g, B(0.52, 0.36, 0.12), A.trim, 0, 1.38, 0.18);\n  part(g, new THREE.CircleGeometry(0.08, 6), glow(A.visor), 0, 1.4, 0.25);\n}`
+  };
+  charData.armors.push(newArmor);
+  armorCount.textContent = charData.armors.length;
+  try {
+    const fn = new Function("THREE", "part", "B", "Cy", "SPH", "E", "seg", "chain", "eyes", "toon", "glow", "C", "V", "UP", "CONE", `return ${newArmor.code}`)(THREE, part, B, Cy, SPH, E, seg, chain, eyes, toon, glow, C, V, UP, CONE);
+    ARMOR_KITS[cleanId] = fn;
+    ARMORS[cleanId] = { name: newArmor.name, lvl: newArmor.lvl, cost: newArmor.cost, def: newArmor.def, trim: newArmor.trim, visor: newArmor.visor, body: newArmor.body };
+  } catch (e) {
+    console.error("Error compiling new armor:", e);
+  }
+  selectArmor(newArmor);
+  isDirty = true;
+  dirtyDot.classList.add("visible");
+  showToast(`Created armor set "${name}". Live preview active! Click Save & Rebuild (Ctrl+S) to persist.`);
+};
+
+// Add Face Style
+btnAddFaceStyle.onclick = () => {
+  const opt = prompt("Add style for: 1. Eyes, 2. Mouth, 3. Hair (type 1, 2, or 3):", "3");
+  if (!opt) return;
+  selectedCharPart = { type: "face", id: "face", name: "Face Features", file: "face.js", meta: {} };
+  selectedModel = null;
+  selectedFile = null;
+  currentTitle.textContent = "Add Face Option [src/face.js]";
+  statPath.textContent = "src/face.js";
+
+  if (opt === "1") {
+    const name = prompt("Name for new eye style (e.g. Laser Visor):", "Laser Visor") || "New Eyes";
+    codeArea.value = `// Added Eye Style: ${name}\nFACE.eyesN.push(${JSON.stringify(name)});\nFACE.eyesBuild.push((g, y, hc, sk) => {\n  // y is head center (1.77), hc is hair color, sk is skin color\n  part(g, B(0.28, 0.04, 0.06), glow('#ff2a3a'), 0, y + 0.03, 0.14);\n});\n`;
+  } else if (opt === "2") {
+    const name = prompt("Name for new mouth style (e.g. Fang Mask):", "Fang Mask") || "New Mouth";
+    codeArea.value = `// Added Mouth Style: ${name}\nFACE.mouthN.push(${JSON.stringify(name)});\nFACE.mouthBuild.push((g, y, hc, sk) => {\n  // y is head center (1.77)\n  part(g, B(0.12, 0.05, 0.04), '#2b2a2c', 0, y - 0.08, 0.15);\n});\n`;
+  } else {
+    const name = prompt("Name for new hair/crest style (e.g. Dragon Crest):", "Dragon Crest") || "New Hair";
+    codeArea.value = `// Added Hair Style: ${name}\nFACE.hairN.push(${JSON.stringify(name)});\nFACE.hairBuild.push((g, y, hc, sk) => {\n  // y is head center (1.77), hc is hair color\n  for (let k = 0; k < 6; k++) {\n    part(g, new THREE.ConeGeometry(0.03, 0.16, 4), hc, 0, y + 0.20, -0.12 + k * 0.05, 0.2, 0, 0);\n  }\n});\n`;
+  }
+  isDirty = true;
+  dirtyDot.classList.add("visible");
+  updateLineNumbers();
+  updateStats();
+  showToast("Face template generated! Edit & Live Preview (Ctrl+Enter), then Save (Ctrl+S)");
+};
+
+function renderCharIn3D() {
+  if (currentModelGroup) {
+    scene.remove(currentModelGroup);
+    currentModelGroup.traverse(c => {
+      if (c.geometry) c.geometry.dispose();
+    });
+    currentModelGroup = null;
+  }
+  currentAnimFn = null;
+
+  try {
+    const isStd = !charLook || !charLook.a || charLook.a === "std";
+    let isBare = false;
+    if (charBaseArmor === "bare") isBare = true;
+    else if (charBaseArmor === "std") isBare = false;
+    else isBare = (charSubtab === "armors" && !isStd && charLook.a !== "recon") || (!isStd && charLook.a !== "recon");
+
+    const mannequin = makePlayerChar(charLook, charCol, { bare: isBare, noGun: !charShowWeapon });
+    currentModelGroup = mannequin;
+    scene.add(mannequin);
+
+    let meshCount = 0;
+    mannequin.traverse(c => { if (c.isMesh) meshCount++; });
+
+    const currentPartName = selectedCharPart ? selectedCharPart.name : "Custom Trooper";
+    hudName.textContent = `Trooper [${currentPartName}]`;
+    hudDims.textContent = isBare ? "1.85m tall · Undersuit base" : "1.85m tall · Default armor base";
+    hudMeshes.textContent = `${meshCount} mesh parts`;
+
+    if (charFocus === "head") {
+      controls.target.set(0, 1.76, 0);
+      camera.position.set(0.35, 1.82, 0.95);
+    } else {
+      controls.target.set(0, 1.0, 0);
+      camera.position.set(1.5, 1.4, 2.5);
+    }
+    controls.update();
+  } catch (err) {
+    console.error("Error rendering character:", err);
+    hudName.textContent = "Runtime Error: " + err.message;
+  }
+}
+
+function renderList() {
+  const q = searchFilter.value.toLowerCase().trim();
+  itemList.innerHTML = "";
+
+  if (currentMode === "models") {
+    const filtered = modelsList.filter(m => {
+      if (q && !m.name.toLowerCase().includes(q) && !m.fn.toLowerCase().includes(q) && !m.file.toLowerCase().includes(q)) return false;
+      if (activeCat !== "all" && m.category !== activeCat) return false;
+      return true;
+    });
+
+    filtered.forEach(m => {
+      const li = document.createElement("li");
+      li.className = "list-item" + (selectedModel === m ? " active" : "");
+      li.innerHTML = `
+        <div class="item-title">
+          <span>${m.name}</span>
+          <span class="cat-badge">${m.category}</span>
+        </div>
+        <div class="item-meta">
+          <span>${m.fn}()</span>
+          <span>${m.file}:${m.startLine}</span>
+        </div>
+      `;
+      li.onclick = () => {
+        if (isDirty && !confirm("Discard unsaved changes?")) return;
+        selectModel(m);
+      };
+      itemList.appendChild(li);
+    });
+  } else if (currentMode === "files") {
+    const filtered = filesList.filter(f => {
+      return !q || f.name.toLowerCase().includes(q);
+    });
+    filtered.forEach(f => {
+      const li = document.createElement("li");
+      li.className = "list-item" + (selectedFile === f.name ? " active" : "");
+      li.innerHTML = `
+        <div class="item-title"><span>${f.name}</span></div>
+        <div class="item-meta">
+          <span>${f.lines} lines</span>
+          <span>${(f.size/1024).toFixed(1)} KB</span>
+        </div>
+      `;
+      li.onclick = () => {
+        if (isDirty && !confirm("Discard unsaved changes?")) return;
+        selectFile(f.name);
+      };
+      itemList.appendChild(li);
+    });
+  }
+}
+
+// Select a 3D Model
+function selectModel(m) {
+  selectedModel = m;
+  selectedFile = null;
+  selectedCharPart = null;
+  currentTitle.textContent = `${m.name} [${m.fn}]`;
+  statPath.textContent = `src/${m.file}:${m.startLine}`;
+  codeArea.value = m.code;
+  isDirty = false;
+  dirtyDot.classList.remove("visible");
+  updateLineNumbers();
+  updateStats();
+  renderList();
+  renderModelIn3D(m.code, m.fn, m.name);
+}
+
+// Select a full source file
+async function selectFile(fileName) {
+  try {
+    const res = await fetch(`/api/file?name=${encodeURIComponent(fileName)}`);
+    const data = await res.json();
+    selectedFile = fileName;
+    selectedModel = null;
+    selectedCharPart = null;
+    currentTitle.textContent = fileName;
+    statPath.textContent = `src/${fileName}`;
+    codeArea.value = data.content;
+    isDirty = false;
+    dirtyDot.classList.remove("visible");
+    updateLineNumbers();
+    updateStats();
+    renderList();
+  } catch (e) {
+    showToast("Error loading file: " + e.message, true);
+  }
+}
+
+function updateStats() {
+  const lines = codeArea.value.split("\n").length;
+  statLines.textContent = `${lines} lines`;
+}
+function updateLineNumbers() {
+  const lines = codeArea.value.split("\n").length;
+  lineNumbers.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join("<br>");
+}
+
+codeArea.addEventListener("input", () => {
+  if (!isDirty) {
+    isDirty = true;
+    dirtyDot.classList.add("visible");
+  }
+  updateStats();
+  updateLineNumbers();
+});
+codeArea.addEventListener("scroll", () => {
+  lineNumbers.scrollTop = codeArea.scrollTop;
+});
+codeArea.addEventListener("keydown", (e) => {
+  if (e.key === "Tab") {
+    e.preventDefault();
+    const s = codeArea.selectionStart, end = codeArea.selectionEnd;
+    codeArea.value = codeArea.value.substring(0, s) + "  " + codeArea.value.substring(end);
+    codeArea.selectionStart = codeArea.selectionEnd = s + 2;
+    codeArea.dispatchEvent(new Event("input"));
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+    e.preventDefault();
+    saveCurrent();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    e.preventDefault();
+    previewCurrentCode();
+  }
+});
+
+// Live Preview current code in 3D Studio
+function previewCurrentCode() {
+  if (currentMode === "models" && selectedModel) {
+    renderModelIn3D(codeArea.value, selectedModel.fn, selectedModel.name);
+    showToast("3D Preview updated!");
+  } else if (currentMode === "char" && selectedCharPart) {
+    try {
+      if (selectedCharPart.type === "helmet") {
+        const fn = new Function("THREE", "part", "B", "Cy", "SPH", "E", "seg", "chain", "eyes", "toon", "glow", "C", "V", "UP", "CONE", `return ${codeArea.value}`)(THREE, part, B, Cy, SPH, E, seg, chain, eyes, toon, glow, C, V, UP, CONE);
+        HELM_KITS[selectedCharPart.id] = fn;
+        renderCharIn3D();
+        showToast(`3D Helmet preview updated: ${selectedCharPart.name}`);
+      } else if (selectedCharPart.type === "armor") {
+        const fn = new Function("THREE", "part", "B", "Cy", "SPH", "E", "seg", "chain", "eyes", "toon", "glow", "C", "V", "UP", "CONE", `return ${codeArea.value}`)(THREE, part, B, Cy, SPH, E, seg, chain, eyes, toon, glow, C, V, UP, CONE);
+        ARMOR_KITS[selectedCharPart.id] = fn;
+        renderCharIn3D();
+        showToast(`3D Armor preview updated: ${selectedCharPart.name}`);
+      } else if (selectedCharPart.type === "face") {
+        new Function("THREE", "part", "B", "Cy", "SPH", "E", "seg", "chain", "eyes", "toon", "glow", "C", "V", "UP", "CONE", "FACE", codeArea.value)(THREE, part, B, Cy, SPH, E, seg, chain, eyes, toon, glow, C, V, UP, CONE, FACE);
+        renderCharIn3D();
+        showToast("3D Face preview updated!");
+      }
+    } catch (err) {
+      console.error("Preview compilation error:", err);
+      showToast("Code error: " + err.message, true);
+    }
+  } else {
+    showToast("Currently viewing full file. Select a 3D model or gear part to preview.", true);
+  }
+}
+btnPreviewCode.onclick = previewCurrentCode;
+btnUpdateStudio.onclick = previewCurrentCode;
+
+// Save
+async function saveCurrent() {
+  btnSave.textContent = "⏳ Saving...";
+  btnSave.disabled = true;
+  try {
+    if (currentMode === "char" && selectedCharPart) {
+      const res = await fetch("/api/save-character-part", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: selectedCharPart.type,
+          id: selectedCharPart.id,
+          name: selectedCharPart.name,
+          code: codeArea.value,
+          meta: selectedCharPart.meta
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        selectedCharPart.code = codeArea.value;
+        isDirty = false;
+        dirtyDot.classList.remove("visible");
+        showToast(`Saved ${selectedCharPart.name} & Rebuilt! In-game cache cleared.`);
+      } else {
+        showToast("Save error: " + (data.error || "Failed"), true);
+      }
+    } else if (selectedModel) {
+      const res = await fetch("/api/save-model", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fn: selectedModel.fn,
+          file: selectedModel.file,
+          code: codeArea.value,
+          rebuild: true
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        selectedModel.code = codeArea.value;
+        isDirty = false;
+        dirtyDot.classList.remove("visible");
+        showToast(`Saved ${selectedModel.name} & Rebuilt!`);
+      } else {
+        showToast("Save error: " + (data.error || "Failed"), true);
+      }
+    } else if (selectedFile) {
+      const res = await fetch("/api/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: selectedFile,
+          content: codeArea.value,
+          rebuild: true
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        isDirty = false;
+        dirtyDot.classList.remove("visible");
+        showToast(`Saved src/${selectedFile} & Rebuilt!`);
+      } else {
+        showToast("Save error: " + (data.error || "Failed"), true);
+      }
+    }
+  } catch (e) {
+    showToast("Save error: " + e.message, true);
+  } finally {
+    btnSave.textContent = "💾 Save & Rebuild";
+    btnSave.disabled = false;
+  }
+}
+btnSave.onclick = saveCurrent;
+
+// Copy for AI
+btnCopyAI.onclick = () => {
+  const code = codeArea.value;
+  let header = "";
+  if (currentMode === "char" && selectedCharPart) {
+    header = `// ==========================================
+// 3D Character Part: ${selectedCharPart.name} [${selectedCharPart.type}: ${selectedCharPart.id}]
+// File: src/${selectedCharPart.file || "face.js"}
+// Project: Art of War: Setting Sun
+// ==========================================
+
+${code}`;
+  } else if (selectedModel) {
+    header = `// ==========================================
+// 3D Model: ${selectedModel.name} (${selectedModel.fn})
+// File: src/${selectedModel.file}:${selectedModel.startLine}
+// Project: Art of War: Setting Sun
+// ==========================================
+
+${code}`;
+  } else {
+    header = `// ==========================================
+// File: src/${selectedFile}
+// Project: Art of War: Setting Sun
+// ==========================================
+
+${code}`;
+  }
+
+  navigator.clipboard.writeText(header).then(() => {
+    showToast("Copied code formatted for AI / Claude!");
+  }).catch(() => {
+    showToast("Failed to copy", true);
+  });
+};
+
+btnLaunchGame.onclick = () => window.open("/", "_blank");
+
+searchFilter.oninput = renderList;
+catScroll.querySelectorAll(".cat-btn").forEach(btn => {
+  btn.onclick = () => {
+    catScroll.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeCat = btn.dataset.cat;
+    renderList();
+  };
+});
+
+// =======================================================================
+// --- Isolated 3D Studio Engine ---
+// =======================================================================
+const container = document.getElementById("canvasContainer");
+const canvas = document.getElementById("threeCanvas");
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x040612);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+camera.position.set(2.5, 2.0, 3.5);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio || 1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.target.set(0, 0.8, 0);
+
+// Studio Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+scene.add(ambientLight);
+
+const keyLight = new THREE.DirectionalLight(0xfffaea, 0.95);
+keyLight.position.set(6, 10, 6);
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0x7fc2ff, 0.65);
+fillLight.position.set(-6, 4, -4);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xff99bb, 0.4);
+rimLight.position.set(0, -6, -4);
+scene.add(rimLight);
+
+// Floor Grid
+let gridHelper = null;
+function updateGrid(colorCenter, colorGrid) {
+  if (gridHelper) scene.remove(gridHelper);
+  gridHelper = new THREE.GridHelper(14, 28, colorCenter || 0x4fd2ff, colorGrid || 0x1b244d);
+  gridHelper.position.y = 0;
+  gridHelper.visible = document.getElementById("chkGrid").checked;
+  scene.add(gridHelper);
+}
+updateGrid(0x4fd2ff, 0x1b244d);
+
+document.getElementById("chkGrid").onchange = (e) => {
+  if (gridHelper) gridHelper.visible = e.target.checked;
+};
+
+// 3D Viewport Backdrop
+const btnToggle3dBg = document.getElementById("btnToggle3dBg");
+const bgSelect = document.getElementById("bgSelect");
+let currentBackdrop = localStorage.getItem("aow_dev_3d_bg") || "dark";
+
+function set3DBackdrop(mode) {
+  currentBackdrop = mode;
+  localStorage.setItem("aow_dev_3d_bg", mode);
+  if (bgSelect) bgSelect.value = mode;
+
+  if (mode === "white") {
+    scene.background = new THREE.Color(0xffffff);
+    updateGrid(0x0284c7, 0xcbd5e1);
+    document.getElementById("modelHud").classList.add("light-theme");
+    btnToggle3dBg.textContent = "🌙 Dark 3D View";
+    ambientLight.intensity = 0.85;
+  } else if (mode === "grey") {
+    scene.background = new THREE.Color(0xe2e6ea);
+    updateGrid(0x0284c7, 0x94a3b8);
+    document.getElementById("modelHud").classList.add("light-theme");
+    btnToggle3dBg.textContent = "🌙 Dark 3D View";
+    ambientLight.intensity = 0.8;
+  } else if (mode === "blueprint") {
+    scene.background = new THREE.Color(0x0e1e38);
+    updateGrid(0x38bdf8, 0x1e3a8a);
+    document.getElementById("modelHud").classList.remove("light-theme");
+    btnToggle3dBg.textContent = "☀️ White 3D View";
+    ambientLight.intensity = 0.75;
+  } else {
+    scene.background = new THREE.Color(0x040612);
+    updateGrid(0x4fd2ff, 0x1b244d);
+    document.getElementById("modelHud").classList.remove("light-theme");
+    btnToggle3dBg.textContent = "☀️ White 3D View";
+    ambientLight.intensity = 0.75;
+  }
+}
+btnToggle3dBg.onclick = () => {
+  set3DBackdrop(currentBackdrop === "white" ? "dark" : "white");
+};
+if (bgSelect) {
+  bgSelect.onchange = (e) => set3DBackdrop(e.target.value);
+}
+set3DBackdrop(currentBackdrop);
+
+// Code Editor Theme
+const btnToggleEditorTheme = document.getElementById("btnToggleEditorTheme");
+const editorPane = document.querySelector(".editor-pane");
+let editorTheme = localStorage.getItem("aow_dev_editor_theme") || "dark";
+
+function applyEditorTheme(theme) {
+  editorTheme = theme;
+  localStorage.setItem("aow_dev_editor_theme", theme);
+  if (theme === "white") {
+    editorPane.classList.add("light-theme");
+    btnToggleEditorTheme.textContent = "🌙 Dark Code";
+  } else {
+    editorPane.classList.remove("light-theme");
+    btnToggleEditorTheme.textContent = "☀️ White Code";
+  }
+}
+btnToggleEditorTheme.onclick = () => {
+  applyEditorTheme(editorTheme === "white" ? "dark" : "white");
+};
+applyEditorTheme(editorTheme);
+
+document.getElementById("btnResetCam").onclick = () => {
+  resetCameraTarget();
+};
+
+document.getElementById("lightSelect").onchange = (e) => {
+  const v = e.target.value;
+  if (v === "warm") {
+    ambientLight.color.setHex(0xffe2ba);
+    keyLight.color.setHex(0xff9933);
+    fillLight.color.setHex(0xff4477);
+  } else if (v === "scifi") {
+    ambientLight.color.setHex(0x223366);
+    keyLight.color.setHex(0x4fd2ff);
+    fillLight.color.setHex(0xcc44ff);
+  } else if (v === "bright") {
+    ambientLight.color.setHex(0xffffff);
+    keyLight.color.setHex(0xffffff);
+    fillLight.color.setHex(0xbbddff);
+  } else {
+    ambientLight.color.setHex(0xffffff);
+    keyLight.color.setHex(0xfffaea);
+    fillLight.color.setHex(0x7fc2ff);
+  }
+};
+
+let currentModelGroup = null;
+let currentAnimFn = null;
+
+function renderModelIn3D(codeStr, fnName, displayName) {
+  if (currentModelGroup) {
+    scene.remove(currentModelGroup);
+    currentModelGroup.traverse(c => {
+      if (c.geometry) c.geometry.dispose();
+    });
+    currentModelGroup = null;
+  }
+  currentAnimFn = null;
+
+  try {
+    // Dynamically evaluate model function with complete Three.js builder scope
+    const runner = new Function(
+      "THREE", "part", "B", "Cy", "SPH", "E", "seg", "chain", "eyes", "toon", "glow", "C", "V", "UP",
+      `
+      ${codeStr}
+      if (typeof ${fnName} === "function") {
+        if ("${fnName}" === "makeCivilian") {
+          return ${fnName}("#3a5f8a", "#2b2a2c", "#d9a77a", "#4a3222", "#c8402f");
+        }
+        return ${fnName}();
+      }
+      return null;
+      `
+    );
+
+    const modelObj = runner(THREE, part, B, Cy, SPH, E, seg, chain, eyes, toon, glow, C, V, UP);
+    if (!modelObj) {
+      hudName.textContent = "Error: Generator returned null";
+      return;
+    }
+
+    currentModelGroup = modelObj;
+    scene.add(currentModelGroup);
+
+    if (modelObj.userData && typeof modelObj.userData.anim === "function") {
+      currentAnimFn = modelObj.userData.anim;
+    }
+
+    // Measure bounding box and auto-frame camera
+    const box = new THREE.Box3().setFromObject(modelObj);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+
+    // Count meshes
+    let meshCount = 0;
+    modelObj.traverse(c => { if (c.isMesh) meshCount++; });
+
+    hudName.textContent = displayName || fnName;
+    hudDims.textContent = `${size.x.toFixed(2)}×${size.y.toFixed(2)}×${size.z.toFixed(2)}m`;
+    hudMeshes.textContent = `${meshCount} mesh parts`;
+
+    // Adjust camera and far clipping plane to frame models of any size (including massive starships)
+    const maxDim = Math.max(size.x, size.y, size.z, 0.4);
+    camera.near = Math.max(0.05, maxDim / 500);
+    camera.far = Math.max(200, maxDim * 15);
+    camera.updateProjectionMatrix();
+
+    const dist = maxDim * 2.2;
+    camera.position.set(center.x + dist * 0.8, center.y + dist * 0.6, center.z + dist);
+    controls.target.copy(center);
+    controls.maxDistance = camera.far * 0.8;
+    controls.update();
+
+  } catch (err) {
+    console.error("Error executing model generator:", err);
+    hudName.textContent = "Runtime Error: " + err.message;
+    hudDims.textContent = "";
+    hudMeshes.textContent = "";
+  }
+}
+
+function resetCameraTarget() {
+  if (currentModelGroup) {
+    const box = new THREE.Box3().setFromObject(currentModelGroup);
+    const size = new THREE.Vector3(), center = new THREE.Vector3();
+    box.getSize(size); box.getCenter(center);
+    const maxDim = Math.max(size.x, size.y, size.z, 0.4);
+    camera.near = Math.max(0.05, maxDim / 500);
+    camera.far = Math.max(200, maxDim * 15);
+    camera.updateProjectionMatrix();
+
+    const dist = maxDim * 2.2;
+    camera.position.set(center.x + dist * 0.8, center.y + dist * 0.6, center.z + dist);
+    controls.target.copy(center);
+    controls.maxDistance = camera.far * 0.8;
+  } else {
+    camera.near = 0.1;
+    camera.far = 200;
+    camera.updateProjectionMatrix();
+    camera.position.set(2.5, 2.0, 3.5);
+    controls.target.set(0, 0.8, 0);
+  }
+  controls.update();
+}
+
+function resizeCanvas() {
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  if (canvas.width !== w || canvas.height !== h) {
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+}
+
+let clock = new THREE.Clock();
+const chkAnim = document.getElementById("chkAnim");
+const chkSpin = document.getElementById("chkSpin");
+
+function animate() {
+  requestAnimationFrame(animate);
+  resizeCanvas();
+
+  const delta = clock.getDelta();
+  const time = clock.getElapsedTime();
+
+  if (chkAnim.checked && currentAnimFn) {
+    try { currentAnimFn(time); } catch (_) {}
+  }
+  if (chkSpin.checked && currentModelGroup) {
+    currentModelGroup.rotation.y += delta * 0.6;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener("resize", resizeCanvas);
+init();
+</script>
+</body>
+</html>

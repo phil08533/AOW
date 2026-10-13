@@ -1,19 +1,195 @@
 // =================== EARTH'S MOON: Luna Dome, low gravity, mines + the notebook's weapon and pet extras ===================
 function makeDrillbot() {
-  const g = new THREE.Group(), m = '#c9a43a', dk = '#3a3d44';
-  for (const s of [-1, 1]) { part(g, B(0.2, 0.5, 0.26), dk, 0.18 * s, 0.25, 0); part(g, B(0.26, 0.1, 0.36), m, 0.18 * s, 0.05, 0.04); }
-  part(g, B(0.7, 0.6, 0.5), m, 0, 0.85, 0); part(g, B(0.5, 0.3, 0.04), '#1a1a1e', 0, 0.9, 0.26); part(g, B(0.3, 0.06, 0.03), glow('#ff9a3c'), 0, 0.95, 0.28);
-  part(g, Cy(0.08, 0.08, 0.5, 6), dk, -0.45, 0.85, 0, 0, 0, Math.PI / 2);
-  const drill = new THREE.Group(); drill.position.set(0.5, 0.8, 0.25); g.add(drill); part(drill, new THREE.ConeGeometry(0.16, 0.7, 7), '#9aa1aa', 0, 0, 0.35, Math.PI / 2); for (let k = 0; k < 3; k++) part(drill, new THREE.TorusGeometry(0.12 - k * 0.03, 0.02, 4, 8), dk, 0, 0, 0.15 + k * 0.18);
-  part(g, Cy(0.03, 0.03, 0.4, 4), dk, 0, 1.3, 0); part(g, new THREE.SphereGeometry(0.05, 6, 4), glow('#ff3b2a'), 0, 1.52, 0);
-  g.userData.anim = (t) => { drill.rotation.z = t * 20; };
+  const g = new THREE.Group();
+  const root = new THREE.Group();
+  g.add(root);
+
+  // Heavy Excavation Mining Rig Palette
+  const hazardYel = '#c9a43a';
+  const chassisDk = '#2e3036';
+  const industrialSteel = '#8e95a0';
+  const frameBlack = '#18191c';
+  const visorGlow = glow('#ff9a3c');
+  const beaconGlow = glow('#ff3b2a');
+
+  // 1. Grounded Heavy Mining Treads / Boots (Grounded at y = 0.0)
+  const legs = [];
+  for (const s of [-1, 1]) {
+    const leg = new THREE.Group();
+    leg.position.set(0.20 * s, 0, 0);
+    root.add(leg);
+    legs.push({ leg, s });
+
+    // Grounded base tread pad (y = 0.0 to 0.04)
+    part(leg, B(0.28, 0.04, 0.40), frameBlack, 0, 0.02, 0.04);
+
+    // Boot housing block (y = 0.04 to 0.12)
+    part(leg, B(0.26, 0.08, 0.36), hazardYel, 0, 0.08, 0.04);
+    part(leg, Cy(0.04, 0.04, 0.24, 6), industrialSteel, 0, 0.08, 0.18, 0, 0, Math.PI / 2); // Front roller
+
+    // Piston leg column (y = 0.12 to 0.54)
+    part(leg, B(0.20, 0.42, 0.24), chassisDk, 0, 0.33, 0);
+    part(leg, Cy(0.035, 0.035, 0.36, 6), industrialSteel, 0.07 * s, 0.33, 0.06); // Reinforcing hydraulic strut
+  }
+
+  // 2. Heavy Torso Chassis & Swivel Cab
+  // Pelvic turntable
+  part(root, B(0.56, 0.14, 0.36), chassisDk, 0, 0.59, 0);
+  part(root, Cy(0.12, 0.12, 0.16, 8), frameBlack, 0, 0.69, 0);
+
+  const torso = new THREE.Group();
+  torso.position.set(0, 0.95, 0);
+  root.add(torso);
+
+  // Main reinforced cab hull (depth 0.52 -> front at z = +0.26)
+  part(torso, B(0.72, 0.58, 0.52), hazardYel, 0, 0, 0);
+  part(torso, B(0.76, 0.10, 0.54), frameBlack, 0, -0.18, 0); // Bottom bumper
+  part(torso, B(0.60, 0.46, 0.12), chassisDk, 0, 0.02, -0.30); // Rear engine radiator block
+
+  // Heavy Mining Visor / Reinforced Cockpit Slit (Stepped cleanly off front z = 0.28 -> 0.30)
+  part(torso, B(0.52, 0.28, 0.05), frameBlack, 0, 0.05, 0.28);
+  part(torso, B(0.34, 0.07, 0.04), visorGlow, 0, 0.08, 0.31);
+  part(torso, B(0.42, 0.025, 0.03), chassisDk, 0, -0.02, 0.31); // Lower visor grille slat
+
+  // 3. Port Arm: Heavy Pincer Gripper
+  const pincerArm = new THREE.Group();
+  pincerArm.position.set(-0.46, 0.02, 0);
+  torso.add(pincerArm);
+
+  // Shoulder gimbal
+  part(pincerArm, Cy(0.12, 0.12, 0.18, 8), chassisDk, 0, 0, 0, 0, 0, Math.PI / 2);
+  part(pincerArm, B(0.16, 0.34, 0.18), hazardYel, -0.06, -0.16, 0);
+  part(pincerArm, Cy(0.06, 0.06, 0.26, 6), industrialSteel, -0.06, -0.32, 0.08, Math.PI / 2);
+
+  // Clamping vise blades
+  part(pincerArm, new THREE.ConeGeometry(0.04, 0.16, 4), chassisDk, -0.09, -0.32, 0.22, Math.PI / 2, 0, 0.2);
+  part(pincerArm, new THREE.ConeGeometry(0.04, 0.16, 4), chassisDk, -0.03, -0.32, 0.22, Math.PI / 2, 0, -0.2);
+
+  // 4. Starboard Arm: High-Torque Rotary Drill
+  const drillArm = new THREE.Group();
+  drillArm.position.set(0.46, 0.02, 0);
+  torso.add(drillArm);
+
+  // Shoulder & hydraulic casing
+  part(drillArm, Cy(0.12, 0.12, 0.18, 8), chassisDk, 0, 0, 0, 0, 0, Math.PI / 2);
+  part(drillArm, B(0.18, 0.22, 0.26), hazardYel, 0.06, -0.02, 0.12);
+
+  // Independent rotating drill head
+  const drillHead = new THREE.Group();
+  drillHead.position.set(0.06, -0.02, 0.30);
+  drillArm.add(drillHead);
+
+  // Hardened carbide auger cone
+  part(drillHead, new THREE.ConeGeometry(0.18, 0.72, 8), industrialSteel, 0, 0, 0.36, Math.PI / 2);
+
+  // Spiral cutting flutes / reamer rings
+  for (let k = 0; k < 3; k++) {
+    const r = 0.15 - k * 0.035;
+    const ringZ = 0.12 + k * 0.18;
+    part(drillHead, new THREE.TorusGeometry(r, 0.022, 4, 10), chassisDk, 0, 0, ringZ);
+    // Spiral tooth spurs
+    part(drillHead, new THREE.ConeGeometry(0.02, 0.06, 3), industrialSteel, r, 0, ringZ, 0, 0, -Math.PI / 2);
+    part(drillHead, new THREE.ConeGeometry(0.02, 0.06, 3), industrialSteel, -r, 0, ringZ, 0, 0, Math.PI / 2);
+  }
+
+  // 5. Roof Siren Beacon & Sensor Mast
+  chain(torso, [
+    [0, 0.29, -0.04],
+    [0, 0.48, -0.05],
+    [0, 0.60, -0.06]
+  ], 0.022, frameBlack, 0.010, true);
+
+  part(torso, new THREE.SphereGeometry(0.055, 8, 6), beaconGlow, 0, 0.63, -0.06);
+
+  // 6. Drill Torque & Heavy Suspension Animation Loop
+  g.userData.anim = (t) => {
+    // High-speed drill rotation along forward Z axis
+    drillHead.rotation.z = t * 24.0;
+
+    // Heavy engine vibration & suspension heave
+    root.position.y = Math.sin(t * 8.0) * 0.005;
+
+    // Torso hydraulic stabilization & surveillance sweep
+    torso.rotation.y = Math.sin(t * 1.5) * 0.10;
+    torso.rotation.x = Math.sin(t * 2.2) * 0.02;
+
+    // Counter-balancing arm drift
+    pincerArm.rotation.x = Math.sin(t * 1.8) * 0.08;
+    drillArm.rotation.x = -Math.sin(t * 1.8) * 0.05;
+
+    // Subtle leg suspension response
+    for (const l of legs) {
+      l.leg.rotation.x = Math.sin(t * 1.8 + l.s) * 0.015;
+    }
+  };
+
+  g.userData.anim(0);
   return g;
 }
 function makeMoonmite() {
-  const g = new THREE.Group(), c = '#9fe8ff';
-  E(g, '#5d636c', 0, 0.25, 0, 0.3, 0.15, 0.25); for (let i = 0; i < 4; i++) part(g, new THREE.OctahedronGeometry(0.1, 0), glow(c), (i - 1.5) * 0.12, 0.42, Math.sin(i) * 0.08);
-  for (const s of [-1, 1]) for (let k = 0; k < 3; k++) chain(g, [[0.22 * s, 0.2, -0.1 + k * 0.1], [0.38 * s, 0.22, -0.1 + k * 0.1], [0.44 * s, 0.0, -0.12 + k * 0.1]], 0.02, '#3a3d44', 0.012);
-  for (const s of [-1, 1]) E(g, glow('#ffe14a'), 0.08 * s, 0.32, 0.24, 0.03, 0.03, 0.02);
+  const g = new THREE.Group();
+  const body = new THREE.Group();
+  g.add(body);
+
+  // Shell
+  E(body, '#5d636c', 0, 0.25, 0, 0.3, 0.15, 0.25);
+
+  // Clearish translucent crystal material
+  const crystalMat = new THREE.MeshPhysicalMaterial({
+    color: '#9fe8ff',
+    roughness: 0.1,
+    transmission: 0.4,
+    transparent: true,
+    opacity: 0.75,
+    ior: 1.3,
+    emissive: '#4bb8eb',
+    emissiveIntensity: 0.6,
+    flatShading: true
+  });
+
+  // Top crystals
+  for (let i = 0; i < 4; i++) {
+    const crys = new THREE.Mesh(new THREE.OctahedronGeometry(0.1, 0), crystalMat);
+    crys.position.set((i - 1.5) * 0.12, 0.42, Math.sin(i) * 0.08);
+    body.add(crys);
+  }
+
+  // Eyes
+  for (const s of [-1, 1]) {
+    E(body, glow('#ffe14a'), 0.08 * s, 0.32, 0.24, 0.03, 0.03, 0.02);
+  }
+
+  // 6 Articulated legs anchored in groups for animation
+  const legs = [];
+  for (const s of [-1, 1]) {
+    for (let k = 0; k < 3; k++) {
+      const legGroup = new THREE.Group();
+      legGroup.position.set(0.22 * s, 0.2, -0.1 + k * 0.1);
+      g.add(legGroup);
+
+      chain(legGroup, [
+        [0, 0, 0],
+        [0.16 * s, 0.02, 0],
+        [0.22 * s, -0.2, -0.02]
+      ], 0.02, '#3a3d44', 0.012);
+
+      legs.push({ legGroup, s, k });
+    }
+  }
+
+  // Animation: slight body bob + alternating tripod leg shuffle
+  g.userData.anim = (t) => {
+    body.position.y = Math.sin(t * 8) * 0.008;
+    body.rotation.z = Math.sin(t * 4) * 0.02;
+
+    legs.forEach(l => {
+      const phase = (l.s > 0 ? 0 : Math.PI) + (l.k % 2 === 0 ? 0 : Math.PI);
+      l.legGroup.rotation.y = Math.sin(t * 8 + phase) * 0.18 * l.s;
+      l.legGroup.rotation.z = Math.sin(t * 8 + phase) * 0.08 * l.s;
+    });
+  };
+
+  g.userData.anim(0);
   return g;
 }
 function makeWraith() {
@@ -52,16 +228,213 @@ function makeRoboTurtle() {
   return g;
 }
 function makeNoptile() {
-  const g = new THREE.Group(), sk = '#c86aff';
-  E(g, sk, 0, 0.25, 0, 0.18, 0.14, 0.36); E(g, sk, 0, 0.3, 0.38, 0.12, 0.1, 0.14); for (let k = 0; k < 5; k++) part(g, new THREE.ConeGeometry(0.04, 0.16, 4), '#ffd23a', 0, 0.4, -0.25 + k * 0.12);
-  for (const s of [-1, 1]) { E(g, '#ffffff', 0.06 * s, 0.36, 0.46, 0.035, 0.035, 0.02); for (const z of [-0.2, 0.2]) seg(g, [0.14 * s, 0.2, z], [0.22 * s, 0.02, z + 0.04], 0.03, sk, 0.02); }
-  chain(g, [[0, 0.25, -0.34], [0, 0.22, -0.6], [0, 0.3, -0.8]], 0.05, sk, 0.015);
+  const g = new THREE.Group();
+  const root = new THREE.Group();
+  g.add(root);
+
+  // Alien reptile palette
+  const sk = '#c86aff';
+  const skDark = '#8e3eb5';
+  const underBelly = '#e8b8ff';
+  const spikeCol = '#ffd23a';
+  const eyeSclera = '#ffffff';
+  const eyePupil = (typeof C !== 'undefined' && C.eye) ? C.eye : '#200b33';
+
+  // 1. Torso, Soft Underbelly & Dorsal Ridge
+  // Main torso pod
+  E(root, sk, 0, 0.25, 0, 0.18, 0.14, 0.36);
+  // Pale ventral underbelly
+  E(root, underBelly, 0, 0.18, 0.02, 0.14, 0.08, 0.30);
+
+  // Dorsal spines (stepped heights along the back)
+  for (let k = 0; k < 5; k++) {
+    const spikeH = 0.14 + Math.sin(k * 0.7) * 0.04;
+    part(
+      root,
+      new THREE.ConeGeometry(0.035, spikeH, 4),
+      spikeCol,
+      0,
+      0.38 + spikeH * 0.45,
+      -0.24 + k * 0.12,
+      -0.1,
+      0,
+      0
+    );
+  }
+
+  // 2. Articulated Head & Snout
+  const head = new THREE.Group();
+  head.position.set(0, 0.28, 0.36);
+  root.add(head);
+
+  // Skull
+  E(head, sk, 0, 0.02, 0.02, 0.12, 0.10, 0.14);
+  // Snout tip
+  E(head, skDark, 0, -0.01, 0.12, 0.08, 0.06, 0.08);
+
+  // Defined glossy eyes with pupils (recessed, no sprite artifacts)
+  for (const s of [-1, 1]) {
+    E(head, eyeSclera, 0.065 * s, 0.06, 0.08, 0.032, 0.032, 0.024);
+    part(head, B(0.018, 0.025, 0.012), eyePupil, 0.07 * s, 0.06, 0.10);
+
+    // Brow ridge
+    part(head, B(0.035, 0.012, 0.04), skDark, 0.068 * s, 0.09, 0.07, 0, 0, -0.2 * s);
+  }
+
+  // 3. Four Splayed Reptile Legs (Grounded at y = 0.0)
+  const legs = [];
+  const legPairs = [
+    { z:  0.20, isFront: true },
+    { z: -0.20, isFront: false }
+  ];
+
+  for (const s of [-1, 1]) {
+    legPairs.forEach(pair => {
+      const legGroup = new THREE.Group();
+      legGroup.position.set(0.14 * s, 0.20, pair.z);
+      root.add(legGroup);
+
+      // Splayed crawling leg chain: Hip -> Knee -> Foot
+      chain(legGroup, [
+        [0, 0, 0],
+        [0.08 * s, 0.02, 0.02 * (pair.isFront ? 1 : -1)],
+        [0.10 * s, -0.19, 0.04 * (pair.isFront ? 1 : -1)]
+      ], 0.032, sk, 0.02, true);
+
+      // Foot pad flush with ground level
+      const footZ = 0.04 * (pair.isFront ? 1 : -1);
+      part(legGroup, B(0.05, 0.015, 0.06), skDark, 0.10 * s, -0.195, footZ);
+
+      // Tiny claw toes
+      for (let t = -1; t <= 1; t++) {
+        part(
+          legGroup,
+          new THREE.ConeGeometry(0.008, 0.03, 3),
+          spikeCol,
+          (0.10 + t * 0.018) * s,
+          -0.195,
+          footZ + 0.03,
+          Math.PI / 2.2,
+          0,
+          0.2 * t * s
+        );
+      }
+
+      legs.push({ legGroup, s, isFront: pair.isFront });
+    });
+  }
+
+  // 4. Undulating Reptile Tail
+  const tail = new THREE.Group();
+  tail.position.set(0, 0.24, -0.34);
+  root.add(tail);
+
+  chain(tail, [
+    [0, 0, 0],
+    [0, -0.03, -0.24],
+    [0, 0.05, -0.46]
+  ], 0.048, sk, 0.015, true);
+
+  // Tail tip barb
+  part(tail, new THREE.ConeGeometry(0.02, 0.08, 4), spikeCol, 0, 0.06, -0.50, -0.4, 0, 0);
+
+  // 5. Scuttling Lizard Animation Loop
+  g.userData.anim = (t) => {
+    // Low crawler breathing heave
+    root.position.y = Math.sin(t * 3.5) * 0.006;
+
+    // Head tracking sway
+    head.rotation.y = Math.sin(t * 1.8) * 0.14;
+    head.rotation.x = Math.sin(t * 3.0) * 0.04;
+
+    // Sinusoidal tail whip
+    tail.rotation.y = Math.sin(t * 3.5) * 0.28;
+    tail.rotation.x = Math.cos(t * 2.0) * 0.08;
+
+    // Diagonal trot gait for all four legs
+    legs.forEach(l => {
+      const phase = (l.s > 0 ? 0 : Math.PI) + (l.isFront ? 0 : Math.PI);
+      l.legGroup.rotation.y = Math.sin(t * 3.5 + phase) * 0.18 * l.s;
+    });
+  };
+
+  g.userData.anim(0);
   return g;
 }
 function makeGosalem() {
-  const g = new THREE.Group(), mat = new THREE.MeshLambertMaterial({ color: '#4fa8ff', transparent: true, opacity: 0.6, emissive: new THREE.Color('#1a3a7a') });
-  const blob = (x, y, z, r) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), mat); m.position.set(x, y, z); g.add(m); return m; };
-  blob(0, 0.6, 0, 0.35); blob(0, 1.05, 0.05, 0.22); for (const s of [-1, 1]) { blob(0.4 * s, 0.7, 0, 0.14); blob(0.18 * s, 0.18, 0, 0.16); E(g, glow('#ffffff'), 0.07 * s, 1.1, 0.24, 0.035, 0.035, 0.02); }
+  const g = new THREE.Group();
+
+  // Soft glowing blue material
+  const mat = new THREE.MeshLambertMaterial({
+    color: '#4fa8ff',
+    transparent: true,
+    opacity: 0.62,
+    emissive: new THREE.Color('#1a3a7a'),
+    emissiveIntensity: 0.45
+  });
+
+  // Slightly brighter core
+  const coreMat = new THREE.MeshLambertMaterial({
+    color: '#7ec8ff',
+    transparent: true,
+    opacity: 0.75,
+    emissive: new THREE.Color('#2a5a9a'),
+    emissiveIntensity: 0.6
+  });
+
+  const blob = (x, y, z, r, material = mat) => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), material);
+    m.position.set(x, y, z);
+    g.add(m);
+    return m;
+  };
+
+  // ---- Body (taller, more elegant silhouette) ----
+  blob(0, 0.55, 0, 0.38);          // main body
+  blob(0, 0.95, 0.02, 0.28);       // upper torso / neck
+  blob(0, 1.22, 0.06, 0.20);       // head
+
+  // Soft shoulder blobs
+  for (const s of [-1, 1]) {
+    blob(0.32 * s, 0.78, 0.02, 0.15);
+  }
+
+  // Floating arm orbs (slightly forward)
+  for (const s of [-1, 1]) {
+    blob(0.48 * s, 0.68, 0.12, 0.13);
+    blob(0.58 * s, 0.55, 0.18, 0.09); // small hand tip
+  }
+
+  // Soft lower “legs” / base
+  for (const s of [-1, 1]) {
+    blob(0.16 * s, 0.18, 0.02, 0.17);
+  }
+
+  // ---- Eyes (bright + soft glow) ----
+  for (const s of [-1, 1]) {
+    // outer soft glow
+    E(g, glow('#aaddff'), 0.09 * s, 1.25, 0.22, 0.055, 0.055, 0.03);
+    // bright core
+    E(g, glow('#ffffff'), 0.09 * s, 1.25, 0.24, 0.032, 0.032, 0.018);
+  }
+
+  // Tiny soft core light in the chest
+  blob(0, 0.72, 0.18, 0.08, coreMat);
+
+  // ---- Gentle idle animation ----
+  g.userData.anim = (t) => {
+    // soft float
+    g.position.y = Math.sin(t * 1.6) * 0.06;
+
+    // subtle breathe / pulse
+    const s = 1 + Math.sin(t * 2.2) * 0.025;
+    g.scale.set(s, s, s);
+
+    // slight side sway
+    g.rotation.z = Math.sin(t * 0.9) * 0.04;
+    g.rotation.y = Math.sin(t * 0.7) * 0.05;
+  };
+
   return g;
 }
 Object.assign(PETS, {
@@ -188,15 +561,18 @@ defQuest('l3', { ch: "Earth's Moon", title: 'The Excavator', giver: 'selene', tu
   outro: ["It's over. The Moon is quiet again. Well, it was always quiet. Now it's peacefully quiet.", "Rocco says the Arsenal's open to you. And Pip has... something with teeth. You've earned it."], reward: { cr: 5000, xp: 14000, take: { moondrill: 1 } } });
 // more helmets from the 2×3 head-design sheet
 Object.assign(HELMS, { horns: { name: 'Horned Helm', lvl: 8 }, skull: { name: 'Skull Mask', lvl: 18 }, bubble: { name: 'Bubble Helmet', lvl: 1, q: 'l1' }, crest: { name: 'Gladiator Crest', lvl: 12 }, antenna: { name: 'Antenna Visor', lvl: 5 }, goggles: { name: 'Goggle Cap', lvl: 3 } });
+Object.assign(HELM_KITS, {
+  horns(g) { for (const s of [-1, 1]) chain(g, [[0.14 * s, 1.85, 0], [0.26 * s, 1.95, 0.02], [0.3 * s, 2.12, 0.08]], 0.04, '#efe7d6', 0.012); },
+  skull(g) { E(g, '#efe7d6', 0, 1.76, 0.1, 0.15, 0.16, 0.09); for (const s of [-1, 1]) E(g, '#1a1a1e', 0.055 * s, 1.79, 0.18, 0.035, 0.04, 0.02); part(g, B(0.1, 0.03, 0.02), '#1a1a1e', 0, 1.69, 0.18); },
+  bubble(g) { const b = new THREE.Mesh(new THREE.SphereGeometry(0.26, 12, 8), new THREE.MeshLambertMaterial({ color: '#cfe6ff', transparent: true, opacity: 0.3, depthWrite: false })); b.position.set(0, 1.76, 0); g.add(b); },
+  crest(g) { for (let k = 0; k < 7; k++) part(g, B(0.04, 0.16, 0.06), '#c8402f', 0, 1.95 + Math.sin(k / 6 * Math.PI) * 0.06, -0.18 + k * 0.06); },
+  antenna(g) { for (const s of [-1, 1]) { part(g, Cy(0.006, 0.006, 0.3, 4), C.dark, 0.1 * s, 2.05, -0.02, 0, 0, -0.3 * s); part(g, new THREE.SphereGeometry(0.03, 6, 4), glow('#6fdc5a'), 0.15 * s, 2.19, -0.02); } },
+  goggles(g) { for (const s of [-1, 1]) { part(g, Cy(0.05, 0.05, 0.05, 10), '#c9a43a', 0.06 * s, 1.88, 0.11, Math.PI / 2 - 0.4); part(g, Cy(0.038, 0.038, 0.052, 10), glow('#ffb347'), 0.06 * s, 1.88, 0.115, Math.PI / 2 - 0.4); } }
+});
 { const _mp = makePlayerChar;
   makePlayerChar = function (look, col) {
-    const g = _mp(look, col), h = look.h;
-    if (h === 'horns') for (const s of [-1, 1]) chain(g, [[0.14 * s, 1.85, 0], [0.26 * s, 1.95, 0.02], [0.3 * s, 2.12, 0.08]], 0.04, '#efe7d6', 0.012);
-    if (h === 'skull') { E(g, '#efe7d6', 0, 1.76, 0.1, 0.15, 0.16, 0.09); for (const s of [-1, 1]) E(g, '#1a1a1e', 0.055 * s, 1.79, 0.18, 0.035, 0.04, 0.02); part(g, B(0.1, 0.03, 0.02), '#1a1a1e', 0, 1.69, 0.18); }
-    if (h === 'bubble') { const b = new THREE.Mesh(new THREE.SphereGeometry(0.26, 12, 8), new THREE.MeshLambertMaterial({ color: '#cfe6ff', transparent: true, opacity: 0.3, depthWrite: false })); b.position.set(0, 1.76, 0); g.add(b); }
-    if (h === 'crest') for (let k = 0; k < 7; k++) part(g, B(0.04, 0.16, 0.06), '#c8402f', 0, 1.95 + Math.sin(k / 6 * Math.PI) * 0.06, -0.18 + k * 0.06);
-    if (h === 'antenna') for (const s of [-1, 1]) { part(g, Cy(0.006, 0.006, 0.3, 4), C.dark, 0.1 * s, 2.05, -0.02, 0, 0, -0.3 * s); part(g, new THREE.SphereGeometry(0.03, 6, 4), glow('#6fdc5a'), 0.15 * s, 2.19, -0.02); }
-    if (h === 'goggles') { for (const s of [-1, 1]) { part(g, Cy(0.05, 0.05, 0.05, 10), '#c9a43a', 0.06 * s, 1.88, 0.11, Math.PI / 2 - 0.4); part(g, Cy(0.038, 0.038, 0.052, 10), glow('#ffb347'), 0.06 * s, 1.88, 0.115, Math.PI / 2 - 0.4); } }
+    const g = _mp(look, col), h = look && look.h;
+    if (h && HELM_KITS[h] && !g.userData._helmCustom) { g.userData._helmCustom = true; HELM_KITS[h](g, look); }
     return g;
   };
 }

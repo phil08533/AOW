@@ -1,30 +1,319 @@
 // =================== ZARLICH (violet storm world) and VECTOR (the dark world) ===================
 // creatures from the colored creature sheet
 function makeTubeShark(col) {
-  const g = new THREE.Group(), b = new THREE.Group(), c = col || '#5a7a9a', bel = '#e8e4dc'; b.position.y = 1.8; g.add(b);
-  const segs = []; for (let i = 0; i < 5; i++) { const s = new THREE.Group(); s.position.z = 0.9 - i * 0.55; b.add(s); segs.push(s); const r = 0.36 - Math.abs(i - 1) * 0.06; part(s, Cy(r, r, 0.58, 10), c, 0, 0, 0, Math.PI / 2); part(s, Cy(r * 0.7, r * 0.7, 0.6, 10), bel, 0, -r * 0.35, 0, Math.PI / 2); }
-  part(segs[0], new THREE.TorusGeometry(0.3, 0.07, 5, 12), '#2b2a2c', 0, 0, 0.3); for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2; part(segs[0], new THREE.ConeGeometry(0.03, 0.12, 3), '#efe7d6', Math.cos(a) * 0.26, Math.sin(a) * 0.26, 0.3, Math.PI / 2); }
+  const g = new THREE.Group(), b = new THREE.Group(), c = col || '#5a7a9a', bel = '#e8e4dc';
+  b.position.y = 1.8; g.add(b);
+
+  const segs = [];
+  for (let i = 0; i < 5; i++) {
+    const s = new THREE.Group();
+    s.position.z = 0.9 - i * 0.55;
+    b.add(s); segs.push(s);
+    const r = 0.36 - Math.abs(i - 1) * 0.06;
+    part(s, Cy(r, r, 0.58, 10), c, 0, 0, 0, Math.PI / 2);
+    part(s, Cy(r * 0.7, r * 0.7, 0.6, 10), bel, 0, -r * 0.35, 0, Math.PI / 2);
+  }
+
+  // Original mouth and teeth preserved
+  part(segs[0], new THREE.TorusGeometry(0.3, 0.07, 5, 12), '#2b2a2c', 0, 0, 0.3);
+  for (let k = 0; k < 10; k++) {
+    const a = k / 10 * Math.PI * 2;
+    part(segs[0], new THREE.ConeGeometry(0.03, 0.12, 3), '#efe7d6',
+      Math.cos(a) * 0.26, Math.sin(a) * 0.26, 0.3, Math.PI / 2);
+  }
   part(segs[0], Cy(0.22, 0.22, 0.02, 10), glow('#ff2a3a'), 0, 0, 0.29, Math.PI / 2);
-  for (const s of [-1, 1]) { E(segs[0], '#ffd23a', 0.22 * s, 0.16, 0.1, 0.05, 0.05, 0.04); part(segs[1], B(0.7, 0.04, 0.35), c, 0.45 * s, -0.05, 0, 0, 0, -0.3 * s); }
-  part(segs[1], B(0.04, 0.5, 0.4), c, 0, 0.4, 0, -0.3); part(segs[4], B(0.04, 0.7, 0.4), c, 0, 0.15, -0.3, 0.4); part(segs[4], B(0.04, 0.5, 0.35), c, 0, -0.25, -0.3, -0.4);
-  g.userData.anim = t => { b.position.y = 1.8 + Math.sin(t * 1.1) * 0.3; segs.forEach((s, i) => { s.rotation.y = Math.sin(t * 3 - i * 0.7) * 0.18; }); };
+
+  // More unsettling eyes: dark sockets, amber irises, tiny black pupils
+  for (const s of [-1, 1]) {
+    E(segs[0], '#100d12', 0.22 * s, 0.16, 0.1, 0.085, 0.075, 0.045);
+    E(segs[0], '#b9a34a', 0.225 * s, 0.16, 0.14, 0.052, 0.058, 0.035);
+    E(segs[0], '#080609', 0.23 * s, 0.16, 0.17, 0.018, 0.044, 0.018);
+    E(segs[0], '#ff3a32', 0.24 * s, 0.18, 0.185, 0.009, 0.012, 0.008);
+
+    // Original side fins
+    part(segs[1], B(0.7, 0.04, 0.35), c,
+      0.45 * s, -0.05, 0, 0, 0, -0.3 * s);
+
+    // Additional rear side fins
+    part(segs[2], B(0.42, 0.035, 0.24), c,
+      0.29 * s, -0.13, 0.02, 0, 0, -0.38 * s);
+
+    // Small lower gill fins
+    part(segs[1], B(0.25, 0.035, 0.16), '#394b5c',
+      0.2 * s, -0.3, 0.12, 0, 0, -0.25 * s);
+  }
+
+  // Original top fin
+  part(segs[1], B(0.04, 0.5, 0.4), c, 0, 0.4, 0, -0.3);
+
+  // Extra dorsal fin toward the rear
+  part(segs[2], B(0.035, 0.32, 0.24), c, 0, 0.27, 0, -0.25);
+
+  // Original tail fins
+  part(segs[4], B(0.04, 0.7, 0.4), c, 0, 0.15, -0.3, 0.4);
+  part(segs[4], B(0.04, 0.5, 0.35), c, 0, -0.25, -0.3, -0.4);
+
+  // Extra lower rear fin
+  part(segs[3], B(0.035, 0.28, 0.2), c, 0, -0.24, 0, 0.3);
+
+  g.userData.anim = t => {
+    b.position.y = 1.8 + Math.sin(t * 1.1) * 0.3;
+    segs.forEach((s, i) => {
+      s.rotation.y = Math.sin(t * 3 - i * 0.7) * 0.18;
+    });
+  };
+
   return g;
 }
 function makeFlaglem(col) {
-  const g = new THREE.Group(), c = col || '#c86aff', dk = '#4a2a6a', sail = [];
-  for (const s of [-1, 1]) for (const z of [-0.3, 0.3]) chain(g, [[0.22 * s, 0.4, z], [0.36 * s, 0.25, z + 0.05], [0.4 * s, 0, z + 0.08]], 0.05, dk, 0.03);
-  E(g, c, 0, 0.5, 0, 0.3, 0.24, 0.55); E(g, c, 0, 0.62, 0.6, 0.2, 0.17, 0.24); for (const s of [-1, 1]) E(g, glow('#ffd23a'), 0.1 * s, 0.7, 0.78, 0.04, 0.04, 0.03);
-  chain(g, [[0, 0.5, -0.5], [0, 0.45, -0.9], [0, 0.55, -1.25]], 0.1, c, 0.02);
-  for (let i = 0; i < 4; i++) { const p = new THREE.Group(); p.position.set(0, 0.72, 0.3 - i * 0.24); g.add(p); sail.push(p); part(p, Cy(0.015, 0.015, 1.1 - Math.abs(i - 1.5) * 0.2, 4), dk, 0, 0.5, 0); part(p, B(0.02, 0.6, 0.26), new THREE.MeshLambertMaterial({ color: i % 2 ? '#ffd23a' : '#ff6a3a', side: THREE.DoubleSide }), 0, 0.68, -0.13); }
-  g.userData.anim = t => { sail.forEach((p, i) => { p.rotation.y = Math.sin(t * 4 + i) * 0.35; }); };
+  const g = new THREE.Group();
+  const root = new THREE.Group();
+  g.add(root);
+
+  // Palettes (Sailback Amphibian / Crested Beast)
+  const c = col || '#c86aff';
+  const cDark = '#8a3fa8';
+  const dk = '#4a2a6a';
+  const bellyCol = '#e5aeff';
+  const flagWarm = '#ff6a3a';
+  const flagGold = '#ffd23a';
+  const eyeColor = '#16141a';
+  const eyeHighlight = '#ffffff';
+
+  // 1. Splayed Grounded Crawler Legs (Flush at y = 0.0)
+  const legs = [];
+  const legPairs = [
+    { z:  0.30, isFront: true },
+    { z: -0.30, isFront: false }
+  ];
+
+  for (const s of [-1, 1]) {
+    legPairs.forEach(pair => {
+      const legGroup = new THREE.Group();
+      legGroup.position.set(0.22 * s, 0.40, pair.z);
+      root.add(legGroup);
+
+      // Thigh -> Knee -> Tarsus
+      chain(legGroup, [
+        [0, 0, 0],
+        [0.14 * s, -0.15, 0.05],
+        [0.18 * s, -0.39, 0.08]
+      ], 0.055, dk, 0.03, true);
+
+      // Webbed foot pad touching ground
+      part(legGroup, B(0.08, 0.02, 0.10), cDark, 0.18 * s, -0.395, 0.09);
+
+      // Claws
+      for (let k = -1; k <= 1; k++) {
+        part(
+          legGroup,
+          new THREE.ConeGeometry(0.009, 0.035, 3),
+          dk,
+          (0.18 + k * 0.025) * s,
+          -0.395,
+          0.13,
+          Math.PI / 2.2,
+          0,
+          k * 0.2 * s
+        );
+      }
+
+      legs.push({ legGroup, s, isFront: pair.isFront });
+    });
+  }
+
+  // 2. Torso, Soft Ventral Belly & Muscular Tail
+  // Arched body hull
+  E(root, c, 0, 0.50, 0, 0.30, 0.24, 0.55);
+  // Ventral pale belly (stepped down to prevent z-fighting with the main hull)
+  E(root, bellyCol, 0, 0.42, 0.02, 0.24, 0.14, 0.48);
+
+  // Counterbalance tail
+  const tail = new THREE.Group();
+  tail.position.set(0, 0.50, -0.48);
+  root.add(tail);
+
+  chain(tail, [
+    [0, 0, 0],
+    [0, -0.06, -0.40],
+    [0, 0.04, -0.76]
+  ], 0.09, c, 0.018, true);
+
+  // 3. Head, Defined Eyes & Snout
+  const head = new THREE.Group();
+  head.position.set(0, 0.62, 0.58);
+  root.add(head);
+
+  // Cranium and jaw
+  E(head, c, 0, 0, 0, 0.20, 0.17, 0.24);
+  E(head, bellyCol, 0, -0.07, 0.04, 0.15, 0.08, 0.18); // Chin pad
+
+  // Crisp eyes (recessed brow + beady pupil + glint, no blinding light flare)
+  for (const s of [-1, 1]) {
+    part(head, B(0.04, 0.015, 0.04), cDark, 0.10 * s, 0.10, 0.12, 0, 0, -0.2 * s);
+    E(head, flagGold, 0.10 * s, 0.08, 0.13, 0.038, 0.038, 0.026);
+    E(head, eyeColor, 0.105 * s, 0.08, 0.148, 0.018, 0.018, 0.012);
+    E(head, eyeHighlight, 0.11 * s, 0.09, 0.155, 0.006, 0.006, 0.006);
+  }
+
+  // 4. Articulated Dorsal Flag / Fin Sails
+  const sails = [];
+  for (let i = 0; i < 4; i++) {
+    const p = new THREE.Group();
+    // Offset along dorsal ridge: i = 0 near neck, i = 3 near hip
+    p.position.set(0, 0.72, 0.30 - i * 0.24);
+    root.add(p);
+    sails.push(p);
+
+    const mastH = 1.15 - Math.abs(i - 1.5) * 0.22;
+    const flagH = mastH * 0.58;
+
+    // Spine mast quill
+    part(p, Cy(0.016, 0.016, mastH, 4), dk, 0, mastH * 0.5, 0);
+
+    // Double-sided fabric membrane fin (offset along -Z from the mast center to prevent co-planar overlap)
+    const mat = (typeof toon === 'function')
+      ? toon(i % 2 === 0 ? flagGold : flagWarm, 'cloth')
+      : new THREE.MeshLambertMaterial({
+          color: i % 2 === 0 ? flagGold : flagWarm,
+          side: THREE.DoubleSide
+        });
+
+    part(p, B(0.018, flagH, 0.26), mat, 0, mastH * 0.65, -0.14);
+  }
+
+  // 5. Quad Gait & Rippling Dorsal Fin Wave Animation Loop
+  g.userData.anim = (t) => {
+    // Low crawler suspension sway
+    root.position.y = Math.sin(t * 3.4) * 0.008;
+
+    // Head searching motion
+    head.rotation.y = Math.sin(t * 1.6) * 0.12;
+    head.rotation.x = Math.sin(t * 2.8) * 0.03;
+
+    // Sinusoidal tail whip
+    tail.rotation.y = Math.sin(t * 3.4) * 0.24;
+
+    // Rippling fin flutter down the spine
+    sails.forEach((p, i) => {
+      p.rotation.y = Math.sin(t * 4.5 - i * 0.75) * 0.32;
+    });
+
+    // Walking leg articulation
+    legs.forEach(l => {
+      const phase = (l.s > 0 ? 0 : Math.PI) + (l.isFront ? 0 : Math.PI);
+      l.legGroup.rotation.y = Math.sin(t * 3.4 + phase) * 0.16 * l.s;
+    });
+  };
+
+  g.userData.anim(0);
   return g;
 }
 function makeEyeWatcher(big) {
-  const g = new THREE.Group(), b = new THREE.Group(), s = big ? 3 : 1; b.position.y = 1.7 * s; g.add(b);
-  E(b, '#1a1420', 0, 0, 0, 0.55 * s, 0.55 * s, 0.55 * s); E(b, '#efe7d6', 0, 0, 0.32 * s, 0.38 * s, 0.38 * s, 0.25 * s); E(b, glow('#ff2a3a'), 0, 0, 0.5 * s, 0.18 * s, 0.18 * s, 0.1 * s); E(b, '#000000', 0, 0, 0.56 * s, 0.08 * s, 0.08 * s, 0.05 * s);
-  const tent = []; for (let i = 0; i < (big ? 8 : 5); i++) { const a = i / (big ? 8 : 5) * Math.PI * 2, t = new THREE.Group(); t.position.set(Math.cos(a) * 0.3 * s, -0.3 * s, Math.sin(a) * 0.3 * s - 0.1 * s); b.add(t); tent.push(t); chain(t, [[0, 0, 0], [Math.cos(a) * 0.2 * s, -0.6 * s, Math.sin(a) * 0.2 * s], [Math.cos(a) * 0.35 * s, -1.2 * s, Math.sin(a) * 0.35 * s]], 0.08 * s, '#2a1a30', 0.02 * s); }
-  if (big) for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; E(b, glow('#ff6a1a'), Math.cos(a) * 0.62 * s, Math.sin(a) * 0.62 * s, 0.1 * s, 0.07 * s, 0.07 * s, 0.05 * s); }
-  g.userData.anim = t => { b.position.y = 1.7 * s + Math.sin(t * 0.9) * 0.2 * s; tent.forEach((q, i) => { q.rotation.x = Math.sin(t * 2 + i) * 0.3; q.rotation.z = Math.cos(t * 1.7 + i) * 0.3; }); };
+  const g = new THREE.Group();
+  const b = new THREE.Group();
+  const s = big ? 3 : 1;
+  b.position.y = 1.7 * s;
+  g.add(b);
+
+  // Organic, bruised flesh palette (not pitch black)
+  const fleshDk   = '#2a1a28';
+  const fleshMid  = '#3d2a38';
+  const fleshLight= '#4f3a48';
+  const scleraCol = '#efe6d4';
+  const veinCol   = '#5c2a38';
+  const tentacleCol = '#2e1c2c';
+  const tentacleTip = '#3a2436';
+  const pupilCol  = '#0a0608';
+  const irisGlow  = glow('#ff2a3a');
+  const miniEyeGlow = glow('#ff5a20');
+
+  // 1. Central Eyeball – layered flesh + sclera
+  E(b, fleshDk, 0, 0, 0, 0.56 * s, 0.56 * s, 0.56 * s);
+  // Softer orbital flesh
+  E(b, fleshMid, 0, 0.06 * s, 0.16 * s, 0.49 * s, 0.44 * s, 0.40 * s);
+  E(b, fleshLight, 0, -0.04 * s, 0.10 * s, 0.42 * s, 0.38 * s, 0.36 * s);
+  // Sclera
+  E(b, scleraCol, 0, 0, 0.34 * s, 0.38 * s, 0.38 * s, 0.25 * s);
+  // Subtle vein streaks
+  for (const a of [0.5, 1.4, 2.3, 3.7, 4.9]) {
+    const vx = Math.cos(a) * 0.17 * s;
+    const vy = Math.sin(a) * 0.17 * s;
+    E(b, veinCol, vx, vy, 0.41 * s, 0.035 * s, 0.08 * s, 0.025 * s, 0, 0, a);
+  }
+  // Iris + pupil
+  E(b, irisGlow, 0, 0, 0.52 * s, 0.18 * s, 0.18 * s, 0.10 * s);
+  E(b, pupilCol, 0, 0, 0.58 * s, 0.08 * s, 0.08 * s, 0.05 * s);
+  // Secondary slit
+  E(b, pupilCol, 0, 0.025 * s, 0.59 * s, 0.022 * s, 0.045 * s, 0.018 * s);
+
+  // 2. Dual-Ring Tentacle Skirt with slight color variation
+  const tent = [];
+  const ringCounts = big ? [10, 6] : [7, 5];
+  ringCounts.forEach((count, rIdx) => {
+    const ringRadius = (rIdx === 0 ? 0.38 : 0.22) * s;
+    const yAnchor = (rIdx === 0 ? -0.28 : -0.36) * s;
+    const baseThickness = (rIdx === 0 ? 0.075 : 0.06) * s;
+    const tipThickness = (rIdx === 0 ? 0.02 : 0.015) * s;
+    const reachMult = rIdx === 0 ? 1.0 : 0.85;
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + (rIdx * 0.3);
+      const cosA = Math.cos(a);
+      const sinA = Math.sin(a);
+      const t = new THREE.Group();
+      t.position.set(cosA * ringRadius, yAnchor, sinA * ringRadius - 0.08 * s);
+      b.add(t);
+      tent.push({ group: t, angle: a, idx: tent.length });
+      const lenJitter = 0.92 + (i % 3) * 0.06;
+      // Alternate base/tip tone slightly for organic variation
+      const col = (i % 2 === 0) ? tentacleCol : tentacleTip;
+      chain(
+        t,
+        [
+          [0, 0, 0],
+          [cosA * 0.18 * s, -0.55 * reachMult * s * lenJitter, sinA * 0.18 * s],
+          [cosA * 0.32 * s, -1.15 * reachMult * s * lenJitter, sinA * 0.32 * s],
+          [cosA * 0.42 * s, -1.65 * reachMult * s * lenJitter, sinA * 0.42 * s]
+        ],
+        baseThickness,
+        col,
+        tipThickness,
+        true
+      );
+    }
+  });
+
+  // 3. Peripheral ocelli (big only)
+  if (big) {
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      E(
+        b,
+        miniEyeGlow,
+        Math.cos(a) * 0.64 * s,
+        Math.sin(a) * 0.64 * s,
+        0.12 * s,
+        0.07 * s,
+        0.07 * s,
+        0.05 * s
+      );
+    }
+  }
+
+  // 4. Animation
+  g.userData.anim = (t) => {
+    b.position.y = 1.7 * s + Math.sin(t * 0.9) * 0.22 * s;
+    b.rotation.y = Math.sin(t * 0.35) * 0.08;
+    b.rotation.z = Math.sin(t * 0.55) * 0.04;
+
+    tent.forEach(({ group, idx }) => {
+      const phase = t * 2.4 + idx * 0.62;
+      group.rotation.x = Math.sin(phase) * 0.38;
+      group.rotation.z = Math.cos(phase * 0.9) * 0.34;
+      group.rotation.y = Math.sin(phase * 0.7) * 0.12;
+    });
+  };
+  g.userData.anim(0);
   return g;
 }
 function makeShade() { const g = makeWraith(); g.traverse(o => { if (o.isMesh && o.material.isMeshBasicMaterial) o.material = glow('#c86aff'); }); return g; }

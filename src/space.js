@@ -14,19 +14,208 @@ function makeStarship(col) {
   return g;
 }
 function makeRaider() {
-  const g = new THREE.Group(), blk = '#1e1c22', red = '#b3262c';
-  part(g, B(0.9, 0.7, 4.2), blk, 0, 0, 0); part(g, new THREE.ConeGeometry(0.5, 1.6, 4), red, 0, 0, -2.8, -Math.PI / 2);
-  for (const s of [-1, 1]) { part(g, B(3.2, 0.12, 1.6), blk, 1.7 * s, 0, 0.4, 0, 0.5 * s, 0); part(g, B(0.8, 0.14, 1.6), red, 3.0 * s, 0, 1.2, 0, 0.5 * s, 0); part(g, B(0.12, 1.2, 1.0), red, 0.4 * s, 0.6, 1.4, 0, 0, 0.3 * s); }
-  part(g, Cy(0.4, 0.4, 0.1, 8), glow('#ff2a3a'), 0, 0, 2.15, Math.PI / 2); part(g, B(0.5, 0.25, 0.8), glow('#ff6a5a'), 0, 0.45, -1.2);
+  const g = new THREE.Group();
+
+  // High-contrast, Imperial-inspired palette
+  const plateDark = '#3d414a';     // Mid/dark gunmetal (visible against black space)
+  const plateLight = '#5b616d';    // Highlight grey for panel edges
+  const frameBlack = '#1c1e24';    // Recessed machinery/pylon trim
+  const crimson = '#d41b2c';       // Menacing empire red for borders & armor
+  const glowRed = glow('#ff1e2d'); // Laser slits, thrusters, sensor lattices
+  const glowCore = glow('#ffffff');// Hot center for twin engines
+
+  // --- 1. CENTRAL COMMAND POD (Spherical/Cylindrical Core + Cockpit Eye) ---
+  // Core viewport sphere / faceted hub
+  part(g, Cy(0.68, 0.68, 0.72, 8), plateDark, 0, 0, -0.15, Math.PI / 2);
+  part(g, B(0.92, 0.62, 0.95), frameBlack, 0, 0, 0.05);
+
+  // Dorsal & ventral armored cowl
+  part(g, B(0.82, 0.16, 1.25), plateLight, 0, 0.42, -0.05);
+  part(g, B(0.72, 0.12, 1.05), plateDark, 0, -0.42, 0.05);
+
+  // Vader-style faceted cockpit eye with glowing red crossbars
+  part(g, Cy(0.48, 0.48, 0.15, 8), frameBlack, 0, 0.05, -0.58, Math.PI / 2);
+  part(g, Cy(0.42, 0.42, 0.08, 8), glowRed, 0, 0.05, -0.63, Math.PI / 2);
+  part(g, B(0.08, 0.86, 0.12), frameBlack, 0, 0.05, -0.64); // Vertical mullion
+  part(g, B(0.86, 0.08, 0.12), frameBlack, 0, 0.05, -0.64); // Horizontal mullion
+  part(g, Cy(0.12, 0.12, 0.14, 8), crimson, 0, 0.05, -0.65, Math.PI / 2); // Center hub
+
+  // Chin heavy blaster cannons
+  for (const s of [-1, 1]) {
+    part(g, Cy(0.06, 0.06, 0.8, 6), frameBlack, 0.28 * s, -0.38, -0.65, Math.PI / 2);
+    part(g, Cy(0.035, 0.035, 0.15, 6), glowRed, 0.28 * s, -0.38, -1.05, Math.PI / 2);
+  }
+
+  // --- 2. TRANSVERSE PYLONS & OUTWARD OUTRIGGERS ---
+  for (const s of [-1, 1]) {
+    // Massive horizontal structural wing spar
+    part(g, B(1.15, 0.32, 0.65), plateDark, 0.95 * s, 0, 0.1);
+    part(g, B(1.05, 0.18, 0.72), frameBlack, 0.95 * s, 0, 0.1);
+
+    // Red running accent rib along the wing pylon
+    part(g, B(1.18, 0.06, 0.06), crimson, 0.95 * s, 0.17, 0.1);
+
+    // --- 3. BENT "VADER-STYLE" SOLAR PANELS (Inward-swept, angular brackets) ---
+    // Horizontal center mid-fin panel
+    part(g, B(0.12, 0.16, 2.7), plateDark, 1.55 * s, 0, 0.05);
+
+    // UPPER BENT WING FLANGE (angled inward toward canopy)
+    part(g, B(0.1, 1.45, 2.8), plateDark, 1.95 * s, 0.82, 0.15, 0, 0, -0.55 * s);
+    // Upper glowing red perimeter strip (creates readable silhouette)
+    part(g, B(0.08, 1.48, 0.08), glowRed, 2.28 * s, 0.82, -1.25, 0, 0, -0.55 * s); // Leading edge
+    part(g, B(0.08, 1.48, 0.08), crimson, 1.62 * s, 0.82, 1.55, 0, 0, -0.55 * s);  // Trailing edge
+    // Upper exterior armor spine
+    part(g, B(0.12, 0.14, 2.9), plateLight, 2.32 * s, 1.42, 0.15, 0, 0, -0.55 * s);
+
+    // LOWER BENT WING FLANGE (symmetrically angled down & inward)
+    part(g, B(0.1, 1.45, 2.8), plateDark, 1.95 * s, -0.82, 0.15, 0, 0, 0.55 * s);
+    // Lower glowing red perimeter strip
+    part(g, B(0.08, 1.48, 0.08), glowRed, 2.28 * s, -0.82, -1.25, 0, 0, 0.55 * s); // Leading edge
+    part(g, B(0.08, 1.48, 0.08), crimson, 1.62 * s, -0.82, 1.55, 0, 0, 0.55 * s);  // Trailing edge
+    // Lower exterior armor spine
+    part(g, B(0.12, 0.14, 2.9), plateLight, 2.32 * s, -1.42, 0.15, 0, 0, 0.55 * s);
+
+    // Vertical radiator matrix slats (breaks up dark panels in game)
+    for (let j = 0; j < 3; j++) {
+      const zOffset = -0.6 + j * 0.65;
+      part(g, B(0.14, 1.35, 0.06), frameBlack, 1.95 * s, 0.82, zOffset, 0, 0, -0.55 * s);
+      part(g, B(0.14, 1.35, 0.06), frameBlack, 1.95 * s, -0.82, zOffset, 0, 0, 0.55 * s);
+    }
+  }
+
+  // --- 4. TWIN ION ENGINE REAR BLOCK ---
+  part(g, B(0.85, 0.55, 0.45), frameBlack, 0, 0, 0.7);
+  part(g, B(0.75, 0.08, 0.46), crimson, 0, 0.28, 0.7); // Red deck trim
+
+  // Twin glowing engine drives (high visual contrast from behind)
+  for (const s of [-1, 1]) {
+    part(g, Cy(0.24, 0.24, 0.12, 8), plateLight, 0.24 * s, 0, 0.94, Math.PI / 2);
+    part(g, Cy(0.18, 0.18, 0.06, 8), glowRed, 0.24 * s, 0, 0.98, Math.PI / 2);
+    part(g, Cy(0.08, 0.08, 0.08, 8), glowCore, 0.24 * s, 0, 1.01, Math.PI / 2);
+  }
+
   return g;
 }
 function makeZeltac() {
-  const g = new THREE.Group(), hull = '#7d8088', dk = '#4a4e56';
-  part(g, B(40, 18, 160), hull, 0, 0, 0); part(g, B(30, 12, 40), dk, 0, -12, 20); part(g, new THREE.ConeGeometry(20, 40, 6), hull, 0, 0, -100, -Math.PI / 2);
-  for (let i = 0; i < 10; i++) { const h = 14 + (i * 37) % 26, x = (i % 2 ? 1 : -1) * (6 + (i % 3) * 5), z = -60 + i * 13; part(g, B(8, h, 8), i % 3 ? dk : hull, x, 9 + h / 2, z);
-    for (let k = 0; k < h / 3; k++) part(g, B(8.1, 0.5, 8.1), glow(k % 2 ? '#ffd36a' : '#8fe3ff'), x, 10 + k * 3, z); }
-  part(g, B(14, 8, 2), glow('#6fdc5a'), 0, -4, 80.6);
-  for (const s of [-1, 1]) { part(g, B(16, 4, 60), dk, 26 * s, 0, 30); part(g, Cy(5, 6, 14, 10), dk, 16 * s, -2, 86, Math.PI / 2); part(g, Cy(4.4, 4.4, 0.5, 10), glow('#8fe3ff'), 16 * s, -2, 93, Math.PI / 2); }
+  const g = new THREE.Group();
+  const hull = '#7d8088', dk = '#4a4e56';
+  const lt = '#a6aab1', black = '#292d34';
+  const blue = '#8fe3ff', gold = '#ffd36a';
+
+  // Main hull
+  part(g, B(40, 18, 160), hull, 0, 0, 0);
+  part(g, B(30, 12, 40), dk, 0, -12, 20);
+
+  // Angular armored prow — replaces the cone
+  part(g, B(34, 14, 24), hull, 0, 0, -80);
+  part(g, B(28, 11, 18), dk, 0, 0, -96);
+  part(g, B(24, 10, 12), hull, 0, 0, -108);
+  part(g, B(17, 8, 10), lt, 0, 0, -117);
+  part(g, B(10, 6, 8), dk, 0, 0, -125);
+  part(g, B(5, 4, 5), hull, 0, 0, -131);
+
+  // Angular side facets on the prow
+  for (const s of [-1, 1]) {
+    part(g, B(9, 8, 23), lt, s * 12, 1, -96);
+    part(g, B(7, 6, 15), dk, s * 9, -1, -112);
+    part(g, B(4, 3, 9), hull, s * 5, 0, -122);
+  }
+
+  // Reinforced central spine
+  part(g, B(13, 3, 125), lt, 0, 10, -5);
+  part(g, B(7, 2, 110), dk, 0, 12, -5);
+
+  // Segmented dorsal armor and illuminated vents
+  for (let i = 0; i < 10; i++) {
+    const h = 14 + (i * 37) % 26;
+    const x = (i % 2 ? 1 : -1) * (6 + (i % 3) * 5);
+    const z = -60 + i * 13;
+
+    part(g, B(8, h, 8), i % 3 ? dk : hull,
+      x, 9 + h / 2, z);
+
+    part(g, B(8.5, 2, 9), lt,
+      x, 9 + h, z);
+
+    for (let k = 0; k < Math.floor(h / 3); k++) {
+      part(g, B(8.1, 0.5, 8.1),
+        glow(k % 2 ? gold : blue),
+        x, 10 + k * 3, z);
+    }
+
+    part(g, B(10, 2, 10), black, x, 10, z);
+  }
+
+  // Command sensor
+  part(g, B(14, 8, 2), dk, 0, -4, 80.6);
+  part(g, B(9, 3, 2.5), glow('#6fdc5a'), 0, -2, 82);
+
+  // Side wings, engines, and navigation lights
+  for (const s of [-1, 1]) {
+    // Armored wings
+    part(g, B(16, 4, 60), dk, 26 * s, 0, 30);
+    part(g, B(13, 2, 48), hull, 26 * s, 3, 30);
+    part(g, B(8, 1, 42), lt, 26 * s, 4.2, 30);
+
+    // Wing panel markings
+    for (let j = 0; j < 4; j++) {
+      part(g, B(10, 0.5, 2), black,
+        26 * s, 4.5, 12 + j * 12);
+    }
+
+    // Engine housings
+    part(g, Cy(5, 6, 14, 10), dk,
+      16 * s, -2, 86, Math.PI / 2);
+
+    part(g, Cy(5.5, 5.5, 3, 10), black,
+      16 * s, -2, 94, Math.PI / 2);
+
+    // Glowing engine aperture
+    part(g, Cy(4.4, 4.4, 0.5, 10), glow(blue),
+      16 * s, -2, 93, Math.PI / 2);
+
+    part(g, Cy(2.3, 2.3, 0.7, 10), glow('#e8fbff'),
+      16 * s, -2, 93.5, Math.PI / 2);
+
+    // Armored side ribs
+    for (let j = 0; j < 3; j++) {
+      part(g, B(2, 7, 15), lt,
+        s * 20, -2, 12 + j * 17);
+    }
+  
+    // Aft-facing thruster detail
+    part(g, B(8, 8, 5), black, s * 9, -7, 68);
+    part(g, B(4, 4, 2), glow('#ff9b52'),
+      s * 9, -7, 71);
+
+    // Tiny cyan navigation lights along each hull side
+    for (let i = 0; i < 12; i++) {
+      const z = -66 + i * 11;
+
+      part(g, B(1.4, 2.2, 3.2), black,
+        s * 20.4, 2, z);
+
+      part(g, B(0.8, 1.2, 2.2), glow(blue),
+        s * 21.1, 2, z);
+    }
+
+    // Amber upper-hull status lights
+    for (let i = 0; i < 4; i++) {
+      part(g, B(2, 1, 4), glow(gold),
+        s * 16, 9.7, -35 + i * 20);
+    }
+  }
+
+  // Underside armor
+  part(g, B(26, 3, 72), dk, 0, -10, 5);
+  part(g, B(18, 2, 50), hull, 0, -12, 8);
+
+  // Hull seams
+  for (let i = 0; i < 6; i++) {
+    const z = -42 + i * 17;
+    part(g, B(41, 1, 1.5), black, 0, 9.1, z);
+  }
+
   return g;
 }
 // ---------------- the space level ----------------

@@ -21,6 +21,7 @@ const RIGS = {
 };
 const _box = new THREE.Box3(), _c = V(0, 0, 0);
 function rig(obj, spec) {
+  if (obj.userData.anim && obj.children.length <= 1) return obj;
   obj.updateMatrixWorld(true);
   const parts = obj.children.slice();
   const R = { spec };

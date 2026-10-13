@@ -61,45 +61,72 @@ function makeBlaster() {
 }
 
 // ---------- Trooper ----------
-function makeTrooper() {
+function makeTrooper(opts) {
   const g = new THREE.Group();
+  const bare = !!(opts && (opts.bare || opts.noArmor));
+  const noGun = !!(opts && (opts.noGun || opts.noWeapon));
   for (const s of [-1, 1]) {
     part(g, B(0.2, 0.16, 0.34), C.dark, 0.13 * s, 0.08, 0.04);
-    part(g, B(0.22, 0.08, 0.2), C.tan, 0.13 * s, 0.2, 0.02);
+    if (!bare) { const m = part(g, B(0.22, 0.08, 0.2), C.tan, 0.13 * s, 0.2, 0.02); m.userData.stdArmor = true; }
     part(g, B(0.17, 0.38, 0.19), C.olive, 0.13 * s, 0.42, 0);
-    part(g, new THREE.IcosahedronGeometry(0.1, 0), C.tan, 0.13 * s, 0.6, 0.07);
+    if (!bare) { const m = part(g, new THREE.IcosahedronGeometry(0.1, 0), C.tan, 0.13 * s, 0.6, 0.07); m.userData.stdArmor = true; }
     part(g, B(0.2, 0.38, 0.22), C.olive, 0.13 * s, 0.8, 0);
   }
   part(g, B(0.44, 0.16, 0.26), C.dark, 0, 1.0, 0);
-  part(g, B(0.46, 0.05, 0.28), C.tan, 0, 1.08, 0);
+  if (!bare) { const m = part(g, B(0.46, 0.05, 0.28), C.tan, 0, 1.08, 0); m.userData.stdArmor = true; }
   part(g, B(0.5, 0.48, 0.3), C.olive, 0, 1.32, 0);
-  part(g, B(0.42, 0.26, 0.06), C.tan, 0, 1.4, 0.16);
-  part(g, B(0.3, 0.36, 0.14), C.oliveDk, 0, 1.34, -0.21);
+  if (!bare) { const m = part(g, B(0.42, 0.26, 0.06), C.tan, 0, 1.4, 0.16); m.userData.stdArmor = true; }
+  if (!bare) { const m = part(g, B(0.3, 0.36, 0.14), C.oliveDk, 0, 1.34, -0.21); m.userData.stdArmor = true; }
   for (const s of [-1, 1]) {
-    part(g, new THREE.SphereGeometry(0.15, 8, 6), C.tan, 0.33 * s, 1.52, 0);
-    part(g, Cy(0.055, 0.055, 0.02, 10), C.dark, 0.46 * s, 1.53, 0.02, 0, 0, Math.PI / 2);
-    part(g, Cy(0.018, 0.018, 0.025, 6), glow(C.gunAcc), 0.465 * s, 1.53, 0.02, 0, 0, Math.PI / 2);
+    if (!bare) {
+      const p1 = part(g, new THREE.SphereGeometry(0.15, 8, 6), C.tan, 0.33 * s, 1.52, 0); p1.userData.stdArmor = true;
+      const p2 = part(g, Cy(0.055, 0.055, 0.02, 10), C.dark, 0.46 * s, 1.53, 0.02, 0, 0, Math.PI / 2); p2.userData.stdArmor = true;
+      const p3 = part(g, Cy(0.018, 0.018, 0.025, 6), glow(C.gunAcc), 0.465 * s, 1.53, 0.02, 0, 0, Math.PI / 2); p3.userData.stdArmor = true;
+    }
     part(g, B(0.14, 0.28, 0.15), C.olive, 0.37 * s, 1.3, 0);
   }
   part(g, B(0.13, 0.13, 0.3), C.oliveDk, 0.31, 1.13, 0.13, 0, -0.25);
   part(g, B(0.1, 0.1, 0.1), C.dark, 0.24, 1.1, 0.29);
   part(g, B(0.13, 0.13, 0.32), C.oliveDk, -0.25, 1.17, 0.2, 0, 0.55);
   part(g, B(0.1, 0.1, 0.1), C.dark, -0.12, 1.16, 0.36);
-  const gun = makeBlaster(); gun.position.set(0.13, 1.2, 0.36); gun.scale.setScalar(1.15); g.add(gun);
+  if (!noGun) {
+    const gun = makeBlaster(); gun.position.set(0.13, 1.2, 0.36); gun.scale.setScalar(1.15); gun.userData.stdGun = true; g.add(gun);
+  }
   part(g, Cy(0.08, 0.09, 0.08, 8), C.dark, 0, 1.6, 0);
   part(g, new THREE.SphereGeometry(0.17, 8, 6), C.olive, 0, 1.76, 0);
   part(g, B(0.3, 0.07, 0.08), glow(C.visor), 0, 1.79, 0.13);
   part(g, B(0.12, 0.06, 0.06), C.dark, 0, 1.68, 0.14);
   part(g, Cy(0.06, 0.06, 0.05, 10), C.dark, 0.17, 1.77, 0, 0, 0, Math.PI / 2);
   // detail pass: webbing, pouches, antenna, lamp, knee straps
-  part(g, B(0.06, 0.56, 0.03), C.dark, 0.08, 1.33, 0.165, 0, 0, 0.5); part(g, B(0.06, 0.56, 0.03), C.dark, -0.08, 1.33, 0.165, 0, 0, -0.5);
-  for (const x of [-0.16, -0.05, 0.06, 0.17]) part(g, B(0.09, 0.09, 0.06), C.oliveDk, x, 1.04, 0.15);
-  part(g, B(0.12, 0.14, 0.08), C.oliveDk, 0.25, 0.98, 0.02); part(g, B(0.12, 0.14, 0.08), C.oliveDk, -0.25, 0.98, 0.02);
-  part(g, Cy(0.006, 0.006, 0.34, 4), C.dark, -0.12, 2.0, -0.06); part(g, new THREE.SphereGeometry(0.018, 5, 4), glow('#ff3b2a'), -0.12, 2.17, -0.06);
-  part(g, B(0.07, 0.05, 0.05), C.dark, -0.33, 1.6, 0.1); part(g, B(0.05, 0.035, 0.02), glow('#fff3c4'), -0.33, 1.6, 0.13);
-  part(g, Cy(0.1, 0.1, 0.03, 8), C.tan, 0, 1.56, 0);
-  for (const s of [-1, 1]) { part(g, B(0.19, 0.03, 0.2), C.dark, 0.13 * s, 0.5, 0); part(g, B(0.21, 0.03, 0.23), C.dark, 0.13 * s, 0.9, 0); part(g, B(0.16, 0.04, 0.08), C.tan, 0.13 * s, 0.14, 0.2); }
-  part(g, B(0.22, 0.05, 0.1), C.tan, 0, 1.47, -0.29);
+  if (!bare) {
+    let m;
+    m = part(g, B(0.06, 0.56, 0.03), C.dark, 0.08, 1.33, 0.165, 0, 0, 0.5); m.userData.stdArmor = true;
+    m = part(g, B(0.06, 0.56, 0.03), C.dark, -0.08, 1.33, 0.165, 0, 0, -0.5); m.userData.stdArmor = true;
+    for (const x of [-0.16, -0.05, 0.06, 0.17]) { m = part(g, B(0.09, 0.09, 0.06), C.oliveDk, x, 1.04, 0.15); m.userData.stdArmor = true; }
+    m = part(g, B(0.12, 0.14, 0.08), C.oliveDk, 0.25, 0.98, 0.02); m.userData.stdArmor = true;
+    m = part(g, B(0.12, 0.14, 0.08), C.oliveDk, -0.25, 0.98, 0.02); m.userData.stdArmor = true;
+    m = part(g, Cy(0.006, 0.006, 0.34, 4), C.dark, -0.12, 2.0, -0.06); m.userData.stdArmor = true;
+    m = part(g, new THREE.SphereGeometry(0.018, 5, 4), glow('#ff3b2a'), -0.12, 2.17, -0.06); m.userData.stdArmor = true;
+    m = part(g, B(0.07, 0.05, 0.05), C.dark, -0.33, 1.6, 0.1); m.userData.stdArmor = true;
+    m = part(g, B(0.05, 0.035, 0.02), glow('#fff3c4'), -0.33, 1.6, 0.13); m.userData.stdArmor = true;
+    m = part(g, Cy(0.1, 0.1, 0.03, 8), C.tan, 0, 1.56, 0); m.userData.stdArmor = true;
+    for (const s of [-1, 1]) {
+      m = part(g, B(0.19, 0.03, 0.2), C.dark, 0.13 * s, 0.5, 0); m.userData.stdArmor = true;
+      m = part(g, B(0.21, 0.03, 0.23), C.dark, 0.13 * s, 0.9, 0); m.userData.stdArmor = true;
+      m = part(g, B(0.16, 0.04, 0.08), C.tan, 0.13 * s, 0.14, 0.2); m.userData.stdArmor = true;
+    }
+    m = part(g, B(0.22, 0.05, 0.1), C.tan, 0, 1.47, -0.29); m.userData.stdArmor = true;
+  }
+  return g;
+}
+function stripDefaultArmor(g, opts) {
+  for (let i = g.children.length - 1; i >= 0; i--) {
+    const c = g.children[i];
+    if (c.userData && (c.userData.stdArmor || (opts && opts.noGun && c.userData.stdGun))) {
+      if (c.geometry) c.geometry.dispose();
+      g.remove(c);
+    }
+  }
   return g;
 }
 
@@ -256,67 +283,386 @@ function makeBugHybrid() {
 
 // Alien Spearman: green big-eyed alien with spear and oval shield
 function makeSpearman() {
-  const g = new THREE.Group(), gr = '#7fae63', dk = '#4f7a3c';
+  const g = new THREE.Group();
+
+  const skinPalettes = [
+    ['#7fae63', '#96c478', '#5a8644'],
+    ['#5e8a52', '#72a863', '#416338'],
+    ['#8fa863', '#a8c477', '#637a43'],
+    ['#5fa896', '#77c4b2', '#417a6c']
+  ];
+  const [gr, grLight, grDark] = skinPalettes[Math.floor(Math.random() * skinPalettes.length)];
+
+  const dk = '#4f7a3c';
+  const leather = Math.random() > 0.5 ? '#3e2e22' : '#2b211a';
+  const leatherLight = '#5d4634';
+  const wood = Math.random() > 0.5 ? '#5a4532' : '#3d2e22';
+  const steelCol = (typeof C !== 'undefined' && C.steel) ? C.steel : '#8c9aa6';
+  const boneCol = (typeof C !== 'undefined' && C.bone) ? C.bone : '#ded7c1';
+
+  const shieldType = Math.floor(Math.random() * 3);
+  const headgearType = Math.floor(Math.random() * 4);
+  const hasWarPaint = Math.random() > 0.4;
+  const paintColor = Math.random() > 0.5 ? '#ffffff' : '#a83232';
+
+  const body = new THREE.Group();
+  g.add(body);
+
+  // 1. Grounded Legs & Feet (Lowest point lands at y = 0.0)
   for (const s of [-1, 1]) {
-    chain(g, [[0.08 * s, 0.6, 0], [0.09 * s, 0.3, 0.02], [0.09 * s, 0.04, 0]], 0.035, gr, 0.028, true);
-    E(g, dk, 0.09 * s, 0.03, 0.04, 0.05, 0.03, 0.08);
+    chain(body, [
+      [0.08 * s, 0.60, 0],
+      [0.085 * s, 0.30, 0.01],
+      [0.09 * s, 0.03, 0]
+    ], 0.034, gr, 0.026, true);
+
+    // Sole touches y = 0
+    E(body, dk, 0.09 * s, 0.02, 0.04, 0.045, 0.02, 0.075);
+    E(body, dk, 0.09 * s, 0.015, 0.09, 0.035, 0.015, 0.035);
+
+    part(body, new THREE.TorusGeometry(0.032, 0.007, 4, 10), leather, 0.09 * s, 0.05, 0, Math.PI / 2);
   }
-  E(g, gr, 0, 0.85, 0, 0.16, 0.3, 0.13);
-  chain(g, [[0.14, 1.05, 0], [0.26, 0.88, 0.1], [0.24, 0.72, 0.18]], 0.03, gr, 0.025, true);
-  chain(g, [[-0.14, 1.05, 0], [-0.25, 0.92, 0.1], [-0.22, 0.8, 0.2]], 0.03, gr, 0.025, true);
-  part(g, Cy(0.015, 0.015, 1.9, 6), '#5a4532', 0.25, 0.85, 0.18);           // spear
-  part(g, new THREE.ConeGeometry(0.04, 0.16, 4), C.steel, 0.25, 1.88, 0.18);
-  const shield = E(g, '#3d3b3f', -0.26, 0.85, 0.28, 0.24, 0.33, 0.03, 0, -0.35);  // big oval shield
-  E(g, '#5c5960', -0.25, 0.85, 0.3, 0.06, 0.08, 0.02, 0, -0.35);
-  seg(g, [0, 1.1, 0], [0, 1.22, 0], 0.035, gr);
-  const head = new THREE.Group(); head.position.set(0, 1.42, 0.02); g.add(head);
+
+  // 2. Torso (Bobs gently while feet stay planted)
+  const torso = new THREE.Group();
+  body.add(torso);
+
+  E(torso, gr, 0, 0.85, 0, 0.16, 0.30, 0.13);
+  E(torso, grLight, 0, 0.90, 0.03, 0.12, 0.18, 0.09);
+
+  if (hasWarPaint) {
+    part(torso, B(0.18, 0.025, 0.02), paintColor, 0, 0.96, 0.13, 0.2, 0, 0.2);
+  }
+
+  part(torso, new THREE.TorusGeometry(0.15, 0.016, 4, 14), leather, 0, 0.65, 0, Math.PI / 2);
+  part(torso, B(0.12, 0.16, 0.02), leatherLight, 0, 0.58, 0.13, 0.12, 0, 0);
+  part(torso, B(0.10, 0.14, 0.02), leather, 0, 0.59, -0.12, -0.10, 0, 0);
+
+  // 3. Head & Gear
+  seg(torso, [0, 1.10, 0], [0, 1.24, 0], 0.034, gr);
+
+  const head = new THREE.Group();
+  head.position.set(0, 1.42, 0.02);
+  torso.add(head);
+
   E(head, gr, 0, 0.03, 0, 0.17, 0.21, 0.16);
-  E(head, gr, 0, -0.12, 0.04, 0.07, 0.07, 0.07);
+  E(head, grLight, 0, 0.06, 0.04, 0.13, 0.12, 0.11);
+  E(head, gr, 0, -0.13, 0.04, 0.07, 0.07, 0.07);
+
+  if (hasWarPaint) {
+    part(head, B(0.14, 0.02, 0.02), paintColor, 0, 0.07, 0.15);
+  }
+
   eyes(head, 0, -0.01, 0.13, 0.075, 0.06, 0.035, 0.5);
+
+  if (headgearType === 1) {
+    for (const s of [-1, 1]) {
+      part(head, new THREE.ConeGeometry(0.025, 0.14, 4), boneCol, 0.11 * s, 0.18, -0.02, -0.4, 0, -0.4 * s);
+    }
+  } else if (headgearType === 2) {
+    part(head, B(0.025, 0.14, 0.22), boneCol, 0, 0.22, -0.04, -0.2, 0, 0);
+  } else if (headgearType === 3) {
+    for (const s of [-1, 1]) {
+      part(head, Cy(0.006, 0.003, 0.18, 4), grDark, 0.06 * s, 0.22, 0.02, 0.2, 0, 0.3 * s);
+    }
+  }
+
+  // 4. Arms & Shield
+  const armL = new THREE.Group();
+  torso.add(armL);
+  chain(armL, [
+    [-0.14, 1.05, 0],
+    [-0.25, 0.92, 0.10],
+    [-0.22, 0.80, 0.20]
+  ], 0.03, gr, 0.024, true);
+
+  const shield = new THREE.Group();
+  shield.position.set(-0.26, 0.85, 0.28);
+  shield.rotation.y = -0.35;
+  torso.add(shield);
+
+  if (shieldType === 0) {
+    E(shield, '#3d3b3f', 0, 0, 0, 0.24, 0.33, 0.025);
+    const rim = part(shield, new THREE.TorusGeometry(0.24, 0.018, 6, 16), '#28262a', 0, 0, 0.005);
+    rim.scale.set(1.0, 1.38, 1.0);
+    E(shield, steelCol, 0, 0, 0.025, 0.06, 0.075, 0.03);
+  } else if (shieldType === 1) {
+    part(shield, Cy(0.22, 0.22, 0.03, 12), '#453528', 0, 0, 0, Math.PI / 2);
+    part(shield, new THREE.TorusGeometry(0.22, 0.016, 6, 16), steelCol, 0, 0, 0.015);
+    part(shield, new THREE.SphereGeometry(0.05, 8, 8), steelCol, 0, 0, 0.03);
+  } else {
+    E(shield, '#2b2a2e', 0, 0, 0, 0.20, 0.35, 0.03);
+    part(shield, new THREE.ConeGeometry(0.035, 0.12, 4), steelCol, 0, 0, 0.06, Math.PI / 2);
+  }
+
+  // 5. Right Arm & Ground-Safe Spear (Pole starts at y = 0.06)
+  const armR = new THREE.Group();
+  torso.add(armR);
+  chain(armR, [
+    [0.14, 1.05, 0],
+    [0.26, 0.88, 0.10],
+    [0.24, 0.72, 0.18]
+  ], 0.03, gr, 0.024, true);
+
+  const spear = new THREE.Group();
+  spear.position.set(0.25, 0.95, 0.18);
+  torso.add(spear);
+
+  // Length 1.76 centered at 0.95 -> lowest butt rests at y = 0.07
+  part(spear, Cy(0.014, 0.014, 1.76, 6), wood, 0, 0, 0);
+  part(spear, Cy(0.018, 0.018, 0.18, 6), leather, 0, -0.12, 0);
+  part(spear, Cy(0.024, 0.018, 0.08, 6), steelCol, 0, 0.88, 0);
+
+  const tip = part(spear, new THREE.ConeGeometry(0.045, 0.22, 4), steelCol, 0, 0.99, 0);
+  tip.scale.set(1.2, 1.0, 0.35);
+
+  // 6. Animation
+  const animPhase = Math.random() * Math.PI * 2;
+  g.userData.anim = (t) => {
+    const time = t + animPhase;
+    torso.position.y = Math.sin(time * 2.0) * 0.01;
+    head.rotation.y = Math.sin(time * 1.2) * 0.15;
+    shield.rotation.y = -0.35 + Math.sin(time * 2.0) * 0.04;
+    spear.rotation.z = Math.sin(time * 2.0) * 0.02;
+  };
+
   return g;
 }
 
 // Crolan: fanged egg critter on a disc of spindly legs, two forked arms
 function makeCrolan() {
-  const g = new THREE.Group(), or = '#d9893a', dk = '#9b5a22';
-  const legs = new THREE.Group(); g.add(legs);
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2 + 0.2, x = Math.cos(a), z = Math.sin(a);
-    chain(legs, [[x * 0.28, 0.32, z * 0.18], [x * 0.42, 0.18, z * 0.3], [x * 0.38, 0.0, z * 0.28]], 0.02, dk, 0.012);
-  }
-  E(g, or, 0, 0.34, 0, 0.42, 0.06, 0.26);                                    // disc
-  E(g, or, 0, 0.62, 0, 0.18, 0.26, 0.17);                                    // egg body
-  eyes(g, 0, 0.72, 0.13, 0.06, 0.035, 0.025, 0.3);
-  E(g, '#5a2c12', 0, 0.58, 0.155, 0.07, 0.025, 0.02);                         // mouth
-  for (const s of [-1, 1]) part(g, new THREE.ConeGeometry(0.018, 0.08, 4), C.bone, 0.03 * s, 0.53, 0.16, Math.PI);
+  const g = new THREE.Group();
+  const or = '#d9893a';
+  const orDark = '#b86d26';
+  const dk = '#7a3e14';
+  const deepDk = '#2c1205';
+  const boneCol = (typeof C !== 'undefined' && C.bone) ? C.bone : '#ded7c1';
+  const eyeAmber = glow('#ff8000'); // Highly aggressive orange-amber glow
+  const eyeBlack = '#080605';
+
+  const root = new THREE.Group();
+  g.add(root);
+
+  // 1. Articulated Spider-Crab Legs (Left/Right pairing)
+  const legs = [];
   for (const s of [-1, 1]) {
-    chain(g, [[0.15 * s, 0.6, 0], [0.38 * s, 0.68, 0], [0.45 * s, 0.9, 0]], 0.025, dk, 0.018);
-    for (let k = -1; k <= 1; k++) seg(g, [0.45 * s, 0.9, 0], [(0.45 + 0.07 * k) * s, 1.04, 0.03 * k], 0.014, dk, 0.008);
+    for (let i = 0; i < 4; i++) {
+      const legGroup = new THREE.Group();
+      const fwd = 0.14 - i * 0.09;
+      legGroup.position.set(0.24 * s, 0.32, fwd);
+      root.add(legGroup);
+
+      const spanX = (0.16 + (3 - i) * 0.02) * s;
+      const fwdTibia = fwd * 1.3;
+      chain(legGroup, [
+        [0, 0, 0],
+        [spanX * 0.6, 0.12, fwdTibia * 0.4],
+        [spanX * 1.2, -0.12, fwdTibia * 0.9],
+        [spanX * 1.1, -0.32, fwdTibia * 1.1]
+      ], 0.022, dk, 0.01, true);
+
+      part(legGroup, new THREE.ConeGeometry(0.012, 0.08, 4), deepDk, spanX * 1.1, -0.32, fwdTibia * 1.1, Math.PI / 2.2, 0, 0.3 * s);
+
+      legs.push({ legGroup, sign: s, index: i });
+    }
   }
-  g.userData.anim = (t) => { legs.rotation.y = Math.sin(t * 3) * 0.06; };
+
+  // 2. Chitinous Skirt Disc & Upright Torso (NO stripes / flat mustache)
+  // Base rim
+  E(root, orDark, 0, 0.34, 0, 0.44, 0.06, 0.28);
+  part(root, new THREE.TorusGeometry(0.38, 0.016, 4, 16), dk, 0, 0.34, 0, Math.PI / 2);
+
+  // Upright ovular body
+  E(root, or, 0, 0.62, 0, 0.20, 0.28, 0.18);
+
+  // 3. Scarrier Spider Eye Cluster & Curved Fangs (Angry Look)
+  // Primary forward-facing eyes (slanted inward for an angry/predatory gaze)
+  for (const s of [-1, 1]) {
+    const mainEye = E(root, eyeBlack, 0.05 * s, 0.70, 0.14, 0.035, 0.038, 0.022);
+    mainEye.rotation.z = -0.3 * s; // Angry angular slant
+
+    // Tiny glint / glowing slit iris
+    E(root, eyeAmber, 0.05 * s, 0.70, 0.155, 0.012, 0.018, 0.008, 0, 0, -0.3 * s);
+  }
+
+  // Secondary multi-lens spider eye configuration (Scary cluster)
+  const sideEyeConfigs = [
+    { x: 0.10, y: 0.74, z: 0.12 }, // Upper outer
+    { x: 0.09, y: 0.66, z: 0.14 }, // Lower outer
+    { x: 0.03, y: 0.77, z: 0.13 }  // Top-center brow
+  ];
+  for (const s of [-1, 1]) {
+    sideEyeConfigs.forEach(cfg => {
+      E(root, eyeAmber, cfg.x * s, cfg.y, cfg.z, 0.014, 0.014, 0.012);
+    });
+  }
+
+  // Deep, aggressive mandible mouth area (Recessed)
+  E(root, deepDk, 0, 0.58, 0.155, 0.09, 0.05, 0.04);
+
+  // Sharp hunting fangs (clamping mandibles)
+  for (const s of [-1, 1]) {
+    part(root, new THREE.ConeGeometry(0.018, 0.10, 4), boneCol, 0.035 * s, 0.51, 0.17, Math.PI - 0.22, 0, 0.25 * s);
+  }
+
+  // 4. Praying Mantis / Scythe Raptorial Arms
+  const arms = [];
+  for (const s of [-1, 1]) {
+    const armRoot = new THREE.Group();
+    armRoot.position.set(0.15 * s, 0.62, 0.04);
+    root.add(armRoot);
+    arms.push({ armRoot, sign: s });
+
+    chain(armRoot, [
+      [0, 0, 0],
+      [0.22 * s, 0.06, 0.06],
+      [0.28 * s, 0.28, 0.02]
+    ], 0.026, dk, 0.016, true);
+
+    // Raptor claw tri-fork (more aggressive, sharp curvature)
+    for (let k = -1; k <= 1; k++) {
+      part(
+        armRoot,
+        new THREE.ConeGeometry(0.014, 0.15, 4),
+        deepDk,
+        (0.28 + 0.04 * k) * s,
+        0.36,
+        0.02 + 0.03 * k,
+        Math.PI / 1.05,
+        0,
+        (0.22 + 0.22 * k) * s
+      );
+    }
+  }
+
+  // 5. High-frequency Skitter & Guard Animation
+  g.userData.anim = (t) => {
+    // Body stalking bob and slight predatory tilt
+    root.position.y = Math.sin(t * 3.5) * 0.018;
+    root.rotation.x = Math.sin(t * 2.0) * 0.03 + 0.02;
+
+    // Alternating leg scuttle ripple
+    legs.forEach(l => {
+      const phase = l.index * 0.8 + (l.sign > 0 ? 0 : Math.PI);
+      l.legGroup.rotation.y = Math.sin(t * 6.0 + phase) * 0.16 * l.sign;
+      l.legGroup.rotation.x = Math.max(0, Math.sin(t * 6.0 + phase)) * 0.12;
+    });
+
+    // Mantis arms guard flex / click
+    arms.forEach(a => {
+      a.armRoot.rotation.z = Math.sin(t * 2.5) * 0.08 * a.sign;
+      a.armRoot.rotation.x = Math.cos(t * 2.5) * 0.06;
+    });
+  };
+
+  g.userData.anim(0);
   return g;
 }
 
 // Stagrone: long-necked runner, curled ram horn, tiny arms, whip tail with tuft
 function makeStagrone() {
-  const g = new THREE.Group(), br = '#9a7650', dk = '#6a4f34';
+  const g = new THREE.Group();
+  const br = '#9a7650';
+  const brLight = '#b5926c';
+  const dk = '#5a3f28';
+  const hornCol = '#ded2ba';
+  const eyeCol = (typeof C !== 'undefined' && C.eye) ? C.eye : '#1a1816';
+  const runeGlow = glow('#ffd15c');
+
+  const root = new THREE.Group();
+  g.add(root);
+
+  // 1. Digitigrade Legs grounded to y = 0
+  const legs = [];
   for (const s of [-1, 1]) {
-    chain(g, [[0.1 * s, 0.82, 0], [0.12 * s, 0.5, 0.12], [0.1 * s, 0.22, -0.05], [0.11 * s, 0.02, 0.05]], 0.06, br, 0.025, true);
-    part(g, B(0.08, 0.03, 0.14), dk, 0.11 * s, 0.015, 0.09);
+    const leg = new THREE.Group();
+    leg.position.set(0.12 * s, 0, 0);
+    root.add(leg);
+    legs.push({ leg, sign: s });
+
+    chain(leg, [
+      [0, 0.80, 0],
+      [0.03 * s, 0.50, 0.12],
+      [0.01 * s, 0.20, -0.06],
+      [0.01 * s, 0.02, 0.05]
+    ], 0.058, br, 0.026, true);
+
+    // Hoof sole flush at y = 0
+    part(leg, B(0.08, 0.04, 0.14), dk, 0.01 * s, 0.02, 0.08);
+    part(leg, new THREE.ConeGeometry(0.018, 0.06, 3), dk, 0.03 * s, 0.015, 0.15, Math.PI / 2.2);
+    part(leg, new THREE.ConeGeometry(0.018, 0.06, 3), dk, -0.01 * s, 0.015, 0.15, Math.PI / 2.2);
   }
-  E(g, br, 0, 0.95, -0.05, 0.22, 0.24, 0.3, -0.3);
-  const neck = [[0, 1.05, 0.15], [0, 1.4, 0.22], [0, 1.75, 0.18], [0, 2.0, 0.24]];
-  chain(g, neck, 0.08, br, 0.05, true);
-  for (const s of [-1, 1]) chain(g, [[0.08 * s, 1.15, 0.2], [0.14 * s, 1.08, 0.36], [0.1 * s, 1.18, 0.44]], 0.022, br, 0.015, true);
-  const head = new THREE.Group(); head.position.set(0, 2.05, 0.3); g.add(head);
-  E(head, br, 0, 0, 0.05, 0.08, 0.08, 0.16);
-  E(head, dk, 0, -0.02, 0.2, 0.05, 0.045, 0.04);
-  E(head, C.eye, 0.06, 0.03, 0.08, 0.018, 0.018, 0.018); E(head, C.eye, -0.06, 0.03, 0.08, 0.018, 0.018, 0.018);
-  for (const s of [-1, 1]) { const horn = part(head, new THREE.TorusGeometry(0.08, 0.02, 5, 10, Math.PI * 1.4), '#d8cbb0', 0.07 * s, 0.07, -0.04, 0, Math.PI / 2, 0.6); }
-  const tail = new THREE.Group(); g.add(tail);
-  chain(tail, [[0, 0.92, -0.32], [0, 0.85, -0.7], [0, 0.95, -1.05], [0, 1.1, -1.3]], 0.04, br, 0.012);
-  E(tail, dk, 0, 1.13, -1.34, 0.04, 0.06, 0.04);
-  g.userData.anim = (t) => { tail.rotation.y = Math.sin(t * 2) * 0.18; head.rotation.x = Math.sin(t * 1.1) * 0.1; };
+
+  // 2. Torso
+  E(root, br, 0, 0.94, -0.04, 0.22, 0.25, 0.32, -0.28);
+  E(root, brLight, 0, 0.90, 0.02, 0.17, 0.19, 0.26, -0.28);
+  E(root, br, 0, 1.10, 0.12, 0.18, 0.20, 0.18);
+
+  // 3. Neck
+  const neckNodes = [
+    [0, 1.10, 0.16],
+    [0, 1.40, 0.22],
+    [0, 1.74, 0.20],
+    [0, 2.00, 0.25]
+  ];
+  chain(root, neckNodes, 0.075, br, 0.045, true);
+
+  // 4. Head & Horns
+  const head = new THREE.Group();
+  head.position.set(0, 2.04, 0.32);
+  root.add(head);
+
+  E(head, br, 0, 0.02, 0.04, 0.09, 0.085, 0.17);
+  E(head, dk, 0, -0.02, 0.18, 0.05, 0.045, 0.05);
+
+  for (const s of [-1, 1]) {
+    E(head, eyeCol, 0.065 * s, 0.04, 0.08, 0.022, 0.022, 0.02);
+    E(head, runeGlow, 0.068 * s, 0.045, 0.09, 0.01, 0.01, 0.01);
+    part(head, new THREE.ConeGeometry(0.02, 0.12, 4), br, 0.08 * s, 0.08, -0.08, -0.4, 0, 0.6 * s);
+
+    const horn = part(head, new THREE.TorusGeometry(0.09, 0.022, 5, 12, Math.PI * 1.35), hornCol, 0.08 * s, 0.09, -0.04, 0, Math.PI / 2, 0.55 * s);
+    horn.scale.set(1.0, 1.1, 0.9);
+    part(head, new THREE.ConeGeometry(0.015, 0.08, 4), hornCol, 0.12 * s, 0.16, -0.02, -0.2, 0, 0.4 * s);
+  }
+
+  // 5. Forelimbs
+  for (const s of [-1, 1]) {
+    chain(root, [
+      [0.08 * s, 1.14, 0.20],
+      [0.15 * s, 1.04, 0.36],
+      [0.11 * s, 1.16, 0.45]
+    ], 0.024, br, 0.014, true);
+    part(root, new THREE.ConeGeometry(0.012, 0.04, 3), dk, 0.11 * s, 1.16, 0.48, Math.PI / 2);
+  }
+
+  // 6. Tail
+  const tail = new THREE.Group();
+  tail.position.set(0, 0.90, -0.32);
+  root.add(tail);
+
+  chain(tail, [
+    [0, 0, 0],
+    [0, -0.08, -0.38],
+    [0, 0.02, -0.74],
+    [0, 0.16, -1.02]
+  ], 0.042, br, 0.012, true);
+
+  E(tail, dk, 0, 0.18, -1.06, 0.04, 0.07, 0.05);
+
+  // 7. Grounded Animation (Bob applies to upper torso/head, legs remain pinned)
+  g.userData.anim = (t) => {
+    head.position.y = 2.04 + Math.sin(t * 2.2) * 0.015;
+    head.rotation.x = Math.sin(t * 1.2) * 0.08;
+    head.rotation.y = Math.cos(t * 0.8) * 0.12;
+    tail.rotation.y = Math.sin(t * 2.2) * 0.22;
+    tail.rotation.x = Math.cos(t * 1.5) * 0.06;
+
+    for (const item of legs) {
+      item.leg.rotation.x = Math.sin(t * 2.2 + item.sign) * 0.02;
+    }
+  };
+
+  g.userData.anim(0);
   return g;
 }
 
@@ -416,7 +762,7 @@ function makeDrome() {
     part(g, B(0.17, 0.28, 0.18), red, 0.47 * s, 1.22, 0.03);
     part(g, B(0.13, 0.12, 0.13), gry, 0.47 * s, 1.04, 0.06);
   }
-  const sword = new THREE.Group(); sword.position.set(0.48, 1.02, 0.12); sword.rotation.set(-0.5, 0, -0.15); g.add(sword);
+  const sword = new THREE.Group(); sword.position.set(0.48, 1.02, 0.12); sword.rotation.set(1, 0, -0.15); g.add(sword);
   part(sword, B(0.05, 0.2, 0.05), gry, 0, -0.05, 0);
   part(sword, B(0.26, 0.04, 0.07), red, 0, 0.06, 0);
   part(sword, B(0.04, 1.1, 0.12), '#c9ccd2', 0, 0.63, 0);

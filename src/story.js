@@ -51,7 +51,7 @@ function rollCredits(replay) {
   const W = () => cv.width = ov.clientWidth * Math.min(2, devicePixelRatio || 1), H = () => cv.height = ov.clientHeight * Math.min(2, devicePixelRatio || 1); W(); H();
   const stars = Array.from({ length: 220 }, (_, i) => [(Math.sin(i * 12.9898) * 43758.5453 % 1 + 1) % 1, (Math.sin(i * 78.233) * 12345.678 % 1 + 1) % 1, (i % 7) / 7]);
   const planets = [['#c9a43a', 0.18, 0.32, 0.05], ['#8fe3ff', 0.78, 0.22, 0.04], ['#3f7d7a', 0.62, 0.62, 0.06], ['#c86aff', 0.3, 0.7, 0.035], ['#ff9a3c', 0.9, 0.55, 0.03], ['#6fdc5a', 0.08, 0.55, 0.03]];
-  const end = () => { if (done) return; done = true; ov.remove(); window.removeEventListener('keydown', key, true); };
+  const end = () => { if (done) return; done = true; window.__cutscene_done = true; const cd = document.createElement('div'); cd.id = 'cutscene_done'; document.body.appendChild(cd); ov.remove(); window.removeEventListener('keydown', key, true); };
   const key = e => { if (e.code === 'Escape') { end(); e.stopImmediatePropagation(); } };
   window.addEventListener('keydown', key, true);
   ffb.addEventListener('click', e => { e.stopPropagation(); speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; ffb.textContent = `⏩ ${speed}×`; SFX.ui(); });

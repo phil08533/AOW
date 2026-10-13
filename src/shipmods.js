@@ -78,9 +78,87 @@ function scavenge(where) {
   toast('SCAVENGED!', `${name} for your ship · fit it at the Ship customizer`, 4); SFX.level(); log(`Scavenged ${where}: ${name}. Fit it from the Ship customizer on your ship.`, 'loot');
 }
 function makeSalvageCrate(big) {
-  const g = new THREE.Group(), s = big ? 3 : 1;
-  part(g, B(1.0 * s, 0.7 * s, 0.7 * s), '#5d636c', 0, 0.35 * s, 0); for (const y of [0.2, 0.5]) part(g, B(1.04 * s, 0.08 * s, 0.74 * s), '#ffd36a', 0, y * s, 0); part(g, B(0.3 * s, 0.3 * s, 0.02), glow('#4fd2ff'), 0, 0.4 * s, 0.36 * s);
-  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.15 * s, 0.15 * s, 6 * s, 6, 1, true), new THREE.MeshBasicMaterial({ color: '#4fd2ff', transparent: true, opacity: 0.25, depthWrite: false })); beam.position.y = 3 * s; g.add(beam);
+  const g = new THREE.Group();
+  const s = big ? 3 : 1;
+
+  const hullGrey = '#5d636c';
+  const cornerDk = '#383d44';
+  const goldBand = '#d4a838';
+  const lockDark = '#1d1f24';
+  const panelGlow = glow('#4fd2ff');
+
+  // 1. Main Crate Body (Flush on floor: y = 0.0 to 0.70 * s)
+  part(g, B(1.0 * s, 0.7 * s, 0.7 * s), hullGrey, 0, 0.35 * s, 0);
+
+  // Bottom skid runners (anchors crate cleanly at y = 0.0)
+  for (const sz of [-1, 1]) {
+    part(g, B(1.04 * s, 0.05 * s, 0.12 * s), lockDark, 0, 0.025 * s, sz * 0.28 * s);
+  }
+
+  // 2. Reinforced Corner Brackets (Stepped outward to eliminate co-planar tearing)
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) {
+      part(
+        g,
+        B(0.10 * s, 0.71 * s, 0.10 * s),
+        cornerDk,
+        sx * 0.485 * s,
+        0.355 * s,
+        sz * 0.335 * s
+      );
+    }
+  }
+
+  // 3. Reinforced Retention Bands (Stepped out in X and Z: 1.04 * s x 0.74 * s)
+  for (const y of [0.18, 0.52]) {
+    part(g, B(1.04 * s, 0.06 * s, 0.74 * s), goldBand, 0, y * s, 0);
+
+    // Lateral tension clamps on both short ends
+    for (const sx of [-1, 1]) {
+      part(g, B(0.04 * s, 0.08 * s, 0.14 * s), lockDark, sx * 0.525 * s, y * s, 0);
+    }
+  }
+
+  // 4. Stepped Front Terminal & Cargo Lock Status
+  // Recessed backplate mounted flush to front face (z = 0.35 * s)
+  part(g, B(0.36 * s, 0.30 * s, 0.03 * s), lockDark, 0, 0.38 * s, 0.36 * s);
+
+  // Glowing status display stepped cleanly forward (z = 0.38 * s)
+  part(g, B(0.28 * s, 0.22 * s, 0.02 * s), panelGlow, 0, 0.38 * s, 0.38 * s);
+
+  // Top magnetic lift latch
+  part(g, B(0.24 * s, 0.04 * s, 0.24 * s), lockDark, 0, 0.72 * s, 0);
+  part(g, new THREE.TorusGeometry(0.06 * s, 0.015 * s, 4, 10), goldBand, 0, 0.75 * s, 0, Math.PI / 2);
+
+  // 5. Vertical Holo-Beacon Beam & Pulse Core
+  const beaconCore = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.04 * s, 0),
+    panelGlow
+  );
+  beaconCore.position.set(0, 0.74 * s, 0);
+  g.add(beaconCore);
+
+  const beamGeom = new THREE.CylinderGeometry(0.12 * s, 0.18 * s, 6 * s, 8, 1, true);
+  const beamMat = new THREE.MeshBasicMaterial({
+    color: '#4fd2ff',
+    transparent: true,
+    opacity: 0.22,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+
+  const beam = new THREE.Mesh(beamGeom, beamMat);
+  beam.position.y = 3.7 * s;
+  g.add(beam);
+
+  // 6. Beacon Rotation & Ambient Holo-Pulse Loop
+  g.userData.anim = (t) => {
+    beam.rotation.y = t * 0.8;
+    beamMat.opacity = 0.18 + Math.sin(t * 3.5) * 0.06;
+    beaconCore.position.y = 0.74 * s + Math.sin(t * 3.0) * (0.015 * s);
+  };
+
+  g.userData.anim(0);
   return g;
 }
 // planets: a couple of salvage crates hidden in the wilds every visit

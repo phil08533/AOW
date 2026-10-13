@@ -139,8 +139,14 @@ const CAPES = {
   frost: { name: 'Frost Cape', lvl: 20, col: '#bfe6f2', trim: '#5d7f99' }, angler: { name: "Angler's Cape", lvl: 1, flag: 'angler', col: '#2a5a7a', trim: '#ffb347' },
   master: { name: "Masters' Cape", lvl: 1, q: 'c5', col: '#0f1757', trim: '#ffd75e' }
 };
-const HELMS = {
+const HELMS = window.HELMS = window.HELMS || {
   visor: { name: 'Visor Helmet', lvl: 1 }, spike: { name: 'Spiked Helm', lvl: 15 }, bug: { name: 'Bug Helm', lvl: 1, q: 'm3' }, crown: { name: 'Ice Crown', lvl: 1, q: 'c5' }
+};
+const HELM_KITS = window.HELM_KITS = window.HELM_KITS || {
+  visor(g) {},
+  spike(g) { for (let k = -1; k <= 1; k++) part(g, new THREE.ConeGeometry(0.04, 0.2, 4), '#b3262c', k * 0.08, 1.95, -0.02); },
+  bug(g) { for (const s of [-1, 1]) { chain(g, [[0.06 * s, 1.9, 0.05], [0.14 * s, 2.1, 0.12], [0.2 * s, 2.15, 0.2]], 0.012, '#3a2c1c', 0.008); E(g, glow('#ffd23a'), 0.07 * s, 1.83, 0.15, 0.03, 0.03, 0.02); } },
+  crown(g) { part(g, Cy(0.15, 0.15, 0.05, 10), toon('#c9a43a'), 0, 1.9, 0); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; part(g, new THREE.ConeGeometry(0.03, 0.14, 4), glow('#9fe8ff'), Math.cos(a) * 0.13, 1.98, Math.sin(a) * 0.13); } }
 };
 function lookUnlocked(T, id) {
   const it = T[id]; if (!it) return false;
@@ -149,16 +155,21 @@ function lookUnlocked(T, id) {
 const myLook = () => { const L = S.look || {}; return { a: ARMORS[L.a] && lookUnlocked(ARMORS, L.a) ? L.a : 'std', c: CAPES[L.c] && lookUnlocked(CAPES, L.c) ? L.c : 'none', h: HELMS[L.h] && lookUnlocked(HELMS, L.h) ? L.h : 'visor', f: L.f || '0.0.0.0.0' }; };
 const armorDef = () => ARMORS[myLook().a].def;
 function swapMats(obj, map) { obj.traverse(o => { if (o.isMesh && map.has(o.material)) o.material = map.get(o.material); }); }
-function makePlayerChar(look, col) {
-  const A = ARMORS[look.a] || ARMORS.std, g = makeTrooper();
+function makePlayerChar(look, col, opts) {
+  opts = opts || {};
+  const isStd = !look || !look.a || look.a === 'std';
+  const bare = (opts.bare !== undefined) ? opts.bare : (!isStd && look.a !== 'recon' && (!ARMORS[look.a] || ARMORS[look.a].bare !== false));
+  const noGun = !!(opts.noGun || opts.noWeapon);
+  const A = ARMORS[look.a] || ARMORS.std, g = makeTrooper({ bare, noGun });
   const m = new Map([[toon(C.olive), toon(A.body || col)], [toon(C.oliveDk), toon(A.body ? A.trim : C.oliveDk)], [toon(C.tan), toon(A.trim)], [glow(C.visor), glow(A.visor)]]);
   swapMats(g, m);
   if (ARMOR_KITS[look.a]) ARMOR_KITS[look.a](g, A);
   const Cp = CAPES[look.c];
   if (Cp && Cp.col) { const cape = part(g, B(0.52, 1.05, 0.03), toon(Cp.col, 'cloth'), 0, 1.0, -0.3, 0.12, 0, 0); cape.castShadow = false; if (Cp.trim) part(g, B(0.54, 0.06, 0.04), Cp.trim, 0, 0.5, -0.24, 0.12); if (Cp.trim) part(g, new THREE.CircleGeometry(0.09, 8), glow(Cp.trim), 0, 1.15, -0.33, 0, Math.PI, 0); }
-  if (look.h === 'spike') for (let k = -1; k <= 1; k++) part(g, new THREE.ConeGeometry(0.04, 0.2, 4), '#b3262c', k * 0.08, 1.95, -0.02);
-  if (look.h === 'bug') { for (const s of [-1, 1]) { chain(g, [[0.06 * s, 1.9, 0.05], [0.14 * s, 2.1, 0.12], [0.2 * s, 2.15, 0.2]], 0.012, '#3a2c1c', 0.008); E(g, glow('#ffd23a'), 0.07 * s, 1.83, 0.15, 0.03, 0.03, 0.02); } }
-  if (look.h === 'crown') { part(g, Cy(0.15, 0.15, 0.05, 10), toon('#c9a43a'), 0, 1.9, 0); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; part(g, new THREE.ConeGeometry(0.03, 0.14, 4), glow('#9fe8ff'), Math.cos(a) * 0.13, 1.98, Math.sin(a) * 0.13); } }
+  if (HELM_KITS[look.h]) HELM_KITS[look.h](g, look, A);
+  else if (look.h === 'spike') for (let k = -1; k <= 1; k++) part(g, new THREE.ConeGeometry(0.04, 0.2, 4), '#b3262c', k * 0.08, 1.95, -0.02);
+  else if (look.h === 'bug') { for (const s of [-1, 1]) { chain(g, [[0.06 * s, 1.9, 0.05], [0.14 * s, 2.1, 0.12], [0.2 * s, 2.15, 0.2]], 0.012, '#3a2c1c', 0.008); E(g, glow('#ffd23a'), 0.07 * s, 1.83, 0.15, 0.03, 0.03, 0.02); } }
+  else if (look.h === 'crown') { part(g, Cy(0.15, 0.15, 0.05, 10), toon('#c9a43a'), 0, 1.9, 0); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; part(g, new THREE.ConeGeometry(0.03, 0.14, 4), glow('#9fe8ff'), Math.cos(a) * 0.13, 1.98, Math.sin(a) * 0.13); } }
   return g;
 }
 let mannequin = null, mannequinAt = null;

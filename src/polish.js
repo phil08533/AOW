@@ -187,8 +187,9 @@ function openOnline() {
 
 // ---- change your callsign any time from the pause menu ----
 function saveNick() {
-  const n = ($('nickEdit').value || '').replace(/[^\w .\-]/g, '').trim().slice(0, 16);
+  const n = (typeof cleanNick === 'function') ? cleanNick($('nickEdit').value) : ($('nickEdit').value || '').replace(/[^\w .\-]/g, '').trim().slice(0, 16);
   if (!n) { $('nickEdit').value = S.nick; return; }
+  $('nickEdit').value = n;
   if (n === S.nick) return; const old = S.nick; S.nick = n; $('nickIn').value = n; markDirty(); sendPresence(true); lbPush(true);
   log(`Callsign changed from ${old} to ${n}`, 'loot'); toast('CALLSIGN', n, 1.5); SFX.ui();
 }

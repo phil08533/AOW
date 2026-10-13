@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Art of War</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=VT323&display=swap">
@@ -16,7 +21,7 @@
   --hurt: #ff4a3d;
   --ally: #8fe3ff;
   --dim: #b9c3f2;
-  --ui: "Pixelify Sans", "VT323", "Courier New", monospace;
+  --ui: "Pixelify Sans", "VT323", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Courier New", monospace;
   --num: "VT323", "Courier New", monospace;
   color-scheme: dark;
 }
@@ -170,6 +175,25 @@ body.flying #tBoost { display: grid; }
   #tNade { right: 236px; bottom: calc(env(safe-area-inset-bottom, 0px) + 40px); }
   #online, #clock { display: none; }
 }
+@media (max-height: 560px) {
+  .dlg {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
+    max-height: calc(100vh - 12px);
+    padding: 8px 12px 8px;
+    width: min(calc(100% - 16px), 640px);
+  }
+  .dlg .who { font-size: 11px; }
+  .dlg h3 { margin: 0 0 2px; font-size: 17px; }
+  .dlg .line { font-size: 13px; min-height: 0; line-height: 1.25; margin-bottom: 2px; }
+  .dlg .acts { margin-top: 6px; gap: 6px; }
+  .dlg .pbtn { padding: 4px 8px; font-size: 13px; }
+}
+@media (max-width: 520px) {
+  .dlg {
+    width: calc(100vw - 16px);
+    padding: 10px 12px 12px;
+  }
+}
 
 .field { display: flex; flex-direction: column; gap: 5px; align-items: stretch; width: min(100%, 290px); text-align: left; }
 .field label { font-size: 13px; color: var(--dim); }
@@ -220,6 +244,8 @@ body.flying #tBoost { display: grid; }
 #fade[hidden] { display: none !important; }
 #fadeTxt { color: var(--gold); font-size: 26px; letter-spacing: 2px; }
 </style>
+</head>
+<body>
 
 <div id="stage" aria-label="Game view"></div>
 <div id="vignette"></div>
@@ -241,7 +267,7 @@ body.flying #tBoost { display: grid; }
     <div class="row"><span id="lvlLbl">Level 1</span><b id="credits">0 cr</b></div>
     <div class="bar" id="xpbar"><i id="xpFill" style="transform:scaleX(0)"></i></div>
   </div>
-  <div class="hudbtns"><button class="hbtn win" id="menuToggle" aria-label="Open menu" aria-expanded="false">☰ Menu</button><div id="menuDrop" hidden><button class="hbtn win" id="shipBtn">Ship</button><button class="hbtn win" id="questBtn">Quests</button><button class="hbtn win" id="bagBtn">Bag</button><button class="hbtn win" id="buildBtn">Build</button><button class="hbtn win" id="bikeBtn">Bike</button><button class="hbtn win" id="chatBtn">Chat</button><button class="hbtn win" id="launchBtn">Launch ship</button><button class="hbtn win" id="codexBtn">Codex</button><button class="hbtn win" id="vehBtn">Vehicle</button><button class="hbtn win" id="newsBtn">What's new</button><button class="hbtn win" id="unstuckBtn">Unstuck</button><button class="hbtn win" id="menuBtn" aria-label="Pause and settings">Settings</button></div></div>
+  <div class="hudbtns"><button class="hbtn win" id="menuToggle" aria-label="Open menu" aria-expanded="false">☰ Menu</button><div id="menuDrop" hidden><button class="hbtn win" id="shipBtn">Ship</button><button class="hbtn win" id="questBtn">Quests</button><button class="hbtn win" id="bagBtn">Bag</button><button class="hbtn win" id="buildBtn">Build</button><button class="hbtn win" id="bikeBtn">Bike</button><button class="hbtn win" id="chatBtn">Chat</button><button class="hbtn win" id="launchBtn">Launch ship</button><button class="hbtn win" id="codexBtn">Codex</button><button class="hbtn win" id="vehBtn">Vehicle</button><button class="hbtn win" id="newsBtn">What's new</button><button class="hbtn win" id="unstuckBtn">Unstuck</button><button class="hbtn win" id="menuBtn" aria-label="Pause and settings">Settings</button><button class="hbtn win" id="logoutHudBtn" style="color:#ff9e9e">Logout</button></div></div>
   <div class="win" id="ammo"><div class="n" id="ammoN">12<small> / ∞</small></div><div class="g" id="gunLbl">Lvl 1 Blaster</div></div>
   <button id="talk" class="win" hidden></button>
   <div id="buildBar" class="win" hidden>
@@ -315,6 +341,7 @@ body.flying #tBoost { display: grid; }
       <span>Pixels</span><button class="pbtn" id="setPix"></button>
       <span>Music</span><button class="pbtn" id="setMusic"></button>
       <span>Sound effects</span><button class="pbtn" id="setSfx"></button>
+      <span>Weather effects</span><span style="display:flex;align-items:center;gap:8px"><input type="range" min="0" max="100" id="setWeather" style="width:130px;accent-color:#8fe3ff"><span id="setWeatherVal" style="font-family:var(--mono,monospace);min-width:3ch">70%</span></span>
       <span>B.U.R.P. voice</span><button class="pbtn" id="setVoice"></button>
       <span>Look speed</span><button class="pbtn" id="setSens"></button>
       <span>Invert look</span><button class="pbtn" id="setInv"></button>
@@ -323,6 +350,7 @@ body.flying #tBoost { display: grid; }
       <span>Damage numbers</span><button class="pbtn" id="setNums"></button>
     </div>
     <button class="cta win" id="resumeBtn">Resume</button>
+    <button class="pbtn" id="logoutBtn" style="background:#5a1f28;margin-top:8px;width:100%;padding:9px">🚪 Logout / Switch Character</button>
     <button class="pbtn" id="skipBtn" style="display:none">Skip the Earth tutorial</button>
   </div>
 </div>
@@ -375,35 +403,198 @@ function recolor(obj, map) {
   return obj;
 }
 function makeCivilian(shirt, pants, skin, hair, extra) {
+
   const g = new THREE.Group();
+
   for (const s of [-1, 1]) {
+
     part(g, B(0.16, 0.12, 0.28), C.dark, 0.11 * s, 0.06, 0.03);
+
     part(g, B(0.16, 0.82, 0.18), pants, 0.11 * s, 0.53, 0);
+
     part(g, B(0.12, 0.6, 0.14), shirt, 0.32 * s, 1.2, 0, 0, 0, 0.06 * s);
+
     E(g, skin, 0.34 * s, 0.86, 0.02, 0.055, 0.06, 0.055);
+
   }
+
   part(g, B(0.48, 0.62, 0.26), shirt, 0, 1.24, 0);
+
   if (extra) part(g, B(0.4, 0.7, 0.03), extra, 0, 1.05, 0.14);
+
   part(g, Cy(0.06, 0.07, 0.1, 8), skin, 0, 1.6, 0);
+
   E(g, skin, 0, 1.76, 0, 0.13, 0.15, 0.13);
+
   E(g, hair, 0, 1.84, -0.02, 0.14, 0.09, 0.14);
+
   E(g, C.eye, 0.045, 1.77, 0.12, 0.018, 0.022, 0.01); E(g, C.eye, -0.045, 1.77, 0.12, 0.018, 0.022, 0.01);
+
   return g;
+
 }
 function makeDog() {
-  const g = new THREE.Group(), fur = '#7a6a58', dk = '#4a3f35';
-  E(g, fur, 0, 0.56, 0, 0.2, 0.2, 0.44);
-  E(g, fur, 0, 0.72, 0.48, 0.14, 0.13, 0.15);
-  E(g, dk, 0, 0.67, 0.64, 0.07, 0.06, 0.1);
-  E(g, C.eye, 0, 0.7, 0.73, 0.03, 0.025, 0.02);
-  for (const s of [-1, 1]) {
-    part(g, new THREE.ConeGeometry(0.05, 0.14, 4), dk, 0.08 * s, 0.86, 0.44, -0.2);
-    E(g, glow('#ff3b2a'), 0.06 * s, 0.76, 0.6, 0.022, 0.022, 0.02);
-    for (const z of [-0.3, 0.3]) seg(g, [0.12 * s, 0.48, z], [0.12 * s, 0.02, z + 0.04], 0.05, fur, 0.035);
+  const g = new THREE.Group();
+  const hide = '#35313d';          // Dark alien hound pelt
+  const underbelly = '#221e29';    // Deep shaded belly
+  const chitinPlate = '#18141f';   // Hardened spinal ridges & jaw chitin
+  const fleshAccent = '#6a2c3e';   // Sinew / bare skin tone
+  const eyeGlow = glow('#ff2b54'); // Bioluminescent compound eyes
+  const spineGlow = glow('#a624ff'); // Mutated dorsal energy nodes
+
+  const root = new THREE.Group();
+  g.add(root);
+
+  // 1. Predatory Quadruped Limbs & Chitin Talons (Grounded flush to y = 0.0)
+  const legs = [];
+  const legConfigs = [
+    { z:  0.28, isFront: true,  hipY: 0.52 },
+    { z: -0.28, isFront: false, hipY: 0.56 }
+  ];
+
+  for (const sx of [-1, 1]) {
+    legConfigs.forEach(cfg => {
+      const legGroup = new THREE.Group();
+      legGroup.position.set(0.14 * sx, cfg.hipY, cfg.z);
+      root.add(legGroup);
+
+      if (cfg.isFront) {
+        // Muscular forward-swept raptor foreleg
+        chain(legGroup, [
+          [0, 0, 0],
+          [0.02 * sx, -0.22, 0.04],
+          [0.01 * sx, -0.50, 0.02]
+        ], 0.055, hide, 0.032, true);
+
+        // Elbow spur
+        part(legGroup, new THREE.ConeGeometry(0.018, 0.08, 4), chitinPlate, -0.01 * sx, -0.22, -0.04, -1.2, 0, 0.2 * sx);
+      } else {
+        // Exaggerated digitigrade hindleg with raised hock
+        chain(legGroup, [
+          [0, 0, 0],
+          [0.03 * sx, -0.22, -0.10],
+          [0.02 * sx, -0.38, -0.04],
+          [0.01 * sx, -0.54, 0.02]
+        ], 0.065, hide, 0.034, true);
+
+        // Knee carapace blade
+        part(legGroup, new THREE.ConeGeometry(0.022, 0.10, 4), chitinPlate, 0.02 * sx, -0.20, 0.06, 0.8, 0, 0.1 * sx);
+      }
+
+      // Splayed two-toed creature talons touching ground
+      const pawY = cfg.isFront ? -0.50 : -0.54;
+      E(legGroup, chitinPlate, 0.01 * sx, pawY + 0.02, 0.03, 0.045, 0.02, 0.06);
+      part(legGroup, new THREE.ConeGeometry(0.012, 0.06, 3), chitinPlate, 0.025 * sx, pawY + 0.015, 0.08, Math.PI / 2.2, 0, 0.15 * sx);
+      part(legGroup, new THREE.ConeGeometry(0.012, 0.06, 3), chitinPlate, -0.005 * sx, pawY + 0.015, 0.08, Math.PI / 2.2, 0, -0.15 * sx);
+
+      legs.push({ legGroup, sx, isFront: cfg.isFront });
+    });
   }
-  const tail = new THREE.Group(); tail.position.set(0, 0.62, -0.42); g.add(tail);
-  chain(tail, [[0, 0, 0], [0, 0.12, -0.18], [0, 0.18, -0.34]], 0.04, fur, 0.02);
-  g.userData.anim = (t) => { tail.rotation.y = Math.sin(t * 10) * 0.4; };
+
+  // 2. Feline-Canine Torso with Exposed Spinal Carapace
+  // High arched back and thick predatory ribcage
+  E(root, hide, 0, 0.58, 0.04, 0.22, 0.24, 0.30);
+  E(root, underbelly, 0, 0.50, 0.06, 0.16, 0.14, 0.26); // Sunken belly flank
+  E(root, hide, 0, 0.58, -0.18, 0.18, 0.20, 0.24);      // Muscular haunches
+
+  // Jagged dorsal armor plates running down the spine
+  for (let k = 0; k < 5; k++) {
+    const plateZ = 0.18 - k * 0.10;
+    const plateY = 0.70 + Math.sin(k * 0.7) * 0.04;
+    part(root, new THREE.ConeGeometry(0.028 - k * 0.003, 0.12 - k * 0.01, 4), chitinPlate, 0, plateY, plateZ, -0.4, 0, 0);
+
+    // Glowing energy nodes between spine plates
+    if (k < 4) {
+      part(root, new THREE.OctahedronGeometry(0.018, 0), spineGlow, 0, plateY - 0.02, plateZ - 0.05);
+    }
+  }
+
+  // 3. Demonic Canine Head & Split Mandible Jaws
+  const head = new THREE.Group();
+  head.position.set(0, 0.72, 0.38);
+  root.add(head);
+
+  // Angular elongated cranium
+  E(head, hide, 0, 0.05, 0, 0.12, 0.13, 0.18);
+  part(head, B(0.04, 0.08, 0.22), chitinPlate, 0, 0.13, 0.02, -0.3, 0, 0); // Brow ridge plate
+
+  // Split lower jaws / fanged snout
+  const muzzle = new THREE.Group();
+  muzzle.position.set(0, -0.02, 0.14);
+  head.add(muzzle);
+
+  E(muzzle, fleshAccent, 0, 0.02, 0.04, 0.075, 0.06, 0.11); // Exposed jaw sinew
+  part(muzzle, B(0.05, 0.03, 0.04), chitinPlate, 0, 0.04, 0.14); // Nose hornlet
+
+  // Splayed side fangs / mandibles
+  for (const s of [-1, 1]) {
+    part(muzzle, new THREE.ConeGeometry(0.015, 0.09, 3), '#e2dac6', 0.045 * s, -0.03, 0.10, Math.PI - 0.3, 0, 0.35 * s);
+    part(muzzle, new THREE.ConeGeometry(0.012, 0.06, 3), '#e2dac6', 0.035 * s, 0.04, 0.12, 0.3, 0, 0.2 * s);
+  }
+
+  // Multi-ocular sensory clusters (3 glowing eyes per side)
+  for (const s of [-1, 1]) {
+    // Primary predator eye
+    E(head, eyeGlow, 0.075 * s, 0.06, 0.11, 0.026, 0.028, 0.018);
+    // Secondary auxiliary eyes
+    E(head, eyeGlow, 0.10 * s, 0.09, 0.06, 0.016, 0.016, 0.012);
+    E(head, eyeGlow, 0.09 * s, 0.03, 0.08, 0.014, 0.014, 0.012);
+
+    // Backward-swept horned canine ears
+    const ear = part(
+      head,
+      new THREE.ConeGeometry(0.038, 0.22, 4),
+      chitinPlate,
+      0.09 * s,
+      0.16,
+      -0.06,
+      -0.55,
+      0,
+      -0.45 * s
+    );
+    ear.scale.set(1.1, 1.0, 0.5);
+  }
+
+  // 4. Barbed Whip Tail / Scorpion Stinger Tip
+  const tail = new THREE.Group();
+  tail.position.set(0, 0.64, -0.34);
+  root.add(tail);
+
+  chain(tail, [
+    [0, 0, 0],
+    [0, 0.14, -0.18],
+    [0, 0.24, -0.36],
+    [0, 0.32, -0.52]
+  ], 0.038, hide, 0.014, true);
+
+  // Terminal bone stinger / chitin barb
+  part(tail, new THREE.ConeGeometry(0.024, 0.14, 4), chitinPlate, 0, 0.34, -0.58, -1.2, 0, 0);
+
+  // 5. Grounded Stalking & Snarl Animation Loop
+  g.userData.anim = (t) => {
+    // Low-slung stalking body heave
+    root.position.y = Math.sin(t * 3.5) * 0.012;
+    root.rotation.x = 0.02 + Math.sin(t * 1.8) * 0.025;
+
+    // Head searching scent & twitch
+    head.rotation.y = Math.sin(t * 1.5) * 0.18;
+    head.rotation.z = Math.sin(t * 0.8) * 0.08;
+    head.rotation.x = -0.06 + Math.sin(t * 3.0) * 0.05;
+
+    // Jaw flex snarl
+    muzzle.rotation.x = Math.max(0, Math.sin(t * 4.0)) * 0.12;
+
+    // Aggressive tail twitch / lash
+    tail.rotation.y = Math.sin(t * 7.0) * 0.35;
+    tail.rotation.x = Math.cos(t * 3.5) * 0.12;
+
+    // Prowling limb micro-adjustments
+    legs.forEach(l => {
+      l.legGroup.rotation.x = Math.sin(t * 3.5 + (l.isFront ? 0 : Math.PI * 0.5)) * 0.04;
+    });
+  };
+
+  g.userData.anim(0);
   return g;
 }
 
@@ -522,13 +713,13 @@ const GUNS = {
   p35: { name: 'Lvl 35 Plasma Rifle', dmg: 120, rate: 0.13, mag: 30, reload: 1.2, req: 24, price: 11000 }
 };
 const ENEMY = {
-  dog:      { rig: 'dog', name: 'Wild Dog', make: makeDog, hp: 30, speed: 4.4, r: 0.45, hy: 0.6, xp: 8, cr: [1, 4], melee: { dmg: 5, rate: 0.9, reach: 1.5 }, drops: [['pelt', 0.6]] },
+  dog:      { name: 'Wild Dog', make: makeDog, hp: 30, speed: 4.4, r: 0.45, hy: 0.6, xp: 8, cr: [1, 4], melee: { dmg: 5, rate: 0.9, reach: 1.5 }, drops: [['pelt', 0.6]] },
   xr17:     { rig: 'xr17', name: 'XR-17', make: makeXR17, hp: 45, speed: 1.7, r: 0.45, hy: 0.7, xp: 12, cr: [3, 8], ranged: { dmg: 6, rate: 1.9, speed: 13, col: '#ff3b2a', range: 16, keep: 9 }, drops: [['scrap', 0.75], ['circuit', 0.18]] },
   crolan:   { name: 'Crolan', make: makeCrolan, hp: 28, speed: 4.2, r: 0.45, hy: 0.55, xp: 10, cr: [2, 5], melee: { dmg: 6, rate: 0.75, reach: 1.4 }, drops: [['fang', 0.5], ['shell', 0.35]] },
   bughybrid:{ rig: 'bughybrid', name: 'Bug Hybrid', make: makeBugHybrid, hp: 80, speed: 2.5, r: 0.45, hy: 1.2, xp: 20, cr: [4, 10], melee: { dmg: 12, rate: 1.2, reach: 2.0 }, drops: [['shell', 0.85]] },
   skyrene:  { name: 'Skyrene', make: makeSkyrene, hp: 35, speed: 3.4, r: 0.45, hy: 1.4, xp: 14, cr: [3, 7], melee: { dmg: 7, rate: 0.9, reach: 1.6 }, drops: [['wing', 0.6]] },
   spearman: { rig: 'spearman', name: 'Alien Raider', make: makeSpearman, hp: 60, speed: 2.7, r: 0.4, hy: 0.95, xp: 18, cr: [5, 12], melee: { dmg: 11, rate: 1.1, reach: 1.7 }, drops: [['crystal', 0.3]] },
-  stagrone: { rig: 'stagrone', name: 'Stagrone', make: makeStagrone, hp: 50, speed: 5.0, r: 0.5, hy: 1.1, xp: 18, cr: [4, 9], melee: { dmg: 10, rate: 1.0, reach: 1.9 }, drops: [['horn', 0.6]] },
+  stagrone: { name: 'Stagrone', make: makeStagrone, hp: 50, speed: 5.0, r: 0.5, hy: 1.1, xp: 18, cr: [4, 9], melee: { dmg: 10, rate: 1.0, reach: 1.9 }, drops: [['horn', 0.6]] },
   chief:    { rig: 'spearman', name: 'Gor-Tak the Raider Chief', make: () => { const g = recolor(makeSpearman(), { '#7fae63': '#b5653f', '#4f7a3c': '#7a3a26' }); return g; }, scale: 1.35, hp: 420, speed: 2.6, r: 0.5, hy: 0.95, xp: 140, cr: [60, 90], elite: true,
               melee: { dmg: 18, rate: 1.2, reach: 2.2 }, drops: [['spear', 1], ['crystal', 1]] },
   gopel:    { rig: 'gopel', name: 'Gopel', make: makeGopel, hp: 130, speed: 1.4, r: 0.8, hy: 0.9, xp: 30, cr: [8, 16], lob: { dmg: 16, rate: 3.2, speed: 12, range: 18, keep: 11 }, drops: [['hide', 0.8]] },
@@ -537,7 +728,7 @@ const ENEMY = {
   drome:    { rig: 'drome', name: 'Drome', make: makeDrome, scale: 1.3, hp: 1600, speed: 2.3, r: 0.6, hy: 1.4, xp: 600, cr: [200, 260], boss: true,
               ranged: { dmg: 12, rate: 1.0, speed: 17, col: '#ff2a3a', range: 20, keep: 7 }, melee: { dmg: 26, rate: 1.4, reach: 2.6 }, drops: [['sigil', 1], ['crystal', 1], ['circuit', 1]] },
   // Mezar
-  sandhound:{ rig: 'dog', name: 'Sand Hound', make: () => recolor(makeDog(), { '#7a6a58': '#c49a5a', '#4a3f35': '#8a5a2a' }), hp: 34, speed: 4.8, r: 0.45, hy: 0.6, xp: 9, cr: [2, 5], melee: { dmg: 6, rate: 0.8, reach: 1.5 }, drops: [['pelt', 0.5]] },
+  sandhound:{ name: 'Sand Hound', make: () => recolor(makeDog(), { '#7a6a58': '#c49a5a', '#4a3f35': '#8a5a2a' }), hp: 34, speed: 4.8, r: 0.45, hy: 0.6, xp: 9, cr: [2, 5], melee: { dmg: 6, rate: 0.8, reach: 1.5 }, drops: [['pelt', 0.5]] },
   ant:      { name: 'Black Ant', make: () => makeAnt(), scale: 1.5, hp: 22, speed: 5.0, r: 0.4, hy: 0.35, xp: 7, cr: [1, 3], melee: { dmg: 4, rate: 0.6, reach: 1.3 }, drops: [['mandible', 0.45]] },
   redant:   { name: 'Red Ant', make: () => makeAnt('#8a2a1e'), scale: 1.6, hp: 30, speed: 5.4, r: 0.4, hy: 0.35, xp: 9, cr: [2, 4], melee: { dmg: 6, rate: 0.6, reach: 1.3 }, drops: [['mandible', 0.55]] },
   bugbug:   { name: 'Bug-bug', make: makeBugbug, fly: true, hp: 26, speed: 3.6, r: 0.4, hy: 1.1, xp: 9, cr: [2, 5], ranged: { dmg: 5, rate: 1.6, speed: 12, col: '#ffe14a', range: 14, keep: 8 }, drops: [['chitin', 0.5]] },
@@ -549,10 +740,10 @@ const ENEMY = {
 // Capitone
 Object.assign(ENEMY, {
   porcupine: { rig: 'porcupine', name: 'Quillback', make: makePorcupine, hp: 150, speed: 2.4, r: 0.55, hy: 0.55, xp: 40, cr: [10, 18], ranged: { dmg: 14, rate: 1.7, speed: 18, col: '#e8dcc0', range: 18, keep: 10 }, drops: [['quillx', 0.6]] },
-  jumper:    { rig: 'jumper', name: 'Tree Jumper', make: makeJumper, scale: 1.3, hp: 120, speed: 6.2, r: 0.4, hy: 0.7, xp: 38, cr: [8, 16], melee: { dmg: 15, rate: 0.7, reach: 1.6 }, drops: [['crystal', 0.25]] },
+  jumper:    { name: 'Tree Jumper', make: makeJumper, scale: 1.3, hp: 120, speed: 6.2, r: 0.4, hy: 0.7, xp: 38, cr: [8, 16], melee: { dmg: 15, rate: 0.7, reach: 1.6 }, drops: [['crystal', 0.25]] },
   nomine:    { name: 'Nomine', make: makeNomine, fly: true, hp: 170, speed: 2.8, r: 0.45, hy: 1.0, xp: 48, cr: [12, 22], ranged: { dmg: 18, rate: 1.5, speed: 14, col: '#c8a0ff', range: 20, keep: 11 }, drops: [['essence', 0.55]] },
   icemonster:{ rig: 'chunk', name: 'Ice Monster', make: () => makeChunkMonster('#bfe6f2', '#8fc4dc', '#e8f6fb', '#5d7f99', true), scale: 1.2, hp: 320, speed: 2.0, r: 0.6, hy: 1.1, xp: 60, cr: [16, 28], melee: { dmg: 30, rate: 1.6, reach: 2.2 }, drops: [['icecore', 0.6]] },
-  snofel:    { rig: 'snofel', name: 'Snofel', make: makeSnofel, grow: true, hp: 200, speed: 3.6, r: 0.5, hy: 0.55, xp: 50, cr: [12, 20], melee: { dmg: 20, rate: 1.0, reach: 1.6 }, drops: [['fluff', 0.65]] },
+  snofel:    { name: 'Snofel', make: makeSnofel, grow: true, hp: 200, speed: 3.6, r: 0.5, hy: 0.55, xp: 50, cr: [12, 20], melee: { dmg: 20, rate: 1.0, reach: 1.6 }, drops: [['fluff', 0.65]] },
   frostking: { rig: 'chunk', name: 'The Frost King', make: makeFrostKing, scale: 2.4, hp: 7000, speed: 1.8, r: 0.7, hy: 1.1, xp: 3500, cr: [700, 900], boss: true,
                melee: { dmg: 48, rate: 1.6, reach: 2.4 }, lob: { dmg: 34, rate: 2.2, speed: 15, range: 26, keep: 6, col: '#9fe8ff' }, drops: [['crown', 1], ['icecore', 1], ['crystal', 1]] },
   magmagopel:{ rig: 'gopel', name: 'Magma Gopel', make: () => recolor(makeGopel(), { '#8e8f8c': '#4a3a36', '#5f605d': '#2a2220', '#3f3a36': '#ff6a1a' }), hp: 340, speed: 1.5, r: 0.8, hy: 0.9, xp: 64, cr: [18, 30], lob: { dmg: 30, rate: 2.6, speed: 13, range: 20, keep: 11, col: '#ff6a1a' }, drops: [['magma', 0.6]] },
@@ -847,7 +1038,7 @@ function openGuns(n) {
       const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = owned ? (eq ? 'Equipped' : 'Owned') : `Lv ${g.req} · ${g.price} cr`;
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px';
       if (owned) { b.textContent = eq ? 'In hand' : 'Equip'; b.disabled = eq; b.addEventListener('click', () => { S.gun = id; player.ammo = g.mag; player.reloading = 0; markDirty(); render(); }); }
-      else { b.textContent = 'Buy'; b.disabled = S.lvl < g.req || S.cr < g.price; b.addEventListener('click', () => { S.cr -= g.price; S.guns.push(id); S.gun = id; player.ammo = g.mag; log('Bought ' + g.name, 'loot'); markDirty(); render(); }); }
+      else { b.textContent = 'Buy'; b.disabled = S.lvl < g.req || S.cr < g.price; b.addEventListener('click', () => { S.cr -= g.price; S.guns.push(id); S.gun = id; player.ammo = g.mag; log('Bought ' + g.name, 'loot'); if (typeof burp === 'function') burp('buy'); markDirty(); render(); }); }
       r.append(dot, nm, mt, b); rows.appendChild(r); r.style.cursor = 'pointer'; r.addEventListener('pointerenter', () => setPreview(gunPreview(id), g.name)); r.addEventListener('click', e => { if (e.target === r || e.target === nm) setPreview(gunPreview(id), g.name); });
     });
     (n.melee || []).forEach(id => { const M = MELEE[id], owned = (S.melees || ['knife']).includes(id), eq = (S.melee || 'knife') === id;
@@ -857,7 +1048,7 @@ function openGuns(n) {
       const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = owned ? (eq ? 'Equipped' : 'Owned') : `Lv ${M.req} · ${M.price} cr`;
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px';
       if (owned) { b.textContent = eq ? 'In hand' : 'Equip'; b.disabled = eq; b.addEventListener('click', () => { S.melee = id; markDirty(); render(); }); }
-      else { b.textContent = 'Buy'; b.disabled = S.lvl < M.req || S.cr < M.price; b.addEventListener('click', () => { S.cr -= M.price; S.melees = (S.melees || ['knife']).concat(id); S.melee = id; if (id === 'nunchucks' && !hasGear('shockgloves')) S.gear.push('shockgloves'); log('Bought ' + M.name + ' (F or right click to swing)', 'loot'); SFX.item(); markDirty(); render(); }); }
+      else { b.textContent = 'Buy'; b.disabled = S.lvl < M.req || S.cr < M.price; b.addEventListener('click', () => { S.cr -= M.price; S.melees = (S.melees || ['knife']).concat(id); S.melee = id; if (id === 'nunchucks' && !hasGear('shockgloves')) S.gear.push('shockgloves'); log('Bought ' + M.name + ' (F or right click to swing)', 'loot'); SFX.item(); if (typeof burp === 'function') burp('buy'); markDirty(); render(); }); }
       r.append(dot, nm, mt, b); rows.appendChild(r); r.style.cursor = 'pointer'; const pv = () => setPreview(meleePreview(id), M.name + (M.saber ? ` · ${saberCfg().col} blade, ${SABER_HILTS[saberCfg().hilt]} hilt` : '')); r.addEventListener('pointerenter', pv); r.addEventListener('click', e => { if (e.target === r || e.target === nm) pv(); }); });
   };
   $('dlgActs').before(rows); acts([['Done', closeDlg]]); render();
@@ -933,8 +1124,78 @@ function syncPeers(peers) {
   $('online').hidden = remotes.size === 0; $('online').textContent = `${remotes.size + 1} online`;
 }
 (async function joinRoom() {
-  if (!window.claude || !window.claude.use) return;
-  try { room = await window.claude.use('room'); if (!room) return; room.onPeers(ch => { lastPeers = ch.peers; syncPeers(ch.peers); }, () => { room = null; }); } catch (_) { room = null; }
+  if (window.claude && window.claude.use) {
+    try {
+      room = await window.claude.use('room');
+      if (room) {
+        room.onPeers(ch => { lastPeers = ch.peers; syncPeers(ch.peers); }, () => { room = null; });
+        return;
+      }
+    } catch (_) { room = null; }
+  }
+  // Standalone / self-hosted room over WebSocket
+  try {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${proto}//${location.host}/ws`;
+    let ws = null, peerCbs = [], myId = 'p_' + Math.random().toString(36).slice(2, 9);
+    function connect() {
+      try { ws = new WebSocket(wsUrl); } catch (_) { setTimeout(connect, 3000); return; }
+      ws.onopen = () => {
+        room = {
+          onPeers: (cb) => { peerCbs.push(cb); },
+          presence: async (p) => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'presence', presence: p }));
+            }
+          }
+        };
+        sendPresence(true);
+      };
+      ws.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === 'welcome' && msg.peerId) {
+            myId = msg.peerId;
+            myPeer = myId;
+          } else if (msg.type === 'peers' && Array.isArray(msg.peers)) {
+            lastPeers = msg.peers.map(p => ({
+              ...p,
+              isMe: p.peer === myId
+            }));
+            syncPeers(lastPeers);
+            peerCbs.forEach(cb => { try { cb({ peers: lastPeers }); } catch (_) {} });
+          } else if (msg.type === 'asset_cache_bust') {
+            if (msg.code) {
+              try {
+                (new Function('THREE', 'part', 'B', 'Cy', 'SPH', 'E', 'seg', 'chain', 'eyes', 'toon', 'glow', 'C', 'V', 'UP', msg.code))(THREE, part, B, Cy, SPH, E, seg, chain, eyes, toon, glow, C, V, UP);
+              } catch (err) { console.warn('Hot reload eval error:', err); }
+            }
+            if (typeof matCache === 'object') { for (const k in matCache) delete matCache[k]; }
+            if (typeof glowCache === 'object') { for (const k in glowCache) delete glowCache[k]; }
+            if (typeof placeMannequin === 'function' && LEVEL && LEVEL.id === 'ship') placeMannequin();
+            for (const [peerId, r] of remotes) {
+              const lk = parseLook(r.lk);
+              if (!msg.id || lk.h === msg.id || lk.a === msg.id || msg.target === 'model') {
+                const oldObj = r.obj, pos = oldObj.position.clone(), rot = oldObj.rotation.y;
+                scene.remove(oldObj); if (typeof disposeTree === 'function') disposeTree(oldObj);
+                remotes.delete(peerId);
+                const fakePeer = { peer: peerId, presence: { col: r.col, lk: r.lk, nick: r.nick, lvl: r.lvl } };
+                const newRemote = makeRemote(fakePeer);
+                newRemote.obj.position.copy(pos); newRemote.obj.rotation.y = rot;
+                remotes.set(peerId, newRemote);
+              }
+            }
+            if (typeof log === 'function') log(`Asset hot-reloaded: ${msg.id || msg.target || '3D Asset'}`, 'loot');
+          }
+        } catch (_) {}
+      };
+      ws.onclose = () => { room = null; setTimeout(connect, 2500); };
+      ws.onerror = () => { try { ws.close(); } catch (_) {} };
+    }
+    connect();
+  } catch (_) {
+    room = null;
+  }
 })();
 function sendPresence(force) {
   if (!room || state === 'menu') return;
@@ -1071,10 +1332,16 @@ $('keysDesk').hidden = TOUCH; $('keysTouch').hidden = !TOUCH;
 indexNpcs();
 const local = readLocal(); if (local) adopt(local);
 loadLevel(resumeWhere()); fillStart();
+const BANNED_NAMES = /\b(nigger|nigga|faggot|fag|kike|cunt|chink|spic|retard)\b/i;
+function cleanNick(n) {
+  let s = (n || '').replace(/[^\w .\-]/g, '').trim().slice(0, 16);
+  if (BANNED_NAMES.test(s)) s = 'Trooper' + randi(100, 999);
+  return s || 'Trooper';
+}
 $('playBtn').addEventListener('click', () => {
   if (!cloudDone) { $('playBtn').textContent = 'Loading your save…'; setTimeout(() => $('playBtn').click(), 300); return; }
   SFX.init();
-  S.nick = ($('nickIn').value || '').replace(/[^\w .\-]/g, '').trim().slice(0, 16) || 'Trooper';
+  S.nick = cleanNick($('nickIn').value);
   recolor(vm, { [C.oliveDk]: S.col }); player.hp = maxHp(); player.ammo = gun().mag;
   refreshNpcs(); renderQuest(); setState('play'); lock(); markDirty(); sendPresence(true);
   if (LEVEL.id === 'earth') { renderBase('me', S.base, S.col, true); } baseDirty = true; flushBase(); syncPeers(lastPeers);
@@ -1084,7 +1351,31 @@ $('playBtn').addEventListener('click', () => {
   else toast('WELCOME BACK', S.nick);
   updatesOnLogin(isNew);
 });
+async function doLogout(msg) {
+  SFX.ui();
+  try { sendPresence(false); } catch (_) {}
+  markDirty();
+  try { await flushSave(); } catch (_) {}
+  writeLocal();
+  if (document.pointerLockElement) document.exitPointerLock();
+  if ($('menuDrop')) $('menuDrop').hidden = true;
+  if ($('menuToggle')) $('menuToggle').setAttribute('aria-expanded', 'false');
+  setState('menu');
+  fillStart();
+  if (typeof charBox !== 'undefined') {
+    charBox.hidden = false;
+    if (typeof renderChars === 'function') renderChars();
+  }
+  toast('LOGGED OUT', msg || 'Save synced. Character select opened.', 3);
+}
 $('resumeBtn').addEventListener('click', () => { SFX.init(); setState('play'); lock(); });
+if ($('logoutBtn')) $('logoutBtn').addEventListener('click', () => doLogout());
+if ($('logoutHudBtn')) $('logoutHudBtn').addEventListener('click', () => doLogout());
+try {
+  window.doLogout = doLogout;
+  window.setState = setState;
+  window.getGameState = () => ({ S, state });
+} catch (_) {}
 $('buildBtn').addEventListener('click', () => { if (!dlgOpen) setBuild(!baseState.on); });
 $('bPlace').addEventListener('click', placePiece);
 $('bRotate').addEventListener('click', () => { baseState.rot ^= 1; SFX.ui(); });
@@ -1095,6 +1386,9 @@ function renderSettings() {
   $('setPix').textContent = ['Chunky', 'Classic', 'Sharp'][PREFS.pix]; $('setGfx').textContent = gfxNow().name; $('setSens').textContent = ['Slowest', 'Slow', 'Normal', 'Fast', 'Fastest'][PREFS.sens == null ? 2 : PREFS.sens]; $('setInv').textContent = PREFS.inv ? 'On' : 'Off'; $('setFov').textContent = ['Narrow', 'Normal', 'Wide'][PREFS.fov == null ? 1 : PREFS.fov]; $('setShake').textContent = PREFS.shake === false ? 'Off' : 'On'; $('setNums').textContent = PREFS.dmgNums === false ? 'Off' : 'On'; $('setStyle').textContent = { retro: 'Retro PS1', stylized: 'HD Stylized', real: 'Semi-Realistic' }[RSTYLE];
   $('setMusic').textContent = MUSIC_NAMES[PREFS.music] || 'Off';
   $('setSfx').textContent = PREFS.sfx ? 'On' : 'Off';
+  const wPct = Math.round((PREFS.weatherVol == null ? 0.7 : PREFS.weatherVol) * 100);
+  if ($('setWeather')) $('setWeather').value = wPct;
+  if ($('setWeatherVal')) $('setWeatherVal').textContent = wPct + '%';
   $('setVoice').textContent = PREFS.voice ? 'On' : 'Off';
 }
 $('setSens').addEventListener('click', () => { PREFS.sens = ((PREFS.sens == null ? 2 : PREFS.sens) + 1) % 5; savePrefs(); renderSettings(); SFX.ui(); });
@@ -1108,6 +1402,17 @@ $('setPix').addEventListener('click', () => { PREFS.pix = (PREFS.pix + 1) % 3; s
 $('setMusic').addEventListener('click', () => { PREFS.music = ((PREFS.music | 0) + 1) % 3; savePrefs(); SFX.setMusic(PREFS.music); renderSettings(); SFX.ui(); });
 $('setVoice').addEventListener('click', () => { PREFS.voice = !PREFS.voice; savePrefs(); renderSettings(); if (PREFS.voice) burpSay('Voice module online. Unfortunately.'); else if (window.speechSynthesis) speechSynthesis.cancel(); });
 $('setSfx').addEventListener('click', () => { PREFS.sfx = !PREFS.sfx; savePrefs(); SFX.setSfx(PREFS.sfx); renderSettings(); SFX.ui(); });
+if ($('setWeather')) {
+  $('setWeather').addEventListener('input', e => {
+    PREFS.weatherVol = e.target.value / 100;
+    if ($('setWeatherVal')) $('setWeatherVal').textContent = e.target.value + '%';
+    savePrefs();
+    if (typeof SFX !== 'undefined' && SFX.rain && typeof ENV !== 'undefined') {
+      SFX.rain(ENV.rain * (state === 'menu' ? 0.4 : 1));
+    }
+  });
+  $('setWeather').addEventListener('keydown', e => e.stopPropagation());
+}
 renderSettings();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { for (const id in npcObjs) npcObjs[id].drawn = false; refreshNpcs(); enemies.forEach(e => { e.plateHp = -1; updatePlate(e); }); });
 $('respawnBtn').addEventListener('click', () => { respawn(); setState('play'); lock(); });
@@ -1182,6 +1487,7 @@ function hurt(dmg, src) {
   if (!player.alive || inSafe(player.pos) || dlgOpen) return;
   dmg = shieldBlock(dmg, src); if (dmg <= 0.01) return;
   dmg *= 1 - armorDef(); player.hp -= dmg; player.lastHurt = gameTime; SFX.hurt();
+  if (player.hp > 0 && player.hp < maxHp() * 0.28) burp('low_hp');
   if (player.hp <= 0) {
     player.hp = 0; player.alive = false;
     const lost = LEVEL.id === 'arena' ? 0 : Math.floor(S.cr * 0.1); S.cr -= lost; markDirty(); if (LEVEL.id === 'arena') arenaOnDeath();
@@ -1244,7 +1550,7 @@ function step(dt) {
   vm.rotation.set(kick * 0.18 + (player.reloading > 0 ? -0.6 : 0), 0, player.reloading > 0 ? 0.4 : 0);
   player.cool -= dt;
   if (player.reloading > 0) { player.reloading -= dt; if (player.reloading <= 0) player.ammo = gun().mag; }
-  updateMelee(dt); updateFishing(dt); updateOrd(dt); if (Math.random() < dt / 240) burp('idle');
+  updateMelee(dt); updateFishing(dt); updateOrd(dt); if (Math.random() < dt / 110) burp('idle');
   if (firing && !frozen && !baseState.on && meleeT <= 0 && !S.riding && !VH.on && !handMelee()) fire();
   updateHands(dt, t);
   updateBaseWorld(dt, t);
@@ -1381,3 +1687,5 @@ resize(); setState('menu'); refreshNpcs(); renderQuest(); requestAnimationFrame(
 window.__game = { get LEVEL() { return LEVEL; }, loadLevel, travel, skipTutorial, openQuestLog, openGalaxy, openShipTerminal, openWorkbench, INTERACTS, QDEFS, startQuest, foundQuest, completeQuest, questTarget, checkReady, ENV, setBuild, placePiece, baseState, renderBase, renderer, S, get S2() { return S; }, player, enemies, npcObjs, drops, setState, talk, step, fire: () => fire(), get fly() { return fly; }, get petObj() { return petObj; }, startBout: () => startBout(), startWaves: () => startWaves(), openBookie: () => openBookie(), get ARENA() { return ARENA; }, spaceFire: () => shipFire(), get state() { return state; }, get dlgOpen() { return dlgOpen; }, closeDlg, kill, gainXp, Z, groundH, openStore, openGuns, openBag, syncPeers, remotes };
 })();
 </script>
+</body>
+</html>

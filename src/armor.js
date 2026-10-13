@@ -112,6 +112,7 @@ const AK = {
 };
 // new sets, unlocked by level and bought in the Wardrobe
 Object.assign(ARMORS, {
+  game_tester: { name: "Game Tester", lvl: 1, cost: 500, def: 0.05, trim: "#ffd36a", visor: "#4fd2ff", body: "#2b2a2c", note: "" },
   gladiator: { name: 'Gladiator Kit', lvl: 3, cost: 400, def: 0.03, trim: '#a8743a', visor: '#ffb347', note: 'From the starter-outfit sketch' },
   diver: { name: 'Deep Diver Suit', lvl: 8, cost: 1400, def: 0.07, trim: '#c9a43a', visor: '#9fe8ff', note: 'Brass dome helmet and air tanks' },
   eva: { name: 'Lunar EVA Suit', lvl: 12, cost: 2200, def: 0.1, body: '#e8eef2', trim: '#ff8a2a', visor: '#ffd36a', note: 'Moon-base spacesuit' },
@@ -123,4 +124,154 @@ Object.assign(ARMORS, {
   drome: { name: 'Drome Warplate', lvl: 40, cost: 15000, def: 0.3, body: '#1e1c22', trim: '#2a1416', visor: '#ff2a3a', note: "The villain's own armor. Horns optional (not really)." }
 });
 Object.assign(ARMOR_KITS, AK);
-window.__armor = { ARMORS, get makePlayerChar() { return makePlayerChar; }, get levelGroup() { return levelGroup; }, get player() { return player; } };
+window.ARMOR_KITS = ARMOR_KITS; window.ARMORS = ARMORS;
+window.__armor = { ARMORS, ARMOR_KITS, get makePlayerChar() { return makePlayerChar; }, get levelGroup() { return levelGroup; }, get player() { return player; } };
+
+// Added Armor Kit: Game Tester
+ARMOR_KITS.game_tester = function (g, A) {
+  // Armor: Game Tester (game_tester)
+  // Shoulder pauldrons
+
+  // Armor: Galaxy Tron Game Tester
+  const armor = '#111827';
+  const dark = '#080d19';
+  const cyan = '#39f5ff';
+  const purple = '#9b5cff';
+  const white = '#e8fcff';
+
+  // Angular shoulder armor with neon edge lights
+  for (const s of [-1, 1]) {
+    part(g, B(0.34, 0.18, 0.34), armor, 0.38 * s, 1.64, 0, 0, 0, 0.22 * s);
+    part(g, B(0.27, 0.035, 0.28), glow(cyan), 0.39 * s, 1.73, 0, 0, 0, 0.22 * s);
+    part(g, Cy(0.045, 0.045, 0.12, 6), glow(purple), 0.43 * s, 1.66, 0);
+    // Shoulder circuitry
+    part(g, B(0.035, 0.11, 0.025), glow(cyan), 0.38 * s, 1.59, 0.17);
+  }
+
+  // Layered chest armor
+  part(g, B(0.52, 0.36, 0.14), armor, 0, 1.38, 0.17);
+  part(g, B(0.42, 0.27, 0.035), dark, 0, 1.39, 0.25);
+
+  // Glowing central tester emblem
+  part(g, B(0.19, 0.19, 0.035), glow(purple), 0, 1.42, 0.275);
+  part(g, B(0.13, 0.13, 0.025), glow(cyan), 0, 1.42, 0.3);
+  part(g, B(0.055, 0.055, 0.02), glow(white), 0, 1.42, 0.32);
+
+  // Tron-like chest circuit lines
+  for (const s of [-1, 1]) {
+    chain(g, [
+      [0.07 * s, 1.53, 0.28],
+      [0.17 * s, 1.57, 0.28],
+      [0.22 * s, 1.49, 0.26]
+    ], 0.018, cyan, 0.005);
+
+    chain(g, [
+      [0.1 * s, 1.27, 0.26],
+      [0.19 * s, 1.31, 0.26],
+      [0.23 * s, 1.37, 0.25]
+    ], 0.016, purple, 0.004);
+  }
+
+  // Glowing waist belt
+  part(g, B(0.4, 0.09, 0.23), dark, 0, 1.08, 0);
+  part(g, B(0.24, 0.045, 0.245), glow(cyan), 0, 1.09, 0.02);
+  part(g, B(0.09, 0.055, 0.03), glow(purple), 0, 1.09, 0.15);
+
+  // Armored forearms and neon strips
+  for (const s of [-1, 1]) {
+    part(g, B(0.2, 0.3, 0.22), armor, 0.39 * s, 1.18, 0);
+    part(g, B(0.035, 0.22, 0.025), glow(cyan), 0.39 * s, 1.18, 0.116);
+    part(g, B(0.22, 0.08, 0.22), dark, 0.39 * s, 1.03, 0);
+    part(g, B(0.14, 0.025, 0.025), glow(purple), 0.39 * s, 1.03, 0.12);
+  }
+
+  // Digital galaxy cape panels
+  for (let i = 0; i < 5; i++) {
+    const x = -0.22 + i * 0.11;
+    part(
+      g,
+      B(0.105, 0.62 - Math.abs(i - 2) * 0.08, 0.025),
+      toon(i % 2 === 0 ? '#151a38' : '#201438', 'cloth'),
+      x, 0.91, -0.22,
+      0.12, 0, (i - 2) * 0.035
+    );
+    // Neon edges on cape
+    part(
+      g,
+      B(0.014, 0.42 - Math.abs(i - 2) * 0.05, 0.012),
+      glow(i % 2 === 0 ? cyan : purple),
+      x - 0.035, 0.9, -0.2,
+      0.12, 0, (i - 2) * 0.035
+    );
+  }
+
+  // Floating galaxy sparkles behind and around the armor
+  const stars = [
+    [-0.48, 1.88, -0.16],
+    [ 0.49, 1.91, -0.12],
+    [-0.34, 1.48, -0.28],
+    [ 0.34, 1.32, -0.26],
+    [-0.27, 0.72, -0.25],
+    [ 0.28, 0.56, -0.25],
+    [ 0.02, 1.82, -0.23],
+    [-0.43, 1.04, -0.18]
+  ];
+
+  for (let i = 0; i < stars.length; i++) {
+    const [x, y, z] = stars[i];
+    const size = i % 3 === 0 ? 0.045 : 0.025;
+
+    // Tiny glowing star
+    E(g, glow(i % 2 === 0 ? cyan : purple), x, y, z,
+      size, size, size);
+
+    // Four-point sparkle
+    part(g, B(0.012, size * 2.8, 0.012),
+      glow(white), x, y, z + 0.015);
+    part(g, B(size * 2.8, 0.012, 0.012),
+      glow(i % 2 === 0 ? cyan : purple), x, y, z + 0.015);
+  }
+
+  // Small illuminated tester insignia on the chest
+  // Crosshair / target symbol
+  for (const s of [-1, 1]) {
+    part(g, B(0.045, 0.012, 0.012), glow(white),
+      0.07 * s, 1.42, 0.34);
+    part(g, B(0.012, 0.045, 0.012), glow(white),
+      0, 1.42 + 0.07 * s, 0.34);
+
+
+
+  }
+
+  // Tron Galaxy armored boots
+  for (const s of [-1, 1]) {
+    // Heavy armored boot
+    part(g, B(0.22, 0.28, 0.34), '#111827',
+      0.14 * s, 0.17, 0.015);
+
+    // Reinforced toe cap
+    part(g, B(0.23, 0.10, 0.20), '#080d19',
+      0.14 * s, 0.09, 0.10);
+
+    // Glowing cyan sole
+    part(g, B(0.24, 0.035, 0.36), glow('#39f5ff'),
+      0.14 * s, 0.035, 0.02);
+
+    // Purple ankle armor
+    part(g, B(0.19, 0.09, 0.22), '#201438',
+      0.14 * s, 0.32, -0.015);
+
+    // Neon shin stripe
+    part(g, B(0.025, 0.14, 0.025), glow('#9b5cff'),
+      0.14 * s, 0.24, 0.14);
+
+    // Cyan toe detail
+    part(g, B(0.12, 0.018, 0.018), glow('#39f5ff'),
+      0.14 * s, 0.12, 0.205);
+
+    // Small galaxy sparkle on each boot
+    E(g, glow('#e8fcff'),
+      0.14 * s, 0.21, 0.17, 0.018, 0.018, 0.018);
+  }
+};

@@ -3,17 +3,20 @@
 const isFemale = L => String((L && L.f) || '').split('.')[5] === 'f';
 function sexTag() { return isFemale(S.look) ? '.f' : '.m'; }
 function setSex(f) { const p = String((S.look && S.look.f) || '0.0.0.0.0').split('.').slice(0, 5); while (p.length < 5) p.push('0'); S.look = Object.assign({}, S.look || {}, { f: p.join('.') + (f ? '.f' : '.m') }); }
-{ const _mp = makePlayerChar; makePlayerChar = function (look, col) {
-  const g = _mp(look, col); if (!isFemale(look)) return g;
+{ const _mp = makePlayerChar; makePlayerChar = function (look, col, opts) {
+  const g = _mp(look, col, opts); if (!isFemale(look)) return g;
   for (const c of g.children) { const p = c.position;
     if (p.y > 1.2 && p.y < 1.62 && Math.abs(p.x) > 0.25) p.x *= 0.86;            // shoulders and arms in
     else if (p.y > 1.15 && p.y < 1.5 && Math.abs(p.x) < 0.05) c.scale.x *= 0.86;   // slimmer chest plate
     else if (p.y > 0.95 && p.y < 1.12 && Math.abs(p.x) < 0.05) c.scale.x *= 0.84;  // narrower waist
     else if (p.y > 0.7 && p.y < 0.9) p.x *= 1.06;                                     // a touch wider at the hips
   }
-  // contoured chest armor
-  const plate = toon(ARMORS[look.a] && ARMORS[look.a].trim || C.tan);
-  for (const s of [-1, 1]) { const m = part(g, new THREE.SphereGeometry(0.1, 8, 6), plate, 0.09 * s, 1.36, 0.14); m.scale.set(1, 0.85, 0.7); }
+  const isStd = !look || !look.a || look.a === 'std';
+  const bare = (opts && opts.bare !== undefined) ? opts.bare : (!isStd && look.a !== 'recon' && (!ARMORS[look.a] || ARMORS[look.a].bare !== false));
+  if (!bare) {
+    const plate = toon(ARMORS[look.a] && ARMORS[look.a].trim || C.tan);
+    for (const s of [-1, 1]) { const m = part(g, new THREE.SphereGeometry(0.1, 8, 6), plate, 0.09 * s, 1.36, 0.14); m.scale.set(1, 0.85, 0.7); }
+  }
   // ponytail out the back of the helmet
   const F = typeof faceOf === 'function' ? faceOf(look) : { hc: 0 }, hc = (typeof FACE !== 'undefined' ? FACE.hairC[F.hc % FACE.hairC.length] : '#5a3a22');
   if (look.h !== 'wizhat') { part(g, Cy(0.05, 0.035, 0.32, 6), toon(hc), 0, 1.6, -0.2, 0.35); part(g, new THREE.SphereGeometry(0.055, 6, 5), toon(hc), 0, 1.75, -0.16); }

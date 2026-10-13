@@ -581,7 +581,7 @@ function openShipTerminal() {
       const nm = document.createElement('span'); nm.textContent = `${R.name} — ${R.desc}`;
       const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = own ? 'Installed' : costLabel(R.cost);
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = own ? '✓' : 'Build'; b.disabled = own || !costOk(R.cost);
-      b.addEventListener('click', () => { costPay(R.cost); S.ship.rooms.push(id); markDirty(); SFX.level(); closeDlg(); loadLevel('ship', { at: { x: player.pos.x, z: player.pos.z, yaw: player.yaw } }); toast('ROOM ADDED', R.name); });
+      b.addEventListener('click', () => { costPay(R.cost); S.ship.rooms.push(id); markDirty(); SFX.level(); closeDlg(); loadLevel('ship', { at: { x: player.pos.x, z: player.pos.z, yaw: player.yaw } }); toast('ROOM ADDED', R.name); if (typeof burp === 'function') burp('room'); });
       r.append(dot, nm, mt, b); rows.appendChild(r);
     });
   };

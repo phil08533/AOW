@@ -152,7 +152,8 @@ function openMcK() {
 function openMcKBack() {
   openDlg('McKlunkies', 'The back counter');
   if (outTier() < 1) { $('dlgLine').textContent = "Back counter? There's no back counter. This is a family restaurant. (Come back when you've got a bit of a reputation.)"; acts([['Order food', () => openMcK()], ['Done', closeDlg, true]]); return; }
-  openFence('McKlunkies', 'The back counter', "Psst. We buy what the shops won't. Substances come later, the supplier's late.", 1.0);
+  openFence('McKlunkies', 'The back counter', subsOn() ? "Psst. We buy what the shops won't. And we sell a little something too." : "Psst. We buy what the shops won't.", 1.0);
+  if (subsOn()) acts([['Buy substances', () => openSubShop('McKlunkies', 'The back counter', MCK_SUBS)], ['Done', closeDlg, true]]);
 }
 // ---- the Fence: buys contraband (and regular loot for 20% more) ----
 function openFence(role, name, line, contraMult) {
@@ -174,7 +175,7 @@ const BM_STOCK = [
 function openBlackMarket(who) {
   openDlg('Black market', who); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   const render = () => { rows.textContent = ''; $('dlgLine').textContent = `${isOutlaw() ? "For you? Anything." : "I only sell to people with a reputation. Outlaws only, sweetheart."} You have ${S.cr.toLocaleString()} cr.`;
-    for (const it of BM_STOCK) { const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = '#c86aff';
+    for (const it of BM_STOCK) { if (it.show && !it.show()) continue; const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = '#c86aff';
       const nm = document.createElement('span'); nm.textContent = `${it.name} · ${it.desc}`; const mt = document.createElement('span'); mt.className = 'meta'; const own = it.own && it.own(); mt.textContent = own ? 'Owned' : it.price.toLocaleString() + ' cr';
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = own ? '✓' : 'Buy'; b.disabled = own || !isOutlaw() || S.cr < it.price;
       b.addEventListener('click', () => { if (S.cr < it.price || !isOutlaw()) return; if (ITEMS[it.id] && invRoomFor(it.id) < 1) { invFullNote(it.id); return; } S.cr -= it.price; it.buy(); SFX.coin(); log(`Bought ${it.name}.`, 'loot'); markDirty(); render(); });

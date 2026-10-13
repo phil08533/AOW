@@ -328,7 +328,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.8.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -637,20 +637,26 @@ const GFX = [
 ];
 const gfxNow = () => GFX[PREFS.gfx == null ? 1 : PREFS.gfx] || GFX[1];
 const postMat = new THREE.ShaderMaterial({
-  uniforms: { tex: { value: low.texture }, res: { value: new THREE.Vector2(320, 240) }, bloom: { value: 0 }, sat: { value: 1 }, con: { value: 1 }, warm: { value: 0 }, dith: { value: 1 }, q: { value: 31 }, vig: { value: 0.35 }, scan: { value: 0 } }, depthTest: false, depthWrite: false,
+  uniforms: { tex: { value: low.texture }, res: { value: new THREE.Vector2(320, 240) }, bloom: { value: 0 }, sat: { value: 1 }, con: { value: 1 }, warm: { value: 0 }, dith: { value: 1 }, q: { value: 31 }, vig: { value: 0.35 }, scan: { value: 0 }, hue: { value: 0 }, wob: { value: 0 }, ghost: { value: 0 }, tint: { value: new THREE.Color(1, 1, 1) }, tintA: { value: 0 }, dark: { value: 0 }, ftime: { value: 0 } }, depthTest: false, depthWrite: false,
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
   fragmentShader: [
-    'uniform sampler2D tex; uniform vec2 res; uniform float bloom, sat, con, warm, dith, q, vig, scan; varying vec2 vUv;',
+    'uniform sampler2D tex; uniform vec2 res; uniform float bloom, sat, con, warm, dith, q, vig, scan, hue, wob, ghost, tintA, dark, ftime; uniform vec3 tint; varying vec2 vUv;',
+    'vec3 hueRot(vec3 c, float a){ const vec3 k = vec3(0.57735); float ca = cos(a); return c * ca + cross(k, c) * sin(a) + k * dot(k, c) * (1.0 - ca); }',
     'float b2(vec2 a){ a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }',
     'float b4(vec2 a){ return b2(0.5 * a) * 0.25 + b2(a); }',
     'vec3 bright(vec2 uv){ vec3 s = texture2D(tex, uv).rgb; float l = max(max(s.r, s.g), s.b); return s * smoothstep(0.62, 1.0, l); }',
     'void main(){',
-    '  vec2 px = floor(vUv * res);',
+    '  vec2 uw = vUv; if (wob > 0.0) uw += wob * 0.008 * vec2(sin(uw.y * 17.0 + ftime * 2.1), cos(uw.x * 13.0 + ftime * 1.7));',
+    '  vec2 px = floor(uw * res);',
     '  vec3 c = texture2D(tex, (px + 0.5) / res).rgb;',
+    '  if (ghost > 0.0) { vec2 g = vec2(ghost * 0.014 * sin(ftime * 0.9), ghost * 0.008); vec3 a = texture2D(tex, (px + 0.5) / res + g).rgb, b = texture2D(tex, (px + 0.5) / res - g).rgb; c = mix(c, vec3(a.r, c.g, b.b), 0.6) * 0.75 + (a + b) * 0.125 * ghost; }',
     '  if (bloom > 0.0) { vec3 b = vec3(0.0); vec2 o = 1.0 / res;',
     '    vec2 uv0 = (px + 0.5) / res; for (int i = -1; i <= 1; i++) for (int j = -1; j <= 1; j++) { vec2 d = vec2(float(i), float(j)); b += bright(uv0 + d * o * 2.5) * (1.0 - length(d) * 0.3); }',
     '    c += b / 5.0 * bloom; }',
     '  float l = dot(c, vec3(0.299, 0.587, 0.114)); c = mix(vec3(l), c, sat); c = (c - 0.5) * con + 0.5; c += vec3(warm, warm * 0.35, -warm);',
+    '  if (hue != 0.0) c = clamp(hueRot(c, hue), 0.0, 1.0);',
+    '  if (tintA > 0.0) c = mix(c, c * tint * 1.6, tintA);',
+    '  if (dark > 0.0) { float dl = dot(c, vec3(0.299, 0.587, 0.114)); c = mix(c, vec3(dl) * vec3(0.7, 0.75, 0.9), dark * 0.8) * (1.0 - dark * 0.45); }',
     '  if (dith > 0.5) c += (b4(px) - 0.5) / q;',
     '  c = floor(c * q + 0.5) / q;',
     '  if (scan > 0.0) c *= 1.0 - scan * step(0.5, fract(px.y * 0.5));',
@@ -1012,7 +1018,7 @@ function openStore(tab, who) {
     if (tab === 'sell') {
       const list = Object.entries(S.inv).filter(([k]) => ITEMS[k] && !ITEMS[k].quest && !ITEMS[k].illegal && k !== 'medkit').map(([k, n]) => [k, n, sellPrice(k) + ' cr each' + (ITEMS[k].fish ? ' (fish buyers pay double)' : ''), [['Sell 1', () => sell(k, 1)], ['All', () => sell(k, n)]]]);
       itemRows(rows, list);
-    } else itemRows(rows, [['medkit', S.inv.medkit || 0, '25 cr', [['Buy', () => { if (S.cr >= 25) { S.cr -= 25; S.inv.medkit = (S.inv.medkit || 0) + 1; markDirty(); render(); } }, S.cr < 25]]]]);
+    } else itemRows(rows, [['medkit', S.inv.medkit || 0, '25 cr', [['Buy', () => { if (S.cr >= 25) { S.cr -= 25; S.inv.medkit = (S.inv.medkit || 0) + 1; markDirty(); render(); } }, S.cr < 25]]]].concat(subStoreRows(render)));
   };
   const sell = (k, n) => { n = Math.min(n, S.inv[k] || 0); S.cr += n * sellPrice(k); S.inv[k] -= n; if (!S.inv[k]) delete S.inv[k]; log(`Sold ${n} ${ITEMS[k].name} for ${n * sellPrice(k)} cr`, 'loot'); markDirty(); render(); renderQuest(); };
   const sellAll = () => { let total = 0; for (const [k, n] of Object.entries(S.inv)) if (ITEMS[k] && !ITEMS[k].quest && !ITEMS[k].illegal && !ITEMS[k].food && k !== 'medkit' && !questNeeds(k)) { total += n * sellPrice(k); delete S.inv[k]; } if (total) { S.cr += total; log(`Sold loot for ${total} cr`, 'loot'); markDirty(); } render(); };
@@ -1429,7 +1435,7 @@ function fire() {
   if (!S.clip) player.ammo--; player.cool = g.rate * (hasGear('eye') ? 0.85 : 1); kick = 1;
   SFX.shot(); flash.visible = true; flashLight.intensity = 2.2; setTimeout(() => { flash.visible = false; flashLight.intensity = 0; }, 45);
   const o = camera.getWorldPosition(V(0, 0, 0)), base = V(0, 0, 0); camera.getWorldDirection(base);
-  const shots = g.pellets || 1, spr = g.spread || 0.012, dmg0 = g.dmg * (1 + (S.lvl - 1) * 0.045) * (1 + 0.08 * gunTier(S.gun)) * (hasGear('ring') ? 1.15 : 1);
+  const shots = g.pellets || 1, spr = g.spread || 0.012, dmg0 = g.dmg * (1 + (S.lvl - 1) * 0.045) * (1 + 0.08 * gunTier(S.gun)) * (hasGear('ring') ? 1.15 : 1) * subDmg();
   let any = false, killed = false;
   for (let p = 0; p < shots; p++) {
     dirV.copy(base); dirV.x += (Math.random() - 0.5) * spr; dirV.y += (Math.random() - 0.5) * spr; dirV.z += (Math.random() - 0.5) * spr; dirV.normalize();
@@ -1465,7 +1471,7 @@ function kill(e) {
   const p = e.obj.position.clone();
   burst(p.clone().add(V(0, e.def.hy, 0)), '#f6b56a', 14, 6);
   // loot
-  const crN = Math.round(rand(e.def.cr[0], e.def.cr[1]) * (1 + 0.2 * (e.lv - 1)));
+  const crN = Math.round(rand(e.def.cr[0], e.def.cr[1]) * (1 + 0.2 * (e.lv - 1)) * subCr());
   spawnDrop(p, 'cr', null, crN);
   for (const [id, ch] of e.def.drops || []) {
     if (ITEMS[id].quest && (S.inv[id] || !questWants(id))) continue;
@@ -1524,7 +1530,7 @@ function step(dt) {
   let mx = frozen ? 0 : (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x, mz = frozen ? 0 : (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0) + move.y;
   const ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; }
   fwd.set(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)); right.set(-fwd.z, 0, fwd.x);
-  const speed = ((sprint || (TOUCH && Math.hypot(move.x, move.y) > 0.95)) ? 7.4 : 4.8) * (player.wet ? 0.6 : 1) * (baseState.on ? 0.8 : 1) * (hasGear('cape') ? 1.12 : 1) * (RACE.on ? 2.3 : 1) * (S.riding ? 2.6 : 1) * (hasGear('gboots') ? 1.15 : 1);
+  const speed = ((sprint || (TOUCH && Math.hypot(move.x, move.y) > 0.95)) ? 7.4 : 4.8) * (player.wet ? 0.6 : 1) * (baseState.on ? 0.8 : 1) * (hasGear('cape') ? 1.12 : 1) * (RACE.on ? 2.3 : 1) * (S.riding ? 2.6 : 1) * (hasGear('gboots') ? 1.15 : 1) * subSpeed();
   vmSub.visible = !!S.inSub; if (S.inSub) vm.visible = false; vmCar.visible = !!RC.on; if (RC.on || VH.on) vm.visible = false; if (!VH.on) for (const k in vmVeh) vmVeh[k].visible = false; updateAir(dt);
   let ground = 0;
   if (S.inSub) { subStep(dt, mx, mz, sprint); ground = player.pos.y; } else if (RC.on && LEVEL.id === 'speedway') { raceDrive(dt); ground = player.pos.y; } else if (VH.on) { vehStep(dt, mx, mz); ground = player.pos.y; } else if (swimHere()) { swimStep(dt, mx, mz, sprint); ground = player.pos.y; } else {

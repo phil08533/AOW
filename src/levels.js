@@ -356,6 +356,7 @@ LEVELS.ship = {
       quarters: { floor: toonNS('#7a4a3a', 'carpet'), wall: toonNS('#a08060', 'woodwall'), ceil: toonNS('#5a4a40', 'ceil'), light: '#ffd8a0' },
       armory: { floor: toonNS('#6a6e76', 'tread'), wall: toonNS('#5a5e66', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ff8a6a' },
       cargo: { floor: toonNS('#8a7a5a', 'grate'), wall: toonNS('#8a6a4a', 'hull'), ceil: toonNS('#4a4038', 'ceil'), light: '#ffd36a' },
+      lab: { floor: toonNS('#2a2c32', 'tile'), wall: toonNS('#3a2e44', 'tile'), ceil: toonNS('#2a2a36', 'ceil'), light: '#c8a8ff' },
       med: { floor: toonNS('#e8eef2', 'tile'), wall: toonNS('#d8e8ec', 'tile'), ceil: toonNS('#e8eef2', 'ceil'), light: '#e8ffff' },
       trophy: { floor: toonNS('#d8d2c8', 'marble'), wall: toonNS('#6a1e24', 'woodwall'), ceil: toonNS('#3a1e22', 'ceil'), light: '#ffd36a' },
       garden: { floor: toonNS('#4a6a3a', 'grass'), wall: toonNS('#8ab8a0', 'tile'), ceil: toonNS('#cfe8d8', 'ceil'), light: '#e8ffd8' },
@@ -413,6 +414,7 @@ LEVELS.ship = {
         box(far, cz, 0.6, 4.2); INTERACTS.push({ x: far - s.side * 1.2, z: cz, r: 2.4, label: 'Harvest garden', fn: harvestGarden });
         { const tank = new THREE.Group(); part(tank, B(1.6, 0.4, 0.8), '#3a3d44', 0, 0.2, 0); const w = part(tank, B(1.5, 1.0, 0.7), new THREE.MeshBasicMaterial({ color: '#4fa8ff', transparent: true, opacity: 0.35, depthWrite: false }), 0, 0.9, 0); for (let f = 0; f < 3; f++) { const fish = part(tank, B(0.12, 0.06, 0.03), glow(['#ff9a3c', '#ffd36a', '#ff6aa8'][f]), 0, 0.9, 0); levelAnims.push(t => { fish.position.x = Math.sin(t * 0.8 + f * 2) * 0.6; fish.position.y = 0.75 + f * 0.15 + Math.sin(t * 1.3 + f) * 0.05; fish.rotation.y = Math.cos(t * 0.8 + f * 2) > 0 ? 0 : Math.PI; }); } tank.position.set(cx, 0, s.z1 - 0.6); props.add(tank); box(cx, s.z1 - 0.6, 0.8, 0.4); }
       }
+      if (id === 'lab') labRoom(s, cx, cz, far, outer, faceIn, term, props);
       if (id === 'hangar') {
         part(props, B(0.2, 2.8, 6), toon('#c9a43a', 'hazard'), outer - s.side * 0.12, 1.4, cz);
         part(props, B(5, 0.012, 5), toon('#ffd36a', 'hazard'), cx, 0.014, cz); part(props, B(4.4, 0.013, 4.4), toonNS('#6a6a6a', 'grate'), cx, 0.016, cz);
@@ -582,7 +584,7 @@ function openShipTerminal() {
     rows.textContent = '';
     $('dlgLine').textContent = `Add rooms to grow your ship. ${S.cr} cr on hand.`;
     Object.entries(ROOMS).forEach(([id, R]) => {
-      if (R.fixed) return;
+      if (R.fixed || (R.hide && R.hide() && !S.ship.rooms.includes(id))) return;
       const own = S.ship.rooms.includes(id), r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = own ? '#6fdc5a' : '#8fe3ff';
       const nm = document.createElement('span'); nm.textContent = `${R.name} — ${R.desc}`;

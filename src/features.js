@@ -263,7 +263,7 @@ function meleeAttack() {
   const hits = enemies.filter(e => !e.dead).map(e => { const dx = e.obj.position.x - player.pos.x, dz = e.obj.position.z - player.pos.z, d = Math.hypot(dx, dz); return { e, d, dot: (dx * fx + dz * fz) / (d || 1) }; })
     .filter(h => h.d < M.reach + h.e.def.r * h.e.sc && h.dot > (M.sweep ? -0.2 : 0.45) && Math.abs(h.e.obj.position.y - player.pos.y) < 3).sort((a, b) => a.d - b.d).slice(0, M.sweep ? 6 : 3);
   for (const { e } of hits) {
-    const dmg = M.dmg * (1 + (S.lvl - 1) * 0.045) * (hasGear('ring') ? 1.15 : 1) * (hasGear('armblade') ? 1.3 : 1);
+    const dmg = M.dmg * (1 + (S.lvl - 1) * 0.045) * (hasGear('ring') ? 1.15 : 1) * (hasGear('armblade') ? 1.3 : 1) * subDmg();
     e.hp -= dmg; e.hitT = 0.15; e.aggro = true; e.lastHit = gameTime; e.anim.hit = 0.18; n++;
     burst(e.obj.position.clone().add(V(0, e.def.hy * e.sc, 0)), M.saber ? SABER_COLS[saberCfg().col] : S.melee === 'staff' ? '#9fe8ff' : '#fff1c8', 8, 4);
     if (S.melee === 'staff') e.cd = Math.max(e.cd, 1.2);

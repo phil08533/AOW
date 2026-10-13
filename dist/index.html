@@ -328,7 +328,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.8.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -4035,6 +4035,7 @@ LEVELS.ship = {
       quarters: { floor: toonNS('#7a4a3a', 'carpet'), wall: toonNS('#a08060', 'woodwall'), ceil: toonNS('#5a4a40', 'ceil'), light: '#ffd8a0' },
       armory: { floor: toonNS('#6a6e76', 'tread'), wall: toonNS('#5a5e66', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ff8a6a' },
       cargo: { floor: toonNS('#8a7a5a', 'grate'), wall: toonNS('#8a6a4a', 'hull'), ceil: toonNS('#4a4038', 'ceil'), light: '#ffd36a' },
+      lab: { floor: toonNS('#2a2c32', 'tile'), wall: toonNS('#3a2e44', 'tile'), ceil: toonNS('#2a2a36', 'ceil'), light: '#c8a8ff' },
       med: { floor: toonNS('#e8eef2', 'tile'), wall: toonNS('#d8e8ec', 'tile'), ceil: toonNS('#e8eef2', 'ceil'), light: '#e8ffff' },
       trophy: { floor: toonNS('#d8d2c8', 'marble'), wall: toonNS('#6a1e24', 'woodwall'), ceil: toonNS('#3a1e22', 'ceil'), light: '#ffd36a' },
       garden: { floor: toonNS('#4a6a3a', 'grass'), wall: toonNS('#8ab8a0', 'tile'), ceil: toonNS('#cfe8d8', 'ceil'), light: '#e8ffd8' },
@@ -4092,6 +4093,7 @@ LEVELS.ship = {
         box(far, cz, 0.6, 4.2); INTERACTS.push({ x: far - s.side * 1.2, z: cz, r: 2.4, label: 'Harvest garden', fn: harvestGarden });
         { const tank = new THREE.Group(); part(tank, B(1.6, 0.4, 0.8), '#3a3d44', 0, 0.2, 0); const w = part(tank, B(1.5, 1.0, 0.7), new THREE.MeshBasicMaterial({ color: '#4fa8ff', transparent: true, opacity: 0.35, depthWrite: false }), 0, 0.9, 0); for (let f = 0; f < 3; f++) { const fish = part(tank, B(0.12, 0.06, 0.03), glow(['#ff9a3c', '#ffd36a', '#ff6aa8'][f]), 0, 0.9, 0); levelAnims.push(t => { fish.position.x = Math.sin(t * 0.8 + f * 2) * 0.6; fish.position.y = 0.75 + f * 0.15 + Math.sin(t * 1.3 + f) * 0.05; fish.rotation.y = Math.cos(t * 0.8 + f * 2) > 0 ? 0 : Math.PI; }); } tank.position.set(cx, 0, s.z1 - 0.6); props.add(tank); box(cx, s.z1 - 0.6, 0.8, 0.4); }
       }
+      if (id === 'lab') labRoom(s, cx, cz, far, outer, faceIn, term, props);
       if (id === 'hangar') {
         part(props, B(0.2, 2.8, 6), toon('#c9a43a', 'hazard'), outer - s.side * 0.12, 1.4, cz);
         part(props, B(5, 0.012, 5), toon('#ffd36a', 'hazard'), cx, 0.014, cz); part(props, B(4.4, 0.013, 4.4), toonNS('#6a6a6a', 'grate'), cx, 0.016, cz);
@@ -4261,7 +4263,7 @@ function openShipTerminal() {
     rows.textContent = '';
     $('dlgLine').textContent = `Add rooms to grow your ship. ${S.cr} cr on hand.`;
     Object.entries(ROOMS).forEach(([id, R]) => {
-      if (R.fixed) return;
+      if (R.fixed || (R.hide && R.hide() && !S.ship.rooms.includes(id))) return;
       const own = S.ship.rooms.includes(id), r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = own ? '#6fdc5a' : '#8fe3ff';
       const nm = document.createElement('span'); nm.textContent = `${R.name} — ${R.desc}`;
@@ -4373,20 +4375,26 @@ const GFX = [
 ];
 const gfxNow = () => GFX[PREFS.gfx == null ? 1 : PREFS.gfx] || GFX[1];
 const postMat = new THREE.ShaderMaterial({
-  uniforms: { tex: { value: low.texture }, res: { value: new THREE.Vector2(320, 240) }, bloom: { value: 0 }, sat: { value: 1 }, con: { value: 1 }, warm: { value: 0 }, dith: { value: 1 }, q: { value: 31 }, vig: { value: 0.35 }, scan: { value: 0 } }, depthTest: false, depthWrite: false,
+  uniforms: { tex: { value: low.texture }, res: { value: new THREE.Vector2(320, 240) }, bloom: { value: 0 }, sat: { value: 1 }, con: { value: 1 }, warm: { value: 0 }, dith: { value: 1 }, q: { value: 31 }, vig: { value: 0.35 }, scan: { value: 0 }, hue: { value: 0 }, wob: { value: 0 }, ghost: { value: 0 }, tint: { value: new THREE.Color(1, 1, 1) }, tintA: { value: 0 }, dark: { value: 0 }, ftime: { value: 0 } }, depthTest: false, depthWrite: false,
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
   fragmentShader: [
-    'uniform sampler2D tex; uniform vec2 res; uniform float bloom, sat, con, warm, dith, q, vig, scan; varying vec2 vUv;',
+    'uniform sampler2D tex; uniform vec2 res; uniform float bloom, sat, con, warm, dith, q, vig, scan, hue, wob, ghost, tintA, dark, ftime; uniform vec3 tint; varying vec2 vUv;',
+    'vec3 hueRot(vec3 c, float a){ const vec3 k = vec3(0.57735); float ca = cos(a); return c * ca + cross(k, c) * sin(a) + k * dot(k, c) * (1.0 - ca); }',
     'float b2(vec2 a){ a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }',
     'float b4(vec2 a){ return b2(0.5 * a) * 0.25 + b2(a); }',
     'vec3 bright(vec2 uv){ vec3 s = texture2D(tex, uv).rgb; float l = max(max(s.r, s.g), s.b); return s * smoothstep(0.62, 1.0, l); }',
     'void main(){',
-    '  vec2 px = floor(vUv * res);',
+    '  vec2 uw = vUv; if (wob > 0.0) uw += wob * 0.008 * vec2(sin(uw.y * 17.0 + ftime * 2.1), cos(uw.x * 13.0 + ftime * 1.7));',
+    '  vec2 px = floor(uw * res);',
     '  vec3 c = texture2D(tex, (px + 0.5) / res).rgb;',
+    '  if (ghost > 0.0) { vec2 g = vec2(ghost * 0.014 * sin(ftime * 0.9), ghost * 0.008); vec3 a = texture2D(tex, (px + 0.5) / res + g).rgb, b = texture2D(tex, (px + 0.5) / res - g).rgb; c = mix(c, vec3(a.r, c.g, b.b), 0.6) * 0.75 + (a + b) * 0.125 * ghost; }',
     '  if (bloom > 0.0) { vec3 b = vec3(0.0); vec2 o = 1.0 / res;',
     '    vec2 uv0 = (px + 0.5) / res; for (int i = -1; i <= 1; i++) for (int j = -1; j <= 1; j++) { vec2 d = vec2(float(i), float(j)); b += bright(uv0 + d * o * 2.5) * (1.0 - length(d) * 0.3); }',
     '    c += b / 5.0 * bloom; }',
     '  float l = dot(c, vec3(0.299, 0.587, 0.114)); c = mix(vec3(l), c, sat); c = (c - 0.5) * con + 0.5; c += vec3(warm, warm * 0.35, -warm);',
+    '  if (hue != 0.0) c = clamp(hueRot(c, hue), 0.0, 1.0);',
+    '  if (tintA > 0.0) c = mix(c, c * tint * 1.6, tintA);',
+    '  if (dark > 0.0) { float dl = dot(c, vec3(0.299, 0.587, 0.114)); c = mix(c, vec3(dl) * vec3(0.7, 0.75, 0.9), dark * 0.8) * (1.0 - dark * 0.45); }',
     '  if (dith > 0.5) c += (b4(px) - 0.5) / q;',
     '  c = floor(c * q + 0.5) / q;',
     '  if (scan > 0.0) c *= 1.0 - scan * step(0.5, fract(px.y * 0.5));',
@@ -5585,7 +5593,7 @@ function meleeAttack() {
   const hits = enemies.filter(e => !e.dead).map(e => { const dx = e.obj.position.x - player.pos.x, dz = e.obj.position.z - player.pos.z, d = Math.hypot(dx, dz); return { e, d, dot: (dx * fx + dz * fz) / (d || 1) }; })
     .filter(h => h.d < M.reach + h.e.def.r * h.e.sc && h.dot > (M.sweep ? -0.2 : 0.45) && Math.abs(h.e.obj.position.y - player.pos.y) < 3).sort((a, b) => a.d - b.d).slice(0, M.sweep ? 6 : 3);
   for (const { e } of hits) {
-    const dmg = M.dmg * (1 + (S.lvl - 1) * 0.045) * (hasGear('ring') ? 1.15 : 1) * (hasGear('armblade') ? 1.3 : 1);
+    const dmg = M.dmg * (1 + (S.lvl - 1) * 0.045) * (hasGear('ring') ? 1.15 : 1) * (hasGear('armblade') ? 1.3 : 1) * subDmg();
     e.hp -= dmg; e.hitT = 0.15; e.aggro = true; e.lastHit = gameTime; e.anim.hit = 0.18; n++;
     burst(e.obj.position.clone().add(V(0, e.def.hy * e.sc, 0)), M.saber ? SABER_COLS[saberCfg().col] : S.melee === 'staff' ? '#9fe8ff' : '#fff1c8', 8, 4);
     if (S.melee === 'staff') e.cd = Math.max(e.cd, 1.2);
@@ -15278,7 +15286,8 @@ function openMcK() {
 function openMcKBack() {
   openDlg('McKlunkies', 'The back counter');
   if (outTier() < 1) { $('dlgLine').textContent = "Back counter? There's no back counter. This is a family restaurant. (Come back when you've got a bit of a reputation.)"; acts([['Order food', () => openMcK()], ['Done', closeDlg, true]]); return; }
-  openFence('McKlunkies', 'The back counter', "Psst. We buy what the shops won't. Substances come later, the supplier's late.", 1.0);
+  openFence('McKlunkies', 'The back counter', subsOn() ? "Psst. We buy what the shops won't. And we sell a little something too." : "Psst. We buy what the shops won't.", 1.0);
+  if (subsOn()) acts([['Buy substances', () => openSubShop('McKlunkies', 'The back counter', MCK_SUBS)], ['Done', closeDlg, true]]);
 }
 // ---- the Fence: buys contraband (and regular loot for 20% more) ----
 function openFence(role, name, line, contraMult) {
@@ -15300,7 +15309,7 @@ const BM_STOCK = [
 function openBlackMarket(who) {
   openDlg('Black market', who); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   const render = () => { rows.textContent = ''; $('dlgLine').textContent = `${isOutlaw() ? "For you? Anything." : "I only sell to people with a reputation. Outlaws only, sweetheart."} You have ${S.cr.toLocaleString()} cr.`;
-    for (const it of BM_STOCK) { const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = '#c86aff';
+    for (const it of BM_STOCK) { if (it.show && !it.show()) continue; const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = '#c86aff';
       const nm = document.createElement('span'); nm.textContent = `${it.name} · ${it.desc}`; const mt = document.createElement('span'); mt.className = 'meta'; const own = it.own && it.own(); mt.textContent = own ? 'Owned' : it.price.toLocaleString() + ' cr';
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = own ? '✓' : 'Buy'; b.disabled = own || !isOutlaw() || S.cr < it.price;
       b.addEventListener('click', () => { if (S.cr < it.price || !isOutlaw()) return; if (ITEMS[it.id] && invRoomFor(it.id) < 1) { invFullNote(it.id); return; } S.cr -= it.price; it.buy(); SFX.coin(); log(`Bought ${it.name}.`, 'loot'); markDirty(); render(); });
@@ -15556,6 +15565,194 @@ defQuest('o4', { ch: 'Underworld · The President', title: "Party's Over", giver
   obj: [{ kind: 'kill', t: 'starling', n: 1, text: 'Defeat President Starling in the Senate Archive (Zeltac elevator)', planet: 'zeltac' }],
   outro: ["It's done. The ledger goes to every newsfeed in the galaxy tonight.", "Starling will spend the rest of his life explaining himself to the Senate. Somehow I think he'll still find a party.", "You did good. The Marshals owe you one."], reward: { cr: 10000, xp: 20000, fn: () => { S.flags = S.flags || {}; S.flags.marshalArmor = true; log('Marshal reward: Marshal Armor and Cape (Wardrobe).', 'loot'); } } });
 
+// =================== PHASE 6: SUBSTANCES AND THE LAB ===================
+// Optional (Settings → Game → Substances, off by default). Timed boosts with screen effects; illegal ones can bring a bad trip.
+// The Lab is a ship room that brews the illegal ones; owning it keeps you Wanted until you tear it down.
+// Save fields: PREFS.subs, S.buffs['sub_<id>'] (end time), S.buffs.trip, S.lastSub, S.lab ({ r, t, n }).
+if (PREFS.subs == null) PREFS.subs = false;
+const subsOn = () => !!PREFS.subs;
+const SUBS = {
+  focusfizz: { name: 'Focus Fizz', legal: true, price: 60, v: 20, col: '#7fe0ff', sec: 600, xp: 0.15, fx: { sat: 0.15 }, trip: 0, desc: 'A fizzy focus drink. +15% XP for 10 minutes.' },
+  stimpatch: { name: 'Stim Patch', legal: true, price: 90, v: 30, col: '#9fff6a', sec: 300, spd: 0.15, fx: { con: 0.12 }, trip: 0, desc: 'Stick it on, feel the buzz. +15% move speed for 5 minutes.' },
+  irongum: { name: 'Iron Gum', legal: true, price: 120, v: 40, col: '#ffb36a', sec: 480, def: 0.10, fx: { warm: 0.08 }, trip: 0, desc: 'Chew it and your skin goes leathery. Take 10% less damage for 8 minutes.' },
+  voidspice: { name: 'Void Spice', price: 140, v: 45, col: '#c86aff', sec: 180, dmg: 0.25, fx: { hue: 0.5, ghost: 0.5 }, trip: 0.10, desc: 'Glittering purple dust from the void lanes. +25% damage for 3 minutes, and everything goes purple. Very illegal.' },
+  neondust: { name: 'Neon Dust', price: 160, v: 60, col: '#ff6aa8', sec: 180, spd: 0.35, fx: { cycle: 1 }, trip: 0.15, desc: 'Glows in the dark, and so do you. +35% move speed for 3 minutes, rainbow vision.' },
+  glimmer: { name: 'Glimmer', price: 220, v: 80, col: '#ffd36a', sec: 300, cr: 0.6, fx: { bloom: 0.7, sat: 0.3 }, trip: 0.15, desc: 'Liquid gold you drip in your eyes. +60% credits from kills for 5 minutes.' },
+  redhaze: { name: 'Red Haze', price: 260, v: 90, col: '#ff3b2a', sec: 120, dmg: 0.45, take: 0.2, fx: { red: 1, pulse: 1 }, trip: 0.20, desc: 'Rage in a can. +45% damage but you take 20% more, for 2 minutes.' },
+  blackout: { name: 'Blackout', price: 0, v: 300, col: '#6a4aa8', sec: 90, dmg: 0.5, spd: 0.5, xp: 0.5, fx: { wobble: 1, ghost: 1, cycle: 1 }, trip: 0.35, lab: true, desc: 'Only a Lab can cook it. +50% damage, speed and XP for 90 seconds. Nobody remembers the rest.' }
+};
+for (const id in SUBS) { const D = SUBS[id]; ITEMS[id] = Object.assign(ITEMS[id] || {}, { name: D.name, v: D.v, col: D.col, drug: true, illegal: !D.legal, desc: D.desc }); }
+const subEnd = id => buffs()['sub_' + id] || 0;
+const subActive = () => subsOn() ? Object.keys(SUBS).filter(id => subEnd(id) > Date.now()) : [];
+const subSum = k => subActive().reduce((a, id) => a + (SUBS[id][k] || 0), 0);
+function subSpeed() { return 1 + subSum('spd'); }
+function subDmg() { return 1 + subSum('dmg'); }
+function subCr() { return 1 + subSum('cr'); }
+const tripOn = () => subsOn() && (buffs().trip || 0) > Date.now();
+{ const _g = gainXp; gainXp = function (n) { const m = 1 + subSum('xp'); return _g(m > 1 ? Math.round(n * m) : n); }; }
+{ const _h = hurt; hurt = function (dmg, src) { const d = subSum('def'), t = subSum('take'); return _h(d || t ? dmg * (1 - d) * (1 + t) : dmg, src); }; }
+
+// ---- taking one ----
+function useSub(id) {
+  const D = SUBS[id]; if (!D || !(S.inv[id] > 0)) return false;
+  if (!subsOn()) { log('Substances are switched off. Turn them on in Settings → Game.'); SFX.hit(); return true; }
+  S.inv[id]--; if (!S.inv[id]) delete S.inv[id]; buffs()['sub_' + id] = Date.now() + D.sec * 1000; S.lastSub = id; markDirty();
+  try { burst(player.pos.clone().add(V(0, 1.3, 0)), D.col, 16, 2.5); } catch (_) {} SFX.quest();
+  toast(D.name.toUpperCase(), D.desc.split('. ').slice(1).join('. ').replace(/\.$/, '') || D.desc, 2.4);
+  if (D.trip && Math.random() < D.trip) setTimeout(() => startTrip(40 + Math.random() * 50), 2500 + Math.random() * 4000);
+  subChip(); invQuickRender(); return true;
+}
+{ const _ou = outUseItem; outUseItem = function (id) { if (SUBS[id]) return useSub(id); return _ou(id); }; }
+// hide them from the bag while the system is off (they stay saved)
+{ const _ik = invKeys; invKeys = function () { const ks = _ik(); return subsOn() ? ks : ks.filter(k => !SUBS[k.slice(2)]); }; }
+
+// ---- shops ----
+function subStoreRows(render) {
+  if (!subsOn()) return [];
+  return Object.keys(SUBS).filter(id => SUBS[id].legal).map(id => { const D = SUBS[id]; return [id, S.inv[id] || 0, `${D.price} cr`, [['Buy', () => { if (S.cr < D.price) return; if (invRoomFor(id) < 1) { invFullNote(id); return; } S.cr -= D.price; S.inv[id] = (S.inv[id] || 0) + 1; SFX.coin(); markDirty(); render(); }, S.cr < D.price]]]; });
+}
+const MCK_SUBS = ['voidspice', 'neondust'];
+function openSubShop(role, who, ids, back) {
+  openDlg(role, who); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const render = () => { $('dlgLine').textContent = `Cash only, no questions. You have ${S.cr.toLocaleString()} cr.`;
+    itemRows(rows, ids.map(id => { const D = SUBS[id]; return [id, S.inv[id] || 0, `${D.price} cr ▲`, [['Buy', () => buy(id, 1)], ['Buy 5', () => buy(id, 5)]]]; })); };
+  const buy = (id, n) => { const p = SUBS[id].price * n; if (S.cr < p) { SFX.hit(); log('Not enough credits.'); return; } if (invRoomFor(id) < n) { invFullNote(id); return; } S.cr -= p; S.inv[id] = (S.inv[id] || 0) + n; S.invT = S.invT || {}; S.invT['i:' + id] = Date.now(); SFX.coin(); log(`+${n} ${SUBS[id].name}`, 'loot'); markDirty(); render(); };
+  $('dlgActs').before(rows); acts([['Done', closeDlg, true]]); render();
+}
+// Madame Vex: every illegal one but Blackout, for outlaws
+BM_STOCK.forEach(it => { if (it.id === 'voidspice') it.show = () => !subsOn(); });
+for (const id of ['voidspice', 'neondust', 'glimmer', 'redhaze']) BM_STOCK.push({ id, name: SUBS[id].name, price: SUBS[id].price, desc: SUBS[id].desc, show: subsOn, buy: () => { S.inv[id] = (S.inv[id] || 0) + 1; } });
+
+// ---- the screen: hue shift, wobble, ghosting, tint, and the dark of a bad trip ----
+const SUBFX = { hue: 0, wob: 0, ghost: 0, tintA: 0, dark: 0, sat: 0, con: 0, warm: 0, bloom: 0, vig: 0, was: false };
+const subLerp = (a, b, k) => a + (b - a) * k;
+function subFxStep(dt) {
+  const U = postMat.uniforms, now = Date.now(), act = subActive(), trip = tripOn(), t = performance.now() / 1000;
+  const tgt = { hue: 0, wob: 0, ghost: 0, tintA: 0, dark: 0, sat: 0, con: 0, warm: 0, bloom: 0, vig: 0 }; let red = 0;
+  for (const id of act) { const F = SUBS[id].fx || {}, left = (subEnd(id) - now) / 1000, k = Math.min(1, left / 8); // fade out over the last 8 seconds
+    tgt.sat += (F.sat || 0) * k; tgt.con += (F.con || 0) * k; tgt.warm += (F.warm || 0) * k; tgt.bloom += (F.bloom || 0) * k;
+    if (F.hue) tgt.hue += F.hue * k; if (F.cycle) tgt.hue += Math.sin(t * 0.7) * 2.2 * F.cycle * k; tgt.ghost += (F.ghost || 0) * k; tgt.wob += (F.wobble || 0) * k;
+    if (F.red) red = Math.max(red, F.red * k * (F.pulse ? 0.75 + Math.sin(t * 5) * 0.25 : 1)); }
+  if (red) { U.tint.value.setRGB(1, 0.35, 0.3); tgt.tintA = red * 0.6; }
+  if (trip) { tgt.dark = 1; tgt.sat -= 0.5; tgt.vig += 0.9; tgt.wob += 0.35; tgt.hue *= 0.3; }
+  const k = Math.min(1, dt * 2.5); let any = false;
+  for (const key in tgt) { SUBFX[key] = subLerp(SUBFX[key], tgt[key], key === 'hue' ? Math.min(1, dt * 6) : k); if (Math.abs(SUBFX[key]) > 0.002) any = true; }
+  if (!any && !SUBFX.was) return; SUBFX.was = any;
+  const G = gfxNow(); U.hue.value = SUBFX.hue; U.wob.value = SUBFX.wob; U.ghost.value = Math.min(1.2, SUBFX.ghost); U.tintA.value = SUBFX.tintA; U.dark.value = SUBFX.dark; U.ftime.value = t;
+  U.sat.value = Math.max(0, G.sat + SUBFX.sat); U.con.value = G.con + SUBFX.con; U.warm.value = G.warm + SUBFX.warm; U.bloom.value = G.bloom + SUBFX.bloom; U.vig.value = G.vig + SUBFX.vig;
+  if (!any) applyGfx();
+}
+
+// ---- bad trips: shadow figures at the edge of view that vanish when you look, and whispers ----
+const TRIP = { figs: [], t: 0, wt: 0 };
+function startTrip(sec) {
+  if (!subsOn() || !player.alive) return; buffs().trip = Date.now() + sec * 1000; markDirty();
+  toast('BAD TRIP', 'Something is wrong. Ride it out.', 2.5); log("The colors drain out of everything. You're not alone.", 'loot');
+}
+function makeShadowFig() {
+  const g = new THREE.Group(), m = new THREE.MeshBasicMaterial({ color: '#050308', transparent: true, opacity: 0, depthWrite: false });
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.38, 1.7, 8), m); body.position.y = 0.85; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 10, 8), m); head.position.y = 1.9; g.add(head);
+  for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 4), new THREE.MeshBasicMaterial({ color: '#ff2a2a', transparent: true, opacity: 0 })); e.position.set(0.08 * s, 1.93, 0.21); g.add(e); }
+  g.userData.mats = [m, g.children[2].material, g.children[3].material]; return g;
+}
+const WHISPERS = ['behind you', 'we see you', 'it was never yours', 'keep running', 'the sun is setting', "don't look", 'come down here', 'you did this'];
+function whisper() {
+  if (!PREFS.sfx) return;
+  try { const u = new SpeechSynthesisUtterance(WHISPERS[Math.floor(Math.random() * WHISPERS.length)]); u.volume = 0.25; u.rate = 0.7; u.pitch = 0.1; speechSynthesis.speak(u); } catch (_) {}
+}
+function tripStep(dt) {
+  const on = tripOn() && LEVEL && !LEVEL.fly && state === 'play';
+  if (!on) { if (TRIP.figs.length) { for (const f of TRIP.figs) scene.remove(f.o); TRIP.figs.length = 0; } return; }
+  TRIP.t -= dt; TRIP.wt -= dt;
+  if (TRIP.wt <= 0) { TRIP.wt = 6 + Math.random() * 8; whisper(); }
+  if (TRIP.t <= 0 && TRIP.figs.length < 3) { TRIP.t = 3 + Math.random() * 4;
+    const side = Math.random() < 0.5 ? -1 : 1, a = player.yaw + side * (0.9 + Math.random() * 0.5), d = 9 + Math.random() * 8;
+    const x = player.pos.x - Math.sin(a) * d, z = player.pos.z - Math.cos(a) * d, o = makeShadowFig();
+    o.position.set(x, (LEVEL.terrain ? groundH(x, z) : player.pos.y - 1.6), z); scene.add(o); TRIP.figs.push({ o, a: 0, life: 9, gone: false }); }
+  const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw);
+  for (let i = TRIP.figs.length - 1; i >= 0; i--) { const f = TRIP.figs[i], dx = f.o.position.x - player.pos.x, dz = f.o.position.z - player.pos.z, d = Math.hypot(dx, dz) || 1;
+    f.o.rotation.y = Math.atan2(-dx, -dz); f.life -= dt;
+    if ((dx * fx + dz * fz) / d > 0.88 || f.life <= 0) f.gone = true; // you looked right at it
+    f.a = f.gone ? f.a - dt * 4 : Math.min(0.85, f.a + dt * 0.6);
+    f.o.userData.mats.forEach((m, j) => { m.opacity = Math.max(0, j ? Math.min(1, f.a * 1.2) : f.a); });
+    if (f.gone && f.a <= 0) { scene.remove(f.o); TRIP.figs.splice(i, 1); } }
+}
+{ const _st = step; step = function (dt) { const r = _st.apply(this, arguments); try { subFxStep(dt); tripStep(dt); } catch (_) {} return r; }; }
+// leaving the game screen or dying ends the visuals cleanly
+{ const _ss = setState; setState = function (s) { const r = _ss.apply(this, arguments); if (s !== 'play' && s !== 'pause') { try { subFxStep(10); } catch (_) {} } return r; }; }
+
+// ---- HUD: active-substance chip, the quick Use button (U on PC) ----
+const subChipEl = document.createElement('button'); subChipEl.className = 'vchip'; subChipEl.hidden = true; subChipEl.title = 'Take a substance (U)'; subChipEl.addEventListener('click', () => quickSub()); { const h = document.getElementById('vchips'); if (h) h.appendChild(subChipEl); }
+const tSub = document.createElement('button'); tSub.className = 'tbtn tq'; tSub.id = 'tSub'; tSub.setAttribute('aria-label', 'Take a substance'); tSub.innerHTML = '<i>✦</i><small>USE</small>'; tSub.hidden = true; { const t = document.getElementById('touch'); if (t) t.appendChild(tSub); }
+tSub.addEventListener('touchstart', e => { quickSub(); e.preventDefault(); }, { passive: false }); tSub.addEventListener('click', () => quickSub());
+{ const st = document.createElement('style'); st.textContent = 'body #tSub { right: 70px !important; } @media (pointer: coarse) and (max-height: 520px) { body #tSub { right: 62px !important; } }'; document.head.appendChild(st); }
+const subOwned = () => Object.keys(SUBS).filter(id => S.inv[id] > 0);
+function subChip() {
+  const on = subsOn(), act = subActive(), now = Date.now();
+  subChipEl.hidden = !on || (!act.length && !subOwned().length);
+  if (!subChipEl.hidden) subChipEl.innerHTML = (act.length ? act.map(id => `<span style="color:${SUBS[id].col}">✦${Math.ceil((subEnd(id) - now) / 60000)}m</span>`).join(' ') : '✦ Use') + (tripOn() ? ' <span style="color:#ff3b2a">☠</span>' : '') + ' <kbd>U</kbd>';
+  tSub.hidden = !on || !subOwned().length;
+  try { const h = $('tReload'); if (h && !tSub.hidden) tSub.style.setProperty('bottom', getComputedStyle(h).bottom, 'important'); } catch (_) {}
+}
+setInterval(() => { try { subChip(); } catch (_) {} }, 1000);
+function quickSub() {
+  if (!subsOn() || state !== 'play' || dlgOpen) return; const own = subOwned();
+  if (!own.length) { toast('NOTHING TO TAKE', 'Stores sell the legal ones', 1.4); return; }
+  if (own.length === 1) { useSub(own[0]); return; }
+  openDlg('Substances', 'Take something'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  itemRows(rows, own.map(id => [id, S.inv[id], SUBS[id].desc.split('. ').slice(1, 2).join('') || '', [['Take', () => { closeDlg(); useSub(id); }, false]]]));
+  $('dlgActs').before(rows); acts([['Close', closeDlg, true]]);
+}
+window.addEventListener('keydown', e => { if (e.code !== 'KeyU' || e.repeat || state !== 'play' || dlgOpen || (typeof chatOpen === 'function' && chatOpen()) || (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName))) return; quickSub(); });
+
+// ---- Settings → Game: the switch ----
+{ const anchor = $('setMusic').previousElementSibling, l = document.createElement('span'); l.textContent = 'Substances'; const b = document.createElement('button'); b.className = 'pbtn'; b.id = 'setSubs';
+  b.addEventListener('click', () => { PREFS.subs = !PREFS.subs; savePrefs(); renderSettings(); SFX.ui(); if (!PREFS.subs) { subFxStep(10); } subChip(); invQuickRender(); }); anchor.before(l, b);
+  SET_OF.setSubs = 'game'; }
+{ const _rs = renderSettings; renderSettings = function () { _rs(); const b = $('setSubs'); if (b) b.textContent = PREFS.subs ? 'On' : 'Off'; }; }
+renderSettings(); try { showSetTab(setTab); } catch (_) {}
+
+// =================== THE LAB ===================
+ROOMS.lab = { name: 'Lab', cost: { cr: 2500, crystal: 8 }, desc: 'Brews illegal substances from materials, and the only place to cook Blackout. Owning one keeps you Wanted.', hide: () => !subsOn() };
+const LAB_RECIPES = { voidspice: { scrap: 2 }, neondust: { crystal: 1 }, glimmer: { circuit: 1, crystal: 1 }, redhaze: { shell: 2 }, blackout: { core: 1, crystal: 1 } };
+const labEvery = () => (12 - 2 * lvUp('lab')) * 60000, labMax = () => 3 + 2 * lvUp('lab');
+{ const _ut = roomUpText; roomUpText = function (id, L) { if (id === 'lab') return `Brews a dose every ${12 - 2 * (L - 1)} min, holds ${3 + 2 * (L - 1)}`; return _ut(id, L); }; }
+function labS() { S.lab = S.lab || { r: 'voidspice', t: Date.now(), n: 0 }; return S.lab; }
+function labTick() { // brew what the time and materials allow; no materials means the batch waits
+  if (!roomLvl('lab')) return; const L = labS(), now = Date.now(), ev = labEvery(), need = LAB_RECIPES[L.r] || {};
+  while (now - L.t >= ev && L.n < labMax()) { if (!costOk(need)) { L.t = now; break; } costPay(need); L.n++; L.t += ev; }
+  if (L.n >= labMax()) L.t = now;
+}
+setInterval(() => { try { const O = outS(), had = !!O.lab; O.lab = roomLvl('lab') > 0; labTick();
+  if (O.lab && !O.bounty) { O.bounty = 300 + O.rep * 10; O.growT = O.obT = Date.now(); O.huntT = Date.now() + 90000; if (!had) log('The Marshals heard about your Lab. You stay Wanted while it runs.', 'loot'); try { outPush(); } catch (_) {} }
+  if (had && !O.lab && O.bounty && outTier() < 3) { O.bounty = 0; O.obT = 0; try { outPush(); } catch (_) {} } } catch (_) {} }, 5000);
+function openLab() {
+  labTick(); const L = labS(); openDlg('Lab', `Level ${roomLvl('lab')}`); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const render = () => { labTick(); rows.textContent = ''; const need = LAB_RECIPES[L.r];
+    $('dlgLine').textContent = `Brewing ${SUBS[L.r].name}: ${L.n} of ${labMax()} doses ready. One every ${Math.round(labEvery() / 60000)} min, using ${costLabel(need)} each${costOk(need) ? '' : ' (you are out of materials, so it has stopped)'}.`;
+    itemRows(rows, Object.keys(LAB_RECIPES).map(id => [id, S.inv[id] || 0, `${costLabel(LAB_RECIPES[id])} a dose`, [[L.r === id ? 'Brewing' : 'Brew this', () => { if (L.r !== id) { L.r = id; L.n = 0; L.t = Date.now(); markDirty(); SFX.ui(); render(); } }, L.r === id]]])); };
+  $('dlgActs').before(rows);
+  acts([['Collect ' + L.n, () => { if (!L.n) return; const n = Math.min(L.n, invRoomFor(L.r)); if (n < 1) { invFullNote(L.r); return; } S.inv[L.r] = (S.inv[L.r] || 0) + n; L.n -= n; L.t = Date.now(); SFX.coin(); log(`+${n} ${SUBS[L.r].name}`, 'loot'); markDirty(); openLab(); }, true, !L.n],
+    ['Tear down the Lab', () => labTearDown()], ['Close', closeDlg]]); render();
+}
+function labTearDown() {
+  openDlg('Lab', 'Tear it down?'); $('dlgLine').textContent = "Strip the Lab out of your ship? You get nothing back, but the Marshals stop treating you as Wanted (unless your rep still says you are).";
+  acts([['Tear it down', () => { S.ship.rooms = S.ship.rooms.filter(r => r !== 'lab'); if (S.ship.lvl) delete S.ship.lvl.lab; S.lab = null; const O = outS(); O.lab = false; if (outTier() < 3) { O.bounty = 0; O.obT = 0; } markDirty(); try { outPush(); } catch (_) {} closeDlg(); SFX.hit(); toast('LAB GONE', 'The Marshals lose interest', 2.5); loadLevel('ship', { at: { x: 0, z: -4, yaw: 0 } }); }, true], ['Keep it', () => openLab()]]);
+}
+function labRoom(s, cx, cz, far, outer, faceIn, term, props) {
+  // a steel bench of glowing flasks, a bubbling vat, and the lab console
+  part(props, B(1.0, 0.9, 4.4), '#3a3d44', far, 0.45, cz - 0.6); part(props, B(1.05, 0.06, 4.5), toon('#5a5e66'), far, 0.92, cz - 0.6); box(far, cz - 0.6, 0.5, 2.2);
+  const cols = ['#c86aff', '#ff6aa8', '#ffd36a', '#ff3b2a', '#7fe0ff'], flasks = [];
+  for (let i = 0; i < 7; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), glow(cols[i % cols.length])); f.position.set(far + (i % 2 ? 0.2 : -0.2), 1.08, cz - 2.4 + i * 0.6); props.add(f); flasks.push(f);
+    part(props, Cy(0.03, 0.04, 0.22, 6), new THREE.MeshBasicMaterial({ color: '#cfe6ff', transparent: true, opacity: 0.5 }), f.position.x, 1.28, f.position.z); }
+  const vat = new THREE.Group(); part(vat, Cy(0.75, 0.85, 1.1, 14), '#2a2c32', 0, 0.55, 0); const liq = part(vat, Cy(0.68, 0.68, 0.05, 14), glow('#8f6ad0'), 0, 1.1, 0);
+  vat.position.set(cx - s.side * 0.4, 0, cz + 2.6); props.add(vat); solid(vat.position.x, vat.position.z, 0.9);
+  const pl = new THREE.PointLight(0xa070ff, 0.8, 8); pl.position.set(cx, 1.6, cz + 2.4); props.add(pl);
+  levelAnims.push(t => { liq.position.y = 1.1 + Math.sin(t * 3) * 0.02; flasks.forEach((f, i) => { f.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.08); }); pl.intensity = 0.7 + Math.sin(t * 4) * 0.15; });
+  term(cx + s.side * 0.5, s.z0 + 0.6, '#c8a8ff', 'Lab console (brew, collect)', openLab, 0);
+}
+
 // ---- Update log: each player sees the updates they missed since their last login ----
 const UPDATES = [
   { id: 20, title: 'Laser swords and shields', items: ['Laser swords with custom colors and hilts, previewed in the shop', 'Melee only fires with a melee weapon equipped; the offhand blue shield blocks', 'Saber mod station on your ship'] },
@@ -15618,7 +15815,8 @@ const UPDATES = [
   { id: 77, title: '2.6 · New backpack', items: ['The bag (I) is now a full inventory screen: equipment on the left, a 60 slot grid in the middle, item details on the right', 'Filter by Weapons, Medical, Materials, Quest, Valuables or Misc, search by name, and sort by type, rarity, weight, value or newest', 'Equip guns, staffs, melee weapons, armor and ordnance from the bag. Drag items onto slots on PC, or tap Move then tap a slot on phones', 'Four quick slots on keys 4 to 7 (buttons on phones) for medkits, weapons and ordnance. They point at your real items, never copies', 'Pickups show a small card with the item. When the bag is full the loot stays on the ground and tells you, instead of vanishing', 'Drop 1, half or a whole stack. Quest items can never be dropped', 'The lava pit in the Maw on Vector now sits down in the crater floor instead of floating above it', 'The Art of War opening trailer is put away for now. New games start with the usual intro']},
   { id: 78, title: '2.7 · Ship storage and room upgrades', items: ['Own a Cargo Bay? Select loot in your bag and Beam it to your ship. Open Ship storage from the bag or the new terminal in the Cargo Bay', 'Ship storage holds 100 slots and doubles with each Cargo Bay level. Level 5 is the Black Hole Box: unlimited storage, and it sits spinning in your Cargo Bay', 'Take items back out aboard your ship. From Cargo Bay level 3 you can beam them down anywhere', 'Every room now upgrades to level 5 at the Engineering terminal: better rest, more ordnance charges, cheaper gun mods, stronger stims, faster gardens, faster vehicles and boss bonus credits', 'Loot now stacks up to 25 per bag slot (medkits 10), so big hauls fill the bag and storage matters. Nothing you already carry is lost']},
   { id: 79, title: '2.8 · The outlaw underworld', items: ['Outlaw rep: crimes raise it, good deeds lower it. Clean, Shady, Outlaw, Wanted, Most Wanted. Your tier shows on the HUD; tap it for your record', 'Every planet has a hidden hatch on the outskirts leading down to the Underworld: Sly Marlo the Fence buys contraband, Madame Vex runs the black market', 'McKlunkies stands on every planet: burgers and fries heal you, and the back counter buys illegal goods once you are Shady', 'Contraband has a red triangle and only Fences buy it. Stores won\'t touch it', 'Scavengers and drifters roam outside the cities. They leave you alone unless you start it', 'Go Wanted and the Marshals put a growing bounty on you and send hunters. Pay Marshal Rook 1.5x the bounty to clear your name, or use Forged Papers', 'Signed-in players share one board: clean players take Marshal bounties on Wanted players, outlaws post and take Hits in the Underworld. You can only fight a player while one of you holds the contract on the other, and they can fight back', 'Raid Merchant Haulers in space for contraband. Wanted pilots get chased by Marshal patrols', 'New Zeltac floors: The Undercroft and the Senate Archive, with a four-part story about the President\'s money'] },,
-  { id: 80, title: '2.8.1 · Bubble City fixes', items: ['Auntie Nacre, Old Barnacle, Farmer Kelpa and Pip were standing in open water outside Bubble City. They are back inside their domes', 'Anyone swimming outside the domes, other players included, now wears a glass dive dome over their head'] }
+  { id: 80, title: '2.8.1 · Bubble City fixes', items: ['Auntie Nacre, Old Barnacle, Farmer Kelpa and Pip were standing in open water outside Bubble City. They are back inside their domes', 'Anyone swimming outside the domes, other players included, now wears a glass dive dome over their head'] },
+  { id: 81, title: '2.9 · Substances and the Lab', items: ['New optional system, off until you switch it on in Settings → Game → Substances', 'Legal boosts at every general store: Focus Fizz (+15% XP), Stim Patch (+15% speed), Iron Gum (take 10% less damage)', 'Illegal ones with a red triangle: Void Spice, Neon Dust, Glimmer and Red Haze from Madame Vex or the McKlunkies back counter. Bigger boosts, wild colors, and a chance of a bad trip with shadow figures and whispers', 'Build a Lab on your ship to brew them from materials. It is the only place to cook Blackout. Owning one keeps you Wanted until you tear it down at the Lab console', 'Take one from the bag, the ✦ chip on the HUD, the new USE button on phones, or press U'] }
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -15902,7 +16100,7 @@ function openStore(tab, who) {
     if (tab === 'sell') {
       const list = Object.entries(S.inv).filter(([k]) => ITEMS[k] && !ITEMS[k].quest && !ITEMS[k].illegal && k !== 'medkit').map(([k, n]) => [k, n, sellPrice(k) + ' cr each' + (ITEMS[k].fish ? ' (fish buyers pay double)' : ''), [['Sell 1', () => sell(k, 1)], ['All', () => sell(k, n)]]]);
       itemRows(rows, list);
-    } else itemRows(rows, [['medkit', S.inv.medkit || 0, '25 cr', [['Buy', () => { if (S.cr >= 25) { S.cr -= 25; S.inv.medkit = (S.inv.medkit || 0) + 1; markDirty(); render(); } }, S.cr < 25]]]]);
+    } else itemRows(rows, [['medkit', S.inv.medkit || 0, '25 cr', [['Buy', () => { if (S.cr >= 25) { S.cr -= 25; S.inv.medkit = (S.inv.medkit || 0) + 1; markDirty(); render(); } }, S.cr < 25]]]].concat(subStoreRows(render)));
   };
   const sell = (k, n) => { n = Math.min(n, S.inv[k] || 0); S.cr += n * sellPrice(k); S.inv[k] -= n; if (!S.inv[k]) delete S.inv[k]; log(`Sold ${n} ${ITEMS[k].name} for ${n * sellPrice(k)} cr`, 'loot'); markDirty(); render(); renderQuest(); };
   const sellAll = () => { let total = 0; for (const [k, n] of Object.entries(S.inv)) if (ITEMS[k] && !ITEMS[k].quest && !ITEMS[k].illegal && !ITEMS[k].food && k !== 'medkit' && !questNeeds(k)) { total += n * sellPrice(k); delete S.inv[k]; } if (total) { S.cr += total; log(`Sold loot for ${total} cr`, 'loot'); markDirty(); } render(); };
@@ -16647,7 +16845,7 @@ function fire() {
   if (!S.clip) player.ammo--; player.cool = g.rate * (hasGear('eye') ? 0.85 : 1); kick = 1;
   SFX.shot(); flash.visible = true; flashLight.intensity = 2.2; setTimeout(() => { flash.visible = false; flashLight.intensity = 0; }, 45);
   const o = camera.getWorldPosition(V(0, 0, 0)), base = V(0, 0, 0); camera.getWorldDirection(base);
-  const shots = g.pellets || 1, spr = g.spread || 0.012, dmg0 = g.dmg * (1 + (S.lvl - 1) * 0.045) * (1 + 0.08 * gunTier(S.gun)) * (hasGear('ring') ? 1.15 : 1);
+  const shots = g.pellets || 1, spr = g.spread || 0.012, dmg0 = g.dmg * (1 + (S.lvl - 1) * 0.045) * (1 + 0.08 * gunTier(S.gun)) * (hasGear('ring') ? 1.15 : 1) * subDmg();
   let any = false, killed = false;
   for (let p = 0; p < shots; p++) {
     dirV.copy(base); dirV.x += (Math.random() - 0.5) * spr; dirV.y += (Math.random() - 0.5) * spr; dirV.z += (Math.random() - 0.5) * spr; dirV.normalize();
@@ -16683,7 +16881,7 @@ function kill(e) {
   const p = e.obj.position.clone();
   burst(p.clone().add(V(0, e.def.hy, 0)), '#f6b56a', 14, 6);
   // loot
-  const crN = Math.round(rand(e.def.cr[0], e.def.cr[1]) * (1 + 0.2 * (e.lv - 1)));
+  const crN = Math.round(rand(e.def.cr[0], e.def.cr[1]) * (1 + 0.2 * (e.lv - 1)) * subCr());
   spawnDrop(p, 'cr', null, crN);
   for (const [id, ch] of e.def.drops || []) {
     if (ITEMS[id].quest && (S.inv[id] || !questWants(id))) continue;
@@ -16742,7 +16940,7 @@ function step(dt) {
   let mx = frozen ? 0 : (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x, mz = frozen ? 0 : (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0) + move.y;
   const ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; }
   fwd.set(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)); right.set(-fwd.z, 0, fwd.x);
-  const speed = ((sprint || (TOUCH && Math.hypot(move.x, move.y) > 0.95)) ? 7.4 : 4.8) * (player.wet ? 0.6 : 1) * (baseState.on ? 0.8 : 1) * (hasGear('cape') ? 1.12 : 1) * (RACE.on ? 2.3 : 1) * (S.riding ? 2.6 : 1) * (hasGear('gboots') ? 1.15 : 1);
+  const speed = ((sprint || (TOUCH && Math.hypot(move.x, move.y) > 0.95)) ? 7.4 : 4.8) * (player.wet ? 0.6 : 1) * (baseState.on ? 0.8 : 1) * (hasGear('cape') ? 1.12 : 1) * (RACE.on ? 2.3 : 1) * (S.riding ? 2.6 : 1) * (hasGear('gboots') ? 1.15 : 1) * subSpeed();
   vmSub.visible = !!S.inSub; if (S.inSub) vm.visible = false; vmCar.visible = !!RC.on; if (RC.on || VH.on) vm.visible = false; if (!VH.on) for (const k in vmVeh) vmVeh[k].visible = false; updateAir(dt);
   let ground = 0;
   if (S.inSub) { subStep(dt, mx, mz, sprint); ground = player.pos.y; } else if (RC.on && LEVEL.id === 'speedway') { raceDrive(dt); ground = player.pos.y; } else if (VH.on) { vehStep(dt, mx, mz); ground = player.pos.y; } else if (swimHere()) { swimStep(dt, mx, mz, sprint); ground = player.pos.y; } else {

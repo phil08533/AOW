@@ -328,7 +328,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.5</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.6</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1635,10 +1635,13 @@ function step(dt) {
   for (let i = drops.length - 1; i >= 0; i--) {
     const dr = drops[i]; dr.life -= dt; dr.m.rotation.y += dt * 2; dr.m.position.y = Math.sin(t * 3 + dr.seed) * 0.08;
     const dd = Math.hypot(dr.g.position.x - player.pos.x, dr.g.position.z - player.pos.z);
-    if (dd < 4 && dd > 0.3 && player.alive) { dr.g.position.x += (player.pos.x - dr.g.position.x) * dt * 4; dr.g.position.z += (player.pos.z - dr.g.position.z) * dt * 4; }
-    if (dd < 1.4 && player.alive) {
+    const held = dr.noPick && gameTime < dr.noPick;
+    if (dd < 4 && dd > 0.3 && player.alive && !held && !dr.full) { dr.g.position.x += (player.pos.x - dr.g.position.x) * dt * 4; dr.g.position.z += (player.pos.z - dr.g.position.z) * dt * 4; }
+    if (dr.full && dd > 2.5) dr.full = false; // walk away and back to retry a refused pickup
+    if (dd < 1.4 && player.alive && !held && !dr.full) {
       if (dr.kind === 'cr') { S.cr += dr.n; log(`+${dr.n} cr`, 'loot'); SFX.coin(); }
-      else { S.inv[dr.id] = (S.inv[dr.id] || 0) + dr.n; log(`+${dr.n} ${ITEMS[dr.id].name}`, 'loot'); SFX.item(); }
+      else if (!invAdd(dr.id, dr.n)) { dr.full = true; dr.life = Math.max(dr.life, 60); continue; }
+      else { log(`+${dr.n} ${ITEMS[dr.id].name}`, 'loot'); SFX.item(); }
       scene.remove(dr.g); drops.splice(i, 1); markDirty(); checkReady(); continue;
     }
     if (dr.life <= 0) { scene.remove(dr.g); drops.splice(i, 1); }

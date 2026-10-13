@@ -369,7 +369,7 @@ function spaceStep(dt, t) {
   if (dirty) F.rocks.instanceMatrix.needsUpdate = true;
   // floating loot
   for (let i = F.drops.length - 1; i >= 0; i--) { const dr = F.drops[i]; dr.life -= dt; dr.m.rotation.y += dt * 2; const d = dr.m.position.distanceTo(player.pos);
-    if (d < 40) dr.m.position.lerp(player.pos, Math.min(1, dt * 3)); if (d < 7) { if (dr.kind === 'cr') { S.cr += dr.n; log(`+${dr.n} cr`, 'loot'); SFX.coin(); } else { S.inv[dr.id] = (S.inv[dr.id] || 0) + dr.n; log(`+${dr.n} ${ITEMS[dr.id].name}`, 'loot'); SFX.item(); } levelGroup.remove(dr.m); F.drops.splice(i, 1); markDirty(); checkReady(); continue; }
+    if (d < 40) dr.m.position.lerp(player.pos, Math.min(1, dt * 3)); if (d < 7) { if (dr.kind === 'cr') { S.cr += dr.n; log(`+${dr.n} cr`, 'loot'); SFX.coin(); } else if (!invAdd(dr.id, dr.n)) { dr.life = Math.max(dr.life, 30); continue; } else { log(`+${dr.n} ${ITEMS[dr.id].name}`, 'loot'); SFX.item(); } levelGroup.remove(dr.m); F.drops.splice(i, 1); markDirty(); checkReady(); continue; }
     if (dr.life <= 0) { levelGroup.remove(dr.m); F.drops.splice(i, 1); } }
   // landing / docking prompts
   F.prompt = null; let best = 1e9;

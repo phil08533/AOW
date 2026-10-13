@@ -64,14 +64,28 @@ const BC_TUBE_R = 1.5;
     for (let i = 0; i < 3; i++) { const x = bx + [-30, 30, 0][i], z = bz + [10, 12, -30][i], b = new THREE.Group(); const top = WATER_Y - gy(x, z);
       part(b, Cy(0.03, 0.03, top, 4), '#5d636c', 0, top / 2, 0); part(b, new THREE.SphereGeometry(0.4, 8, 6), toon('#ff6a5a'), 0, top, 0); at(b, x, z); } }
 }; }
-// ---- people of Bubble City ----
+// ---- people of Bubble City (z is offset by the ocean's npcBase of -28, like Finn and Nurse Gill) ----
 LEVELS.ocean.npcs.push(
-  { id: 'pearlmkt', name: 'Auntie Nacre', role: 'Bubble Market · buys and sells', rig: 'civ', make: () => makeCivilian('#c86aff', '#2c2a38', '#e8c4a0', '#e8e4dc', '#ffd36a'), x: -21, z: 63, face: Math.PI, shop: 'store',
+  { id: 'pearlmkt', name: 'Auntie Nacre', role: 'Bubble Market · buys and sells', rig: 'civ', make: () => makeCivilian('#c86aff', '#2c2a38', '#e8c4a0', '#e8e4dc', '#ffd36a'), x: -21, z: 91, face: Math.PI, shop: 'store',
     idle: ["Fresh catch! Pearls! Things that were in a shipwreck and are now in my shop!", "Everything here was made, found, or bargained for under eight meters of water.", "Don't ask where the crates come from. The crates don't ask where you come from."] },
-  { id: 'barnacle', name: 'Old Barnacle', role: 'Retired dome builder', rig: 'civ', make: () => makeCivilian('#3a5266', '#2c2a28', '#c8a07a', '#d8d8d8', null), x: 19.5, z: 64, face: -Math.PI / 2,
+  { id: 'barnacle', name: 'Old Barnacle', role: 'Retired dome builder', rig: 'civ', make: () => makeCivilian('#3a5266', '#2c2a28', '#c8a07a', '#d8d8d8', null), x: 19.5, z: 92, face: -Math.PI / 2,
     idle: ["I built the first dome with my own two hands and a lot of glue. Mostly glue.", "Every crack in this city has a name. That one's Gerald.", "The Leviathan took Dome Six. We don't talk about Dome Six."] },
-  { id: 'kelpa', name: 'Farmer Kelpa', role: 'Kelp farmer', rig: 'civ', make: () => makeCivilian('#4f6e2c', '#3a2a1a', '#a07850', '#2a1a10', '#8fae6a'), x: 0.8, z: 47.5, face: 0,
+  { id: 'kelpa', name: 'Farmer Kelpa', role: 'Kelp farmer', rig: 'civ', make: () => makeCivilian('#4f6e2c', '#3a2a1a', '#a07850', '#2a1a10', '#8fae6a'), x: 0.8, z: 75.5, face: 0,
     idle: ["Grow lights, good water, and talking to them. Kelp loves gossip.", "This row is kelp. That row is also kelp. It's a kelp farm.", "Try the kelp chips at the market. Auntie Nacre stole my recipe, but she makes them well."] },
-  { id: 'pip', name: 'Pip', role: 'Dome kid', rig: 'civ', make: () => { const g = makeCivilian('#ff6aa8', '#2c2a38', '#e8c4a0', '#4a2a1a', null); g.scale.setScalar(0.7); return g; }, x: 22, z: 59, face: Math.PI,
+  { id: 'pip', name: 'Pip', role: 'Dome kid', rig: 'civ', make: () => { const g = makeCivilian('#ff6aa8', '#2c2a38', '#e8c4a0', '#4a2a1a', null); g.scale.setScalar(0.7); return g; }, x: 22, z: 87, face: Math.PI,
     idle: ["Have you ever been ABOVE the water? Is it true there's no ceiling?", "I'm gonna be a sub pilot. Or a fish. Whichever pays more.", "Mayor Blub is my uncle. He isn't. But he lets me say it."] }
 );
+
+// anyone outside the domes and below the surface wears a glass dive dome over their head (other players swimming, any stray NPC)
+const DIVE_HELM_GEO = new THREE.SphereGeometry(0.34, 14, 10), DIVE_HELM_MAT = new THREE.MeshLambertMaterial({ color: '#bfefff', transparent: true, opacity: 0.32, emissive: new THREE.Color('#2a6a7a'), depthWrite: false });
+function diveHelm(o, on) {
+  let h = o.userData.diveHelm; if (!on) { if (h) h.visible = false; return; }
+  if (!h) { h = new THREE.Group(); const g = new THREE.Mesh(DIVE_HELM_GEO, DIVE_HELM_MAT); h.add(g); const ring = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.035, 6, 18), toon('#c9a43a')); ring.rotation.x = Math.PI / 2; ring.position.y = -0.24; h.add(ring); h.position.y = 1.62; o.add(h); o.userData.diveHelm = h; }
+  h.visible = true;
+}
+let diveT = 0;
+{ const _st = step; step = function (dt) { const r = _st.apply(this, arguments);
+  if (LEVEL && LEVEL.ocean && (diveT -= dt) <= 0) { diveT = 0.3; const wet = o => o.parent && o.position.y + 1.5 < WATER_Y && !inDome(o.position);
+    for (const id in npcObjs) { const N = npcObjs[id]; if (N.def.rig === 'civ' || N.def.rig === 'trooper') diveHelm(N.obj, wet(N.obj)); }
+    for (const R of remotes.values()) if (R.obj) diveHelm(R.obj, wet(R.obj)); }
+  return r; }; }

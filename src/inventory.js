@@ -21,7 +21,7 @@ const rarByVal = v => v < 20 ? 'common' : v < 60 ? 'uncommon' : v < 150 ? 'rare'
 function gunKind(id) { const g = GUNS[id]; if (!g) return 'rifle'; if (g.mana) return 'staff'; const n = g.name.toLowerCase();
   if (/minigun|gatling|launcher|cannon|rocket|nova/.test(n)) return 'heavy'; if (/blaster|pistol|revolver|wand|scatter/.test(n) && !/rifle/.test(n)) return 'pistol'; if (/bow/.test(n)) return 'rifle'; return 'rifle'; }
 function itemIcon(id) { const k = id.toLowerCase(), I = ITEMS[id] || {};
-  if (id === 'medkit' || I.use) return 'medkit'; if (I.drug || I.stim) return 'vial'; if (I.fish) return /boot|can/.test(k) ? 'junk' : 'fish';
+  if (I.food) return 'burger'; if (I.papers) return 'scroll'; if (id === 'medkit' || I.use) return 'medkit'; if (I.drug || I.stim) return 'vial'; if (I.fish) return /boot|can/.test(k) ? 'junk' : 'fish';
   if (/journal|recorder|blackbox|code|book/.test(k)) return 'scroll'; if (/key|card|chip|circuit|cell/.test(k)) return 'chip'; if (/pelt|hide|fluff|wing|scale|moss|gel/.test(k)) return 'hide';
   if (/fang|horn|tooth|mandible|quill|spear|shell|chitin|blade|drill/.test(k)) return 'fang'; if (/crystal|pearl|shard|gem|crown|essence|ice/.test(k)) return 'gem';
   if (/heart|eye|sigil|seed|core|token/.test(k)) return 'relic'; if (/scrap|cog|ore|rock|magma|filter/.test(k)) return 'ore'; return 'box'; }
@@ -60,7 +60,7 @@ const INV_SVG = {
   ore: '<path d="M4 15l3-8 7-3 6 5 1 8-7 4-8-1z"/><path d="M9 9l4 2 3-2" stroke="#15171b" stroke-width=".9" fill="none"/>',
   scroll: '<rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M8 8h8M8 11h8M8 14h5" stroke="#15171b" stroke-width="1.2"/>',
   relic: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5" fill="#15171b"/><circle cx="12" cy="12" r="1.6"/>',
-  junk: '<path d="M6 4h8v7l5 3v5H5l1-8z"/>', box: '<rect x="4" y="6" width="16" height="13" rx="1.5"/><path d="M4 10h16" stroke="#15171b" stroke-width="1.2"/>'
+  junk: '<path d="M6 4h8v7l5 3v5H5l1-8z"/>', burger: '<path d="M3 11a9 6 0 0 1 18 0z"/><rect x="2" y="12" width="20" height="2.2" rx="1" opacity=".75"/><rect x="3" y="15" width="18" height="2.6" rx="1"/><path d="M3 18.5h18a3 3 0 0 1-3 2.5H6a3 3 0 0 1-3-2.5z"/>', box: '<rect x="4" y="6" width="16" height="13" rx="1.5"/><path d="M4 10h16" stroke="#15171b" stroke-width="1.2"/>'
 };
 const invIconHtml = (icon, col) => `<svg viewBox="0 0 24 24" class="ii" style="color:${col}" fill="currentColor" aria-hidden="true">${INV_SVG[icon] || INV_SVG.box}</svg>`;
 
@@ -191,7 +191,8 @@ function invUnequip(slot) {
 function invWear(id) { if (!invLock() || !ARMORS[id] || !lookUnlocked(ARMORS, id)) return; S.look = Object.assign({}, myLook(), { a: id }); sendPresence(true); if (LEVEL.id === 'ship' && typeof placeMannequin === 'function') placeMannequin(); SFX.item(); markDirty(); invFlash('armor'); log(`Wearing ${ARMORS[id].name}.`); invRender(); }
 function invUse(key) {
   if (!invLock()) return; const [t, id] = key.split(':');
-  if (t === 'i' && id === 'medkit') { if (!(S.inv.medkit > 0)) return; if (player.hp >= maxHp()) { log('Already at full health.'); return; } useMedkit(); burst(player.pos.clone().add(V(0, 1.2, 0)), '#5dff9a', 18, 3); SFX.ui(); }
+  if (t === 'i' && id !== 'medkit' && outUseItem(id)) { if (!S.inv[id]) INVUI.sel = null; }
+  else if (t === 'i' && id === 'medkit') { if (!(S.inv.medkit > 0)) return; if (player.hp >= maxHp()) { log('Already at full health.'); return; } useMedkit(); burst(player.pos.clone().add(V(0, 1.2, 0)), '#5dff9a', 18, 3); SFX.ui(); }
   invRender(); invQuickRender();
 }
 function invDrop(id, n) {
@@ -215,7 +216,7 @@ const slotFor = key => { const [t, id] = key.split(':'); return t === 'g' ? (isS
 // ---- quick slots (keys 4–7, or tap them on the HUD) ----
 function invQuickUse(i) {
   invSync(); const key = S.quick[i]; if (!key) return; const [t, id] = key.split(':');
-  if (t === 'i') { if (!(S.inv[id] > 0)) { log(`No ${ITEMS[id] ? ITEMS[id].name : id} left.`); SFX.hit(); return; } if (id === 'medkit') { if (player.hp >= maxHp()) { log('Already at full health.'); return; } useMedkit(); burst(player.pos.clone().add(V(0, 1.2, 0)), '#5dff9a', 18, 3); SFX.ui(); } }
+  if (t === 'i') { if (!(S.inv[id] > 0)) { log(`No ${ITEMS[id] ? ITEMS[id].name : id} left.`); SFX.hit(); return; } if (id !== 'medkit') outUseItem(id); else if (id === 'medkit') { if (player.hp >= maxHp()) { log('Already at full health.'); return; } useMedkit(); burst(player.pos.clone().add(V(0, 1.2, 0)), '#5dff9a', 18, 3); SFX.ui(); } }
   else if (t === 'g') { if (!S.guns.includes(id)) return; if (S.gun !== id || handMelee()) bagEquipGun(id); }
   else if (t === 'm') { if (!(S.melees || ['knife']).includes(id)) return; S.melee = id; try { if (typeof refreshMeleeModel === 'function') refreshMeleeModel(); } catch (_) {} if (!handMelee()) swapHand(); markDirty(); }
   else if (t === 'o') { if (!ORD[id] || S.lvl < ORD[id].lvl) return; S.ord = id; throwOrd(); }
@@ -312,7 +313,7 @@ function invGrid(order) {
     c.innerHTML = `<span class="rb" style="background:${RARITY[m.rar][1]}"></span><span class="nm"></span>${invIconHtml(m.icon, m.col)}${m.kind === 'item' && m.n > 1 ? `<span class="n">${m.n}</span>` : ''}${eqd ? '<span class="eqd">E</span>' : ''}${m.illegal ? '<span class="tri" title="Illegal">▲</span>' : ''}`;
     c.querySelector('.nm').textContent = m.name; c.title = `${m.name}${m.kind === 'item' ? ' ×' + m.n : ''} · ${RARITY[m.rar][0]}`; c.setAttribute('aria-label', c.title);
     c.addEventListener('click', () => { if (INVUI.move) { const k = INVUI.move; INVUI.move = null; if (k !== key) invMoveTo(k, key); else invRender(); return; } INVUI.sel = key; invRender(); });
-    c.addEventListener('dblclick', () => { if (m.kind !== 'item') invEquip(key); else if (m.id === 'medkit') invUse(key); });
+    c.addEventListener('dblclick', () => { if (m.kind !== 'item') invEquip(key); else if (m.id === 'medkit' || ITEMS[m.id].heal || ITEMS[m.id].papers) invUse(key); });
     c.addEventListener('keydown', e => { if (e.code === 'Enter') { INVUI.sel = key; invRender(); } });
     if (!TOUCH) { c.draggable = true; c.addEventListener('dragstart', e => { INVUI.drag = key; c.classList.add('drag'); try { e.dataTransfer.setData('text/plain', key); e.dataTransfer.effectAllowed = 'move'; } catch (_) {} });
       c.addEventListener('dragend', () => { c.classList.remove('drag'); INVUI.drag = null; INVUI.el && INVUI.el.querySelectorAll('.ok,.bad').forEach(x => x.classList.remove('ok', 'bad')); });
@@ -349,11 +350,12 @@ function invDetailPanel() {
     row('Damage per swing', M.dmg + cmp(M.dmg, cur.dmg)); row('Swing time', M.rate + 's' + cmp(M.rate, cur.rate, true)); row('Reach', M.reach + ' m' + cmp(M.reach, cur.reach)); row('Durability', 'Never breaks'); row('Needs level', M.req || 1);
     dtext = 'Melee weapon. Swing with F or right click.' + (cur !== M ? ` Numbers compare it with your ${cur.name}.` : ''); }
   else if (m.kind === 'ord') { const O = ORD[m.id]; row('Damage', O.dmg); row('Blast radius', O.r + ' m'); row('Charges', `${ORD_MAX}, recharging every 9s`); row('Unlocks at level', O.lvl); dtext = O.desc + '. Throw with the NADE button or your ordnance key.'; }
-  else { const I = ITEMS[m.id]; row('Quantity', m.n); row('Weight', (m.w * m.n).toFixed(1) + ' kg' + (m.n > 1 ? ` (${m.w} each)` : '')); if (!I.quest) row('Sells for', `${sellPrice(m.id)} cr each`);
+  else { const I = ITEMS[m.id]; row('Quantity', m.n); row('Weight', (m.w * m.n).toFixed(1) + ' kg' + (m.n > 1 ? ` (${m.w} each)` : '')); if (!I.quest) row(I.illegal ? 'Fence pays' : 'Sells for', `${I.illegal ? I.v : sellPrice(m.id)} cr each`); if (I.heal) { row('Effect', I.heal >= 9999 ? 'Full heal' : `+${I.heal} health`); }
     const uses = []; try { for (const p of Object.values(PIECES)) if (p.cost && p.cost[m.id]) uses.push(p.name); } catch (_) {}
     if (m.id === 'medkit') { row('Effect', '+50 health'); row('Duration', 'Instant'); dtext = 'Patches you up in a hurry. Press H, tap the ✚ button, or put it in a quick slot.'; }
     else if (I.quest) { const q = Object.values(QDEFS).find(Q => (Q.obj || []).some(o => o.t === m.id)); dtext = 'Quest item. It can\'t be sold or dropped.' + (q ? ` Needed for “${q.title}”.` : ''); }
     else if (I.fish) dtext = m.sub === 'junk' ? 'Something that came up on your fishing line. Worth almost nothing.' : 'A fish you caught. Fish buyers pay double.';
+    else if (I.illegal) dtext = (I.desc ? I.desc + ' ' : '') + 'Contraband: shops won\'t buy it. Sell it to a Fence in an underworld basement or at the McKlunkies back counter. Selling it raises your outlaw rep.';
     else dtext = I.desc || (m.cat === 'val' ? 'Valuable loot. Sell it at a store for a good price.' : 'Loot from the wilds. Sell it at a store.');
     if (uses.length) dtext += ` Used to build: ${[...new Set(uses)].slice(0, 4).join(', ')}.`; if (UPG_MATS.has(m.id)) dtext += ' Used for gun upgrades at the armory workbench.'; if (questWants(m.id)) dtext += ' A quest you are on needs this.'; }
   desc.textContent = dtext; P.appendChild(desc);
@@ -365,6 +367,7 @@ function invDetailPanel() {
   if (m.kind === 'melee') { if (!equipped) act('Equip', () => invEquip(key), true); else if (m.id !== 'knife') act('Unequip', () => invUnequip('melee')); }
   if (m.kind === 'ord' && !equipped) act('Select', () => invEquip(key), true);
   if (m.id === 'medkit' && m.kind === 'item') act('Use', () => invUse(key), true, player.hp >= maxHp());
+  else if (m.kind === 'item' && (ITEMS[m.id].heal || ITEMS[m.id].papers)) act(ITEMS[m.id].heal ? 'Eat' : 'Use', () => invUse(key), true, !!ITEMS[m.id].heal && player.hp >= maxHp());
   if (m.kind === 'item' && !ITEMS[m.id].quest) { act('Drop 1', () => invDrop(m.id, 1)); if (m.n > 2) act(`Drop ${Math.floor(m.n / 2)}`, () => invDrop(m.id, Math.floor(m.n / 2))); if (m.n > 1) act(`Drop all ${m.n}`, () => invDrop(m.id, m.n)); }
   if (m.kind === 'item' && !ITEMS[m.id].quest && roomLvl('cargo')) { act('Beam 1 to ship', () => beamUp(m.id, 1)); if (m.n > 1) act(`Beam all ${m.n} to ship`, () => beamUp(m.id, m.n)); }
   if (invQuickOk(key)) { const qi = S.quick.indexOf(key); if (qi >= 0) act(`Remove from quick ${qi + 4}`, () => invAssignQuick(qi, null)); else act('Add to quick slot', () => { const free = S.quick.indexOf(null); invAssignQuick(free >= 0 ? free : INV_CFG.quick - 1, key); }); }

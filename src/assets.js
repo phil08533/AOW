@@ -786,7 +786,7 @@ function signTex(text, bg, fg) {
   x.fillStyle = bg; x.fillRect(0, 0, 512, 128);
   x.strokeStyle = fg; x.lineWidth = 8; x.strokeRect(10, 10, 492, 108);
   x.fillStyle = fg; x.font = 'bold 72px Impact, "Arial Narrow", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(text, 256, 68);
+  x.fillText(text, 256, 68, 470);
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t;
 }
 function sign(g, text, bg, fg, x, y, z, w, ry) {

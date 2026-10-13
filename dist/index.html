@@ -328,7 +328,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.7</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1532,7 +1532,7 @@ function signTex(text, bg, fg) {
   x.fillStyle = bg; x.fillRect(0, 0, 512, 128);
   x.strokeStyle = fg; x.lineWidth = 8; x.strokeRect(10, 10, 492, 108);
   x.fillStyle = fg; x.font = 'bold 72px Impact, "Arial Narrow", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(text, 256, 68);
+  x.fillText(text, 256, 68, 470);
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t;
 }
 function sign(g, text, bg, fg, x, y, z, w, ry) {
@@ -10419,7 +10419,7 @@ const ZTHEMES = {
   aliens: { name: 'Alien Quarter', col: '#7a2a2a', floor: '#3a2a2a', neon: '#ff3b2a', safe: false }
 };
 ZTHEMES.bar = { name: 'Starlight Lounge', col: '#5a2a4a', floor: '#2a1a24', neon: '#ff6aa8', safe: true };
-const ZLIST = [null, 'plaza', 'market', 'homes', 'hydro', 'bar', 'arcade', 'engine', 'aliens', 'bridge'], ZTOP = ZLIST.length - 1;
+const ZLIST = [null, 'plaza', 'market', 'homes', 'hydro', 'bar', 'arcade', 'engine', 'aliens', 'under', 'archive', 'bridge'], ZTOP = ZLIST.length - 1;
 const zTheme = n => ZLIST[n] || 'market';
 const ZF = { floor: 1 };
 function zFloorName(n) { if (n === 1) return 'Zeltac Plaza'; if (n === ZTOP) return "Captain's Bridge"; return `Floor ${n} · ${ZTHEMES[zTheme(n)].name}`; }
@@ -14625,7 +14625,7 @@ const rarByVal = v => v < 20 ? 'common' : v < 60 ? 'uncommon' : v < 150 ? 'rare'
 function gunKind(id) { const g = GUNS[id]; if (!g) return 'rifle'; if (g.mana) return 'staff'; const n = g.name.toLowerCase();
   if (/minigun|gatling|launcher|cannon|rocket|nova/.test(n)) return 'heavy'; if (/blaster|pistol|revolver|wand|scatter/.test(n) && !/rifle/.test(n)) return 'pistol'; if (/bow/.test(n)) return 'rifle'; return 'rifle'; }
 function itemIcon(id) { const k = id.toLowerCase(), I = ITEMS[id] || {};
-  if (id === 'medkit' || I.use) return 'medkit'; if (I.drug || I.stim) return 'vial'; if (I.fish) return /boot|can/.test(k) ? 'junk' : 'fish';
+  if (I.food) return 'burger'; if (I.papers) return 'scroll'; if (id === 'medkit' || I.use) return 'medkit'; if (I.drug || I.stim) return 'vial'; if (I.fish) return /boot|can/.test(k) ? 'junk' : 'fish';
   if (/journal|recorder|blackbox|code|book/.test(k)) return 'scroll'; if (/key|card|chip|circuit|cell/.test(k)) return 'chip'; if (/pelt|hide|fluff|wing|scale|moss|gel/.test(k)) return 'hide';
   if (/fang|horn|tooth|mandible|quill|spear|shell|chitin|blade|drill/.test(k)) return 'fang'; if (/crystal|pearl|shard|gem|crown|essence|ice/.test(k)) return 'gem';
   if (/heart|eye|sigil|seed|core|token/.test(k)) return 'relic'; if (/scrap|cog|ore|rock|magma|filter/.test(k)) return 'ore'; return 'box'; }
@@ -14664,7 +14664,7 @@ const INV_SVG = {
   ore: '<path d="M4 15l3-8 7-3 6 5 1 8-7 4-8-1z"/><path d="M9 9l4 2 3-2" stroke="#15171b" stroke-width=".9" fill="none"/>',
   scroll: '<rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M8 8h8M8 11h8M8 14h5" stroke="#15171b" stroke-width="1.2"/>',
   relic: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5" fill="#15171b"/><circle cx="12" cy="12" r="1.6"/>',
-  junk: '<path d="M6 4h8v7l5 3v5H5l1-8z"/>', box: '<rect x="4" y="6" width="16" height="13" rx="1.5"/><path d="M4 10h16" stroke="#15171b" stroke-width="1.2"/>'
+  junk: '<path d="M6 4h8v7l5 3v5H5l1-8z"/>', burger: '<path d="M3 11a9 6 0 0 1 18 0z"/><rect x="2" y="12" width="20" height="2.2" rx="1" opacity=".75"/><rect x="3" y="15" width="18" height="2.6" rx="1"/><path d="M3 18.5h18a3 3 0 0 1-3 2.5H6a3 3 0 0 1-3-2.5z"/>', box: '<rect x="4" y="6" width="16" height="13" rx="1.5"/><path d="M4 10h16" stroke="#15171b" stroke-width="1.2"/>'
 };
 const invIconHtml = (icon, col) => `<svg viewBox="0 0 24 24" class="ii" style="color:${col}" fill="currentColor" aria-hidden="true">${INV_SVG[icon] || INV_SVG.box}</svg>`;
 
@@ -14795,7 +14795,8 @@ function invUnequip(slot) {
 function invWear(id) { if (!invLock() || !ARMORS[id] || !lookUnlocked(ARMORS, id)) return; S.look = Object.assign({}, myLook(), { a: id }); sendPresence(true); if (LEVEL.id === 'ship' && typeof placeMannequin === 'function') placeMannequin(); SFX.item(); markDirty(); invFlash('armor'); log(`Wearing ${ARMORS[id].name}.`); invRender(); }
 function invUse(key) {
   if (!invLock()) return; const [t, id] = key.split(':');
-  if (t === 'i' && id === 'medkit') { if (!(S.inv.medkit > 0)) return; if (player.hp >= maxHp()) { log('Already at full health.'); return; } useMedkit(); burst(player.pos.clone().add(V(0, 1.2, 0)), '#5dff9a', 18, 3); SFX.ui(); }
+  if (t === 'i' && id !== 'medkit' && outUseItem(id)) { if (!S.inv[id]) INVUI.sel = null; }
+  else if (t === 'i' && id === 'medkit') { if (!(S.inv.medkit > 0)) return; if (player.hp >= maxHp()) { log('Already at full health.'); return; } useMedkit(); burst(player.pos.clone().add(V(0, 1.2, 0)), '#5dff9a', 18, 3); SFX.ui(); }
   invRender(); invQuickRender();
 }
 function invDrop(id, n) {
@@ -14819,7 +14820,7 @@ const slotFor = key => { const [t, id] = key.split(':'); return t === 'g' ? (isS
 // ---- quick slots (keys 4–7, or tap them on the HUD) ----
 function invQuickUse(i) {
   invSync(); const key = S.quick[i]; if (!key) return; const [t, id] = key.split(':');
-  if (t === 'i') { if (!(S.inv[id] > 0)) { log(`No ${ITEMS[id] ? ITEMS[id].name : id} left.`); SFX.hit(); return; } if (id === 'medkit') { if (player.hp >= maxHp()) { log('Already at full health.'); return; } useMedkit(); burst(player.pos.clone().add(V(0, 1.2, 0)), '#5dff9a', 18, 3); SFX.ui(); } }
+  if (t === 'i') { if (!(S.inv[id] > 0)) { log(`No ${ITEMS[id] ? ITEMS[id].name : id} left.`); SFX.hit(); return; } if (id !== 'medkit') outUseItem(id); else if (id === 'medkit') { if (player.hp >= maxHp()) { log('Already at full health.'); return; } useMedkit(); burst(player.pos.clone().add(V(0, 1.2, 0)), '#5dff9a', 18, 3); SFX.ui(); } }
   else if (t === 'g') { if (!S.guns.includes(id)) return; if (S.gun !== id || handMelee()) bagEquipGun(id); }
   else if (t === 'm') { if (!(S.melees || ['knife']).includes(id)) return; S.melee = id; try { if (typeof refreshMeleeModel === 'function') refreshMeleeModel(); } catch (_) {} if (!handMelee()) swapHand(); markDirty(); }
   else if (t === 'o') { if (!ORD[id] || S.lvl < ORD[id].lvl) return; S.ord = id; throwOrd(); }
@@ -14916,7 +14917,7 @@ function invGrid(order) {
     c.innerHTML = `<span class="rb" style="background:${RARITY[m.rar][1]}"></span><span class="nm"></span>${invIconHtml(m.icon, m.col)}${m.kind === 'item' && m.n > 1 ? `<span class="n">${m.n}</span>` : ''}${eqd ? '<span class="eqd">E</span>' : ''}${m.illegal ? '<span class="tri" title="Illegal">▲</span>' : ''}`;
     c.querySelector('.nm').textContent = m.name; c.title = `${m.name}${m.kind === 'item' ? ' ×' + m.n : ''} · ${RARITY[m.rar][0]}`; c.setAttribute('aria-label', c.title);
     c.addEventListener('click', () => { if (INVUI.move) { const k = INVUI.move; INVUI.move = null; if (k !== key) invMoveTo(k, key); else invRender(); return; } INVUI.sel = key; invRender(); });
-    c.addEventListener('dblclick', () => { if (m.kind !== 'item') invEquip(key); else if (m.id === 'medkit') invUse(key); });
+    c.addEventListener('dblclick', () => { if (m.kind !== 'item') invEquip(key); else if (m.id === 'medkit' || ITEMS[m.id].heal || ITEMS[m.id].papers) invUse(key); });
     c.addEventListener('keydown', e => { if (e.code === 'Enter') { INVUI.sel = key; invRender(); } });
     if (!TOUCH) { c.draggable = true; c.addEventListener('dragstart', e => { INVUI.drag = key; c.classList.add('drag'); try { e.dataTransfer.setData('text/plain', key); e.dataTransfer.effectAllowed = 'move'; } catch (_) {} });
       c.addEventListener('dragend', () => { c.classList.remove('drag'); INVUI.drag = null; INVUI.el && INVUI.el.querySelectorAll('.ok,.bad').forEach(x => x.classList.remove('ok', 'bad')); });
@@ -14953,11 +14954,12 @@ function invDetailPanel() {
     row('Damage per swing', M.dmg + cmp(M.dmg, cur.dmg)); row('Swing time', M.rate + 's' + cmp(M.rate, cur.rate, true)); row('Reach', M.reach + ' m' + cmp(M.reach, cur.reach)); row('Durability', 'Never breaks'); row('Needs level', M.req || 1);
     dtext = 'Melee weapon. Swing with F or right click.' + (cur !== M ? ` Numbers compare it with your ${cur.name}.` : ''); }
   else if (m.kind === 'ord') { const O = ORD[m.id]; row('Damage', O.dmg); row('Blast radius', O.r + ' m'); row('Charges', `${ORD_MAX}, recharging every 9s`); row('Unlocks at level', O.lvl); dtext = O.desc + '. Throw with the NADE button or your ordnance key.'; }
-  else { const I = ITEMS[m.id]; row('Quantity', m.n); row('Weight', (m.w * m.n).toFixed(1) + ' kg' + (m.n > 1 ? ` (${m.w} each)` : '')); if (!I.quest) row('Sells for', `${sellPrice(m.id)} cr each`);
+  else { const I = ITEMS[m.id]; row('Quantity', m.n); row('Weight', (m.w * m.n).toFixed(1) + ' kg' + (m.n > 1 ? ` (${m.w} each)` : '')); if (!I.quest) row(I.illegal ? 'Fence pays' : 'Sells for', `${I.illegal ? I.v : sellPrice(m.id)} cr each`); if (I.heal) { row('Effect', I.heal >= 9999 ? 'Full heal' : `+${I.heal} health`); }
     const uses = []; try { for (const p of Object.values(PIECES)) if (p.cost && p.cost[m.id]) uses.push(p.name); } catch (_) {}
     if (m.id === 'medkit') { row('Effect', '+50 health'); row('Duration', 'Instant'); dtext = 'Patches you up in a hurry. Press H, tap the ✚ button, or put it in a quick slot.'; }
     else if (I.quest) { const q = Object.values(QDEFS).find(Q => (Q.obj || []).some(o => o.t === m.id)); dtext = 'Quest item. It can\'t be sold or dropped.' + (q ? ` Needed for “${q.title}”.` : ''); }
     else if (I.fish) dtext = m.sub === 'junk' ? 'Something that came up on your fishing line. Worth almost nothing.' : 'A fish you caught. Fish buyers pay double.';
+    else if (I.illegal) dtext = (I.desc ? I.desc + ' ' : '') + 'Contraband: shops won\'t buy it. Sell it to a Fence in an underworld basement or at the McKlunkies back counter. Selling it raises your outlaw rep.';
     else dtext = I.desc || (m.cat === 'val' ? 'Valuable loot. Sell it at a store for a good price.' : 'Loot from the wilds. Sell it at a store.');
     if (uses.length) dtext += ` Used to build: ${[...new Set(uses)].slice(0, 4).join(', ')}.`; if (UPG_MATS.has(m.id)) dtext += ' Used for gun upgrades at the armory workbench.'; if (questWants(m.id)) dtext += ' A quest you are on needs this.'; }
   desc.textContent = dtext; P.appendChild(desc);
@@ -14969,6 +14971,7 @@ function invDetailPanel() {
   if (m.kind === 'melee') { if (!equipped) act('Equip', () => invEquip(key), true); else if (m.id !== 'knife') act('Unequip', () => invUnequip('melee')); }
   if (m.kind === 'ord' && !equipped) act('Select', () => invEquip(key), true);
   if (m.id === 'medkit' && m.kind === 'item') act('Use', () => invUse(key), true, player.hp >= maxHp());
+  else if (m.kind === 'item' && (ITEMS[m.id].heal || ITEMS[m.id].papers)) act(ITEMS[m.id].heal ? 'Eat' : 'Use', () => invUse(key), true, !!ITEMS[m.id].heal && player.hp >= maxHp());
   if (m.kind === 'item' && !ITEMS[m.id].quest) { act('Drop 1', () => invDrop(m.id, 1)); if (m.n > 2) act(`Drop ${Math.floor(m.n / 2)}`, () => invDrop(m.id, Math.floor(m.n / 2))); if (m.n > 1) act(`Drop all ${m.n}`, () => invDrop(m.id, m.n)); }
   if (m.kind === 'item' && !ITEMS[m.id].quest && roomLvl('cargo')) { act('Beam 1 to ship', () => beamUp(m.id, 1)); if (m.n > 1) act(`Beam all ${m.n} to ship`, () => beamUp(m.id, m.n)); }
   if (invQuickOk(key)) { const qi = S.quick.indexOf(key); if (qi >= 0) act(`Remove from quick ${qi + 4}`, () => invAssignQuick(qi, null)); else act('Add to quick slot', () => { const free = S.quick.indexOf(null); invAssignQuick(free >= 0 ? free : INV_CFG.quick - 1, key); }); }
@@ -15107,6 +15110,438 @@ function cargoStorage(s, cx, cz, far, term) {
 }
 { const _st = step; step = function (dt) { if (BHB.ring && LEVEL.id === 'ship') { const t = performance.now() / 1000; BHB.ring.rotation.z = t * 1.4; BHB.halo.rotation.z = -t * 2.2; BHB.core.scale.setScalar(1 + Math.sin(t * 3) * 0.03); } return _st.apply(this, arguments); }; }
 
+// =================== PHASE 5: THE OUTLAW UNDERWORLD ===================
+// Outlaw rep, contraband, underworld basements and McKlunkies on every planet, Marshal bounties and outlaw hits
+// on players (shared through everyone's leaders/<id> record), NPC hunter squads, merchant raids in space, wanderers.
+// New, optional save field (old saves start Clean): S.out.
+const OUT_TIERS = [[0, 'Clean', '#8fd0a0'], [10, 'Shady', '#c9b27c'], [40, 'Outlaw', '#e0a040'], [80, 'Wanted', '#e0603a'], [150, 'Most Wanted', '#ff2a3a']];
+const OUT_WORLDS = ['earth', 'mezar', 'capitone', 'robot', 'ocean', 'moon', 'fort', 'skycity', 'zarlich', 'vector', 'forestlife'];
+function outS() { S.out = S.out || {}; const O = S.out; O.rep = O.rep || 0; O.bounty = O.bounty || 0; O.oh = O.oh || []; O.oc = O.oc || []; return O; }
+function outTier() { const r = outS().rep; let t = 0; OUT_TIERS.forEach((x, i) => { if (r >= x[0]) t = i; }); return t; }
+const outTierName = () => OUT_TIERS[outTier()][1];
+const isOutlaw = () => outTier() >= 2;
+const isWanted = () => outTier() >= 3 || !!outS().lab;
+function crime(n, why) {
+  const O = outS(), before = outTier(), wasWanted = isWanted();
+  O.rep = Math.min(400, O.rep + n); O.crimeT = Date.now();
+  if (isWanted()) { if (!wasWanted || !O.bounty) { O.bounty = 300 + O.rep * 10; O.growT = O.obT = Date.now(); toast('WANTED', `The Marshals put a ${O.bounty.toLocaleString()} cr bounty on you`, 4); SFX.hit(); log(`You're Wanted. Marshal hunters will come for you, and other players can take your bounty.`, 'loot'); O.huntT = Date.now() + 60000; }
+    else O.bounty += n * 25; }
+  else if (outTier() > before) toast(OUT_TIERS[outTier()][1].toUpperCase(), why || 'Your outlaw rep went up', 2.5);
+  if (why) log(`${why} (+${n} outlaw rep)`, 'loot'); outHud(); markDirty(); outPush();
+}
+function goodDeed(n, why) {
+  const O = outS(); if (!O.rep) return; O.rep = Math.max(0, O.rep - n); if (why) log(`${why} (−${n} outlaw rep)`); clearIfClean(); outHud(); markDirty();
+}
+function clearIfClean() { const O = outS(); if (!isWanted() && O.bounty) { O.bounty = 0; log('The Marshals dropped your bounty. Your name is clear for now.', 'loot'); toast('BOUNTY DROPPED', 'You lay low long enough', 3); outPush(); } }
+// rep cools off, bounty grows, hunters come
+setInterval(() => { try {
+  if (state !== 'play' || !S.out) return; const O = outS(), now = Date.now();
+  if (O.rep > 0 && now - (O.crimeT || 0) > 5 * 60000 && now - (O.decT || 0) > 3 * 60000) { O.decT = now; O.rep = Math.max(0, O.rep - 1); clearIfClean(); markDirty(); }
+  if (isWanted() && O.bounty && now - (O.growT || now) > 3 * 60000) { O.growT = now; O.bounty = Math.round(O.bounty * (hasGear('ghostid') ? 1.025 : 1.05)); markDirty(); outPush(); }
+  if (isWanted() && now > (O.huntT || 0)) huntersCome();
+  outHud();
+} catch (err) { console.warn('outlaw tick', err); } }, 5000);
+
+// ---- HUD chip: tier, bounty, and a hit on you ----
+let outChip = null;
+function outHud() {
+  if (!outChip) { outChip = document.createElement('span'); outChip.className = 'vchip'; outChip.style.cursor = 'pointer'; outChip.hidden = true; outChip.addEventListener('click', () => openOutlawCard()); const host = document.getElementById('vchips'); if (host) host.appendChild(outChip); else return; }
+  const O = outS(), t = outTier(), hitOnMe = (OUTB.board || []).some(h => h.kind === 'hit' && h.to === uid);
+  outChip.hidden = !O.rep && !hitOnMe && !O.hunt; if (outChip.hidden) return;
+  outChip.style.color = OUT_TIERS[t][2]; outChip.style.borderColor = OUT_TIERS[t][2];
+  outChip.textContent = (isWanted() && O.bounty ? `⚠ WANTED ${O.bounty.toLocaleString()} cr` : `☠ ${OUT_TIERS[t][1]} ${O.rep}`) + (hitOnMe ? ' · HIT ON YOU' : '') + (O.hunt ? ` · hunting ${O.hunt.nick}` : '');
+}
+function openOutlawCard() {
+  const O = outS(), t = outTier(), next = OUT_TIERS[t + 1];
+  openDlg('Outlaw record', OUT_TIERS[t][1]);
+  $('dlgLine').textContent = `Outlaw rep ${O.rep}${next ? ` (${next[1]} at ${next[0]})` : ''}. ${isWanted() ? `Marshal bounty: ${O.bounty.toLocaleString()} cr, growing while you're Wanted. Hunters will come. Marshal Rook on the Zeltac can clear it for ${payoffCost().toLocaleString()} cr.` : O.rep ? 'Lie low: rep cools off a little every few minutes once you stop committing crimes.' : 'Clean as a whistle.'}${O.lab ? ' Your drug lab keeps you on the Marshals\' list.' : ''}${O.hunt ? ` You're hunting ${O.hunt.nick} for ${O.hunt.amt.toLocaleString()} cr.` : ''}`;
+  acts([...(O.hunt ? [['Drop contract', () => { O.hunt = null; markDirty(); outPush(); outHud(); closeDlg(); log('Contract dropped.'); }]] : []), ['Close', closeDlg, true]]);
+}
+
+// ---- contraband: ordinary inventory items with the illegal tag ----
+Object.assign(ITEMS, {
+  voidspice: { name: 'Void Spice', v: 45, col: '#c86aff', illegal: true },
+  gunparts: { name: 'Unregistered Gun Parts', v: 70, col: '#8a8f99', illegal: true },
+  forgedid: { name: 'Forged ID Chips', v: 60, col: '#4fd2ff', illegal: true },
+  credsticks: { name: 'Counterfeit Credsticks', v: 90, col: '#6fdc5a', illegal: true },
+  stolencargo: { name: 'Stolen Cargo Crate', v: 120, col: '#c9a43a', illegal: true },
+  lootedrelic: { name: 'Looted Relic', v: 180, col: '#ffb347', illegal: true },
+  klunkburger: { name: 'Klunk Burger', v: 6, col: '#e0a040', use: true, food: true, sub: 'food', heal: 60 },
+  klunkfries: { name: 'Klunk Fries', v: 3, col: '#ffd36a', use: true, food: true, sub: 'food', heal: 25 },
+  megaklunk: { name: 'Mega Klunk', v: 20, col: '#c8402f', use: true, food: true, sub: 'food', heal: 9999 },
+  forgedpapers: { name: 'Forged Papers', v: 400, col: '#d8cbb0', illegal: true, papers: true },
+  treasuryledger: { name: 'Treasury Ledger', v: 0, col: '#ffd36a', quest: true },
+});
+const CONTRA = ['voidspice', 'gunparts', 'forgedid', 'credsticks', 'stolencargo', 'lootedrelic'];
+const ITEM_DESC = { voidspice: 'Glittering purple dust from the void lanes. Very illegal, very popular.', gunparts: 'Gun parts with the serial numbers ground off.', forgedid: 'Blank identity chips, ready to become anyone.', credsticks: 'Fake credits good enough to fool a vending machine.', stolencargo: 'A sealed cargo crate with a merchant guild stamp. Not yours.', lootedrelic: 'An ancient relic someone was supposed to leave in a tomb.',
+  klunkburger: 'A McKlunkies classic. Heals 60.', klunkfries: 'Hot, salty, heals 25.', megaklunk: 'Three patties of questionable origin. Full heal.', forgedpapers: 'Use to wipe 30 outlaw rep off your record.' };
+for (const k in ITEM_DESC) if (ITEMS[k]) ITEMS[k].desc = ITEM_DESC[k];
+const contraOnly = k => ITEMS[k] && ITEMS[k].illegal;
+GEAR.ghostid = { name: 'Ghost Transponder', desc: 'Your bounty grows half as fast and hunters show up less often', col: '#c86aff' };
+ARMORS.outlaw = { name: 'Outlaw Leathers', lvl: 1, flag: 'outlawArmor', def: 0.15, trim: '#8a3a2e', visor: '#ff8a2a' };
+CAPES.outlaw = { name: 'Outlaw Duster', lvl: 1, flag: 'outlawArmor', col: '#3a2a20', trim: '#c9a43a' };
+// eating and forged papers work from the bag and quick slots
+function outUseItem(id) {
+  const I = ITEMS[id]; if (!I || !(S.inv[id] > 0)) return false;
+  if (I.heal) { if (player.hp >= maxHp()) { log('Already at full health.'); return true; } S.inv[id]--; if (!S.inv[id]) delete S.inv[id]; player.hp = Math.min(maxHp(), player.hp + I.heal); log(`Ate a ${I.name}${I.heal < 9999 ? ` (+${I.heal} health)` : ' (full heal)'}. Mmm.`); burst(player.pos.clone().add(V(0, 1.2, 0)), '#ffd36a', 14, 3); SFX.ui(); markDirty(); return true; }
+  if (I.papers) { const O = outS(); if (!O.rep) { log('Your record is already clean.'); return true; } S.inv[id]--; if (!S.inv[id]) delete S.inv[id]; goodDeed(30, 'Forged Papers filed'); SFX.ui(); return true; }
+  return false;
+}
+const OUTB = { board: [], boardT: 0, noContra: false };
+
+// ---- finding a quiet spot on the outskirts of a world ----
+function outSpot(seed, lo, hi) {
+  // first pass: the quiet outskirts; second pass (small or watery worlds): anywhere dry that isn't a safe town
+  for (let i = 0; i < 180; i++) {
+    const wide = i >= 90; if (wide) { lo = 0.15; hi = 0.92; }
+    const a = seed * 2.39 + i * 0.73, d = WORLD_R * (lo + ((i * 7) % 10) / 10 * (hi - lo)), x = WORLD_C.x + Math.cos(a) * d, z = WORLD_C.z + Math.sin(a) * d;
+    if (!LEVEL.terrain) return { x, z }; const h = groundH(x, z); if (h < WATER_Y + 0.3) continue;
+    let ok = true; for (const [dx, dz] of [[3, 0], [-3, 0], [0, 3], [0, -3], [2, 2], [-2, -2]]) { const g = groundH(x + dx, z + dz); if (Math.abs(g - h) > 0.7 || g < WATER_Y + 0.25) { ok = false; break; } } if (!ok) continue;
+    if (LAVA.some(l => Math.hypot(x - l[0], z - l[1]) < l[2] + 6)) continue;
+    if (ZONES.some(zn => (!wide || zn.safe) && Math.hypot(x - zn.x, z - zn.z) < zn.r + 5)) continue;
+    if (SAFES.some(s => s.r < 100 && Math.hypot(x - s.x, z - s.z) < s.r + 6)) continue;
+    if (CIRCLES.some(c => Math.hypot(x - c[0], z - c[1]) < c[2] + 4) || BOXES.some(b => Math.abs(x - b[0]) < b[2] + 4 && Math.abs(z - b[1]) < b[3] + 4)) continue;
+    if (OUTB.taken && OUTB.taken.some(p => Math.hypot(x - p.x, z - p.z) < 18)) continue;
+    return { x, z };
+  }
+  return null;
+}
+const outSeed = id => { let h = 7; for (const c of id) h = (h * 31 + c.charCodeAt(0)) % 9973; return h; };
+
+// ---- the hatch, McKlunkies and a scavenger trader on every world ----
+const MCK = { col: '#c8402f', yel: '#ffd36a' };
+function buildHatch(x, z) {
+  const y = groundH(x, z), g = new THREE.Group(); g.position.set(x, y, z); levelGroup.add(g);
+  part(g, Cy(1.25, 1.35, 0.25, 12), toon('#3a3d44'), 0, 0.12, 0); part(g, Cy(1.0, 1.0, 0.06, 12), toon('#26232a'), 0, 0.27, 0);
+  for (let i = 0; i < 4; i++) part(g, B(1.9, 0.05, 0.12), toon('#5d636c'), 0, 0.31, -0.6 + i * 0.4);
+  const lamp = part(g, new THREE.SphereGeometry(0.12, 8, 6), glow('#c86aff'), 0.9, 0.4, 0.6);
+  const crate = part(g, B(0.9, 0.7, 0.9), toon('#5a4a3a'), -2.0, 0.35, 0.6, 0, 0.4); part(g, B(0.7, 0.5, 0.7), toon('#3a2e26'), -2.1, 0.95, 0.5, 0, 0.9);
+  const pl = new THREE.PointLight(0xa070ff, 0.6, 8); pl.position.set(0.9, 1, 0.6); g.add(pl);
+  levelAnims.push(t => { lamp.material = glow(Math.sin(t * 2) > 0 ? '#c86aff' : '#5a2a7a'); });
+  box(x - 2.0, z + 0.6, 0.6, 0.6); solid(x, z, 1.1);
+  INTERACTS.push({ x, z: z + 1.8, r: 2.4, label: 'Climb down the hatch (underworld basement)', fn: () => enterUnderworld(x, z) });
+}
+function buildMcK(x, z, face) {
+  const y = groundH(x, z), g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = face; levelGroup.add(g);
+  part(g, B(4.6, 2.4, 2.6), toon('#e8e4dc'), 0, 1.2, -0.4); part(g, B(4.8, 0.3, 3.2), toon(MCK.col), 0, 2.55, -0.2);
+  for (let i = 0; i < 6; i++) part(g, B(0.8, 0.12, 0.6), toon(i % 2 ? MCK.col : '#ffffff'), -2 + i * 0.8, 2.3, 1.25, 0.5);
+  part(g, B(3.8, 1.0, 0.1), toon('#1e1c22'), 0, 1.6, 0.92); part(g, B(4.4, 1.0, 0.5), toon(MCK.col), 0, 0.5, 1.15);
+  part(g, B(4.4, 0.06, 0.6), toon('#c9c4bc'), 0, 1.02, 1.15);
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.9), new THREE.MeshBasicMaterial({ map: signTex("McKLUNKIES", MCK.col, MCK.yel) })); sign.position.set(0, 3.3, 1.0); g.add(sign);
+  const pole = part(g, Cy(0.1, 0.12, 4.5, 6), toon('#5d636c'), 2.9, 2.25, 1.3);
+  const bun = new THREE.Group(); bun.position.set(2.9, 4.9, 1.3); g.add(bun);
+  part(bun, new THREE.SphereGeometry(0.62, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), toon('#d8903a'), 0, 0.12, 0); part(bun, Cy(0.66, 0.66, 0.14, 12), toon('#5a3020'), 0, 0.02, 0); part(bun, Cy(0.7, 0.7, 0.05, 12), toon('#6fdc5a'), 0, 0.11, 0); part(bun, Cy(0.6, 0.6, 0.18, 12), toon('#d8903a'), 0, -0.14, 0);
+  levelAnims.push(t => { bun.rotation.y = t * 0.9; });
+  for (const s of [-1, 1]) { const tb = new THREE.Group(); tb.position.set(s * 2.0, 0, 3.4); g.add(tb); part(tb, Cy(0.6, 0.6, 0.06, 10), toon('#ffffff'), 0, 0.75, 0); part(tb, Cy(0.06, 0.06, 0.75, 6), toon('#5d636c'), 0, 0.37, 0); }
+  const pl = new THREE.PointLight(0xffd36a, 0.8, 10); pl.position.set(0, 2, 2); g.add(pl);
+  const c = Math.cos(face), s = Math.sin(face), wx = (lx, lz) => x + lx * c + lz * s, wz = (lx, lz) => z - lx * s + lz * c;
+  box(wx(0, -0.2), wz(0, -0.2), 2.4, 1.6); for (const k of [-1, 1]) solid(wx(k * 2, 3.4), wz(k * 2, 3.4), 0.6);
+  return { x: wx(0, 2.3), z: wz(0, 2.3) };
+}
+// worlds with too little dry land for the search get hand-picked spots
+const OUT_FIX = { ocean: { h: { x: -62, z: 18 }, m: { x: -44, z: 28 } } };
+function outlawWorldDressing(id) {
+  OUTB.taken = []; const sd = outSeed(id), fx = OUT_FIX[id];
+  const h = fx ? fx.h : outSpot(sd, 0.55, 0.8); if (h) { OUTB.taken.push(h); buildHatch(h.x, h.z); OUTB.hatch = h;
+    const tx = h.x + 3.2, tz = h.z - 1.5; makeNpc({ id: 'scav_' + id, name: 'Scavenger Pike', role: 'Wanderer · trades anything', rig: 'civ', make: () => makeCivilian('#6a5a3a', '#3a3430', '#c58a64', '#8a8f99', '#c9a43a'), x: tx, z: tz, face: -1.2, shop: 'store',
+      idle: ["Don't mind me. Just a humble scavenger. Humbly scavenging.", "The hatch? Never seen it. What hatch. Go on down if you want, tell 'em Pike sent you.", "I buy, I sell, I don't ask where it came from."] }, [0, 0]); }
+  const m = fx ? fx.m : outSpot(sd + 41, 0.5, 0.82); if (m) { OUTB.taken.push(m); const face = Math.atan2(WORLD_C.x - m.x, WORLD_C.z - m.z); const at = buildMcK(m.x, m.z, face);
+    makeNpc({ id: 'mck_' + id, name: 'McKlunkies Clerk', role: 'McKlunkies · open 25 hours', rig: 'civ', make: () => makeCivilian(MCK.col, '#2b2a2c', '#e0b892', '#3a2a20', MCK.yel), x: at.x - Math.sin(face) * 1.2, z: at.z - Math.cos(face) * 1.2, face: face, custom: [['🍔 Order food', () => openMcK()], ['Back counter', () => openMcKBack()]],
+      idle: ["Welcome to McKlunkies, home of the Klunk. Would you like to Klunk it up?", "We're hidden out here because of zoning. Totally normal zoning reasons.", "Everything's made fresh. Fresh from where is a trade secret."] }, [0, 0]); }
+  spawnWanderers(sd);
+}
+for (const id of OUT_WORLDS) { const L = LEVELS[id]; if (!L) continue; const orig = L.build; L.build = function () { orig.call(this); try { outlawWorldDressing(id); } catch (err) { console.warn('outlaw dressing', id, err); } }; }
+
+// ---- McKlunkies counters ----
+const MCK_MENU = [['klunkfries', 12], ['klunkburger', 25], ['megaklunk', 120]];
+function openMcK() {
+  openDlg('McKlunkies', 'Order up'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const render = () => { $('dlgLine').textContent = `What'll it be? You have ${S.cr.toLocaleString()} cr. Food goes in your bag: eat it from there, or put it in a quick slot.`;
+    itemRows(rows, MCK_MENU.map(([k, p]) => [k, null, `${p} cr · ${ITEMS[k].heal >= 9999 ? 'full heal' : '+' + ITEMS[k].heal + ' health'}`, [['Buy', () => buy(k, p, 1)], ['Buy 5', () => buy(k, p, 5)]]])); };
+  const buy = (k, p, n) => { if (S.cr < p * n) { SFX.hit(); log("Not enough credits."); return; } if (invRoomFor(k) < n) { invFullNote(k); return; } S.cr -= p * n; S.inv[k] = (S.inv[k] || 0) + n; S.invT = S.invT || {}; S.invT['i:' + k] = Date.now(); SFX.coin(); log(`+${n} ${ITEMS[k].name}`, 'loot'); markDirty(); render(); };
+  $('dlgActs').before(rows); acts([['Back counter', () => openMcKBack()], ['Done', closeDlg, true]]); render();
+}
+function openMcKBack() {
+  openDlg('McKlunkies', 'The back counter');
+  if (outTier() < 1) { $('dlgLine').textContent = "Back counter? There's no back counter. This is a family restaurant. (Come back when you've got a bit of a reputation.)"; acts([['Order food', () => openMcK()], ['Done', closeDlg, true]]); return; }
+  openFence('McKlunkies', 'The back counter', "Psst. We buy what the shops won't. Substances come later, the supplier's late.", 1.0);
+}
+// ---- the Fence: buys contraband (and regular loot for 20% more) ----
+function openFence(role, name, line, contraMult) {
+  openDlg(role, name); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const render = () => { $('dlgLine').textContent = `${line} You have ${S.cr.toLocaleString()} cr.`;
+    const list = Object.entries(S.inv).filter(([k, n]) => ITEMS[k] && n > 0 && !ITEMS[k].quest && k !== 'medkit' && !ITEMS[k].food).sort((a, b) => (ITEMS[b[0]].illegal ? 1 : 0) - (ITEMS[a[0]].illegal ? 1 : 0));
+    itemRows(rows, list.map(([k, n]) => [k, n, `${fencePrice(k, contraMult)} cr each${ITEMS[k].illegal ? ' ▲' : ''}`, [['Sell 1', () => sell(k, 1)], ['Sell all', () => sell(k, S.inv[k] || 0)]]])); };
+  const sell = (k, n) => { n = Math.min(n, S.inv[k] || 0); if (n < 1) return; const p = fencePrice(k, contraMult) * n; S.cr += p; S.inv[k] -= n; if (!S.inv[k]) delete S.inv[k]; SFX.coin(); log(`Sold ${n} ${ITEMS[k].name} for ${p} cr`, 'loot'); if (ITEMS[k].illegal) crime(Math.min(10, n), 'Fenced contraband'); markDirty(); renderQuest(); render(); };
+  $('dlgActs').before(rows); acts([['Done', closeDlg, true]]); render();
+}
+const fencePrice = (k, m) => ITEMS[k].illegal ? Math.round(ITEMS[k].v * (m || 1)) : Math.ceil(sellPrice(k) * 1.2);
+// ---- the black-market dealer ----
+const BM_STOCK = [
+  { id: 'forgedpapers', name: 'Forged Papers', price: 2500, desc: 'Wipes 30 outlaw rep. One use.', buy: () => { S.inv.forgedpapers = (S.inv.forgedpapers || 0) + 1; } },
+  { id: 'ghostid', name: 'Ghost Transponder', price: 6000, desc: 'Gear: bounty grows half as fast, hunters come less often.', own: () => hasGear('ghostid'), buy: () => S.gear.push('ghostid') },
+  { id: 'outlawArmor', name: 'Outlaw Leathers + Duster', price: 8000, desc: 'Armor (−15% damage) and a long coat. Wardrobe.', own: () => !!(S.flags && S.flags.outlawArmor), buy: () => { S.flags = S.flags || {}; S.flags.outlawArmor = true; } },
+  { id: 'voidspice', name: 'Void Spice (to resell)', price: 30, desc: 'Buy low, fence high. Still contraband.', buy: () => { S.inv.voidspice = (S.inv.voidspice || 0) + 1; } },
+];
+function openBlackMarket(who) {
+  openDlg('Black market', who); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const render = () => { rows.textContent = ''; $('dlgLine').textContent = `${isOutlaw() ? "For you? Anything." : "I only sell to people with a reputation. Outlaws only, sweetheart."} You have ${S.cr.toLocaleString()} cr.`;
+    for (const it of BM_STOCK) { const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = '#c86aff';
+      const nm = document.createElement('span'); nm.textContent = `${it.name} · ${it.desc}`; const mt = document.createElement('span'); mt.className = 'meta'; const own = it.own && it.own(); mt.textContent = own ? 'Owned' : it.price.toLocaleString() + ' cr';
+      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = own ? '✓' : 'Buy'; b.disabled = own || !isOutlaw() || S.cr < it.price;
+      b.addEventListener('click', () => { if (S.cr < it.price || !isOutlaw()) return; if (ITEMS[it.id] && invRoomFor(it.id) < 1) { invFullNote(it.id); return; } S.cr -= it.price; it.buy(); SFX.coin(); log(`Bought ${it.name}.`, 'loot'); markDirty(); render(); });
+      r.append(dot, nm, mt, b); rows.appendChild(r); } };
+  $('dlgActs').before(rows); acts([['Done', closeDlg, true]]); render();
+}
+
+// ---- the underworld basement (one shared den, you climb out where you came in) ----
+const UW = { from: null };
+function enterUnderworld(x, z) { UW.from = { lv: LEVEL.id, x, z: z + 2.5 }; SFX.door(); travel('underworld'); }
+function leaveUnderworld() { const f = UW.from || { lv: 'earth' }; UW.from = null; SFX.door(); travel(f.lv, f.x != null ? { at: { x: f.x, z: f.z, yaw: 0 } } : undefined); }
+LEVELS.underworld = {
+  id: 'underworld', name: 'The Underworld', tag: 'A basement that isn\'t on any map', lvls: 'No law', size: 60, center: [0, 0], radius: 200, water: -99, sky: 'space', weather: 'none', indoor: true,
+  terrain: null, palette: { grass: '#1a141e' }, zones: [{ id: 'den', name: 'The Underworld', lvl: 'No law · no fighting', x: 0, z: 0, r: 16, col: '#1a141e', safe: true, h: 0 }], paths: [], river: [], pools: [], lava: [],
+  safes: [{ x: 0, z: 0, r: 300 }], spawn: { x: 0, z: 9, yaw: 0 }, menu: { x: 0, z: 0, r: 10, h: 3 }, npcBase: [0, 0], spawns: [],
+  npcs: [
+    { id: 'fence', name: 'Sly Marlo', role: 'The Fence · buys anything', rig: 'civ', make: () => makeCivilian('#3a2a4a', '#1e1c22', '#c58a64', '#1e1c22', '#c86aff'), x: -7, z: -6, face: 0.6, custom: [['Sell', () => openFence('The Fence', 'Sly Marlo', "Contraband at full price, everything else at 20% over the shops. No questions.", 1.0)]],
+      idle: ["Shops won't touch it? I'll touch it. I'll touch anything.", "Every basement on every world connects to this one. Don't ask how. Plumbing.", "Keep your voice down. The Marshals have ears. Mostly they have Rook."] },
+    { id: 'vexdeal', name: 'Madame Vex', role: 'Black market', rig: 'civ', make: () => makeCivilian('#5a1e2a', '#1e1c22', '#e8b896', '#c8c8d0', '#ffd36a'), x: 7, z: -6, face: -0.6, custom: [['Black market', () => openBlackMarket('Madame Vex')]],
+      idle: ["Papers, transponders, leathers. Everything a growing outlaw needs.", "Clean folk don't shop here. Come back with a reputation."] },
+  ],
+  build() {
+    const W = 12, D = 11, H = 3.4, wallM = toon('#2a2430'), floorM = toon('#1e1a22');
+    const fl = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, D * 2).rotateX(-Math.PI / 2), floorM); props.add(fl); const ce = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, D * 2).rotateX(Math.PI / 2), toon('#141018')); ce.position.y = H; props.add(ce);
+    const wall = (x, z, w, d) => { part(props, B(w, H, d), wallM, x, H / 2, z); box(x, z, w / 2, d / 2); };
+    wall(0, -D, W * 2, 0.5); wall(0, D, W * 2, 0.5); wall(-W, 0, 0.5, D * 2); wall(W, 0, 0.5, D * 2);
+    for (let x = -W + 2; x < W; x += 4) part(props, Cy(0.1, 0.1, D * 2, 6), toon('#3a3430'), x, H - 0.3, 0, Math.PI / 2);
+    // bar counter, neon, crates, a pool table
+    part(props, B(8, 1.1, 1.2), toon('#3a2a20'), 0, 0.55, -8.6); part(props, B(8.2, 0.08, 1.4), toon('#5a4a3a'), 0, 1.14, -8.6); box(0, -8.6, 4, 0.6);
+    for (let i = 0; i < 7; i++) part(props, Cy(0.08, 0.1, 0.4, 6), glow(['#c86aff', '#6fdc5a', '#ffd36a', '#ff6aa8'][i % 4]), -3 + i, 1.4, -10.4);
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(6, 1), new THREE.MeshBasicMaterial({ map: signTex('THE UNDERWORLD', '#1a0a20', '#c86aff') })); sign.position.set(0, 2.6, -10.7); props.add(sign);
+    for (const [x, z, s] of [[-10, 6, 1], [-9, 8, 0.8], [10, 7, 1.1], [9.6, 4.6, 0.7], [-10.4, -2, 0.9]]) { part(props, B(s, s, s), toon('#5a4a3a'), x, s / 2, z, 0, x); box(x, z, s / 2, s / 2); }
+    part(props, B(3, 0.8, 1.6), toon('#1e4a2a'), 0, 0.4, 2); part(props, B(3.2, 0.1, 1.8), toon('#3a2a20'), 0, 0.82, 2); box(0, 2, 1.6, 0.9);
+    // the Hit board
+    part(props, B(3, 1.8, 0.1), toon('#1e1c22'), -11.7 + 0.1, 1.6, -2, 0, Math.PI / 2); const hb = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.6), new THREE.MeshBasicMaterial({ map: signTex('HIT BOARD', '#3a0a0a', '#ff3b2a') })); hb.position.set(-11.6, 2.3, -2); hb.rotation.y = Math.PI / 2; props.add(hb);
+    INTERACTS.push({ x: -10, z: -2, r: 2.2, label: 'Hit board (contracts on players)', fn: () => openHitBoard() });
+    // the way out
+    part(props, B(1.4, H, 0.2), toon('#3a3d44'), 0, H / 2, 10.7); for (let i = 0; i < 8; i++) part(props, B(1.2, 0.06, 0.08), toon('#8a8f99'), 0, 0.3 + i * 0.4, 10.55);
+    INTERACTS.push({ x: 0, z: 9.4, r: 2.0, label: 'Climb the ladder back up', fn: leaveUnderworld });
+    for (const [x, z, c] of [[-6, -6, 0xc86aff], [6, -6, 0xff6aa8], [0, 4, 0xffd36a]]) { const l = new THREE.PointLight(c, 0.9, 16); l.position.set(x, H - 0.6, z); levelGroup.add(l); }
+    LEVEL.name = 'The Underworld' + (UW.from && LEVELS[UW.from.lv] ? ' · under ' + LEVELS[UW.from.lv].name : '');
+  }
+};
+{ const _po = planetOpen; planetOpen = function (id) { if (id === 'underworld') return false; return _po(id); }; }
+
+// ---- wanderers: scavengers and drifters outside the cities, peaceful unless you start it ----
+Object.assign(ENEMY, {
+  scavenger: { rig: 'civ', name: 'Scavenger', passive: true, wanderer: 'scav', make: () => makeCivilian('#6a5a3a', '#3a3430', '#c58a64', '#5d636c', '#8a8f99'), hp: 120, speed: 2.2, r: 0.45, hy: 0.95, xp: 30, cr: [10, 30], melee: { dmg: 10, rate: 1.2, reach: 1.8 }, drops: [['scrap', 0.6], ['gunparts', 0.12]] },
+  drifter: { rig: 'trooper', name: 'Drifter', passive: true, wanderer: 'outlaw', make: () => recolor(makeTrooper(), { '#6f7a3e': '#5a3a2a', '#4a5229': '#3a2a20', '#c9b27c': '#8a6a4a' }), hp: 180, speed: 2.4, r: 0.45, hy: 0.95, xp: 45, cr: [20, 50], ranged: { dmg: 9, rate: 1.4, speed: 15, col: '#ff8a2a', range: 18, keep: 9 }, drops: [['voidspice', 0.25], ['credsticks', 0.12], ['forgedid', 0.12]] },
+  mhunter: { rig: 'trooper', name: 'Marshal Hunter', make: () => recolor(makeTrooper(), { '#6f7a3e': '#2a3a7a', '#4a5229': '#1e2a5a', '#c9b27c': '#ffd36a' }), hp: 160, speed: 3.0, r: 0.45, hy: 0.95, xp: 70, cr: [30, 70], ranged: { dmg: 11, rate: 1.1, speed: 18, col: '#4fa8ff', range: 22, keep: 9 }, drops: [['circuit', 0.3]] },
+  secguard: { rig: 'trooper', name: 'Hauler Security', make: () => recolor(makeTrooper(), { '#6f7a3e': '#5d636c', '#4a5229': '#3a3d44', '#c9b27c': '#4fd2ff' }), hp: 150, speed: 2.4, r: 0.45, hy: 0.95, xp: 50, cr: [20, 40], ranged: { dmg: 10, rate: 1.3, speed: 16, col: '#4fd2ff', range: 18, keep: 8 }, drops: [['stolencargo', 0.2]] },
+});
+function spawnWanderers(sd) {
+  const lv0 = (LEVEL.zones.map(z => +(String(z.lvl).match(/Lv (\d+)/) || [])[1]).filter(Boolean).sort((a, b) => a - b)[0]) || Math.max(1, S.lvl - 2), lv = [Math.max(1, lv0), Math.max(1, lv0) + 2];
+  for (let k = 0; k < 2; k++) { const p = outSpot(sd + 97 + k * 13, 0.45, 0.8); if (!p) continue; OUTB.taken.push(p);
+    const zid = 'wild' + k; Z[zid] = { id: zid, name: 'The wilds', x: p.x, z: p.z, r: 14 };
+    for (let i = 0; i < 2; i++) makeEnemy({ zone: zid, type: k ? 'drifter' : 'scavenger', n: 1, lv, wander: true }); }
+}
+// rep from who you kill
+{ const _k = kill; kill = function (e) { const r = _k(e); try { const d = e.def;
+  if (d.wanderer === 'scav') crime(8, 'Killed a peaceful scavenger');
+  else if (d.wanderer === 'outlaw') goodDeed(3, 'Took down a drifter');
+  else if (d === ENEMY.mhunter) { crime(10, 'Killed a Marshal hunter'); }
+  if (e.sp && e.sp.huntSquad && !enemies.some(f => f.sp && f.sp.huntSquad && !f.dead)) { toast('HUNTERS DOWN', 'More will come while you\'re Wanted', 3); outS().huntT = Date.now() + (hasGear('ghostid') ? 7 : 4) * 60000; }
+} catch (_) {} return r; }; }
+
+// ---- NPC hunter squads ----
+function huntersCome() {
+  const O = outS(); O.huntT = Date.now() + (hasGear('ghostid') ? 7 : 4) * 60000;
+  if (!LEVEL || !LEVEL.terrain || LEVEL.fly || !OUT_WORLDS.concat(['speedway']).includes(LEVEL.id) || LEVEL.id === 'speedway' || dlgOpen || !player.alive) { O.huntT = Date.now() + 30000; return; }
+  if (SAFES.some(s => s.r < 100 && Math.hypot(player.pos.x - s.x, player.pos.z - s.z) < s.r + 8)) { O.huntT = Date.now() + 30000; return; }
+  let p = null; for (let i = 0; i < 12 && !p; i++) { const a = Math.random() * 6.28, x = player.pos.x + Math.cos(a) * 26, z = player.pos.z + Math.sin(a) * 26; if (groundH(x, z) > WATER_Y + 0.4 && Math.hypot(x - WORLD_C.x, z - WORLD_C.z) < WORLD_R - 4) p = { x, z }; }
+  if (!p) { O.huntT = Date.now() + 30000; return; }
+  const zid = 'hunt' + Date.now(); Z[zid] = { id: zid, name: 'Marshal hunters', x: p.x, z: p.z, r: 6 };
+  const n = Math.min(6, 2 + Math.floor(O.bounty / 1500)), lv = [Math.max(1, S.lvl), S.lvl + 2];
+  for (let i = 0; i < n; i++) { const e = makeEnemy({ zone: zid, type: 'mhunter', n: 1, lv, once: true, huntSquad: true }); e.aggro = true; }
+  toast('MARSHAL HUNTERS', `${n} hunters are after your ${O.bounty.toLocaleString()} cr bounty`, 3.5); SFX.hit(); log('Marshal hunters found you. Fight, or run for a city.', 'loot');
+}
+
+// ---- clearing your name with Marshal Rook ----
+const payoffCost = () => Math.round(outS().bounty * 1.5);
+{ const n = LEVELS.zeltac.npcs.find(k => k.id === 'rook'); if (n) n.custom = [...(n.custom || []), ['Clear my bounty', () => {
+  const O = outS(); openDlg('Galactic Marshals', 'Marshal Rook');
+  if (!isWanted() || !O.bounty) { $('dlgLine').textContent = O.lab ? "You run a drug lab. Your name stays on my list as long as it's running." : "Your record's clean. Keep it that way."; acts([['Done', closeDlg, true]]); return; }
+  const c = payoffCost(); $('dlgLine').textContent = `${O.bounty.toLocaleString()} cr on your head. Pay ${c.toLocaleString()} and I'll lose the paperwork. Your rep drops to Outlaw.${O.lab ? ' The lab keeps you on the list, so it will come back.' : ''}`;
+  acts([['Pay ' + c.toLocaleString() + ' cr', () => { if (S.cr < c) { SFX.hit(); log('Not enough credits on hand.'); return; } S.cr -= c; O.bounty = 0; O.rep = Math.min(O.rep, 60); O.crimeT = Date.now(); SFX.coin(); toast('BOUNTY CLEARED', 'The Marshals lost your paperwork', 3); markDirty(); outPush(); outHud(); closeDlg(); }, true, S.cr < c], ['Not now', closeDlg]]);
+}]]; }
+// closing Marshal contracts and story quests is honest work
+{ const _bd = bountyDone; bountyDone = function () { const r = _bd.apply(this, arguments); goodDeed(15, 'Closed a Marshal contract'); return r; }; }
+{ const _cq = completeQuest; completeQuest = function (id) { const r = _cq(id); try { if (QDEFS[id] && QDEFS[id].main) goodDeed(5); } catch (_) {} return r; }; }
+
+// =================== PHASE 5b: PLAYER BOUNTIES, HITS, SPACE RAIDS, THE PRESIDENT ===================
+// Shared board: everyone's outlaw record rides along in their own leaders/<id> doc (ob = Marshal bounty,
+// oh = hits they posted, oc = contracts they've collected), so every player reads the same board.
+// Fights between players outside the arena: only between a contract holder and their target.
+{ const _lr = lbRow; lbRow = function () { const d = _lr(); const O = outS(), now = Date.now();
+  O.oh = O.oh.filter(h => now - h.t < 48 * 3600000); O.oc = O.oc.slice(-40);
+  d.ob = isWanted() ? O.bounty : 0; d.obT = isWanted() ? (O.obT || 0) : 0; d.orp = O.rep; d.oh = O.oh.slice(-6); d.oc = O.oc; d.where = LEVEL ? LEVEL.id : 'earth'; return d; }; }
+let outPushT = 0;
+function outPush() { clearTimeout(outPushT); outPushT = setTimeout(() => { try { lbPush(true); } catch (_) {} }, 2500); }
+async function outFetch(force) {
+  if (!db) return OUTB.board; if (!force && Date.now() - OUTB.boardT < 45000) return OUTB.board;
+  OUTB.boardT = Date.now();
+  try { const snap = await db.collection('leaders').limit(500).get(); const docs = snap.docs.map(s => Object.assign({ id: s.id }, s.data())), now = Date.now();
+    const claimed = new Set(); for (const d of docs) for (const c of (Array.isArray(d.oc) ? d.oc : [])) claimed.add(String(c));
+    const nickOf = {}; for (const d of docs) nickOf[d.id] = String(d.nick || 'Trooper').slice(0, 16);
+    const list = [];
+    for (const d of docs) { if (!(now - (d.t || 0) < 7 * 86400000)) continue;
+      if (typeof d.ob === 'number' && d.ob > 0) { const id = 'b:' + d.id + ':' + (d.obT || 0); if (!claimed.has(id)) list.push({ kind: 'bounty', id, to: d.id, nick: nickOf[d.id], amt: Math.round(d.ob), where: d.where, lvl: d.lvl || 1 }); }
+      for (const h of (Array.isArray(d.oh) ? d.oh : [])) { if (!h || typeof h.to !== 'string' || !(h.amt > 0) || !(now - (h.t || 0) < 48 * 3600000)) continue; const id = 'h:' + String(h.id); if (claimed.has(id) || !nickOf[h.to]) continue;
+        const T = docs.find(x => x.id === h.to); list.push({ kind: 'hit', id, to: h.to, nick: nickOf[h.to], amt: Math.round(Math.min(h.amt, 50000)), by: nickOf[d.id], byId: d.id, where: T && T.where, lvl: (T && T.lvl) || 1 }); } }
+    OUTB.board = list; OUTB.people = docs.filter(d => now - (d.t || 0) < 7 * 86400000).map(d => ({ id: d.id, nick: nickOf[d.id], lvl: d.lvl || 1, where: d.where }));
+    const O = outS(); if (O.hunt && !list.some(c => c.id === O.hunt.id)) { log(`Your contract on ${O.hunt.nick} is gone (someone else collected, or it was cleared).`); O.hunt = null; markDirty(); }
+  } catch (err) { console.warn('board', err); }
+  outHud(); return OUTB.board;
+}
+setInterval(() => { if (state === 'play' && db) outFetch(false); }, 60000);
+const whereName = w => (LEVELS[w] && LEVELS[w].name) || 'somewhere';
+function contractRows(rows, list, canTake, empty) {
+  rows.textContent = ''; const O = outS();
+  if (!list.length) { const e = document.createElement('div'); e.className = 'rowi nodot'; e.textContent = empty; rows.appendChild(e); return; }
+  for (const c of list) { const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = c.kind === 'hit' ? '#ff3b2a' : '#ffd36a';
+    const nm = document.createElement('span'); nm.textContent = `${c.kind === 'hit' ? 'HIT' : 'BOUNTY'} · ${c.nick} (Lv ${c.lvl})${c.by ? ' · posted by ' + c.by : ''} · last seen on ${whereName(c.where)}`;
+    const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = c.amt.toLocaleString() + ' cr';
+    const mine = O.hunt && O.hunt.id === c.id, self = c.to === uid, b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px';
+    b.textContent = self ? 'You' : mine ? 'Taken' : 'Take'; b.disabled = self || mine || !!O.hunt || !canTake;
+    b.addEventListener('click', () => { O.hunt = { kind: c.kind, id: c.id, to: c.to, nick: c.nick, amt: c.amt }; markDirty(); outPush(); outHud(); SFX.quest(); toast('CONTRACT TAKEN', `${c.nick} · ${c.amt.toLocaleString()} cr`, 3); log(`You took the ${c.kind} on ${c.nick}. Find them (last seen on ${whereName(c.where)}). You can only fight each other while you hold it, and they can fight back.`, 'loot'); closeDlg(); });
+    r.append(dot, nm, mt, b); rows.appendChild(r); }
+}
+// Marshal terminals: bounties on players, for clean hunters
+async function openPlayerBounties(who) {
+  openDlg('Galactic Marshals', who || 'Wanted players'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; $('dlgActs').before(rows);
+  $('dlgLine').textContent = db ? 'Checking the wire…' : 'The player board needs you signed in to the game page.';
+  acts([['NPC contracts', () => openBountyBoard(who)], ['Done', closeDlg, true]]); if (!db) return;
+  await outFetch(true); if (!$('shopRows')) return; const can = !isOutlaw();
+  $('dlgLine').textContent = can ? 'Players with a Marshal bounty. Take one, find them, beat them. While you hold it, you two can fight anywhere outside a city; they can fight back.' : "The Marshals don't hire outlaws. Lower your rep below 40 to take player bounties.";
+  contractRows(rows, OUTB.board.filter(c => c.kind === 'bounty'), can, 'No player is Wanted right now.');
+}
+{ const _ob = openBountyBoard; openBountyBoard = function (who) { const r = _ob(who); const a = $('dlgActs'); if (a) { const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = 'Wanted players'; b.addEventListener('click', () => { SFX.ui(); openPlayerBounties(who); }); a.prepend(b); } return r; }; }
+// the Hit board: outlaws post and take hits on players
+const HIT_AMTS = [500, 1000, 2500, 5000];
+async function openHitBoard() {
+  openDlg('Underworld', 'Hit board'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; $('dlgActs').before(rows);
+  $('dlgLine').textContent = db ? 'Reading the board…' : 'The Hit board needs you signed in to the game page.';
+  acts([['Done', closeDlg, true]]); if (!db) return;
+  await outFetch(true); if (!$('shopRows')) return; const can = isOutlaw();
+  $('dlgLine').textContent = can ? 'Contracts on players, paid by outlaws. Take one and hunt them down, or post your own.' : 'Outlaws only. Get your rep to 40 (Outlaw) to post or take hits.';
+  contractRows(rows, OUTB.board.filter(c => c.kind === 'hit'), can, 'No open hits. Post one?');
+  acts([['Post a hit', () => openPostHit(), false, !can], ['Done', closeDlg, true]]);
+}
+function openPostHit() {
+  openDlg('Underworld', 'Post a hit'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; $('dlgActs').before(rows);
+  const people = (OUTB.people || []).filter(p => p.id !== uid).sort((a, b) => b.lvl - a.lvl).slice(0, 30); let amt = HIT_AMTS[0];
+  const render = () => { rows.textContent = ''; $('dlgLine').textContent = `Pick a target. The ${amt.toLocaleString()} cr is paid now and goes to whoever collects. You have ${S.cr.toLocaleString()} cr.`;
+    const pick = document.createElement('div'); pick.className = 'rowi nodot'; for (const a of HIT_AMTS) { const b = document.createElement('button'); b.className = 'pbtn' + (a === amt ? ' go' : ''); b.style.padding = '4px 8px'; b.textContent = a.toLocaleString() + ' cr'; b.addEventListener('click', () => { amt = a; render(); }); pick.appendChild(b); } rows.appendChild(pick);
+    if (!people.length) { const e = document.createElement('div'); e.className = 'rowi nodot'; e.textContent = 'No other players on record yet.'; rows.appendChild(e); }
+    for (const p of people) { const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = '#ff3b2a'; const nm = document.createElement('span'); nm.textContent = `${p.nick} · Lv ${p.lvl} · ${whereName(p.where)}`;
+      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = 'Post'; b.disabled = S.cr < amt;
+      b.addEventListener('click', () => { if (S.cr < amt) return; const O = outS(); S.cr -= amt; O.oh.push({ id: (uid || 'me').slice(-6) + Date.now().toString(36), to: p.id, amt, t: Date.now() }); crime(5, `Put a hit on ${p.nick}`); SFX.coin(); toast('HIT POSTED', `${p.nick} · ${amt.toLocaleString()} cr`, 3); OUTB.boardT = 0; markDirty(); outPush(); closeDlg(); });
+      r.append(dot, nm, b); rows.appendChild(r); } };
+  acts([['Back', () => openHitBoard()], ['Done', closeDlg, true]]); render();
+}
+
+// ---- fights between contract holders and their targets ----
+const outSafe = p => SAFES.some(s => s.r < 100 && Math.hypot(p.x - s.x, p.z - s.z) < s.r);
+function canFight(r) { const O = outS(); if (!r || !r.wu || LEVEL.id === 'arena' || LEVEL.fly) return false; if (outSafe(player.pos) || outSafe(r.obj.position)) return false;
+  return (O.hunt && r.wu === O.hunt.to) || (r.hn && r.hn === uid); }
+{ const _ps = pvpShoot; pvpShoot = function (o, dir, dmg, maxT) {
+  if (LEVEL && LEVEL.id === 'arena') return _ps(o, dir, dmg, maxT);
+  let best = null, bt = maxT; for (const r of remotes.values()) { if (!r.peerId || !canFight(r)) continue; const b = r.obj.position; for (const f of [0.6, 1.2, 1.7]) { const t = raySphere(o, dir, tmp.set(b.x, b.y + f, b.z), 0.45); if (t > 0 && t < bt) { bt = t; best = r; } } }
+  if (best) { pvpOut.push([best.peerId, Math.round(dmg * 0.5), ++pvpSeq]); while (pvpOut.length > 8) pvpOut.shift(); burst(best.obj.position.clone().add(V(0, 1.3, 0)), '#ff3b2a', 8, 4); hitmark(false); SFX.hit(); sendPresence(true); }
+  return best ? bt : null; }; }
+{ const _pw = pvpWrite; pvpWrite = function (p) { _pw(p); const O = outS(); if (uid) p.wu = uid; if (isWanted() && O.bounty) p.wb = O.bounty; if (O.hunt) p.hn = O.hunt.to;
+  if (LEVEL && LEVEL.id !== 'arena') { if (pvpOut.length) p.hx = pvpOut.slice(); if (koOut.length) p.ko = koOut.slice(); } }; }
+{ const _pr = pvpRead; pvpRead = function (peerId, pr, r) {
+  r.wu = typeof pr.wu === 'string' ? pr.wu : null; r.hn = typeof pr.hn === 'string' ? pr.hn : null; r.wb = Number(pr.wb) || 0;
+  if (LEVEL && LEVEL.id === 'arena') return _pr(peerId, pr, r);
+  if (!myPeer) return; const seen = pvpSeen.get(peerId) || { hit: 0, ko: 0 }, O = outS();
+  if (Array.isArray(pr.hx)) for (const h of pr.hx) { if (!Array.isArray(h) || h[0] !== myPeer || !(h[2] > seen.hit)) continue; seen.hit = h[2]; if (!canFight(r)) continue; const d = clamp(Number(h[1]) || 0, 0, 200); if (player.alive) { player.pvpBy = r.nick; player.pvpPeer = peerId; player.pvpT = gameTime; hurt(d); } }
+  if (Array.isArray(pr.ko)) for (const k of pr.ko) { if (!Array.isArray(k) || k[0] !== myPeer || !(k[1] > seen.ko)) continue; seen.ko = k[1];
+    if (O.hunt && r.wu === O.hunt.to) { const c = O.hunt; S.cr += c.amt; O.oc.push(c.id); O.hunt = null; toast('CONTRACT COLLECTED', `${c.nick} · +${c.amt.toLocaleString()} cr`, 4); SFX.level(); log(`You collected the ${c.kind} on ${c.nick}: +${c.amt.toLocaleString()} cr.`, 'loot'); if (c.kind === 'bounty') goodDeed(10); else crime(10, 'Collected a hit'); gainXp(300 + S.lvl * 15); markDirty(); outPush(); outHud(); }
+    else if (r.hn === uid) { toast('HUNTER BEATEN', `You fought off ${r.nick}`, 3); SFX.quest(); gainXp(200 + S.lvl * 10); } }
+  pvpSeen.set(peerId, seen); }; }
+function outlawOnDeath() {
+  const O = outS();
+  if (player.pvpBy && gameTime - (player.pvpT || 0) < 12 && player.pvpPeer) { koOut.push([player.pvpPeer, ++pvpSeq]); while (koOut.length > 4) koOut.shift(); sendPresence(true); }
+  const byHunters = enemies.some(e => !e.dead && e.def === ENEMY.mhunter && e.obj.position.distanceTo(player.pos) < 35);
+  if ((player.pvpBy && gameTime - (player.pvpT || 0) < 12) || byHunters) { if (isWanted() && O.bounty) { O.bounty = 0; O.obT = 0; O.rep = Math.min(O.rep, 60); O.crimeT = Date.now(); log(byHunters ? 'The Marshal hunters got you. Your bounty is collected and your rep drops to Outlaw.' : `${player.pvpBy} collected your bounty. Your rep drops to Outlaw.`, 'loot'); markDirty(); outPush(); } }
+  player.pvpBy = null; player.pvpPeer = null; outHud();
+}
+// show WANTED and TARGET on other players' name plates
+{ const _sp = syncPeers; syncPeers = function (peers) { _sp(peers); const O = outS(); for (const r of remotes.values()) { const tgt = O.hunt && r.wu === O.hunt.to, hunter = r.hn && r.hn === uid, key = `${r.nick}|${r.lvl}|${r.wb}|${tgt}|${hunter}`; if (r._outKey === key || !r.nick) continue; r._outKey = key;
+  if (tgt || hunter || r.wb) drawPlate(r.plate, r.nick, tgt ? `TARGET · ${O.hunt.amt.toLocaleString()} cr` : hunter ? 'HUNTING YOU' : `WANTED · ${r.wb.toLocaleString()} cr`, tgt || hunter ? '#ff6a5a' : '#ffd36a', null); else drawPlate(r.plate, r.nick, 'Lv ' + r.lvl, '#7fd6ff', null); } }; }
+// the compass points at your target
+{ const _qt = questTarget; questTarget = function () { const O = outS(); if (O.hunt) { for (const r of remotes.values()) if (r.wu === O.hunt.to) return { p: r.obj.position, label: `Hunt ${O.hunt.nick}` }; } return _qt(); }; }
+
+// ---- raiding merchant haulers in space, and Marshal patrols when you're Wanted ----
+HULK_TYPES.trader = { name: 'Merchant Hauler', hull: '#c9c4bc', trim: '#4fa8ff', light: '#4fd2ff', wall: '#5d636c', floor: '#3a3d44', neon: '#4fd2ff', crew: () => ['secguard'], boss: () => 'secguard', line: 'A merchant guild hauler, heavy with cargo. Peaceful. Robbing it is a crime.' };
+{ const _fw = freshWrecks; freshWrecks = function () { _fw(); const W = BOARD.wrecks || []; let n = 0; for (const w of W) { if (n >= 2) break; if (w.type === 'derelict' || w.type === 'hive') { w.type = 'trader'; n++; } } }; }
+{ const _bp = boardPrompt; boardPrompt = function (W) { if (W.type !== 'trader') return _bp(W); const T = HULK_TYPES.trader; openDlg('Sensors', T.name);
+  $('dlgLine').textContent = `${T.line} Security level ${W.lv}. Raiding it raises your outlaw rep a lot${isWanted() ? '' : ', and could make you Wanted'}.`;
+  acts([['Raid it', () => { closeDlg(); crime(25, 'Raided a merchant hauler'); boardShipW(W); }, true], ['Fly on', closeDlg]]); }; }
+{ const _bl = boardLoot; boardLoot = function (C) { const r = _bl(C); if (C.type === 'trader') { const got = []; for (let i = 0, n = 2 + randi(0, 2); i < n; i++) { const k = CONTRA[randi(0, CONTRA.length - 1)]; S.inv[k] = (S.inv[k] || 0) + 1; got.push(ITEMS[k].name); } const cr = 400 + C.lv * 40; S.cr += cr; log(`The hauler's hold: ${cr} cr and ${got.join(', ')} (contraband: sell it to a Fence).`, 'loot'); markDirty(); } return r; }; }
+{ const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); if (id === 'space' && isWanted()) setTimeout(() => { if (!LEVEL || LEVEL.id !== 'space' || !fly || !isWanted()) return;
+  const n = Math.min(4, 2 + Math.floor(outS().bounty / 3000)); for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, p = player.pos.clone().add(V(Math.cos(a) * 320, rand(-40, 40), Math.sin(a) * 320)); const R = spawnRaider(p, Math.max(8, S.lvl + 1)); R.marshal = true; R.aggro = true; R.def = { name: 'Marshal Patrol' }; drawPlate(R.plate, 'Marshal Patrol', 'Lv ' + R.lv, '#4fa8ff', null); }
+  toast('MARSHAL PATROL', 'They know your ship. Fight or outrun them.', 3); SFX.hit(); }, 15000); return r; }; }
+{ const _kr = killRaider; killRaider = function (R) { const r = _kr(R); if (R.marshal) crime(10, 'Shot down a Marshal patrol'); return r; }; }
+
+// ---- the President storyline: the Undercroft and the Senate Archive on the Zeltac ----
+Object.assign(ZTHEMES, { under: { name: 'The Undercroft', col: '#5a2a7a', floor: '#1e1a22', neon: '#c86aff', safe: true }, archive: { name: 'Senate Archive', col: '#3a4a7a', floor: '#2a2e3a', neon: '#ffd36a', safe: false } });
+Object.assign(ENEMY, {
+  presguard: { rig: 'trooper', name: 'Presidential Guard', make: () => recolor(makeTrooper(), { '#6f7a3e': '#1e2a4a', '#4a5229': '#141c30', '#c9b27c': '#e8e4dc' }), hp: 260, speed: 2.6, r: 0.45, hy: 0.95, xp: 140, cr: [40, 80], ranged: { dmg: 16, rate: 1.1, speed: 18, col: '#ffd36a', range: 22, keep: 9 }, drops: [['treasuryledger', 0.4], ['credsticks', 0.2]] },
+  starling: { rig: 'civ', name: 'President Starling · Power Suit', make: () => { const g = makePrez(); part(g, B(0.9, 0.7, 0.55), toon('#c9a43a'), 0, 1.25, 0); part(g, B(0.3, 0.2, 0.6), glow('#ffd36a'), 0, 1.3, -0.3); return g; }, scale: 1.5, hp: 14000, speed: 2.4, r: 0.6, hy: 1.0, xp: 30000, cr: [4000, 6000], boss: true,
+    ranged: { dmg: 26, rate: 0.8, speed: 20, col: '#ffd36a', range: 26, keep: 9 }, melee: { dmg: 45, rate: 1.4, reach: 2.6 }, drops: [['credsticks', 1], ['lootedrelic', 1]] },
+});
+{ const _zn = zNpcs; zNpcs = function (n, th) {
+  if (th === 'under') return [{ id: 'mole', name: 'The Mole', role: 'Informant · knows everything', rig: 'civ', make: () => makeCivilian('#2a2430', '#1e1c22', '#9fe8ff', '#5d636c', '#c86aff'), x: -8, z: -10, face: 0.5, idle: ["Every secret on this ship passes through the Undercroft. Most of them twice.", "Want to know who really paid for Drome's war? So do I. So does everyone. I know, though."] },
+    { id: 'fence2', name: 'Sly Marlo\'s Cousin', role: 'The Fence · Zeltac branch', rig: 'civ', make: () => makeCivilian('#3a2a4a', '#1e1c22', '#8a5a3a', '#1e1c22', '#c86aff'), x: 8, z: -10, face: -0.5, custom: [['Sell', () => openFence('The Fence', 'Marlo\'s Cousin', 'Same deal as the basements. Contraband at full price.', 1.0)], ['Black market', () => openBlackMarket("Marlo's Cousin")]], idle: ["Family business. The family is mostly crimes."] }];
+  if (th === 'archive') return [];
+  return _zn(n, th); }; }
+{ const _zs = zSpawns; zSpawns = function (n, th) {
+  if (th === 'archive') { const lv = [34, 38], list = [{ zone: 'deck', type: 'presguard', n: 7, lv }]; if (qState('o4') && qState('o4').st === 'active') list.push({ zone: 'deck', type: 'starling', n: 1, lv: [40, 40], at: [0, -20], once: true }); return list; }
+  if (th === 'under') return [];
+  return _zs(n, th); }; }
+{ const _zb = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _zb.call(this); const th = zTheme(ZF.floor);
+  if (th === 'under') {
+    for (let i = 0; i < 10; i++) { const x = -24 + (i % 5) * 12, z = i < 5 ? -18 : 14; part(props, B(1.2, 1.2, 1.2), toon('#3a2e26'), x, 0.6, z, 0, i); box(x, z, 0.6, 0.6); }
+    part(props, B(10, 1.1, 1.4), toon('#2a1e2a'), 0, 0.55, -16); box(0, -16, 5, 0.7); const sg = new THREE.Mesh(new THREE.PlaneGeometry(7, 1.2), new THREE.MeshBasicMaterial({ map: signTex('THE UNDERCROFT', '#1a0a20', '#c86aff') })); sg.position.set(0, 4.2, -27.6); props.add(sg);
+    part(props, B(3, 1.8, 0.1), toon('#1e1c22'), -14, 1.6, -27.5); INTERACTS.push({ x: -14, z: -25.5, r: 2.4, label: 'Hit board (contracts on players)', fn: () => openHitBoard() });
+    for (const [x, z, c] of [[-10, -10, 0xc86aff], [10, -10, 0xff6aa8], [0, 8, 0xc86aff]]) { const l = new THREE.PointLight(c, 1.0, 22); l.position.set(x, 5, z); levelGroup.add(l); }
+  }
+  if (th === 'archive') {
+    for (let i = 0; i < 12; i++) { const x = -24 + (i % 6) * 9.6, z = i < 6 ? -10 : 6; part(props, B(1.2, 4.5, 6), toon('#5a4a3a', 'wood'), x, 2.25, z); for (let k = 0; k < 4; k++) part(props, B(1.25, 0.08, 6), toon('#3a2e26'), x, 0.6 + k * 1.1, z); box(x, z, 0.6, 3); }
+    part(props, B(6, 1.0, 2.4), toon('#3a4a7a'), 0, 0.5, -22); part(props, B(6.2, 0.06, 2.6), toon('#c9a43a'), 0, 1.02, -22); box(0, -22, 3, 1.2);
+    const seal = new THREE.Mesh(new THREE.CircleGeometry(2.2, 24), glow('#c9a43a')); seal.position.set(0, 4, -27.6); props.add(seal);
+  } }; }
+// insert the two new floors before the Captain's Bridge
+NPC_HOME.mole = 'zeltac'; NPC_HOME.fence = 'underworld';
+defQuest('o1', { ch: 'Underworld · The President', title: 'Word in the Undercroft', giver: 'mole', turnIn: 'fence', req: ['q5'], main: true,
+  intro: ["You're the one who killed Drome. Then you'll want to hear this.", "Drome's war chest was paid in New United States treasury credsticks. Somebody in the government bankrolled him.", "The Fence, Sly Marlo, launders half the credits in the galaxy. Every planet has a hatch on the outskirts that leads to his basement. Ask him."],
+  obj: [{ kind: 'reach', zone: 'den', planet: 'underworld', n: 1, text: 'Find a hatch on any planet and visit the underworld basement' }],
+  outro: ["The Mole sent you? Fine. Yes, I washed those credits. Treasury sticks, all signed from one office.", "The paper trail lives in the Senate Archive, two floors under the Captain's Bridge on the Zeltac. Heavily guarded. Good luck."], reward: { cr: 800, xp: 2500 } });
+defQuest('o2', { ch: 'Underworld · The President', title: 'The Senate Archive', giver: 'fence', turnIn: 'mole', req: ['o1'], main: true,
+  intro: ["The Presidential Guard carries the Treasury Ledger between the stacks. Take it off one of them.", "Bring it to the Mole. He'll know what to do with it."],
+  obj: [{ kind: 'item', t: 'treasuryledger', n: 1, text: 'Take the Treasury Ledger from the Presidential Guard (Zeltac elevator · Senate Archive)', planet: 'zeltac' }],
+  outro: ["Let me see... payments to Drome, every month, for three years. Each one signed D. Starling.", "The President. The man dancing in the Starlight Lounge right now. He paid Drome to burn Earth so his friends could sell the rebuilding contracts.", "This needs a Marshal. Take it to Rook."], reward: { cr: 1500, xp: 5000 } });
+defQuest('o3', { ch: 'Underworld · The President', title: 'Follow the Money', giver: 'mole', turnIn: 'rook', req: ['o2'], main: true,
+  intro: ["Marshal Rook is the only Marshal Starling never bought. He's in the Zeltac Plaza."],
+  obj: [{ kind: 'item', t: 'treasuryledger', n: 1, text: 'Bring the Treasury Ledger to Marshal Rook (Zeltac Plaza)', planet: 'zeltac' }],
+  outro: ["...Signed by Duke Starling himself. I always knew he was rotten. I didn't know he was this rotten.", "I can't arrest a sitting president. But the Senate Archive is his. He's hiding in there in a power suit, waiting for this to blow over.", "Go in there and end it."], reward: { cr: 2000, xp: 6000, take: { treasuryledger: 1 } } });
+defQuest('o4', { ch: 'Underworld · The President', title: "Party's Over", giver: 'rook', turnIn: 'rook', req: ['o3'], main: true,
+  intro: ["Starling is in the Senate Archive in a gold power suit. He's armed, and he's not going quietly.", "Take him down. The galaxy deserves to know."],
+  obj: [{ kind: 'kill', t: 'starling', n: 1, text: 'Defeat President Starling in the Senate Archive (Zeltac elevator)', planet: 'zeltac' }],
+  outro: ["It's done. The ledger goes to every newsfeed in the galaxy tonight.", "Starling will spend the rest of his life explaining himself to the Senate. Somehow I think he'll still find a party.", "You did good. The Marshals owe you one."], reward: { cr: 10000, xp: 20000, fn: () => { S.flags = S.flags || {}; S.flags.marshalArmor = true; log('Marshal reward: Marshal Armor and Cape (Wardrobe).', 'loot'); } } });
+
 // ---- Update log: each player sees the updates they missed since their last login ----
 const UPDATES = [
   { id: 20, title: 'Laser swords and shields', items: ['Laser swords with custom colors and hilts, previewed in the shop', 'Melee only fires with a melee weapon equipped; the offhand blue shield blocks', 'Saber mod station on your ship'] },
@@ -15167,7 +15602,8 @@ const UPDATES = [
   { id: 75, title: '2.4 · Velocity, the magnet storm planet', items: ['Velocity is now a flat plain of gray glass under a storm that never ends: lightning bolts, rainbow rain and fog that rushes past as you speed up', 'Pit Row floats 20 m above the plain on magnet pylons, with a long ramp bridge down to the start line', 'Hover driving: cars slide on magnets with almost no friction. Hold Space (or DRIFT) to drift, which charges a boost when you let go. Shift boosts', 'C (or CAM) switches between hood, chase and far chase cameras. Your car has headlights', 'Three new courses across the open plain with ring gates: Storm Sprint, Magnet Mile and Thunder Run, on the shared leaderboards', 'Garage Gus sells five levels of Engine, Magnets and Boost, plus stripe colors and patterns', 'Every car is rebuilt with hover pads, lights and paint, and there is a new Hover Bike', 'Other players see you in your car']},
   { id: 76, title: '2.5 · Aim comes right back', items: ['Closing a menu, the bag, a shop or the tablet takes the mouse back for aiming on its own. No cursor on screen and no extra click', 'If the browser blocks it for a moment (right after Esc), the cursor stays hidden and your next click only grabs the mouse, it never fires']},
   { id: 77, title: '2.6 · New backpack', items: ['The bag (I) is now a full inventory screen: equipment on the left, a 60 slot grid in the middle, item details on the right', 'Filter by Weapons, Medical, Materials, Quest, Valuables or Misc, search by name, and sort by type, rarity, weight, value or newest', 'Equip guns, staffs, melee weapons, armor and ordnance from the bag. Drag items onto slots on PC, or tap Move then tap a slot on phones', 'Four quick slots on keys 4 to 7 (buttons on phones) for medkits, weapons and ordnance. They point at your real items, never copies', 'Pickups show a small card with the item. When the bag is full the loot stays on the ground and tells you, instead of vanishing', 'Drop 1, half or a whole stack. Quest items can never be dropped', 'The lava pit in the Maw on Vector now sits down in the crater floor instead of floating above it', 'The Art of War opening trailer is put away for now. New games start with the usual intro']},
-  { id: 78, title: '2.7 · Ship storage and room upgrades', items: ['Own a Cargo Bay? Select loot in your bag and Beam it to your ship. Open Ship storage from the bag or the new terminal in the Cargo Bay', 'Ship storage holds 100 slots and doubles with each Cargo Bay level. Level 5 is the Black Hole Box: unlimited storage, and it sits spinning in your Cargo Bay', 'Take items back out aboard your ship. From Cargo Bay level 3 you can beam them down anywhere', 'Every room now upgrades to level 5 at the Engineering terminal: better rest, more ordnance charges, cheaper gun mods, stronger stims, faster gardens, faster vehicles and boss bonus credits', 'Loot now stacks up to 25 per bag slot (medkits 10), so big hauls fill the bag and storage matters. Nothing you already carry is lost']}
+  { id: 78, title: '2.7 · Ship storage and room upgrades', items: ['Own a Cargo Bay? Select loot in your bag and Beam it to your ship. Open Ship storage from the bag or the new terminal in the Cargo Bay', 'Ship storage holds 100 slots and doubles with each Cargo Bay level. Level 5 is the Black Hole Box: unlimited storage, and it sits spinning in your Cargo Bay', 'Take items back out aboard your ship. From Cargo Bay level 3 you can beam them down anywhere', 'Every room now upgrades to level 5 at the Engineering terminal: better rest, more ordnance charges, cheaper gun mods, stronger stims, faster gardens, faster vehicles and boss bonus credits', 'Loot now stacks up to 25 per bag slot (medkits 10), so big hauls fill the bag and storage matters. Nothing you already carry is lost']},
+  { id: 79, title: '2.8 · The outlaw underworld', items: ['Outlaw rep: crimes raise it, good deeds lower it. Clean, Shady, Outlaw, Wanted, Most Wanted. Your tier shows on the HUD; tap it for your record', 'Every planet has a hidden hatch on the outskirts leading down to the Underworld: Sly Marlo the Fence buys contraband, Madame Vex runs the black market', 'McKlunkies stands on every planet: burgers and fries heal you, and the back counter buys illegal goods once you are Shady', 'Contraband has a red triangle and only Fences buy it. Stores won\'t touch it', 'Scavengers and drifters roam outside the cities. They leave you alone unless you start it', 'Go Wanted and the Marshals put a growing bounty on you and send hunters. Pay Marshal Rook 1.5x the bounty to clear your name, or use Forged Papers', 'Signed-in players share one board: clean players take Marshal bounties on Wanted players, outlaws post and take Hits in the Underworld. You can only fight a player while one of you holds the contract on the other, and they can fight back', 'Raid Merchant Haulers in space for contraband. Wanted pilots get chased by Marshal patrols', 'New Zeltac floors: The Undercroft and the Senate Archive, with a four-part story about the President\'s money'] },
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -15449,12 +15885,12 @@ function openStore(tab, who) {
   const render = () => {
     $('dlgLine').textContent = tab === 'sell' ? `${who} buys all loot. You have ${S.cr} cr.` : `Supplies. You have ${S.cr} cr.`;
     if (tab === 'sell') {
-      const list = Object.entries(S.inv).filter(([k]) => ITEMS[k] && !ITEMS[k].quest && k !== 'medkit').map(([k, n]) => [k, n, sellPrice(k) + ' cr each' + (ITEMS[k].fish ? ' (fish buyers pay double)' : ''), [['Sell 1', () => sell(k, 1)], ['All', () => sell(k, n)]]]);
+      const list = Object.entries(S.inv).filter(([k]) => ITEMS[k] && !ITEMS[k].quest && !ITEMS[k].illegal && k !== 'medkit').map(([k, n]) => [k, n, sellPrice(k) + ' cr each' + (ITEMS[k].fish ? ' (fish buyers pay double)' : ''), [['Sell 1', () => sell(k, 1)], ['All', () => sell(k, n)]]]);
       itemRows(rows, list);
     } else itemRows(rows, [['medkit', S.inv.medkit || 0, '25 cr', [['Buy', () => { if (S.cr >= 25) { S.cr -= 25; S.inv.medkit = (S.inv.medkit || 0) + 1; markDirty(); render(); } }, S.cr < 25]]]]);
   };
   const sell = (k, n) => { n = Math.min(n, S.inv[k] || 0); S.cr += n * sellPrice(k); S.inv[k] -= n; if (!S.inv[k]) delete S.inv[k]; log(`Sold ${n} ${ITEMS[k].name} for ${n * sellPrice(k)} cr`, 'loot'); markDirty(); render(); renderQuest(); };
-  const sellAll = () => { let total = 0; for (const [k, n] of Object.entries(S.inv)) if (ITEMS[k] && !ITEMS[k].quest && k !== 'medkit' && !questNeeds(k)) { total += n * sellPrice(k); delete S.inv[k]; } if (total) { S.cr += total; log(`Sold loot for ${total} cr`, 'loot'); markDirty(); } render(); };
+  const sellAll = () => { let total = 0; for (const [k, n] of Object.entries(S.inv)) if (ITEMS[k] && !ITEMS[k].quest && !ITEMS[k].illegal && !ITEMS[k].food && k !== 'medkit' && !questNeeds(k)) { total += n * sellPrice(k); delete S.inv[k]; } if (total) { S.cr += total; log(`Sold loot for ${total} cr`, 'loot'); markDirty(); } render(); };
   acts([['Sell', () => { tab = 'sell'; render(); }], ['Buy medkits', () => { tab = 'buy'; render(); }], ['Sell all loot', sellAll, true], ['Done', closeDlg]]);
   $('dlgActs').before(rows); rows.id = 'shopRows'; render();
   const kill = () => { rows.remove(); }; const prev = closeDlg; $('dlg').addEventListener('close', kill, { once: true });
@@ -16257,7 +16693,7 @@ function hurt(dmg, src) {
   if (player.hp > 0 && player.hp < maxHp() * 0.28) burp('low_hp');
   if (player.hp <= 0) {
     player.hp = 0; player.alive = false;
-    const lost = LEVEL.id === 'arena' ? 0 : Math.floor(S.cr * 0.1); S.cr -= lost; markDirty(); if (LEVEL.id === 'arena') arenaOnDeath();
+    const lost = LEVEL.id === 'arena' ? 0 : Math.floor(S.cr * 0.1); S.cr -= lost; markDirty(); if (LEVEL.id === 'arena') arenaOnDeath(); else if (typeof outlawOnDeath === 'function') outlawOnDeath();
     $('deadTxt').textContent = lost ? `You dropped ${lost} cr. Bank your credits with Old Nash to keep them safe.` : 'Heal up in the Safe Zone and get back out there.';
     setState('dead'); setTimeout(() => burp('death'), 300);
   }
@@ -16351,7 +16787,7 @@ function step(dt) {
     const px0 = o.position.x, pz0 = o.position.z;
     const dx = player.pos.x - o.position.x, dz = player.pos.z - o.position.z, d = Math.hypot(dx, dz) || 1e-3;
     const home = Math.hypot(o.position.x - e.zone.x, o.position.z - e.zone.z);
-    if (!e.aggro && d < (def.boss ? 16 : 12) && !pSafe && player.alive) e.aggro = true;
+    if (!e.aggro && !def.passive && d < (def.boss ? 16 : 12) && !pSafe && player.alive) e.aggro = true;
     const leash = e.zone.r + (def.boss || def.elite ? 45 : 20);
     if (e.aggro && (home > leash || !player.alive)) { e.aggro = false; e.wander = V(e.zone.x, 0, e.zone.z); }
     if (!e.aggro && e.hp < e.max && gameTime - e.lastHit > (def.boss || def.elite ? 45 : 15) && (d > 30 || !player.alive)) { e.hp = Math.min(e.max, e.hp + e.max * 0.02 * dt); updatePlate(e); }

@@ -328,7 +328,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.7</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1010,12 +1010,12 @@ function openStore(tab, who) {
   const render = () => {
     $('dlgLine').textContent = tab === 'sell' ? `${who} buys all loot. You have ${S.cr} cr.` : `Supplies. You have ${S.cr} cr.`;
     if (tab === 'sell') {
-      const list = Object.entries(S.inv).filter(([k]) => ITEMS[k] && !ITEMS[k].quest && k !== 'medkit').map(([k, n]) => [k, n, sellPrice(k) + ' cr each' + (ITEMS[k].fish ? ' (fish buyers pay double)' : ''), [['Sell 1', () => sell(k, 1)], ['All', () => sell(k, n)]]]);
+      const list = Object.entries(S.inv).filter(([k]) => ITEMS[k] && !ITEMS[k].quest && !ITEMS[k].illegal && k !== 'medkit').map(([k, n]) => [k, n, sellPrice(k) + ' cr each' + (ITEMS[k].fish ? ' (fish buyers pay double)' : ''), [['Sell 1', () => sell(k, 1)], ['All', () => sell(k, n)]]]);
       itemRows(rows, list);
     } else itemRows(rows, [['medkit', S.inv.medkit || 0, '25 cr', [['Buy', () => { if (S.cr >= 25) { S.cr -= 25; S.inv.medkit = (S.inv.medkit || 0) + 1; markDirty(); render(); } }, S.cr < 25]]]]);
   };
   const sell = (k, n) => { n = Math.min(n, S.inv[k] || 0); S.cr += n * sellPrice(k); S.inv[k] -= n; if (!S.inv[k]) delete S.inv[k]; log(`Sold ${n} ${ITEMS[k].name} for ${n * sellPrice(k)} cr`, 'loot'); markDirty(); render(); renderQuest(); };
-  const sellAll = () => { let total = 0; for (const [k, n] of Object.entries(S.inv)) if (ITEMS[k] && !ITEMS[k].quest && k !== 'medkit' && !questNeeds(k)) { total += n * sellPrice(k); delete S.inv[k]; } if (total) { S.cr += total; log(`Sold loot for ${total} cr`, 'loot'); markDirty(); } render(); };
+  const sellAll = () => { let total = 0; for (const [k, n] of Object.entries(S.inv)) if (ITEMS[k] && !ITEMS[k].quest && !ITEMS[k].illegal && !ITEMS[k].food && k !== 'medkit' && !questNeeds(k)) { total += n * sellPrice(k); delete S.inv[k]; } if (total) { S.cr += total; log(`Sold loot for ${total} cr`, 'loot'); markDirty(); } render(); };
   acts([['Sell', () => { tab = 'sell'; render(); }], ['Buy medkits', () => { tab = 'buy'; render(); }], ['Sell all loot', sellAll, true], ['Done', closeDlg]]);
   $('dlgActs').before(rows); rows.id = 'shopRows'; render();
   const kill = () => { rows.remove(); }; const prev = closeDlg; $('dlg').addEventListener('close', kill, { once: true });
@@ -1490,7 +1490,7 @@ function hurt(dmg, src) {
   if (player.hp > 0 && player.hp < maxHp() * 0.28) burp('low_hp');
   if (player.hp <= 0) {
     player.hp = 0; player.alive = false;
-    const lost = LEVEL.id === 'arena' ? 0 : Math.floor(S.cr * 0.1); S.cr -= lost; markDirty(); if (LEVEL.id === 'arena') arenaOnDeath();
+    const lost = LEVEL.id === 'arena' ? 0 : Math.floor(S.cr * 0.1); S.cr -= lost; markDirty(); if (LEVEL.id === 'arena') arenaOnDeath(); else if (typeof outlawOnDeath === 'function') outlawOnDeath();
     $('deadTxt').textContent = lost ? `You dropped ${lost} cr. Bank your credits with Old Nash to keep them safe.` : 'Heal up in the Safe Zone and get back out there.';
     setState('dead'); setTimeout(() => burp('death'), 300);
   }
@@ -1584,7 +1584,7 @@ function step(dt) {
     const px0 = o.position.x, pz0 = o.position.z;
     const dx = player.pos.x - o.position.x, dz = player.pos.z - o.position.z, d = Math.hypot(dx, dz) || 1e-3;
     const home = Math.hypot(o.position.x - e.zone.x, o.position.z - e.zone.z);
-    if (!e.aggro && d < (def.boss ? 16 : 12) && !pSafe && player.alive) e.aggro = true;
+    if (!e.aggro && !def.passive && d < (def.boss ? 16 : 12) && !pSafe && player.alive) e.aggro = true;
     const leash = e.zone.r + (def.boss || def.elite ? 45 : 20);
     if (e.aggro && (home > leash || !player.alive)) { e.aggro = false; e.wander = V(e.zone.x, 0, e.zone.z); }
     if (!e.aggro && e.hp < e.max && gameTime - e.lastHit > (def.boss || def.elite ? 45 : 15) && (d > 30 || !player.alive)) { e.hp = Math.min(e.max, e.hp + e.max * 0.02 * dt); updatePlate(e); }

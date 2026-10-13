@@ -10616,17 +10616,17 @@ function raidSpawn(type, x, z, lv, tag) {
 }
 function raidTick() {
   const R = raidNow();
-  if (RAID.key !== R.key) { RAID.key = R.key; RAID.wave = 0; RAID.nextWave = 0; RAID.kills = 0; RAID.boss = false; if (R.active) { toast('RAID ALERT', `Drome's remnants are hitting ${LEVELS[R.world].name}!`, 4); SFX.horn(); } }
+  if (RAID.key !== R.key) { RAID.key = R.key; RAID.wave = 0; RAID.nextWave = 0; RAID.kills = 0; RAID.boss = false; if (R.active) { raidNote('RAID ALERT', `Drome's remnants are hitting ${LEVELS[R.world].name}!`, 4); SFX.horn(); } }
   if (!R.active || LEVEL.id !== R.world || state !== 'play' || LEVEL.fly) return;
   const lv = Math.max(S.lvl, 3);
   if (gameTime > RAID.nextWave) { RAID.wave++; RAID.nextWave = gameTime + 35; const A = raidAnchor(), ts = raidTypes(), n = Math.min(4 + RAID.wave, 9);
     for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; raidSpawn(ts[i % ts.length], A.x + Math.cos(a) * 6, A.z + Math.sin(a) * 6, lv + (i % 3 === 0 ? 1 : 0)); }
-    if (RAID.wave >= 6 && !RAID.boss) { RAID.boss = true; raidSpawn(raidBossType(), A.x, A.z, lv + 2); toast('RAID BOSS', `${ENEMY[raidBossType()].name} leads the raid!`, 3); }
-    else toast(`RAID WAVE ${RAID.wave}`, `${n} raiders at the edge of town`, 2.2); SFX.horn(); }
+    if (RAID.wave >= 6 && !RAID.boss) { RAID.boss = true; raidSpawn(raidBossType(), A.x, A.z, lv + 2); raidNote('RAID BOSS', `${ENEMY[raidBossType()].name} leads the raid!`, 3); }
+    else raidNote(`RAID WAVE ${RAID.wave}`, `${n} raiders at the edge of town`, 2.2); SFX.horn(); }
   // clean up raiders that are too far gone (fell, left the map)
 }
 ITEMS.raidtoken = { name: 'Raid Token', v: 0, col: '#ff6a5a' };
-{ const _k = kill; kill = function (e) { const r = _k(e); if (e.sp && e.sp.raid) { RAID.kills++; S.inv.raidtoken = (S.inv.raidtoken || 0) + (e.def.boss ? 10 : 1); S.cr += e.def.boss ? 800 : 25; if (e.def.boss) { toast('RAID BOSS DOWN', '+10 Raid Tokens · +800 cr', 3); SFX.level(); } markDirty(); } return r; }; }
+{ const _k = kill; kill = function (e) { const r = _k(e); if (e.sp && e.sp.raid) { RAID.kills++; S.inv.raidtoken = (S.inv.raidtoken || 0) + (e.def.boss ? 10 : 1); S.cr += e.def.boss ? 800 : 25; if (e.def.boss) { raidNote('RAID BOSS DOWN', '+10 Raid Tokens · +800 cr', 3); SFX.level(); } markDirty(); } return r; }; }
 // enemies spawned for a raid never respawn
 { const _re = resetEnemy; resetEnemy = function (e) { if (e.sp && e.sp.raid && e.dead) { e.gone = true; scene.remove(e.obj); return; } return _re(e); }; }
 setInterval(() => { try { raidTick(); raidHud(); for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i].gone) enemies.splice(i, 1); } catch (_) {} }, 500);
@@ -13290,6 +13290,23 @@ body.flying #talk { top: auto !important; left: 12px !important; transform: none
 @media (pointer: coarse) and (max-height: 520px) { body #ctape { top: calc(env(safe-area-inset-top, 0px) + 116px) !important; } body #clock { top: calc(env(safe-area-inset-top, 0px) + 150px) !important; } body #boss { top: calc(env(safe-area-inset-top, 0px) + 168px) !important; } }
 `; document.body.appendChild(st); }
 
+// =================== Raid notices out of the way ===================
+// the raid chip sits small in the bottom-left above your health instead of the middle of the screen; the countdown only shows
+// in the last minute before a raid, and raid alerts go to a small line on the chip and the chat log instead of a big center popup
+{ const st = document.createElement('style'); st.textContent = `
+body #hud #raidBar { left: 12px !important; right: auto !important; top: auto !important; transform: none !important; bottom: calc(env(safe-area-inset-bottom, 0px) + 128px) !important;
+  max-width: min(46vw, 260px) !important; white-space: normal !important; text-align: left !important; font-size: 11px !important; padding: 2px 8px !important; opacity: .85; height: auto !important; }
+@media (pointer: coarse) { body #hud #raidBar { left: 12px !important; right: auto !important; bottom: auto !important; top: calc(env(safe-area-inset-top, 0px) + 68px) !important; max-width: 46vw !important; } }
+body #hud #raidBar.flash { opacity: 1; box-shadow: 0 0 0 2px #ff6a5a; }
+`; document.head.appendChild(st); }
+let raidNoteT = 0, raidNoteTxt = '';
+function raidNote(big, sm) { raidNoteTxt = `⚔ ${big}${sm ? ' · ' + sm : ''}`; raidNoteT = performance.now() + 4500; log(raidNoteTxt, 'sys'); }
+{ const _rh = raidHud; raidHud = function () { const r = _rh.apply(this, arguments); if (!raidEl || raidEl.hidden) return r;
+  const R = raidNow(), on = performance.now() < raidNoteT;
+  if (on) raidEl.textContent = raidNoteTxt;
+  else if (!R.active && R.next > 60000) raidEl.hidden = true;
+  raidEl.classList.toggle('flash', on); return r; }; }
+
 // =================== PC CONTROLS: the mouse goes straight back to aiming when a menu closes ===================
 // Before: closing a menu left the mouse free, so your first click both grabbed the mouse AND fired a shot.
 // Now: closing any menu re-captures the mouse, a click that only grabs the mouse never fires, and Esc opens the pause menu in one press.
@@ -13436,6 +13453,7 @@ const UPDATES = [
   { id: 66, title: 'Characters, body type and controller', items: ['Every character now has a permanent ID. Making a new character never replaces an old one, even with the same callsign', 'Start screen → 👥 Characters: switch between all your characters. Characters save automatically to browser & cloud', 'Moving to a different device? Characters → Download file or Copy code, then Upload file or Paste code on the other device', 'Pick ♂ Male or ♀ Female on the start screen', 'Controller: tap LB for the bag, hold LB for gun/staff, heal, codex and dance; R3 heals; D-pad works in menus; A skips cutscenes; rumble when you get hit', 'Wardrobe → Armor: switch Male / Female any time', 'Flying into an asteroid now bounces you off instead of trapping you', 'Removed the old Skip tutorial button']},
   { id: 67, title: 'Cleaner screen', items: ['The minimap now stays north-up; your arrow turns instead', 'The compass is smaller and sits under the minimap', 'Boss health moved out of the middle of the screen to the top-right, under the compass', 'Leave the helm (and other flying prompts) moved to a small chip in the bottom-left', 'Wardrobe shows armor, helmets and faces from the front (capes still from the back)']},
   { id: 68, title: '1.8: Gun sounds, your look, and smoother PC controls', items: ['Gunfire works again: sound effects could get stuck silent after pressing Start. Now any key or tap wakes them up, and iPhones play them even on silent mode', 'Every weapon sounds new: punchy blasters, cracking rifles, booming shotguns with a pump, a whooshing rocket launcher, a twanging crossbow, a buzzing Stinger, and its own voice for every spell element. Reloads, empty clicks, shell casings and explosions are new too', 'New default look: PS1 render, Crisp Toon, Sharp pixels. First launch lets you pick a look (with screenshots) and your music. Change both any time in Menu → Settings', 'PC: closing a menu puts you straight back into aiming (no more wasted shot to grab the mouse). One Esc opens the pause menu. Press 1–9 to pick menu options, 1 gun · 2 staff · 3 melee, mouse wheel swaps weapons, I opens the bag', 'New Game+ only unlocks after you finish the story', 'The end credits play the hymn']},
+  { id: 69, title: 'Raid notices out of the way', items: ['The raid chip is now small and sits above your health (top-left on phones) instead of the middle of the screen', 'The next-raid countdown only shows in the last minute', 'Raid alerts, waves and boss calls show on that chip and in the chat log instead of a big popup']},
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {

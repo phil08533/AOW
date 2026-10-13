@@ -203,6 +203,7 @@ function openWardrobe() {
       for (const [t, f] of [['♂ Male', false], ['♀ Female', true]]) { const b = document.createElement('button'); b.className = 'pbtn' + (isFemale(S.look) === f ? ' go' : ''); b.style.padding = '5px 10px'; b.textContent = t; b.addEventListener('click', () => { setSex(f); markDirty(); SFX.item(); sendPresence(true); if (LEVEL.id === 'ship') placeMannequin(); render(); }); c.appendChild(b); }
       r.append(nm, c); rows.appendChild(r); }
     Object.entries(T).forEach(([id, it]) => {
+      if (tab === 'a' && it.shop === false && !(S.ownA && S.ownA[id])) return;
       const un = lookUnlocked(T, id), on = L[tab] === id, r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = it.col || it.trim || it.visor || '#9aa1aa';
       const nm = document.createElement('span'); nm.textContent = it.name + (tab === 'a' && it.def ? ` · −${Math.round(it.def * 100)}% dmg` : '');
@@ -224,7 +225,7 @@ function openWardrobe() {
   pvMe(); rows.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') setTimeout(pvMe, 0); });
 }
 function announceUnlocks(lv) {
-  for (const T of [ARMORS, CAPES, HELMS]) for (const id in T) { const it = T[id]; if (it.lvl === lv && !it.q && !it.gear && !it.flag) log(`Unlocked: ${it.name}. Open the Wardrobe from your Bag.`, 'loot'); }
+  for (const T of [ARMORS, CAPES, HELMS]) for (const id in T) { const it = T[id]; if (it.lvl === lv && !it.q && !it.gear && !it.flag && it.shop !== false) log(`Unlocked: ${it.name}. Open the Wardrobe from your Bag.`, 'loot'); }
   for (const id in MELEE) if (MELEE[id].req === lv) log(`${MELEE[id].name} can now be bought from gunsmiths.`, 'loot');
 }
 

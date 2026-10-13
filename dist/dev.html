@@ -103,15 +103,17 @@ header {
 }
 .mode-toggle {
   display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
   background: #050711;
   border: 1px solid var(--panel-border);
   border-radius: 4px;
   padding: 2px;
 }
 .mode-btn {
-  flex: 1;
-  padding: 5px;
-  font-size: 11px;
+  flex: 1 1 calc(50% - 4px);
+  padding: 4px 2px;
+  font-size: 10px;
   font-family: var(--font-mono);
   font-weight: bold;
   background: transparent;
@@ -120,6 +122,7 @@ header {
   cursor: pointer;
   border-radius: 3px;
   text-align: center;
+  white-space: nowrap;
 }
 .mode-btn.active {
   background: rgba(79, 210, 255, 0.25);
@@ -558,6 +561,7 @@ header {
         <button class="mode-btn active" id="tabModeModels">📦 Assets (<span id="modelCount">0</span>)</button>
         <button class="mode-btn" id="tabModeFiles">📄 Files (<span id="fileCount">0</span>)</button>
         <button class="mode-btn" id="tabModeChar">🎭 Face & Armor</button>
+        <button class="mode-btn" id="tabModePlanets">🪐 Planets & Map</button>
       </div>
       <input type="text" class="search-box" id="searchFilter" placeholder="Search models or files...">
       <div class="cat-scroll" id="catScroll">
@@ -680,6 +684,157 @@ header {
         </div>
         <div class="char-item-list" id="armorList"></div>
         <button class="char-add-btn" id="btnAddArmor">➕ Add New Armor Set</button>
+
+        <!-- Selected Armor Settings & Exclusivity -->
+        <div id="armorPropsCard" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)">
+          <div style="font-size:10px;font-weight:700;color:var(--gold);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">🛡️ Selected Armor Settings</div>
+          <div class="char-row">
+            <span>Name:</span>
+            <input type="text" id="inpArmorName" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:3px 6px;font-size:11px;width:130px">
+          </div>
+          <div class="char-row">
+            <span>Req. Level:</span>
+            <input type="number" id="inpArmorLvl" min="1" max="100" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:3px 6px;font-size:11px;width:60px">
+          </div>
+          <div class="char-row">
+            <span>Cost (cr):</span>
+            <input type="number" id="inpArmorCost" min="0" step="50" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:3px 6px;font-size:11px;width:70px">
+          </div>
+          <div class="char-row">
+            <span>Def Bonus:</span>
+            <input type="number" id="inpArmorDef" min="0" max="1" step="0.01" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:3px 6px;font-size:11px;width:60px">
+          </div>
+          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;margin-top:8px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px;font-weight:600;color:var(--fg)">
+              <input type="checkbox" id="chkArmorShop" checked style="accent-color:var(--accent);width:15px;height:15px">
+              <span>Available in Armory</span>
+            </label>
+            <div style="font-size:10px;color:var(--dim);margin-top:4px;line-height:1.3">
+              Uncheck to make this set <b>Exclusive</b>. Exclusive armor will not appear in the Wardrobe shop unless earned or granted.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Planets & Galaxy Map Panel -->
+    <div class="char-panel" id="planetPanel" style="display:none">
+      <div class="char-card">
+        <div class="char-card-title">
+          <span>🪐 Worlds & Bodies (<span id="planetCount">0</span>)</span>
+        </div>
+        <div class="char-item-list" id="planetList"></div>
+        <button class="char-add-btn" id="btnAddPlanet">➕ Add New Celestial Body</button>
+      </div>
+
+      <div class="char-card" id="planetInspector" style="display:none">
+        <div class="char-card-title">
+          <span id="planetInspectorTitle">Planet Inspector</span>
+        </div>
+
+        <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;margin:6px 0 4px">Orbit & Space Position</div>
+        <div class="char-row">
+          <span>Name:</span>
+          <input type="text" id="inpPlanetName" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:3px 6px;font-size:11px;width:130px">
+        </div>
+        <div class="char-row">
+          <span>Survey Name:</span>
+          <input type="text" id="inpPlanetSurvey" placeholder="Shown in Star Chart" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:3px 6px;font-size:11px;width:130px">
+        </div>
+        <div class="char-row">
+          <span>Coordinates (X, Y, Z):</span>
+          <div style="display:flex;gap:4px">
+            <input type="number" id="inpPlanetPosX" title="X Position" style="width:40px;background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:2px 4px;font-size:10px">
+            <input type="number" id="inpPlanetPosY" title="Y Position" style="width:40px;background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:2px 4px;font-size:10px">
+            <input type="number" id="inpPlanetPosZ" title="Z Position" style="width:40px;background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:2px 4px;font-size:10px">
+          </div>
+        </div>
+        <div class="char-row">
+          <span>Scale Radius (r):</span>
+          <input type="number" id="inpPlanetRadius" min="10" max="600" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:3px 6px;font-size:11px;width:60px">
+        </div>
+        <div class="char-row">
+          <span>Atmosphere Color:</span>
+          <input type="color" id="inpPlanetColor" value="#3a6cb8" style="background:transparent;border:none;cursor:pointer;width:32px;height:24px">
+        </div>
+
+        <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;margin:10px 0 4px">Features & Rings</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer">
+            <input type="checkbox" id="chkPlanetClouds" style="accent-color:var(--accent)">
+            <span>Atmospheric Clouds Layer</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer">
+            <input type="checkbox" id="chkPlanetRings" style="accent-color:var(--accent)">
+            <span>Planetary Dust Rings</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer">
+            <input type="checkbox" id="chkPlanetStation" style="accent-color:var(--accent)">
+            <span>Orbital Station Model</span>
+          </label>
+        </div>
+
+        <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;margin:12px 0 4px">Surface Noise & Shader</div>
+        <div class="char-row">
+          <span>Noise Seed:</span>
+          <div style="display:flex;gap:4px">
+            <input type="number" id="inpPlanetSeed" style="width:55px;background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:2px 4px;font-size:11px">
+            <button class="btn" id="btnRandomSeed" style="padding:2px 6px;font-size:10px">🎲</button>
+          </div>
+        </div>
+        <div class="char-row">
+          <span>Banding (Gas / Layers):</span>
+          <input type="range" id="rngPlanetBands" min="0" max="1" step="0.05" value="0" style="width:90px">
+        </div>
+        <div class="char-row">
+          <span>Polar Ice Caps:</span>
+          <input type="range" id="rngPlanetCaps" min="0" max="1" step="0.02" value="0" style="width:90px">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer">
+            <input type="checkbox" id="chkPlanetCraters" style="accent-color:var(--accent)">
+            <span>Impact Craters</span>
+          </label>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer">
+              <input type="checkbox" id="chkPlanetLava" style="accent-color:var(--accent)">
+              <span>Lava Veins</span>
+            </label>
+            <input type="color" id="inpPlanetLavaCol" value="#ff6a1a" style="background:transparent;border:none;cursor:pointer;width:24px;height:20px">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer">
+              <input type="checkbox" id="chkPlanetGrid" style="accent-color:var(--accent)">
+              <span>Cyber Grid</span>
+            </label>
+            <input type="color" id="inpPlanetGridCol" value="#ff3b2a" style="background:transparent;border:none;cursor:pointer;width:24px;height:20px">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer">
+              <input type="checkbox" id="chkPlanetGlow" style="accent-color:var(--accent)">
+              <span>Bioluminescent Dots</span>
+            </label>
+            <input type="color" id="inpPlanetGlowCol" value="#4fffe0" style="background:transparent;border:none;cursor:pointer;width:24px;height:20px">
+          </div>
+        </div>
+
+        <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;margin:12px 0 4px">Elevation Color Ramp</div>
+        <div id="rampBarPreview" style="height:14px;border-radius:4px;border:1px solid rgba(255,255,255,0.2);margin-bottom:8px"></div>
+        <div id="rampStopsList" style="display:flex;flex-direction:column;gap:4px;max-height:120px;overflow-y:auto"></div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="btn" id="btnAddRampStop" style="flex:1;padding:3px 6px;font-size:10px">➕ Add Stop</button>
+          <select id="selPlanetPreset" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;font-size:10px;padding:2px 4px">
+            <option value="">Presets...</option>
+            <option value="earth">Terran / Earth</option>
+            <option value="mezar">Desert / Dunes</option>
+            <option value="capitone">Frost & Fire</option>
+            <option value="ocean">Deep Ocean</option>
+            <option value="robot">Cyber Metal</option>
+            <option value="zarlich">Violet Storm</option>
+            <option value="moon">Lunar Gray</option>
+            <option value="vector">Void Purple</option>
+          </select>
+        </div>
       </div>
     </div>
   </aside>
@@ -711,12 +866,15 @@ header {
     <div class="studio-bar">
       <span>🎨 3D STUDIO PREVIEW</span>
       <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn active" id="btnViewPlanet3D" style="display:none;padding:2px 8px;font-size:10px" title="View selected world as rotating 3D planet sphere">🪐 3D Planet</button>
+        <button class="btn" id="btnViewGalaxyMap" style="display:none;padding:2px 8px;font-size:10px" title="View interactive Star Chart of the Solar System">🗺️ Star Chart</button>
         <button class="btn" id="btnToggle3dBg" style="padding:2px 8px;font-size:10px;font-weight:600" title="Toggle 3D Viewport Backdrop between Dark and White">☀️ White 3D View</button>
         <button class="btn" id="btnResetCam" style="padding:2px 8px;font-size:10px">Reset Camera</button>
       </div>
     </div>
     <div id="canvasContainer">
       <canvas id="threeCanvas"></canvas>
+      <canvas id="mapCanvas" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:#05060f;cursor:pointer"></canvas>
       <div class="model-hud" id="modelHud">
         <b id="hudName">No Model Loaded</b><br>
         <span id="hudDims">0×0×0 m</span> • <span id="hudMeshes">0 meshes</span>
@@ -1044,11 +1202,20 @@ let charBaseArmor = 'auto'; // 'auto', 'bare', or 'std'
 let charShowWeapon = false; // default false so weapon doesn't block armor preview
 let selectedCharPart = null; // { type, id, name, file, code, meta }
 
+// Planets & Map State
+let planetsLoaded = false;
+let planetsData = [];
+let selectedPlanet = null;
+let planetViewMode = '3d'; // '3d' or 'map'
+let currentPlanetAnims = null;
+
 // DOM Elements
 const tabModeModels = document.getElementById("tabModeModels");
 const tabModeFiles = document.getElementById("tabModeFiles");
 const tabModeChar = document.getElementById("tabModeChar");
+const tabModePlanets = document.getElementById("tabModePlanets");
 const charPanel = document.getElementById("charPanel");
+const planetPanel = document.getElementById("planetPanel");
 const searchFilter = document.getElementById("searchFilter");
 const catScroll = document.getElementById("catScroll");
 const itemList = document.getElementById("itemList");
@@ -1108,6 +1275,49 @@ const armorList = document.getElementById("armorList");
 const armorCount = document.getElementById("armorCount");
 const btnAddArmor = document.getElementById("btnAddArmor");
 
+// Armor Props DOM Elements
+const armorPropsCard = document.getElementById("armorPropsCard");
+const inpArmorName = document.getElementById("inpArmorName");
+const inpArmorLvl = document.getElementById("inpArmorLvl");
+const inpArmorCost = document.getElementById("inpArmorCost");
+const inpArmorDef = document.getElementById("inpArmorDef");
+const chkArmorShop = document.getElementById("chkArmorShop");
+
+// Planet Studio DOM Elements
+const planetList = document.getElementById("planetList");
+const planetCount = document.getElementById("planetCount");
+const btnAddPlanet = document.getElementById("btnAddPlanet");
+const planetInspector = document.getElementById("planetInspector");
+const planetInspectorTitle = document.getElementById("planetInspectorTitle");
+const inpPlanetName = document.getElementById("inpPlanetName");
+const inpPlanetSurvey = document.getElementById("inpPlanetSurvey");
+const inpPlanetPosX = document.getElementById("inpPlanetPosX");
+const inpPlanetPosY = document.getElementById("inpPlanetPosY");
+const inpPlanetPosZ = document.getElementById("inpPlanetPosZ");
+const inpPlanetRadius = document.getElementById("inpPlanetRadius");
+const inpPlanetColor = document.getElementById("inpPlanetColor");
+const chkPlanetClouds = document.getElementById("chkPlanetClouds");
+const chkPlanetRings = document.getElementById("chkPlanetRings");
+const chkPlanetStation = document.getElementById("chkPlanetStation");
+const inpPlanetSeed = document.getElementById("inpPlanetSeed");
+const btnRandomSeed = document.getElementById("btnRandomSeed");
+const rngPlanetBands = document.getElementById("rngPlanetBands");
+const rngPlanetCaps = document.getElementById("rngPlanetCaps");
+const chkPlanetCraters = document.getElementById("chkPlanetCraters");
+const chkPlanetLava = document.getElementById("chkPlanetLava");
+const inpPlanetLavaCol = document.getElementById("inpPlanetLavaCol");
+const chkPlanetGrid = document.getElementById("chkPlanetGrid");
+const inpPlanetGridCol = document.getElementById("inpPlanetGridCol");
+const chkPlanetGlow = document.getElementById("chkPlanetGlow");
+const inpPlanetGlowCol = document.getElementById("inpPlanetGlowCol");
+const rampBarPreview = document.getElementById("rampBarPreview");
+const rampStopsList = document.getElementById("rampStopsList");
+const btnAddRampStop = document.getElementById("btnAddRampStop");
+const selPlanetPreset = document.getElementById("selPlanetPreset");
+const btnViewPlanet3D = document.getElementById("btnViewPlanet3D");
+const btnViewGalaxyMap = document.getElementById("btnViewGalaxyMap");
+const mapCanvas = document.getElementById("mapCanvas");
+
 function showToast(msg, isError = false) {
   toast.textContent = msg;
   toast.style.borderColor = isError ? "var(--accent-red)" : "var(--accent-blue)";
@@ -1150,15 +1360,26 @@ async function init() {
 }
 
 // Mode Switching
+function exitPlanetView() {
+  if (btnViewPlanet3D) btnViewPlanet3D.style.display = "none";
+  if (btnViewGalaxyMap) btnViewGalaxyMap.style.display = "none";
+  if (mapCanvas) mapCanvas.style.display = "none";
+  const threeCanvas = document.getElementById("threeCanvas");
+  if (threeCanvas) threeCanvas.style.display = "block";
+}
+
 tabModeModels.onclick = () => {
   currentMode = "models";
   tabModeModels.classList.add("active");
   tabModeFiles.classList.remove("active");
   tabModeChar.classList.remove("active");
+  tabModePlanets.classList.remove("active");
   catScroll.style.display = "flex";
   searchFilter.style.display = "block";
   itemList.style.display = "block";
   charPanel.style.display = "none";
+  planetPanel.style.display = "none";
+  exitPlanetView();
   renderList();
   if (selectedModel) selectModel(selectedModel);
 };
@@ -1167,10 +1388,13 @@ tabModeFiles.onclick = () => {
   tabModeFiles.classList.add("active");
   tabModeModels.classList.remove("active");
   tabModeChar.classList.remove("active");
+  tabModePlanets.classList.remove("active");
   catScroll.style.display = "none";
   searchFilter.style.display = "block";
   itemList.style.display = "block";
   charPanel.style.display = "none";
+  planetPanel.style.display = "none";
+  exitPlanetView();
   renderList();
   if (selectedFile) selectFile(selectedFile);
 };
@@ -1179,14 +1403,37 @@ tabModeChar.onclick = () => {
   tabModeChar.classList.add("active");
   tabModeModels.classList.remove("active");
   tabModeFiles.classList.remove("active");
+  tabModePlanets.classList.remove("active");
   catScroll.style.display = "none";
   searchFilter.style.display = "none";
   itemList.style.display = "none";
   charPanel.style.display = "flex";
+  planetPanel.style.display = "none";
+  exitPlanetView();
   if (!charDataLoaded) {
     loadCharacterData();
   } else {
     renderCharIn3D();
+  }
+};
+tabModePlanets.onclick = () => {
+  currentMode = "planets";
+  tabModePlanets.classList.add("active");
+  tabModeModels.classList.remove("active");
+  tabModeFiles.classList.remove("active");
+  tabModeChar.classList.remove("active");
+  catScroll.style.display = "none";
+  searchFilter.style.display = "none";
+  itemList.style.display = "none";
+  charPanel.style.display = "none";
+  planetPanel.style.display = "flex";
+  btnViewPlanet3D.style.display = "inline-block";
+  btnViewGalaxyMap.style.display = "inline-block";
+  if (!planetsLoaded) {
+    loadPlanetsData();
+  } else if (selectedPlanet) {
+    if (planetViewMode === '3d') renderPlanetIn3D();
+    else renderGalaxyMap();
   }
 };
 
@@ -1421,7 +1668,9 @@ function selectFaceSubtab() {
   selectedCharPart = { type: "face", id: "face", name: "Face Features", file: "face.js", meta: {} };
   selectedModel = null;
   selectedFile = null;
+  selectedPlanet = null;
   charLook.h = "face";
+  if (armorPropsCard) armorPropsCard.style.display = "none";
 
   currentTitle.textContent = "Face Features [src/face.js]";
   statPath.textContent = "src/face.js";
@@ -1466,7 +1715,9 @@ function selectHelmet(helm) {
   selectedCharPart = { type: "helmet", id: helm.id, name: helm.name, file: helm.file, meta: { lvl: helm.lvl } };
   selectedModel = null;
   selectedFile = null;
+  selectedPlanet = null;
   charLook.h = helm.id;
+  if (armorPropsCard) armorPropsCard.style.display = "none";
 
   currentTitle.textContent = `Helmet: ${helm.name} [${helm.id}]`;
   statPath.textContent = `src/${helm.file || "face.js"}`;
@@ -1495,7 +1746,7 @@ function renderArmorList() {
       </div>
       <div class="char-item-meta">
         <span>+${Math.round((armor.def || 0) * 100)}% Def</span>
-        <span>Lv.${armor.lvl || 1}</span>
+        <span>${armor.shop === false ? '🔒 Exclusive' : 'Lv.' + (armor.lvl || 1)}</span>
       </div>
     `;
     div.onclick = () => {
@@ -1519,12 +1770,23 @@ function selectArmor(armor) {
       trim: armor.trim,
       visor: armor.visor,
       body: armor.body,
-      note: armor.note
+      note: armor.note,
+      shop: armor.shop !== false
     }
   };
   selectedModel = null;
   selectedFile = null;
+  selectedPlanet = null;
   charLook.a = armor.id;
+
+  if (armorPropsCard) {
+    armorPropsCard.style.display = "block";
+    inpArmorName.value = armor.name || armor.id;
+    inpArmorLvl.value = armor.lvl || 1;
+    inpArmorCost.value = armor.cost || 0;
+    inpArmorDef.value = armor.def || 0;
+    chkArmorShop.checked = (armor.shop !== false);
+  }
 
   if (charBaseArmor === "auto") {
     const isStd = armor.id === "std" || armor.id === "recon";
@@ -1543,6 +1805,65 @@ function selectArmor(armor) {
   renderArmorList();
   setCharFocus("body");
   renderCharIn3D();
+}
+
+// Armor Property Inputs Listeners
+if (inpArmorName) {
+  inpArmorName.addEventListener("input", () => {
+    if (selectedCharPart && selectedCharPart.type === "armor") {
+      selectedCharPart.name = inpArmorName.value;
+      selectedCharPart.meta.name = inpArmorName.value;
+      currentTitle.textContent = `Armor: ${selectedCharPart.name} [${selectedCharPart.id}]`;
+      const a = charData.armors.find(x => x.id === selectedCharPart.id);
+      if (a) a.name = inpArmorName.value;
+      renderArmorList();
+      if (!isDirty) { isDirty = true; dirtyDot.classList.add("visible"); }
+    }
+  });
+}
+if (inpArmorLvl) {
+  inpArmorLvl.addEventListener("input", () => {
+    if (selectedCharPart && selectedCharPart.type === "armor") {
+      selectedCharPart.meta.lvl = parseInt(inpArmorLvl.value) || 1;
+      const a = charData.armors.find(x => x.id === selectedCharPart.id);
+      if (a) a.lvl = selectedCharPart.meta.lvl;
+      renderArmorList();
+      if (!isDirty) { isDirty = true; dirtyDot.classList.add("visible"); }
+    }
+  });
+}
+if (inpArmorCost) {
+  inpArmorCost.addEventListener("input", () => {
+    if (selectedCharPart && selectedCharPart.type === "armor") {
+      selectedCharPart.meta.cost = parseInt(inpArmorCost.value) || 0;
+      const a = charData.armors.find(x => x.id === selectedCharPart.id);
+      if (a) a.cost = selectedCharPart.meta.cost;
+      if (!isDirty) { isDirty = true; dirtyDot.classList.add("visible"); }
+    }
+  });
+}
+if (inpArmorDef) {
+  inpArmorDef.addEventListener("input", () => {
+    if (selectedCharPart && selectedCharPart.type === "armor") {
+      selectedCharPart.meta.def = parseFloat(inpArmorDef.value) || 0;
+      const a = charData.armors.find(x => x.id === selectedCharPart.id);
+      if (a) a.def = selectedCharPart.meta.def;
+      renderArmorList();
+      if (!isDirty) { isDirty = true; dirtyDot.classList.add("visible"); }
+    }
+  });
+}
+if (chkArmorShop) {
+  chkArmorShop.addEventListener("change", () => {
+    if (selectedCharPart && selectedCharPart.type === "armor") {
+      selectedCharPart.meta.shop = chkArmorShop.checked;
+      const a = charData.armors.find(x => x.id === selectedCharPart.id);
+      if (a) a.shop = chkArmorShop.checked;
+      renderArmorList();
+      if (!isDirty) { isDirty = true; dirtyDot.classList.add("visible"); }
+      showToast(chkArmorShop.checked ? "Available in Armory Shop" : "Marked as Exclusive Armor (Hidden from shop)");
+    }
+  });
 }
 
 // Add New Helmet
@@ -1581,16 +1902,18 @@ btnAddArmor.onclick = () => {
   const cleanId = id.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
   if (!cleanId) return;
   const name = prompt("Enter armor display name:", cleanId.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())) || cleanId;
+  const inShop = confirm("Should this armor set be available in the Armory / Wardrobe Shop?\n\nOK = Available in Armory\nCancel = Exclusive Set (Hidden from shop)");
   const newArmor = {
     id: cleanId,
     name: name.trim(),
     lvl: 1,
-    cost: 500,
+    cost: inShop ? 600 : 0,
     def: 0.05,
     trim: "#ffd36a",
     visor: "#4fd2ff",
     body: "#2b2a2c",
     note: "",
+    shop: inShop,
     file: "armor.js",
     code: `function (g, A) {\n  // Armor: ${name.trim()} (${cleanId})\n  // Shoulder pauldrons\n  for (const s of [-1, 1]) {\n    part(g, B(0.32, 0.18, 0.34), A.trim, 0.38 * s, 1.64, 0, 0, 0, 0.25 * s);\n    part(g, Cy(0.04, 0.04, 0.12, 6), glow(A.visor), 0.42 * s, 1.72, 0);\n  }\n  // Chest plate\n  part(g, B(0.52, 0.36, 0.12), A.trim, 0, 1.38, 0.18);\n  part(g, new THREE.CircleGeometry(0.08, 6), glow(A.visor), 0, 1.4, 0.25);\n}`
   };
@@ -1599,14 +1922,14 @@ btnAddArmor.onclick = () => {
   try {
     const fn = new Function("THREE", "part", "B", "Cy", "SPH", "E", "seg", "chain", "eyes", "toon", "glow", "C", "V", "UP", "CONE", `return ${newArmor.code}`)(THREE, part, B, Cy, SPH, E, seg, chain, eyes, toon, glow, C, V, UP, CONE);
     ARMOR_KITS[cleanId] = fn;
-    ARMORS[cleanId] = { name: newArmor.name, lvl: newArmor.lvl, cost: newArmor.cost, def: newArmor.def, trim: newArmor.trim, visor: newArmor.visor, body: newArmor.body };
+    ARMORS[cleanId] = { name: newArmor.name, lvl: newArmor.lvl, cost: newArmor.cost, def: newArmor.def, trim: newArmor.trim, visor: newArmor.visor, body: newArmor.body, shop: inShop };
   } catch (e) {
     console.error("Error compiling new armor:", e);
   }
   selectArmor(newArmor);
   isDirty = true;
   dirtyDot.classList.add("visible");
-  showToast(`Created armor set "${name}". Live preview active! Click Save & Rebuild (Ctrl+S) to persist.`);
+  showToast(`Created armor "${name}" (${inShop ? 'Shop' : 'Exclusive'}). Live preview active! Click Save to persist.`);
 };
 
 // Add Face Style
@@ -1833,6 +2156,9 @@ function previewCurrentCode() {
       console.error("Preview compilation error:", err);
       showToast("Code error: " + err.message, true);
     }
+  } else if (currentMode === "planets" && selectedPlanet) {
+    renderPlanetIn3D();
+    showToast(`3D Planet preview updated: ${selectedPlanet.name || selectedPlanet.id}`);
   } else {
     showToast("Currently viewing full file. Select a 3D model or gear part to preview.", true);
   }
@@ -1863,6 +2189,20 @@ async function saveCurrent() {
         isDirty = false;
         dirtyDot.classList.remove("visible");
         showToast(`Saved ${selectedCharPart.name} & Rebuilt! In-game cache cleared.`);
+      } else {
+        showToast("Save error: " + (data.error || "Failed"), true);
+      }
+    } else if (currentMode === "planets" && selectedPlanet) {
+      const res = await fetch("/api/save-planet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(selectedPlanet)
+      });
+      const data = await res.json();
+      if (data.success) {
+        isDirty = false;
+        dirtyDot.classList.remove("visible");
+        showToast(`Saved Planet ${selectedPlanet.name} & Rebuilt! Star chart updated.`);
       } else {
         showToast("Save error: " + (data.error || "Failed"), true);
       }
@@ -1918,7 +2258,15 @@ btnSave.onclick = saveCurrent;
 btnCopyAI.onclick = () => {
   const code = codeArea.value;
   let header = "";
-  if (currentMode === "char" && selectedCharPart) {
+  if (currentMode === "planets" && selectedPlanet) {
+    header = `// ==========================================
+// Planet / Celestial Body: ${selectedPlanet.name} [${selectedPlanet.id}]
+// File: src/space.js & src/levels.js
+// Project: Art of War: Setting Sun
+// ==========================================
+
+${code}`;
+  } else if (currentMode === "char" && selectedCharPart) {
     header = `// ==========================================
 // 3D Character Part: ${selectedCharPart.name} [${selectedCharPart.type}: ${selectedCharPart.id}]
 // File: src/${selectedCharPart.file || "face.js"}
@@ -1951,6 +2299,617 @@ ${code}`;
 };
 
 btnLaunchGame.onclick = () => window.open("/", "_blank");
+
+// =======================================================================
+// --- Planet & Galaxy Map Studio Logic ---
+// =======================================================================
+function pnoise(seed) {
+  const h = (x, y) => { const n = Math.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453; return n - Math.floor(n); };
+  const v = (x, y, W) => { const x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy), wx = (k) => ((k % W) + W) % W;
+    const a = h(wx(x0), y0), b = h(wx(x0 + 1), y0), c = h(wx(x0), y0 + 1), d = h(wx(x0 + 1), y0 + 1); return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy; };
+  return (x, y) => { let s = 0, amp = 0.5, f = 1; for (let o = 0; o < 5; o++) { s += v(x * f * 8, y * f * 8, 8 * f) * amp; amp *= 0.5; f *= 2; } return s / 0.97; };
+}
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+function generatePlanetCanvas(L, kind) {
+  const W = 256, H = 128, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const x = cv.getContext('2d'), img = x.createImageData(W, H), seed = L.seed || 1;
+  const n = pnoise(seed), n2 = pnoise(seed + 5);
+  const ramp = (L.ramp && L.ramp.length ? L.ramp : [[0, '#1a3a7a'], [1, '#ffffff']]).map(([t, c]) => [t, new THREE.Color(c)]);
+  const col = new THREE.Color(), cc = new THREE.Color();
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const u = i / W, v = j / H, lat = Math.abs(v - 0.5) * 2; let e = n(u, v * 0.5);
+    if (kind === 'clouds') {
+      const c = n2(u * 1.3, v * 0.6);
+      const a = clamp((c - 0.52) * 4, 0, 1) * 0.85;
+      const k = (j * W + i) * 4;
+      img.data[k] = img.data[k + 1] = img.data[k + 2] = 255;
+      img.data[k + 3] = a * 255;
+      continue;
+    }
+    if (L.bands) e = e * (1 - L.bands) + (0.5 + 0.5 * Math.sin(v * 22 + n2(u, v) * 6)) * L.bands;
+    let k0 = 0; while (k0 < ramp.length - 1 && e > ramp[k0 + 1][0]) k0++;
+    const a = ramp[k0], b = ramp[Math.min(k0 + 1, ramp.length - 1)], t = b === a ? 0 : clamp((e - a[0]) / (b[0] - a[0]), 0, 1);
+    col.copy(a[1]).lerp(b[1], t * t);
+    if (L.caps && lat > (1 - L.caps * 0.5) - n2(u, v) * 0.1) col.set('#f4f8ff');
+    if (L.lava && e > 0.66 && n2(u * 2, v) > 0.72) col.set(L.lava);
+    if (L.grid && (i % 16 === 0 || j % 12 === 0) && n2(u, v) > 0.45) col.lerp(cc.set(L.grid), 0.8);
+    if (L.glowDots && e > 0.75 && (i * 7 + j * 13) % 23 === 0) col.set(L.glowDots);
+    if (L.craters) { const c = n2(u * 3, v * 1.5); if (c > 0.68) col.multiplyScalar(0.7 + (c - 0.68)); }
+    col.offsetHSL(0, 0, (n2(u * 4, v * 2) - 0.5) * 0.06);
+    const k = (j * W + i) * 4; img.data[k] = col.r * 255; img.data[k + 1] = col.g * 255; img.data[k + 2] = col.b * 255; img.data[k + 3] = 255;
+  }
+  x.putImageData(img, 0, 0);
+  return cv;
+}
+
+async function loadPlanetsData() {
+  try {
+    const res = await fetch('/api/planets').then(r => r.json());
+    planetsData = res.planets || [];
+    planetCount.textContent = planetsData.length;
+    planetsLoaded = true;
+    renderPlanetList();
+    if (planetsData.length > 0) {
+      selectPlanet(planetsData[0]);
+    }
+  } catch (err) {
+    console.error('Failed to load planets:', err);
+    showToast('Error loading planets', true);
+  }
+}
+
+function renderPlanetList() {
+  planetList.innerHTML = '';
+  planetsData.forEach(p => {
+    const div = document.createElement('div');
+    const isSel = selectedPlanet && selectedPlanet.id === p.id;
+    div.className = 'char-item-row' + (isSel ? ' active' : '');
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${p.col || '#3a6cb8'};box-shadow:0 0 6px ${p.col || '#3a6cb8'}"></span>
+        <span class="char-item-name">${p.name || p.id}</span>
+      </div>
+      <div class="char-item-meta">
+        <span>r:${p.r}</span>
+        <span>${p.ring ? '🪐' : ''}${p.clouds ? '☁️' : ''}${p.station ? '🛰️' : ''}</span>
+      </div>
+    `;
+    div.onclick = () => {
+      if (isDirty && !confirm('Discard unsaved changes?')) return;
+      selectPlanet(p);
+    };
+    planetList.appendChild(div);
+  });
+}
+
+function selectPlanet(p) {
+  selectedPlanet = p;
+  selectedCharPart = null;
+  selectedModel = null;
+  selectedFile = null;
+
+  currentTitle.textContent = `Planet: ${p.name || p.id} [${p.id}]`;
+  statPath.textContent = 'src/space.js & src/levels.js';
+
+  codeArea.value = `// ================= Planet / World: ${p.name || p.id} [${p.id}] =================
+// Position in Solar System (src/space.js):
+SPACE_BODIES.${p.id} = {
+  pos: V(${p.pos.x}, ${p.pos.y}, ${p.pos.z}),
+  r: ${p.r},
+  col: '${p.col}'${p.clouds ? ',\n  clouds: true' : ''}${p.ring ? ',\n  ring: true' : ''}${p.station ? ',\n  station: true' : ''}${p.survey ? `,\n  survey: ${JSON.stringify(p.survey)}` : ''}${p.note ? `,\n  note: ${JSON.stringify(p.note)}` : ''}
+};
+
+// Procedural Terrain Look (src/levels.js):
+PLANET_LOOK.${p.id} = ${JSON.stringify(p.look, null, 2)};
+`;
+
+  isDirty = false;
+  dirtyDot.classList.remove('visible');
+  updateLineNumbers();
+  updateStats();
+
+  if (planetInspector) {
+    planetInspector.style.display = 'block';
+    planetInspectorTitle.textContent = `🪐 ${p.name || p.id} Settings`;
+    inpPlanetName.value = p.name || p.id;
+    inpPlanetSurvey.value = p.survey || '';
+    inpPlanetPosX.value = p.pos.x;
+    inpPlanetPosY.value = p.pos.y;
+    inpPlanetPosZ.value = p.pos.z;
+    inpPlanetRadius.value = p.r;
+    inpPlanetColor.value = p.col || '#3a6cb8';
+
+    chkPlanetClouds.checked = !!p.clouds;
+    chkPlanetRings.checked = !!p.ring;
+    chkPlanetStation.checked = !!p.station;
+
+    inpPlanetSeed.value = p.look.seed || 1;
+    rngPlanetBands.value = p.look.bands || 0;
+    rngPlanetCaps.value = p.look.caps || 0;
+    chkPlanetCraters.checked = !!p.look.craters;
+    chkPlanetLava.checked = !!p.look.lava;
+    inpPlanetLavaCol.value = p.look.lava || '#ff6a1a';
+    chkPlanetGrid.checked = !!p.look.grid;
+    inpPlanetGridCol.value = p.look.grid || '#ff3b2a';
+    chkPlanetGlow.checked = !!p.look.glowDots;
+    inpPlanetGlowCol.value = p.look.glowDots || '#4fffe0';
+
+    renderRampBar();
+    renderRampStopsList();
+  }
+
+  renderPlanetList();
+  if (planetViewMode === '3d') {
+    renderPlanetIn3D();
+  } else {
+    renderGalaxyMap();
+  }
+}
+
+function updatePlanetCodeArea() {
+  if (!selectedPlanet) return;
+  const p = selectedPlanet;
+  codeArea.value = `// ================= Planet / World: ${p.name || p.id} [${p.id}] =================
+// Position in Solar System (src/space.js):
+SPACE_BODIES.${p.id} = {
+  pos: V(${p.pos.x}, ${p.pos.y}, ${p.pos.z}),
+  r: ${p.r},
+  col: '${p.col}'${p.clouds ? ',\n  clouds: true' : ''}${p.ring ? ',\n  ring: true' : ''}${p.station ? ',\n  station: true' : ''}${p.survey ? `,\n  survey: ${JSON.stringify(p.survey)}` : ''}${p.note ? `,\n  note: ${JSON.stringify(p.note)}` : ''}
+};
+
+// Procedural Terrain Look (src/levels.js):
+PLANET_LOOK.${p.id} = ${JSON.stringify(p.look, null, 2)};
+`;
+  updateLineNumbers();
+  updateStats();
+}
+
+function markPlanetDirty() {
+  if (!isDirty) {
+    isDirty = true;
+    dirtyDot.classList.add('visible');
+  }
+  updatePlanetCodeArea();
+  if (planetViewMode === '3d') {
+    renderPlanetIn3D();
+  } else {
+    renderGalaxyMap();
+  }
+}
+
+function renderRampBar() {
+  if (!selectedPlanet || !selectedPlanet.look || !selectedPlanet.look.ramp) return;
+  const ramp = selectedPlanet.look.ramp;
+  const grad = ramp.map(([t, c]) => `${c} ${Math.round(t * 100)}%`).join(', ');
+  rampBarPreview.style.background = `linear-gradient(to right, ${grad})`;
+}
+
+function renderRampStopsList() {
+  if (!selectedPlanet || !selectedPlanet.look || !selectedPlanet.look.ramp) return;
+  rampStopsList.innerHTML = '';
+  selectedPlanet.look.ramp.forEach((stop, idx) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:10px';
+    row.innerHTML = `
+      <input type="color" value="${stop[1]}" style="width:24px;height:20px;border:none;background:transparent;cursor:pointer">
+      <input type="number" min="0" max="1" step="0.01" value="${stop[0]}" style="width:48px;background:#131826;border:1px solid var(--border);color:#fff;border-radius:3px;padding:2px 4px;font-size:10px">
+      <span style="color:var(--dim);font-size:9px">${Math.round(stop[0] * 100)}%</span>
+      <button class="btn" style="padding:1px 5px;font-size:10px;margin-left:auto" title="Delete stop">✖</button>
+    `;
+    const colInp = row.children[0];
+    const posInp = row.children[1];
+    const delBtn = row.children[3];
+
+    colInp.oninput = () => {
+      stop[1] = colInp.value;
+      renderRampBar();
+      markPlanetDirty();
+    };
+    posInp.oninput = () => {
+      stop[0] = Math.max(0, Math.min(1, parseFloat(posInp.value) || 0));
+      selectedPlanet.look.ramp.sort((a, b) => a[0] - b[0]);
+      renderRampBar();
+      markPlanetDirty();
+    };
+    delBtn.onclick = () => {
+      if (selectedPlanet.look.ramp.length <= 2) {
+        showToast('At least 2 color stops are required', true);
+        return;
+      }
+      selectedPlanet.look.ramp.splice(idx, 1);
+      renderRampBar();
+      renderRampStopsList();
+      markPlanetDirty();
+    };
+    rampStopsList.appendChild(row);
+  });
+}
+
+// Color presets for planets
+const PLANET_PRESETS = {
+  earth: { ramp: [[0, '#1a3a7a'], [0.47, '#2a5aa8'], [0.52, '#d8c890'], [0.55, '#4f8a3a'], [0.68, '#3a6a2e'], [0.78, '#8a7a5a'], [0.88, '#e8e4dc']], caps: 0.86, clouds: '#ffffff', col: '#3a6cb8' },
+  mezar: { ramp: [[0, '#8a5a36'], [0.4, '#c48a52'], [0.55, '#e0b070'], [0.7, '#f0d0a0'], [0.85, '#b8703a']], bands: 0.6, col: '#d49a5a', ring: true },
+  capitone: { ramp: [[0, '#1a4a5a'], [0.44, '#2a6a7a'], [0.5, '#2f6a4a'], [0.62, '#3f8a52'], [0.72, '#dce8f0'], [0.9, '#ffffff']], caps: 0.7, clouds: '#eef4f8', lava: '#ff6a1a', col: '#9fe8ff' },
+  ocean: { ramp: [[0, '#0a3a5a'], [0.6, '#1a6a8a'], [0.72, '#2a8a9a'], [0.76, '#3f8a52'], [0.85, '#5fa04a']], clouds: '#ffffff', glowDots: '#4fffe0', col: '#2a8a9a' },
+  robot: { ramp: [[0, '#2b2a2c'], [0.5, '#4a4e56'], [0.7, '#5d636c'], [0.9, '#8a8f96']], grid: '#ff3b2a', col: '#c8402f' },
+  zarlich: { ramp: [[0, '#3a1e4a'], [0.45, '#6a3a8a'], [0.6, '#c86aff'], [0.8, '#f0c0ff']], bands: 0.8, col: '#c86aff', ring: true },
+  moon: { ramp: [[0, '#5a5a60'], [0.5, '#8a8a90'], [0.7, '#b0b0b4'], [1, '#d0d0d4']], craters: true, col: '#b0b0b4' },
+  vector: { ramp: [[0, '#05050a'], [0.55, '#14121e'], [0.7, '#2a1e3a'], [0.9, '#5a2a6a']], grid: '#c86aff', col: '#5a2a6a' }
+};
+
+if (selPlanetPreset) {
+  selPlanetPreset.onchange = () => {
+    const key = selPlanetPreset.value;
+    if (!key || !PLANET_PRESETS[key] || !selectedPlanet) return;
+    const pre = PLANET_PRESETS[key];
+    selectedPlanet.look.ramp = JSON.parse(JSON.stringify(pre.ramp));
+    if (pre.caps !== undefined) selectedPlanet.look.caps = pre.caps;
+    if (pre.bands !== undefined) selectedPlanet.look.bands = pre.bands;
+    if (pre.craters !== undefined) selectedPlanet.look.craters = pre.craters;
+    if (pre.clouds !== undefined) selectedPlanet.look.clouds = pre.clouds;
+    if (pre.lava !== undefined) selectedPlanet.look.lava = pre.lava;
+    if (pre.grid !== undefined) selectedPlanet.look.grid = pre.grid;
+    if (pre.glowDots !== undefined) selectedPlanet.look.glowDots = pre.glowDots;
+    if (pre.col) {
+      selectedPlanet.col = pre.col;
+      inpPlanetColor.value = pre.col;
+    }
+    if (pre.ring !== undefined) {
+      selectedPlanet.ring = pre.ring;
+      chkPlanetRings.checked = !!pre.ring;
+    }
+    rngPlanetBands.value = selectedPlanet.look.bands || 0;
+    rngPlanetCaps.value = selectedPlanet.look.caps || 0;
+    chkPlanetCraters.checked = !!selectedPlanet.look.craters;
+    chkPlanetLava.checked = !!selectedPlanet.look.lava;
+    chkPlanetGrid.checked = !!selectedPlanet.look.grid;
+    chkPlanetGlow.checked = !!selectedPlanet.look.glowDots;
+    renderRampBar();
+    renderRampStopsList();
+    markPlanetDirty();
+    selPlanetPreset.value = '';
+    showToast(`Applied preset: ${key}`);
+  };
+}
+
+if (btnAddRampStop) {
+  btnAddRampStop.onclick = () => {
+    if (!selectedPlanet) return;
+    selectedPlanet.look.ramp.push([0.5, '#7f8a9a']);
+    selectedPlanet.look.ramp.sort((a, b) => a[0] - b[0]);
+    renderRampBar();
+    renderRampStopsList();
+    markPlanetDirty();
+  };
+}
+
+if (btnRandomSeed) {
+  btnRandomSeed.onclick = () => {
+    if (!selectedPlanet) return;
+    const seed = Math.floor(Math.random() * 999) + 1;
+    selectedPlanet.look.seed = seed;
+    inpPlanetSeed.value = seed;
+    markPlanetDirty();
+    showToast(`🎲 Random seed: ${seed}`);
+  };
+}
+
+// Planet Inspector Form Input Listeners
+if (inpPlanetName) inpPlanetName.oninput = () => { if (selectedPlanet) { selectedPlanet.name = inpPlanetName.value; renderPlanetList(); markPlanetDirty(); } };
+if (inpPlanetSurvey) inpPlanetSurvey.oninput = () => { if (selectedPlanet) { selectedPlanet.survey = inpPlanetSurvey.value; markPlanetDirty(); } };
+if (inpPlanetPosX) inpPlanetPosX.oninput = () => { if (selectedPlanet) { selectedPlanet.pos.x = parseFloat(inpPlanetPosX.value) || 0; markPlanetDirty(); } };
+if (inpPlanetPosY) inpPlanetPosY.oninput = () => { if (selectedPlanet) { selectedPlanet.pos.y = parseFloat(inpPlanetPosY.value) || 0; markPlanetDirty(); } };
+if (inpPlanetPosZ) inpPlanetPosZ.oninput = () => { if (selectedPlanet) { selectedPlanet.pos.z = parseFloat(inpPlanetPosZ.value) || 0; markPlanetDirty(); } };
+if (inpPlanetRadius) inpPlanetRadius.oninput = () => { if (selectedPlanet) { selectedPlanet.r = parseInt(inpPlanetRadius.value) || 100; renderPlanetList(); markPlanetDirty(); } };
+if (inpPlanetColor) inpPlanetColor.oninput = () => { if (selectedPlanet) { selectedPlanet.col = inpPlanetColor.value; renderPlanetList(); markPlanetDirty(); } };
+if (chkPlanetClouds) chkPlanetClouds.onchange = () => { if (selectedPlanet) { selectedPlanet.clouds = chkPlanetClouds.checked; renderPlanetList(); markPlanetDirty(); } };
+if (chkPlanetRings) chkPlanetRings.onchange = () => { if (selectedPlanet) { selectedPlanet.ring = chkPlanetRings.checked; renderPlanetList(); markPlanetDirty(); } };
+if (chkPlanetStation) chkPlanetStation.onchange = () => { if (selectedPlanet) { selectedPlanet.station = chkPlanetStation.checked; renderPlanetList(); markPlanetDirty(); } };
+if (inpPlanetSeed) inpPlanetSeed.oninput = () => { if (selectedPlanet) { selectedPlanet.look.seed = parseInt(inpPlanetSeed.value) || 1; markPlanetDirty(); } };
+if (rngPlanetBands) rngPlanetBands.oninput = () => { if (selectedPlanet) { selectedPlanet.look.bands = parseFloat(rngPlanetBands.value) || 0; markPlanetDirty(); } };
+if (rngPlanetCaps) rngPlanetCaps.oninput = () => { if (selectedPlanet) { selectedPlanet.look.caps = parseFloat(rngPlanetCaps.value) || 0; markPlanetDirty(); } };
+if (chkPlanetCraters) chkPlanetCraters.onchange = () => { if (selectedPlanet) { selectedPlanet.look.craters = chkPlanetCraters.checked; markPlanetDirty(); } };
+if (chkPlanetLava) chkPlanetLava.onchange = () => { if (selectedPlanet) { selectedPlanet.look.lava = chkPlanetLava.checked ? inpPlanetLavaCol.value : ''; markPlanetDirty(); } };
+if (inpPlanetLavaCol) inpPlanetLavaCol.oninput = () => { if (selectedPlanet && chkPlanetLava.checked) { selectedPlanet.look.lava = inpPlanetLavaCol.value; markPlanetDirty(); } };
+if (chkPlanetGrid) chkPlanetGrid.onchange = () => { if (selectedPlanet) { selectedPlanet.look.grid = chkPlanetGrid.checked ? inpPlanetGridCol.value : ''; markPlanetDirty(); } };
+if (inpPlanetGridCol) inpPlanetGridCol.oninput = () => { if (selectedPlanet && chkPlanetGrid.checked) { selectedPlanet.look.grid = inpPlanetGridCol.value; markPlanetDirty(); } };
+if (chkPlanetGlow) chkPlanetGlow.onchange = () => { if (selectedPlanet) { selectedPlanet.look.glowDots = chkPlanetGlow.checked ? inpPlanetGlowCol.value : ''; markPlanetDirty(); } };
+if (inpPlanetGlowCol) inpPlanetGlowCol.oninput = () => { if (selectedPlanet && chkPlanetGlow.checked) { selectedPlanet.look.glowDots = inpPlanetGlowCol.value; markPlanetDirty(); } };
+
+// Add New Planet
+if (btnAddPlanet) {
+  btnAddPlanet.onclick = () => {
+    const id = prompt('Enter new celestial body ID (e.g. solis_prime):');
+    if (!id) return;
+    const cleanId = id.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    if (!cleanId) return;
+    const name = prompt('Enter planet display name:', cleanId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())) || cleanId;
+    const newPlanet = {
+      id: cleanId,
+      name: name.trim(),
+      survey: name.trim(),
+      note: 'Newly discovered planetary body.',
+      pos: { x: Math.floor(Math.random() * 2000) - 1000, y: Math.floor(Math.random() * 200) - 100, z: Math.floor(Math.random() * 2000) - 1000 },
+      r: 150,
+      col: '#4f8aff',
+      clouds: true,
+      ring: false,
+      station: false,
+      look: {
+        seed: Math.floor(Math.random() * 999) + 1,
+        ramp: [[0, '#0a2a5a'], [0.45, '#1a5aa8'], [0.55, '#e0c080'], [0.75, '#3f8a4a'], [1, '#ffffff']],
+        caps: 0.8,
+        clouds: '#ffffff',
+        bands: 0,
+        craters: false
+      }
+    };
+    planetsData.push(newPlanet);
+    planetCount.textContent = planetsData.length;
+    renderPlanetList();
+    selectPlanet(newPlanet);
+    isDirty = true;
+    dirtyDot.classList.add('visible');
+    showToast(`Created new world "${name}". Live preview active! Click Save to persist.`);
+  };
+}
+
+// View mode buttons
+if (btnViewPlanet3D) {
+  btnViewPlanet3D.onclick = () => {
+    planetViewMode = '3d';
+    btnViewPlanet3D.classList.add('active');
+    btnViewGalaxyMap.classList.remove('active');
+    mapCanvas.style.display = 'none';
+    const threeCanvas = document.getElementById('threeCanvas');
+    if (threeCanvas) threeCanvas.style.display = 'block';
+    renderPlanetIn3D();
+  };
+}
+
+if (btnViewGalaxyMap) {
+  btnViewGalaxyMap.onclick = () => {
+    planetViewMode = 'map';
+    btnViewGalaxyMap.classList.add('active');
+    btnViewPlanet3D.classList.remove('active');
+    const threeCanvas = document.getElementById('threeCanvas');
+    if (threeCanvas) threeCanvas.style.display = 'none';
+    mapCanvas.style.display = 'block';
+    renderGalaxyMap();
+  };
+}
+
+function clearModelFromScene() {
+  if (currentModelGroup) {
+    scene.remove(currentModelGroup);
+    currentModelGroup.traverse(c => {
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) {
+        if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+        else c.material.dispose();
+      }
+    });
+    currentModelGroup = null;
+  }
+  currentAnimFn = null;
+  currentPlanetAnims = null;
+}
+
+// 3D Planet Rendering
+function renderPlanetIn3D() {
+  if (!selectedPlanet) return;
+  clearModelFromScene();
+
+  const group = new THREE.Group();
+  const P = selectedPlanet;
+  const L = P.look || {};
+
+  // 1. Planet texture & surface
+  const cv = generatePlanetCanvas(L);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.encoding = THREE.sRGBEncoding;
+  tex.wrapS = THREE.RepeatWrapping;
+
+  const sphereGeo = new THREE.SphereGeometry(2, 44, 32);
+  const planetMat = new THREE.MeshLambertMaterial({ map: tex });
+  const planetMesh = new THREE.Mesh(sphereGeo, planetMat);
+  group.add(planetMesh);
+
+  // 2. Clouds
+  let cloudMesh = null;
+  if (P.clouds) {
+    const cloudCv = generatePlanetCanvas(L, 'clouds');
+    const cloudTex = new THREE.CanvasTexture(cloudCv);
+    cloudTex.wrapS = THREE.RepeatWrapping;
+    const cloudMat = new THREE.MeshLambertMaterial({ map: cloudTex, transparent: true, depthWrite: false });
+    cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(2.04, 44, 32), cloudMat);
+    group.add(cloudMesh);
+  }
+
+  // 3. Atmosphere halo
+  const atmMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(P.col || '#3a6cb8'),
+    transparent: true,
+    opacity: 0.22,
+    side: THREE.BackSide,
+    depthWrite: false
+  });
+  const atmMesh = new THREE.Mesh(new THREE.SphereGeometry(2.15, 36, 24), atmMat);
+  group.add(atmMesh);
+
+  // 4. Rings
+  if (P.ring) {
+    const ringGeo = new THREE.RingGeometry(2.8, 4.4, 64);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color('#e2d6b8'),
+      transparent: true,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.rotation.set(-1.2, 0.3, 0);
+    group.add(ringMesh);
+  }
+
+  // 5. Space station
+  if (P.station) {
+    const stGroup = new THREE.Group();
+    const core = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 1.2, 10), new THREE.MeshLambertMaterial({ color: 0x8fe3ff }));
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.08, 8, 24), new THREE.MeshLambertMaterial({ color: 0x3a3d44 }));
+    ring.rotation.x = Math.PI / 2;
+    stGroup.add(core, ring);
+    stGroup.position.set(2.9, 0.6, 0);
+    group.add(stGroup);
+  }
+
+  currentModelGroup = group;
+  scene.add(group);
+
+  currentPlanetAnims = { planetMesh, cloudMesh };
+
+  hudName.textContent = `🪐 ${P.name || P.id}`;
+  hudDims.textContent = `Radius: ${P.r} km · Seed: ${L.seed || 1}`;
+  hudMeshes.textContent = `${group.children.length} orbital layers`;
+
+  resetCameraTarget(4.8);
+}
+
+// 2D Interactive Galaxy Map Chart
+function renderGalaxyMap() {
+  if (!mapCanvas || !planetsData.length) return;
+  const W = mapCanvas.width = mapCanvas.parentElement.clientWidth || 600;
+  const H = mapCanvas.height = mapCanvas.parentElement.clientHeight || 450;
+  const c = mapCanvas.getContext('2d');
+  const t = performance.now() / 1000;
+
+  c.fillStyle = '#05060f';
+  c.fillRect(0, 0, W, H);
+
+  // Nebulae
+  const neb = c.createRadialGradient(W * 0.3, H * 0.35, 10, W * 0.3, H * 0.35, W * 0.6);
+  neb.addColorStop(0, 'rgba(120,60,160,0.35)'); neb.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = neb; c.fillRect(0, 0, W, H);
+
+  const neb2 = c.createRadialGradient(W * 0.8, H * 0.7, 10, W * 0.8, H * 0.7, W * 0.5);
+  neb2.addColorStop(0, 'rgba(40,110,170,0.3)'); neb2.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = neb2; c.fillRect(0, 0, W, H);
+
+  // Starfield
+  if (!window._starsSeed) {
+    window._starsSeed = Array.from({ length: 150 }, () => [Math.random(), Math.random(), Math.random()]);
+  }
+  for (const [rx, ry, b] of window._starsSeed) {
+    c.fillStyle = `rgba(255,255,255,${0.25 + b * 0.5 + Math.sin(t * 2 + b * 9) * 0.15})`;
+    c.fillRect(rx * W, ry * H, b > 0.85 ? 2 : 1, b > 0.85 ? 2 : 1);
+  }
+
+  // Planet scale & bounds
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+  for (const p of planetsData) {
+    x0 = Math.min(x0, p.pos.x); x1 = Math.max(x1, p.pos.x);
+    z0 = Math.min(z0, p.pos.z); z1 = Math.max(z1, p.pos.z);
+  }
+  const pad = 60;
+  const sc = Math.min((W - pad * 2) / (x1 - x0 || 1), (H - pad * 2) / (z1 - z0 || 1));
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const toPx = pos => [W / 2 + (pos.x - cx) * sc, H / 2 + (pos.z - cz) * sc];
+
+  // The Sun
+  const [sx, sy] = toPx({ x: -2600, y: 0, z: 1800 });
+  const px = clamp(sx, 18, W - 18), py = clamp(sy, 18, H - 18);
+  const sg = c.createRadialGradient(px, py, 2, px, py, 42);
+  sg.addColorStop(0, 'rgba(255,230,160,1)'); sg.addColorStop(0.3, 'rgba(255,190,90,0.6)'); sg.addColorStop(1, 'rgba(255,150,60,0)');
+  c.fillStyle = sg; c.beginPath(); c.arc(px, py, 42, 0, 6.3); c.fill();
+
+  // Asteroid belt
+  c.strokeStyle = 'rgba(180,160,130,0.35)'; c.setLineDash([2, 5]); c.lineWidth = 4; c.beginPath();
+  for (let a = 0; a <= 6.3; a += 0.05) {
+    const [ax, ay] = toPx({ x: Math.cos(a) * 760, y: 0, z: Math.sin(a) * 760 * 0.7 + 90 });
+    a ? c.lineTo(ax, ay) : c.moveTo(ax, ay);
+  }
+  c.stroke(); c.setLineDash([]); c.lineWidth = 1;
+
+  // Selected route line from Earth
+  const earth = planetsData.find(p => p.id === 'earth');
+  if (earth && selectedPlanet && selectedPlanet.id !== 'earth') {
+    const [eX, eY] = toPx(earth.pos), [sX, sY] = toPx(selectedPlanet.pos);
+    c.strokeStyle = 'rgba(255,211,106,0.8)'; c.setLineDash([6, 5]); c.lineDashOffset = -t * 25; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(eX, eY); c.lineTo(sX, sY); c.stroke(); c.setLineDash([]); c.lineWidth = 1;
+  }
+
+  // Draw each body
+  for (const p of planetsData) {
+    const [px, py] = toPx(p.pos);
+    const r = Math.max(6, Math.min(22, p.r * sc * 1.5));
+    const isSel = selectedPlanet && selectedPlanet.id === p.id;
+
+    if (p.ring) {
+      c.strokeStyle = 'rgba(220,200,160,0.6)'; c.lineWidth = 2;
+      c.beginPath(); c.ellipse(px, py, r * 1.8, r * 0.5, -0.3, 0, 6.3); c.stroke(); c.lineWidth = 1;
+    }
+
+    if (p.station) {
+      c.fillStyle = '#8fe3ff'; c.fillRect(px - r, py - r * 0.35, r * 2, r * 0.7);
+      c.fillStyle = '#3a3d44'; c.fillRect(px - r * 0.4, py - r * 0.6, r * 0.8, r * 1.2);
+    } else {
+      c.save(); c.beginPath(); c.arc(px, py, r, 0, 6.3); c.clip();
+      c.fillStyle = p.col || '#9aa1aa'; c.fill();
+      const sh = c.createLinearGradient(px - r, py - r, px + r, py + r);
+      sh.addColorStop(0, 'rgba(255,255,255,0.2)'); sh.addColorStop(1, 'rgba(0,0,0,0.6)');
+      c.fillStyle = sh; c.fillRect(px - r, py - r, r * 2, r * 2);
+      c.restore();
+    }
+
+    if (isSel) {
+      c.strokeStyle = '#ffd36a'; c.lineWidth = 2;
+      c.beginPath(); c.arc(px, py, r + 5 + Math.sin(t * 4) * 2, 0, 6.3); c.stroke(); c.lineWidth = 1;
+    }
+
+    const name = p.name || p.id;
+    c.font = `${isSel ? 'bold ' : ''}11px monospace`;
+    c.textAlign = 'center'; c.fillStyle = 'rgba(0,0,0,0.6)';
+    const tw = c.measureText(name).width;
+    c.fillRect(px - tw / 2 - 2, py + r + 3, tw + 4, 14);
+    c.fillStyle = isSel ? '#ffd36a' : '#e8ecf8';
+    c.fillText(name, px, py + r + 13);
+    c.textAlign = 'left';
+  }
+
+  if (planetViewMode === 'map') {
+    requestAnimationFrame(renderGalaxyMap);
+  }
+}
+
+if (mapCanvas) {
+  mapCanvas.addEventListener('pointerdown', e => {
+    const rect = mapCanvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / rect.width * mapCanvas.width;
+    const my = (e.clientY - rect.top) / rect.height * mapCanvas.height;
+
+    let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+    for (const p of planetsData) {
+      x0 = Math.min(x0, p.pos.x); x1 = Math.max(x1, p.pos.x);
+      z0 = Math.min(z0, p.pos.z); z1 = Math.max(z1, p.pos.z);
+    }
+    const pad = 60, sc = Math.min((mapCanvas.width - pad * 2) / (x1 - x0 || 1), (mapCanvas.height - pad * 2) / (z1 - z0 || 1));
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    const toPx = pos => [mapCanvas.width / 2 + (pos.x - cx) * sc, mapCanvas.height / 2 + (pos.z - cz) * sc];
+
+    let best = null, bestDist = 35;
+    for (const p of planetsData) {
+      const [px, py] = toPx(p.pos);
+      const d = Math.hypot(px - mx, py - my);
+      if (d < bestDist) { bestDist = d; best = p; }
+    }
+    if (best) {
+      selectPlanet(best);
+      showToast(`Selected ${best.name || best.id}`);
+    }
+  });
+}
 
 searchFilter.oninput = renderList;
 catScroll.querySelectorAll(".cat-btn").forEach(btn => {
@@ -2229,6 +3188,12 @@ function animate() {
 
   if (chkAnim.checked && currentAnimFn) {
     try { currentAnimFn(time); } catch (_) {}
+  }
+  if (currentPlanetAnims && currentPlanetAnims.planetMesh) {
+    currentPlanetAnims.planetMesh.rotation.y += delta * 0.08;
+    if (currentPlanetAnims.cloudMesh) {
+      currentPlanetAnims.cloudMesh.rotation.y += delta * 0.12;
+    }
   }
   if (chkSpin.checked && currentModelGroup) {
     currentModelGroup.rotation.y += delta * 0.6;

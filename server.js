@@ -3,6 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { WebSocketServer, WebSocket } = require('ws');
+const vm = require('vm');
 
 const { execSync } = require('child_process');
 
@@ -209,6 +210,7 @@ function scanCharacterData() {
     visor: '#4fd2ff',
     body: '#6f7a3e',
     note: 'Standard issue field armor',
+    shop: true,
     file: 'features.js',
     code: 'function (g, A) {\n  // Standard combat rig (base trooper colors)\n}'
   });
@@ -231,6 +233,24 @@ function scanCharacterData() {
     drome: { name: 'Drome Warplate', lvl: 40, cost: 15000, def: 0.3, body: '#1e1c22', trim: '#2a1416', visor: '#ff2a3a', note: "The villain's own armor" }
   };
 
+  // Dynamically parse ARMORS entries from armorContent for custom metadata (e.g. shop availability)
+  const rArmLine = /([a-zA-Z0-9_]+)\s*:\s*\{([^}]+)\}/g;
+  let alm;
+  while ((alm = rArmLine.exec(armorContent)) !== null) {
+    const aid = alm[1], props = alm[2];
+    if (aid === 'ARMORS' || aid === 'ARMOR_KITS' || aid === 'const' || aid === 'AK') continue;
+    if (!armMeta[aid]) armMeta[aid] = {};
+    const nm = props.match(/name:\s*['"]([^'"]+)['"]/); if (nm) armMeta[aid].name = nm[1];
+    const lv = props.match(/lvl:\s*(\d+)/); if (lv) armMeta[aid].lvl = parseInt(lv[1]);
+    const cst = props.match(/cost:\s*(\d+)/); if (cst) armMeta[aid].cost = parseInt(cst[1]);
+    const df = props.match(/def:\s*([0-9.]+)/); if (df) armMeta[aid].def = parseFloat(df[1]);
+    const tr = props.match(/trim:\s*['"]([^'"]+)['"]/); if (tr) armMeta[aid].trim = tr[1];
+    const vs = props.match(/visor:\s*['"]([^'"]+)['"]/); if (vs) armMeta[aid].visor = vs[1];
+    const bd = props.match(/body:\s*['"]([^'"]+)['"]/); if (bd) armMeta[aid].body = bd[1];
+    const nt = props.match(/note:\s*['"]([^'"]+)['"]/); if (nt) armMeta[aid].note = nt[1];
+    const shp = props.match(/shop:\s*(true|false)/); if (shp) armMeta[aid].shop = shp[1] === 'true';
+  }
+
   const akMatch = armorContent.match(/const AK\s*=\s*\{([\s\S]*?)\n\};/);
   if (akMatch) {
     const methods = parseMethods(akMatch[1]);
@@ -246,6 +266,7 @@ function scanCharacterData() {
         visor: meta.visor || '#4fd2ff',
         body: meta.body || '',
         note: meta.note || '',
+        shop: meta.shop !== false,
         file: 'armor.js',
         code: m.code
       });
@@ -269,6 +290,7 @@ function scanCharacterData() {
       visor: meta.visor || '#4fd2ff',
       body: meta.body || '',
       note: meta.note || '',
+      shop: meta.shop !== false,
       file: 'armor.js',
       code: 'function (g, A) {\n  ' + cam[2].trim() + '\n}'
     });
@@ -284,6 +306,109 @@ function scanCharacterData() {
   };
 
   return { helmets, armors, face: faceData, faceFile: faceContent, armorFile: armorContent };
+}
+
+function scanPlanetsData() {
+  const spaceFp = path.join(SRC_DIR, 'space.js');
+  const levelsFp = path.join(SRC_DIR, 'levels.js');
+  const spaceContent = fs.readFileSync(spaceFp, 'utf8');
+  const levelsContent = fs.readFileSync(levelsFp, 'utf8');
+
+  let spaceBodies = {};
+  const sbMatch = spaceContent.match(/const SPACE_BODIES\s*=\s*(\{[\s\S]*?\n\};)/);
+  if (sbMatch) {
+    try {
+      const sandbox = { V: (x, y, z) => ({ x, y, z }) };
+      spaceBodies = vm.runInNewContext(`(${sbMatch[1].replace(/;$/, '')})`, sandbox);
+    } catch (e) {
+      console.error('Error parsing SPACE_BODIES:', e);
+    }
+  }
+
+  // Scan extra bodies from other source files if any
+  const extraFiles = ['arena.js', 'army.js', 'racing.js', 'skycity.js'];
+  for (const ef of extraFiles) {
+    const efp = path.join(SRC_DIR, ef);
+    if (!fs.existsSync(efp)) continue;
+    const txt = fs.readFileSync(efp, 'utf8');
+    const rx = /SPACE_BODIES\.(\w+)\s*=\s*\{([^}]+)\}/g;
+    let m;
+    while ((m = rx.exec(txt)) !== null) {
+      const bid = m[1];
+      if (!spaceBodies[bid]) {
+        try {
+          const sandbox = {
+            V: (x, y, z) => ({ x, y, z, multiplyScalar: () => ({ x, y, z }) }),
+            SPACE_SPREAD: 1.45,
+            SPACE_BODIES: { earth: { pos: { clone: () => ({ add: (v) => ({ x: v.x, y: -40 + v.y, z: -700 + v.z }) }) } } }
+          };
+          const bObj = vm.runInNewContext(`({${m[2]}})`, sandbox);
+          spaceBodies[bid] = bObj;
+        } catch (_) {}
+      }
+    }
+  }
+
+  let planetLooks = {};
+  const plMatch = levelsContent.match(/const PLANET_LOOK\s*=\s*(\{[\s\S]*?\n\};)/);
+  if (plMatch) {
+    try {
+      planetLooks = vm.runInNewContext(`(${plMatch[1].replace(/;$/, '')})`);
+    } catch (e) {
+      console.error('Error parsing PLANET_LOOK:', e);
+    }
+  }
+
+  const PLANET_META = {
+    earth: { name: 'Earth', desc: 'Home world of New Jamestown, Forest of Life, and Super Swift Arena.' },
+    mezar: { name: 'Mezar', desc: 'Arid canyon world with deep sandstone ravines, sand worms, and outposts.' },
+    capitone: { name: 'Capitone', desc: 'Volcanic and glacial world of fire, magma lakes, and ice spires.' },
+    robot: { name: 'Robot City', desc: 'Industrial cyber-megacity governed by autonomous defense grids.' },
+    zeltac: { name: 'Zeltac Station', desc: 'Orbital starbase, bounty hunters hub, casino, and trading station.' },
+    moon: { name: "Earth's Moon", desc: 'Low-gravity lunar colony with mining complexes and biodomes.' },
+    ocean: { name: 'Ocean World', desc: 'Endless aquatic expanse with submerged cities, bioluminescent kelp, and leviathans.' },
+    zarlich: { name: 'Zarlich', desc: 'Violet storm planet with hyper-charged ring system and alien flora.' },
+    vector: { name: 'Vector', desc: 'The dark world enveloped in deep purple haze. Something watches back.' },
+    arena: { name: 'Gladiator Arena', desc: 'Asteroid arena world hosted for interstellar combat trials.' },
+    fort: { name: 'Fort Ironrock', desc: 'Heavy fortified military bastion and garrison outpost.' },
+    speedway: { name: 'Hyper Speedway', desc: 'Neon rings and raceway world for high-speed ship competition.' },
+    skycity: { name: 'Sky City', desc: 'Floating metropolis hovering in the upper troposphere above Earth.' }
+  };
+
+  const list = [];
+  for (const [id, body] of Object.entries(spaceBodies)) {
+    const meta = PLANET_META[id] || {};
+    const look = planetLooks[id] || {
+      seed: (Math.abs(Math.round((body.pos ? body.pos.x : 0) + (body.pos ? body.pos.z : 0))) % 100) || 1,
+      ramp: [[0, body.col || '#3a6cb8'], [0.5, '#5d7f99'], [1, '#ffffff']],
+      craters: !body.clouds
+    };
+    list.push({
+      id,
+      name: body.survey || meta.name || (id.charAt(0).toUpperCase() + id.slice(1)),
+      survey: body.survey || '',
+      note: body.note || meta.desc || '',
+      pos: { x: body.pos ? Math.round(body.pos.x) : 0, y: body.pos ? Math.round(body.pos.y) : 0, z: body.pos ? Math.round(body.pos.z) : 0 },
+      r: body.r || 100,
+      col: body.col || '#9aa1aa',
+      clouds: !!body.clouds,
+      ring: !!body.ring,
+      station: !!body.station,
+      look: {
+        seed: look.seed || 1,
+        ramp: look.ramp || [[0, '#1a3a7a'], [1, '#ffffff']],
+        bands: look.bands || 0,
+        caps: look.caps || 0,
+        clouds: typeof look.clouds === 'string' ? look.clouds : (body.clouds ? '#ffffff' : ''),
+        lava: look.lava || '',
+        grid: look.grid || '',
+        glowDots: look.glowDots || '',
+        craters: !!look.craters
+      }
+    });
+  }
+
+  return { planets: list };
 }
 
 
@@ -494,9 +619,11 @@ const server = http.createServer((req, res) => {
               trim: (meta && meta.trim) || '#a8743a',
               visor: (meta && meta.visor) || '#ffd36a',
               body: (meta && meta.body) || '',
-              note: (meta && meta.note) || ''
+              note: (meta && meta.note) || '',
+              shop: (meta && typeof meta.shop === 'boolean') ? meta.shop : true
             };
-            const metaLine = `  ${id}: { name: ${JSON.stringify(metaObj.name)}, lvl: ${metaObj.lvl}, cost: ${metaObj.cost}, def: ${metaObj.def}, trim: ${JSON.stringify(metaObj.trim)}, visor: ${JSON.stringify(metaObj.visor)}${metaObj.body ? `, body: ${JSON.stringify(metaObj.body)}` : ''}, note: ${JSON.stringify(metaObj.note)} },`;
+            const shopStr = metaObj.shop === false ? ', shop: false' : '';
+            const metaLine = `  ${id}: { name: ${JSON.stringify(metaObj.name)}, lvl: ${metaObj.lvl}, cost: ${metaObj.cost}, def: ${metaObj.def}, trim: ${JSON.stringify(metaObj.trim)}, visor: ${JSON.stringify(metaObj.visor)}${metaObj.body ? `, body: ${JSON.stringify(metaObj.body)}` : ''}, note: ${JSON.stringify(metaObj.note)}${shopStr} },`;
 
             const assignMarker = 'Object.assign(ARMORS, {';
             if (content.includes(`${id}: {`)) {
@@ -529,6 +656,115 @@ const server = http.createServer((req, res) => {
 
           res.setHeader('Content-Type', 'application/json; charset=utf-8');
           res.end(JSON.stringify({ success: true, type, id, build: buildMsg }));
+        } catch (err) {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+
+    // GET /api/planets - List all planets, celestial bodies, and procedural looks
+    if (req.method === 'GET' && pathname === '/api/planets') {
+      try {
+        const data = scanPlanetsData();
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify(data));
+      } catch (err) {
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: err.message }));
+      }
+      return;
+    }
+
+    // POST /api/save-planet - Save planet coordinates, celestial properties, and PLANET_LOOK
+    if (req.method === 'POST' && pathname === '/api/save-planet') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body);
+          const { id, name, survey, note, pos, r, col, clouds, ring, station, look } = payload;
+          if (!id) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: 'Missing planet id' }));
+            return;
+          }
+
+          // 1. Update src/space.js
+          const spaceFp = path.join(SRC_DIR, 'space.js');
+          let spaceContent = fs.readFileSync(spaceFp, 'utf8');
+
+          const extraProps = [];
+          if (clouds) extraProps.push('clouds: true');
+          if (ring) extraProps.push('ring: true');
+          if (station) extraProps.push('station: true');
+          if (survey) extraProps.push(`survey: ${JSON.stringify(survey)}`);
+          if (note) extraProps.push(`note: ${JSON.stringify(note)}`);
+          const extraStr = extraProps.length ? ', ' + extraProps.join(', ') : '';
+          const px = pos && pos.x != null ? Math.round(pos.x) : 0;
+          const py = pos && pos.y != null ? Math.round(pos.y) : 0;
+          const pz = pos && pos.z != null ? Math.round(pos.z) : 0;
+          const rad = r != null ? Math.round(r) : 120;
+          const colorHex = col || '#9aa1aa';
+          const bodyLine = `  ${id}: { pos: V(${px}, ${py}, ${pz}), r: ${rad}, col: ${JSON.stringify(colorHex)}${extraStr} },`;
+
+          const bodyRegex = new RegExp('([ \\t]*' + id + ':\\s*\\{[^}]*\\},?)');
+          if (bodyRegex.test(spaceContent)) {
+            spaceContent = spaceContent.replace(bodyRegex, bodyLine);
+          } else {
+            const sbEnd = /const SPACE_BODIES\s*=\s*\{([\s\S]*?)\n\};/;
+            if (sbEnd.test(spaceContent)) {
+              spaceContent = spaceContent.replace(sbEnd, (match, p1) => {
+                return `const SPACE_BODIES = {${p1}\n${bodyLine}\n};`;
+              });
+            } else {
+              spaceContent = spaceContent.trim() + `\n\nSPACE_BODIES.${id} = { pos: V(${px}, ${py}, ${pz}), r: ${rad}, col: ${JSON.stringify(colorHex)}${extraStr} };\n`;
+            }
+          }
+          fs.writeFileSync(spaceFp, spaceContent, 'utf8');
+
+          // 2. Update src/levels.js (PLANET_LOOK)
+          const levelsFp = path.join(SRC_DIR, 'levels.js');
+          let levelsContent = fs.readFileSync(levelsFp, 'utf8');
+
+          const lk = look || {};
+          const lookParts = [`seed: ${lk.seed || 1}`, `ramp: ${JSON.stringify(lk.ramp || [[0, '#1a3a7a'], [1, '#ffffff']])}`];
+          if (lk.bands) lookParts.push(`bands: ${Number(lk.bands)}`);
+          if (lk.caps) lookParts.push(`caps: ${Number(lk.caps)}`);
+          if (lk.clouds) lookParts.push(`clouds: ${JSON.stringify(lk.clouds)}`);
+          if (lk.lava) lookParts.push(`lava: ${JSON.stringify(lk.lava)}`);
+          if (lk.grid) lookParts.push(`grid: ${JSON.stringify(lk.grid)}`);
+          if (lk.glowDots) lookParts.push(`glowDots: ${JSON.stringify(lk.glowDots)}`);
+          if (lk.craters) lookParts.push(`craters: true`);
+          const lookLine = `  ${id}: { ${lookParts.join(', ')} },`;
+
+          const lookRegex = new RegExp('([ \\t]*' + id + ':\\s*\\{[^}]*\\},?)');
+          if (lookRegex.test(levelsContent)) {
+            levelsContent = levelsContent.replace(lookRegex, lookLine);
+          } else {
+            const plEnd = /const PLANET_LOOK\s*=\s*\{([\s\S]*?)\n\};/;
+            if (plEnd.test(levelsContent)) {
+              levelsContent = levelsContent.replace(plEnd, (match, p1) => {
+                return `const PLANET_LOOK = {${p1}\n${lookLine}\n};`;
+              });
+            } else {
+              levelsContent = levelsContent.trim() + `\n\nPLANET_LOOK.${id} = { ${lookParts.join(', ')} };\n`;
+            }
+          }
+          fs.writeFileSync(levelsFp, levelsContent, 'utf8');
+
+          let buildMsg = '';
+          try {
+            buildMsg = execSync('python3 tools/build.py', { cwd: ROOT_DIR, encoding: 'utf8' }).trim();
+          } catch (bErr) {
+            buildMsg = 'Build error: ' + (bErr.stderr || bErr.message);
+          }
+
+          broadcastAssetCacheBust('planet', id, '');
+
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.end(JSON.stringify({ success: true, id, build: buildMsg }));
         } catch (err) {
           res.statusCode = 500;
           res.end(JSON.stringify({ error: err.message }));

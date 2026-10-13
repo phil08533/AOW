@@ -427,7 +427,7 @@ const planetTexCache = {};
 // equirectangular planet maps from wrapped fractal noise, with a palette ramp per world
 const PLANET_LOOK = {
   earth: { seed: 3, ramp: [[0, '#1a3a7a'], [0.47, '#2a5aa8'], [0.52, '#d8c890'], [0.55, '#4f8a3a'], [0.68, '#3a6a2e'], [0.78, '#8a7a5a'], [0.88, '#e8e4dc']], caps: 0.86, clouds: '#ffffff' },
-  mezar: { seed: 7, ramp: [[0, '#8a5a36'], [0.4, '#c48a52'], [0.55, '#e0b070'], [0.7, '#f0d0a0'], [0.85, '#b8703a']], bands: 0.6 },
+  mezar: { seed: 7, ramp: [[0,"#8a5a36"],[0.4,"#c48a52"],[0.55,"#e0b070"],[0.7,"#f0d0a0"],[0.85,"#b8703a"]], bands: 0.6 },
   capitone: { seed: 11, ramp: [[0, '#1a4a5a'], [0.44, '#2a6a7a'], [0.5, '#2f6a4a'], [0.62, '#3f8a52'], [0.72, '#dce8f0'], [0.9, '#ffffff']], caps: 0.7, clouds: '#eef4f8', lava: '#ff6a1a' },
   robot: { seed: 17, ramp: [[0, '#2b2a2c'], [0.5, '#4a4e56'], [0.7, '#5d636c'], [0.9, '#8a8f96']], grid: '#ff3b2a' },
   moon: { seed: 23, ramp: [[0, '#5a5a60'], [0.5, '#8a8a90'], [0.7, '#b0b0b4'], [1, '#d0d0d4']], craters: true },

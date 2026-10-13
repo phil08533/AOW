@@ -261,7 +261,7 @@ LEVELS.fort = {
 };
 Object.assign(ENEMY, {
   tdrone: { name: 'Training Drone', make: makeTrainingDrone, fly: true, hp: 120, speed: 3.2, r: 0.6, hy: 1.4, xp: 45, cr: [6, 12], ranged: { dmg: 8, rate: 1.6, speed: 14, col: '#ffd36a', range: 18, keep: 10 }, drops: [['scrap', 0.4]] },
-  siegebot: { rig: 'xr17', name: 'Siege Bot', make: makeSiegeBot, scale: 1.3, hp: 450, speed: 1.8, r: 0.8, hy: 1.5, xp: 160, cr: [20, 36], lob: { dmg: 40, rate: 2.4, speed: 13, range: 26, keep: 10, col: '#ff6a1a' }, drops: [['scrap', 0.7], ['ore', 0.4]] },
+  siegebot: { name: 'Siege Bot', make: makeSiegeBot, scale: 1.3, hp: 450, speed: 1.8, r: 0.8, hy: 1.5, xp: 160, cr: [20, 36], lob: { dmg: 40, rate: 2.4, speed: 13, range: 26, keep: 10, col: '#ff6a1a' }, drops: [['scrap', 0.7], ['ore', 0.4]] },
   dtank: { name: 'Drome Tank', make: () => makeTankModel('#3a1416'), scale: 0.75, hp: 600, speed: 2.4, r: 1.6, hy: 1.0, xp: 240, cr: [30, 50], ranged: { dmg: 46, rate: 2.2, speed: 22, col: '#ff2a3a', range: 30, keep: 14 }, drops: [['scrap', 0.9], ['ore', 0.6], ['circuit', 0.3]] },
   krag: { name: 'Warlord Krag', make: makeKragMech, scale: 1.2, hp: 9000, speed: 2.0, r: 1.6, hy: 2.4, xp: 9000, cr: [1500, 2200], boss: true, melee: { dmg: 90, rate: 1.6, reach: 3.6 }, lob: { dmg: 60, rate: 1.8, speed: 15, range: 30, keep: 8, col: '#ff2a3a' }, drops: [['kragcore', 1]] }
 });

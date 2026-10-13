@@ -308,14 +308,14 @@ function skipTutorial() {
   S.cr += 300; S.ship.unlocked = true; player.hp = maxHp(); if (!S.qst.m1) startQuest('m1', true);
   markDirty(); setState('play'); travel('ship'); log('Tutorial skipped. Welcome aboard the Setting Sun. Use the galaxy map to fly to Mezar.', 'loot');
 }
-// ---- gun workbench: every gun takes 3 upgrade tiers, +12% damage each ----
+// ---- gun workbench: every gun takes 3 upgrade tiers, +8% damage each ----
 const MOD_COST = [{ cr: 200, scrap: 4 }, { cr: 500, circuit: 4 }, { cr: 1200, crystal: 3, circuit: 4 }];
 const gunTier = (id) => (S.mods && S.mods[id]) || 0;
 function openWorkbench() {
   openDlg('Armory', 'Gun workbench');
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   const render = () => {
-    rows.textContent = ''; $('dlgLine').textContent = `Each tier adds +12% damage. ${S.cr} cr on hand.`;
+    rows.textContent = ''; $('dlgLine').textContent = `Each tier adds +8% damage. ${S.cr} cr on hand.`;
     S.guns.forEach(id => { const g = GUNS[id], t = gunTier(id), r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = ['#9aa1aa', '#6fdc5a', '#4fa8ff', '#c86aff'][t];
       const nm = document.createElement('span'); nm.textContent = `${g.name} ${'★'.repeat(t)}${S.gun === id ? ' (in hand)' : ''}`;

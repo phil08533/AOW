@@ -328,7 +328,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.0</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1429,7 +1429,7 @@ function fire() {
   if (!S.clip) player.ammo--; player.cool = g.rate * (hasGear('eye') ? 0.85 : 1); kick = 1;
   SFX.shot(); flash.visible = true; flashLight.intensity = 2.2; setTimeout(() => { flash.visible = false; flashLight.intensity = 0; }, 45);
   const o = camera.getWorldPosition(V(0, 0, 0)), base = V(0, 0, 0); camera.getWorldDirection(base);
-  const shots = g.pellets || 1, spr = g.spread || 0.012, dmg0 = g.dmg * (1 + (S.lvl - 1) * 0.06) * (1 + 0.12 * gunTier(S.gun)) * (hasGear('ring') ? 1.15 : 1);
+  const shots = g.pellets || 1, spr = g.spread || 0.012, dmg0 = g.dmg * (1 + (S.lvl - 1) * 0.045) * (1 + 0.08 * gunTier(S.gun)) * (hasGear('ring') ? 1.15 : 1);
   let any = false, killed = false;
   for (let p = 0; p < shots; p++) {
     dirV.copy(base); dirV.x += (Math.random() - 0.5) * spr; dirV.y += (Math.random() - 0.5) * spr; dirV.z += (Math.random() - 0.5) * spr; dirV.normalize();
@@ -1569,6 +1569,7 @@ function step(dt) {
   // enemies
   const pSafe = inSafe(player.pos);
   for (const e of enemies) {
+    if (e.netRemote && typeof netEnemyStep === 'function' && netEnemyStep(e, dt, t)) continue;
     const o = e.obj, def = e.def;
     if (e.dead) {
       if (e.dead < 2) { e.dead += dt; o.rotation.x = -Math.min(Math.PI / 2, e.dead * 4); o.position.y -= dt * (e.dead > 0.6 ? 1.2 : 0); if (e.dead >= 2) o.visible = false; }

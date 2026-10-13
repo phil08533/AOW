@@ -217,5 +217,5 @@ body.menuopen #pullTab { opacity: 0; pointer-events: none; }
   tab.addEventListener('click', () => open(true));
   let sy = null; tab.addEventListener('touchstart', e => { sy = e.touches[0].clientY; }, { passive: true }); tab.addEventListener('touchend', e => { if (sy != null && sy - e.changedTouches[0].clientY > 20) open(true); sy = null; });
   let dy = null; drop.addEventListener('touchstart', e => { dy = e.touches[0].clientY; }, { passive: true }); drop.addEventListener('touchend', e => { if (dy != null && e.changedTouches[0].clientY - dy > 50) open(false); dy = null; });
-  window.addEventListener('keydown', e => { if (e.code === 'Tab' && state === 'play' && !dlgOpen && !chatOpen()) { e.preventDefault(); open(drop.hidden); } else if (e.code === 'Escape' && !drop.hidden) { open(false); e.stopImmediatePropagation(); } }, true);
+  window.addEventListener('keydown', e => { if (e.code === 'Tab' && state === 'play' && !dlgOpen && !chatOpen()) { e.preventDefault(); open(drop.hidden); } else if (e.code === 'Escape' && !drop.hidden) { if (typeof tabletBack === 'function') tabletBack(); else open(false); e.stopImmediatePropagation(); } }, true);
 }

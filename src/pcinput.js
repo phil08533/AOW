@@ -32,6 +32,7 @@ function pickSlot(want) {
 window.addEventListener('keydown', e => {
   if (e.repeat || chatOpen() || (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName))) return;
   const n = /^Digit([1-9])$/.exec(e.code); if (!n || state !== 'play') return;
+  if (!$('menuDrop').hidden) { if (typeof tabletNum === 'function') tabletNum(+n[1]); e.preventDefault(); e.stopImmediatePropagation(); return; }
   if (dlgOpen) { const bs = [...$('dlgActs').querySelectorAll('button')].filter(b => !b.disabled); const b = bs[+n[1] - 1]; if (b) { b.click(); e.preventDefault(); e.stopImmediatePropagation(); } return; }
   if (n[1] === '1') pickSlot('gun'); else if (n[1] === '2') pickSlot('staff'); else if (n[1] === '3') pickSlot('melee');
 }, true);

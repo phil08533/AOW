@@ -14233,8 +14233,10 @@ function playTrailer(opts) {
 }
 // draw the trailer's world instead of the game's while it plays
 { const _rr = renderer.render.bind(renderer); renderer.render = function (sc, cam) { if (TRL.on && TRL.scene && sc === scene) { if (cam === camera && camera.layers.mask === 2) return; return _rr(TRL.scene, TRL.cam); } return _rr(sc, cam); }; }
-// first start of every character (and anyone who has never seen it): the trailer, then the usual opening
-$('playBtn').addEventListener('click', () => {
+// first start of every character (and anyone who has never seen it): the trailer, then the usual opening.
+// Off for now (Phil: saving it for later). Set to true to bring it back, Codex entry included.
+const TRL_AUTO = false;
+if (TRL_AUTO) $('playBtn').addEventListener('click', () => {
   setTimeout(function chk(n) { if (state === 'menu' && (n || 0) < 40) return setTimeout(() => chk((n || 0) + 1), 250);
     if (state !== 'play' || TRL.on || (S.flags && S.flags.trailer) || new URLSearchParams(location.search).get('cutscene')) return;
     if (CUT.on) return; // something else already playing
@@ -14242,8 +14244,8 @@ $('playBtn').addEventListener('click', () => {
   }, 300);
 });
 // the opening intro waits for the trailer
-{ const _si = shipIntro; shipIntro = function () { if (TRL.on || (!(S.flags && S.flags.trailer) && state === 'cut')) return; return _si.apply(this, arguments); }; }
-SCENES.unshift(['trailer', '⚔️ The Art of War (opening)', () => true, () => playTrailer()]);
+{ const _si = shipIntro; shipIntro = function () { if (TRL.on || (TRL_AUTO && !(S.flags && S.flags.trailer) && state === 'cut')) return; return _si.apply(this, arguments); }; }
+if (TRL_AUTO) SCENES.unshift(['trailer', '⚔️ The Art of War (opening)', () => true, () => playTrailer()]);
 
 // =================== VELOCITY 2: the magnet storm planet ===================
 // A flat, glassy plain under a storm that never ends. Cars hover on magnets with almost no friction.
@@ -15033,7 +15035,7 @@ const UPDATES = [
   { id: 74, title: '2.3 · The Art of War', items: ['A new opening trailer, The Art of War, set to the Rising Sun song: the battlefield, the general, a lone warrior, the fallen masterpiece and a statue of rubble, then the galaxy and a fleet battle', 'It plays once when you start a new game, and you can replay it any time from Codex, then Cinema', 'The big eye boss, the Watcher in the Maw, now fights to Event Horizon Collapse', 'Cutscenes in the Codex always switch to their own music', 'Cutscenes play their music even when the game music is set to Ambient or Beep boop (Off still keeps them silent)']},
   { id: 75, title: '2.4 · Velocity, the magnet storm planet', items: ['Velocity is now a flat plain of gray glass under a storm that never ends: lightning bolts, rainbow rain and fog that rushes past as you speed up', 'Pit Row floats 20 m above the plain on magnet pylons, with a long ramp bridge down to the start line', 'Hover driving: cars slide on magnets with almost no friction. Hold Space (or DRIFT) to drift, which charges a boost when you let go. Shift boosts', 'C (or CAM) switches between hood, chase and far chase cameras. Your car has headlights', 'Three new courses across the open plain with ring gates: Storm Sprint, Magnet Mile and Thunder Run, on the shared leaderboards', 'Garage Gus sells five levels of Engine, Magnets and Boost, plus stripe colors and patterns', 'Every car is rebuilt with hover pads, lights and paint, and there is a new Hover Bike', 'Other players see you in your car']},
   { id: 76, title: '2.5 · Aim comes right back', items: ['Closing a menu, the bag, a shop or the tablet takes the mouse back for aiming on its own. No cursor on screen and no extra click', 'If the browser blocks it for a moment (right after Esc), the cursor stays hidden and your next click only grabs the mouse, it never fires']},
-  { id: 77, title: '2.6 · New backpack', items: ['The bag (I) is now a full inventory screen: equipment on the left, a 60 slot grid in the middle, item details on the right', 'Filter by Weapons, Medical, Materials, Quest, Valuables or Misc, search by name, and sort by type, rarity, weight, value or newest', 'Equip guns, staffs, melee weapons, armor and ordnance from the bag. Drag items onto slots on PC, or tap Move then tap a slot on phones', 'Four quick slots on keys 4 to 7 (buttons on phones) for medkits, weapons and ordnance. They point at your real items, never copies', 'Pickups show a small card with the item. When the bag is full the loot stays on the ground and tells you, instead of vanishing', 'Drop 1, half or a whole stack. Quest items can never be dropped', 'The lava pit in the Maw on Vector now sits down in the crater floor instead of floating above it']}
+  { id: 77, title: '2.6 · New backpack', items: ['The bag (I) is now a full inventory screen: equipment on the left, a 60 slot grid in the middle, item details on the right', 'Filter by Weapons, Medical, Materials, Quest, Valuables or Misc, search by name, and sort by type, rarity, weight, value or newest', 'Equip guns, staffs, melee weapons, armor and ordnance from the bag. Drag items onto slots on PC, or tap Move then tap a slot on phones', 'Four quick slots on keys 4 to 7 (buttons on phones) for medkits, weapons and ordnance. They point at your real items, never copies', 'Pickups show a small card with the item. When the bag is full the loot stays on the ground and tells you, instead of vanishing', 'Drop 1, half or a whole stack. Quest items can never be dropped', 'The lava pit in the Maw on Vector now sits down in the crater floor instead of floating above it', 'The Art of War opening trailer is put away for now. New games start with the usual intro']}
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {

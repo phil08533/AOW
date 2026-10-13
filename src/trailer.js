@@ -319,8 +319,10 @@ function playTrailer(opts) {
 }
 // draw the trailer's world instead of the game's while it plays
 { const _rr = renderer.render.bind(renderer); renderer.render = function (sc, cam) { if (TRL.on && TRL.scene && sc === scene) { if (cam === camera && camera.layers.mask === 2) return; return _rr(TRL.scene, TRL.cam); } return _rr(sc, cam); }; }
-// first start of every character (and anyone who has never seen it): the trailer, then the usual opening
-$('playBtn').addEventListener('click', () => {
+// first start of every character (and anyone who has never seen it): the trailer, then the usual opening.
+// Off for now (Phil: saving it for later). Set to true to bring it back, Codex entry included.
+const TRL_AUTO = false;
+if (TRL_AUTO) $('playBtn').addEventListener('click', () => {
   setTimeout(function chk(n) { if (state === 'menu' && (n || 0) < 40) return setTimeout(() => chk((n || 0) + 1), 250);
     if (state !== 'play' || TRL.on || (S.flags && S.flags.trailer) || new URLSearchParams(location.search).get('cutscene')) return;
     if (CUT.on) return; // something else already playing
@@ -328,5 +330,5 @@ $('playBtn').addEventListener('click', () => {
   }, 300);
 });
 // the opening intro waits for the trailer
-{ const _si = shipIntro; shipIntro = function () { if (TRL.on || (!(S.flags && S.flags.trailer) && state === 'cut')) return; return _si.apply(this, arguments); }; }
-SCENES.unshift(['trailer', '⚔️ The Art of War (opening)', () => true, () => playTrailer()]);
+{ const _si = shipIntro; shipIntro = function () { if (TRL.on || (TRL_AUTO && !(S.flags && S.flags.trailer) && state === 'cut')) return; return _si.apply(this, arguments); }; }
+if (TRL_AUTO) SCENES.unshift(['trailer', '⚔️ The Art of War (opening)', () => true, () => playTrailer()]);

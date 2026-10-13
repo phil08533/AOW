@@ -1,6 +1,7 @@
 // =================== PC CONTROLS: the mouse goes straight back to aiming when a menu closes ===================
 // Before: closing a menu left the mouse free, so your first click both grabbed the mouse AND fired a shot.
-// Now: after a menu, one click takes the mouse back for aiming and that click never fires; Esc opens the pause menu in one press.
+// Now: closing a menu takes the mouse back for aiming on its own (the click or key that closed it counts as the gesture the browser needs).
+// If the browser still says no (it does for a moment after Esc), the cursor stays hidden and the next click only grabs the mouse, never fires.
 let lockWorks = false, lockDrop = 0;
 document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement === stage) lockWorks = true; });
 { const _ex = document.exitPointerLock.bind(document); document.exitPointerLock = function () { lockDrop = performance.now(); return _ex(); }; }
@@ -46,3 +47,9 @@ window.addEventListener('keydown', e => {
 window.addEventListener('keydown', e => { if (e.code === 'KeyI' && !e.repeat && state === 'play' && !dlgOpen && !chatOpen()) openBag(); });
 { let pausedAt = 0; document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement) pausedAt = performance.now(); });
   window.addEventListener('keydown', e => { if (e.code === 'Escape' && state === 'pause' && performance.now() - pausedAt < 350) e.stopImmediatePropagation(); }, true); }
+// aim comes back by itself the moment a menu closes
+{ let wasBusy = true;
+  setInterval(() => { const busy = state !== 'play' || uiBusy(); if (wasBusy && !busy) relock(); wasBusy = busy; document.body.classList.toggle('aimfree', !TOUCH && !busy && !document.pointerLockElement); }, 50);
+  for (const ev of ['pointerup', 'keyup']) window.addEventListener(ev, () => setTimeout(relock, 0), true);
+  const st = document.createElement('style'); st.textContent = 'body.aimfree #stage{cursor:none}'; document.head.appendChild(st); }
+{ const _cd = closeDlg; closeDlg = function () { const r = _cd(); setTimeout(relock, 0); return r; }; }

@@ -328,7 +328,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.4</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.5</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -13319,7 +13319,8 @@ function raidNote(big, sm) { raidNoteTxt = `⚔ ${big}${sm ? ' · ' + sm : ''}`;
 
 // =================== PC CONTROLS: the mouse goes straight back to aiming when a menu closes ===================
 // Before: closing a menu left the mouse free, so your first click both grabbed the mouse AND fired a shot.
-// Now: after a menu, one click takes the mouse back for aiming and that click never fires; Esc opens the pause menu in one press.
+// Now: closing a menu takes the mouse back for aiming on its own (the click or key that closed it counts as the gesture the browser needs).
+// If the browser still says no (it does for a moment after Esc), the cursor stays hidden and the next click only grabs the mouse, never fires.
 let lockWorks = false, lockDrop = 0;
 document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement === stage) lockWorks = true; });
 { const _ex = document.exitPointerLock.bind(document); document.exitPointerLock = function () { lockDrop = performance.now(); return _ex(); }; }
@@ -13365,6 +13366,12 @@ window.addEventListener('keydown', e => {
 window.addEventListener('keydown', e => { if (e.code === 'KeyI' && !e.repeat && state === 'play' && !dlgOpen && !chatOpen()) openBag(); });
 { let pausedAt = 0; document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement) pausedAt = performance.now(); });
   window.addEventListener('keydown', e => { if (e.code === 'Escape' && state === 'pause' && performance.now() - pausedAt < 350) e.stopImmediatePropagation(); }, true); }
+// aim comes back by itself the moment a menu closes
+{ let wasBusy = true;
+  setInterval(() => { const busy = state !== 'play' || uiBusy(); if (wasBusy && !busy) relock(); wasBusy = busy; document.body.classList.toggle('aimfree', !TOUCH && !busy && !document.pointerLockElement); }, 50);
+  for (const ev of ['pointerup', 'keyup']) window.addEventListener(ev, () => setTimeout(relock, 0), true);
+  const st = document.createElement('style'); st.textContent = 'body.aimfree #stage{cursor:none}'; document.head.appendChild(st); }
+{ const _cd = closeDlg; closeDlg = function () { const r = _cd(); setTimeout(relock, 0); return r; }; }
 
 // =================== FIRST LAUNCH: pick your look and your music ===================
 // Shown once, the first time you press Start. Default is PS1 render + Crisp Toon + Sharp pixels.
@@ -14647,7 +14654,8 @@ const UPDATES = [
   { id: 72, title: '2.1 · Shared world, bag equip, balance', items: ['Everyone in the same world now sees the same monsters in the same places, with the same health. Hit one together and it dies for everybody, and everyone who hurt it gets the kill and loot', 'The bag lists your guns, staffs and melee weapons with an Equip button', 'Balance: the Backpack Minigun, Storm Rifle and Marshal Repeater hit less hard, levels add less damage, and gun upgrades are +8% per tier']},
   { id: 73, title: '2.2 · Bubble City grows', items: ['Bubble City has three new domes joined by glass tunnels: the Bubble Market (Auntie Nacre buys and sells), the homes dome (Old Barnacle and Pip) and a kelp farm (Farmer Kelpa)', 'A Pearl Fountain and benches in the main dome, fish schools circling the city, a parked sub and buoys', 'Walking out of a dome no longer pops you up to the surface. You start swimming from the sea floor', 'Siege Bots: legs are attached to the body again and stand on the ground']},
   { id: 74, title: '2.3 · The Art of War', items: ['A new opening trailer, The Art of War, set to the Rising Sun song: the battlefield, the general, a lone warrior, the fallen masterpiece and a statue of rubble, then the galaxy and a fleet battle', 'It plays once when you start a new game, and you can replay it any time from Codex, then Cinema', 'The big eye boss, the Watcher in the Maw, now fights to Event Horizon Collapse', 'Cutscenes in the Codex always switch to their own music', 'Cutscenes play their music even when the game music is set to Ambient or Beep boop (Off still keeps them silent)']},
-  { id: 75, title: '2.4 · Velocity, the magnet storm planet', items: ['Velocity is now a flat plain of gray glass under a storm that never ends: lightning bolts, rainbow rain and fog that rushes past as you speed up', 'Pit Row floats 20 m above the plain on magnet pylons, with a long ramp bridge down to the start line', 'Hover driving: cars slide on magnets with almost no friction. Hold Space (or DRIFT) to drift, which charges a boost when you let go. Shift boosts', 'C (or CAM) switches between hood, chase and far chase cameras. Your car has headlights', 'Three new courses across the open plain with ring gates: Storm Sprint, Magnet Mile and Thunder Run, on the shared leaderboards', 'Garage Gus sells five levels of Engine, Magnets and Boost, plus stripe colors and patterns', 'Every car is rebuilt with hover pads, lights and paint, and there is a new Hover Bike', 'Other players see you in your car']}
+  { id: 75, title: '2.4 · Velocity, the magnet storm planet', items: ['Velocity is now a flat plain of gray glass under a storm that never ends: lightning bolts, rainbow rain and fog that rushes past as you speed up', 'Pit Row floats 20 m above the plain on magnet pylons, with a long ramp bridge down to the start line', 'Hover driving: cars slide on magnets with almost no friction. Hold Space (or DRIFT) to drift, which charges a boost when you let go. Shift boosts', 'C (or CAM) switches between hood, chase and far chase cameras. Your car has headlights', 'Three new courses across the open plain with ring gates: Storm Sprint, Magnet Mile and Thunder Run, on the shared leaderboards', 'Garage Gus sells five levels of Engine, Magnets and Boost, plus stripe colors and patterns', 'Every car is rebuilt with hover pads, lights and paint, and there is a new Hover Bike', 'Other players see you in your car']},
+  { id: 76, title: '2.5 · Aim comes right back', items: ['Closing a menu, the bag, a shop or the tablet takes the mouse back for aiming on its own. No cursor on screen and no extra click', 'If the browser blocks it for a moment (right after Esc), the cursor stays hidden and your next click only grabs the mouse, it never fires']}
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {

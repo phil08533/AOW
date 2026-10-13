@@ -6,7 +6,7 @@ if (!PREFS.musicV2) { PREFS.musicV2 = 1; PREFS.music = 3; if (PREFS.musicVol == 
 if (PREFS.musicVol == null) PREFS.musicVol = 0.7;
 const MUS = { a: null, b: null, cur: null, list: null, idx: 0, want: null, force: null, battleT: 0, calmT: 0, romT: 0, unlocked: false, fades: [] };
 function musEl() { const e = new Audio(); e.preload = 'auto'; e.volume = 0; e.addEventListener('ended', () => { if (e === MUS.cur && MUS.list && PLAYLISTS[MUS.list].length > 1) { MUS.idx = (MUS.idx + 1) % PLAYLISTS[MUS.list].length; musStart(MUS.list, MUS.idx); } }); return e; }
-const musVol = () => PREFS.music === 3 ? Math.max(0, Math.min(1, PREFS.musicVol * (MUS.ac ? 1 : (MUS.spaceK || 1)))) : 0;
+const musVol = () => (PREFS.music === 3 || (MUS.force && PREFS.music)) ? Math.max(0, Math.min(1, PREFS.musicVol * (MUS.ac ? 1 : (MUS.spaceK || 1)))) : 0;
 function musFade(el, to, sec, then) { MUS.fades = MUS.fades.filter(f => f.el !== el); MUS.fades.push({ el, from: el.volume, to, t: 0, sec, then }); }
 setInterval(() => { for (const f of MUS.fades.slice()) { f.t += 0.05; const k = Math.min(1, f.t / f.sec); f.el.volume = Math.max(0, Math.min(1, f.from + (f.to - f.from) * k)); if (k >= 1) { MUS.fades.splice(MUS.fades.indexOf(f), 1); if (f.then) f.then(); } } }, 50);
 function musStart(list, idx) {
@@ -55,7 +55,7 @@ function musContext(dt) {
 }
 let musLast = performance.now();
 function musTick(now) { const t = performance.now(), dt = Math.min(1, (t - musLast) / 1000); musLast = t; if (!MUS.a) return;
-  if (PREFS.music !== 3) { if (MUS.list) musStop(); return; }
+  if (PREFS.music !== 3 && !(MUS.force && PREFS.music)) { if (MUS.list) musStop(); return; }
   const want = musContext(dt); if (!want) { if (MUS.list) musStop(); return; }
   if (want !== MUS.list) musPlay(want);
   if (MUS.cur && !MUS.fades.some(f => f.el === MUS.cur)) MUS.cur.volume = musVol();
@@ -96,8 +96,8 @@ function shipIntro() {
   ];
   const SHOT = 9, MIN_LOCK = 12; let t0 = performance.now(), last = -1, done = false;
   const cap = ov.querySelector('#cutcap');
-  if (MUS.a && PREFS.music === 3) { MUS.force = 'cutscene'; musTick(); }
-  const end = () => { if (done) return; done = true; MUS.force = null; levelGroup.remove(ship); levelGroup.remove(me); ov.remove(); skip.remove(); S.flags.shipIntro = 1; markDirty(); CUT.on = false; setState(prevState === 'cut' ? 'play' : prevState); player.pos.set(0, 0, -4); player.yaw = 0; vm.visible = true; toast('THE SETTING SUN', 'Welcome aboard, Captain', 3); };
+  musForce('cutscene');
+  const end = () => { if (done) return; done = true; musRelease('cutscene'); levelGroup.remove(ship); levelGroup.remove(me); ov.remove(); skip.remove(); S.flags.shipIntro = 1; markDirty(); CUT.on = false; setState(prevState === 'cut' ? 'play' : prevState); player.pos.set(0, 0, -4); player.yaw = 0; vm.visible = true; toast('THE SETTING SUN', 'Welcome aboard, Captain', 3); };
   skip.addEventListener('click', end);
   const tick = () => { if (done) return; const el = (performance.now() - t0) / 1000, si = Math.floor(el / SHOT) % shots.length, lt = el - Math.floor(el / SHOT) * SHOT;
     if (si !== last) { last = si; cap.style.opacity = 0; if (shots[si][0]) setTimeout(() => { cap.textContent = shots[si][0]; cap.style.opacity = 1; }, 600); }
@@ -129,5 +129,5 @@ PLAYLISTS.cutscene = ['hymn'];
   MUS.spaceK = k; if (MUS.cur && !MUS.fades.some(f => f.el === MUS.cur)) MUS.cur.volume = musVol(); }; }
 // the end credits play the heavenly hymn, then hand the music back when they close
 { const _rc = rollCredits; rollCredits = function (...a) { const r = _rc.apply(this, a);
-  if (MUS.a && PREFS.music === 3) { MUS.force = 'cutscene'; musTick(); const iv = setInterval(() => { if (!document.getElementById('ending')) { clearInterval(iv); if (MUS.force === 'cutscene') { MUS.force = null; musTick(); } } }, 400); }
+  { musForce('cutscene'); const iv = setInterval(() => { if (!document.getElementById('ending')) { clearInterval(iv); musRelease('cutscene'); } }, 400); }
   return r; }; }

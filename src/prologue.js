@@ -56,12 +56,12 @@ shipIntro = function (replay) {
   const skip = document.createElement('button'); skip.className = 'pbtn'; skip.textContent = 'Skip ▸'; skip.style.cssText = 'position:fixed;right:16px;bottom:calc(11vh + 14px);z-index:41;pointer-events:auto;opacity:0;transition:opacity .6s;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.5);color:#fff'; skip.hidden = true;
   document.body.append(ov, skip);
   const D = buildDiorama(), me = buildChar(() => makePlayerChar(myLook(), S.col), 'trooper'); me.position.set(0.4, 0, -12.6); me.rotation.y = Math.PI; levelGroup.add(me);
-  if (MUS.a && PREFS.music === 3) { MUS.force = 'cutscene'; musTick(); }
+  musForce('cutscene');
   const voice = new Audio(); voice.preload = 'auto';
   let li = -1, lineT0 = performance.now(), lineDur = 6, done = false; const t0 = performance.now(), MIN_LOCK = 12, cap = ov.querySelector('#cutcap'), title = ov.querySelector('#cuttitle');
   const startLine = i => { li = i; const L = PROLOGUE[i]; lineT0 = performance.now(); lineDur = lineSecs(L); cap.style.opacity = 0; setTimeout(() => { if (!done) { cap.textContent = L.text; cap.style.opacity = 1; } }, 250); prologueTint(ov, L.shot);
     if (VOICE_READY.includes(L.id)) { voice.src = `voice/${L.id}.mp3`; voice.volume = 1; voice.play().then(() => { if (isFinite(voice.duration)) lineDur = voice.duration + 0.8; }).catch(() => {}); if (MUS.cur) musFade(MUS.cur, musVol() * 0.35, 0.6); } };
-  const end = () => { if (done) return; done = true; window.__cutscene_done = true; const cd = document.createElement('div'); cd.id = 'cutscene_done'; document.body.appendChild(cd); voice.pause(); MUS.force = null; levelGroup.remove(D.g); levelGroup.remove(me); ov.remove(); skip.remove(); if (!replay) { S.flags.prologue1 = 1; S.flags.shipIntro = 1; markDirty(); } camera.far = far0; camera.updateProjectionMatrix(); CUT.on = false; setState(prevState); player.pos.set(0, 0, -4); player.yaw = 0; vm.visible = true; if (!replay) toast('THE SETTING SUN', 'Welcome aboard, Captain', 3); };
+  const end = () => { if (done) return; done = true; window.__cutscene_done = true; const cd = document.createElement('div'); cd.id = 'cutscene_done'; document.body.appendChild(cd); voice.pause(); musRelease('cutscene'); levelGroup.remove(D.g); levelGroup.remove(me); ov.remove(); skip.remove(); if (!replay) { S.flags.prologue1 = 1; S.flags.shipIntro = 1; markDirty(); } camera.far = far0; camera.updateProjectionMatrix(); CUT.on = false; setState(prevState); player.pos.set(0, 0, -4); player.yaw = 0; vm.visible = true; if (!replay) toast('THE SETTING SUN', 'Welcome aboard, Captain', 3); };
   skip.addEventListener('click', end);
   setTimeout(() => { title.style.opacity = 1; setTimeout(() => { title.style.opacity = 0; }, 2600); }, 400);
   const lead = 4;

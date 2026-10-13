@@ -8,9 +8,9 @@ function runCutscene(opt) {
   const skip = document.createElement('button'); skip.className = 'pbtn'; skip.textContent = 'Skip ▸'; skip.style.cssText = 'position:fixed;right:16px;bottom:calc(11vh + 14px);z-index:41;pointer-events:auto;opacity:0;transition:opacity .6s;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.5);color:#fff'; skip.hidden = true;
   document.body.append(ov, skip);
   const cap = ov.querySelector('.cc'), ttl = ov.querySelector('.ct'); if (ttl) { setTimeout(() => { ttl.style.opacity = 1; setTimeout(() => { ttl.style.opacity = 0; }, 2400); }, 300); }
-  if (opt.music && MUS.a && PREFS.music === 3) { MUS.force = opt.music; musTick(); }
+  if (opt.music) musForce(opt.music);
   let si = -1, s0 = performance.now(), done = false; const t0 = performance.now(), lock = opt.lock == null ? 8 : opt.lock;
-  const end = () => { if (done) return; done = true; window.__cutscene_done = true; const cd = document.createElement('div'); cd.id = 'cutscene_done'; document.body.appendChild(cd); MUS.force = null; ov.remove(); skip.remove(); CUT.on = false; setState(prevState); vm.visible = true; if (opt.onEnd) opt.onEnd(); };
+  const end = () => { if (done) return; done = true; window.__cutscene_done = true; const cd = document.createElement('div'); cd.id = 'cutscene_done'; document.body.appendChild(cd); if (opt.music) musRelease(opt.music); ov.remove(); skip.remove(); CUT.on = false; setState(prevState); vm.visible = true; if (opt.onEnd) opt.onEnd(); };
   skip.addEventListener('click', end);
   const next = () => { si++; if (si >= opt.shots.length) return end(); s0 = performance.now(); const sh = opt.shots[si]; cap.style.opacity = 0; if (sh.text) setTimeout(() => { if (!done) { cap.textContent = sh.text; cap.style.opacity = 1; } }, 300); };
   next();

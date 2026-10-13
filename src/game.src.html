@@ -328,7 +328,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 1.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 1.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1532,7 +1532,7 @@ function step(dt) {
   collide(player.pos, 0.35, false);
   ground = floorAt(player.pos.x, player.pos.z); const swim = ground < WATER_Y - 1.15 && !inDome(); if (swim) ground = WATER_Y - 1.15;
   const wasWet = player.wet; player.wet = ground < WATER_Y - 0.25; if (player.wet && !wasWet) SFX.splash(); }
-  for (const [lx, lz, lr] of LAVA) if (Math.hypot(player.pos.x - lx, player.pos.z - lz) < lr && player.pos.y < 2.9) hurt(22 * dt, false);
+  for (const [lx, lz, lr, ly] of LAVA) if (Math.hypot(player.pos.x - lx, player.pos.z - lz) < lr && player.pos.y < (ly != null ? ly : 2.55) + 0.35) hurt(22 * dt, false);
   const hover = hasGear('jet') && !player.onGround && (keys.Space || jetHeld) && player.jet > 0;
   if (hover) { player.jet -= dt; player.vy = Math.max(player.vy, 1.2); if (Math.random() < 0.4) burst(player.pos.clone().add(V(0, 0.4, 0)), '#ff9a3c', 1, 1.5); }
   if (!S.inSub && !RC.on && !VH.on && !swimHere()) { player.vy -= 18 * (LEVEL.gravity || 1) * dt; player.pos.y += player.vy * dt; }

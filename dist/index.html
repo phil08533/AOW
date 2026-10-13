@@ -328,7 +328,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 1.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 1.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -3751,10 +3751,14 @@ function wallRing(cx, cz, R, gate, half, mat, mat2, hgt, n) {
 function bridgeOn(path) {
   const a = path[0], b = path[1], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L;
   let best = 0, bd = 1e9; for (let t = 0; t <= 1; t += 0.005) { const d = polyDist(a[0] + dx * t, a[1] + dz * t, RIVER); if (d < bd) { bd = d; best = t; } }
-  const cx = a[0] + dx * best, cz = a[1] + dz * best, hl = 5.2, y = Math.max(groundH(cx - ux * hl, cz - uz * hl), groundH(cx + ux * hl, cz + uz * hl), WATER_Y + 0.6) + 0.12;
+  const cx = a[0] + dx * best, cz = a[1] + dz * best, y = Math.max(groundH(cx - ux * 5.2, cz - uz * 5.2), groundH(cx + ux * 5.2, cz + uz * 5.2), WATER_Y + 0.6) + 0.12;
+  // stretch the deck until it reaches dry ground on both banks, so the bridge always connects (a wider river made a short one fall short)
+  const reach = s => { for (let d = 3; d < 34; d += 0.5) if (groundH(cx + ux * d * s, cz + uz * d * s) >= y - 0.25) return d + 0.6; return 34; };
+  const hl = Math.max(5.2, reach(1), reach(-1)), n = Math.ceil(hl * 2 / 0.75);
   const g = new THREE.Group(); g.position.set(cx, y, cz); g.rotation.y = Math.atan2(ux, uz);
-  for (let i = 0; i < 14; i++) part(g, B(2.8, 0.14, 0.7), toon(i % 2 ? '#9a7650' : '#8a6a44', 'wood'), 0, -0.07, -hl + 0.37 + i * 0.75);
-  for (const s of [-1, 1]) { part(g, B(0.14, 0.14, hl * 2), toon('#6a4f34', 'wood'), 1.35 * s, 0.75, 0); for (let k = 0; k < 6; k++) part(g, B(0.14, 0.8, 0.14), toon('#6a4f34', 'wood'), 1.35 * s, 0.35, -hl + 0.3 + k * 2.05); part(g, B(0.3, 2.2, 0.3), toon('#6a4f34', 'wood'), 1.35 * s, -1.1, 0); }
+  for (let i = 0; i < n; i++) part(g, B(2.8, 0.14, 0.7), toon(i % 2 ? '#9a7650' : '#8a6a44', 'wood'), 0, -0.07, -hl + 0.37 + i * 0.75);
+  for (const s of [-1, 1]) { part(g, B(0.14, 0.14, hl * 2), toon('#6a4f34', 'wood'), 1.35 * s, 0.75, 0); for (let k = 0; k <= Math.floor((hl * 2 - 0.6) / 2.05); k++) part(g, B(0.14, 0.8, 0.14), toon('#6a4f34', 'wood'), 1.35 * s, 0.35, -hl + 0.3 + k * 2.05);
+    for (let k = -Math.floor(hl / 5); k <= Math.floor(hl / 5); k++) part(g, B(0.3, 2.6, 0.3), toon('#6a4f34', 'wood'), 1.35 * s, -1.3, k * 5); }
   props.add(g); SURFACES.push({ x: cx, z: cz, ux, uz, hl, hw: 1.4, y });
 }
 function dropshipPad(x, z, ry, label) {
@@ -4182,6 +4186,8 @@ function loadLevel(id, opts) {
   POOLS.length = 0; L.pools.forEach(p => POOLS.push(p)); LAVA.length = 0; L.lava.forEach(p => LAVA.push(p));
   WATER_Y = L.water; WORLD_C.set(L.center[0], 0, L.center[1]); WORLD_R = L.radius;
   L.safes.forEach(s => SAFES.push(s));
+  // lava sits on the ground: if the land under a lava pool is lower than the usual lava level, drop the pool to it (no more floating lava)
+  if (L.terrain) for (const l of LAVA) if (l[3] == null) { const keep = LAVA.splice(0); const nat = heightExact(l[0], l[1]); keep.forEach(k => LAVA.push(k)); if (nat < 2.2) l[3] = nat + 0.3; }
   buildHeightGrid();
   if (L.terrain) levelGroup.add(makeGround());
   levelGroup.add(makeWater());
@@ -5996,7 +6002,10 @@ function spaceStep(dt, t) {
   F.roll += ((-st * 0.5 - (F.lastYaw != null ? (player.yaw - F.lastYaw) / Math.max(dt, 1e-3) * 0.08 : 0)) - F.roll) * Math.min(1, dt * 4); F.lastYaw = player.yaw;
   F.ship.position.copy(player.pos); F.ship.rotation.set(0, 0, 0); F.ship.quaternion.copy(_q); F.ship.rotateZ(clamp(F.roll, -0.8, 0.8));
   const eng = 0.6 + th * 0.6 * boost + Math.sin(t * 30) * 0.08; F.ship.userData.engines.forEach(m => m.scale.set(eng, 1, eng));
-  F.trail.forEach((m, i) => { if ((Math.floor(t * 60) + i) % 18 === 0) { m.position.copy(player.pos).addScaledVector(shipFwd, 3.5).addScaledVector(shipRight, i % 2 ? 1.4 : -1.4).addScaledVector(shipUp, -0.2); } m.scale.setScalar(Math.max(0.5, 5 * th * boost)); m.visible = th > 0.05; });
+  // exhaust comes out of the BACK of the ship, in the color picked in the ship customizer
+  if (F.sternD == null && F.ship) { const bx = new THREE.Box3().setFromObject(F.ship), c = F.ship.position; let mn = 0; for (const x of [bx.min.x, bx.max.x]) for (const y of [bx.min.y, bx.max.y]) for (const z of [bx.min.z, bx.max.z]) mn = Math.min(mn, (x - c.x) * shipFwd.x + (y - c.y) * shipFwd.y + (z - c.z) * shipFwd.z); F.sternD = Math.max(1.5, -mn + 0.4); }
+  { const ex = (SHIP_EXHAUST[(smS().x | 0)] || SHIP_EXHAUST[0])[1]; F.trail.forEach((m, i) => { const want = ex === 'rainbow' ? '#' + new THREE.Color().setHSL(((t * 0.4 + i / 18) % 1), 1, 0.6).getHexString() : ex; if (m.userData.ex !== want) { m.material = glow(want); m.userData.ex = want; } }); }
+  F.trail.forEach((m, i) => { if ((Math.floor(t * 60) + i) % 18 === 0) { m.position.copy(player.pos).addScaledVector(shipFwd, -F.sternD).addScaledVector(shipRight, i % 2 ? 1.4 : -1.4).addScaledVector(shipUp, -0.2); } m.scale.setScalar(Math.max(0.5, 5 * th * boost)); m.visible = th > 0.05; });
   // chase camera
   F.shake = Math.max(0, F.shake - dt);
   const camPos = player.pos.clone().addScaledVector(shipFwd, -15).addScaledVector(shipUp, 4.2);
@@ -10964,6 +10973,7 @@ function spawnRoommate() {
 // =================== SHIP MODS: paint and parts for the Setting Sun, some scavenged in space and on planets ===================
 const SHIP_PAINTS = [['Gunmetal', '#9aa1aa', 1], ['Arctic', '#e8eef2', 1], ['Olive Drab', '#6f7a3e', 1], ['Midnight', '#2a3756', 1], ['Crimson', '#8a1e1e', 0], ['Sunset Gold', '#c9a43a', 0], ['Void Black', '#1e1c22', 0], ['Nebula Violet', '#5a2a8a', 0], ['Coral', '#e86a5a', 0], ['Toxic Green', '#5aff6a', 0]];
 const SHIP_ACCENTS = [['Team color', null, 1], ['Orange', '#ff8a2a', 1], ['Ice', '#4fd2ff', 1], ['Hazard', '#ffd36a', 0], ['Blood', '#ff2a3a', 0], ['Pink', '#ff6aa8', 0], ['Chrome', '#e8e4dc', 0]];
+const SHIP_EXHAUST = [['Sunfire orange', '#ff9a3c', 1], ['Plasma blue', '#4fd2ff', 1], ['Toxic green', '#7fff6a', 1], ['Hot pink', '#ff6aa8', 1], ['Royal violet', '#c86aff', 1], ['White hot', '#f4f4ff', 1], ['Blood red', '#ff2a3a', 1], ['Gold', '#ffd36a', 1], ['Rainbow', 'rainbow', 1]];
 const SHIP_PARTS = {
   wing: [['Standard wings', 1, {}], ['Swept wings', 1, { sp: 0.04 }], ['Delta wing', 0, { sp: 0.06 }], ['Biplane wings', 0, { hull: 0.08 }], ['Blade wings', 0, { sp: 0.05, laser: 0.05 }], ['Drome talons', 0, { laser: 0.1 }]],
   eng: [['Twin thrusters', 1, {}], ['Quad thrusters', 0, { sp: 0.08 }], ['Ion drive', 0, { sp: 0.12 }], ['Mega thruster', 0, { sp: 0.18, hull: -0.05 }]],
@@ -10972,8 +10982,8 @@ const SHIP_PARTS = {
   pod: [['No pods', 1, {}], ['Missile pods', 0, { laser: 0.12 }], ['Antenna array', 1, {}], ['Armor plating', 0, { hull: 0.15, sp: -0.04 }], ['Trophy spikes', 0, { hull: 0.05 }]]
 };
 const SM_SLOTS = [['wing', 'Wings'], ['eng', 'Engines'], ['nose', 'Nose'], ['fin', 'Fins'], ['pod', 'Extras']];
-const smS = () => { S.sm = S.sm || { p: 0, a: 0, wing: 0, eng: 0, nose: 0, fin: 0, pod: 0, own: {} }; S.sm.own = S.sm.own || {}; return S.sm; };
-const smOwn = (k, i) => { const T = k === 'p' ? SHIP_PAINTS : k === 'a' ? SHIP_ACCENTS : SHIP_PARTS[k]; return !!(T[i] && (T[i][T === SHIP_PAINTS || T === SHIP_ACCENTS ? 2 : 1] || smS().own[k + i])); };
+const smS = () => { S.sm = S.sm || { p: 0, a: 0, x: 0, wing: 0, eng: 0, nose: 0, fin: 0, pod: 0, own: {} }; S.sm.own = S.sm.own || {}; return S.sm; };
+const smOwn = (k, i) => { const T = k === 'p' ? SHIP_PAINTS : k === 'a' ? SHIP_ACCENTS : k === 'x' ? SHIP_EXHAUST : SHIP_PARTS[k]; return !!(T[i] && (T[i][T === SHIP_PAINTS || T === SHIP_ACCENTS || T === SHIP_EXHAUST ? 2 : 1] || smS().own[k + i])); };
 function shipMod(stat) { const M = smS(); let m = 1; for (const [k] of SM_SLOTS) { const P = SHIP_PARTS[k][M[k]]; if (P && P[2][stat]) m += P[2][stat]; } if (stat === 'laser' && typeof romPerk === 'function' && romPerk('laser')) m += 0.15; return m; }
 const smCode = M => [M.p, M.a, M.wing, M.eng, M.nose, M.fin, M.pod].join('.');
 const smParse = c => { const p = String(c || '').split('.').map(Number); return { p: p[0] || 0, a: p[1] || 0, wing: p[2] || 0, eng: p[3] || 0, nose: p[4] || 0, fin: p[5] || 0, pod: p[6] || 0 }; };
@@ -11020,15 +11030,15 @@ function openShipMods() {
   const render = () => { rows.textContent = '';
     const total = ['sp', 'hull', 'laser'].map(k => `${k === 'sp' ? 'speed' : k} ${Math.round((shipMod(k) - 1) * 100) >= 0 ? '+' : ''}${Math.round((shipMod(k) - 1) * 100)}%`).join(' · ');
     $('dlgLine').textContent = `Locked parts and paints are scavenged: fly through salvage in space, or find salvage crates on planets. Bonuses: ${total}.`;
-    const T = tab === 'p' ? SHIP_PAINTS : tab === 'a' ? SHIP_ACCENTS : SHIP_PARTS[tab];
-    T.forEach((it, i) => { const own = smOwn(tab, i), on = M[tab] === i, r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = (tab === 'p' || tab === 'a') ? (it[1] || S.col) : '#9aa1aa';
-      const nm = document.createElement('span'); nm.textContent = it[0] + (tab !== 'p' && tab !== 'a' && Object.keys(it[2]).length ? ` · ${statTxt(it[2])}` : ''); const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '13px'; mt.textContent = own ? (on ? 'Fitted' : 'Owned') : 'Scavenge';
+    const T = tab === 'p' ? SHIP_PAINTS : tab === 'a' ? SHIP_ACCENTS : tab === 'x' ? SHIP_EXHAUST : SHIP_PARTS[tab];
+    T.forEach((it, i) => { const own = smOwn(tab, i), on = M[tab] === i, r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = tab === 'x' ? (it[1] === 'rainbow' ? 'linear-gradient(90deg,#ff2a3a,#ffd36a,#7fff6a,#4fd2ff,#c86aff)' : it[1]) : (tab === 'p' || tab === 'a') ? (it[1] || S.col) : '#9aa1aa';
+      const nm = document.createElement('span'); nm.textContent = it[0] + (tab !== 'p' && tab !== 'a' && tab !== 'x' && Object.keys(it[2]).length ? ` · ${statTxt(it[2])}` : ''); const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '13px'; mt.textContent = own ? (on ? 'Fitted' : 'Owned') : 'Scavenge';
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = on ? '✓' : 'Fit'; b.disabled = !own || on;
       b.addEventListener('click', () => { M[tab] = i; markDirty(); sendPresence(true); SFX.item(); render(); pv(); if (LEVEL.fly && fly && fly.ship) { const old = fly.ship, nw = makeStarship(S.col); nw.position.copy(old.position); nw.quaternion.copy(old.quaternion); levelGroup.remove(old); levelGroup.add(nw); fly.ship = nw; } });
       r.style.cursor = 'pointer'; r.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') return; setPreview(() => { const g = makeStarship(S.col, Object.assign({}, M, { [tab]: i })); g.rotation.y = Math.PI * 0.8; return g; }, own ? it[0] : it[0] + ' (not found yet)'); });
       r.append(dot, nm, mt, b); rows.appendChild(r); }); };
   $('dlgActs').before(rows);
-  acts([['Paint', () => { tab = 'p'; render(); }, true], ['Accent', () => { tab = 'a'; render(); }], ...SM_SLOTS.map(([k, n]) => [n, () => { tab = k; render(); }]), ['Done', closeDlg]]);
+  acts([['Paint', () => { tab = 'p'; render(); }, true], ['Accent', () => { tab = 'a'; render(); }], ['Exhaust', () => { tab = 'x'; render(); }], ...SM_SLOTS.map(([k, n]) => [n, () => { tab = k; render(); }]), ['Done', closeDlg]]);
   render(); showPreviewIn(rows); pv();
 }
 // ---------- scavenging ----------
@@ -12777,7 +12787,7 @@ const HUD_SIZES = [['Small', 0.72], ['Medium', 0.86], ['Large', 1]];
 function applyHudSize() {
   const z = HUD_SIZES[PREFS.hudSize][1];
   $('hudsizecss').textContent = `#hud > *:not(#toast):not(#zone):not(#menuDrop):not(.hudbtns), #hud .hudbtns > *:not(#menuDrop), #touch > * { zoom: ${z}; }
-  ${PREFS.compact ? '#quest ul, #quest .ch, #log, #clock, #online { display: none !important; } #ctape { opacity: .75; }' : ''}`;
+  ${PREFS.compact ? '#quest ul, #quest .ch, #clock, #online { display: none !important; } #log > :not(.chat) { display: none !important; } #ctape { opacity: .75; }' : ''}`;
 }
 applyHudSize();
 { const anchor = $('setMusic').previousElementSibling; const mk = (label, id, fn) => { const l = document.createElement('span'); l.textContent = label; const b = document.createElement('button'); b.className = 'pbtn'; b.id = id; b.addEventListener('click', () => { fn(); savePrefs(); applyHudSize(); renderSettings(); SFX.ui(); }); anchor.before(l, b); };
@@ -13309,16 +13319,12 @@ function raidNote(big, sm) { raidNoteTxt = `⚔ ${big}${sm ? ' · ' + sm : ''}`;
 
 // =================== PC CONTROLS: the mouse goes straight back to aiming when a menu closes ===================
 // Before: closing a menu left the mouse free, so your first click both grabbed the mouse AND fired a shot.
-// Now: closing any menu re-captures the mouse, a click that only grabs the mouse never fires, and Esc opens the pause menu in one press.
+// Now: after a menu, one click takes the mouse back for aiming and that click never fires; Esc opens the pause menu in one press.
 let lockWorks = false, lockDrop = 0;
 document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement === stage) lockWorks = true; });
 { const _ex = document.exitPointerLock.bind(document); document.exitPointerLock = function () { lockDrop = performance.now(); return _ex(); }; }
 const uiBusy = () => dlgOpen || chatOpen() || !$('menuDrop').hidden || !!document.getElementById('ending') || (typeof CUT !== 'undefined' && CUT.on) || (typeof PHOTO !== 'undefined' && PHOTO.on) || (typeof baseState !== 'undefined' && baseState.on);
 function relock() { if (TOUCH || state !== 'play' || uiBusy() || document.pointerLockElement) return; lock(); }
-{ const _c = closeDlg; closeDlg = function (...a) { const r = _c.apply(this, a); setTimeout(relock, 30); return r; }; }
-// any click on a HUD button that doesn't open something else puts you back in the fight
-window.addEventListener('click', e => { if (e.target === stage) return; setTimeout(relock, 60); });
-$('chatIn').addEventListener('keydown', e => { if (e.key === 'Enter') setTimeout(relock, 30); });
 // the first click after a menu only grabs the mouse; it doesn't shoot
 stage.addEventListener('mousedown', e => { if (TOUCH || state !== 'play' || uiBusy() || document.pointerLockElement || !lockWorks) return; lock(); e.stopImmediatePropagation(); }, true);
 // Esc while aiming: the browser frees the mouse and swallows the key, so open the pause menu right away instead of needing a second Esc
@@ -13402,6 +13408,65 @@ $('playBtn').addEventListener('click', e => {
   e.stopImmediatePropagation(); SFX.init(); openLookPicker(() => $('playBtn').click());
 }, true);
 
+// =================== 1.9 FIXES: arena popup, lounge, other players' weapons and dancing, Zeltac floors, mouse, ceilings ===================
+
+// ---- arena: the betting card shows while bets are open, then shrinks to a small chip at the edge once the fight starts ----
+{ const st = document.createElement('style'); st.textContent = `
+body #hud #bout.compact { left: 12px !important; right: auto !important; transform: none !important; top: auto !important; bottom: calc(env(safe-area-inset-bottom, 0px) + 156px) !important; width: 210px !important; padding: 3px 8px 5px !important; opacity: .9; }
+body #hud #bout.compact .brow { font-size: 11px; margin-top: 1px; } body #hud #bout.compact .bar { height: 5px; } body #hud #bout.compact .bsub { font-size: 11px; margin-top: 2px; }
+@media (pointer: coarse) { body #hud #bout.compact { bottom: auto !important; top: calc(env(safe-area-inset-top, 0px) + 96px) !important; width: 180px !important; } }
+`; document.head.appendChild(st); }
+{ const _bh = boutHud; boutHud = function () { const r = _bh.apply(this, arguments); if (boutEl) { const B = ARENA.bout; boutEl.classList.toggle('compact', !B || !(B.open > 0)); } return r; }; }
+
+// ---- what other players see: your weapon, your dancing and which Zeltac floor you're on ----
+const myWeaponCode = () => (typeof inLounge === 'function' && inLounge()) ? '' : handMelee() ? 'm:' + (S.melee || 'knife') : String(S.gun || 'b1');
+{ const _pw = pvpWrite; pvpWrite = function (p) { _pw(p); p.gn = myWeaponCode(); if (typeof DANCE !== 'undefined' && DANCE.on) p.dn = 1; if (LEVEL && LEVEL.id === 'zfloor' && typeof ZF !== 'undefined') p.zf = ZF.floor; }; }
+let lastWeaponSent = '';
+{ const _st = step; step = function (dt) { _st(dt); const w = myWeaponCode() + (typeof DANCE !== 'undefined' && DANCE.on ? '+d' : ''); if (w !== lastWeaponSent) { lastWeaponSent = w; try { sendPresence(true); } catch (_) {} } }; }
+function remoteWeapon(r, code) {
+  if (r.gnCode === code) return; r.gnCode = code;
+  let std = null; r.obj.traverse(c => { if (c.userData && c.userData.stdGun) std = c; });
+  if (!std) return;
+  if (r.gnObj) { r.gnObj.parent && r.gnObj.parent.remove(r.gnObj); r.gnObj = null; }
+  std.visible = false;
+  if (!code) return; // hands empty (lounge)
+  let m = null;
+  try { if (code.startsWith('m:')) { const id = code.slice(2); if (MELEE[id]) { m = makeMeleeModel(id); m.scale.setScalar(0.85); m.rotation.set(0.5, 0, 0); } }
+    else if (GUNS[code]) { m = makeGunModel(code); m.scale.setScalar(std.scale.x * 1.4); } } catch (_) { m = null; }
+  if (!m) { std.visible = true; return; }
+  m.position.copy(std.position); if (!code.startsWith('m:')) m.quaternion.copy(std.quaternion);
+  m.traverse(o => { if (o.isMesh) o.castShadow = false; }); std.parent.add(m); r.gnObj = m;
+}
+{ const _sp = syncPeers; syncPeers = function (peers) { _sp(peers);
+  for (const peer of peers || []) { if (peer.isMe) continue; const r = remotes.get(peer.peer); if (!r) continue; const pr = peer.presence || {};
+    remoteWeapon(r, typeof pr.gn === 'string' ? pr.gn.slice(0, 24) : 'b1');
+    r.dance = !!pr.dn;
+    r.otherFloor = !!(LEVEL && LEVEL.id === 'zfloor' && typeof ZF !== 'undefined' && typeof pr.zf === 'number' && pr.zf !== ZF.floor); } }; }
+{ const _st = step; step = function (dt) { _st(dt);
+  for (const r of remotes.values()) {
+    if (r.otherFloor) { r.obj.visible = false; continue; } if (!r.obj.visible) r.obj.visible = true;
+    if (r.dance) { r.danceT = (r.danceT || 0) + dt; const b = Math.abs(Math.sin(r.danceT * 4.2)); r.obj.position.y = r.target.y + b * 0.22; r.obj.rotation.z = Math.sin(r.danceT * 2.1) * 0.12; r.obj.rotation.y += Math.sin(r.danceT * 1.3) * dt * 3; }
+    else if (r.obj.rotation.z) r.obj.rotation.z = 0;
+  }
+  // lounge: no weapon of any kind in your hands
+  if (typeof inLounge === 'function' && inLounge()) { vm.visible = false; vmMelee.visible = false; if (typeof vmOff !== 'undefined' && vmOff) vmOff.visible = false; }
+}; }
+
+// ---- the President's party button only shows when you're right next to him ----
+{ const _st = step; step = function (dt) { _st(dt);
+  if (nearNpc === 'prez' && npcObjs.prez && npcObjs.prez.obj.position.distanceTo(player.pos) > 1.9) { nearNpc = null; if (!nearAct) $('talk').hidden = true; } }; }
+
+// ---- mouse: ignore the huge jumps some browsers send while the mouse is captured (the "mouse spazzes out" bug) ----
+window.addEventListener('mousemove', e => { if (document.pointerLockElement && (Math.abs(e.movementX) > 220 || Math.abs(e.movementY) > 220)) e.stopImmediatePropagation(); }, true);
+
+// ---- indoors (ship, Zeltac, apartments): your head stops at the ceiling instead of poking through the roof ----
+{ const rc = new THREE.Raycaster(), up = V(0, 1, 0);
+  const _st = step; step = function (dt) { _st(dt);
+    if (!LEVEL || LEVEL.terrain || LEVEL.fly || player.onGround || player.vy <= 0 || state !== 'play') return;
+    rc.set(V(player.pos.x, player.pos.y + 1.2, player.pos.z), up); rc.far = 0.75; rc.camera = camera;
+    let hit = null; try { hit = rc.intersectObject(levelGroup, true).find(h => h.object.isMesh && h.object.visible && !(h.object.material && h.object.material.transparent)); } catch (_) {}
+    if (hit) { player.pos.y = Math.min(player.pos.y, hit.point.y - 1.95); player.vy = Math.min(player.vy, 0); player.jet = 0; } }; }
+
 // ---- Update log: each player sees the updates they missed since their last login ----
 const UPDATES = [
   { id: 20, title: 'Laser swords and shields', items: ['Laser swords with custom colors and hilts, previewed in the shop', 'Melee only fires with a melee weapon equipped; the offhand blue shield blocks', 'Saber mod station on your ship'] },
@@ -13454,6 +13519,7 @@ const UPDATES = [
   { id: 67, title: 'Cleaner screen', items: ['The minimap now stays north-up; your arrow turns instead', 'The compass is smaller and sits under the minimap', 'Boss health moved out of the middle of the screen to the top-right, under the compass', 'Leave the helm (and other flying prompts) moved to a small chip in the bottom-left', 'Wardrobe shows armor, helmets and faces from the front (capes still from the back)']},
   { id: 68, title: '1.8: Gun sounds, your look, and smoother PC controls', items: ['Gunfire works again: sound effects could get stuck silent after pressing Start. Now any key or tap wakes them up, and iPhones play them even on silent mode', 'Every weapon sounds new: punchy blasters, cracking rifles, booming shotguns with a pump, a whooshing rocket launcher, a twanging crossbow, a buzzing Stinger, and its own voice for every spell element. Reloads, empty clicks, shell casings and explosions are new too', 'New default look: PS1 render, Crisp Toon, Sharp pixels. First launch lets you pick a look (with screenshots) and your music. Change both any time in Menu → Settings', 'PC: closing a menu puts you straight back into aiming (no more wasted shot to grab the mouse). One Esc opens the pause menu. Press 1–9 to pick menu options, 1 gun · 2 staff · 3 melee, mouse wheel swaps weapons, I opens the bag', 'New Game+ only unlocks after you finish the story', 'The end credits play the hymn']},
   { id: 69, title: 'Raid notices out of the way', items: ['The raid chip is now small and sits above your health (top-left on phones) instead of the middle of the screen', 'The next-raid countdown only shows in the last minute', 'Raid alerts, waves and boss calls show on that chip and in the chat log instead of a big popup']},
+  { id: 70, title: '1.9 · Fixes round one', items: ['Arena: the betting card shows while bets are open, then shrinks to a small chip in the corner once the fight starts', 'Earth: the floating lava pool now sits on the ground, and the river bridge reaches both banks', 'Other players now see the actual gun or melee weapon you are holding, and see you dancing', 'Starlight Lounge: no weapons in your hands', 'Zeltac: you only see players on your own floor', 'Chat still shows when quests are hidden', 'Ship and indoors: the jetpack no longer pushes your head through the roof', 'Ship exhaust comes out the back now, with new colors in the ship shop (Exhaust tab)', 'The President party button only shows when you are right next to him', 'PC: fixed the mouse randomly jumping. After a menu, click once to take back aiming (that click does not shoot)']},
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -14585,7 +14651,7 @@ function step(dt) {
   collide(player.pos, 0.35, false);
   ground = floorAt(player.pos.x, player.pos.z); const swim = ground < WATER_Y - 1.15 && !inDome(); if (swim) ground = WATER_Y - 1.15;
   const wasWet = player.wet; player.wet = ground < WATER_Y - 0.25; if (player.wet && !wasWet) SFX.splash(); }
-  for (const [lx, lz, lr] of LAVA) if (Math.hypot(player.pos.x - lx, player.pos.z - lz) < lr && player.pos.y < 2.9) hurt(22 * dt, false);
+  for (const [lx, lz, lr, ly] of LAVA) if (Math.hypot(player.pos.x - lx, player.pos.z - lz) < lr && player.pos.y < (ly != null ? ly : 2.55) + 0.35) hurt(22 * dt, false);
   const hover = hasGear('jet') && !player.onGround && (keys.Space || jetHeld) && player.jet > 0;
   if (hover) { player.jet -= dt; player.vy = Math.max(player.vy, 1.2); if (Math.random() < 0.4) burst(player.pos.clone().add(V(0, 0.4, 0)), '#ff9a3c', 1, 1.5); }
   if (!S.inSub && !RC.on && !VH.on && !swimHere()) { player.vy -= 18 * (LEVEL.gravity || 1) * dt; player.pos.y += player.vy * dt; }

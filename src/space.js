@@ -327,7 +327,10 @@ function spaceStep(dt, t) {
   F.roll += ((-st * 0.5 - (F.lastYaw != null ? (player.yaw - F.lastYaw) / Math.max(dt, 1e-3) * 0.08 : 0)) - F.roll) * Math.min(1, dt * 4); F.lastYaw = player.yaw;
   F.ship.position.copy(player.pos); F.ship.rotation.set(0, 0, 0); F.ship.quaternion.copy(_q); F.ship.rotateZ(clamp(F.roll, -0.8, 0.8));
   const eng = 0.6 + th * 0.6 * boost + Math.sin(t * 30) * 0.08; F.ship.userData.engines.forEach(m => m.scale.set(eng, 1, eng));
-  F.trail.forEach((m, i) => { if ((Math.floor(t * 60) + i) % 18 === 0) { m.position.copy(player.pos).addScaledVector(shipFwd, 3.5).addScaledVector(shipRight, i % 2 ? 1.4 : -1.4).addScaledVector(shipUp, -0.2); } m.scale.setScalar(Math.max(0.5, 5 * th * boost)); m.visible = th > 0.05; });
+  // exhaust comes out of the BACK of the ship, in the color picked in the ship customizer
+  if (F.sternD == null && F.ship) { const bx = new THREE.Box3().setFromObject(F.ship), c = F.ship.position; let mn = 0; for (const x of [bx.min.x, bx.max.x]) for (const y of [bx.min.y, bx.max.y]) for (const z of [bx.min.z, bx.max.z]) mn = Math.min(mn, (x - c.x) * shipFwd.x + (y - c.y) * shipFwd.y + (z - c.z) * shipFwd.z); F.sternD = Math.max(1.5, -mn + 0.4); }
+  { const ex = (SHIP_EXHAUST[(smS().x | 0)] || SHIP_EXHAUST[0])[1]; F.trail.forEach((m, i) => { const want = ex === 'rainbow' ? '#' + new THREE.Color().setHSL(((t * 0.4 + i / 18) % 1), 1, 0.6).getHexString() : ex; if (m.userData.ex !== want) { m.material = glow(want); m.userData.ex = want; } }); }
+  F.trail.forEach((m, i) => { if ((Math.floor(t * 60) + i) % 18 === 0) { m.position.copy(player.pos).addScaledVector(shipFwd, -F.sternD).addScaledVector(shipRight, i % 2 ? 1.4 : -1.4).addScaledVector(shipUp, -0.2); } m.scale.setScalar(Math.max(0.5, 5 * th * boost)); m.visible = th > 0.05; });
   // chase camera
   F.shake = Math.max(0, F.shake - dt);
   const camPos = player.pos.clone().addScaledVector(shipFwd, -15).addScaledVector(shipUp, 4.2);

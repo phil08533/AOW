@@ -323,7 +323,16 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // only pages served from this machine (dev.html, the game) may use the dev API. Other websites open in your browser
+    // could otherwise send edits to localhost, since the browser would happily deliver them
+    const origin = req.headers.origin;
+    if (origin && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      res.statusCode = 403;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Access denied: Developer API only accepts requests from pages on this machine' }));
+      return;
+    }
+    if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 

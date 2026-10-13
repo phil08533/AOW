@@ -72,10 +72,14 @@ function wallRing(cx, cz, R, gate, half, mat, mat2, hgt, n) {
 function bridgeOn(path) {
   const a = path[0], b = path[1], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L;
   let best = 0, bd = 1e9; for (let t = 0; t <= 1; t += 0.005) { const d = polyDist(a[0] + dx * t, a[1] + dz * t, RIVER); if (d < bd) { bd = d; best = t; } }
-  const cx = a[0] + dx * best, cz = a[1] + dz * best, hl = 5.2, y = Math.max(groundH(cx - ux * hl, cz - uz * hl), groundH(cx + ux * hl, cz + uz * hl), WATER_Y + 0.6) + 0.12;
+  const cx = a[0] + dx * best, cz = a[1] + dz * best, y = Math.max(groundH(cx - ux * 5.2, cz - uz * 5.2), groundH(cx + ux * 5.2, cz + uz * 5.2), WATER_Y + 0.6) + 0.12;
+  // stretch the deck until it reaches dry ground on both banks, so the bridge always connects (a wider river made a short one fall short)
+  const reach = s => { for (let d = 3; d < 34; d += 0.5) if (groundH(cx + ux * d * s, cz + uz * d * s) >= y - 0.25) return d + 0.6; return 34; };
+  const hl = Math.max(5.2, reach(1), reach(-1)), n = Math.ceil(hl * 2 / 0.75);
   const g = new THREE.Group(); g.position.set(cx, y, cz); g.rotation.y = Math.atan2(ux, uz);
-  for (let i = 0; i < 14; i++) part(g, B(2.8, 0.14, 0.7), toon(i % 2 ? '#9a7650' : '#8a6a44', 'wood'), 0, -0.07, -hl + 0.37 + i * 0.75);
-  for (const s of [-1, 1]) { part(g, B(0.14, 0.14, hl * 2), toon('#6a4f34', 'wood'), 1.35 * s, 0.75, 0); for (let k = 0; k < 6; k++) part(g, B(0.14, 0.8, 0.14), toon('#6a4f34', 'wood'), 1.35 * s, 0.35, -hl + 0.3 + k * 2.05); part(g, B(0.3, 2.2, 0.3), toon('#6a4f34', 'wood'), 1.35 * s, -1.1, 0); }
+  for (let i = 0; i < n; i++) part(g, B(2.8, 0.14, 0.7), toon(i % 2 ? '#9a7650' : '#8a6a44', 'wood'), 0, -0.07, -hl + 0.37 + i * 0.75);
+  for (const s of [-1, 1]) { part(g, B(0.14, 0.14, hl * 2), toon('#6a4f34', 'wood'), 1.35 * s, 0.75, 0); for (let k = 0; k <= Math.floor((hl * 2 - 0.6) / 2.05); k++) part(g, B(0.14, 0.8, 0.14), toon('#6a4f34', 'wood'), 1.35 * s, 0.35, -hl + 0.3 + k * 2.05);
+    for (let k = -Math.floor(hl / 5); k <= Math.floor(hl / 5); k++) part(g, B(0.3, 2.6, 0.3), toon('#6a4f34', 'wood'), 1.35 * s, -1.3, k * 5); }
   props.add(g); SURFACES.push({ x: cx, z: cz, ux, uz, hl, hw: 1.4, y });
 }
 function dropshipPad(x, z, ry, label) {
@@ -503,6 +507,8 @@ function loadLevel(id, opts) {
   POOLS.length = 0; L.pools.forEach(p => POOLS.push(p)); LAVA.length = 0; L.lava.forEach(p => LAVA.push(p));
   WATER_Y = L.water; WORLD_C.set(L.center[0], 0, L.center[1]); WORLD_R = L.radius;
   L.safes.forEach(s => SAFES.push(s));
+  // lava sits on the ground: if the land under a lava pool is lower than the usual lava level, drop the pool to it (no more floating lava)
+  if (L.terrain) for (const l of LAVA) if (l[3] == null) { const keep = LAVA.splice(0); const nat = heightExact(l[0], l[1]); keep.forEach(k => LAVA.push(k)); if (nat < 2.2) l[3] = nat + 0.3; }
   buildHeightGrid();
   if (L.terrain) levelGroup.add(makeGround());
   levelGroup.add(makeWater());

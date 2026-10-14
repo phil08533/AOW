@@ -13528,12 +13528,12 @@ const TAB_PAGES = {
   home: { title: 'MENU' },
   ship: { title: 'SHIP', ids: ['shipBtn', 'launchBtn', 'galaxyBtn', 'buildBtn'] },
   veh: { title: 'VEHICLES', ids: ['vehBtn', 'bikeBtn', 'droneBtn'] },
-  journal: { title: 'JOURNAL', ids: ['questBtn', 'codexBtn', 'newsBtn', 'playersBtn'] },
-  social: { title: 'SOCIAL', ids: ['chatBtn', 'photoBtn', 'danceBtn'] },
+  journal: { title: 'JOURNAL', ids: ['questBtn', 'codexBtn', 'newsBtn'] },
+  social: { title: 'SOCIAL', ids: ['playersBtn', 'chatBtn', 'photoBtn', 'danceBtn'] },
   set: { title: 'SETTINGS', ids: ['stGfx', 'stSnd', 'stCtl', 'stGame', 'helpBtn', 'fullBtn', 'unstuckBtn', 'logoutHudBtn'] }
 };
 const TAB_HOME = [['tcShip', 'Ship', 'Beam up · launch · map', 'ship'], ['tcVeh', 'Vehicles', 'Car · bike · drone', 'veh'], ['tcBag', 'Bag', 'Your gear', null],
-  ['tcJournal', 'Journal', 'Quests · codex · news', 'journal'], ['tcSocial', 'Social', 'Chat · photo · dance', 'social'], ['tcSet', 'Settings', 'Graphics · sound · controls', 'set']];
+  ['tcJournal', 'Journal', 'Quests · codex · news', 'journal'], ['tcSocial', 'Social', "Who's here · chat · photo", 'social'], ['tcSet', 'Settings', 'Graphics · sound · controls', 'set']];
 const tabBtn = (id, label, fn) => { const b = document.createElement('button'); b.className = 'hbtn win'; b.id = id; b.textContent = label; b.addEventListener('click', fn); return b; };
 {
   const drop = $('menuDrop'), loose = [...drop.children];

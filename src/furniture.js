@@ -173,3 +173,7 @@ body.decor #quest, body.decor #log, body.decor #zone, body.decor #raidBar, body.
 @media (pointer: coarse) and (max-height: 520px) { #buildBar .bacts .bmsg { font-size: 11px; } body.decor #tFire, body.decor #tJump { opacity: .35; } }`; document.head.appendChild(st);
   const acts = document.querySelector('#buildBar .bacts'), msg = $('buildMsg'); if (acts && msg) acts.prepend(msg);
   const rb = $('bRotate'); if (rb) rb.textContent = '↻ Rotate'; }
+// ---- hanging decor (shares its models with the editor): it hangs from the ship's ceiling over the spot you pick ----
+for (const [id, nm, pr] of [['hanglamp', 'Hanging lamp', 150], ['chainlight', 'Chain light', 300], ['hangplant', 'Hanging plant', 120], ['hangbanner', 'Hanging banner', 200]]) {
+  FURN[id] = [nm, 'Decor', pr, [0.8, 0.3, 0.8], 1, 0]; PIECES[id] = { name: nm, cost: {}, price: pr, cat: 'Decor', layer: 1, dim: [0.8, 0.3, 0.8], solid: 0, hang: true }; }
+{ const _pm = pieceModel; pieceModel = function (type, col) { if (!HANG_MODELS[type]) return _pm(type, col); const g = new THREE.Group(), h = new THREE.Group(); HANG_MODELS[type](h); h.position.y = 3.18; g.add(h); return g; }; }

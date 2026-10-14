@@ -206,9 +206,9 @@ function pageRows() {
   const name = $('dlgName').textContent + '|' + $('dlgRole').textContent; if (name !== PG.name) { PG.name = name; PG.page = 0; }
   rows.classList.remove('paged'); kids.forEach(c => c.classList.remove('pgOff'));
   // short, wide screens (phones sideways): two columns of rows so each page holds more
-  const two = innerHeight < 520 && innerWidth > 640 && getComputedStyle(rows).display !== 'grid'; rows.classList.toggle('cols2', two); if (two) rows.classList.add('paged');
+  const wordy = kids.some(c => (c.textContent || '').length > 64), two = innerHeight < 520 && innerWidth > 640 && !wordy && getComputedStyle(rows).display !== 'grid'; rows.classList.toggle('cols2', two); if (two) rows.classList.add('paged');
   // how much room the list has: the screen minus everything else in the dialog
-  const dlg = $('dlg'), rest = dlg.scrollHeight - rows.offsetHeight, room = Math.max(120, Math.min(innerHeight * 0.92 - rest - 44, innerHeight * 0.62));
+  const dlg = $('dlg'), rest = dlg.scrollHeight - rows.offsetHeight, mh = parseFloat(getComputedStyle(dlg).maxHeight) || innerHeight, room = Math.max(120, Math.min(innerHeight * 0.92 - rest - 58, innerHeight * 0.62, mh - rest - 30));
   const pages = []; let start = null, cur = [];
   for (const c of kids) { const top = c.offsetTop, bot = top + c.offsetHeight; if (start == null) start = top; if (bot - start > room && cur.length) { pages.push(cur); cur = []; start = top; } cur.push(c); }
   if (cur.length) pages.push(cur);

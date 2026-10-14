@@ -23,6 +23,8 @@ body { text-shadow: 0 1px 2px rgba(0,0,0,.9); }
 .cta::before, .pbtn:hover::before, .pbtn:focus-visible::before { content: none; }
 .rowi { border-bottom: 1px solid rgba(127,233,255,.12); font-family: var(--hud); font-weight: 500; }
 .rowi .meta { font-family: var(--mono); font-size: 15px; color: #9fd8ea; }
+.rowi { grid-template-columns: 14px minmax(100px, 1.5fr) minmax(64px, 1fr) auto; } .rowi.nodot { grid-template-columns: minmax(100px, 1.5fr) minmax(64px, 1fr) auto; } .rowi .meta { text-align: right; overflow-wrap: break-word; min-width: 0; } .cols2 .rowi .meta { font-size: 12px; } .cols2 .rowi { font-size: 13px; gap: 6px; }
+@media (max-height: 520px) { .dlg { max-height: calc(100vh - 14px); } #dlg .prevWrap { position: absolute; right: 14px; top: 10px; width: 168px; margin: 0; z-index: 1; } #dlg .prevWrap canvas { border-width: 1px; } #dlg .prevLbl { font-size: 10px; } #dlg:has(.prevWrap) .line, #dlg:has(.prevWrap) h3 { padding-right: 180px; } }
 /* top-left: objective tracker, no box, a cyan rail */
 #quest { background: linear-gradient(90deg, rgba(5,12,24,.55), rgba(5,12,24,0)); border: 0; box-shadow: none; border-left: 2px solid var(--hl); border-radius: 0; padding: 4px 10px 6px; backdrop-filter: none; }
 #quest .ch { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; color: var(--hl); }

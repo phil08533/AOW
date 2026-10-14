@@ -61,8 +61,8 @@ body.menuopen #touch { display: none !important; }
 #ammo .n small { font-size: 17px; color: #9fd8ea; }
 #ammo .g { font: 700 12px var(--hud); letter-spacing: .08em; text-transform: uppercase; color: var(--amber); }
 /* center text */
-#zone .n { font-family: var(--hud); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(22px, 5.6vw, 36px); }
-#zone .l { font-family: var(--mono); font-size: 15px; letter-spacing: .14em; color: var(--hl); text-transform: uppercase; }
+#zone .n { font-family: var(--hud); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(15px, 2.8vw, 22px); opacity: .85; }
+#zone .l { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--hl); text-transform: uppercase; }
 #toast .big { font-family: var(--hud); letter-spacing: .1em; text-transform: uppercase; text-shadow: 0 2px 8px #000, 0 0 22px rgba(255,154,60,.55); }
 #toast .sm { font-family: var(--hud); font-weight: 600; font-size: 18px; color: var(--amber); }
 #log { font-family: var(--hud); font-weight: 600; font-size: 14px; }

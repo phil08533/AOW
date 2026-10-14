@@ -84,9 +84,10 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outl
 #log .loot { color: var(--gold); }
 #log .chat b { color: var(--ally); font-weight: 600; }
 #log .ai { color: #b8f0ff; } #log .ai b { color: #6fdc5a; }
-#toast { position: absolute; left: 50%; top: 34%; transform: translate(-50%, -50%); text-align: center; opacity: 0; transition: opacity .3s; width: 92vw; }
-#toast .big { font-size: clamp(30px, 8vw, 58px); font-weight: 700; letter-spacing: .04em; line-height: 1; color: #fff; text-shadow: 3px 3px 0 #000, 0 0 18px rgba(255,154,60,.6); }
-#toast .sm { font-size: 17px; color: var(--gold); text-shadow: 2px 2px 0 #000; }
+#toast { position: absolute; left: 50%; top: auto !important; bottom: calc(env(safe-area-inset-bottom, 0px) + 100px); transform: translateX(-50%); text-align: center; opacity: 0; transition: opacity .3s; width: auto; max-width: min(70vw, 520px); padding: 5px 14px 6px; border-radius: 10px; background: rgba(8,14,26,.5); border: 1px solid rgba(255,255,255,.12); pointer-events: none; }
+#toast .big { font-size: 14px !important; font-weight: 700; letter-spacing: .14em; line-height: 1.2; color: #ffe7b0; text-shadow: none !important; }
+#toast .sm { font-size: 12px !important; color: rgba(232,236,248,.85); text-shadow: none; }
+#toast .sm:empty { display: none; }
 body.flying #talk { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 38%); padding: 5px 12px; font-size: 13px; opacity: 0.85; }
 #talk { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); transform: translateX(-50%); pointer-events: auto; cursor: pointer; padding: 8px 16px; font-size: 16px; font-weight: 600; color: var(--text); }
 #talk kbd { font-family: var(--num); font-size: 18px; padding: 0 5px; border: 1px solid var(--edge); margin-left: 8px; }
@@ -328,7 +329,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.9.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -914,7 +915,7 @@ function spawnDrop(p, kind, id, n) {
 
 // =================== HUD helpers ===================
 let toastT = 0;
-function toast(big, sm, dur) { $('toastBig').textContent = big; $('toastSm').textContent = sm || ''; $('toast').style.opacity = 1; toastT = dur || 2.4; }
+function toast(big, sm, dur) { $('toastBig').textContent = big; $('toastSm').textContent = sm || ''; $('toast').style.opacity = 0.82; toastT = Math.min(dur || 2.4, 3); }
 let hitT = 0;
 function hitmark(kill) { const h = $('hitmark'); h.classList.toggle('kill', !!kill); h.style.opacity = 1; hitT = 0.12; }
 function log(text, cls, who) {
@@ -1233,7 +1234,7 @@ window.addEventListener('keydown', e => {
   if (dlgOpen) { if (e.repeat) return; const go = $('dlgActs').querySelector('.go:not(:disabled)');
     if (e.code === 'Escape') { closeDlg(); e.stopImmediatePropagation(); } else if ((e.code === 'KeyE' || e.code === 'Space') && go) { go.click(); e.preventDefault(); } else if (e.code === 'KeyE') closeDlg(); return; }
   keys[e.code] = true;
-  if (e.code === 'KeyR') { if (baseState.on) { baseState.rot ^= 1; } else reload(); }
+  if (e.code === 'KeyR') { if (baseState.on) { baseState.rot = ((baseState.rot | 0) + 1) % 4; } else reload(); }
   if (e.code === 'KeyG') setBuild(!baseState.on);
   if (e.code === 'KeyX') { if (baseState.on) { baseState.remove = !baseState.remove; renderBuildBar(); } else toggleBike(); }
   if (e.code === 'Escape' && baseState.on) { setBuild(false); }
@@ -1384,7 +1385,7 @@ try {
 } catch (_) {}
 $('buildBtn').addEventListener('click', () => { if (!dlgOpen) setBuild(!baseState.on); });
 $('bPlace').addEventListener('click', placePiece);
-$('bRotate').addEventListener('click', () => { baseState.rot ^= 1; SFX.ui(); });
+$('bRotate').addEventListener('click', () => { baseState.rot = ((baseState.rot | 0) + 1) % 4; SFX.ui(); });
 $('bRemove').addEventListener('click', () => { baseState.remove = !baseState.remove; SFX.ui(); renderBuildBar(); });
 $('bDone').addEventListener('click', () => setBuild(false));
 $('menuBtn').addEventListener('click', () => { if (!dlgOpen && !chatOpen()) setState('pause'); });

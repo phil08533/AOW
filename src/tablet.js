@@ -86,6 +86,7 @@ function tabRefresh() {
   const why = (id, reason) => { const b = $(id); if (!b) return; b.disabled = !!reason; let w = b.querySelector('.why'); if (reason) { if (!w) { w = document.createElement('span'); w.className = 'why'; b.appendChild(w); } w.textContent = reason; } else if (w) w.remove(); };
   const onShip = LEVEL && (LEVEL.id === 'ship' || LEVEL.fly || LEVEL.id === 'space');
   why('galaxyBtn', onShip ? '' : 'On your ship');
+  why('buildBtn', LEVEL && LEVEL.id === 'ship' ? '' : 'Inside your ship');
   why('danceBtn', typeof inLounge === 'function' && inLounge() ? '' : 'In the Starlight Lounge');
   const pg = $('menuDrop').querySelector(`.tabPage[data-p="${TAB.page}"]`); let k = 0;
   if (pg) [...pg.children].forEach(b => { if (!b.hidden && b.style.display !== 'none') b.dataset.k = ++k; else delete b.dataset.k; });

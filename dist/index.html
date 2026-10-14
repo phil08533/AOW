@@ -84,9 +84,10 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outl
 #log .loot { color: var(--gold); }
 #log .chat b { color: var(--ally); font-weight: 600; }
 #log .ai { color: #b8f0ff; } #log .ai b { color: #6fdc5a; }
-#toast { position: absolute; left: 50%; top: 34%; transform: translate(-50%, -50%); text-align: center; opacity: 0; transition: opacity .3s; width: 92vw; }
-#toast .big { font-size: clamp(30px, 8vw, 58px); font-weight: 700; letter-spacing: .04em; line-height: 1; color: #fff; text-shadow: 3px 3px 0 #000, 0 0 18px rgba(255,154,60,.6); }
-#toast .sm { font-size: 17px; color: var(--gold); text-shadow: 2px 2px 0 #000; }
+#toast { position: absolute; left: 50%; top: auto !important; bottom: calc(env(safe-area-inset-bottom, 0px) + 100px); transform: translateX(-50%); text-align: center; opacity: 0; transition: opacity .3s; width: auto; max-width: min(70vw, 520px); padding: 5px 14px 6px; border-radius: 10px; background: rgba(8,14,26,.5); border: 1px solid rgba(255,255,255,.12); pointer-events: none; }
+#toast .big { font-size: 14px !important; font-weight: 700; letter-spacing: .14em; line-height: 1.2; color: #ffe7b0; text-shadow: none !important; }
+#toast .sm { font-size: 12px !important; color: rgba(232,236,248,.85); text-shadow: none; }
+#toast .sm:empty { display: none; }
 body.flying #talk { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 38%); padding: 5px 12px; font-size: 13px; opacity: 0.85; }
 #talk { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); transform: translateX(-50%); pointer-events: auto; cursor: pointer; padding: 8px 16px; font-size: 16px; font-weight: 600; color: var(--text); }
 #talk kbd { font-family: var(--num); font-size: 18px; padding: 0 5px; border: 1px solid var(--edge); margin-left: 8px; }
@@ -328,7 +329,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.9.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -12134,8 +12135,8 @@ body.menuopen #touch { display: none !important; }
 #ammo .n small { font-size: 17px; color: #9fd8ea; }
 #ammo .g { font: 700 12px var(--hud); letter-spacing: .08em; text-transform: uppercase; color: var(--amber); }
 /* center text */
-#zone .n { font-family: var(--hud); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(22px, 5.6vw, 36px); }
-#zone .l { font-family: var(--mono); font-size: 15px; letter-spacing: .14em; color: var(--hl); text-transform: uppercase; }
+#zone .n { font-family: var(--hud); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(15px, 2.8vw, 22px); opacity: .85; }
+#zone .l { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--hl); text-transform: uppercase; }
 #toast .big { font-family: var(--hud); letter-spacing: .1em; text-transform: uppercase; text-shadow: 0 2px 8px #000, 0 0 22px rgba(255,154,60,.55); }
 #toast .sm { font-family: var(--hud); font-weight: 600; font-size: 18px; color: var(--amber); }
 #log { font-family: var(--hud); font-weight: 600; font-size: 14px; }
@@ -13574,6 +13575,7 @@ function tabRefresh() {
   const why = (id, reason) => { const b = $(id); if (!b) return; b.disabled = !!reason; let w = b.querySelector('.why'); if (reason) { if (!w) { w = document.createElement('span'); w.className = 'why'; b.appendChild(w); } w.textContent = reason; } else if (w) w.remove(); };
   const onShip = LEVEL && (LEVEL.id === 'ship' || LEVEL.fly || LEVEL.id === 'space');
   why('galaxyBtn', onShip ? '' : 'On your ship');
+  why('buildBtn', LEVEL && LEVEL.id === 'ship' ? '' : 'Inside your ship');
   why('danceBtn', typeof inLounge === 'function' && inLounge() ? '' : 'In the Starlight Lounge');
   const pg = $('menuDrop').querySelector(`.tabPage[data-p="${TAB.page}"]`); let k = 0;
   if (pg) [...pg.children].forEach(b => { if (!b.hidden && b.style.display !== 'none') b.dataset.k = ++k; else delete b.dataset.k; });
@@ -15522,7 +15524,7 @@ HULK_TYPES.trader = { name: 'Merchant Hauler', hull: '#c9c4bc', trim: '#4fa8ff',
 Object.assign(ZTHEMES, { under: { name: 'The Undercroft', col: '#5a2a7a', floor: '#1e1a22', neon: '#c86aff', safe: true }, archive: { name: 'Senate Archive', col: '#3a4a7a', floor: '#2a2e3a', neon: '#ffd36a', safe: false } });
 Object.assign(ENEMY, {
   presguard: { rig: 'trooper', name: 'Presidential Guard', make: () => recolor(makeTrooper(), { '#6f7a3e': '#1e2a4a', '#4a5229': '#141c30', '#c9b27c': '#e8e4dc' }), hp: 260, speed: 2.6, r: 0.45, hy: 0.95, xp: 140, cr: [40, 80], ranged: { dmg: 16, rate: 1.1, speed: 18, col: '#ffd36a', range: 22, keep: 9 }, drops: [['treasuryledger', 0.4], ['credsticks', 0.2]] },
-  starling: { rig: 'civ', name: 'President Starling · Power Suit', make: () => { const g = makePrez(); part(g, B(0.9, 0.7, 0.55), toon('#c9a43a'), 0, 1.25, 0); part(g, B(0.3, 0.2, 0.6), glow('#ffd36a'), 0, 1.3, -0.3); return g; }, scale: 1.5, hp: 14000, speed: 2.4, r: 0.6, hy: 1.0, xp: 30000, cr: [4000, 6000], boss: true,
+  starling: { rig: 'civ', name: 'President Starling', make: makePrezSuit, scale: 1.5, hp: 14000, speed: 2.4, r: 0.6, hy: 1.0, xp: 30000, cr: [4000, 6000], boss: true,
     ranged: { dmg: 26, rate: 0.8, speed: 20, col: '#ffd36a', range: 26, keep: 9 }, melee: { dmg: 45, rate: 1.4, reach: 2.6 }, drops: [['credsticks', 1], ['lootedrelic', 1]] },
 });
 { const _zn = zNpcs; zNpcs = function (n, th) {
@@ -15564,6 +15566,33 @@ defQuest('o4', { ch: 'Underworld · The President', title: "Party's Over", giver
   intro: ["Starling is in the Senate Archive in a gold power suit. He's armed, and he's not going quietly.", "Take him down. The galaxy deserves to know."],
   obj: [{ kind: 'kill', t: 'starling', n: 1, text: 'Defeat President Starling in the Senate Archive (Zeltac elevator)', planet: 'zeltac' }],
   outro: ["It's done. The ledger goes to every newsfeed in the galaxy tonight.", "Starling will spend the rest of his life explaining himself to the Senate. Somehow I think he'll still find a party.", "You did good. The Marshals owe you one."], reward: { cr: 10000, xp: 20000, fn: () => { S.flags = S.flags || {}; S.flags.marshalArmor = true; log('Marshal reward: Marshal Armor and Cape (Wardrobe).', 'loot'); } } });
+
+// President Starling's power suit: gold plate over navy, a reactor on his back, a glass dome over that famous hair
+function makePrezSuit() {
+  const g = makePrez(), gold = toon('#d4ad3a', 'metal'), trim = toon('#1e2a4a', 'metal'), dark = toon('#2a2c32', 'metal');
+  for (const s of [-1, 1]) {
+    part(g, B(0.22, 0.16, 0.34), dark, 0.11 * s, 0.08, 0.04);                       // boots
+    part(g, Cy(0.11, 0.1, 0.36, 8), gold, 0.11 * s, 0.32, 0.01);                   // shin greaves
+    part(g, B(0.04, 0.3, 0.05), glow('#ffd36a'), 0.11 * s, 0.32, 0.11);            // shin light strip
+    part(g, B(0.2, 0.3, 0.22), gold, 0.11 * s, 0.72, 0);                            // thigh plates
+    part(g, Cy(0.1, 0.085, 0.36, 8), gold, 0.33 * s, 1.0, 0.01, 0, 0, 0.06 * s);   // gauntlets
+    E(g, dark, 0.34 * s, 0.82, 0.02, 0.08, 0.08, 0.08);                             // armored fists
+    E(g, gold, 0.37 * s, 1.5, 0, 0.17, 0.12, 0.17);                                 // pauldrons
+    part(g, Cy(0.17, 0.17, 0.03, 12), trim, 0.37 * s, 1.44, 0);                     // pauldron trim
+    part(g, Cy(0.05, 0.05, 0.24, 8), dark, 0.13 * s, 1.18, -0.36, Math.PI / 2);     // reactor exhausts
+    part(g, Cy(0.055, 0.055, 0.02, 8), glow('#4fd2ff'), 0.13 * s, 1.18, -0.49, Math.PI / 2);
+  }
+  { const c = part(g, Cy(0.33, 0.25, 0.58, 8), gold, 0, 1.26, 0); c.scale.z = 0.62; }  // chest plate, wide at the shoulders
+  part(g, B(0.5, 0.09, 0.3), trim, 0, 0.94, 0);                                     // belt
+  part(g, Cy(0.08, 0.08, 0.04, 12), glow('#4fd2ff'), 0, 1.32, 0.21, Math.PI / 2);   // chest reactor
+  part(g, new THREE.TorusGeometry(0.1, 0.02, 6, 16), gold, 0, 1.32, 0.205);
+  part(g, B(0.08, 0.5, 0.02), toon('#c8402f', 'cloth'), 0.02, 1.25, 0.215, 0, 0, 0.55); // the presidential sash, still on
+  part(g, B(0.44, 0.5, 0.2), dark, 0, 1.3, -0.25);                                  // backpack reactor
+  part(g, new THREE.TorusGeometry(0.15, 0.025, 6, 16), glow('#4fd2ff'), 0, 1.32, -0.36);
+  part(g, new THREE.TorusGeometry(0.12, 0.035, 6, 16), gold, 0, 1.6, 0, Math.PI / 2);  // collar
+  { const d = new THREE.Mesh(new THREE.SphereGeometry(0.21, 14, 10), new THREE.MeshLambertMaterial({ color: '#cfefff', transparent: true, opacity: 0.28, depthWrite: false })); d.position.set(0, 1.78, 0); g.add(d); }
+  return g;
+}
 
 // =================== PHASE 6: SUBSTANCES AND THE LAB ===================
 // Optional (Settings → Game → Substances, off by default). Timed boosts with screen effects; illegal ones can bring a bad trip.
@@ -15816,7 +15845,8 @@ const UPDATES = [
   { id: 78, title: '2.7 · Ship storage and room upgrades', items: ['Own a Cargo Bay? Select loot in your bag and Beam it to your ship. Open Ship storage from the bag or the new terminal in the Cargo Bay', 'Ship storage holds 100 slots and doubles with each Cargo Bay level. Level 5 is the Black Hole Box: unlimited storage, and it sits spinning in your Cargo Bay', 'Take items back out aboard your ship. From Cargo Bay level 3 you can beam them down anywhere', 'Every room now upgrades to level 5 at the Engineering terminal: better rest, more ordnance charges, cheaper gun mods, stronger stims, faster gardens, faster vehicles and boss bonus credits', 'Loot now stacks up to 25 per bag slot (medkits 10), so big hauls fill the bag and storage matters. Nothing you already carry is lost']},
   { id: 79, title: '2.8 · The outlaw underworld', items: ['Outlaw rep: crimes raise it, good deeds lower it. Clean, Shady, Outlaw, Wanted, Most Wanted. Your tier shows on the HUD; tap it for your record', 'Every planet has a hidden hatch on the outskirts leading down to the Underworld: Sly Marlo the Fence buys contraband, Madame Vex runs the black market', 'McKlunkies stands on every planet: burgers and fries heal you, and the back counter buys illegal goods once you are Shady', 'Contraband has a red triangle and only Fences buy it. Stores won\'t touch it', 'Scavengers and drifters roam outside the cities. They leave you alone unless you start it', 'Go Wanted and the Marshals put a growing bounty on you and send hunters. Pay Marshal Rook 1.5x the bounty to clear your name, or use Forged Papers', 'Signed-in players share one board: clean players take Marshal bounties on Wanted players, outlaws post and take Hits in the Underworld. You can only fight a player while one of you holds the contract on the other, and they can fight back', 'Raid Merchant Haulers in space for contraband. Wanted pilots get chased by Marshal patrols', 'New Zeltac floors: The Undercroft and the Senate Archive, with a four-part story about the President\'s money'] },,
   { id: 80, title: '2.8.1 · Bubble City fixes', items: ['Auntie Nacre, Old Barnacle, Farmer Kelpa and Pip were standing in open water outside Bubble City. They are back inside their domes', 'Anyone swimming outside the domes, other players included, now wears a glass dive dome over their head'] },
-  { id: 81, title: '2.9 · Substances and the Lab', items: ['New optional system, off until you switch it on in Settings → Game → Substances', 'Legal boosts at every general store: Focus Fizz (+15% XP), Stim Patch (+15% speed), Iron Gum (take 10% less damage)', 'Illegal ones with a red triangle: Void Spice, Neon Dust, Glimmer and Red Haze from Madame Vex or the McKlunkies back counter. Bigger boosts, wild colors, and a chance of a bad trip with shadow figures and whispers', 'Build a Lab on your ship to brew them from materials. It is the only place to cook Blackout. Owning one keeps you Wanted until you tear it down at the Lab console', 'Take one from the bag, the ✦ chip on the HUD, the new USE button on phones, or press U'] }
+  { id: 81, title: '2.9 · Substances and the Lab', items: ['New optional system, off until you switch it on in Settings → Game → Substances', 'Legal boosts at every general store: Focus Fizz (+15% XP), Stim Patch (+15% speed), Iron Gum (take 10% less damage)', 'Illegal ones with a red triangle: Void Spice, Neon Dust, Glimmer and Red Haze from Madame Vex or the McKlunkies back counter. Bigger boosts, wild colors, and a chance of a bad trip with shadow figures and whispers', 'Build a Lab on your ship to brew them from materials. It is the only place to cook Blackout. Owning one keeps you Wanted until you tear it down at the Lab console', 'Take one from the bag, the ✦ chip on the HUD, the new USE button on phones, or press U'] },
+  { id: 82, title: '2.9.1 · Decorate, pop-ups and the President', items: ['Decorate now lives in the Ship menu. It is greyed out until you are inside your ship', 'New compact build bar at the top of the screen, and the HUD gets out of the way while you decorate', 'The piece you are placing shows as a see-through copy with a yellow arrow out of its front, and turns in all four directions', 'Pop-up messages are now a small see-through pill near the bottom, and area names are smaller', 'President Starling wears a real gold power suit now instead of a box'] }
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -15996,7 +16026,7 @@ function spawnDrop(p, kind, id, n) {
 
 // =================== HUD helpers ===================
 let toastT = 0;
-function toast(big, sm, dur) { $('toastBig').textContent = big; $('toastSm').textContent = sm || ''; $('toast').style.opacity = 1; toastT = dur || 2.4; }
+function toast(big, sm, dur) { $('toastBig').textContent = big; $('toastSm').textContent = sm || ''; $('toast').style.opacity = 0.82; toastT = Math.min(dur || 2.4, 3); }
 let hitT = 0;
 function hitmark(kill) { const h = $('hitmark'); h.classList.toggle('kill', !!kill); h.style.opacity = 1; hitT = 0.12; }
 function log(text, cls, who) {
@@ -16347,7 +16377,7 @@ function pieceY(pieces, gx, gz, layer) {
 }
 function cleanPieces(list) {
   if (!Array.isArray(list)) return [];
-  return list.slice(0, 200).filter(p => Array.isArray(p) && PIECES[p[0]] && Number.isInteger(p[1]) && Number.isInteger(p[2]) && Math.abs(p[1]) < 80 && Math.abs(p[2]) < 80).map(p => [p[0], p[1], p[2], p[3] ? 1 : 0]);
+  return list.slice(0, 200).filter(p => Array.isArray(p) && PIECES[p[0]] && Number.isInteger(p[1]) && Number.isInteger(p[2]) && Math.abs(p[1]) < 80 && Math.abs(p[2]) < 80).map(p => [p[0], p[1], p[2], (p[3] | 0) & 3]);
 }
 function renderBase(key, pieces, col, own) {
   const old = baseState.groups.get(key); if (old) scene.remove(old);
@@ -16355,9 +16385,9 @@ function renderBase(key, pieces, col, own) {
   const g = new THREE.Group(); g.userData.turrets = []; g.userData.fires = []; g.userData.boxes = []; g.userData.surfaces = [];
   for (const p of pieces) {
     const [type, gx, gz, rot] = p, def = PIECES[type], x = gx * CELL, z = gz * CELL, y = pieceY(pieces, gx, gz, def.layer);
-    const m = mergeChar(pieceModel(type, col)); m.position.set(x, y, z); m.rotation.y = rot ? Math.PI / 2 : 0; g.add(m);
+    const m = mergeChar(pieceModel(type, col)); m.position.set(x, y, z); m.rotation.y = (rot | 0) * Math.PI / 2; g.add(m);
     if (type === 'floor') g.userData.surfaces.push({ x, z, ux: 1, uz: 0, hl: 1, hw: 1, y: y + 0.22, base: true });
-    if (type === 'wall') g.userData.boxes.push(rot ? [x, z, 0.17, 1.0] : [x, z, 1.0, 0.17]);
+    if (type === 'wall') g.userData.boxes.push(rot % 2 ? [x, z, 0.17, 1.0] : [x, z, 1.0, 0.17]);
     if (type === 'turret' || type === 'crate' || type === 'lamp') g.userData.boxes.push([x, z, type === 'lamp' ? 0.18 : 0.42, type === 'lamp' ? 0.18 : 0.42]);
     if (type === 'turret' && own) g.userData.turrets.push({ head: m.userData.head, x, y: y + 1.2, z, cd: 0 });
     if (type === 'fire') g.userData.fires.push({ x, z, flame: m.userData.flame });
@@ -16394,8 +16424,9 @@ function canBuild(type, gx, gz) {
 function targetCell() {
   const f = V(-Math.sin(player.yaw), 0, -Math.cos(player.yaw));
   const p = player.pos.clone().addScaledVector(f, 3.6);
-  const auto = Math.abs(f.x) > Math.abs(f.z) ? 1 : 0;
-  return { gx: Math.round(p.x / CELL), gz: Math.round(p.z / CELL), rot: auto ^ baseState.rot };
+  // the piece's front faces you by default; Rotate turns it a quarter at a time
+  const face = ((Math.round(player.yaw / (Math.PI / 2)) % 4) + 4) % 4;
+  return { gx: Math.round(p.x / CELL), gz: Math.round(p.z / CELL), rot: (face + (baseState.rot | 0)) % 4 };
 }
 const ghostOk = new THREE.MeshBasicMaterial({ color: '#6fdc5a', transparent: true, opacity: 0.42, depthWrite: false });
 const ghostBad = new THREE.MeshBasicMaterial({ color: '#ff4a3d', transparent: true, opacity: 0.42, depthWrite: false });
@@ -16591,16 +16622,39 @@ placePiece = function () {
   if (!furnOwned(baseState.type)) { S.cr -= def.price; S.furn = S.furn || {}; S.furn[baseState.type] = 1; SFX.coin(); log(`Bought ${def.name} (${def.price} cr). Place as many as you like.`, 'loot'); }
   myBase().push([baseState.type, c.gx, c.gz, c.rot]); SFX.item(); afterBaseChange();
 };
+// ---- decorating you can see: a see-through copy of the real piece, its footprint, and a yellow arrow out of its front ----
+const FG = { g: null, type: null, ok: null };
+const fgMatOk = new THREE.MeshBasicMaterial({ color: '#8affb0', transparent: true, opacity: 0.55, depthWrite: false });
+const fgMatBad = new THREE.MeshBasicMaterial({ color: '#ff5a4d', transparent: true, opacity: 0.55, depthWrite: false });
+function fgBuild(type) {
+  if (FG.g) scene.remove(FG.g); const d = PIECES[type].dim, g = new THREE.Group(), m = pieceModel(type, S.col);
+  m.traverse(o => { if (o.isMesh) o.material = fgMatOk; }); g.add(m); g.userData.model = m;
+  const foot = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(Math.max(0.4, d[0]), Math.max(0.4, d[2])).rotateX(-Math.PI / 2)), new THREE.LineBasicMaterial({ color: '#ffffff' })); foot.position.y = 0.04; g.add(foot);
+  const am = new THREE.MeshBasicMaterial({ color: '#ffd36a', side: THREE.DoubleSide, depthWrite: false, transparent: true, opacity: 0.95 });
+  const sh = new THREE.Shape(); sh.moveTo(-0.45, 0); sh.lineTo(0.45, 0); sh.lineTo(0, 0.6); sh.closePath();
+  const tip = new THREE.Mesh(new THREE.ShapeGeometry(sh).rotateX(Math.PI / 2), am); tip.position.set(0, 0.05, Math.max(0.2, d[2] / 2) + 0.4); g.add(tip);
+  const stem = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.4).rotateX(-Math.PI / 2), am); stem.position.set(0, 0.05, Math.max(0.2, d[2] / 2) + 0.2); g.add(stem);
+  g.userData.am = am; scene.add(g); FG.g = g; FG.type = type; FG.ok = true;
+}
 const _updGhost = updateGhost;
-updateGhost = function () { _updGhost(); if (baseState.on && !baseState.remove) { const def = PIECES[baseState.type], why = canBuild(baseState.type, targetCell().gx, targetCell().gz); $('buildMsg').textContent = why || `Place ${def.name}${furnOwned(baseState.type) ? '' : ` · buy for ${def.price} cr`} · R rotates`; } };
+updateGhost = function () {
+  if (!baseState.on || !onShip() || baseState.remove) { if (FG.g) FG.g.visible = false; _updGhost(); if (baseState.on && baseState.remove) $('buildMsg').textContent = $('buildMsg').textContent.replace(' (refunds half)', ''); return; }
+  if (ghost) ghost.visible = false;
+  const c = targetCell(), def = PIECES[baseState.type], why = canBuild(baseState.type, c.gx, c.gz);
+  if (FG.type !== baseState.type || !FG.g) fgBuild(baseState.type);
+  FG.g.visible = true; FG.g.position.set(c.gx * CELL, pieceY(myBase(), c.gx, c.gz, def.layer), c.gz * CELL); FG.g.rotation.y = c.rot * Math.PI / 2;
+  const ok = !why; if (FG.ok !== ok) { FG.ok = ok; FG.g.userData.model.traverse(o => { if (o.isMesh) o.material = ok ? fgMatOk : fgMatBad; }); }
+  const t = performance.now() / 1000; fgMatOk.opacity = fgMatBad.opacity = 0.5 + Math.sin(t * 4) * 0.12; FG.g.userData.am.opacity = 0.75 + Math.sin(t * 6) * 0.2;
+  $('buildMsg').textContent = why || `${def.name}${furnOwned(baseState.type) ? '' : ` · ${def.price} cr`} · yellow arrow = front · Rotate turns it`;
+};
 baseState.cat = 'Living'; baseState.type = 'sofa';
 renderBuildBar = function () {
   const bar = $('buildPieces'); bar.textContent = '';
   let cats = $('buildCats'); if (!cats) { cats = document.createElement('div'); cats.id = 'buildCats'; cats.className = 'bpieces'; bar.before(cats); }
-  cats.textContent = ''; FURN_CATS.forEach(cn => { const b = document.createElement('button'); b.className = 'pbtn' + (baseState.cat === cn ? ' go' : ''); b.style.padding = '3px 8px'; b.style.fontSize = '12px'; b.textContent = cn; b.addEventListener('click', () => { baseState.cat = cn; const first = Object.keys(PIECES).find(k => PIECES[k].cat === cn); if (first) baseState.type = first; baseState.remove = false; SFX.ui(); renderBuildBar(); }); cats.appendChild(b); });
+  cats.textContent = ''; FURN_CATS.forEach(cn => { const b = document.createElement('button'); b.className = 'pbtn' + (baseState.cat === cn ? ' go' : ''); b.textContent = cn; b.addEventListener('click', () => { baseState.cat = cn; const first = Object.keys(PIECES).find(k => PIECES[k].cat === cn); if (first) baseState.type = first; baseState.remove = false; SFX.ui(); renderBuildBar(); }); cats.appendChild(b); });
   Object.entries(PIECES).filter(([, p]) => p.cat === baseState.cat).forEach(([id, p]) => {
     const b = document.createElement('button'); b.className = 'pbtn' + (baseState.type === id && !baseState.remove ? ' go' : '');
-    const n = document.createElement('span'); n.textContent = p.name; const c = document.createElement('small'); c.style.display = 'block'; c.style.fontSize = '11px';
+    const n = document.createElement('span'); n.textContent = p.name; const c = document.createElement('small');
     c.textContent = furnOwned(id) ? (p.price ? 'Owned' : 'Free') : `${p.price} cr`; c.style.color = furnOwned(id) || S.cr >= p.price ? 'var(--dim)' : '#ff8a80';
     b.append(n, c); b.addEventListener('click', () => { baseState.type = id; baseState.remove = false; SFX.ui(); renderBuildBar(); }); bar.appendChild(b); });
   $('bRemove').classList.toggle('go', baseState.remove);
@@ -16609,11 +16663,11 @@ renderBuildBar = function () {
 };
 setBuild = function (on) {
   if (on && !onShip()) { log('Decorating happens on your ship. Board it and open Decorate from the menu.'); return; }
-  baseState.on = on; $('buildBar').hidden = !on; $('ammo').hidden = on; firing = false;
-  if (on) { renderBuildBar(); log('Decorate: aim at the floor of a room, pick furniture, click/tap to place, R rotates.'); } else if (ghost) ghost.visible = false;
+  baseState.on = on; $('buildBar').hidden = !on; $('ammo').hidden = on; firing = false; document.body.classList.toggle('decor', !!on);
+  if (on) { closeTablet(); renderBuildBar(); log('Decorate: look at a spot on the floor, pick a piece, then Place. The yellow arrow is its front.'); } else { if (ghost) ghost.visible = false; if (FG.g) FG.g.visible = false; }
 };
 // planet bases are retired: only your ship's furniture renders
-{ const _rb = renderBase; renderBase = function (key, pieces, col, own) { if (key !== 'ship') return; const r = _rb(key, cleanPieces(pieces), col, own); const g = baseState.groups.get('ship'); if (g) { g.userData.boxes = []; for (const p of cleanPieces(pieces)) { const d = PIECES[p[0]]; if (!d || !d.solid || p[0] === 'wall') continue; const hx = (p[3] ? d.dim[2] : d.dim[0]) / 2, hz = (p[3] ? d.dim[0] : d.dim[2]) / 2; g.userData.boxes.push([p[1] * CELL, p[2] * CELL, hx, hz]); } for (const p of cleanPieces(pieces)) if (p[0] === 'wall') g.userData.boxes.push(p[3] ? [p[1] * CELL, p[2] * CELL, 0.17, 1.0] : [p[1] * CELL, p[2] * CELL, 1.0, 0.17]); rebuildBaseColliders(); } furnInteracts(pieces); return r; }; }
+{ const _rb = renderBase; renderBase = function (key, pieces, col, own) { if (key !== 'ship') return; const r = _rb(key, cleanPieces(pieces), col, own); const g = baseState.groups.get('ship'); if (g) { g.userData.boxes = []; for (const p of cleanPieces(pieces)) { const d = PIECES[p[0]]; if (!d || !d.solid || p[0] === 'wall') continue; const hx = (p[3] % 2 ? d.dim[2] : d.dim[0]) / 2, hz = (p[3] % 2 ? d.dim[0] : d.dim[2]) / 2; g.userData.boxes.push([p[1] * CELL, p[2] * CELL, hx, hz]); } for (const p of cleanPieces(pieces)) if (p[0] === 'wall') g.userData.boxes.push(p[3] % 2 ? [p[1] * CELL, p[2] * CELL, 0.17, 1.0] : [p[1] * CELL, p[2] * CELL, 1.0, 0.17]); rebuildBaseColliders(); } furnInteracts(pieces); return r; }; }
 function furnInteracts(pieces) {
   for (let i = INTERACTS.length - 1; i >= 0; i--) if (INTERACTS[i].furn) INTERACTS.splice(i, 1);
   for (const p of cleanPieces(pieces)) { const x = p[1] * CELL, z = p[2] * CELL, t = p[0], add = (label, fn) => INTERACTS.push({ x, z, r: 1.6, label, fn, furn: true, quiet: true });
@@ -16629,8 +16683,21 @@ function furnInteracts(pieces) {
   }
 }
 // hide the Build button off-ship, rename it Decorate
-{ const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); const b = $('buildBtn'); if (b) { b.hidden = id !== 'ship'; b.textContent = 'Decorate'; } if (id !== 'ship' && baseState.on) setBuild(false); return r; }; }
+{ const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); const b = $('buildBtn'); if (b) { b.hidden = false; if (b.firstChild && b.firstChild.nodeType === 3) b.firstChild.textContent = 'Decorate'; else if (!b.querySelector('.why')) b.textContent = 'Decorate'; } if (id !== 'ship' && baseState.on) setBuild(false); return r; }; }
 window.__furn = { get rooms() { return SHIP_ROOMS; } };
+// ---- a compact decorate bar: docked at the top on phones, the bottom on PC, with the HUD clutter tucked away ----
+{ const st = document.createElement('style'); st.textContent = `
+body.decor #quest, body.decor #log, body.decor #zone, body.decor #raidBar, body.decor #map, body.decor #ctape, body.decor #qbar, body.decor #toast, body.decor #compass { visibility: hidden !important; }
+#buildBar { width: min(calc(100% - 24px), 600px) !important; padding: 6px 8px 7px !important; gap: 5px !important; background: rgba(8,14,26,.78) !important; }
+#buildBar .bhead { font-size: 12px; align-items: center; } #buildBar .bhead span { font-size: 12px !important; }
+#buildBar #buildCats { gap: 4px; } #buildBar #buildCats .pbtn { padding: 2px 8px !important; font-size: 11px !important; min-height: 0; }
+#buildBar #buildPieces .pbtn { padding: 4px 9px !important; font-size: 12px; min-height: 0; } #buildBar #buildPieces small { margin-left: 6px; font-size: 10px; opacity: .8; }
+#buildBar .bacts { align-items: center; flex-wrap: nowrap; } #buildBar .bacts .bmsg { flex: 1; font-size: 12px; min-width: 0; color: var(--dim); }
+#buildBar .bacts .pbtn { padding: 5px 11px !important; font-size: 12px; flex: 0 0 auto; }
+@media (pointer: coarse) { #buildBar { top: calc(env(safe-area-inset-top, 0px) + 6px) !important; bottom: auto !important; } }
+@media (pointer: coarse) and (max-height: 520px) { #buildBar .bacts .bmsg { font-size: 11px; } body.decor #tFire, body.decor #tJump { opacity: .35; } }`; document.head.appendChild(st);
+  const acts = document.querySelector('#buildBar .bacts'), msg = $('buildMsg'); if (acts && msg) acts.prepend(msg);
+  const rb = $('bRotate'); if (rb) rb.textContent = '↻ Rotate'; }
 
 // =================== INPUT ===================
 const keys = {};
@@ -16643,7 +16710,7 @@ window.addEventListener('keydown', e => {
   if (dlgOpen) { if (e.repeat) return; const go = $('dlgActs').querySelector('.go:not(:disabled)');
     if (e.code === 'Escape') { closeDlg(); e.stopImmediatePropagation(); } else if ((e.code === 'KeyE' || e.code === 'Space') && go) { go.click(); e.preventDefault(); } else if (e.code === 'KeyE') closeDlg(); return; }
   keys[e.code] = true;
-  if (e.code === 'KeyR') { if (baseState.on) { baseState.rot ^= 1; } else reload(); }
+  if (e.code === 'KeyR') { if (baseState.on) { baseState.rot = ((baseState.rot | 0) + 1) % 4; } else reload(); }
   if (e.code === 'KeyG') setBuild(!baseState.on);
   if (e.code === 'KeyX') { if (baseState.on) { baseState.remove = !baseState.remove; renderBuildBar(); } else toggleBike(); }
   if (e.code === 'Escape' && baseState.on) { setBuild(false); }
@@ -16794,7 +16861,7 @@ try {
 } catch (_) {}
 $('buildBtn').addEventListener('click', () => { if (!dlgOpen) setBuild(!baseState.on); });
 $('bPlace').addEventListener('click', placePiece);
-$('bRotate').addEventListener('click', () => { baseState.rot ^= 1; SFX.ui(); });
+$('bRotate').addEventListener('click', () => { baseState.rot = ((baseState.rot | 0) + 1) % 4; SFX.ui(); });
 $('bRemove').addEventListener('click', () => { baseState.remove = !baseState.remove; SFX.ui(); renderBuildBar(); });
 $('bDone').addEventListener('click', () => setBuild(false));
 $('menuBtn').addEventListener('click', () => { if (!dlgOpen && !chatOpen()) setState('pause'); });

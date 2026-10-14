@@ -119,7 +119,7 @@ HULK_TYPES.trader = { name: 'Merchant Hauler', hull: '#c9c4bc', trim: '#4fa8ff',
 Object.assign(ZTHEMES, { under: { name: 'The Undercroft', col: '#5a2a7a', floor: '#1e1a22', neon: '#c86aff', safe: true }, archive: { name: 'Senate Archive', col: '#3a4a7a', floor: '#2a2e3a', neon: '#ffd36a', safe: false } });
 Object.assign(ENEMY, {
   presguard: { rig: 'trooper', name: 'Presidential Guard', make: () => recolor(makeTrooper(), { '#6f7a3e': '#1e2a4a', '#4a5229': '#141c30', '#c9b27c': '#e8e4dc' }), hp: 260, speed: 2.6, r: 0.45, hy: 0.95, xp: 140, cr: [40, 80], ranged: { dmg: 16, rate: 1.1, speed: 18, col: '#ffd36a', range: 22, keep: 9 }, drops: [['treasuryledger', 0.4], ['credsticks', 0.2]] },
-  starling: { rig: 'civ', name: 'President Starling · Power Suit', make: () => { const g = makePrez(); part(g, B(0.9, 0.7, 0.55), toon('#c9a43a'), 0, 1.25, 0); part(g, B(0.3, 0.2, 0.6), glow('#ffd36a'), 0, 1.3, -0.3); return g; }, scale: 1.5, hp: 14000, speed: 2.4, r: 0.6, hy: 1.0, xp: 30000, cr: [4000, 6000], boss: true,
+  starling: { rig: 'civ', name: 'President Starling', make: makePrezSuit, scale: 1.5, hp: 14000, speed: 2.4, r: 0.6, hy: 1.0, xp: 30000, cr: [4000, 6000], boss: true,
     ranged: { dmg: 26, rate: 0.8, speed: 20, col: '#ffd36a', range: 26, keep: 9 }, melee: { dmg: 45, rate: 1.4, reach: 2.6 }, drops: [['credsticks', 1], ['lootedrelic', 1]] },
 });
 { const _zn = zNpcs; zNpcs = function (n, th) {
@@ -161,3 +161,30 @@ defQuest('o4', { ch: 'Underworld · The President', title: "Party's Over", giver
   intro: ["Starling is in the Senate Archive in a gold power suit. He's armed, and he's not going quietly.", "Take him down. The galaxy deserves to know."],
   obj: [{ kind: 'kill', t: 'starling', n: 1, text: 'Defeat President Starling in the Senate Archive (Zeltac elevator)', planet: 'zeltac' }],
   outro: ["It's done. The ledger goes to every newsfeed in the galaxy tonight.", "Starling will spend the rest of his life explaining himself to the Senate. Somehow I think he'll still find a party.", "You did good. The Marshals owe you one."], reward: { cr: 10000, xp: 20000, fn: () => { S.flags = S.flags || {}; S.flags.marshalArmor = true; log('Marshal reward: Marshal Armor and Cape (Wardrobe).', 'loot'); } } });
+
+// President Starling's power suit: gold plate over navy, a reactor on his back, a glass dome over that famous hair
+function makePrezSuit() {
+  const g = makePrez(), gold = toon('#d4ad3a', 'metal'), trim = toon('#1e2a4a', 'metal'), dark = toon('#2a2c32', 'metal');
+  for (const s of [-1, 1]) {
+    part(g, B(0.22, 0.16, 0.34), dark, 0.11 * s, 0.08, 0.04);                       // boots
+    part(g, Cy(0.11, 0.1, 0.36, 8), gold, 0.11 * s, 0.32, 0.01);                   // shin greaves
+    part(g, B(0.04, 0.3, 0.05), glow('#ffd36a'), 0.11 * s, 0.32, 0.11);            // shin light strip
+    part(g, B(0.2, 0.3, 0.22), gold, 0.11 * s, 0.72, 0);                            // thigh plates
+    part(g, Cy(0.1, 0.085, 0.36, 8), gold, 0.33 * s, 1.0, 0.01, 0, 0, 0.06 * s);   // gauntlets
+    E(g, dark, 0.34 * s, 0.82, 0.02, 0.08, 0.08, 0.08);                             // armored fists
+    E(g, gold, 0.37 * s, 1.5, 0, 0.17, 0.12, 0.17);                                 // pauldrons
+    part(g, Cy(0.17, 0.17, 0.03, 12), trim, 0.37 * s, 1.44, 0);                     // pauldron trim
+    part(g, Cy(0.05, 0.05, 0.24, 8), dark, 0.13 * s, 1.18, -0.36, Math.PI / 2);     // reactor exhausts
+    part(g, Cy(0.055, 0.055, 0.02, 8), glow('#4fd2ff'), 0.13 * s, 1.18, -0.49, Math.PI / 2);
+  }
+  { const c = part(g, Cy(0.33, 0.25, 0.58, 8), gold, 0, 1.26, 0); c.scale.z = 0.62; }  // chest plate, wide at the shoulders
+  part(g, B(0.5, 0.09, 0.3), trim, 0, 0.94, 0);                                     // belt
+  part(g, Cy(0.08, 0.08, 0.04, 12), glow('#4fd2ff'), 0, 1.32, 0.21, Math.PI / 2);   // chest reactor
+  part(g, new THREE.TorusGeometry(0.1, 0.02, 6, 16), gold, 0, 1.32, 0.205);
+  part(g, B(0.08, 0.5, 0.02), toon('#c8402f', 'cloth'), 0.02, 1.25, 0.215, 0, 0, 0.55); // the presidential sash, still on
+  part(g, B(0.44, 0.5, 0.2), dark, 0, 1.3, -0.25);                                  // backpack reactor
+  part(g, new THREE.TorusGeometry(0.15, 0.025, 6, 16), glow('#4fd2ff'), 0, 1.32, -0.36);
+  part(g, new THREE.TorusGeometry(0.12, 0.035, 6, 16), gold, 0, 1.6, 0, Math.PI / 2);  // collar
+  { const d = new THREE.Mesh(new THREE.SphereGeometry(0.21, 14, 10), new THREE.MeshLambertMaterial({ color: '#cfefff', transparent: true, opacity: 0.28, depthWrite: false })); d.position.set(0, 1.78, 0); g.add(d); }
+  return g;
+}

@@ -128,7 +128,7 @@ Object.assign(ENEMY, {
   if (th === 'archive') return [];
   return _zn(n, th); }; }
 { const _zs = zSpawns; zSpawns = function (n, th) {
-  if (th === 'archive') { const lv = [34, 38], list = [{ zone: 'deck', type: 'presguard', n: 7, lv }]; if (qState('o4') && qState('o4').st === 'active') list.push({ zone: 'deck', type: 'starling', n: 1, lv: [40, 40], at: [0, -20], once: true }); return list; }
+  if (th === 'archive') { const lv = [34, 38], list = [{ zone: 'deck', type: 'presguard', n: 7, lv }]; if (qState('pr4') && qState('pr4').st === 'active') list.push({ zone: 'deck', type: 'starling', n: 1, lv: [40, 40], at: [0, -20], once: true }); return list; }
   if (th === 'under') return [];
   return _zs(n, th); }; }
 { const _zb = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _zb.call(this); const th = zTheme(ZF.floor);
@@ -145,19 +145,22 @@ Object.assign(ENEMY, {
   } }; }
 // insert the two new floors before the Captain's Bridge
 NPC_HOME.mole = 'zeltac'; NPC_HOME.fence = 'underworld';
-defQuest('o1', { ch: 'Underworld · The President', title: 'Word in the Undercroft', giver: 'mole', turnIn: 'fence', req: ['q5'], main: true,
+// these quests first shipped as o1-o4, which clashed with Ocean World's o1-o4 and wiped them out; saves that never saw the ocean move theirs over
+{ const _ad = adopt; adopt = function (s) { const r = _ad(s); try { if (!S.qmigPr) { S.qmigPr = 1; const sawOcean = !!(S.stats && S.stats.worlds && S.stats.worlds.ocean);
+  if (!sawOcean) for (let i = 1; i <= 4; i++) { if (S.qst['o' + i] && !S.qst['pr' + i]) S.qst['pr' + i] = S.qst['o' + i]; delete S.qst['o' + i]; } if (S.track && /^o[1-4]$/.test(S.track)) S.track = sawOcean ? S.track : 'pr' + S.track.slice(1); } } catch (_) {} return r; }; }
+defQuest('pr1', { ch: 'Underworld · The President', title: 'Word in the Undercroft', giver: 'mole', turnIn: 'fence', req: ['q5'], main: true,
   intro: ["You're the one who killed Drome. Then you'll want to hear this.", "Drome's war chest was paid in New United States treasury credsticks. Somebody in the government bankrolled him.", "The Fence, Sly Marlo, launders half the credits in the galaxy. Every planet has a hatch on the outskirts that leads to his basement. Ask him."],
   obj: [{ kind: 'reach', zone: 'den', planet: 'underworld', n: 1, text: 'Find a hatch on any planet and visit the underworld basement' }],
   outro: ["The Mole sent you? Fine. Yes, I washed those credits. Treasury sticks, all signed from one office.", "The paper trail lives in the Senate Archive, two floors under the Captain's Bridge on the Zeltac. Heavily guarded. Good luck."], reward: { cr: 800, xp: 2500 } });
-defQuest('o2', { ch: 'Underworld · The President', title: 'The Senate Archive', giver: 'fence', turnIn: 'mole', req: ['o1'], main: true,
+defQuest('pr2', { ch: 'Underworld · The President', title: 'The Senate Archive', giver: 'fence', turnIn: 'mole', req: ['pr1'], main: true,
   intro: ["The Presidential Guard carries the Treasury Ledger between the stacks. Take it off one of them.", "Bring it to the Mole. He'll know what to do with it."],
   obj: [{ kind: 'item', t: 'treasuryledger', n: 1, text: 'Take the Treasury Ledger from the Presidential Guard (Zeltac elevator · Senate Archive)', planet: 'zeltac' }],
   outro: ["Let me see... payments to Drome, every month, for three years. Each one signed D. Starling.", "The President. The man dancing in the Starlight Lounge right now. He paid Drome to burn Earth so his friends could sell the rebuilding contracts.", "This needs a Marshal. Take it to Rook."], reward: { cr: 1500, xp: 5000 } });
-defQuest('o3', { ch: 'Underworld · The President', title: 'Follow the Money', giver: 'mole', turnIn: 'rook', req: ['o2'], main: true,
+defQuest('pr3', { ch: 'Underworld · The President', title: 'Follow the Money', giver: 'mole', turnIn: 'rook', req: ['pr2'], main: true,
   intro: ["Marshal Rook is the only Marshal Starling never bought. He's in the Zeltac Plaza."],
   obj: [{ kind: 'item', t: 'treasuryledger', n: 1, text: 'Bring the Treasury Ledger to Marshal Rook (Zeltac Plaza)', planet: 'zeltac' }],
   outro: ["...Signed by Duke Starling himself. I always knew he was rotten. I didn't know he was this rotten.", "I can't arrest a sitting president. But the Senate Archive is his. He's hiding in there in a power suit, waiting for this to blow over.", "Go in there and end it."], reward: { cr: 2000, xp: 6000, take: { treasuryledger: 1 } } });
-defQuest('o4', { ch: 'Underworld · The President', title: "Party's Over", giver: 'rook', turnIn: 'rook', req: ['o3'], main: true,
+defQuest('pr4', { ch: 'Underworld · The President', title: "Party's Over", giver: 'rook', turnIn: 'rook', req: ['pr3'], main: true,
   intro: ["Starling is in the Senate Archive in a gold power suit. He's armed, and he's not going quietly.", "Take him down. The galaxy deserves to know."],
   obj: [{ kind: 'kill', t: 'starling', n: 1, text: 'Defeat President Starling in the Senate Archive (Zeltac elevator)', planet: 'zeltac' }],
   outro: ["It's done. The ledger goes to every newsfeed in the galaxy tonight.", "Starling will spend the rest of his life explaining himself to the Senate. Somehow I think he'll still find a party.", "You did good. The Marshals owe you one."], reward: { cr: 10000, xp: 20000, fn: () => { S.flags = S.flags || {}; S.flags.marshalArmor = true; log('Marshal reward: Marshal Armor and Cape (Wardrobe).', 'loot'); } } });
@@ -188,3 +191,12 @@ function makePrezSuit() {
   { const d = new THREE.Mesh(new THREE.SphereGeometry(0.21, 14, 10), new THREE.MeshLambertMaterial({ color: '#cfefff', transparent: true, opacity: 0.28, depthWrite: false })); d.position.set(0, 1.78, 0); g.add(d); }
   return g;
 }
+// the quest arrow for the Undercroft and the Senate Archive: those are Zeltac floors, reached by the elevator
+{ const _qt = questTarget; questTarget = function () {
+  try { const id = trackedQuest(), q = id && QDEFS[id], s = id && S.qst[id]; if (q && /^pr[1-4]$/.test(id)) {
+    const nid = !s ? q.giver : s.st === 'ready' ? q.turnIn : null, floor = LEVEL.id === 'zfloor' && typeof ZF !== 'undefined' ? ZLIST[ZF.floor] : null;
+    const lift = (where) => { const el = INTERACTS.find(i => /^Elevator/.test(i.label || '')); return el ? { p: V(el.x, 0, el.z), label: `Take the elevator to the ${where}` } : null; };
+    if (nid === 'mole') { if (floor === 'under' && npcObjs.mole) return { p: npcObjs.mole.obj.position, label: 'Talk to The Mole' }; if (LEVEL.id === 'zeltac' || LEVEL.id === 'zfloor') { const t = lift('Undercroft'); if (t) return t; } }
+    if (s && s.st === 'active' && (id === 'pr2' || id === 'pr4')) { if (floor === 'archive') { let best = null, bd = 1e9; for (const e of enemies) if (!e.dead && (id === 'pr4' ? e.sp.type === 'starling' : e.sp.type === 'presguard')) { const d = e.obj.position.distanceTo(player.pos); if (d < bd) { bd = d; best = e; } } return best ? { p: best.obj.position } : null; }
+      if (LEVEL.id === 'zeltac' || LEVEL.id === 'zfloor') { const t = lift('Senate Archive'); if (t) return t; } } } } catch (_) {}
+  return _qt(); }; }

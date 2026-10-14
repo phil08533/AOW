@@ -329,7 +329,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.12.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.12.2</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -10622,6 +10622,8 @@ function raidHud() {
   if (!raidEl) { raidEl = document.createElement('button'); raidEl.id = 'raidBar'; raidEl.className = 'hbtn win'; $('hud').appendChild(raidEl); raidEl.addEventListener('click', () => { const R = raidNow(); if (R.active && LEVEL.id !== R.world && planetOpen(R.world) && shipUnlocked()) travel(R.world); }); }
   const R = raidNow(), name = LEVELS[R.world] ? LEVELS[R.world].name : R.world, mm = ms => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}`;
   if (state !== 'play' || LEVEL.fly && !R.active) { raidEl.hidden = true; return; }
+  // new players without a ship, or raids on worlds you can't reach yet, are just noise
+  const here = R.active && LEVEL.id === R.world; if (!here && (!shipUnlocked() || (R.active && !planetOpen(R.world)))) { raidEl.hidden = true; return; }
   raidEl.hidden = false;
   raidEl.textContent = R.active ? (LEVEL.id === R.world ? `⚔ RAID HERE · wave ${RAID.wave} · ${mm(R.left)} · ${RAID.kills} kills` : `⚔ RAID on ${name} · ${mm(R.left)}${planetOpen(R.world) && shipUnlocked() ? ' · tap to go' : ''}`) : `Next raid: ${LEVELS[RAID_WORLDS[(R.key + 1) % RAID_WORLDS.length]].name} in ${mm(R.next)}`;
   raidEl.style.borderColor = R.active ? '#ff6a5a' : '';
@@ -11203,7 +11205,7 @@ openGalaxy = function () {
   };
   const showInfo = () => {
     const P = SPACE_BODIES[sel], L = LEVELS[sel], open = !!L && planetOpen(sel);
-    info.innerHTML = ''; const h = document.createElement('div'); h.innerHTML = `<b style="color:var(--gold)">${L && !P.survey ? L.name : P.survey || sel}</b> · ${L ? L.tag + ' · ' + L.lvls : (P.note || 'Uncharted')}${open ? '' : ' · <span style="color:#ff8a80">Locked: keep following the story</span>'}`; info.appendChild(h);
+    info.innerHTML = ''; const h = document.createElement('div'); h.innerHTML = `<b style="color:var(--gold)">${L && !P.survey ? L.name : P.survey || sel}</b> · ${L ? L.tag + ' · ' + L.lvls : (P.note || 'Uncharted')}${open ? '' : ' · <span style="color:#ff8a80">Locked: ' + planetLockHint(sel) + '</span>'}`; info.appendChild(h);
     const subs = GM_SUB[sel] || [[L ? L.name : sel, sel]], list = [];
     if (open) subs.forEach(([nm, lid], i) => list.push([sel === 'earth' && subs.length > 1 ? `Go: ${nm}` : `Autopilot to ${nm}`, () => { S.orbit = sel; closeDlg(); travel(lid); }, i === 0]));
     if (open && shipUnlocked()) list.push(['Fly there yourself', () => { S.orbit = sel; closeDlg(); enterSpace(sel); }]);
@@ -13646,7 +13648,7 @@ function openLookPicker(done) {
       <div id="lookGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px"></div>
       <div style="font-family:var(--hud);font-size:18px;color:#ffd36a;margin:18px 0 8px;text-align:center">MUSIC</div>
       <div id="musRow" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
-      <div style="text-align:center;margin-top:18px"><button class="cta win" id="lookGo" style="min-width:220px">Play</button></div></div>`;
+      <div style="text-align:center;margin-top:12px;position:sticky;bottom:-18px;padding:10px 0 18px;background:linear-gradient(rgba(3,5,20,0),rgba(3,5,20,.96) 35%)"><button class="cta win" id="lookGo" style="min-width:220px">Play</button></div></div>`;
     const grid = ov.querySelector('#lookGrid');
     for (const L of LOOKS) { const b = document.createElement('button'); const on = L.id === pick;
       b.style.cssText = `text-align:left;padding:0;cursor:pointer;background:rgba(6,10,46,.7);color:inherit;font:inherit;border:2px solid ${on ? '#ffd36a' : 'rgba(232,236,248,.25)'};border-radius:6px;overflow:hidden;box-shadow:${on ? '0 0 0 3px rgba(255,211,106,.25)' : 'none'}`;
@@ -14037,7 +14039,7 @@ function netEnemyStep(e, dt, t) {
   const st = e.netState; if (!st) return false;
   const o = e.obj; netTrackDamage(e);
   if (e.dead) { if (e.dead < 2) { e.dead += dt; o.rotation.x = -Math.min(Math.PI / 2, e.dead * 4); o.position.y -= dt * (e.dead > 0.6 ? 1.2 : 0); if (e.dead >= 2) o.visible = false; } return true; }
-  const d2p = o.position.distanceTo(player.pos); o.visible = d2p < 64; e.plate.visible = d2p < 36;
+  const d2p = o.position.distanceTo(player.pos); o.visible = d2p < 64; e.plate.visible = d2p < 36 && d2p > 2.4;
   const k = Math.min(1, dt * 8), px = o.position.x, pz = o.position.z;
   o.position.x += (st.x - o.position.x) * k; o.position.z += (st.z - o.position.z) * k;
   if (Math.hypot(st.x - px, st.z - pz) > 25) { o.position.x = st.x; o.position.z = st.z; }
@@ -16295,6 +16297,12 @@ function questLevel(id) {
 for (const id in QDEFS) { const q = QDEFS[id], r = q.reward; if (!r || !r.xp) continue;
   const lv = questLevel(id); if (!lv) continue;
   const cap = Math.round((lv > 30 ? 0.6 : 1) * 60 * Math.pow(lv, 1.45) / 50) * 50; if (r.xp > cap) r.xp = cap; }
+// what opens a locked world, in words, for the galaxy map
+function planetLockHint(id) {
+  if (!shipUnlocked() && id !== 'earth') return "you need a ship first. Finish Captain Vega's Earth chapter";
+  return ({ capitone: 'beat the Gut Worm Matriarch on Mezar (The Gut Pit)', robot: 'defeat the Frost King on Capitone', ocean: 'scan it from space, or defeat the Frost King',
+    skycity: "win Fort Ironrock's war (Krag's Last Stand), or reach Level 36", zarlich: 'defeat Drome in Earth Sky, or reach Level 44', vector: 'defeat the Storm Mother on Zarlich, or reach Level 50' })[id] || 'keep following the story';
+}
 
 // ---------------- phone message log (2.12) ----------------
 // On short screens the log sits under the quest tracker with little room, so keep the newest three
@@ -16547,7 +16555,8 @@ const UPDATES = [
   { id: 85, title: '2.11.1 · Playtest fixes', items: ['Menu rows on phones no longer squeeze names into one word per line (ship upgrades, bounty board and others)', 'Gunsmith and wardrobe previews sit in the corner on phones, so the list and Done button fit without scrolling', 'The New World Discovered card is smaller, see-through, and waits until intro scenes finish', 'Signs and holo ads no longer read backwards when you see them from behind'] },
   { id: 86, title: '2.11.2 · Ocean World quests are back', items: ['The President storyline had accidentally replaced four Ocean World quests (Salt and Subs, Jelly Jam, Pearls for the Mayor, The Sword Master), which also blocked The Deep. They are back, and the President storyline keeps going separately', 'The quest arrow now points you to the Zeltac elevator for the Undercroft and the Senate Archive, and to The Mole once you are on his floor'] },
   { id: 87, title: '2.12 · Story pacing, fishing fights and a livelier ship', items: ['Story pacing: you no longer end up thirty levels above the next chapter. Big quest rewards and boss kills are tuned to their own level, and enemies give less XP once you clearly out-level them.', 'Fort Ironrock\'s war zones, Earth Sky, Zarlich and Vector now match where they sit in the story. Fort\'s training range is still a beginner area, and the war there starts after the Dark Fleet.', 'The President storyline now opens after Robot City.', 'Fishing: a new line-tension fight. Hold to reel, ease off when the line goes red, and watch for big fish making a run. Better rods take more strain and reel faster.', 'Your ship\'s hallway has pipes, crates, lockers, a water cooler, a status screen, a viewport onto the stars, and crew walking the deck who stop for a chat.', 'Phones: the message log keeps the newest three lines, fades sooner and is easier to read. On PC it no longer overlaps the raid button.', 'Long lists like the gunsmith and the Codex get filter buttons: Can buy, Owned, Locked (or Done and To do).'] },
-  { id: 88, title: '2.12.1 · A livelier Underworld, and skip the scenes', items: ['The Underworld den has a bartender who sells drinks, Lucky Seven\'s dice table (bet credits, beat her roll, win double), booths, a jukebox, arcade cabinets, and Rattle the information broker with rumors and tips.', 'Settings → Story scenes: set it to Skip and every first-time intro skips itself. Replays from the Codex cinema still play.'] }
+  { id: 88, title: '2.12.1 · A livelier Underworld, and skip the scenes', items: ['The Underworld den has a bartender who sells drinks, Lucky Seven\'s dice table (bet credits, beat her roll, win double), booths, a jukebox, arcade cabinets, and Rattle the information broker with rumors and tips.', 'Settings → Story scenes: set it to Skip and every first-time intro skips itself. Replays from the Codex cinema still play.'] },
+  { id: 89, title: '2.12.2 · First-minute fixes', items: ['Phones: the Play button on the Choose Your Look screen was hidden below the bottom edge. It now stays on screen.', 'Enemy and NPC name tags no longer fill the screen when something is right in your face.', 'New players without a ship no longer see raid countdowns for worlds they cannot reach.', 'The galaxy map now says exactly what opens a locked world.'] }
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -17760,7 +17769,7 @@ function step(dt) {
   for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible) continue; const d = N.obj.position.distanceTo(player.pos); if (d < nd) { nd = d; nearNpc = id; } }
   nearAct = null; if (!nearNpc) { let ad = 1e9; for (const a of INTERACTS) { const d = Math.hypot(player.pos.x - a.x, player.pos.z - a.z); if (d < a.r && d < ad) { ad = d; nearAct = a; } } }
   const tb = $('talk'); if ((nearNpc || nearAct) && !dlgOpen) { tb.hidden = false; tb.innerHTML = ''; tb.append(nearNpc ? 'Talk to ' + npcObjs[nearNpc].def.name : nearAct.label); if (!TOUCH) { const k = document.createElement('kbd'); k.textContent = 'E'; tb.append(k); } } else tb.hidden = true;
-  for (const id in npcObjs) { const N = npcObjs[id]; const d = N.obj.position.distanceTo(player.pos); N.obj.visible = d < 60 && npcShown(N); N.plate.visible = d < 30; if (d < 6) { const want = Math.atan2(player.pos.x - N.obj.position.x, player.pos.z - N.obj.position.z); let df = Math.atan2(Math.sin(want - N.obj.rotation.y), Math.cos(want - N.obj.rotation.y)); N.obj.rotation.y += df * Math.min(1, dt * 4); } if (N.obj.userData.anim) N.obj.userData.anim(t); if (!N.anim) N.anim = {}; if (d < 40) { N.anim.gest = dlgOpen && nearNpc === id ? Math.max(0, Math.sin(t * 3)) * 0.5 : 0; animRig(N.obj, N.anim, dt, t); } }
+  for (const id in npcObjs) { const N = npcObjs[id]; const d = N.obj.position.distanceTo(player.pos); N.obj.visible = d < 60 && npcShown(N); N.plate.visible = d < 30 && d > 1.8; if (d < 6) { const want = Math.atan2(player.pos.x - N.obj.position.x, player.pos.z - N.obj.position.z); let df = Math.atan2(Math.sin(want - N.obj.rotation.y), Math.cos(want - N.obj.rotation.y)); N.obj.rotation.y += df * Math.min(1, dt * 4); } if (N.obj.userData.anim) N.obj.userData.anim(t); if (!N.anim) N.anim = {}; if (d < 40) { N.anim.gest = dlgOpen && nearNpc === id ? Math.max(0, Math.sin(t * 3)) * 0.5 : 0; animRig(N.obj, N.anim, dt, t); } }
   // enemies
   const pSafe = inSafe(player.pos);
   for (const e of enemies) {
@@ -17773,7 +17782,7 @@ function step(dt) {
       continue;
     }
     const d2p = o.position.distanceTo(player.pos);
-    o.visible = d2p < 64; e.plate.visible = d2p < 36;
+    o.visible = d2p < 64; e.plate.visible = d2p < 36 && d2p > 2.4;
     if (d2p > 75) continue;
     if (o.userData.anim && d2p < 45) o.userData.anim(t + e.seed);
     const px0 = o.position.x, pz0 = o.position.z;

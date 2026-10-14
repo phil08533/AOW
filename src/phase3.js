@@ -52,7 +52,7 @@ function netEnemyStep(e, dt, t) {
   const st = e.netState; if (!st) return false;
   const o = e.obj; netTrackDamage(e);
   if (e.dead) { if (e.dead < 2) { e.dead += dt; o.rotation.x = -Math.min(Math.PI / 2, e.dead * 4); o.position.y -= dt * (e.dead > 0.6 ? 1.2 : 0); if (e.dead >= 2) o.visible = false; } return true; }
-  const d2p = o.position.distanceTo(player.pos); o.visible = d2p < 64; e.plate.visible = d2p < 36;
+  const d2p = o.position.distanceTo(player.pos); o.visible = d2p < 64; e.plate.visible = d2p < 36 && d2p > 2.4;
   const k = Math.min(1, dt * 8), px = o.position.x, pz = o.position.z;
   o.position.x += (st.x - o.position.x) * k; o.position.z += (st.z - o.position.z) * k;
   if (Math.hypot(st.x - px, st.z - pz) > 25) { o.position.x = st.x; o.position.z = st.z; }

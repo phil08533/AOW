@@ -329,7 +329,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.12.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.12.2</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1579,7 +1579,7 @@ function step(dt) {
   for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible) continue; const d = N.obj.position.distanceTo(player.pos); if (d < nd) { nd = d; nearNpc = id; } }
   nearAct = null; if (!nearNpc) { let ad = 1e9; for (const a of INTERACTS) { const d = Math.hypot(player.pos.x - a.x, player.pos.z - a.z); if (d < a.r && d < ad) { ad = d; nearAct = a; } } }
   const tb = $('talk'); if ((nearNpc || nearAct) && !dlgOpen) { tb.hidden = false; tb.innerHTML = ''; tb.append(nearNpc ? 'Talk to ' + npcObjs[nearNpc].def.name : nearAct.label); if (!TOUCH) { const k = document.createElement('kbd'); k.textContent = 'E'; tb.append(k); } } else tb.hidden = true;
-  for (const id in npcObjs) { const N = npcObjs[id]; const d = N.obj.position.distanceTo(player.pos); N.obj.visible = d < 60 && npcShown(N); N.plate.visible = d < 30; if (d < 6) { const want = Math.atan2(player.pos.x - N.obj.position.x, player.pos.z - N.obj.position.z); let df = Math.atan2(Math.sin(want - N.obj.rotation.y), Math.cos(want - N.obj.rotation.y)); N.obj.rotation.y += df * Math.min(1, dt * 4); } if (N.obj.userData.anim) N.obj.userData.anim(t); if (!N.anim) N.anim = {}; if (d < 40) { N.anim.gest = dlgOpen && nearNpc === id ? Math.max(0, Math.sin(t * 3)) * 0.5 : 0; animRig(N.obj, N.anim, dt, t); } }
+  for (const id in npcObjs) { const N = npcObjs[id]; const d = N.obj.position.distanceTo(player.pos); N.obj.visible = d < 60 && npcShown(N); N.plate.visible = d < 30 && d > 1.8; if (d < 6) { const want = Math.atan2(player.pos.x - N.obj.position.x, player.pos.z - N.obj.position.z); let df = Math.atan2(Math.sin(want - N.obj.rotation.y), Math.cos(want - N.obj.rotation.y)); N.obj.rotation.y += df * Math.min(1, dt * 4); } if (N.obj.userData.anim) N.obj.userData.anim(t); if (!N.anim) N.anim = {}; if (d < 40) { N.anim.gest = dlgOpen && nearNpc === id ? Math.max(0, Math.sin(t * 3)) * 0.5 : 0; animRig(N.obj, N.anim, dt, t); } }
   // enemies
   const pSafe = inSafe(player.pos);
   for (const e of enemies) {
@@ -1592,7 +1592,7 @@ function step(dt) {
       continue;
     }
     const d2p = o.position.distanceTo(player.pos);
-    o.visible = d2p < 64; e.plate.visible = d2p < 36;
+    o.visible = d2p < 64; e.plate.visible = d2p < 36 && d2p > 2.4;
     if (d2p > 75) continue;
     if (o.userData.anim && d2p < 45) o.userData.anim(t + e.seed);
     const px0 = o.position.x, pz0 = o.position.z;

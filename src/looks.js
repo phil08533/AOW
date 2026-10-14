@@ -19,7 +19,7 @@ function openLookPicker(done) {
       <div id="lookGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px"></div>
       <div style="font-family:var(--hud);font-size:18px;color:#ffd36a;margin:18px 0 8px;text-align:center">MUSIC</div>
       <div id="musRow" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
-      <div style="text-align:center;margin-top:18px"><button class="cta win" id="lookGo" style="min-width:220px">Play</button></div></div>`;
+      <div style="text-align:center;margin-top:12px;position:sticky;bottom:-18px;padding:10px 0 18px;background:linear-gradient(rgba(3,5,20,0),rgba(3,5,20,.96) 35%)"><button class="cta win" id="lookGo" style="min-width:220px">Play</button></div></div>`;
     const grid = ov.querySelector('#lookGrid');
     for (const L of LOOKS) { const b = document.createElement('button'); const on = L.id === pick;
       b.style.cssText = `text-align:left;padding:0;cursor:pointer;background:rgba(6,10,46,.7);color:inherit;font:inherit;border:2px solid ${on ? '#ffd36a' : 'rgba(232,236,248,.25)'};border-radius:6px;overflow:hidden;box-shadow:${on ? '0 0 0 3px rgba(255,211,106,.25)' : 'none'}`;

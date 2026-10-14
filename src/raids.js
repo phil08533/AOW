@@ -10,6 +10,8 @@ function raidHud() {
   if (!raidEl) { raidEl = document.createElement('button'); raidEl.id = 'raidBar'; raidEl.className = 'hbtn win'; $('hud').appendChild(raidEl); raidEl.addEventListener('click', () => { const R = raidNow(); if (R.active && LEVEL.id !== R.world && planetOpen(R.world) && shipUnlocked()) travel(R.world); }); }
   const R = raidNow(), name = LEVELS[R.world] ? LEVELS[R.world].name : R.world, mm = ms => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}`;
   if (state !== 'play' || LEVEL.fly && !R.active) { raidEl.hidden = true; return; }
+  // new players without a ship, or raids on worlds you can't reach yet, are just noise
+  const here = R.active && LEVEL.id === R.world; if (!here && (!shipUnlocked() || (R.active && !planetOpen(R.world)))) { raidEl.hidden = true; return; }
   raidEl.hidden = false;
   raidEl.textContent = R.active ? (LEVEL.id === R.world ? `⚔ RAID HERE · wave ${RAID.wave} · ${mm(R.left)} · ${RAID.kills} kills` : `⚔ RAID on ${name} · ${mm(R.left)}${planetOpen(R.world) && shipUnlocked() ? ' · tap to go' : ''}`) : `Next raid: ${LEVELS[RAID_WORLDS[(R.key + 1) % RAID_WORLDS.length]].name} in ${mm(R.next)}`;
   raidEl.style.borderColor = R.active ? '#ff6a5a' : '';

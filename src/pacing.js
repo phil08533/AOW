@@ -35,3 +35,9 @@ function questLevel(id) {
 for (const id in QDEFS) { const q = QDEFS[id], r = q.reward; if (!r || !r.xp) continue;
   const lv = questLevel(id); if (!lv) continue;
   const cap = Math.round((lv > 30 ? 0.6 : 1) * 60 * Math.pow(lv, 1.45) / 50) * 50; if (r.xp > cap) r.xp = cap; }
+// what opens a locked world, in words, for the galaxy map
+function planetLockHint(id) {
+  if (!shipUnlocked() && id !== 'earth') return "you need a ship first. Finish Captain Vega's Earth chapter";
+  return ({ capitone: 'beat the Gut Worm Matriarch on Mezar (The Gut Pit)', robot: 'defeat the Frost King on Capitone', ocean: 'scan it from space, or defeat the Frost King',
+    skycity: "win Fort Ironrock's war (Krag's Last Stand), or reach Level 36", zarlich: 'defeat Drome in Earth Sky, or reach Level 44', vector: 'defeat the Storm Mother on Zarlich, or reach Level 50' })[id] || 'keep following the story';
+}

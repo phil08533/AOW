@@ -100,8 +100,10 @@ const arrive = document.createElement('div'); arrive.id = 'arrive'; arrive.style
 function arrivalCard(id) {
   const L = LEVELS[id]; if (!L) return; const lore = LORE[id];
   arrive.innerHTML = `<div style="font-size:10px;letter-spacing:.2em;color:#ffd36a">NEW WORLD DISCOVERED</div><div style="font-size:clamp(20px,3.6vw,30px);font-weight:bold;color:#fff;margin:2px 0;line-height:1.1">${(L.name || id).toUpperCase()}</div><div style="font-size:13px;color:#e8ecf8">${L.tag || ''}${L.lvls ? ' · ' + L.lvls : ''}</div>${lore ? '<div style="font-size:11px;color:#c8d0e8;margin-top:4px;opacity:.8">Lore entry added to your Codex (C)</div>' : ''}`;
-  arrive.style.opacity = 0.9; $('toast').style.opacity = 0; toastT = 0; SFX.level && SFX.level(); clearTimeout(arrive._t); arrive._t = setTimeout(() => arrive.style.opacity = 0, 3000);
+  arrive.style.opacity = 0.9; $('toast').style.opacity = 0; toastT = 0; SFX.level && SFX.level(); clearTimeout(arrive._t); arrive._t = setTimeout(() => arrive.style.opacity = 0, 3000); arrive._until = performance.now() + 3000;
 }
+// toasts that pop while the arrival card is up wait their turn instead of landing on top of it
+{ const _to = toast; toast = function (big, sm, dur) { const wait = (arrive._until || 0) - performance.now(); if (wait > 0) { setTimeout(() => toast(big, sm, dur), wait + 250); return; } return _to(big, sm, dur); }; }
 { const _ll = loadLevel; loadLevel = function (id, o) {
   const known = !!ST().worlds[id], r = _ll(id, o);
   if (!known && state === 'play' && LORE[id] && !['ship', 'space'].includes(id)) { const show = () => { if (LEVEL.id !== id) return; if (state === 'cut') { setTimeout(show, 700); return; } if (state === 'play') arrivalCard(id); }; setTimeout(show, 900); }

@@ -197,11 +197,38 @@ const PG = { name: '', page: 0, busy: false };
 #shopRows.paged.cols2 { display: grid !important; grid-template-columns: 1fr 1fr; column-gap: 14px; align-items: start; }
 #pgBar { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 6px 0 2px; font: 700 13px var(--mono, monospace); color: #8fe3ff; }
 #pgBar button { min-width: 54px; }
+#fltBar { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; } #fltBar .pbtn { padding: 3px 10px; font-size: 12px; opacity: .7; } #fltBar .pbtn.on { opacity: 1; background: #ffd36a; color: #15110e; }
+#shopRows > .fltOff { display: none !important; }
 `; document.head.appendChild(st); }
+// long lists get filter chips: what you can buy, what you own, what is still locked
+const FLT = { name: '', sel: 'all' };
+function rowKind(c) {
+  if (!c.classList || !c.classList.contains('rowi')) return null;
+  const b = c.querySelector('button'), t = (b && b.textContent || '').trim();
+  if (b) { if (/^(Buy|Get|Hire|Adopt|Unlock)/i.test(t)) return b.disabled ? 'locked' : 'buy'; if (/^(Equip|In hand|Wear|Wearing|Owned|Use|Ride|Fly|Set)/i.test(t)) return 'own'; return null; }
+  const x = (c.textContent || '').trim(); if (/^(🏆|✓|✔)/.test(x)) return 'own'; if (/^🔒/.test(x)) return 'locked'; return null;
+}
+function rowFilter(rows, all) {
+  const name = $('dlgName').textContent + '|' + $('dlgRole').textContent; if (name !== FLT.name) { FLT.name = name; FLT.sel = 'all'; }
+  const kinds = all.map(rowKind), n = { buy: 0, own: 0, locked: 0 }; kinds.forEach(k => { if (k) n[k]++; });
+  const typed = kinds.filter(Boolean).length, used = Object.values(n).filter(v => v).length;
+  let bar = $('fltBar');
+  if (all.length < 14 || typed < all.length * 0.8 || used < 2) { all.forEach(c => c.classList.remove('fltOff')); if (bar) bar.remove(); return; }
+  const shop = n.buy > 0 || all.some(c => c.querySelector('button'));
+  const opts = [['all', 'All']].concat(shop ? [['buy', 'Can buy'], ['own', 'Owned'], ['locked', 'Locked']] : [['own', 'Done'], ['locked', 'To do']]).filter(([k]) => k === 'all' || n[k]);
+  if (!opts.some(o => o[0] === FLT.sel)) FLT.sel = 'all';
+  all.forEach((c, i) => c.classList.toggle('fltOff', FLT.sel !== 'all' && kinds[i] !== FLT.sel));
+  const html = opts.map(([k, l]) => `<button class="pbtn${k === FLT.sel ? ' on' : ''}" data-k="${k}">${l}${k === 'all' ? '' : ' ' + n[k]}</button>`).join('');
+  if (!bar) { bar = document.createElement('div'); bar.id = 'fltBar'; bar.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; e.stopPropagation(); FLT.sel = b.dataset.k; PG.page = 0; SFX.ui(); pageRows(); }); }
+  if (bar.innerHTML !== html) bar.innerHTML = html;
+  if (bar.nextElementSibling !== rows) rows.before(bar);
+}
 function pageRows() {
   const rows = $('shopRows'), old = $('pgBar');
-  if (!rows || $('dlg').hidden) { if (old) old.remove(); return; }
-  const kids = [...rows.children].filter(c => c.id !== 'pgBar');
+  if (!rows || $('dlg').hidden) { if (old) old.remove(); if ($('fltBar')) $('fltBar').remove(); return; }
+  const all = [...rows.children].filter(c => c.id !== 'pgBar');
+  rowFilter(rows, all);
+  const kids = all.filter(c => !c.classList.contains('fltOff'));
   if (kids.length < 3 || rows.querySelector('canvas')) { rows.classList.remove('paged'); kids.forEach(c => c.classList.remove('pgOff')); if (old) old.remove(); return; }
   const name = $('dlgName').textContent + '|' + $('dlgRole').textContent; if (name !== PG.name) { PG.name = name; PG.page = 0; }
   rows.classList.remove('paged'); kids.forEach(c => c.classList.remove('pgOff'));
@@ -221,7 +248,7 @@ function pageRows() {
   if (bar.previousElementSibling !== rows) rows.after(bar);
 }
 { let q = false; const run = () => { q = false; PG.busy = true; try { pageRows(); } finally { PG.busy = false; } };
-  new MutationObserver(muts => { if (PG.busy || q) return; if (muts.every(m => m.target.id === 'pgBar' || (m.target.closest && m.target.closest('#pgBar')))) return; q = true; requestAnimationFrame(run); })
+  new MutationObserver(muts => { if (PG.busy || q) return; if (muts.every(m => m.target.id === 'pgBar' || m.target.id === 'fltBar' || (m.target.closest && m.target.closest('#pgBar, #fltBar')))) return; q = true; requestAnimationFrame(run); })
     .observe($('dlg'), { childList: true, subtree: true });
   addEventListener('resize', () => { if (!$('dlg').hidden) requestAnimationFrame(run); }); }
 // arrow keys and the controller shoulders turn pages

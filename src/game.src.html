@@ -329,7 +329,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.11.2</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.12</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1480,10 +1480,17 @@ function kill(e) {
   }
   if (Math.random() < 0.08) spawnDrop(p, 'item', 'medkit', 1);
   questProgressKill(e.sp.type); if (e.sp.bounty) setTimeout(bountyDone, 1600);
-  gainXp(Math.round(e.def.xp * (1 + 0.3 * (e.lv - 1))));
+  gainXp(killXp(e));
   if (e.def.boss || e.def.elite) burp('boss');
   if (e.def.boss || e.def.elite) toast(e.def.name.toUpperCase() + ' DEFEATED', 'Grab the loot', 3.5);
   checkReady(); markDirty();
+}
+// Kill XP falls off when you out-level the enemy, and a boss is worth about one level of its own.
+function killXp(e) {
+  let x = e.def.xp * (1 + 0.3 * (e.lv - 1));
+  if (e.def.boss) x = Math.min(x, xpNeed(e.lv));
+  const over = S.lvl - e.lv - 2; if (over > 0) x *= Math.max(0.05, 1 - 0.2 * over);
+  return Math.max(1, Math.round(x));
 }
 function gainXp(n) {
   S.xp += n;

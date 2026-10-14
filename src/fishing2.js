@@ -134,3 +134,63 @@ function fshCatchHide() { const C = FSH.catch; if (C) { camera.remove(C.holder);
   if (r.gnObj) { r.gnObj.parent && r.gnObj.parent.remove(r.gnObj); r.gnObj = null; } if (r.rodObj) { r.rodObj.parent && r.rodObj.parent.remove(r.rodObj); r.rodObj = null; }
   std.visible = false; const h = new THREE.Group(), m = makeRodModel(+code.slice(4) || 1); m.rotation.x = 1.0; h.add(m); h.position.copy(std.position); h.quaternion.copy(std.quaternion);
   const ws = V(1, 1, 1); std.parent.getWorldScale(ws); const rs = V(1, 1, 1); r.obj.getWorldScale(rs); h.scale.setScalar(rs.x / (ws.x || 1)); std.parent.add(h); r.rodObj = h; }; }
+// ---- line tension (2.12): hold to reel, ease off when the line strains; big fish fight back in surges ----
+function fshLose(F, msg) {
+  F.st = 'gone'; F.hold = false; SFX.hurt(); $('dlgLine').textContent = `${msg} (${ITEMS[F.fish].name})`; F.bar.style.opacity = 0.35;
+  acts([['Cast again', () => { closeDlg(); startFishing(F.name, F.table); }, true], ['Stop', closeDlg]]);
+}
+function fshLand(F) {
+  F.st = 'done'; F.hold = false; S.inv[F.fish] = (S.inv[F.fish] || 0) + 1; S.fishLog = S.fishLog || {}; const first = !S.fishLog[F.fish]; S.fishLog[F.fish] = (S.fishLog[F.fish] || 0) + 1;
+  const it = ITEMS[F.fish]; $('dlgLine').textContent = `You caught a ${it.name}! (${it.v} cr)${first ? ' New species for your log!' : ''}`;
+  SFX.splash(); SFX.item(); if (it.v >= 100) { SFX.quest(); toast('RARE CATCH', it.name); burp('rare'); }
+  log(`Caught ${it.name}`, 'loot'); questProgressFish(); gainXp(Math.max(4, Math.round(it.v * 0.9))); markDirty(); checkReady();
+  F.bar.style.opacity = 0.35; acts([['Cast again', () => { closeDlg(); startFishing(F.name, F.table); }, true], ['Stop', closeDlg]]);
+}
+function fshFightStart(F) {
+  const e = (FISH_TABLES[F.table] || []).find(x => x[0] === F.fish), d = e ? e[2] : 0.3, rod = RODS[S.rod] || RODS[1];
+  F.fight = { d, tol: rod.zone, ten: 0, prog: 0.15, slackT: 0, surge: 0, surgeT: rand(1.2, 2.4), tick: 0 }; F.need = 4; F.hits = 0;
+  F.bar.innerHTML = '<i class="ft"></i><s class="fdz"></s>'; F.bar.classList.add('tension');
+  const pr = document.createElement('div'); pr.className = 'fprog'; pr.innerHTML = '<i></i><b></b>'; F.bar.after(pr); F.prog = pr;
+  $('dlgLine').textContent = d > 0.55 ? 'Something BIG is on! Hold to reel, ease off when the line goes red.' : 'Hooked! Hold to reel. Ease off when the line goes red.';
+}
+function fshFight(F, dt) {
+  const G = F.fight, d = G.d;
+  G.surgeT -= dt; if (G.surgeT <= 0) {
+    if (G.surge) { G.surge = 0; G.surgeT = rand(1.4, 3.2) * (1.25 - d * 0.6); if (F.st === 'bite') $('dlgLine').textContent = 'It tired out. Reel!'; }
+    else if (d > 0.15) { G.surge = 1; G.surgeT = rand(0.5, 0.8 + d); $('dlgLine').textContent = d > 0.55 ? "It's running hard! Ease off!" : "It's pulling! Ease off!"; SFX.bite(); } else G.surgeT = 2; }
+  if (F.hold) { G.ten += dt * (0.1 + d * 0.5 + G.surge * (0.7 + d)) / G.tol; G.prog += dt * (0.3 - d * 0.14) * (0.85 + 0.15 * G.tol) * (G.surge ? 0.3 : 1); G.slackT = 0;
+    G.tick -= dt; if (G.tick <= 0) { G.tick = 0.28; SFX.reel(); } }
+  else { G.ten = Math.max(0, G.ten - dt * 0.75); G.prog -= dt * (0.015 + d * 0.04) * (G.surge ? 2.2 : 1); G.slackT += dt; }
+  G.ten = Math.min(1, G.ten); G.prog = Math.min(1, G.prog);
+  F.hits = Math.max(F.hits, Math.min(3, Math.floor(G.prog * 4)));
+  const t = F.bar.firstChild; t.style.width = (G.ten * 100) + '%'; t.style.background = G.ten < 0.6 ? '#6fdc5a' : G.ten < 0.85 ? '#ffd36a' : '#ff4a3a';
+  F.bar.classList.toggle('strain', G.ten > 0.85 || !!G.surge); F.prog.firstChild.style.width = (G.prog * 100) + '%';
+  if (G.ten >= 1) return fshLose(F, 'Snap! The line broke.');
+  if (G.prog <= 0 || G.slackT > 3.2) return fshLose(F, 'Too much slack. It slipped the hook.');
+  if (G.prog >= 1) fshLand(F);
+}
+{ const _sf = startFishing; startFishing = function (name, table) {
+  _sf(name, table); const F = fishing; if (!F || !F.bar) return;
+  const early = F.reel; F.reel = () => { if (F.st === 'wait') early(); else if (F.st === 'bite') F.hold = true; };
+  const b = $('dlgActs').querySelector('.go'); if (b) { const nb = b.cloneNode(true); nb.textContent = 'Hold to reel'; b.replaceWith(nb);
+    nb.addEventListener('pointerdown', e => { e.preventDefault(); F.reel(); }); nb.addEventListener('contextmenu', e => e.preventDefault()); }
+}; }
+{ const _uf = updateFishing; updateFishing = function (dt) {
+  const F = fishing, was = F && F.st; _uf(dt); if (!F || fishing !== F) return;
+  if (was === 'wait' && F.st === 'bite') fshFightStart(F);
+  if (F.st === 'bite' && F.fight) fshFight(F, dt);
+}; }
+{ const up = () => { if (fishing) fishing.hold = false; };
+  window.addEventListener('pointerup', up, true); window.addEventListener('pointercancel', up, true); window.addEventListener('blur', up);
+  window.addEventListener('keydown', e => { if (!fishing || !dlgOpen || !fishing.fight || fishing.st !== 'bite' || (e.code !== 'Space' && e.code !== 'KeyE')) return; e.preventDefault(); e.stopImmediatePropagation(); if (!e.repeat) fishing.reel(); }, true);
+  window.addEventListener('keyup', e => { if (e.code === 'Space' || e.code === 'KeyE') up(); }, true);
+  const st = document.createElement('style'); st.textContent = `
+.fishbar.tension { height: 16px; border-radius: 9px; overflow: hidden; }
+.fishbar.tension .ft { position: absolute; left: 0; top: 0; bottom: 0; width: 0; transition: background .15s; }
+.fishbar.tension .fdz { position: absolute; right: 0; top: 0; bottom: 0; width: 15%; background: repeating-linear-gradient(135deg, rgba(255,74,58,.35) 0 6px, transparent 6px 12px); }
+.fishbar.tension.strain { animation: fshShake .12s linear infinite; }
+@keyframes fshShake { 0% { transform: translateX(0) } 25% { transform: translateX(-2px) } 75% { transform: translateX(2px) } }
+.fprog { position: relative; height: 7px; margin: 4px 0 0; border-radius: 4px; background: rgba(255,255,255,.14); }
+.fprog i { position: absolute; left: 0; top: 0; bottom: 0; width: 15%; border-radius: 4px; background: #4fd2ff; }
+.fprog b { position: absolute; right: -2px; top: -4px; width: 14px; height: 14px; border-radius: 50%; background: #e8f4ff; box-shadow: 0 0 6px #4fd2ff; }
+@media (max-height: 520px) { .dlg.fishing .fishbar.tension { height: 14px; } }`; document.head.appendChild(st); }

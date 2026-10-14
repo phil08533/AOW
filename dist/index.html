@@ -329,7 +329,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.11.2</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.12</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -13926,11 +13926,38 @@ const PG = { name: '', page: 0, busy: false };
 #shopRows.paged.cols2 { display: grid !important; grid-template-columns: 1fr 1fr; column-gap: 14px; align-items: start; }
 #pgBar { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 6px 0 2px; font: 700 13px var(--mono, monospace); color: #8fe3ff; }
 #pgBar button { min-width: 54px; }
+#fltBar { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; } #fltBar .pbtn { padding: 3px 10px; font-size: 12px; opacity: .7; } #fltBar .pbtn.on { opacity: 1; background: #ffd36a; color: #15110e; }
+#shopRows > .fltOff { display: none !important; }
 `; document.head.appendChild(st); }
+// long lists get filter chips: what you can buy, what you own, what is still locked
+const FLT = { name: '', sel: 'all' };
+function rowKind(c) {
+  if (!c.classList || !c.classList.contains('rowi')) return null;
+  const b = c.querySelector('button'), t = (b && b.textContent || '').trim();
+  if (b) { if (/^(Buy|Get|Hire|Adopt|Unlock)/i.test(t)) return b.disabled ? 'locked' : 'buy'; if (/^(Equip|In hand|Wear|Wearing|Owned|Use|Ride|Fly|Set)/i.test(t)) return 'own'; return null; }
+  const x = (c.textContent || '').trim(); if (/^(🏆|✓|✔)/.test(x)) return 'own'; if (/^🔒/.test(x)) return 'locked'; return null;
+}
+function rowFilter(rows, all) {
+  const name = $('dlgName').textContent + '|' + $('dlgRole').textContent; if (name !== FLT.name) { FLT.name = name; FLT.sel = 'all'; }
+  const kinds = all.map(rowKind), n = { buy: 0, own: 0, locked: 0 }; kinds.forEach(k => { if (k) n[k]++; });
+  const typed = kinds.filter(Boolean).length, used = Object.values(n).filter(v => v).length;
+  let bar = $('fltBar');
+  if (all.length < 14 || typed < all.length * 0.8 || used < 2) { all.forEach(c => c.classList.remove('fltOff')); if (bar) bar.remove(); return; }
+  const shop = n.buy > 0 || all.some(c => c.querySelector('button'));
+  const opts = [['all', 'All']].concat(shop ? [['buy', 'Can buy'], ['own', 'Owned'], ['locked', 'Locked']] : [['own', 'Done'], ['locked', 'To do']]).filter(([k]) => k === 'all' || n[k]);
+  if (!opts.some(o => o[0] === FLT.sel)) FLT.sel = 'all';
+  all.forEach((c, i) => c.classList.toggle('fltOff', FLT.sel !== 'all' && kinds[i] !== FLT.sel));
+  const html = opts.map(([k, l]) => `<button class="pbtn${k === FLT.sel ? ' on' : ''}" data-k="${k}">${l}${k === 'all' ? '' : ' ' + n[k]}</button>`).join('');
+  if (!bar) { bar = document.createElement('div'); bar.id = 'fltBar'; bar.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; e.stopPropagation(); FLT.sel = b.dataset.k; PG.page = 0; SFX.ui(); pageRows(); }); }
+  if (bar.innerHTML !== html) bar.innerHTML = html;
+  if (bar.nextElementSibling !== rows) rows.before(bar);
+}
 function pageRows() {
   const rows = $('shopRows'), old = $('pgBar');
-  if (!rows || $('dlg').hidden) { if (old) old.remove(); return; }
-  const kids = [...rows.children].filter(c => c.id !== 'pgBar');
+  if (!rows || $('dlg').hidden) { if (old) old.remove(); if ($('fltBar')) $('fltBar').remove(); return; }
+  const all = [...rows.children].filter(c => c.id !== 'pgBar');
+  rowFilter(rows, all);
+  const kids = all.filter(c => !c.classList.contains('fltOff'));
   if (kids.length < 3 || rows.querySelector('canvas')) { rows.classList.remove('paged'); kids.forEach(c => c.classList.remove('pgOff')); if (old) old.remove(); return; }
   const name = $('dlgName').textContent + '|' + $('dlgRole').textContent; if (name !== PG.name) { PG.name = name; PG.page = 0; }
   rows.classList.remove('paged'); kids.forEach(c => c.classList.remove('pgOff'));
@@ -13950,7 +13977,7 @@ function pageRows() {
   if (bar.previousElementSibling !== rows) rows.after(bar);
 }
 { let q = false; const run = () => { q = false; PG.busy = true; try { pageRows(); } finally { PG.busy = false; } };
-  new MutationObserver(muts => { if (PG.busy || q) return; if (muts.every(m => m.target.id === 'pgBar' || (m.target.closest && m.target.closest('#pgBar')))) return; q = true; requestAnimationFrame(run); })
+  new MutationObserver(muts => { if (PG.busy || q) return; if (muts.every(m => m.target.id === 'pgBar' || m.target.id === 'fltBar' || (m.target.closest && m.target.closest('#pgBar, #fltBar')))) return; q = true; requestAnimationFrame(run); })
     .observe($('dlg'), { childList: true, subtree: true });
   addEventListener('resize', () => { if (!$('dlg').hidden) requestAnimationFrame(run); }); }
 // arrow keys and the controller shoulders turn pages
@@ -16170,6 +16197,211 @@ function fshCatchHide() { const C = FSH.catch; if (C) { camera.remove(C.holder);
   if (r.gnObj) { r.gnObj.parent && r.gnObj.parent.remove(r.gnObj); r.gnObj = null; } if (r.rodObj) { r.rodObj.parent && r.rodObj.parent.remove(r.rodObj); r.rodObj = null; }
   std.visible = false; const h = new THREE.Group(), m = makeRodModel(+code.slice(4) || 1); m.rotation.x = 1.0; h.add(m); h.position.copy(std.position); h.quaternion.copy(std.quaternion);
   const ws = V(1, 1, 1); std.parent.getWorldScale(ws); const rs = V(1, 1, 1); r.obj.getWorldScale(rs); h.scale.setScalar(rs.x / (ws.x || 1)); std.parent.add(h); r.rodObj = h; }; }
+// ---- line tension (2.12): hold to reel, ease off when the line strains; big fish fight back in surges ----
+function fshLose(F, msg) {
+  F.st = 'gone'; F.hold = false; SFX.hurt(); $('dlgLine').textContent = `${msg} (${ITEMS[F.fish].name})`; F.bar.style.opacity = 0.35;
+  acts([['Cast again', () => { closeDlg(); startFishing(F.name, F.table); }, true], ['Stop', closeDlg]]);
+}
+function fshLand(F) {
+  F.st = 'done'; F.hold = false; S.inv[F.fish] = (S.inv[F.fish] || 0) + 1; S.fishLog = S.fishLog || {}; const first = !S.fishLog[F.fish]; S.fishLog[F.fish] = (S.fishLog[F.fish] || 0) + 1;
+  const it = ITEMS[F.fish]; $('dlgLine').textContent = `You caught a ${it.name}! (${it.v} cr)${first ? ' New species for your log!' : ''}`;
+  SFX.splash(); SFX.item(); if (it.v >= 100) { SFX.quest(); toast('RARE CATCH', it.name); burp('rare'); }
+  log(`Caught ${it.name}`, 'loot'); questProgressFish(); gainXp(Math.max(4, Math.round(it.v * 0.9))); markDirty(); checkReady();
+  F.bar.style.opacity = 0.35; acts([['Cast again', () => { closeDlg(); startFishing(F.name, F.table); }, true], ['Stop', closeDlg]]);
+}
+function fshFightStart(F) {
+  const e = (FISH_TABLES[F.table] || []).find(x => x[0] === F.fish), d = e ? e[2] : 0.3, rod = RODS[S.rod] || RODS[1];
+  F.fight = { d, tol: rod.zone, ten: 0, prog: 0.15, slackT: 0, surge: 0, surgeT: rand(1.2, 2.4), tick: 0 }; F.need = 4; F.hits = 0;
+  F.bar.innerHTML = '<i class="ft"></i><s class="fdz"></s>'; F.bar.classList.add('tension');
+  const pr = document.createElement('div'); pr.className = 'fprog'; pr.innerHTML = '<i></i><b></b>'; F.bar.after(pr); F.prog = pr;
+  $('dlgLine').textContent = d > 0.55 ? 'Something BIG is on! Hold to reel, ease off when the line goes red.' : 'Hooked! Hold to reel. Ease off when the line goes red.';
+}
+function fshFight(F, dt) {
+  const G = F.fight, d = G.d;
+  G.surgeT -= dt; if (G.surgeT <= 0) {
+    if (G.surge) { G.surge = 0; G.surgeT = rand(1.4, 3.2) * (1.25 - d * 0.6); if (F.st === 'bite') $('dlgLine').textContent = 'It tired out. Reel!'; }
+    else if (d > 0.15) { G.surge = 1; G.surgeT = rand(0.5, 0.8 + d); $('dlgLine').textContent = d > 0.55 ? "It's running hard! Ease off!" : "It's pulling! Ease off!"; SFX.bite(); } else G.surgeT = 2; }
+  if (F.hold) { G.ten += dt * (0.1 + d * 0.5 + G.surge * (0.7 + d)) / G.tol; G.prog += dt * (0.3 - d * 0.14) * (0.85 + 0.15 * G.tol) * (G.surge ? 0.3 : 1); G.slackT = 0;
+    G.tick -= dt; if (G.tick <= 0) { G.tick = 0.28; SFX.reel(); } }
+  else { G.ten = Math.max(0, G.ten - dt * 0.75); G.prog -= dt * (0.015 + d * 0.04) * (G.surge ? 2.2 : 1); G.slackT += dt; }
+  G.ten = Math.min(1, G.ten); G.prog = Math.min(1, G.prog);
+  F.hits = Math.max(F.hits, Math.min(3, Math.floor(G.prog * 4)));
+  const t = F.bar.firstChild; t.style.width = (G.ten * 100) + '%'; t.style.background = G.ten < 0.6 ? '#6fdc5a' : G.ten < 0.85 ? '#ffd36a' : '#ff4a3a';
+  F.bar.classList.toggle('strain', G.ten > 0.85 || !!G.surge); F.prog.firstChild.style.width = (G.prog * 100) + '%';
+  if (G.ten >= 1) return fshLose(F, 'Snap! The line broke.');
+  if (G.prog <= 0 || G.slackT > 3.2) return fshLose(F, 'Too much slack. It slipped the hook.');
+  if (G.prog >= 1) fshLand(F);
+}
+{ const _sf = startFishing; startFishing = function (name, table) {
+  _sf(name, table); const F = fishing; if (!F || !F.bar) return;
+  const early = F.reel; F.reel = () => { if (F.st === 'wait') early(); else if (F.st === 'bite') F.hold = true; };
+  const b = $('dlgActs').querySelector('.go'); if (b) { const nb = b.cloneNode(true); nb.textContent = 'Hold to reel'; b.replaceWith(nb);
+    nb.addEventListener('pointerdown', e => { e.preventDefault(); F.reel(); }); nb.addEventListener('contextmenu', e => e.preventDefault()); }
+}; }
+{ const _uf = updateFishing; updateFishing = function (dt) {
+  const F = fishing, was = F && F.st; _uf(dt); if (!F || fishing !== F) return;
+  if (was === 'wait' && F.st === 'bite') fshFightStart(F);
+  if (F.st === 'bite' && F.fight) fshFight(F, dt);
+}; }
+{ const up = () => { if (fishing) fishing.hold = false; };
+  window.addEventListener('pointerup', up, true); window.addEventListener('pointercancel', up, true); window.addEventListener('blur', up);
+  window.addEventListener('keydown', e => { if (!fishing || !dlgOpen || !fishing.fight || fishing.st !== 'bite' || (e.code !== 'Space' && e.code !== 'KeyE')) return; e.preventDefault(); e.stopImmediatePropagation(); if (!e.repeat) fishing.reel(); }, true);
+  window.addEventListener('keyup', e => { if (e.code === 'Space' || e.code === 'KeyE') up(); }, true);
+  const st = document.createElement('style'); st.textContent = `
+.fishbar.tension { height: 16px; border-radius: 9px; overflow: hidden; }
+.fishbar.tension .ft { position: absolute; left: 0; top: 0; bottom: 0; width: 0; transition: background .15s; }
+.fishbar.tension .fdz { position: absolute; right: 0; top: 0; bottom: 0; width: 15%; background: repeating-linear-gradient(135deg, rgba(255,74,58,.35) 0 6px, transparent 6px 12px); }
+.fishbar.tension.strain { animation: fshShake .12s linear infinite; }
+@keyframes fshShake { 0% { transform: translateX(0) } 25% { transform: translateX(-2px) } 75% { transform: translateX(2px) } }
+.fprog { position: relative; height: 7px; margin: 4px 0 0; border-radius: 4px; background: rgba(255,255,255,.14); }
+.fprog i { position: absolute; left: 0; top: 0; bottom: 0; width: 15%; border-radius: 4px; background: #4fd2ff; }
+.fprog b { position: absolute; right: -2px; top: -4px; width: 14px; height: 14px; border-radius: 50%; background: #e8f4ff; box-shadow: 0 0 6px #4fd2ff; }
+@media (max-height: 520px) { .dlg.fishing .fishbar.tension { height: 14px; } }`; document.head.appendChild(st); }
+
+// ---------------- pacing (2.12) ----------------
+// Enemy levels follow the story: Robot City (28–40) → Dark Fleet → Fort Ironrock's war zones (34–40)
+// → Earth Sky (34–44) → Zarlich (44–50) → Vector (50–54). Quest XP is capped near one level for
+// the quest's own level, so finishing a chapter no longer leaves you thirty levels above the next one.
+{
+  const shift = (id, d) => { const L = LEVELS[id]; if (L) for (const s of L.spawns || []) s.lv = [s.lv[0] + d, s.lv[1] + d]; };
+  shift('skycity', 4); shift('zarlich', 4); shift('vector', 4);
+  const F = LEVELS.fort;
+  if (F) for (const s of F.spawns) {
+    if (s.zone === 'siege') s.lv = [34, 37];
+    if (s.zone === 'tankyard') s.lv = s.type === 'dtank' ? [36, 39] : [37, 38];
+    if (s.zone === 'kragpit') s.lv = [40, 40];
+  }
+  const lab = { fort: 'Lv 12–40 · vehicles', skycity: 'Lv 34–44', zarlich: 'Lv 44–50', vector: 'Lv 50–54' };
+  for (const id in lab) if (LEVELS[id]) LEVELS[id].lvls = lab[id];
+  // Fort's training range stays a beginner area; the war starts after the Dark Fleet.
+  if (QDEFS.a2 && !QDEFS.a2.req.includes('d3')) QDEFS.a2.req.push('d3');
+  // The President arc follows Robot City instead of opening right after Earth.
+  if (QDEFS.pr1) QDEFS.pr1.req = ['r5'];
+}
+{ const _po = planetOpen; planetOpen = function (id) {
+  if (id === 'skycity') return shipUnlocked() && (qDone('a4') || !!qState('k1') || S.lvl >= 36);
+  if (id === 'zarlich') return shipUnlocked() && (qDone('k4') || !!qState('x1') || S.lvl >= 44);
+  if (id === 'vector') return shipUnlocked() && (qDone('x3') || !!qState('w1') || S.lvl >= 50);
+  return _po(id); }; }
+// Quest XP cap: about one level at the quest's own level, a bit over half a level past 30 where kills pay more.
+const QUEST_LV = { m1: 12, c1: 18, r1: 28, d1: 40, d2: 41, d3: 42, e1: 54, pr1: 36, pr2: 37, pr3: 37, pr4: 38 };
+function questLevel(id) {
+  if (QUEST_LV[id]) return QUEST_LV[id];
+  const q = QDEFS[id]; let hi = 0;
+  for (const o of q.obj) { const L = LEVELS[objPlanet(q, o)]; for (const s of (L && L.spawns) || []) if (!o.zone || s.zone === o.zone) hi = Math.max(hi, s.lv[1]); }
+  return hi || null;
+}
+{ const keep = Object.assign({}, NPC_HOME); indexNpcs(); Object.assign(NPC_HOME, keep); }
+for (const id in QDEFS) { const q = QDEFS[id], r = q.reward; if (!r || !r.xp) continue;
+  const lv = questLevel(id); if (!lv) continue;
+  const cap = Math.round((lv > 30 ? 0.6 : 1) * 60 * Math.pow(lv, 1.45) / 50) * 50; if (r.xp > cap) r.xp = cap; }
+
+// ---------------- phone message log (2.12) ----------------
+// On short screens the log sits under the quest tracker with little room, so keep the newest three
+// lines, fade them sooner, and give them a soft backing so they read over bright scenes.
+const LOG_PHONE = () => innerHeight <= 520 || innerWidth <= 600;
+{ const _log = log; log = function (text, cls, who) {
+  _log(text, cls, who);
+  if (!LOG_PHONE()) return;
+  const L = $('log'), d = L.lastElementChild; while (L.children.length > 3) L.removeChild(L.firstChild);
+  if (d) { setTimeout(() => { d.style.opacity = 0; }, cls === 'chat' ? 8000 : 5000); setTimeout(() => d.remove(), cls === 'chat' ? 9200 : 6200); }
+}; }
+{ const st = document.createElement('style'); st.textContent = `
+@media (pointer: fine) and (min-height: 521px) { body #hud #log { bottom: calc(env(safe-area-inset-bottom, 0px) + 158px); } }
+@media (max-height: 520px), (max-width: 600px) {
+  #log { max-height: none !important; gap: 3px; font-size: 12.5px !important; }
+  #log div { background: rgba(8,12,20,.42); border-radius: 6px; padding: 2px 7px; width: fit-content; max-width: 100%;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+}`; document.head.appendChild(st); }
+
+// =================== SHIP HALLWAY (2.12): pipes, a viewport, crew, and things to poke at ===================
+const HALL_CREW = [
+  { name: 'Ensign Pell', role: 'Deck crew', col: '#3a5a8a', lines: ["Morning, Captain. Or evening. Hard to tell out here.", "The hangar mechanics keep stealing my wrench. I can't prove it. Yet.", "If you see a loose pipe, don't touch it. Most of them are hot. Some are VERY hot."] },
+  { name: 'Tech Ruiz', role: 'Engineer', col: '#8a5a2a', lines: ["Hull's holding. Engines purring. Coffee machine is the real problem.", "Every room you add makes the ship hum a little different. I like it.", "Need upgrades? The terminal on the bridge. Tell it Ruiz says hi."] },
+  { name: 'Medic Okafor', role: 'Med crew', col: '#d8e8ec', lines: ["Stay hydrated. There's a cooler in the hall. Use it.", "You came back with all your fingers again. Good. I'm counting.", "The med bay stim is safe. Mostly. Read the label."] }
+];
+function hallLayout() {
+  const rooms = S.ship.rooms.filter(r => r !== 'bridge'), rows = Math.max(1, Math.ceil(rooms.length / 2)), Lz = 4 + (rows - 1) * 11 + 7;
+  const doors = { 1: [], '-1': [] }; rooms.forEach((r, k) => { const s = roomSlot(k); doors[s.side].push(s.zc); });
+  const free = side => { const out = []; let z = -2; for (const g of doors[side].sort((a, b) => a - b)) { if (g - 1.3 - z > 0.5) out.push([z, g - 1.3]); z = g + 1.3; } if (Lz - z > 0.5) out.push([z, Lz]); return out; };
+  return { Lz, free };
+}
+function starTex() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 160; const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 160); gr.addColorStop(0, '#04061a'); gr.addColorStop(1, '#0c1030'); g.fillStyle = gr; g.fillRect(0, 0, 256, 160);
+  for (let i = 0; i < 140; i++) { g.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.7})`; const s = Math.random() < 0.1 ? 2 : 1; g.fillRect(Math.random() * 256, Math.random() * 160, s, s); }
+  const pg = g.createRadialGradient(178, 98, 4, 190, 110, 52); pg.addColorStop(0, '#6aa8e0'); pg.addColorStop(0.5, '#2a5a98'); pg.addColorStop(0.85, '#1a3060'); pg.addColorStop(1, '#0c1030'); g.fillStyle = pg; g.beginPath(); g.arc(190, 110, 46, 0, Math.PI * 2); g.fill();
+  const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; return t;
+}
+function hallWater() { player.hp = Math.min(maxHp(), player.hp + Math.round(maxHp() * 0.1)); SFX.ui(); toast('WATER COOLER', 'Cold and a little metallic. +10% health', 1.6); }
+function hallStatus() {
+  const rooms = S.ship.rooms.filter(r => r !== 'bridge'), missing = Object.keys(ROOMS).filter(r => r !== 'bridge' && !S.ship.rooms.includes(r));
+  openDlg('Ship status', LEVELS.ship.name);
+  $('dlgLine').textContent = `Hull nominal. ${rooms.length} room${rooms.length === 1 ? '' : 's'} online: ${rooms.map(r => ROOMS[r].name).join(', ') || 'none yet'}.` + (missing.length ? ` Still to build: ${missing.map(r => ROOMS[r].name).join(', ')}. Use the ship terminal on the bridge.` : ' Every room is built. Nice ship, Captain.');
+  acts([['Close', closeDlg, true]]);
+}
+function hallView() {
+  const at = S.orbit && LEVELS[S.orbit] ? LEVELS[S.orbit].name : 'deep space';
+  openDlg('Viewport', 'Looking out'); $('dlgLine').textContent = `Stars, and ${at} hanging below the ship. It never gets old.`; acts([['Galaxy map', () => { closeDlg(); openGalaxy(); }, true], ['Close', closeDlg]]);
+}
+function dressHall() {
+  const H = 3.2, { Lz, free } = hallLayout();
+  // pipes along both upper corners, brackets on every rib, a cable bundle
+  for (const s of [1, -1]) {
+    const len = Lz + 2, cz = (Lz - 2) / 2;
+    part(props, Cy(0.07, 0.07, len, 8), '#6a7a8a', 1.64 * s, 3.02, cz, Math.PI / 2, 0, 0);
+    part(props, Cy(0.05, 0.05, len, 8), '#b3762a', 1.7 * s, 2.86, cz, Math.PI / 2, 0, 0);
+    part(props, Cy(0.035, 0.035, len, 6), '#2a2c32', 1.56 * s, 3.1, cz, Math.PI / 2, 0, 0);
+    for (let z = 0; z < Lz; z += 3) part(props, B(0.3, 0.06, 0.08), '#3a3d44', 1.66 * s, 2.78, z);
+    part(props, B(0.05, 0.012, len), glow('#4fd2ff'), 1.55 * s, 0.012, cz);
+  }
+  // the end of the hall: a big viewport onto the stars
+  const vw = 2.6, vh = 1.5, zEnd = Lz - 0.18;
+  const view = new THREE.Mesh(new THREE.PlaneGeometry(vw, vh), new THREE.MeshBasicMaterial({ map: starTex(), toneMapped: false })); view.position.set(0, 1.65, zEnd); view.rotation.y = Math.PI; levelGroup.add(view);
+  part(props, B(vw + 0.3, 0.16, 0.2), '#2a2c32', 0, 1.65 + vh / 2 + 0.06, zEnd); part(props, B(vw + 0.3, 0.16, 0.2), '#2a2c32', 0, 1.65 - vh / 2 - 0.06, zEnd);
+  for (const s of [-1, 1]) part(props, B(0.16, vh + 0.3, 0.2), '#2a2c32', s * (vw / 2 + 0.07), 1.65, zEnd);
+  part(props, B(0.06, vh, 0.08), '#2a2c32', 0, 1.65, zEnd - 0.02);
+  { const g = new THREE.Group(); part(g, B(1.6, 0.1, 0.45), toon('#3a5a8a', 'cloth'), 0, 0.45, 0); for (const x of [-0.65, 0.65]) part(g, B(0.08, 0.42, 0.38), '#2a2c32', x, 0.21, 0); g.position.set(0, 0, Lz - 0.75); props.add(g); box(0, Lz - 0.75, 0.8, 0.23); }
+  INTERACTS.push({ x: 0, z: Lz - 1.4, r: 1.6, label: 'Look out the viewport', fn: hallView });
+  // along the free stretches of wall: a status screen, crates, lockers, a water cooler, an extinguisher
+  let n = 0; const used = { status: 0, cooler: 0 };
+  for (const s of [1, -1]) for (const [a, b] of free(s)) {
+    const len = b - a, x = 1.62 * s, ry = s > 0 ? -Math.PI / 2 : Math.PI / 2;
+    if (len < 1.6) continue;
+    const at = k => a + len * k;
+    // wall screen (clickable) or extinguisher near the start of the stretch
+    if (!used.status && len > 3) { used.status = 1; const z = at(0.22); const g = new THREE.Group(); part(g, B(1.0, 0.62, 0.06), '#2a2c32', 0, 0, 0); part(g, B(0.9, 0.52, 0.02), glow('#4fd2ff'), 0, 0, 0.04); part(g, B(0.7, 0.04, 0.025), glow('#ffd36a'), 0, 0.14, 0.05); part(g, B(0.5, 0.04, 0.025), glow('#6fdc5a'), -0.1, 0.02, 0.05); g.position.set(1.95 * s, 1.55, z); g.rotation.y = ry; props.add(g); INTERACTS.push({ x: 1.1 * s, z, r: 1.4, label: 'Ship status', fn: hallStatus }); }
+    else { const z = at(0.18); part(props, Cy(0.09, 0.09, 0.5, 8), '#c8402f', 1.86 * s, 0.75, z); part(props, B(0.12, 0.04, 0.12), '#2a2c32', 1.86 * s, 1.03, z); part(props, B(0.02, 0.5, 0.3), '#ffd36a', 1.98 * s, 1.5, z); }
+    if (len < 3) continue;
+    // middle: a crate stack or a locker bank
+    const zm = at(0.55);
+    if (n++ % 2 === 0) { part(props, B(0.7, 0.7, 0.7), toonNS('#8a6a4a', 'wood'), x - 0.2 * s, 0.35, zm, 0, 0.1, 0); part(props, B(0.5, 0.5, 0.5), toonNS('#5a7a9a', 'hull'), x - 0.25 * s, 0.95, zm + 0.05, 0, -0.2, 0); part(props, B(0.6, 0.45, 0.55), toonNS('#7a6a4a', 'wood'), x - 0.2 * s, 0.23, zm + 0.75); box(x - 0.2 * s, zm + 0.35, 0.38, 0.75); }
+    else { for (let i = 0; i < 3; i++) { const z = zm - 0.55 + i * 0.55; part(props, B(0.45, 1.9, 0.52), "#5d636c", 1.6 * s, 0.95, z); part(props, B(0.02, 0.5, 0.06), "#2a2c32", (1.6 - 0.23) * s, 1.5, z + 0.12); for (const y of [1.7, 1.75, 1.8]) part(props, B(0.02, 0.02, 0.36), "#2a2c32", (1.6 - 0.23) * s, y, z); } box(1.6 * s, zm, 0.23, 0.85); }
+    // the end of a long stretch: the water cooler, once
+    if (!used.cooler && len > 5) { used.cooler = 1; const z = at(0.86), g = new THREE.Group(); part(g, B(0.4, 0.95, 0.4), '#d8e8ec', 0, 0.48, 0); part(g, Cy(0.17, 0.17, 0.45, 10), new THREE.MeshLambertMaterial({ color: '#8fd0ff', transparent: true, opacity: 0.7 }), 0, 1.18, 0); part(g, B(0.08, 0.06, 0.06), '#4fa8ff', -0.1, 0.8, 0.22); g.position.set(1.72 * s, 0, z); props.add(g); solid(1.72 * s, z, 0.28); INTERACTS.push({ x: 1.0 * s, z, r: 1.3, label: 'Water cooler', fn: hallWater }); }
+  }
+  // crew who walk the hall and stop for a word
+  const pick = HALL_CREW.slice(0, Lz > 20 ? 3 : 2);
+  pick.forEach((c, i) => {
+    const o = buildChar(() => recolor(makeTrooper(), { '#6f7a3e': c.col }), 'trooper'); blob(o, 0.4); const lane = i % 2 ? -0.75 : 0.75;
+    const f = { o, st: {}, a: 0.5 + i * 2.5, b: Lz - 1.6 - i * 1.5, tgt: null, wait: 1 + i * 1.7, sp: 1.0 + i * 0.12, talkT: 0 };
+    o.position.set(lane, 0, f.a + (f.b - f.a) * (i / 3)); levelGroup.add(o); MOVERS.push([o, 0.4]); f.lane = lane;
+    INTERACTS.push({ get x() { return o.position.x; }, get z() { return o.position.z; }, r: 1.6, label: 'Talk to ' + c.name, fn: () => { f.talkT = 6; const want = Math.atan2(player.pos.x - o.position.x, player.pos.z - o.position.z); o.rotation.y = want;
+      openDlg(c.role, c.name); $('dlgLine').textContent = c.lines[Math.floor(Math.random() * c.lines.length)]; acts([['Carry on', closeDlg, true]]); } });
+    let last = 0;
+    levelAnims.push(t => { const dt = Math.min(0.05, t - last || 0.016); last = t;
+      if (f.talkT > 0) { f.talkT -= dt; animRig(o, f.st, dt, t); return; }
+      if (f.wait > 0) { f.wait -= dt; animRig(o, f.st, dt, t); return; }
+      if (f.tgt == null) f.tgt = Math.abs(o.position.z - f.a) < Math.abs(o.position.z - f.b) ? f.b : f.a;
+      const near = Math.hypot(player.pos.x - o.position.x, player.pos.z - o.position.z) < 1.1, x = near ? -f.lane : f.lane;
+      const dx = x - o.position.x, dz = f.tgt - o.position.z, d = Math.hypot(dx, dz);
+      if (Math.abs(dz) < 0.3) { f.tgt = null; f.wait = 2 + Math.random() * 5; return; }
+      const step = Math.min(d, f.sp * dt); o.position.x += dx / d * step; o.position.z += dz / d * step;
+      const want = Math.atan2(dx, dz); o.rotation.y += Math.atan2(Math.sin(want - o.rotation.y), Math.cos(want - o.rotation.y)) * Math.min(1, dt * 6);
+      animRig(o, f.st, dt, t); });
+  });
+}
+{ const _b = LEVELS.ship.build; LEVELS.ship.build = function () { _b.apply(this, arguments); try { dressHall(); } catch (e) { console.warn('hall', e); } }; }
 
 // ---- Update log: each player sees the updates they missed since their last login ----
 const UPDATES = [
@@ -16239,7 +16471,8 @@ const UPDATES = [
   { id: 83, title: '2.10 · Editor place mode', items: ['Editor → Place → Place mode: a see-through preview sits wherever you aim, with a yellow arrow for its front. Fire or Place drops it, and you can keep placing', 'Grid on snaps to half metres and 45° turns; Grid off places freely in 15° turns. Arrow keys nudge (Shift for bigger steps), Q/E turn, PgUp/PgDn raise and lower. Phones get a nudge pad', 'Aim at something you placed to Move, Copy or Delete it. Undo takes back the last 20 changes', 'New hanging lamp, chain light, hanging plant and banner. They hang from the ceiling, or get a post outdoors. Ship Decorate has them under Decor', 'Aim at any NPC to move them, turn them, or rewrite what they say', 'New Shops tab: what stores pay for loot and which guns each gunsmith sells. The Enemies tab now sets each spawn group’s levels and count, and can move a spawn area to where you stand'] },
   { id: 84, title: '2.11 · The fishing update', items: ['You now hold your rod while you fish, and other players see it in your hands. Basic, Hive and Frost rods each have their own look', 'New Abyss Rod from Old Marlin on Ocean World (6,000 cr): the biggest catch window and the best odds of rare fish', 'A real cast: swing the rod and the bobber arcs out onto the water. It bobs while you wait, dips with a splash on a bite, and gets pulled in as you reel', 'The fishing box is now a small panel so you can watch the water. Click or tap the screen to reel', 'Every catch swings up in front of you with its name, size and rarity (Common, Uncommon, Rare or Legendary). Your biggest of each species is saved, so watch for New record!'] },
   { id: 85, title: '2.11.1 · Playtest fixes', items: ['Menu rows on phones no longer squeeze names into one word per line (ship upgrades, bounty board and others)', 'Gunsmith and wardrobe previews sit in the corner on phones, so the list and Done button fit without scrolling', 'The New World Discovered card is smaller, see-through, and waits until intro scenes finish', 'Signs and holo ads no longer read backwards when you see them from behind'] },
-  { id: 86, title: '2.11.2 · Ocean World quests are back', items: ['The President storyline had accidentally replaced four Ocean World quests (Salt and Subs, Jelly Jam, Pearls for the Mayor, The Sword Master), which also blocked The Deep. They are back, and the President storyline keeps going separately', 'The quest arrow now points you to the Zeltac elevator for the Undercroft and the Senate Archive, and to The Mole once you are on his floor'] }
+  { id: 86, title: '2.11.2 · Ocean World quests are back', items: ['The President storyline had accidentally replaced four Ocean World quests (Salt and Subs, Jelly Jam, Pearls for the Mayor, The Sword Master), which also blocked The Deep. They are back, and the President storyline keeps going separately', 'The quest arrow now points you to the Zeltac elevator for the Undercroft and the Senate Archive, and to The Mole once you are on his floor'] },
+  { id: 87, title: '2.12 · Story pacing, fishing fights and a livelier ship', items: ['Story pacing: you no longer end up thirty levels above the next chapter. Big quest rewards and boss kills are tuned to their own level, and enemies give less XP once you clearly out-level them.', 'Fort Ironrock\'s war zones, Earth Sky, Zarlich and Vector now match where they sit in the story. Fort\'s training range is still a beginner area, and the war there starts after the Dark Fleet.', 'The President storyline now opens after Robot City.', 'Fishing: a new line-tension fight. Hold to reel, ease off when the line goes red, and watch for big fish making a run. Better rods take more strain and reel faster.', 'Your ship\'s hallway has pipes, crates, lockers, a water cooler, a status screen, a viewport onto the stars, and crew walking the deck who stop for a chat.', 'Phones: the message log keeps the newest three lines, fades sooner and is easier to read. On PC it no longer overlaps the raid button.', 'Long lists like the gunsmith and the Codex get filter buttons: Can buy, Owned, Locked (or Done and To do).'] }
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -17353,10 +17586,17 @@ function kill(e) {
   }
   if (Math.random() < 0.08) spawnDrop(p, 'item', 'medkit', 1);
   questProgressKill(e.sp.type); if (e.sp.bounty) setTimeout(bountyDone, 1600);
-  gainXp(Math.round(e.def.xp * (1 + 0.3 * (e.lv - 1))));
+  gainXp(killXp(e));
   if (e.def.boss || e.def.elite) burp('boss');
   if (e.def.boss || e.def.elite) toast(e.def.name.toUpperCase() + ' DEFEATED', 'Grab the loot', 3.5);
   checkReady(); markDirty();
+}
+// Kill XP falls off when you out-level the enemy, and a boss is worth about one level of its own.
+function killXp(e) {
+  let x = e.def.xp * (1 + 0.3 * (e.lv - 1));
+  if (e.def.boss) x = Math.min(x, xpNeed(e.lv));
+  const over = S.lvl - e.lv - 2; if (over > 0) x *= Math.max(0.05, 1 - 0.2 * over);
+  return Math.max(1, Math.round(x));
 }
 function gainXp(n) {
   S.xp += n;

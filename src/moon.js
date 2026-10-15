@@ -455,7 +455,7 @@ Object.assign(MELEE, {
   twinmaster: { name: 'Lvl 100 Twin Master Swords', dmg: 1100, rate: 0.4, reach: 3.3, req: 40, price: 60000, twin: true }
 });
 Object.assign(GUNS, {
-  xbow: { name: 'Lvl 30 Crossbow', dmg: 260, rate: 0.75, mag: 8, reload: 1.6, req: 18, price: 8000, col: '#8a6a44', kind: 'crossbow', pierce: 3 },
+  xbow: { name: 'Lvl 30 Crossbow', dmg: 340, rate: 0.75, mag: 8, reload: 1.6, req: 18, price: 8000, col: '#8a6a44', kind: 'crossbow', pierce: 3 },
   g70: { name: 'Lvl 70 Storm Rifle', dmg: 125, rate: 0.08, mag: 50, reload: 1.4, req: 34, price: 38000, col: '#8fe3ff', kind: 'rifle' },
   g80: { name: 'Lvl 80 Nova Launcher', dmg: 620, splash: 5, rate: 0.9, mag: 6, reload: 2.0, req: 36, price: 48000, col: '#ff6aa8', kind: 'rocket' },
   g90: { name: 'Lvl 90 Phase Sniper', dmg: 1400, rate: 1.2, mag: 4, reload: 2.0, req: 38, price: 60000, col: '#c86aff', kind: 'long' },

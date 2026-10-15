@@ -4741,8 +4741,8 @@ const GUNS = {
   c10: { name: 'Lvl 10 Carbine', dmg: 34, rate: 0.12, mag: 26, reload: 1.15, req: 6, price: 450 },
   r15: { name: 'Lvl 15 Rifle', dmg: 46, rate: 0.11, mag: 32, reload: 1.1, req: 9, price: 1100 },
   h20: { name: 'Lvl 20 Hive Repeater', dmg: 58, rate: 0.1, mag: 40, reload: 1.1, req: 12, price: 2400 },
-  s25: { name: 'Lvl 25 Stinger Rifle', dmg: 75, rate: 0.14, mag: 24, reload: 1.2, req: 15, price: 4200 },
-  f30: { name: 'Lvl 30 Frost Carbine', dmg: 92, rate: 0.1, mag: 36, reload: 1.1, req: 20, price: 7000 },
+  s25: { name: 'Lvl 25 Stinger Rifle', dmg: 95, rate: 0.14, mag: 24, reload: 1.2, req: 15, price: 4200 },
+  f30: { name: 'Lvl 30 Frost Carbine', dmg: 80, rate: 0.1, mag: 36, reload: 1.1, req: 20, price: 7000 },
   p35: { name: 'Lvl 35 Plasma Rifle', dmg: 120, rate: 0.13, mag: 30, reload: 1.2, req: 24, price: 11000 }
 };
 const ENEMY = {
@@ -5641,9 +5641,9 @@ function updateMelee(dt) {
 
 // ---------------- more guns, each with its own model ----------------
 Object.assign(GUNS, {
-  sg8: { name: 'Lvl 8 Scatter Blaster', dmg: 13, pellets: 7, spread: 0.06, rate: 0.65, mag: 6, reload: 1.5, req: 5, price: 380, col: '#c8402f', kind: 'scatter' },
-  k18: { name: 'Lvl 18 Long Rifle', dmg: 210, rate: 0.9, mag: 5, reload: 1.6, req: 12, price: 3600, col: '#6fdc5a', kind: 'long' },
-  l28: { name: 'Lvl 28 Rocket Launcher', dmg: 170, splash: 3.4, rate: 1.0, mag: 4, reload: 1.8, req: 19, price: 9000, col: '#ff6a1a', kind: 'rocket' }
+  sg8: { name: 'Lvl 8 Scatter Blaster', dmg: 22, pellets: 7, spread: 0.06, rate: 0.65, mag: 6, reload: 1.5, req: 5, price: 380, col: '#c8402f', kind: 'scatter' },
+  k18: { name: 'Lvl 18 Long Rifle', dmg: 210, rate: 0.75, mag: 5, reload: 1.6, req: 12, price: 3600, col: '#6fdc5a', kind: 'long' },
+  l28: { name: 'Lvl 28 Rocket Launcher', dmg: 380, splash: 3.4, rate: 1.0, mag: 4, reload: 1.8, req: 19, price: 9000, col: '#ff6a1a', kind: 'rocket' }
 });
 Object.assign(GUNS.b5, { col: '#4fa8ff' }); Object.assign(GUNS.c10, { col: '#ffd36a', kind: 'carbine' }); Object.assign(GUNS.r15, { col: '#c86aff', kind: 'rifle' });
 Object.assign(GUNS.h20, { col: '#ffd23a', kind: 'hive' }); Object.assign(GUNS.s25, { col: '#ff3b2a', kind: 'rifle' }); Object.assign(GUNS.f30, { col: '#9fe8ff', kind: 'carbine' }); Object.assign(GUNS.p35, { col: '#c86aff', kind: 'plasma' });
@@ -6225,10 +6225,10 @@ function openShipSystems(who) {
 Object.assign(GUNS, {
   m_ember: { name: 'Ember Wand', dmg: 40, rate: 0.28, mag: 18, reload: 1.4, req: 10, price: 2200, col: '#ff6a1a', kind: 'mystic', elem: 'flame', mana: true },
   m_storm: { name: 'Storm Staff', dmg: 70, rate: 0.45, mag: 12, reload: 1.6, req: 16, price: 5200, col: '#8fe3ff', kind: 'mystic', elem: 'storm', mana: true },
-  m_venom: { name: 'Venom Scepter', dmg: 55, rate: 0.4, mag: 14, reload: 1.5, req: 20, price: 7800, col: '#7fff6a', kind: 'mystic', elem: 'poison', mana: true },
+  m_venom: { name: 'Venom Scepter', dmg: 110, rate: 0.4, mag: 14, reload: 1.5, req: 20, price: 7800, col: '#7fff6a', kind: 'mystic', elem: 'poison', mana: true },
   m_spirit: { name: 'Spirit Bow', dmg: 120, rate: 0.55, mag: 10, reload: 1.4, req: 22, price: 0, col: '#c8a0ff', kind: 'mystic', elem: 'spirit', mana: true },
-  m_void: { name: 'Void Orb', dmg: 150, rate: 0.9, mag: 6, reload: 2.0, req: 26, price: 0, col: '#9b6bff', kind: 'mystic', elem: 'void', splash: 6, mana: true },
-  m_sun: { name: 'Sunfire Codex', dmg: 260, rate: 1.1, mag: 5, reload: 2.2, req: 30, price: 0, col: '#ffd36a', kind: 'mystic', elem: 'sun', splash: 5, mana: true }
+  m_void: { name: 'Void Orb', dmg: 380, rate: 0.9, mag: 6, reload: 2.0, req: 26, price: 0, col: '#9b6bff', kind: 'mystic', elem: 'void', splash: 6, mana: true },
+  m_sun: { name: 'Sunfire Codex', dmg: 520, rate: 1.1, mag: 5, reload: 2.2, req: 30, price: 0, col: '#ffd36a', kind: 'mystic', elem: 'sun', splash: 5, mana: true }
 });
 function makeMysticModel(id) {
   const G = GUNS[id], g = new THREE.Group(), col = G.col;
@@ -6453,9 +6453,9 @@ Object.assign(ITEMS, {
 });
 FISH_TABLES.canal = [['rustcan', 12, 0], ['chromecarp', 50, 0.6], ['voltfish', 12, 0.85]];
 Object.assign(GUNS, {
-  r40: { name: 'Lvl 40 Railgun', dmg: 330, rate: 1.0, mag: 6, reload: 1.7, req: 28, price: 16000, col: '#4fd2ff', kind: 'long' },
+  r40: { name: 'Lvl 40 Railgun', dmg: 700, rate: 1.0, mag: 6, reload: 1.7, req: 28, price: 16000, col: '#4fd2ff', kind: 'long' },
   g45: { name: 'Lvl 45 Gatling', dmg: 72, rate: 0.06, mag: 120, reload: 2.6, req: 31, price: 22000, col: '#ffd36a', kind: 'carbine' },
-  x50: { name: 'Lvl 50 Pulse Cannon', dmg: 320, splash: 4, rate: 0.8, mag: 8, reload: 2.0, req: 35, price: 32000, col: '#ff3b6a', kind: 'plasma' }
+  x50: { name: 'Lvl 50 Pulse Cannon', dmg: 500, splash: 4, rate: 0.8, mag: 8, reload: 2.0, req: 35, price: 32000, col: '#ff3b6a', kind: 'plasma' }
 });
 MELEE.saber = { name: 'Ion Saber', dmg: 620, rate: 0.5, reach: 3.0, req: 32, price: 26000, saber: true };
 RIGS.zr = { type: 'biped', hip: 0.98, neck: 1.7, armX: 0.4, ax: 0.5, sh: 1.58, legX: 0.16 };
@@ -7553,7 +7553,7 @@ Object.assign(MELEE, {
   twinmaster: { name: 'Lvl 100 Twin Master Swords', dmg: 1100, rate: 0.4, reach: 3.3, req: 40, price: 60000, twin: true }
 });
 Object.assign(GUNS, {
-  xbow: { name: 'Lvl 30 Crossbow', dmg: 260, rate: 0.75, mag: 8, reload: 1.6, req: 18, price: 8000, col: '#8a6a44', kind: 'crossbow', pierce: 3 },
+  xbow: { name: 'Lvl 30 Crossbow', dmg: 340, rate: 0.75, mag: 8, reload: 1.6, req: 18, price: 8000, col: '#8a6a44', kind: 'crossbow', pierce: 3 },
   g70: { name: 'Lvl 70 Storm Rifle', dmg: 125, rate: 0.08, mag: 50, reload: 1.4, req: 34, price: 38000, col: '#8fe3ff', kind: 'rifle' },
   g80: { name: 'Lvl 80 Nova Launcher', dmg: 620, splash: 5, rate: 0.9, mag: 6, reload: 2.0, req: 36, price: 48000, col: '#ff6aa8', kind: 'rocket' },
   g90: { name: 'Lvl 90 Phase Sniper', dmg: 1400, rate: 1.2, mag: 4, reload: 2.0, req: 38, price: 60000, col: '#c86aff', kind: 'long' },
@@ -8035,8 +8035,8 @@ const BH_RANKS = [
 const BH_TIERS = { C: { mult: 1, hp: 3, lv: 0, rank: 0, col: '#9aa1aa' }, B: { mult: 1.9, hp: 5, lv: 2, rank: 1, col: '#6fdc5a' }, A: { mult: 3.2, hp: 8, lv: 4, rank: 3, col: '#4fa8ff' }, S: { mult: 5.5, hp: 12, lv: 6, rank: 5, col: '#ffd36a' } };
 GEAR.hvisor = { name: "Hunter's Visor", desc: '+20% damage to bosses, elites and bounties', col: '#ff6a1a' };
 GEAR.gboots = { name: 'Grav Boots', desc: '+15% run speed', col: '#9fe8ff' };
-GUNS.bh30 = { name: 'Marshal Repeater', dmg: 55, rate: 0.09, mag: 40, reload: 1.3, req: 1, price: 0, col: '#ffd36a', kind: 'carbine' };
-GUNS.bh60 = { name: 'Lvl 60 Judgement Cannon', dmg: 520, splash: 4.5, rate: 0.85, mag: 8, reload: 2.0, req: 1, price: 0, col: '#ff3b2a', kind: 'plasma' };
+GUNS.bh30 = { name: 'Marshal Repeater', dmg: 55, rate: 0.09, mag: 40, reload: 1.3, req: 12, price: 0, col: '#ffd36a', kind: 'carbine' };
+GUNS.bh60 = { name: 'Lvl 60 Judgement Cannon', dmg: 520, splash: 4.5, rate: 0.85, mag: 8, reload: 2.0, req: 25, price: 0, col: '#ff3b2a', kind: 'plasma' };
 MELEE.bsaber = { name: 'Marshal Saber', dmg: 520, rate: 0.42, reach: 3.2, req: 1, price: 0, saber: true };
 ARMORS.marshal = { name: 'Marshal Armor', lvl: 1, flag: 'marshalArmor', def: 0.2, trim: '#c9a43a', visor: '#ffd36a' };
 CAPES.marshal = { name: "Marshal's Cape", lvl: 1, flag: 'marshalArmor', col: '#2a3a7a', trim: '#ffd36a' };
@@ -8052,12 +8052,12 @@ function genBounty() {
   const B = bhState(), rank = bhRankIdx(), tiers = Object.keys(BH_TIERS).filter(k => BH_TIERS[k].rank <= rank), tier = pick(tiers), T = BH_TIERS[tier];
   const planets = ['earth', 'mezar', 'capitone', 'robot', 'ocean'].filter(p => LEVELS[p] && planetOpen(p) && p !== 'earth' || (p === 'earth')), space = shipUnlocked() && Math.random() < 0.22;
   const name = `${pick(BH_FIRST)} "${pick(BH_TITLES)}" ${pick(BH_LAST)}`;
-  if (space) { const lv = Math.max(8, S.lvl + T.lv); return { id: 'b' + Date.now() + randi(0, 999), name, tier, planet: 'space', zone: null, type: 'raider', lv, crime: pick(BH_CRIMES), reward: Math.round((400 + lv * 70) * T.mult), xp: Math.round((120 + lv * 12) * T.mult) }; }
+  if (space) { const lv = Math.max(8, S.lvl + T.lv); return { id: 'b' + Date.now() + randi(0, 999), name, tier, planet: 'space', zone: null, type: 'raider', lv, crime: pick(BH_CRIMES), reward: Math.round((260 + lv * 45) * T.mult), xp: Math.round((120 + lv * 12) * T.mult) }; }
   const pl = pick(planets), L = LEVELS[pl];
   const sps = L.spawns.filter(s => { const d = ENEMY[s.type]; return d && !d.boss && !d.elite && !s.at; });
   if (!sps.length) return null;
   const sp = pick(sps), lv = Math.max(sp.lv[1], S.lvl) + T.lv;
-  return { id: 'b' + Date.now() + randi(0, 999), name, tier, planet: pl, zone: sp.zone, type: sp.type, lv, crime: pick(BH_CRIMES), reward: Math.round((300 + lv * 60) * T.mult), xp: Math.round((100 + lv * 10) * T.mult) };
+  return { id: 'b' + Date.now() + randi(0, 999), name, tier, planet: pl, zone: sp.zone, type: sp.type, lv, crime: pick(BH_CRIMES), reward: Math.round((200 + lv * 40) * T.mult), xp: Math.round((100 + lv * 10) * T.mult) };
 }
 function refreshBoard(force) {
   const B = bhState();
@@ -12338,7 +12338,7 @@ body.menuopen #pullTab { opacity: 0; pointer-events: none; }
 
 // =================== WIZARDRY: the notebook's staff line (Lvl 1 → 100), new elements, Merla the Wizard, robes and a hat ===================
 Object.assign(GUNS, {
-  w_1: { name: 'Lvl 1 Apprentice Staff', dmg: 14, rate: 0.4, mag: 16, reload: 1.2, req: 1, price: 300, col: '#9fd8ff', kind: 'mystic', elem: 'arcane', mana: true, staff: 'crystal' },
+  w_1: { name: 'Lvl 1 Apprentice Staff', dmg: 22, rate: 0.4, mag: 16, reload: 1.2, req: 1, price: 300, col: '#9fd8ff', kind: 'mystic', elem: 'arcane', mana: true, staff: 'crystal' },
   w_10: { name: 'Lvl 10 Ember Staff', dmg: 30, rate: 0.4, mag: 16, reload: 1.3, req: 4, price: 1200, col: '#ff6a1a', kind: 'mystic', elem: 'flame', mana: true, staff: 'flame' },
   w_20: { name: 'Lvl 20 Lightning Staff', dmg: 45, rate: 0.45, mag: 14, reload: 1.4, req: 8, price: 2600, col: '#8fe3ff', kind: 'mystic', elem: 'storm', mana: true, staff: 'rings' },
   w_30: { name: 'Lvl 30 Glacier Staff', dmg: 70, rate: 0.5, mag: 14, reload: 1.4, req: 12, price: 4800, col: '#bfefff', kind: 'mystic', elem: 'frost', mana: true, staff: 'crystal' },
@@ -14579,6 +14579,7 @@ if (TRL_AUTO) SCENES.unshift(['trailer', '⚔️ The Art of War (opening)', () =
 // =================== VELOCITY 2: the magnet storm planet ===================
 // A flat, glassy plain under a storm that never ends. Cars hover on magnets with almost no friction.
 // The town floats above the plain and a long ramp bridge runs down to it.
+const VEL_HOVER = 0.62;
 const VEL = { built: false, ref: null, cam: 1, carObj: null, carKey: '', lamp: null, streaks: null, low: null, up: null, base: null, bm: 1, dm: 0, kick: 0, wasDrift: false, driftHeld: false, cp: null, bolts: [], lastFlash: 0, rainOn: false, gateRings: {}, hud: null, cls: '' };
 const VCITY = { x: 0, z: -20, hx: 30, hz: 24, y: 20 }, VBR = { x: 0, z0: 4, z1: 124, hw: 6 };
 const velBridgeY = t => VCITY.y + (0.3 - VCITY.y) * t;
@@ -14880,13 +14881,13 @@ window.addEventListener('keydown', e => { if (e.code === 'KeyC' && !e.repeat && 
   const R = velR(), key = [R.car, R.paint, R.stripe, R.pat].join('|');
   if (key !== VEL.carKey || !VEL.carObj || !VEL.carObj.parent) { if (VEL.carObj && VEL.carObj.parent) VEL.carObj.parent.remove(VEL.carObj); VEL.carObj = mergeChar(velMyCar()); levelGroup.add(VEL.carObj); VEL.carKey = key; }
   const car = VEL.carObj, f = V(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)), sp = Math.hypot(RC.vx || 0, RC.vz || 0);
-  car.visible = true; car.position.copy(player.pos); car.position.y += 0.08 + Math.sin(gameTime * 5) * 0.05; car.rotation.set(clamp(-(RC.vy || 0) * 0.02, -0.3, 0.3), player.yaw + Math.PI, clamp((RC.vr || 0) * 0.012, -0.2, 0.2));
+  car.visible = true; car.position.copy(player.pos); car.position.y += VEL_HOVER + Math.sin(gameTime * 4.2) * 0.07; // Velocity is a magnet: cars float on the field car.rotation.set(clamp(-(RC.vy || 0) * 0.02, -0.3, 0.3), player.yaw + Math.PI, clamp((RC.vr || 0) * 0.012, -0.2, 0.2));
   // headlight
   VEL.lamp.intensity = 2.4; VEL.lamp.position.copy(player.pos).addScaledVector(f, 1.8).add(V(0, 0.9, 0)); VEL.lampT.position.copy(player.pos).addScaledVector(f, 22); VEL.lampT.position.y = player.pos.y - 0.5;
   // camera
   if (VEL.cam > 0) { const d = VEL.cam === 1 ? 6.2 : 11.5, h = VEL.cam === 1 ? 2.4 : 4.4, want = player.pos.clone().addScaledVector(f, -d); want.y += h; VEL.ref = player.pos.y; want.y = Math.max(want.y, floorAt(want.x, want.z) + 0.8);
     if (!VEL.cp) VEL.cp = want.clone(); VEL.cp.lerp(want, 1 - Math.exp(-dt * 7)); camera.position.copy(VEL.cp); camera.lookAt(player.pos.x + f.x * 6, player.pos.y + 1.3, player.pos.z + f.z * 6); vmCar.visible = false;}
-  else { camera.position.copy(player.pos).addScaledVector(f, 1.0); camera.position.y += 1.2; camera.rotation.set(-0.06, player.yaw, clamp(-(RC.vr || 0) * 0.01, -0.12, 0.12)); vmCar.visible = false; }
+  else { camera.position.copy(player.pos).addScaledVector(f, 1.0); camera.position.y += 1.2 + VEL_HOVER - 0.08; camera.rotation.set(-0.06, player.yaw, clamp(-(RC.vr || 0) * 0.01, -0.12, 0.12)); vmCar.visible = false; }
   VEL.ref = player.pos.y;
   // HUD
   const K = velStats(); $('velSpd').textContent = Math.round(sp * 3.6); $('velBst').style.width = Math.round(VEL.bm / K.bcap * 100) + '%'; $('velDrf').style.width = Math.round(VEL.dm / 2.5 * 100) + '%';
@@ -17128,7 +17129,7 @@ function watcherDeath(e) {
       const circ = Math.max(1, Math.PI * (T.a + T.b)); T.th += T.dir * T.sp / circ * Math.PI * 2 * dt;
       const x = T.cx + Math.cos(T.th) * T.a + T.push.x, z = T.cz + Math.sin(T.th) * T.b + Math.sin(T.th * 3) * T.wob + T.push.z;
       const dx = x - T.x, dz = z - T.z; T.x = x; T.z = z; T.push.multiplyScalar(Math.exp(-dt * 1.2));
-      const g = groundH(x, z); T.obj.position.set(x, g + 0.35 + Math.sin(gameTime * 4 + T.th) * 0.04, z);
+      const g = groundH(x, z); T.obj.position.set(x, g + VEL_HOVER + 0.1 + Math.sin(gameTime * 4 + T.th) * 0.07, z); T.g = g;
       if (Math.hypot(dx, dz) > 1e-4) T.obj.rotation.y = Math.atan2(dx, dz);
       // bump into you
       if (Math.abs(p.y - g) > 2.5) continue;
@@ -17192,7 +17193,7 @@ function watcherDeath(e) {
     if (W.c.style.display === 'none') W.c.style.display = 'block';
     const w = Math.round(innerWidth / 2), h = Math.round(innerHeight / 2); if (W.c.width !== w || W.c.height !== h) { W.c.width = w; W.c.height = h; }
     W.t += dt; if (W.t < 1 / 30) return; const T = W.t; W.t = 0; const x = W.x, top = h * 0.03, bot = h * 0.62;
-    W.acc += T * (70 + sp * 2); while (W.acc >= 1 && W.drops.length < 220) { W.acc -= 1; W.drops.push({ x: Math.random() * w, y: top + Math.random() * (bot - top), r: 1.2 + Math.pow(Math.random(), 2) * 4.5, hue: (gameTime * 40 + Math.random() * 360) % 360, vy: 0, life: 4 + Math.random() * 4 }); }
+    W.acc += T * (16 + sp * 0.5); while (W.acc >= 1 && W.drops.length < 70) { W.acc -= 1; W.drops.push({ x: Math.random() * w, y: top + Math.random() * (bot - top), r: 1.2 + Math.pow(Math.random(), 2) * 4.5, hue: (gameTime * 40 + Math.random() * 360) % 360, vy: 0, life: 4 + Math.random() * 4 }); }
     // the wipers sweep every 1.4s
     const ph = (gameTime % 1.4) / 1.4, ang = Math.PI * (0.06 + 0.84 * (ph < 0.5 ? ph * 2 : 2 - ph * 2)), piv = [[w * 0.3, bot + h * 0.06], [w * 0.72, bot + h * 0.06]], L = Math.min(w * 0.46, h * 0.95);
     x.clearRect(0, 0, w, h);
@@ -17210,9 +17211,9 @@ function watcherDeath(e) {
       x.fillStyle = 'rgba(255,255,255,0.75)'; x.beginPath(); x.arc(-0.35, -0.4, 0.22, 0, Math.PI * 2); x.fill();
       x.fillStyle = `hsla(${d.hue},90%,75%,0.35)`; x.beginPath(); x.arc(0.25, 0.45, 0.18, 0, Math.PI * 2); x.fill(); x.restore(); }
     // a fine mist of tiny droplets everywhere
-    if (!W.mist || W.mist.w !== w) { W.mist = { w, p: Array.from({ length: 260 }, () => [Math.random(), Math.random(), 0.4 + Math.random() * 0.9]) }; }
+    if (!W.mist || W.mist.w !== w) { W.mist = { w, p: Array.from({ length: 90 }, () => [Math.random(), Math.random(), 0.4 + Math.random() * 0.9]) }; }
     for (let k = 0; k < 5; k++) { const q = W.mist.p[(Math.random() * W.mist.p.length) | 0]; q[0] = Math.random(); q[1] = Math.random(); }
-    x.fillStyle = 'rgba(220,235,255,0.22)'; for (const [mx, my, mr] of W.mist.p) { const yy = top + my * (bot - top); x.beginPath(); x.arc(mx * w, yy, mr, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = 'rgba(220,235,255,0.12)'; for (const [mx, my, mr] of W.mist.p) { const yy = top + my * (bot - top); x.beginPath(); x.arc(mx * w, yy, mr, 0, Math.PI * 2); x.fill(); }
     x.lineCap = 'round'; for (const [px, py] of piv) { const ex = px + Math.cos(Math.PI - ang) * L, ey = py - Math.sin(Math.PI - ang) * L;
       x.strokeStyle = 'rgba(8,10,14,0.92)'; x.lineWidth = Math.max(3, h * 0.012); x.beginPath(); x.moveTo(px, py); x.lineTo(ex, ey); x.stroke();
       x.strokeStyle = 'rgba(40,44,52,0.95)'; x.lineWidth = Math.max(2, h * 0.006); x.beginPath(); x.moveTo(px + (ex - px) * 0.25, py + (ey - py) * 0.25); x.lineTo(ex, ey); x.stroke(); }
@@ -17245,19 +17246,19 @@ function watcherDeath(e) {
     const fogBase = new THREE.Color('#151920'), sk = skyMat.uniforms;
     scene.fog.near = 7; scene.fog.far = 58; scene.fog.color.copy(fogBase).lerp(VEL.rbCol, fk * 0.3);
     const fogLin = scene.fog.color; sk.hor.value.copy(fogLin); sk.mid.value.copy(fogLin).multiplyScalar(0.8); sk.top.value.multiplyScalar(0.35).lerp(VEL.rbCol, fk * 0.5); sk.mid.value.lerp(VEL.rbCol, fk * 0.35);
-    sun.intensity *= 0.3; hemi.intensity *= 0.55; clouds.visible = false; skyRing.visible = false; stars.visible = false; hemi.color.copy(VEL.hemi0).lerp(VEL.rbCol, fk * 0.5);
+    sun.intensity *= 0.3; hemi.intensity *= 0.55; clouds.visible = false; rain.visible = false; skyRing.visible = false; stars.visible = false; hemi.color.copy(VEL.hemi0).lerp(VEL.rbCol, fk * 0.5);
     if (renderer && renderer.setClearColor) { /* the HD pass clears to HORIZON; keep it stormy */ HORIZON.copy(fogBase); } }; }
 
   // ---- park the car and get out; it stays there ----
   function parkCar() {
     if (VEL.parked && VEL.parked.parent) VEL.parked.parent.remove(VEL.parked);
-    const car = mergeChar(velMyCar()); car.position.copy(player.pos); car.position.y += 0.08; car.rotation.y = player.yaw + Math.PI; levelGroup.add(car);
+    const car = mergeChar(velMyCar()); car.position.copy(player.pos); car.position.y += VEL_HOVER; car.rotation.y = player.yaw + Math.PI; levelGroup.add(car);
     VEL.parked = car; VEL.parkYaw = player.yaw;
     const r = V(Math.cos(player.yaw), 0, -Math.sin(player.yaw)); player.pos.addScaledVector(r, 2.4); collide(player.pos, 0.4, false); velClamp(player.pos); player.pos.y = floorAt(player.pos.x, player.pos.z);
     const it = { x: car.position.x, z: car.position.z, r: 3.4, label: '🚗 Get in your car', fn: () => enterParked() }; VEL.parkIt = it; INTERACTS.push(it);
   }
   function dropParked() { if (VEL.parked && VEL.parked.parent) VEL.parked.parent.remove(VEL.parked); VEL.parked = null; const i = INTERACTS.indexOf(VEL.parkIt); if (i >= 0) INTERACTS.splice(i, 1); VEL.parkIt = null; }
-  function enterParked() { if (!VEL.parked || RC.on) return; const c = VEL.parked; player.pos.set(c.position.x, c.position.y - 0.08, c.position.z); player.yaw = VEL.parkYaw; dropParked(); VEL.entering = true; try { toggleFreeDrive(); } finally { VEL.entering = false; } }
+  function enterParked() { if (!VEL.parked || RC.on) return; const c = VEL.parked; player.pos.set(c.position.x, c.position.y - VEL_HOVER, c.position.z); player.yaw = VEL.parkYaw; dropParked(); VEL.entering = true; try { toggleFreeDrive(); } finally { VEL.entering = false; } }
   { const _tf = toggleFreeDrive; toggleFreeDrive = function () {
     if (!on()) return _tf();
     const wasFree = RC.on && RC.free; if (wasFree && Math.hypot(RC.vx || 0, RC.vz || 0) < 12) { RC.v = 0; RC.vx = 0; RC.vz = 0; }
@@ -17286,26 +17287,33 @@ function watcherDeath(e) {
       u.wheel.rotation.z += (-st * 1.2 - u.wheel.rotation.z) * Math.min(1, dt * 10); const R = velR(); u.hood.material.color.set(RPAINTS[R.paint || 0]).convertSRGBToLinear();
       const K = velStats(), f = Math.min(1, sp / K.top); u.dial.scale.setScalar(0.5 + f * 0.6); u.dial2.scale.setScalar(0.5 + (VEL.bm / K.bcap) * 0.6);
       camera.position.y += Math.sin(gameTime * 23) * Math.min(0.012, sp * 0.0004); }
-    windStep(dt, cockOn && rain.visible !== false, sp);
+    windStep(dt, cockOn, sp);
     trafficStep(dt); sprayStep(dt, RC.on, sp);
-    if (VEL.parked && VEL.parked.parent) VEL.parked.position.y = floorAt(VEL.parked.position.x, VEL.parked.position.z) + 0.1 + Math.sin(gameTime * 3) * 0.03;
+    if (VEL.parked && VEL.parked.parent) VEL.parked.position.y = floorAt(VEL.parked.position.x, VEL.parked.position.z) + VEL_HOVER + Math.sin(gameTime * 3) * 0.05;
   }; }
 
   // ---- round 2: heavy rain, a storm-cloud ceiling, brighter headlights, your car waiting, shady locals, quick car swap ----
-  function velRainMake() {
-    const N = 1600, pos = new Float32Array(N * 6), col = new Float32Array(N * 6), g = new THREE.BufferGeometry(), c = new THREE.Color();
+  // two layers: near streaks you can pick out, and a faint far sheet for depth. Drops land (with a splash) and slide around the cars' magnet field.
+  function velRainLayer(N, op, R, lenK) {
+    const pos = new Float32Array(N * 6), col = new Float32Array(N * 6), g = new THREE.BufferGeometry(), c = new THREE.Color();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    for (let i = 0; i < N; i++) { c.setHSL(Math.random(), 0.7, 0.75); col.set([c.r * 0.5, c.g * 0.5, c.b * 0.5, c.r, c.g, c.b], i * 6); }
-    const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false })); l.frustumCulled = false; levelGroup.add(l);
-    VEL.hrain = { l, N, p: Array.from({ length: N }, () => [0, -999, 0, 0]) };
+    for (let i = 0; i < N; i++) { c.setHSL(Math.random(), 0.35, 0.82); col.set([c.r * 0.35, c.g * 0.35, c.b * 0.4, c.r, c.g, c.b], i * 6); }
+    const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: op, depthWrite: false })); l.frustumCulled = false; levelGroup.add(l);
+    return { l, N, R, lenK, p: Array.from({ length: N }, () => [0, -999, 0, 0, -999]) };
   }
+  function velRainMake() { VEL.hrain = [velRainLayer(520, 0.34, 16, 0.05), velRainLayer(620, 0.13, 42, 0.09)]; VEL.shields = VEL.shields || []; }
   function velRainStep(dt) {
-    const H = VEL.hrain; if (!H) return; const cp = camera.position, a = H.l.geometry.attributes.position.array, wx = 5, wz = 2, vx = -(RC.vx || 0) * 0.15, vz = -(RC.vz || 0) * 0.15;
-    for (let i = 0; i < H.N; i++) { const q = H.p[i];
-      if (q[1] < cp.y - 6 || Math.abs(q[0] - cp.x) > 26 || Math.abs(q[2] - cp.z) > 26) { q[0] = cp.x + (Math.random() - 0.5) * 50; q[2] = cp.z + (Math.random() - 0.5) * 50; q[1] = cp.y + 4 + Math.random() * 22; q[3] = 34 + Math.random() * 14; }
-      q[1] -= q[3] * dt; q[0] += wx * dt; q[2] += wz * dt;
-      const len = 0.06; a.set([q[0], q[1], q[2], q[0] - (wx + vx) * len, q[1] + q[3] * len, q[2] - (wz + vz) * len], i * 6); }
-    H.l.geometry.attributes.position.needsUpdate = true;
+    const L = VEL.hrain; if (!L) return; const cp = camera.position, wx = 4, wz = 1.6, vx = -(RC.vx || 0) * 0.12, vz = -(RC.vz || 0) * 0.12, SH = VEL.shields || [];
+    for (const H of L) { const a = H.l.geometry.attributes.position.array, near = H.R < 20, R = H.R;
+      for (let i = 0; i < H.N; i++) { const q = H.p[i];
+        if (q[1] < q[4] || Math.abs(q[0] - cp.x) > R || Math.abs(q[2] - cp.z) > R) {
+          if (near && q[1] > -900 && q[1] < q[4] + 0.3 && typeof velSplash === 'function') velSplash(q[0], q[4], q[2]);
+          q[0] = cp.x + (Math.random() - 0.5) * R * 2; q[2] = cp.z + (Math.random() - 0.5) * R * 2; q[1] = cp.y + 3 + Math.random() * 20; q[3] = 30 + Math.random() * 12; q[4] = near ? floorAt(q[0], q[2]) : cp.y - 8; }
+        q[1] -= q[3] * dt; q[0] += wx * dt; q[2] += wz * dt;
+        if (near) for (const s of SH) { const dx = q[0] - s[0], dz = q[2] - s[2]; if (dx > 2.6 || dx < -2.6 || dz > 2.6 || dz < -2.6 || q[1] > s[1] + 2.4 || q[1] < s[1] - 0.8) continue;
+          const d = Math.hypot(dx, dz) || 0.01; if (d < 2.3) { q[0] = s[0] + dx / d * 2.3; q[2] = s[2] + dz / d * 2.3; q[3] = Math.max(q[3] * 0.7, 9); } }
+        const len = H.lenK; a.set([q[0], q[1], q[2], q[0] - (wx + vx) * len, q[1] + q[3] * len, q[2] - (wz + vz) * len], i * 6); }
+      H.l.geometry.attributes.position.needsUpdate = true; }
   }
   let cloudTex = null;
   const velCloudTex = () => cloudTex || (cloudTex = (() => { const S2 = 128, c = document.createElement('canvas'); c.width = c.height = S2; const x = c.getContext('2d');
@@ -17325,7 +17333,7 @@ function watcherDeath(e) {
   // your car waits right in front of you when you arrive
   function velArrivalCar() {
     if (VEL.parked) return; const R = velR(); const car = mergeChar(velMyCar()); const x = -4, z = -2, yaw = Math.PI;
-    car.position.set(x, VCITY.y + 0.1, z); car.rotation.y = yaw + Math.PI; levelGroup.add(car); VEL.parked = car; VEL.parkYaw = yaw;
+    car.position.set(x, VCITY.y + VEL_HOVER, z); car.rotation.y = yaw + Math.PI; levelGroup.add(car); VEL.parked = car; VEL.parkYaw = yaw;
     const it = { x, z, r: 3.4, label: '🚗 Get in your car', fn: () => enterParked() }; VEL.parkIt = it; INTERACTS.push(it);
   }
   // shady locals in Pit Row
@@ -17360,6 +17368,80 @@ function watcherDeath(e) {
   { const _st2 = step; step = function (dt) { _st2(dt); if (!on()) return; velRainStep(dt); velCloudsStep(dt);
     if (VEL.lamp) { if (RC.on) { VEL.lamp.intensity = 6; VEL.lamp.distance = 120; VEL.lamp.angle = 0.62; } }
     if (VEL.beam) { VEL.beam.visible = !!RC.on && VEL.cam !== 0; if (RC.on) { const f = V(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)); VEL.beam.position.copy(player.pos).addScaledVector(f, 1.9).add(V(0, 0.75, 0)); VEL.beam.rotation.set(0, player.yaw, 0); VEL.beam.rotateX(Math.PI / 2 - 0.06); } } }; }
+}
+
+// =================== VELOCITY 4: wet ground and magnet cars ===================
+// The flats are soaked: darker glossy ground, puddles with rain rings, little splashes where drops land,
+// and headlights that smear across the wet road. Velocity is a magnet planet, so every car floats on a
+// glowing field, and the rain slides off that field and runs off the bodywork.
+let velSplash = null; // set below; the rain in velstorm.js calls it where a drop lands
+{
+  const on = () => LEVEL && LEVEL.id === 'speedway' && !LEVEL.fly;
+  let gradTex = null;
+  const velGrad = () => gradTex || (gradTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.45, 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })());
+  const addMat = (col, op) => new THREE.MeshBasicMaterial({ map: velGrad(), color: new THREE.Color(col), transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+  const flat = (w, h, mat) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); m.rotation.x = -Math.PI / 2; return m; };
+  const W = { puddles: [], rings: [], ri: 0, splash: null, glows: new Map(), shed: null, wet: false };
+
+  // ---- the soaked ground ----
+  function wetGround() {
+    levelGroup.traverse(o => { if (o.isMesh && o.geometry && o.geometry.type === 'PlaneGeometry' && o.material && o.material.isMeshPhongMaterial && o.material.vertexColors) {
+      o.material.color.set('#8a929e'); o.material.shininess = 140; o.material.specular.set('#8a9ab4'); o.material.needsUpdate = true; } });
+    W.puddles = []; const S = (LEVEL.size || 400) * 0.45, pm = new THREE.MeshPhongMaterial({ color: '#0a0d14', shininess: 160, specular: new THREE.Color('#a8b8d8'), transparent: true, opacity: 0.82, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+    for (let i = 0; i < 140; i++) { const x = WORLD_C.x + (Math.random() - 0.5) * 2 * S, z = WORLD_C.z + (Math.random() - 0.5) * 2 * S; if (Math.abs(x - VCITY.x) < VCITY.hx + 3 && Math.abs(z - VCITY.z) < VCITY.hz + 3) continue;
+      const r = 1.2 + Math.random() * 3.2, m = new THREE.Mesh(new THREE.CircleGeometry(1, 14), pm); m.rotation.x = -Math.PI / 2; m.scale.set(r * (0.6 + Math.random() * 0.8), r * (0.6 + Math.random() * 0.8), 1); m.rotation.z = Math.random() * 6.28;
+      m.position.set(x, groundH(x, z) + 0.025, z); levelGroup.add(m); W.puddles.push([x, z, r * 0.6, m.position.y]); }
+    // rain rings in the puddles
+    W.rings = []; for (let i = 0; i < 70; i++) { const m = flat(1, 1, new THREE.MeshBasicMaterial({ color: '#c8d8f0', transparent: true, opacity: 0, depthWrite: false })); m.geometry = new THREE.RingGeometry(0.82, 1, 16); m.geometry.rotateX(-Math.PI / 2); m.rotation.x = 0; m.visible = false; levelGroup.add(m); W.rings.push({ m, t: 1 }); }
+    // splashes where drops land
+    const N = 260, pos = new Float32Array(N * 3), g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); for (let i = 0; i < N; i++) pos[i * 3 + 1] = -999;
+    const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.09, map: velGrad(), color: '#dbe6ff', transparent: true, opacity: 0.7, depthWrite: false })); pts.frustumCulled = false; levelGroup.add(pts);
+    W.splash = { pts, N, i: 0, v: Array.from({ length: N }, () => [0, 0, 0, 0]) };
+    // water running off the cars
+    const M = 320, sp = new Float32Array(M * 3), sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3)); for (let i = 0; i < M; i++) sp[i * 3 + 1] = -999;
+    const sh = new THREE.Points(sg, new THREE.PointsMaterial({ size: 0.07, map: velGrad(), color: '#cfe0ff', transparent: true, opacity: 0.8, depthWrite: false })); sh.frustumCulled = false; levelGroup.add(sh);
+    W.shed = { pts: sh, N: M, i: 0, v: Array.from({ length: M }, () => [0, 0, 0, 0]), acc: new Map() };
+    W.glows = new Map(); W.wet = true;
+  }
+  velSplash = function (x, y, z) { const S2 = W.splash; if (!S2 || Math.random() < 0.55) return; const pos = S2.pts.geometry.attributes.position.array;
+    for (let k = 0; k < 2; k++) { const i = S2.i = (S2.i + 1) % S2.N; pos.set([x, y + 0.03, z], i * 3); const a = Math.random() * 6.28, s = 0.6 + Math.random() * 0.9; S2.v[i] = [Math.cos(a) * s, 1.2 + Math.random() * 1.3, Math.sin(a) * s, 0.22]; }
+    // a ring if it landed in a puddle
+    for (const p of W.puddles) { if (Math.abs(x - p[0]) < p[2] && Math.abs(z - p[1]) < p[2]) { const R = W.rings[W.ri = (W.ri + 1) % W.rings.length]; R.m.position.set(x, p[3] + 0.01, z); R.t = 0; R.m.visible = true; break; } } };
+  function stepParticles(S2, dt, grav) { if (!S2) return; const pos = S2.pts.geometry.attributes.position.array; for (let i = 0; i < S2.N; i++) { const v = S2.v[i]; if (v[3] <= 0) { if (pos[i * 3 + 1] > -900) pos[i * 3 + 1] = -999; continue; } v[3] -= dt; v[1] -= grav * dt; pos[i * 3] += v[0] * dt; pos[i * 3 + 1] += v[1] * dt; pos[i * 3 + 2] += v[2] * dt; } S2.pts.geometry.attributes.position.needsUpdate = true; }
+
+  // ---- each car: a magnet glow on the ground under it, a pulsing field ring, and wet-road light smears ----
+  function carGlow(key) { let G = W.glows.get(key); if (G) return G; G = new THREE.Group();
+    const pad = flat(3.4, 5.2, addMat('#4fb8ff', 0.55)); G.add(pad);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.25, 0.03, 4, 28), new THREE.MeshBasicMaterial({ color: '#8fd8ff', transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending })); ring.rotation.x = Math.PI / 2; ring.scale.set(1, 1.6, 1); G.add(ring);
+    const head = flat(3.2, 13, addMat('#fff0d0', 0.22)); head.position.z = 8.2; G.add(head); // headlights smeared down the wet road
+    const tail = flat(2.2, 5, addMat('#ff3040', 0.2)); tail.position.z = -4.4; G.add(tail);
+    levelGroup.add(G); G.userData = { pad, ring, head, tail }; W.glows.set(key, G); return G; }
+  function placeGlow(key, obj, yaw, sp, t) { const G = carGlow(key), p = obj.position, g = floorAt(p.x, p.z), u = G.userData;
+    G.visible = obj.visible !== false && !!obj.parent; if (!G.visible) return; G.position.set(p.x, g + 0.04, p.z); G.rotation.y = yaw;
+    const k = 0.75 + Math.sin(t * 7 + p.x) * 0.25; u.pad.material.opacity = 0.42 * k; const h = (p.y - g); u.ring.position.y = (h * ((t * 1.6 + p.z * 0.1) % 1)); u.ring.material.opacity = 0.45 * (1 - u.ring.position.y / Math.max(0.1, h));
+    u.head.material.opacity = 0.18 + Math.min(0.12, sp * 0.004); }
+  function shedFrom(key, obj, vx, vz, rate, dt) { const S2 = W.shed; if (!S2 || !obj || !obj.parent || obj.visible === false) return; let a = (S2.acc.get(key) || 0) + rate * dt;
+    const pos = S2.pts.geometry.attributes.position.array, ry = obj.rotation.y, c = Math.cos(ry), s = Math.sin(ry);
+    while (a >= 1) { a -= 1; const i = S2.i = (S2.i + 1) % S2.N, side = Math.random() < 0.5 ? -1 : 1, lz = (Math.random() - 0.5) * 3.6, lx = side * (0.85 + Math.random() * 0.1);
+      const wx = obj.position.x + lx * c + lz * s, wz = obj.position.z - lx * s + lz * c; pos.set([wx, obj.position.y + 0.45 + Math.random() * 0.25, wz], i * 3);
+      const ox = side * c, oz = -side * s; S2.v[i] = [vx * 0.85 + ox * (0.8 + Math.random()), 0.2, vz * 0.85 + oz * (0.8 + Math.random()), 0.5]; }
+    S2.acc.set(key, a); }
+
+  { const _b = LEVELS.speedway.build; LEVELS.speedway.build = function () { const r = _b.apply(this, arguments); W.wet = false; try { wetGround(); } catch (e) { console.warn('wet', e); } return r; }; }
+  { const _st = step; step = function (dt) { _st(dt); if (!on() || !W.wet) return; const t = gameTime, sh = VEL.shields || (VEL.shields = []); sh.length = 0;
+    // your car (driving or parked)
+    const mine = RC.on ? VEL.carObj : VEL.parked;
+    if (mine && mine.parent && mine.visible !== false) { const sp = RC.on ? Math.hypot(RC.vx || 0, RC.vz || 0) : 0; placeGlow('me', mine, RC.on ? player.yaw + Math.PI : mine.rotation.y, sp, t); sh.push([mine.position.x, mine.position.y, mine.position.z]);
+      shedFrom('me', mine, RC.on ? RC.vx || 0 : 0, RC.on ? RC.vz || 0 : 0, 26 + sp * 1.4, dt); } else { const G = W.glows.get('me'); if (G) G.visible = false; }
+    // traffic
+    VEL.traffic.forEach((T, i) => { const o = T.obj, near = Math.hypot(o.position.x - player.pos.x, o.position.z - player.pos.z) < 70; placeGlow('t' + i, o, o.rotation.y, T.sp, t);
+      if (near) { sh.push([o.position.x, o.position.y, o.position.z]); const f = T.dir; shedFrom('t' + i, o, Math.sin(o.rotation.y) * T.sp * 0.6, Math.cos(o.rotation.y) * T.sp * 0.6, 14, dt); } });
+    stepParticles(W.splash, dt, 9); stepParticles(W.shed, dt, 7);
+    for (const R of W.rings) { if (!R.m.visible) continue; R.t += dt * 1.8; const k = 0.08 + R.t * 0.55; R.m.scale.set(k, 1, k); R.m.material.opacity = Math.max(0, 0.55 * (1 - R.t)); if (R.t >= 1) R.m.visible = false; }
+    // a light patter: random rings in nearby puddles even when no streak lands there
+    for (let k = 0; k < 3; k++) { const p = W.puddles[(Math.random() * W.puddles.length) | 0]; if (!p || Math.hypot(p[0] - player.pos.x, p[1] - player.pos.z) > 45) continue; const R = W.rings[W.ri = (W.ri + 1) % W.rings.length]; R.m.position.set(p[0] + (Math.random() - 0.5) * p[2] * 1.4, p[3] + 0.01, p[1] + (Math.random() - 0.5) * p[2] * 1.4); R.t = 0; R.m.visible = true; }
+  }; }
 }
 
 // =================== FISHING 3: the catch card (type, weight, value) and alien fish that look alien ===================

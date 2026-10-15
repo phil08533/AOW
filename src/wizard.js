@@ -1,6 +1,6 @@
 // =================== WIZARDRY: the notebook's staff line (Lvl 1 → 100), new elements, Merla the Wizard, robes and a hat ===================
 Object.assign(GUNS, {
-  w_1: { name: 'Lvl 1 Apprentice Staff', dmg: 14, rate: 0.4, mag: 16, reload: 1.2, req: 1, price: 300, col: '#9fd8ff', kind: 'mystic', elem: 'arcane', mana: true, staff: 'crystal' },
+  w_1: { name: 'Lvl 1 Apprentice Staff', dmg: 22, rate: 0.4, mag: 16, reload: 1.2, req: 1, price: 300, col: '#9fd8ff', kind: 'mystic', elem: 'arcane', mana: true, staff: 'crystal' },
   w_10: { name: 'Lvl 10 Ember Staff', dmg: 30, rate: 0.4, mag: 16, reload: 1.3, req: 4, price: 1200, col: '#ff6a1a', kind: 'mystic', elem: 'flame', mana: true, staff: 'flame' },
   w_20: { name: 'Lvl 20 Lightning Staff', dmg: 45, rate: 0.45, mag: 14, reload: 1.4, req: 8, price: 2600, col: '#8fe3ff', kind: 'mystic', elem: 'storm', mana: true, staff: 'rings' },
   w_30: { name: 'Lvl 30 Glacier Staff', dmg: 70, rate: 0.5, mag: 14, reload: 1.4, req: 12, price: 4800, col: '#bfefff', kind: 'mystic', elem: 'frost', mana: true, staff: 'crystal' },

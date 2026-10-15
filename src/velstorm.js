@@ -36,7 +36,7 @@
       const circ = Math.max(1, Math.PI * (T.a + T.b)); T.th += T.dir * T.sp / circ * Math.PI * 2 * dt;
       const x = T.cx + Math.cos(T.th) * T.a + T.push.x, z = T.cz + Math.sin(T.th) * T.b + Math.sin(T.th * 3) * T.wob + T.push.z;
       const dx = x - T.x, dz = z - T.z; T.x = x; T.z = z; T.push.multiplyScalar(Math.exp(-dt * 1.2));
-      const g = groundH(x, z); T.obj.position.set(x, g + 0.35 + Math.sin(gameTime * 4 + T.th) * 0.04, z);
+      const g = groundH(x, z); T.obj.position.set(x, g + VEL_HOVER + 0.1 + Math.sin(gameTime * 4 + T.th) * 0.07, z); T.g = g;
       if (Math.hypot(dx, dz) > 1e-4) T.obj.rotation.y = Math.atan2(dx, dz);
       // bump into you
       if (Math.abs(p.y - g) > 2.5) continue;
@@ -100,7 +100,7 @@
     if (W.c.style.display === 'none') W.c.style.display = 'block';
     const w = Math.round(innerWidth / 2), h = Math.round(innerHeight / 2); if (W.c.width !== w || W.c.height !== h) { W.c.width = w; W.c.height = h; }
     W.t += dt; if (W.t < 1 / 30) return; const T = W.t; W.t = 0; const x = W.x, top = h * 0.03, bot = h * 0.62;
-    W.acc += T * (70 + sp * 2); while (W.acc >= 1 && W.drops.length < 220) { W.acc -= 1; W.drops.push({ x: Math.random() * w, y: top + Math.random() * (bot - top), r: 1.2 + Math.pow(Math.random(), 2) * 4.5, hue: (gameTime * 40 + Math.random() * 360) % 360, vy: 0, life: 4 + Math.random() * 4 }); }
+    W.acc += T * (16 + sp * 0.5); while (W.acc >= 1 && W.drops.length < 70) { W.acc -= 1; W.drops.push({ x: Math.random() * w, y: top + Math.random() * (bot - top), r: 1.2 + Math.pow(Math.random(), 2) * 4.5, hue: (gameTime * 40 + Math.random() * 360) % 360, vy: 0, life: 4 + Math.random() * 4 }); }
     // the wipers sweep every 1.4s
     const ph = (gameTime % 1.4) / 1.4, ang = Math.PI * (0.06 + 0.84 * (ph < 0.5 ? ph * 2 : 2 - ph * 2)), piv = [[w * 0.3, bot + h * 0.06], [w * 0.72, bot + h * 0.06]], L = Math.min(w * 0.46, h * 0.95);
     x.clearRect(0, 0, w, h);
@@ -118,9 +118,9 @@
       x.fillStyle = 'rgba(255,255,255,0.75)'; x.beginPath(); x.arc(-0.35, -0.4, 0.22, 0, Math.PI * 2); x.fill();
       x.fillStyle = `hsla(${d.hue},90%,75%,0.35)`; x.beginPath(); x.arc(0.25, 0.45, 0.18, 0, Math.PI * 2); x.fill(); x.restore(); }
     // a fine mist of tiny droplets everywhere
-    if (!W.mist || W.mist.w !== w) { W.mist = { w, p: Array.from({ length: 260 }, () => [Math.random(), Math.random(), 0.4 + Math.random() * 0.9]) }; }
+    if (!W.mist || W.mist.w !== w) { W.mist = { w, p: Array.from({ length: 90 }, () => [Math.random(), Math.random(), 0.4 + Math.random() * 0.9]) }; }
     for (let k = 0; k < 5; k++) { const q = W.mist.p[(Math.random() * W.mist.p.length) | 0]; q[0] = Math.random(); q[1] = Math.random(); }
-    x.fillStyle = 'rgba(220,235,255,0.22)'; for (const [mx, my, mr] of W.mist.p) { const yy = top + my * (bot - top); x.beginPath(); x.arc(mx * w, yy, mr, 0, Math.PI * 2); x.fill(); }
+    x.fillStyle = 'rgba(220,235,255,0.12)'; for (const [mx, my, mr] of W.mist.p) { const yy = top + my * (bot - top); x.beginPath(); x.arc(mx * w, yy, mr, 0, Math.PI * 2); x.fill(); }
     x.lineCap = 'round'; for (const [px, py] of piv) { const ex = px + Math.cos(Math.PI - ang) * L, ey = py - Math.sin(Math.PI - ang) * L;
       x.strokeStyle = 'rgba(8,10,14,0.92)'; x.lineWidth = Math.max(3, h * 0.012); x.beginPath(); x.moveTo(px, py); x.lineTo(ex, ey); x.stroke();
       x.strokeStyle = 'rgba(40,44,52,0.95)'; x.lineWidth = Math.max(2, h * 0.006); x.beginPath(); x.moveTo(px + (ex - px) * 0.25, py + (ey - py) * 0.25); x.lineTo(ex, ey); x.stroke(); }
@@ -153,19 +153,19 @@
     const fogBase = new THREE.Color('#151920'), sk = skyMat.uniforms;
     scene.fog.near = 7; scene.fog.far = 58; scene.fog.color.copy(fogBase).lerp(VEL.rbCol, fk * 0.3);
     const fogLin = scene.fog.color; sk.hor.value.copy(fogLin); sk.mid.value.copy(fogLin).multiplyScalar(0.8); sk.top.value.multiplyScalar(0.35).lerp(VEL.rbCol, fk * 0.5); sk.mid.value.lerp(VEL.rbCol, fk * 0.35);
-    sun.intensity *= 0.3; hemi.intensity *= 0.55; clouds.visible = false; skyRing.visible = false; stars.visible = false; hemi.color.copy(VEL.hemi0).lerp(VEL.rbCol, fk * 0.5);
+    sun.intensity *= 0.3; hemi.intensity *= 0.55; clouds.visible = false; rain.visible = false; skyRing.visible = false; stars.visible = false; hemi.color.copy(VEL.hemi0).lerp(VEL.rbCol, fk * 0.5);
     if (renderer && renderer.setClearColor) { /* the HD pass clears to HORIZON; keep it stormy */ HORIZON.copy(fogBase); } }; }
 
   // ---- park the car and get out; it stays there ----
   function parkCar() {
     if (VEL.parked && VEL.parked.parent) VEL.parked.parent.remove(VEL.parked);
-    const car = mergeChar(velMyCar()); car.position.copy(player.pos); car.position.y += 0.08; car.rotation.y = player.yaw + Math.PI; levelGroup.add(car);
+    const car = mergeChar(velMyCar()); car.position.copy(player.pos); car.position.y += VEL_HOVER; car.rotation.y = player.yaw + Math.PI; levelGroup.add(car);
     VEL.parked = car; VEL.parkYaw = player.yaw;
     const r = V(Math.cos(player.yaw), 0, -Math.sin(player.yaw)); player.pos.addScaledVector(r, 2.4); collide(player.pos, 0.4, false); velClamp(player.pos); player.pos.y = floorAt(player.pos.x, player.pos.z);
     const it = { x: car.position.x, z: car.position.z, r: 3.4, label: '🚗 Get in your car', fn: () => enterParked() }; VEL.parkIt = it; INTERACTS.push(it);
   }
   function dropParked() { if (VEL.parked && VEL.parked.parent) VEL.parked.parent.remove(VEL.parked); VEL.parked = null; const i = INTERACTS.indexOf(VEL.parkIt); if (i >= 0) INTERACTS.splice(i, 1); VEL.parkIt = null; }
-  function enterParked() { if (!VEL.parked || RC.on) return; const c = VEL.parked; player.pos.set(c.position.x, c.position.y - 0.08, c.position.z); player.yaw = VEL.parkYaw; dropParked(); VEL.entering = true; try { toggleFreeDrive(); } finally { VEL.entering = false; } }
+  function enterParked() { if (!VEL.parked || RC.on) return; const c = VEL.parked; player.pos.set(c.position.x, c.position.y - VEL_HOVER, c.position.z); player.yaw = VEL.parkYaw; dropParked(); VEL.entering = true; try { toggleFreeDrive(); } finally { VEL.entering = false; } }
   { const _tf = toggleFreeDrive; toggleFreeDrive = function () {
     if (!on()) return _tf();
     const wasFree = RC.on && RC.free; if (wasFree && Math.hypot(RC.vx || 0, RC.vz || 0) < 12) { RC.v = 0; RC.vx = 0; RC.vz = 0; }
@@ -194,26 +194,33 @@
       u.wheel.rotation.z += (-st * 1.2 - u.wheel.rotation.z) * Math.min(1, dt * 10); const R = velR(); u.hood.material.color.set(RPAINTS[R.paint || 0]).convertSRGBToLinear();
       const K = velStats(), f = Math.min(1, sp / K.top); u.dial.scale.setScalar(0.5 + f * 0.6); u.dial2.scale.setScalar(0.5 + (VEL.bm / K.bcap) * 0.6);
       camera.position.y += Math.sin(gameTime * 23) * Math.min(0.012, sp * 0.0004); }
-    windStep(dt, cockOn && rain.visible !== false, sp);
+    windStep(dt, cockOn, sp);
     trafficStep(dt); sprayStep(dt, RC.on, sp);
-    if (VEL.parked && VEL.parked.parent) VEL.parked.position.y = floorAt(VEL.parked.position.x, VEL.parked.position.z) + 0.1 + Math.sin(gameTime * 3) * 0.03;
+    if (VEL.parked && VEL.parked.parent) VEL.parked.position.y = floorAt(VEL.parked.position.x, VEL.parked.position.z) + VEL_HOVER + Math.sin(gameTime * 3) * 0.05;
   }; }
 
   // ---- round 2: heavy rain, a storm-cloud ceiling, brighter headlights, your car waiting, shady locals, quick car swap ----
-  function velRainMake() {
-    const N = 1600, pos = new Float32Array(N * 6), col = new Float32Array(N * 6), g = new THREE.BufferGeometry(), c = new THREE.Color();
+  // two layers: near streaks you can pick out, and a faint far sheet for depth. Drops land (with a splash) and slide around the cars' magnet field.
+  function velRainLayer(N, op, R, lenK) {
+    const pos = new Float32Array(N * 6), col = new Float32Array(N * 6), g = new THREE.BufferGeometry(), c = new THREE.Color();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    for (let i = 0; i < N; i++) { c.setHSL(Math.random(), 0.7, 0.75); col.set([c.r * 0.5, c.g * 0.5, c.b * 0.5, c.r, c.g, c.b], i * 6); }
-    const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false })); l.frustumCulled = false; levelGroup.add(l);
-    VEL.hrain = { l, N, p: Array.from({ length: N }, () => [0, -999, 0, 0]) };
+    for (let i = 0; i < N; i++) { c.setHSL(Math.random(), 0.35, 0.82); col.set([c.r * 0.35, c.g * 0.35, c.b * 0.4, c.r, c.g, c.b], i * 6); }
+    const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: op, depthWrite: false })); l.frustumCulled = false; levelGroup.add(l);
+    return { l, N, R, lenK, p: Array.from({ length: N }, () => [0, -999, 0, 0, -999]) };
   }
+  function velRainMake() { VEL.hrain = [velRainLayer(360, 0.24, 16, 0.035), velRainLayer(520, 0.1, 42, 0.07)]; VEL.shields = VEL.shields || []; }
   function velRainStep(dt) {
-    const H = VEL.hrain; if (!H) return; const cp = camera.position, a = H.l.geometry.attributes.position.array, wx = 5, wz = 2, vx = -(RC.vx || 0) * 0.15, vz = -(RC.vz || 0) * 0.15;
-    for (let i = 0; i < H.N; i++) { const q = H.p[i];
-      if (q[1] < cp.y - 6 || Math.abs(q[0] - cp.x) > 26 || Math.abs(q[2] - cp.z) > 26) { q[0] = cp.x + (Math.random() - 0.5) * 50; q[2] = cp.z + (Math.random() - 0.5) * 50; q[1] = cp.y + 4 + Math.random() * 22; q[3] = 34 + Math.random() * 14; }
-      q[1] -= q[3] * dt; q[0] += wx * dt; q[2] += wz * dt;
-      const len = 0.06; a.set([q[0], q[1], q[2], q[0] - (wx + vx) * len, q[1] + q[3] * len, q[2] - (wz + vz) * len], i * 6); }
-    H.l.geometry.attributes.position.needsUpdate = true;
+    const L = VEL.hrain; if (!L) return; const cp = camera.position, wx = 4, wz = 1.6, vx = -(RC.vx || 0) * 0.12, vz = -(RC.vz || 0) * 0.12, SH = VEL.shields || [];
+    for (const H of L) { const a = H.l.geometry.attributes.position.array, near = H.R < 20, R = H.R;
+      for (let i = 0; i < H.N; i++) { const q = H.p[i];
+        if (q[1] < q[4] || Math.abs(q[0] - cp.x) > R || Math.abs(q[2] - cp.z) > R) {
+          if (near && q[1] > -900 && q[1] < q[4] + 0.3 && typeof velSplash === 'function') velSplash(q[0], q[4], q[2]);
+          q[0] = cp.x + (Math.random() - 0.5) * R * 2; q[2] = cp.z + (Math.random() - 0.5) * R * 2; q[1] = cp.y + 3 + Math.random() * 20; q[3] = 30 + Math.random() * 12; q[4] = near ? floorAt(q[0], q[2]) : cp.y - 8; }
+        q[1] -= q[3] * dt; q[0] += wx * dt; q[2] += wz * dt;
+        if (near) for (const s of SH) { const dx = q[0] - s[0], dz = q[2] - s[2]; if (dx > 2.6 || dx < -2.6 || dz > 2.6 || dz < -2.6 || q[1] > s[1] + 2.4 || q[1] < s[1] - 0.8) continue;
+          const d = Math.hypot(dx, dz) || 0.01; if (d < 2.3) { q[0] = s[0] + dx / d * 2.3; q[2] = s[2] + dz / d * 2.3; q[3] = Math.max(q[3] * 0.7, 9); } }
+        const len = H.lenK; a.set([q[0], q[1], q[2], q[0] - (wx + vx) * len, q[1] + q[3] * len, q[2] - (wz + vz) * len], i * 6); }
+      H.l.geometry.attributes.position.needsUpdate = true; }
   }
   let cloudTex = null;
   const velCloudTex = () => cloudTex || (cloudTex = (() => { const S2 = 128, c = document.createElement('canvas'); c.width = c.height = S2; const x = c.getContext('2d');
@@ -233,7 +240,7 @@
   // your car waits right in front of you when you arrive
   function velArrivalCar() {
     if (VEL.parked) return; const R = velR(); const car = mergeChar(velMyCar()); const x = -4, z = -2, yaw = Math.PI;
-    car.position.set(x, VCITY.y + 0.1, z); car.rotation.y = yaw + Math.PI; levelGroup.add(car); VEL.parked = car; VEL.parkYaw = yaw;
+    car.position.set(x, VCITY.y + VEL_HOVER, z); car.rotation.y = yaw + Math.PI; levelGroup.add(car); VEL.parked = car; VEL.parkYaw = yaw;
     const it = { x, z, r: 3.4, label: '🚗 Get in your car', fn: () => enterParked() }; VEL.parkIt = it; INTERACTS.push(it);
   }
   // shady locals in Pit Row

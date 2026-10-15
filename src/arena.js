@@ -2,10 +2,10 @@
 Object.assign(GUNS, {
   m_ember: { name: 'Ember Wand', dmg: 40, rate: 0.28, mag: 18, reload: 1.4, req: 10, price: 2200, col: '#ff6a1a', kind: 'mystic', elem: 'flame', mana: true },
   m_storm: { name: 'Storm Staff', dmg: 70, rate: 0.45, mag: 12, reload: 1.6, req: 16, price: 5200, col: '#8fe3ff', kind: 'mystic', elem: 'storm', mana: true },
-  m_venom: { name: 'Venom Scepter', dmg: 55, rate: 0.4, mag: 14, reload: 1.5, req: 20, price: 7800, col: '#7fff6a', kind: 'mystic', elem: 'poison', mana: true },
+  m_venom: { name: 'Venom Scepter', dmg: 110, rate: 0.4, mag: 14, reload: 1.5, req: 20, price: 7800, col: '#7fff6a', kind: 'mystic', elem: 'poison', mana: true },
   m_spirit: { name: 'Spirit Bow', dmg: 120, rate: 0.55, mag: 10, reload: 1.4, req: 22, price: 0, col: '#c8a0ff', kind: 'mystic', elem: 'spirit', mana: true },
-  m_void: { name: 'Void Orb', dmg: 150, rate: 0.9, mag: 6, reload: 2.0, req: 26, price: 0, col: '#9b6bff', kind: 'mystic', elem: 'void', splash: 6, mana: true },
-  m_sun: { name: 'Sunfire Codex', dmg: 260, rate: 1.1, mag: 5, reload: 2.2, req: 30, price: 0, col: '#ffd36a', kind: 'mystic', elem: 'sun', splash: 5, mana: true }
+  m_void: { name: 'Void Orb', dmg: 380, rate: 0.9, mag: 6, reload: 2.0, req: 26, price: 0, col: '#9b6bff', kind: 'mystic', elem: 'void', splash: 6, mana: true },
+  m_sun: { name: 'Sunfire Codex', dmg: 520, rate: 1.1, mag: 5, reload: 2.2, req: 30, price: 0, col: '#ffd36a', kind: 'mystic', elem: 'sun', splash: 5, mana: true }
 });
 function makeMysticModel(id) {
   const G = GUNS[id], g = new THREE.Group(), col = G.col;

@@ -1,6 +1,7 @@
 // =================== VELOCITY 2: the magnet storm planet ===================
 // A flat, glassy plain under a storm that never ends. Cars hover on magnets with almost no friction.
 // The town floats above the plain and a long ramp bridge runs down to it.
+const VEL_HOVER = 0.62;
 const VEL = { built: false, ref: null, cam: 1, carObj: null, carKey: '', lamp: null, streaks: null, low: null, up: null, base: null, bm: 1, dm: 0, kick: 0, wasDrift: false, driftHeld: false, cp: null, bolts: [], lastFlash: 0, rainOn: false, gateRings: {}, hud: null, cls: '' };
 const VCITY = { x: 0, z: -20, hx: 30, hz: 24, y: 20 }, VBR = { x: 0, z0: 4, z1: 124, hw: 6 };
 const velBridgeY = t => VCITY.y + (0.3 - VCITY.y) * t;
@@ -302,13 +303,13 @@ window.addEventListener('keydown', e => { if (e.code === 'KeyC' && !e.repeat && 
   const R = velR(), key = [R.car, R.paint, R.stripe, R.pat].join('|');
   if (key !== VEL.carKey || !VEL.carObj || !VEL.carObj.parent) { if (VEL.carObj && VEL.carObj.parent) VEL.carObj.parent.remove(VEL.carObj); VEL.carObj = mergeChar(velMyCar()); levelGroup.add(VEL.carObj); VEL.carKey = key; }
   const car = VEL.carObj, f = V(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)), sp = Math.hypot(RC.vx || 0, RC.vz || 0);
-  car.visible = true; car.position.copy(player.pos); car.position.y += 0.08 + Math.sin(gameTime * 5) * 0.05; car.rotation.set(clamp(-(RC.vy || 0) * 0.02, -0.3, 0.3), player.yaw + Math.PI, clamp((RC.vr || 0) * 0.012, -0.2, 0.2));
+  car.visible = true; car.position.copy(player.pos); car.position.y += VEL_HOVER + Math.sin(gameTime * 4.2) * 0.07; // Velocity is a magnet: cars float on the field car.rotation.set(clamp(-(RC.vy || 0) * 0.02, -0.3, 0.3), player.yaw + Math.PI, clamp((RC.vr || 0) * 0.012, -0.2, 0.2));
   // headlight
   VEL.lamp.intensity = 2.4; VEL.lamp.position.copy(player.pos).addScaledVector(f, 1.8).add(V(0, 0.9, 0)); VEL.lampT.position.copy(player.pos).addScaledVector(f, 22); VEL.lampT.position.y = player.pos.y - 0.5;
   // camera
   if (VEL.cam > 0) { const d = VEL.cam === 1 ? 6.2 : 11.5, h = VEL.cam === 1 ? 2.4 : 4.4, want = player.pos.clone().addScaledVector(f, -d); want.y += h; VEL.ref = player.pos.y; want.y = Math.max(want.y, floorAt(want.x, want.z) + 0.8);
     if (!VEL.cp) VEL.cp = want.clone(); VEL.cp.lerp(want, 1 - Math.exp(-dt * 7)); camera.position.copy(VEL.cp); camera.lookAt(player.pos.x + f.x * 6, player.pos.y + 1.3, player.pos.z + f.z * 6); vmCar.visible = false;}
-  else { camera.position.copy(player.pos).addScaledVector(f, 1.0); camera.position.y += 1.2; camera.rotation.set(-0.06, player.yaw, clamp(-(RC.vr || 0) * 0.01, -0.12, 0.12)); vmCar.visible = false; }
+  else { camera.position.copy(player.pos).addScaledVector(f, 1.0); camera.position.y += 1.2 + VEL_HOVER - 0.08; camera.rotation.set(-0.06, player.yaw, clamp(-(RC.vr || 0) * 0.01, -0.12, 0.12)); vmCar.visible = false; }
   VEL.ref = player.pos.y;
   // HUD
   const K = velStats(); $('velSpd').textContent = Math.round(sp * 3.6); $('velBst').style.width = Math.round(VEL.bm / K.bcap * 100) + '%'; $('velDrf').style.width = Math.round(VEL.dm / 2.5 * 100) + '%';

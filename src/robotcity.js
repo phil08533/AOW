@@ -6,9 +6,9 @@ Object.assign(ITEMS, {
 });
 FISH_TABLES.canal = [['rustcan', 12, 0], ['chromecarp', 50, 0.6], ['voltfish', 12, 0.85]];
 Object.assign(GUNS, {
-  r40: { name: 'Lvl 40 Railgun', dmg: 330, rate: 1.0, mag: 6, reload: 1.7, req: 28, price: 16000, col: '#4fd2ff', kind: 'long' },
+  r40: { name: 'Lvl 40 Railgun', dmg: 700, rate: 1.0, mag: 6, reload: 1.7, req: 28, price: 16000, col: '#4fd2ff', kind: 'long' },
   g45: { name: 'Lvl 45 Gatling', dmg: 72, rate: 0.06, mag: 120, reload: 2.6, req: 31, price: 22000, col: '#ffd36a', kind: 'carbine' },
-  x50: { name: 'Lvl 50 Pulse Cannon', dmg: 320, splash: 4, rate: 0.8, mag: 8, reload: 2.0, req: 35, price: 32000, col: '#ff3b6a', kind: 'plasma' }
+  x50: { name: 'Lvl 50 Pulse Cannon', dmg: 500, splash: 4, rate: 0.8, mag: 8, reload: 2.0, req: 35, price: 32000, col: '#ff3b6a', kind: 'plasma' }
 });
 MELEE.saber = { name: 'Ion Saber', dmg: 620, rate: 0.5, reach: 3.0, req: 32, price: 26000, saber: true };
 RIGS.zr = { type: 'biped', hip: 0.98, neck: 1.7, armX: 0.4, ax: 0.5, sh: 1.58, legX: 0.16 };

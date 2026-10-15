@@ -13,7 +13,6 @@ import json, os, subprocess, sys, urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'dist', 'video', 'notld')
 SOURCES = [
-    'https://archive.org/download/night_of_the_living_dead/night_of_the_living_dead_512kb.mp4',
     'https://archive.org/download/night_of_the_living_dead_dvd/Night.mp4',
 ]
 PART_SECONDS = 300

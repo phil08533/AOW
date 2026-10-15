@@ -181,9 +181,9 @@ function arcOpen(game) {
     // high-low table: a half moon
     { const tb = new THREE.Group(), half = (r, h, y, m) => part(tb, new THREE.CylinderGeometry(r, r, h, 24, 1, false, -Math.PI / 2, Math.PI), m, 0, y, 0);
       half(1.3, 0.8, 0.4, rail); half(1.42, 0.1, 0.84, rail); half(1.36, 0.06, 0.9, felt); part(tb, new THREE.TorusGeometry(1.4, 0.07, 6, 24, Math.PI), toon('#2a1410', 'cloth'), 0, 0.93, 0, Math.PI / 2, 0, 0);
-      part(tb, B(2.84, 0.9, 0.14), rail, 0, 0.45, 0.05); part(tb, B(1.2, 0.08, 0.3), toon('#1e1c22'), 0, 0.95, -0.12); for (let i = 0; i < 5; i++) part(tb, Cy(0.07, 0.07, 0.06 + (i % 2) * 0.05, 10), toon(['#c8402f', '#e8e4dc', '#3b4f7a', '#ffd36a', '#1f6a3a'][i]), -0.44 + i * 0.22, 1.0, -0.12);
-      for (let i = 0; i < 3; i++) part(tb, B(0.18, 0.01, 0.26), '#f4f8ff', -0.5 + i * 0.5, 0.94, -0.75);
-      for (let i = 0; i < 3; i++) { const a = -Math.PI / 2 + (i + 0.5) * Math.PI / 3, x = Math.sin(a) * 1.85, z = -Math.cos(a) * 1.85; part(tb, Cy(0.25, 0.25, 0.08, 10), toon('#6a1a24', 'cloth'), x, 0.72, z); part(tb, Cy(0.04, 0.04, 0.7, 5), '#2b2a2c', x, 0.36, z); }
+      part(tb, B(2.84, 0.9, 0.14), rail, 0, 0.45, 0.05); part(tb, B(1.2, 0.08, 0.3), toon('#1e1c22'), 0, 0.95, 0.3); for (let i = 0; i < 5; i++) part(tb, Cy(0.07, 0.07, 0.06 + (i % 2) * 0.05, 10), toon(['#c8402f', '#e8e4dc', '#3b4f7a', '#ffd36a', '#1f6a3a'][i]), -0.44 + i * 0.22, 1.0, 0.3);
+      for (let i = 0; i < 3; i++) part(tb, B(0.18, 0.01, 0.26), '#f4f8ff', -0.5 + i * 0.5, 0.94, 0.8); // cards and chips sit on the felt (2.17: they floated behind the table)
+      for (let i = 0; i < 3; i++) { const a = -Math.PI / 2 + (i + 0.5) * Math.PI / 3, x = Math.sin(a) * 1.85, z = Math.cos(a) * 1.85; part(tb, Cy(0.25, 0.25, 0.08, 10), toon('#6a1a24', 'cloth'), x, 0.72, z); part(tb, Cy(0.04, 0.04, 0.7, 5), '#2b2a2c', x, 0.36, z); }
       tb.position.set(-20, 0, 4.3); tb.rotation.y = Math.PI; props.add(tb); box(-20, 4.3, 1.5, 0.8); }
     // six slot machines along the casino wall, lights chasing
     for (let i = 0; i < 6; i++) { const z = -11 + i * 4.3, m = new THREE.Group(); part(m, B(1.0, 2.0, 1.1), toon('#3a1a2a', 'hull'), 0, 1.0, 0); part(m, B(0.06, 0.7, 0.9), toon('#f4f8ff'), 0.53, 1.4, 0); for (let k = 0; k < 3; k++) part(m, B(0.07, 0.5, 0.22), toon(['#c8402f', '#ffd36a', '#4fd2ff'][(i + k) % 3]), 0.55, 1.4, -0.28 + k * 0.28);

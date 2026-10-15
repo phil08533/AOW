@@ -3,7 +3,7 @@
 // The film is public domain (George A. Romero, 1968). It plays from local parts (video/notld/parts.json + mp4 parts, made by
 // tools/fetch_movie.py) when they're there, and otherwise streams it from the Internet Archive.
 // Angler's Den Lv 5 adds the Worm Hole: an ice-fishing hole that can bite with any fish in the game. You can fish it from the couch.
-const TV_REMOTE = ['https://archive.org/download/night_of_the_living_dead/night_of_the_living_dead_512kb.mp4', 'https://archive.org/download/night_of_the_living_dead_dvd/Night.mp4'];
+const TV_REMOTE = ['https://archive.org/download/night_of_the_living_dead_dvd/Night.mp4'];
 const TVD = { room: null, scr: null, led: null, vid: null, tex: null, idle: null, on: false, parts: null, part: 0, cand: 0, sinceSave: 0, musDown: false, hole: null };
 const SEAT = { on: false, x: 0, z: 0, yaw: 0, out: null, y: 0.62 };
 // ---- every fish in the game, for the Worm Hole ----

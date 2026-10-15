@@ -303,6 +303,7 @@ const SFX = (() => {
   wire();
   return {
     init,
+    ctx() { return ac; }, voiceOut() { return master; },
     setMusic(mode) { const k = PREFS.musicVol == null ? 1 : Math.max(0, Math.min(1, PREFS.musicVol)) / 0.7; if (musicGain) musicGain.gain.value = mode === 1 ? 0.16 * k : 0; if (chipGain) chipGain.gain.value = mode === 2 ? 0.11 * k : 0; },
     setSfx(on) { if (sfxGain) sfxGain.gain.value = on ? 1 : 0; },
     shot(g) { gunShot(g || (typeof gun === 'function' ? gun() : null)); },

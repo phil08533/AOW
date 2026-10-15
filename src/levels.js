@@ -366,7 +366,8 @@ LEVELS.ship = {
       med: { floor: toonNS('#e8eef2', 'tile'), wall: toonNS('#d8e8ec', 'tile'), ceil: toonNS('#e8eef2', 'ceil'), light: '#e8ffff' },
       trophy: { floor: toonNS('#d8d2c8', 'marble'), wall: toonNS('#6a1e24', 'woodwall'), ceil: toonNS('#3a1e22', 'ceil'), light: '#ffd36a' },
       garden: { floor: toonNS('#4a6a3a', 'grass'), wall: toonNS('#8ab8a0', 'tile'), ceil: toonNS('#cfe8d8', 'ceil'), light: '#e8ffd8' },
-      hangar: { floor: toonNS('#6a6a6a', 'grate'), wall: toonNS('#7a7e86', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ffffff' }
+      hangar: { floor: toonNS('#6a6a6a', 'grate'), wall: toonNS('#7a7e86', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ffffff' },
+      range: { floor: toonNS('#4a4e56', 'tread'), wall: toonNS('#3a3438', 'hull'), ceil: toonNS('#2a2c32', 'ceil'), light: '#ffe8c8' }
     };
     rooms.forEach((id, k) => {
       const s = roomSlot(k); SHIP_ROOMS.push(Object.assign({ id }, s));
@@ -421,6 +422,7 @@ LEVELS.ship = {
         { const tank = new THREE.Group(); part(tank, B(1.6, 0.4, 0.8), '#3a3d44', 0, 0.2, 0); const w = part(tank, B(1.5, 1.0, 0.7), new THREE.MeshBasicMaterial({ color: '#4fa8ff', transparent: true, opacity: 0.35, depthWrite: false }), 0, 0.9, 0); for (let f = 0; f < 3; f++) { const fish = part(tank, B(0.12, 0.06, 0.03), glow(['#ff9a3c', '#ffd36a', '#ff6aa8'][f]), 0, 0.9, 0); levelAnims.push(t => { fish.position.x = Math.sin(t * 0.8 + f * 2) * 0.6; fish.position.y = 0.75 + f * 0.15 + Math.sin(t * 1.3 + f) * 0.05; fish.rotation.y = Math.cos(t * 0.8 + f * 2) > 0 ? 0 : Math.PI; }); } tank.position.set(cx, 0, s.z1 - 0.6); props.add(tank); box(cx, s.z1 - 0.6, 0.8, 0.4); }
       }
       if (id === 'lab') labRoom(s, cx, cz, far, outer, faceIn, term, props);
+      if (id === 'range' && typeof rangeRoom === 'function') rangeRoom(s, cx, cz, outer, term, props);
       if (id === 'hangar') {
         part(props, B(0.2, 2.8, 6), toon('#c9a43a', 'hazard'), outer - s.side * 0.12, 1.4, cz);
         part(props, B(5, 0.012, 5), toon('#ffd36a', 'hazard'), cx, 0.014, cz); part(props, B(4.4, 0.013, 4.4), toonNS('#6a6a6a', 'grate'), cx, 0.016, cz);

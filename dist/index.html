@@ -329,7 +329,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.13.3</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.13.4</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -716,6 +716,7 @@ const SFX = (() => {
   wire();
   return {
     init,
+    ctx() { return ac; }, voiceOut() { return master; },
     setMusic(mode) { const k = PREFS.musicVol == null ? 1 : Math.max(0, Math.min(1, PREFS.musicVol)) / 0.7; if (musicGain) musicGain.gain.value = mode === 1 ? 0.16 * k : 0; if (chipGain) chipGain.gain.value = mode === 2 ? 0.11 * k : 0; },
     setSfx(on) { if (sfxGain) sfxGain.gain.value = on ? 1 : 0; },
     shot(g) { gunShot(g || (typeof gun === 'function' ? gun() : null)); },
@@ -4065,7 +4066,8 @@ LEVELS.ship = {
       med: { floor: toonNS('#e8eef2', 'tile'), wall: toonNS('#d8e8ec', 'tile'), ceil: toonNS('#e8eef2', 'ceil'), light: '#e8ffff' },
       trophy: { floor: toonNS('#d8d2c8', 'marble'), wall: toonNS('#6a1e24', 'woodwall'), ceil: toonNS('#3a1e22', 'ceil'), light: '#ffd36a' },
       garden: { floor: toonNS('#4a6a3a', 'grass'), wall: toonNS('#8ab8a0', 'tile'), ceil: toonNS('#cfe8d8', 'ceil'), light: '#e8ffd8' },
-      hangar: { floor: toonNS('#6a6a6a', 'grate'), wall: toonNS('#7a7e86', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ffffff' }
+      hangar: { floor: toonNS('#6a6a6a', 'grate'), wall: toonNS('#7a7e86', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ffffff' },
+      range: { floor: toonNS('#4a4e56', 'tread'), wall: toonNS('#3a3438', 'hull'), ceil: toonNS('#2a2c32', 'ceil'), light: '#ffe8c8' }
     };
     rooms.forEach((id, k) => {
       const s = roomSlot(k); SHIP_ROOMS.push(Object.assign({ id }, s));
@@ -4120,6 +4122,7 @@ LEVELS.ship = {
         { const tank = new THREE.Group(); part(tank, B(1.6, 0.4, 0.8), '#3a3d44', 0, 0.2, 0); const w = part(tank, B(1.5, 1.0, 0.7), new THREE.MeshBasicMaterial({ color: '#4fa8ff', transparent: true, opacity: 0.35, depthWrite: false }), 0, 0.9, 0); for (let f = 0; f < 3; f++) { const fish = part(tank, B(0.12, 0.06, 0.03), glow(['#ff9a3c', '#ffd36a', '#ff6aa8'][f]), 0, 0.9, 0); levelAnims.push(t => { fish.position.x = Math.sin(t * 0.8 + f * 2) * 0.6; fish.position.y = 0.75 + f * 0.15 + Math.sin(t * 1.3 + f) * 0.05; fish.rotation.y = Math.cos(t * 0.8 + f * 2) > 0 ? 0 : Math.PI; }); } tank.position.set(cx, 0, s.z1 - 0.6); props.add(tank); box(cx, s.z1 - 0.6, 0.8, 0.4); }
       }
       if (id === 'lab') labRoom(s, cx, cz, far, outer, faceIn, term, props);
+      if (id === 'range' && typeof rangeRoom === 'function') rangeRoom(s, cx, cz, outer, term, props);
       if (id === 'hangar') {
         part(props, B(0.2, 2.8, 6), toon('#c9a43a', 'hazard'), outer - s.side * 0.12, 1.4, cz);
         part(props, B(5, 0.012, 5), toon('#ffd36a', 'hazard'), cx, 0.014, cz); part(props, B(4.4, 0.013, 4.4), toonNS('#6a6a6a', 'grate'), cx, 0.016, cz);
@@ -16626,6 +16629,7 @@ const UPDATES = [
   { id: 93, title: '2.13.1 · Velocity storm', items: ['Velocity is stormier: heavy fog, a dark sky and a short view distance. The ring gates still glow through it.', 'Rainbow lightning: thick, many-colored bolts strike every few seconds and flash the sky the same color.', 'New default Cockpit camera (C to switch): dashboard, steering wheel that turns with you, your hood in your paint, and rainbow rain on the windshield with wipers.', 'Cars are 12% faster. Gold times were raised to match so medals stay fair.', 'Traffic: hover cars cruise the flats. Hit one and you bounce.', 'Rainbow spray kicks up behind your car.', 'Park and get out: your car now stays where you park it. Walk up and press X or E to get back in, or press X twice from far away to call it.', 'The glassy floor no longer swims and wobbles as you drive (the PS1 jitter is now off for the big flat pieces).'] },
   { id: 94, title: '2.13.2 · Bridges, lakes and alien fish', items: ['Bridges on Earth and Capitone no longer float metres above the ground: they now run bank to bank and slope to meet both sides.', 'The Forest of Life path to the Heartwood now has a footbridge over the river.', "Zarlich's Glowing Lake was dry. It holds water now, and you can fish there.", 'Rivers and pools always sit below the water line on every world.', 'New catch card: when you land a fish you see its type, weight (kg and lb), length and value. Bigger than average fish pay a size bonus on the spot.', 'Ten alien fish that look alien: Lanternjaw, Void Gulper, Three-Eyed Gawker, Tentafish, Shard Ray, Violet Spinefish, Jellopod, Star Jelly, Hive Skimmer and the Gearfish. Find them on Mezar, Capitone, Ocean World, Robot City and Zarlich.'] },
   { id: 95, title: '2.13.3 · Velocity, darker', items: ['Your car now waits right in front of you when you land in Pit Row. Walk up and press E or X to drive.', 'Menu → Vehicle now lets you pick which car to drive. On Velocity it lists your hover cars; elsewhere it lists your war vehicles.', 'Heavier rainbow rain, a rolling storm-cloud ceiling, and a much darker sky. The flash color of each lightning bolt lights up the clouds.', 'Brighter, longer headlights with a beam you can see in the rain.', 'Windshield rain looks like water now: clear beads with a glint and a dark rim, running streaks, and fine mist the wipers clear.', 'Traffic cars no longer drive backwards, and they have headlights.', 'Some shady locals moved into Pit Row.'] }
+  { id: 96, title: '2.13.4 · Guns, a gun range and a real B.U.R.P.', items: ['Every gun got a makeover: sights, a light strip in its color, a muzzle brake and a slide that kicks back when you fire.', 'Alien guns now have a floating energy core, spinning rings and glowing vents, and burst a ring of their own color when fired. Regular guns flip out brass casings.', 'Other players now see your gun with its paint, and see it flash and fire.', 'New ship room: the Gun Range (1,200 cr and 6 circuits). It is the one place on the ship you can shoot, with free ammo, pop-up targets and a 30 second drill. Beat your best score for credits.', 'B.U.R.P. has a real robot voice now instead of the browser speech.'] },
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -17461,6 +17465,200 @@ fshCatchShow = function (F) {
 #catchCard .cbox { display: inline-block; min-width: 230px; padding: 10px 16px 12px; background: rgba(10,14,24,.86); border: 2px solid #cfd6e0; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.5); }
 #catchCard .crows { margin-top: 8px; display: grid; gap: 3px; text-align: left; }
 #catchCard .crow { display: flex; justify-content: space-between; gap: 18px; font-size: 14px; } #catchCard .ck { color: #8fa0b8; text-transform: uppercase; letter-spacing: .1em; font-size: 11px; font-weight: 700; align-self: center; } #catchCard .cv { color: #fff; font-weight: 600; }`; document.head.appendChild(st); }
+
+// =================== GUNS 2: cooler models, firing animation, alien glow, and other players see it all ===================
+// Every gun gets sights, a muzzle brake, a moving slide and a side light strip in its accent color.
+// Alien-tech guns also get a floating energy core and spinning rings that pulse, and flash their own color when fired.
+// Other players see your gun (with its paint), and see it flash and fire.
+const GUNFX = { shots: 0, heat: 0, forcePaint: undefined, casings: [] };
+const GUN_ALIEN_KIND = ['hive', 'plasma', 'mystic'];
+const gunIsAlien = id => { const G = GUNS[id]; if (!G) return false; return GUN_ALIEN_KIND.includes(G.kind) || /plasma|frost|storm|nova|phase|pulse|rail|void|star|ion|hive|stinger|volt|lumen|crystal|judgement|maw|wizard|mystic|arc|quantum/i.test(G.name || ''); };
+const gunIsBallistic = id => { const G = GUNS[id]; return !!G && !gunIsAlien(id) && ['carbine', 'rifle', 'long', 'scatter', 'minigun', 'gatling'].includes(G.kind); };
+{ const _gm = makeGunModel; makeGunModel = function (id) {
+  let g; if (GUNFX.forcePaint !== undefined) { S.gunLook = S.gunLook || {}; const keep = S.gunLook[id]; S.gunLook[id] = Object.assign({}, keep || {}, { paint: GUNFX.forcePaint || 'stock' }); try { g = _gm(id); } finally { if (keep) S.gunLook[id] = keep; else delete S.gunLook[id]; } } else g = _gm(id);
+  try { gunDress(g, id); } catch (e) { console.warn('gunDress', e); } return g; }; }
+function gunDress(g, id) {
+  const G = GUNS[id]; if (!G) return; const paint = GUN_PAINTS[(GUNFX.forcePaint !== undefined ? GUNFX.forcePaint : gunLook(id).paint)] || null, acc = paint || G.col || '#4fd2ff', alien = gunIsAlien(id), U = { spin: [], pulse: [], slide: null, alien, col: acc, heat: [] };
+  if (G.kind !== 'mystic') {
+    // sights, a light strip down each side, a muzzle brake and a top slide that kicks back when you fire
+    part(g, B(0.012, 0.03, 0.012), C.dark, 0, 0.125, 0.26); part(g, B(0.04, 0.025, 0.012), C.dark, 0, 0.12, -0.12);
+    for (const s of [-1, 1]) { const st = part(g, B(0.004, 0.012, 0.3), glow(acc), s * 0.037, 0.05, 0.02); U.pulse.push(st); }
+    const brake = part(g, Cy(0.03, 0.03, 0.06, 8), C.dark, 0, 0.05, 0.38, Math.PI / 2); for (const s of [-1, 1]) part(g, B(0.006, 0.02, 0.03), glow(acc), s * 0.03, 0.05, 0.38);
+    U.slide = part(g, B(0.06, 0.02, 0.18), toon(acc), 0, 0.112, 0.04); U.slide.userData.z0 = 0.04;
+    if (['carbine', 'rifle', 'long'].includes(G.kind)) { part(g, B(0.05, 0.05, 0.03), C.dark, 0, 0.15, 0.05); const holo = part(g, new THREE.PlaneGeometry(0.035, 0.035), new THREE.MeshBasicMaterial({ color: new THREE.Color(acc).convertSRGBToLinear(), transparent: true, opacity: 0.45, side: THREE.DoubleSide }), 0, 0.15, 0.067); U.pulse.push(holo); }
+    if (gunIsBallistic(id)) part(g, B(0.045, 0.12, 0.07), C.dark, 0, -0.07, 0.12, 0.15);
+  }
+  if (alien) {
+    // a floating energy core in a cage, rings spinning around the barrel, glowing vents
+    const core = part(g, new THREE.SphereGeometry(0.03, 10, 8), glow(acc), 0, 0.05, -0.05); U.pulse.push(core); U.core = core;
+    for (const s of [-1, 1]) part(g, Cy(0.004, 0.004, 0.09, 4), C.dark, s * 0.035, 0.05, -0.05);
+    for (let k = 0; k < 3; k++) { const r = part(g, new THREE.TorusGeometry(0.05 - k * 0.005, 0.006, 5, 14), glow(acc), 0, 0.05, 0.18 + k * 0.07); U.spin.push(r); }
+    for (let k = 0; k < 4; k++) { const v = part(g, B(0.075, 0.006, 0.012), glow(acc), 0, 0.02, -0.17 + k * 0.025); U.heat.push(v); }
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: FLASH_TEX, color: acc, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending })); halo.position.set(0, 0.05, -0.05); halo.scale.setScalar(0.16); g.add(halo); U.halo = halo;
+  }
+  g.userData.gfx = U;
+}
+function gunAnim(g, dt, t, kick) {
+  const U = g && g.userData.gfx; if (!U) return;
+  for (let i = 0; i < U.spin.length; i++) U.spin[i].rotation.z += dt * (3 + i * 2) * (i % 2 ? -1 : 1) * (1 + kick * 6);
+  const p = 1 + Math.sin(t * 5) * 0.12 + kick * 0.6; if (U.core) U.core.scale.setScalar(p); if (U.halo) { U.halo.material.opacity = 0.35 + Math.sin(t * 5) * 0.15 + kick * 0.5; U.halo.scale.setScalar(0.16 * p); }
+  if (U.slide) U.slide.position.z = U.slide.userData.z0 - kick * 0.08;
+}
+// your gun: kick, heat and effects when you fire
+{ const _f = fire; fire = function () { const before = player.ammo, clip = S.clip; const r = _f(); if (player.ammo !== before && !handMelee()) gunShotFx(); return r; }; }
+function gunShotFx() {
+  GUNFX.shots = (GUNFX.shots + 1) % 1000; GUNFX.kick = 1; GUNFX.heat = Math.min(1, GUNFX.heat + 0.12);
+  const U = vmGun && vmGun.userData.gfx; if (!U) return;
+  if (U.alien) { // a ring of energy bursts off the muzzle in the gun's color
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.03, 0.05, 18), new THREE.MeshBasicMaterial({ color: new THREE.Color(U.col).convertSRGBToLinear(), transparent: true, opacity: 0.9, depthWrite: false, depthTest: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+    ring.position.set(0, 0.05, 0.46); vmGun.add(ring); GUNFX.casings.push({ m: ring, life: 0.22, ring: true, par: vmGun });
+    const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: FLASH_TEX, color: U.col, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending })); fl.position.set(0, 0.05, 0.46); fl.scale.setScalar(0.3); vmGun.add(fl); GUNFX.casings.push({ m: fl, life: 0.07, par: vmGun });
+    if (typeof fxFlashLight !== 'undefined') fxFlashLight.color.set(U.col);
+  } else if (gunIsBallistic(S.gun)) { // a brass casing flips out to the right
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.02, 6), new THREE.MeshBasicMaterial({ color: '#d8a84a' })); c.position.set(0.03, 0.03, -0.05); camera.add(c); c.position.copy(vm.position).add(V(0.02, 0.03, -0.12));
+    GUNFX.casings.push({ m: c, life: 0.5, v: V(0.9 + Math.random() * 0.4, 0.9 + Math.random() * 0.4, 0.2), spin: V(Math.random() * 20, Math.random() * 20, 0), par: camera });
+    if (typeof fxFlashLight !== 'undefined') fxFlashLight.color.set('#ffc870');
+  } else if (typeof fxFlashLight !== 'undefined') fxFlashLight.color.set(U.col);
+}
+// remote players: show their paint and their shots
+{ const _pw = pvpWrite; pvpWrite = function (p) { _pw(p); p.fs = GUNFX.shots; try { p.gp = gunLook(S.gun).paint || 'stock'; } catch (_) {} }; }
+{ const _rw = remoteWeapon; remoteWeapon = function (r, code) { if (r.gpWant !== r.gpHave) { r.gpHave = r.gpWant; r.gnCode = null; } GUNFX.forcePaint = r.gpWant || 'stock'; try { return _rw(r, code); } finally { GUNFX.forcePaint = undefined; } }; }
+{ const _sp = syncPeers; syncPeers = function (peers) {
+  for (const peer of peers || []) { if (peer.isMe) continue; const r = remotes.get(peer.peer); if (!r) continue; const pr = peer.presence || {}; r.gpWant = typeof pr.gp === 'string' && pr.gp in GUN_PAINTS ? pr.gp : 'stock'; }
+  _sp(peers);
+  for (const peer of peers || []) { if (peer.isMe) continue; const r = remotes.get(peer.peer); if (!r) continue; const pr = peer.presence || {};
+    const fs = typeof pr.fs === 'number' ? pr.fs : null; if (fs == null) continue; if (r.fsLast == null) { r.fsLast = fs; continue; }
+    const n = (fs - r.fsLast + 1000) % 1000; r.fsLast = fs; if (n > 0 && n < 60) remoteShots(r, Math.min(3, n)); } }; }
+function remoteShots(r, n) {
+  const g = r.gnObj; if (!g || !g.parent || !r.obj.visible) return; const U = g.userData.gfx, col = (U && U.col) || '#ffd36a';
+  g.updateWorldMatrix(true, false); const from = V(0, 0.05, 0.45).applyMatrix4(g.matrixWorld), dir = V(0, 0, 1).transformDirection(g.matrixWorld);
+  if (from.distanceTo(player.pos) > 80) return;
+  for (let i = 0; i < n; i++) setTimeout(() => { if (!g.parent) return; const to = from.clone().addScaledVector(dir, 28).add(V((Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 0.6)); tracer(from, to, col); impactFlash(from, col, 0.6); r.gfxKick = 1; }, i * 90);
+}
+// every frame: animate your gun, every visible remote gun, and the casings
+{ const _st = step; step = function (dt) { _st(dt); const t = gameTime;
+  GUNFX.kick = Math.max(0, (GUNFX.kick || 0) - dt * 9); GUNFX.heat = Math.max(0, GUNFX.heat - dt * 0.35);
+  if (vmGun) { gunAnim(vmGun, dt, t, GUNFX.kick); const U = vmGun.userData.gfx; if (U && U.heat) U.heat.forEach((v, i) => { v.scale.y = 1 + GUNFX.heat * 3; }); }
+  for (const r of remotes.values()) { if (r.gnObj && r.obj.visible) { r.gfxKick = Math.max(0, (r.gfxKick || 0) - dt * 9); gunAnim(r.gnObj, dt, t, r.gfxKick); } }
+  for (let i = GUNFX.casings.length - 1; i >= 0; i--) { const c = GUNFX.casings[i]; c.life -= dt;
+    if (c.ring) { const k = 1 + (0.22 - c.life) * 30; c.m.scale.setScalar(k); c.m.material.opacity = Math.max(0, c.life / 0.22); }
+    if (c.v) { c.v.y -= 6 * dt; c.m.position.addScaledVector(c.v, dt * 0.25); c.m.rotation.x += c.spin.x * dt; c.m.rotation.z += c.spin.y * dt; }
+    if (c.life <= 0) { if (c.m.parent) c.m.parent.remove(c.m); c.m.geometry && c.m.geometry.dispose(); c.m.material.dispose(); GUNFX.casings.splice(i, 1); } } }; }
+
+// =================== GUN RANGE: a buyable ship room where you can actually shoot ===================
+// The ship is a safe zone, so guns are locked everywhere on board except inside the range.
+// Free ammo on the range. Pop-up targets: body 10, bullseye 15, head 25. The drill is 30 seconds of random pop-ups.
+ROOMS.range = { name: 'Gun Range', cost: { cr: 1200, circuit: 6 }, desc: 'Pop-up targets and a 30 second drill with a best score. The one place on the ship you can fire, with free ammo.' };
+const RANGE = { rect: null, side: 1, tg: [], drill: null, hud: null };
+function rangeRoom(s, cx, cz, outer, term, props) {
+  RANGE.rect = { x0: s.x0 + 0.2, x1: s.x1 - 0.2, z0: s.z0 + 0.2, z1: s.z1 - 0.2 }; RANGE.side = s.side; RANGE.tg = []; RANGE.drill = null;
+  const sd = s.side, lineX = sd * 4.2;
+  // firing line: a counter you shoot over and a yellow stripe on the deck
+  part(props, B(0.5, 1.0, 4.8), '#2a2c32', lineX, 0.5, cz + 1.2); part(props, B(0.56, 0.05, 4.9), toon('#c9a43a', 'hazard'), lineX, 1.02, cz + 1.2); box(lineX, cz + 1.2, 0.25, 2.4); // the open end lets you walk downrange
+  part(props, B(0.12, 0.012, 9.6), glow('#ffd36a'), lineX + sd * 0.45, 0.014, cz);
+  // lane dividers and a dark backstop
+  for (const dz of [-2.55, -0.85, 0.85, 2.55]) part(props, B(4.5, 0.05, 0.04), glow('#ff6a3a'), sd * 8.6, 0.03, cz + dz);
+  part(props, B(0.3, 2.9, 9.6), toonNS('#2a2228', 'grime'), outer - sd * 0.2, 1.45, cz);
+  const lanes = [[9.6, -3.4], [8.2, -1.7], [11.0, 0], [8.2, 1.7], [9.6, 3.4]];
+  const bodyM = toon('#e8e2d4'), ringM = glow('#ff4a3a'), headM = toon('#e8e2d4'), postM = toon('#3a3d44');
+  lanes.forEach(([ax, dz]) => {
+    const x = sd * ax, z = cz + dz, g = new THREE.Group(), pv = new THREE.Group();
+    part(g, B(0.3, 0.25, 0.5), postM, 0, 0.12, 0); g.add(pv); pv.position.y = 0.25;
+    part(pv, B(0.05, 0.4, 0.05), postM, 0, 0.2, 0);
+    part(pv, B(0.04, 0.9, 0.6), bodyM, 0, 0.8, 0); part(pv, B(0.045, 0.24, 0.24), ringM, 0, 0.8, 0); part(pv, B(0.05, 0.1, 0.1), bodyM, 0, 0.8, 0);
+    part(pv, B(0.04, 0.32, 0.32), headM, 0, 1.5, 0); part(pv, B(0.045, 0.1, 0.1), ringM, 0, 1.5, 0);
+    g.position.set(x, 0, z); levelGroup.add(g);
+    RANGE.tg.push({ x, z, g: pv, up: 1, want: 1, downT: 0, popT: 0, live: false });
+  });
+  levelAnims.push(() => rangeAnim());
+  term(sd * 3.1, s.z0 + 0.7, '#ff6a3a', 'Gun range drill', openRange, 0);
+}
+const rangeHere = () => { const R = RANGE.rect; if (!R || !LEVEL || LEVEL.id !== 'ship') return null; const p = player.pos; return p.x > R.x0 && p.x < R.x1 && p.z > R.z0 && p.z < R.z1 ? R : null; };
+let rangeLast = 0;
+function rangeAnim() {
+  const now = performance.now(), dt = Math.min(0.05, (now - (rangeLast || now)) / 1000); rangeLast = now;
+  for (const t of RANGE.tg) {
+    if (!RANGE.drill && t.want === 0 && now > t.downT) t.want = 1; // free shooting: targets pop back up
+    t.up += (t.want - t.up) * Math.min(1, dt * 14);
+    t.g.rotation.z = -RANGE.side * (1 - t.up) * Math.PI / 2;
+  }
+  const D = RANGE.drill; if (!D) return;
+  if (!rangeHere()) { rangeEnd('You left the range'); return; }
+  const left = D.end - now; if (left <= 0) { rangeEnd(); return; }
+  for (const t of RANGE.tg) if (t.live && now > t.popT) { t.live = false; t.want = 0; } // missed: it drops on its own
+  if (now > D.next) { const idle = RANGE.tg.filter(t => !t.live && t.up < 0.1); if (idle.length) { const t = idle[Math.floor(Math.random() * idle.length)]; t.live = true; t.want = 1; t.popT = now + Math.max(900, 1700 - D.hits * 40); D.pops++; } D.next = now + 450 + Math.random() * 650; }
+  rangeHud(`🎯 ${Math.ceil(left / 1000)}s · ${D.score} pts · ${D.hits}/${D.pops} hit`);
+}
+function rangeHud(txt) {
+  let h = RANGE.hud; if (!h) { h = RANGE.hud = document.createElement('div'); h.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);left:50%;transform:translateX(-50%);z-index:30;padding:6px 14px;border-radius:10px;background:rgba(15,23,87,.82);color:#ffd75e;font:700 16px system-ui,sans-serif;pointer-events:none;letter-spacing:.5px'; document.body.appendChild(h); }
+  h.hidden = !txt; if (txt) h.textContent = txt;
+}
+function openRange() {
+  const best = S.rangeBest || 0;
+  openDlg('Gun Range', 'Drill');
+  $('dlgLine').textContent = `30 seconds. Targets pop up at random and drop again if you are too slow. Body 10, bullseye 15, head 25. Ammo is free in here. Best score: ${best}. Beating your best pays 2 credits a point.`;
+  acts([['Start drill', () => { closeDlg(); rangeStart(); }, true], ['Close', closeDlg]]);
+}
+function rangeStart() {
+  const now = performance.now();
+  for (const t of RANGE.tg) { t.want = 0; t.live = false; }
+  RANGE.drill = { end: now + 30000 + 1500, next: now + 1500, score: 0, hits: 0, pops: 0 };
+  toast('DRILL', 'Targets incoming', 1.4); SFX.ui && SFX.ui();
+}
+function rangeEnd(why) {
+  const D = RANGE.drill; RANGE.drill = null; rangeHud(''); if (!D) return;
+  for (const t of RANGE.tg) { t.live = false; t.want = 1; }
+  if (why) { toast('DRILL STOPPED', why, 2); return; }
+  const old = S.rangeBest || 0, acc = D.pops ? Math.round(100 * D.hits / D.pops) : 0;
+  if (D.score > old) { const pay = (D.score - old) * 2; S.rangeBest = D.score; S.cr += pay; gainXp(Math.round((D.score - old) / 4) + 1); markDirty(); SFX.level(); toast('NEW BEST ' + D.score, `${acc}% accuracy · +${pay} cr`, 3); }
+  else toast('SCORE ' + D.score, `${acc}% accuracy · best ${old}`, 3);
+}
+// which target a shot hits, and where
+function rangeHit(o, d) {
+  let best = null, bt = 1e9;
+  for (const t of RANGE.tg) {
+    if (t.up < 0.7 || Math.abs(d.x) < 1e-4) continue;
+    const tt = (t.x - o.x) / d.x; if (tt <= 0 || tt > bt) continue;
+    const y = o.y + d.y * tt, dz = o.z + d.z * tt - t.z, base = t.g.parent.position.y + 0.25;
+    let pts = 0; if (Math.abs(dz) < 0.16 && Math.abs(y - (base + 1.5)) < 0.16) pts = 25;
+    else if (Math.abs(dz) < 0.3 && Math.abs(y - (base + 0.8)) < 0.45) pts = Math.hypot(dz, y - (base + 0.8)) < 0.13 ? 15 : 10;
+    if (pts) { best = { t, pts, at: V(t.x, y, o.z + d.z * tt) }; bt = tt; }
+  }
+  return best;
+}
+// the ship's safe zone is lifted for shots fired from inside the range, and the ammo comes back
+{ const _f = fire; fire = function () {
+  if (!rangeHere()) return _f();
+  const keep = SAFES.splice(0), am = player.ammo, c0 = player.cool; let r;
+  try { r = _f(); } finally { for (const s of keep) SAFES.push(s); }
+  if (c0 <= 0 && player.cool > 0) { player.ammo = am;
+    const o = camera.getWorldPosition(V(0, 0, 0)), d = V(0, 0, 0); camera.getWorldDirection(d); const h = rangeHit(o, d);
+    if (h) { const D = RANGE.drill, t = h.t;
+      burst(h.at, h.pts >= 25 ? '#ff4a3a' : '#ffd36a', h.pts >= 25 ? 12 : 6, 4); hitmark(h.pts >= 25); SFX.hit && SFX.hit();
+      if (D) { if (t.live) { t.live = false; t.want = 0; D.hits++; D.score += h.pts + (h.pts >= 25 ? 5 : 0); } }
+      else { t.want = 0; t.downT = performance.now() + 1400; toast(h.pts >= 25 ? 'HEADSHOT' : h.pts >= 15 ? 'BULLSEYE' : 'HIT', h.pts + ' pts', 0.6); } } }
+  return r; }; }
+
+// generated by tools/burpvo_ids.py: which B.U.R.P. lines have a recorded clip
+const BURP_VO = new Set('0255d943 0272ce6c 07ff4d15 0a3f0e98 0ce14908 0f9d7604 0ffd248d 1040a9a1 11547848 17769fd6 1835dd59 1884f842 1f8fabb8 21276758 21361572 222043b4 22da18a5 26756b04 27852aed 290ea7d4 29d1db4a 2c3fd6a9 3b6163c8 3bb3d5f8 3ce3ba0b 3d1f3920 3f1f93b2 4262ca97 5022a5ea 520d6549 5239f162 54571b61 607cf32d 60d55737 62b93e73 65155efe 66be4e32 68ff0303 6a60a1a5 6a67f9a3 6b1edd7f 6b44fd90 6e3b9360 71f43a89 7bc06ab5 824eb1fb 8428f81b 880722bf a5679e21 b1b07d1f b3a15d17 b5280fa7 b5796e10 b6829a2a b73ea286 bc424774 bfab3f26 c1633150 c39e5ecf cf58242e cf76d3f5 cfb78867 d2773270 d4c11e65 dc1c2c42 e3bd8605 e41cb0e5 ea68da11 ec88c940 ed2bca2a f2c7fbf6 f6c703ba f7d2c3d9 fd85cb42 ff0c92ca'.split(' ').filter(Boolean));
+
+// =================== B.U.R.P.'s real voice ===================
+// Every B.U.R.P. line is a recorded clip (a British voice run through a robot filter), named by a hash of the line.
+// Lines without a clip, or a phone that can't load it, fall back to the old browser speech.
+const burpHash = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, '0'); };
+const burpVoBuf = new Map(); let burpSrc = null;
+{ const _bs = burpSay; burpSay = function (text) {
+  const id = burpHash(text), ac = SFX.ctx && SFX.ctx();
+  if (!BURP_VO.has(id) || !ac || !PREFS.voice || !PREFS.sfx) return _bs(text);
+  try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (_) {}
+  const play = buf => { try { if (burpSrc) burpSrc.stop(); } catch (_) {} if (ac.state !== 'running') { try { ac.resume(); } catch (_) {} }
+    const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = buf; g.gain.value = 1.5; s.connect(g); g.connect(SFX.voiceOut()); s.start(); burpSrc = s;
+    if (Math.random() < 0.25) s.onended = () => { if (burpSrc === s) SFX.burp(); }; };
+  const b = burpVoBuf.get(id); if (b) { play(b); return; }
+  const t0 = performance.now(); // a clip that took too long to arrive is kept for next time, not played late
+  fetch('voice/burp/' + id + '.mp3').then(r => { if (!r.ok) throw new Error('no clip'); return r.arrayBuffer(); })
+    .then(a => ac.decodeAudioData(a)).then(buf => { burpVoBuf.set(id, buf); if (performance.now() - t0 < 6000) play(buf); }).catch(() => _bs(text));
+}; }
 
 
 // =================== STATE + SAVE ===================

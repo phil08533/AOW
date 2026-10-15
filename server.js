@@ -359,7 +359,9 @@ const server = http.createServer((req, res) => {
       const packOk = id => /^[a-z0-9_-]{1,40}$/.test(id || '');
       const clipsOf = id => { const d = path.join(DIST_DIR, 'voice', id); try { return fs.readdirSync(d).filter(f => f.endsWith('.mp3')).map(f => f.slice(0, -4)); } catch (_) { return []; } };
       const VJ = global.__voiceJob || (global.__voiceJob = { running: false, pack: '', done: 0, total: 0, log: [], error: '' });
-      const py = process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
+      const sysPy = process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
+      const venvPy = path.join(ROOT_DIR, 'tools', 'voice_models', 'venv', process.platform === 'win32' ? 'Scripts' : 'bin', process.platform === 'win32' ? 'python.exe' : 'python');
+      const vpy = fs.existsSync(venvPy) ? venvPy : sysPy, py = sysPy;
       if (req.method === 'GET' && pathname === '/api/script') {
         const inv = SS.scan(), script = readScript(), clips = {};
         for (const id of Object.keys((script.voice && script.voice.packs) || {})) clips[id] = clipsOf(id);
@@ -379,9 +381,12 @@ const server = http.createServer((req, res) => {
       if (req.method === 'POST' && pathname === '/api/voice/setup') {
         if (VJ.running) return send(409, { error: 'busy' });
         Object.assign(VJ, { running: true, pack: '(setup)', done: 0, total: 1, log: ['Installing the voice tools (pip)...'], error: '' });
-        const { spawn } = require('child_process'); const p = spawn(py, ['-m', 'pip', 'install', '--user', 'kokoro-onnx', 'piper-tts', 'soundfile', 'lameenc', 'numpy'], { cwd: ROOT_DIR });
+        const { spawn } = require('child_process'); fs.mkdirSync(path.join(ROOT_DIR, 'tools', 'voice_models'), { recursive: true });
+        const cmd = process.platform === 'win32' ? `"${sysPy}" -m venv tools\\voice_models\\venv && "${venvPy}" -m pip install --upgrade pip && "${venvPy}" -m pip install kokoro-onnx piper-tts soundfile lameenc numpy`
+          : `"${sysPy}" -m venv tools/voice_models/venv && "${venvPy}" -m pip install --upgrade pip && "${venvPy}" -m pip install kokoro-onnx piper-tts soundfile lameenc numpy`;
+        const p = spawn(cmd, { cwd: ROOT_DIR, shell: true });
         const eat = d => { VJ.log.push(...String(d).split('\n').filter(Boolean)); VJ.log = VJ.log.slice(-40); }; p.stdout.on('data', eat); p.stderr.on('data', eat);
-        p.on('close', c => { VJ.running = false; VJ.done = 1; if (c) VJ.error = 'pip exited with ' + c; else VJ.log.push('Voice tools installed. The voice models download the first time you generate.'); });
+        p.on('close', c => { VJ.running = false; VJ.done = 1; if (c) VJ.error = 'Setup failed (exit ' + c + '). On Ubuntu or Mint, run: sudo apt install python3-venv, then press Install voice tools again.'; else VJ.log.push('Voice tools installed. The voice models download the first time you generate.'); });
         p.on('error', e => { VJ.running = false; VJ.error = 'Could not run ' + py + ': ' + e.message + ' (install Python 3, or set the PYTHON environment variable)'; });
         return send(200, { ok: true });
       }
@@ -396,7 +401,7 @@ const server = http.createServer((req, res) => {
           const jobFile = path.join(require('os').tmpdir(), 'aow_voicejob_' + Date.now() + '.json');
           fs.writeFileSync(jobFile, JSON.stringify({ pack, out, lines, force: !!(J.force || J.preview) }));
           Object.assign(VJ, { running: true, pack: id, done: 0, total: lines.length, log: [], error: '', preview: J.preview ? lines.map(l => l[0]) : null });
-          const { spawn } = require('child_process'); const p = spawn(py, [path.join('tools', 'voicegen.py'), jobFile], { cwd: ROOT_DIR });
+          const { spawn } = require('child_process'); const p = spawn(vpy, [path.join('tools', 'voicegen.py'), jobFile], { cwd: ROOT_DIR });
           const eat = d => { for (const l of String(d).split('\n').filter(Boolean)) { const m = /^PROGRESS (\d+) (\d+)/.exec(l); if (m) { VJ.done = +m[1]; VJ.total = +m[2]; } else VJ.log.push(l); } VJ.log = VJ.log.slice(-40); };
           p.stdout.on('data', eat); p.stderr.on('data', eat);
           p.on('close', c => { VJ.running = false; try { fs.unlinkSync(jobFile); } catch (_) {} if (c) VJ.error = VJ.error || ('The voice generator stopped (exit ' + c + '). ' + (VJ.log.slice(-3).join(' '))); else if (!J.preview) { try { execSync(py + ' tools/burpvo_ids.py', { cwd: ROOT_DIR }); execSync(py + ' tools/build.py', { cwd: ROOT_DIR }); VJ.log.push('Game rebuilt with the new clips.'); } catch (e) { VJ.error = 'rebuild failed: ' + e.message; } } });

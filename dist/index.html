@@ -14774,8 +14774,10 @@ function velPhysics(dt) {
   if (!drift && VEL.wasDrift && VEL.dm > 0.5) { VEL.kick = VEL.dm * 0.8; toast('DRIFT BOOST', `${VEL.dm.toFixed(1)}s drift`, 0.9); SFX.coin(); }
   if (!drift) VEL.dm = 0; VEL.wasDrift = drift;
   VEL.bm = Math.min(K.bcap, VEL.bm + dt * 0.05);
-  const steerK = (drift ? 1.95 : 1.6) * Math.min(1, 0.3 + Math.abs(vf) / 16) * (air ? 0.4 : 1);
-  player.yaw -= st * steerK * dt * (vf < -1 ? -1 : 1);
+  // steering eases in (no keyboard twitch) and calms down at high speed so long straights stay straight
+  VEL.stS = (VEL.stS || 0) + (st - (VEL.stS || 0)) * Math.min(1, dt * (st ? 9 : 14));
+  const steerK = (drift ? 1.95 : 1.6) * Math.min(1, 0.3 + Math.abs(vf) / 16) * (air ? 0.4 : 1) / (1 + Math.max(0, Math.abs(vf) - 35) / (drift ? 110 : 70));
+  player.yaw -= VEL.stS * steerK * dt * (vf < -1 ? -1 : 1);
   RC.vx = fx * vf + rx * vr; RC.vz = fz * vf + rz * vr;
   // move, then bounce off whatever we hit
   const ix = p.x + RC.vx * dt, iz = p.z + RC.vz * dt; p.x = ix; p.z = iz; collide(p, 0.9, false); velClamp(p);
@@ -17386,11 +17388,12 @@ let velSplash = null; // set below; the rain in velstorm.js calls it where a dro
   // ---- the soaked ground ----
   function wetGround() {
     levelGroup.traverse(o => { if (o.isMesh && o.geometry && o.geometry.type === 'PlaneGeometry' && o.material && o.material.isMeshPhongMaterial && o.material.vertexColors) {
-      o.material.color.set('#8a929e'); o.material.shininess = 140; o.material.specular.set('#8a9ab4'); o.material.needsUpdate = true; } });
+      o.material.color.set('#666d79'); o.material.shininess = 140; o.material.specular.set('#8a9ab4'); o.material.needsUpdate = true; } });
     W.puddles = []; const S = (LEVEL.size || 400) * 0.45, pm = new THREE.MeshPhongMaterial({ color: '#0a0d14', shininess: 160, specular: new THREE.Color('#a8b8d8'), transparent: true, opacity: 0.82, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
     for (let i = 0; i < 140; i++) { const x = WORLD_C.x + (Math.random() - 0.5) * 2 * S, z = WORLD_C.z + (Math.random() - 0.5) * 2 * S; if (Math.abs(x - VCITY.x) < VCITY.hx + 3 && Math.abs(z - VCITY.z) < VCITY.hz + 3) continue;
       const r = 1.2 + Math.random() * 3.2, m = new THREE.Mesh(new THREE.CircleGeometry(1, 14), pm); m.rotation.x = -Math.PI / 2; m.scale.set(r * (0.6 + Math.random() * 0.8), r * (0.6 + Math.random() * 0.8), 1); m.rotation.z = Math.random() * 6.28;
-      m.position.set(x, groundH(x, z) + 0.025, z); levelGroup.add(m); W.puddles.push([x, z, r * 0.6, m.position.y]); }
+      m.position.set(x, groundH(x, z) + 0.025, z); levelGroup.add(m); W.puddles.push([x, z, r * 0.6, m.position.y, m, r]); }
+    W.pudT = 0;
     // rain rings in the puddles
     W.rings = []; for (let i = 0; i < 70; i++) { const m = flat(1, 1, new THREE.MeshBasicMaterial({ color: '#c8d8f0', transparent: true, opacity: 0, depthWrite: false })); m.geometry = new THREE.RingGeometry(0.82, 1, 16); m.geometry.rotateX(-Math.PI / 2); m.rotation.x = 0; m.visible = false; levelGroup.add(m); W.rings.push({ m, t: 1 }); }
     // splashes where drops land
@@ -17439,6 +17442,10 @@ let velSplash = null; // set below; the rain in velstorm.js calls it where a dro
     stepParticles(W.splash, dt, 9); stepParticles(W.shed, dt, 7);
     for (const R of W.rings) { if (!R.m.visible) continue; R.t += dt * 1.8; const k = 0.08 + R.t * 0.55; R.m.scale.set(k, 1, k); R.m.material.opacity = Math.max(0, 0.55 * (1 - R.t)); if (R.t >= 1) R.m.visible = false; }
     // a light patter: random rings in nearby puddles even when no streak lands there
+    if ((W.pudT -= dt) < 0) { W.pudT = 0.25; const px = player.pos.x, pz = player.pos.z, fy = player.yaw || 0;
+      for (let k = 0; k < 4; k++) { const p = W.puddles[(Math.random() * W.puddles.length) | 0]; if (!p || Math.hypot(p[0] - px, p[1] - pz) < 90) continue;
+        const a = fy + (Math.random() - 0.5) * 2.6, d = 25 + Math.random() * 55, x = px - Math.sin(a) * d, z = pz - Math.cos(a) * d; if (Math.abs(x - VCITY.x) < VCITY.hx + 3 && Math.abs(z - VCITY.z) < VCITY.hz + 3) continue;
+        const y = groundH(x, z); if (Math.abs(floorAt(x, z) - y) > 0.2) continue; p[0] = x; p[1] = z; p[3] = y + 0.025; p[4].position.set(x, p[3], z); } }
     for (let k = 0; k < 3; k++) { const p = W.puddles[(Math.random() * W.puddles.length) | 0]; if (!p || Math.hypot(p[0] - player.pos.x, p[1] - player.pos.z) > 45) continue; const R = W.rings[W.ri = (W.ri + 1) % W.rings.length]; R.m.position.set(p[0] + (Math.random() - 0.5) * p[2] * 1.4, p[3] + 0.01, p[1] + (Math.random() - 0.5) * p[2] * 1.4); R.t = 0; R.m.visible = true; }
   }; }
 }

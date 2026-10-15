@@ -197,8 +197,10 @@ function velPhysics(dt) {
   if (!drift && VEL.wasDrift && VEL.dm > 0.5) { VEL.kick = VEL.dm * 0.8; toast('DRIFT BOOST', `${VEL.dm.toFixed(1)}s drift`, 0.9); SFX.coin(); }
   if (!drift) VEL.dm = 0; VEL.wasDrift = drift;
   VEL.bm = Math.min(K.bcap, VEL.bm + dt * 0.05);
-  const steerK = (drift ? 1.95 : 1.6) * Math.min(1, 0.3 + Math.abs(vf) / 16) * (air ? 0.4 : 1);
-  player.yaw -= st * steerK * dt * (vf < -1 ? -1 : 1);
+  // steering eases in (no keyboard twitch) and calms down at high speed so long straights stay straight
+  VEL.stS = (VEL.stS || 0) + (st - (VEL.stS || 0)) * Math.min(1, dt * (st ? 9 : 14));
+  const steerK = (drift ? 1.95 : 1.6) * Math.min(1, 0.3 + Math.abs(vf) / 16) * (air ? 0.4 : 1) / (1 + Math.max(0, Math.abs(vf) - 35) / (drift ? 110 : 70));
+  player.yaw -= VEL.stS * steerK * dt * (vf < -1 ? -1 : 1);
   RC.vx = fx * vf + rx * vr; RC.vz = fz * vf + rz * vr;
   // move, then bounce off whatever we hit
   const ix = p.x + RC.vx * dt, iz = p.z + RC.vz * dt; p.x = ix; p.z = iz; collide(p, 0.9, false); velClamp(p);

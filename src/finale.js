@@ -349,8 +349,9 @@ function mawDoomStep(A, dt) {
   return true;
 }
 // ---- the fight ----
+const MAW_FINAL_TOUGH = 0.6; // the last, morphed phase soaks more: every hit lands at 60%
 function mawDamage(n, byYou, at) {
-  if (MAW.dead || !MAW.obj) return; MAW.hp -= n;
+  if (MAW.dead || !MAW.obj) return; if (MAW.final) n *= MAW_FINAL_TOUGH; MAW.hp -= n;
   const f = MAW.hp / MAW.max, ph = f > 0.66 ? 1 : f > 0.33 ? 2 : 3;
   if (ph !== MAW.phase && !MAW.final) { MAW.phase = ph; MAW.obj.userData.rage = ph - 1; SFX.boom(); if (fly) fly.shake = 0.6;
     toast(ph === 2 ? 'IT SPAWNS' : 'IT\'S ENRAGED', ph === 2 ? 'The Maw tears off pieces of itself' : 'Every eye opens at once', 2.5); }
@@ -559,7 +560,8 @@ function mawDeath() {
   const shake = (k) => { m.position.copy(MAW_C).add(V(rand(-1, 1), rand(-1, 1), rand(-1, 1)).multiplyScalar(2 + k * 4)); };
   const popTo = (n) => { while (popped < n && popped < U.eyes.length) { const e = U.eyes[popped++]; burst(e.getWorldPosition(V(0, 0, 0)), '#ff2a3a', 10, 30); e.visible = false; } };
   const leave = () => { m.visible = false; levelGroup.remove(flash);
-    toast('THE GREATER MAW IS DEAD', first ? 'Return to Captain Vega on Earth' : 'The rift remembers. It will be back.', 4); SFX.level();
+    toast('THE GREATER MAW IS DEAD', first ? 'The galaxy can breathe again' : 'The rift remembers. It will be back.', 4); SFX.level();
+    if (first) { setTimeout(mawEnding, 1800); return; }
     setTimeout(() => { if (LEVEL.id !== 'maw') return; player.hp = player.groundHp != null ? player.groundHp : maxHpGround(); player.groundHp = null; const p = wormholePos(); travel('space', { at: { x: p.x + 120, y: p.y, z: p.z + 120, yaw: 0.8 } }); }, 3500); };
   runCutscene({ lock: first ? 4 : 1, shots: (first ? [
     { text: 'It screams, and there is no sound.', dur: 4, cam: (t, k) => { U.rage = 3; mawAnim(m, T(), camera.position); shake(k); popTo(Math.floor(k * U.eyes.length * 0.6)); camLook(V(Math.sin(k) * 220, 60, 360), MAW_C); } },
@@ -571,6 +573,14 @@ function mawDeath() {
   ]), onEnd: leave });
 }
 
+// the first kill rolls the ending and credits straight away, then lands you in New Jamestown beside Vega for the hand-in
+function mawEnding() {
+  S.flags = S.flags || {}; S.flags.creditsSeen = 1; markDirty(); rollCredits(false);
+  const iv = setInterval(() => { if (document.getElementById('ending')) return; clearInterval(iv);
+    player.hp = player.groundHp != null ? player.groundHp : maxHpGround(); player.groundHp = null; travel('earth');
+    setTimeout(() => { const v = npcObjs.vega && npcObjs.vega.obj; if (v && LEVEL.id === 'earth') { const a = v.rotation.y; player.pos.x = v.position.x + Math.sin(a) * 3.2; player.pos.z = v.position.z + Math.cos(a) * 3.2; player.yaw = a; }
+      toast('HOME', 'Captain Vega is waiting for you', 4); }, 1100); }, 400);
+}
 // ---- the Watcher's death on Vector: it dies, and tears the wormhole open ----
 { const _k = kill; kill = function (e) { const r = _k.apply(this, arguments);
   try { if (e && e.sp && e.sp.type === 'watcher' && LEVEL && LEVEL.id === 'vector') { const first = !(S.flags && S.flags.watcherDied); S.flags = S.flags || {}; S.flags.watcherDied = 1; S.flags.wormhole = 1; markDirty();

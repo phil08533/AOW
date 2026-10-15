@@ -3,7 +3,7 @@ const ST = () => { S.stats = S.stats || { kills: 0, bosses: 0, fish: 0, deaths: 
 // ---- counters ----
 { const _k = kill; kill = function (e) { const r = _k(e); const T = ST(); T.kills++; T.kt[e.sp.type] = (T.kt[e.sp.type] || 0) + 1; if (e.def.boss) T.bosses++; if (e.sp.raid) T.raids++; dailyTick(); return r; }; }
 { const _q = questProgressFish; questProgressFish = function (...a) { ST().fish++; dailyTick(); return _q.apply(this, a); }; }
-{ const _c = completeQuest; completeQuest = function (id) { const r = _c(id); ST().quests++; checkAch(); if (id === 'w4') setTimeout(rollCredits, 4500); return r; }; }
+{ const _c = completeQuest; completeQuest = function (id) { const r = _c(id); ST().quests++; checkAch(); if (id === 'w4' && !(S.flags && S.flags.creditsSeen)) setTimeout(rollCredits, 4500); return r; }; }
 { const _r = respawn; respawn = function () { ST().deaths++; return _r(); }; }
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); if (LEVELS[id] && !['ship', 'space', 'apt', 'zfloor'].includes(id)) ST().worlds[id] = 1; return r; }; }
 { let lastCr = null; setInterval(() => { try { if (state !== 'play') return; if (lastCr != null && S.cr > lastCr) { ST().crEarned += S.cr - lastCr; dailyTick(); } lastCr = S.cr; } catch (_) {} }, 1000); }

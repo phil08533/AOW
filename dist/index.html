@@ -329,7 +329,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.13.11</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.13.12</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -11453,7 +11453,7 @@ const ST = () => { S.stats = S.stats || { kills: 0, bosses: 0, fish: 0, deaths: 
 // ---- counters ----
 { const _k = kill; kill = function (e) { const r = _k(e); const T = ST(); T.kills++; T.kt[e.sp.type] = (T.kt[e.sp.type] || 0) + 1; if (e.def.boss) T.bosses++; if (e.sp.raid) T.raids++; dailyTick(); return r; }; }
 { const _q = questProgressFish; questProgressFish = function (...a) { ST().fish++; dailyTick(); return _q.apply(this, a); }; }
-{ const _c = completeQuest; completeQuest = function (id) { const r = _c(id); ST().quests++; checkAch(); if (id === 'w4') setTimeout(rollCredits, 4500); return r; }; }
+{ const _c = completeQuest; completeQuest = function (id) { const r = _c(id); ST().quests++; checkAch(); if (id === 'w4' && !(S.flags && S.flags.creditsSeen)) setTimeout(rollCredits, 4500); return r; }; }
 { const _r = respawn; respawn = function () { ST().deaths++; return _r(); }; }
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); if (LEVELS[id] && !['ship', 'space', 'apt', 'zfloor'].includes(id)) ST().worlds[id] = 1; return r; }; }
 { let lastCr = null; setInterval(() => { try { if (state !== 'play') return; if (lastCr != null && S.cr > lastCr) { ST().crEarned += S.cr - lastCr; dailyTick(); } lastCr = S.cr; } catch (_) {} }, 1000); }
@@ -12079,9 +12079,9 @@ function rollCredits(replay) {
   const ffb = document.createElement('button'), skb = document.createElement('button'); [ffb, skb].forEach(b => { b.className = 'pbtn'; b.style.cssText = 'font-size:15px;padding:8px 14px;background:rgba(0,0,0,.55)'; });
   ffb.textContent = '⏩ 1×'; skb.textContent = 'Skip ✕'; bar.append(ffb, skb); ov.appendChild(bar);
   document.body.appendChild(ov); if (document.pointerLockElement) document.exitPointerLock(); SFX.level();
-  const L = ['<div style="font-size:44px;color:#ffd36a;margin-bottom:6px">ART OF WAR</div><div style="font-size:22px;margin-bottom:40px;letter-spacing:6px">SETTING SUN</div>', '<b style="color:#ffd36a">Created by</b>', 'Philip Gonzales', 'Caleb Dingus', '<br>', '<b style="color:#ffd36a">Original concept art</b>', "Phil & Caleb's high-school notebooks", 'with one sketch by Ethan', '<br>', ...(typeof GALLERY !== 'undefined' ? GALLERY.filter(g => ['xr17', 'elismas', 'ramick', 'maxurge', 'bugmaster', 'drome'].includes(g[0])).flatMap(g => [galleryCard(g, true), '<br>']) : []), '<b style="color:#ffd36a">Starring</b>', (S.nick || 'Trooper') + ' as the Trooper', 'B.U.R.P. as the ship AI (against his will)', 'Captain Vega · Elismas · Maxurge · Ramick · Seer Ixa', 'Ada-9 · Harbor Master Rell · General Hale · Sgt. Torque', 'Captain Skye · Old Wren · Dr. Fenn · Lumen', 'Nyra · Grix · Juno · Rhett · Vesper · PIP-9', '<br>', '<b style="color:#ffd36a">Villains</b>', 'Drome, Lord of the Setting Sun', 'Admiral Sable · Warlord Krag · the Overseer', 'the Frost King · the Storm Mother', 'and the Watcher in the Maw', '<br>', '<b style="color:#ffd36a">Built by</b>', 'Claude, as the whole dev team', '<br><br>', '<div style="font-size:22px;color:#ffd36a">The galaxy is still out there.</div>', replay ? '' : 'Talk to Captain Vega for one last thing. New Game+ is in the Codex.'];
+  const L = ['<div style="font-size:44px;color:#ffd36a;margin-bottom:6px">ART OF WAR</div><div style="font-size:22px;margin-bottom:40px;letter-spacing:6px">SETTING SUN</div>', '<b style="color:#ffd36a">Created by</b>', 'Philip Gonzales', 'Caleb Dingus', '<br>', '<b style="color:#ffd36a">Original concept art</b>', "Phil & Caleb's high-school notebooks", 'with one sketch by Ethan', '<br>', ...(typeof GALLERY !== 'undefined' ? GALLERY.filter(g => ['xr17', 'elismas', 'ramick', 'maxurge', 'bugmaster', 'drome'].includes(g[0])).flatMap(g => [galleryCard(g, true), '<br>']) : []), '<b style="color:#ffd36a">Starring</b>', (S.nick || 'Trooper') + ' as the Trooper', 'B.U.R.P. as the ship AI (against his will)', 'Captain Vega · Elismas · Maxurge · Ramick · Seer Ixa', 'Ada-9 · Harbor Master Rell · General Hale · Sgt. Torque', 'Captain Skye · Old Wren · Dr. Fenn · Lumen', 'Nyra · Grix · Juno · Rhett · Vesper · PIP-9', '<br>', '<b style="color:#ffd36a">The last squadron</b>', 'Captain Vega, who flew the old ship first', 'Captain Skye and the Earth Defense Force', 'Ada-9 for Robot City', 'Harbor Master Rell · General Hale · Lumen', 'Elismas · the Bug Master · Maxurge · Ramick, the Four Masters', 'Lt. Vance · Ensign Park · Sgt. Okafor', '<br>', '<b style="color:#ffd36a">Villains</b>', 'Drome, Lord of the Setting Sun', 'Admiral Sable · Warlord Krag · the Overseer', 'the Frost King · the Storm Mother', 'the Watcher on Vector', 'and the Greater Maw', '<br>', '<b style="color:#ffd36a">Built by</b>', 'Claude, as the whole dev team', '<br><br>', '<div style="font-size:22px;color:#ffd36a">The galaxy is still out there.</div>', replay ? '' : 'Talk to Captain Vega for one last thing. New Game+ is in the Codex.'];
   roll.innerHTML = L.map(l => `<div>${l}</div>`).join('');
-  const scenes = [[0, 'The Maw\'s last eye closes.'], [6, 'Across the galaxy, the lights come back on.'], [12.5, 'On Earth, the sun comes up red...'], [17, '...and then gold.'], [21.5, '']];
+  const scenes = [[0, 'The Greater Maw\'s last eye closes.'], [5.5, 'The squadron flies home through the wormhole.'], [9.5, 'Across the galaxy, the lights come back on.'], [12.5, 'On Earth, the sun comes up red...'], [17, '...and then gold.'], [21.5, '']];
   let t = 0, speed = 1, last = performance.now(), done = false, capI = -1;
   const W = () => cv.width = ov.clientWidth * Math.min(2, devicePixelRatio || 1), H = () => cv.height = ov.clientHeight * Math.min(2, devicePixelRatio || 1); W(); H();
   const stars = Array.from({ length: 220 }, (_, i) => [(Math.sin(i * 12.9898) * 43758.5453 % 1 + 1) % 1, (Math.sin(i * 78.233) * 12345.678 % 1 + 1) % 1, (i % 7) / 7]);
@@ -12105,8 +12105,12 @@ function rollCredits(replay) {
     }
     if (t > 5 && t < 16) { // worlds light up, the ship flies across
       const k = Math.min(1, (t - 5) / 3) * Math.max(0, 1 - (t - 13) / 3);
-      planets.forEach(([c, px, py, pr], i) => { const on = Math.min(1, Math.max(0, (t - 6 - i * 0.6) / 0.8)); x.globalAlpha = k; x.fillStyle = c; x.beginPath(); x.arc(px * w, py * h, pr * m, 0, Math.PI * 2); x.fill(); x.globalAlpha = k * on * 0.5; const rg = x.createRadialGradient(px * w, py * h, pr * m, px * w, py * h, pr * m * 2.4); rg.addColorStop(0, '#ffd36a'); rg.addColorStop(1, 'rgba(255,211,106,0)'); x.fillStyle = rg; x.beginPath(); x.arc(px * w, py * h, pr * m * 2.4, 0, Math.PI * 2); x.fill(); });
-      x.globalAlpha = k; const sx = (t - 6) / 8 * w * 1.3 - w * 0.15, sy = h * 0.45 - (t - 6) * h * 0.012; x.fillStyle = '#e8ecf8'; x.beginPath(); x.moveTo(sx + m * 0.06, sy); x.lineTo(sx - m * 0.03, sy - m * 0.02); x.lineTo(sx - m * 0.02, sy); x.lineTo(sx - m * 0.03, sy + m * 0.02); x.closePath(); x.fill(); x.fillStyle = '#4fd2ff'; x.fillRect(sx - m * 0.06, sy - 2, m * 0.03, 4); x.globalAlpha = 1;
+      planets.forEach(([c, px, py, pr], i) => { const on = Math.min(1, Math.max(0, (t - 9.5 - i * 0.45) / 0.8)); x.globalAlpha = k; x.fillStyle = c; x.beginPath(); x.arc(px * w, py * h, pr * m, 0, Math.PI * 2); x.fill(); x.globalAlpha = k * on * 0.5; const rg = x.createRadialGradient(px * w, py * h, pr * m, px * w, py * h, pr * m * 2.4); rg.addColorStop(0, '#ffd36a'); rg.addColorStop(1, 'rgba(255,211,106,0)'); x.fillStyle = rg; x.beginPath(); x.arc(px * w, py * h, pr * m * 2.4, 0, Math.PI * 2); x.fill(); });
+      { const wa = Math.min(1, (t - 5) / 1) * Math.max(0, 1 - (t - 9) / 1.5), wx = w * 0.1, wy = h * 0.45; if (wa > 0) { x.save(); x.translate(wx, wy); for (let j = 0; j < 5; j++) { x.globalAlpha = wa * (0.25 + j * 0.12); x.strokeStyle = j % 2 ? '#c86aff' : '#6ad0ff'; x.lineWidth = m * 0.008; x.beginPath(); x.ellipse(0, 0, m * (0.05 + j * 0.022), m * (0.11 + j * 0.03), 0, t * (1.5 + j * 0.3), t * (1.5 + j * 0.3) + Math.PI * 1.5); x.stroke(); } x.restore(); } }
+      const sq = [[0, 0, '#e8ecf8'], [-1, -1, '#ffd36a'], [-1, 1, '#4fd2ff'], [-2, -2, '#9aff6a'], [-2, 2, '#ff6a6a'], [-3, -3, '#c86aff'], [-3, 3, '#ffb36a'], [-4, -4, '#7fe0ff'], [-4, 4, '#ff6ae8']];
+      for (const [fx, fy, fc] of sq) { const go = Math.max(0, t - 6 - (-fx) * 0.25); if (!go) continue; x.globalAlpha = k; const sx = w * 0.1 + go / 8 * w * 1.3 + fx * m * 0.09, sy = h * 0.45 - go * h * 0.012 + fy * m * 0.05, sc = fx ? 0.7 : 1;
+        x.fillStyle = fc; x.beginPath(); x.moveTo(sx + m * 0.06 * sc, sy); x.lineTo(sx - m * 0.03 * sc, sy - m * 0.02 * sc); x.lineTo(sx - m * 0.02 * sc, sy); x.lineTo(sx - m * 0.03 * sc, sy + m * 0.02 * sc); x.closePath(); x.fill(); x.fillStyle = '#4fd2ff'; x.fillRect(sx - m * 0.06 * sc, sy - 2, m * 0.03 * sc, 4); }
+      x.globalAlpha = 1;
     }
     if (dawn > 0) { // the sun and New Jamestown's skyline
       const sy = h * (0.95 - 0.35 * Math.min(1, (t - 12) / 10)), sr = m * 0.14; const sg = x.createRadialGradient(w / 2, sy, sr * 0.2, w / 2, sy, sr * 3); sg.addColorStop(0, gold > 0.3 ? '#fff6d0' : '#ffb070'); sg.addColorStop(0.3, `rgba(255,${120 + 100 * gold},${60 + 40 * gold},.9)`); sg.addColorStop(1, 'rgba(255,120,40,0)'); x.fillStyle = sg; x.beginPath(); x.arc(w / 2, sy, sr * 3, 0, Math.PI * 2); x.fill();
@@ -13838,7 +13842,7 @@ const tabBtn = (id, label, fn) => { const b = document.createElement('button'); 
     stGame: tabBtn('stGame', 'Game', () => openSettingsTab('game'))
   };
   const home = document.createElement('div'); home.className = 'tabPage'; home.dataset.p = 'home'; drop.appendChild(home);
-  for (const [id, label, sub, page] of TAB_HOME) { const b = document.createElement('button'); b.className = 'hbtn win tabCat'; b.id = id; b.innerHTML = `${label}<small>${sub}</small>`;
+  for (const [id, label, sub, page] of TAB_HOME) { const b = document.createElement('button'); b.className = 'hbtn win tabCat'; b.id = id; b.innerHTML = `<span class="tcT">${label}<small>${sub}</small></span>`;
     b.addEventListener('click', e => { if (page) { e.stopPropagation(); SFX.ui(); tabGo(page); } else { if (!dlgOpen) openBag(); } }); home.appendChild(b); }
   const placed = new Set();
   for (const [p, P] of Object.entries(TAB_PAGES)) { if (!P.ids) continue; const pg = document.createElement('div'); pg.className = 'tabPage'; pg.dataset.p = p; pg.hidden = true; drop.appendChild(pg);
@@ -16077,7 +16081,7 @@ function subChip() {
   subChipEl.hidden = !on || (!act.length && !subOwned().length);
   if (!subChipEl.hidden) subChipEl.innerHTML = (act.length ? act.map(id => `<span style="color:${SUBS[id].col}">✦${Math.ceil((subEnd(id) - now) / 60000)}m</span>`).join(' ') : '✦ Use') + (tripOn() ? ' <span style="color:#ff3b2a">☠</span>' : '') + ' <kbd>U</kbd>';
   tSub.hidden = !on || !subOwned().length;
-  try { const h = $('tReload'); if (h && !tSub.hidden) tSub.style.setProperty('bottom', getComputedStyle(h).bottom, 'important'); } catch (_) {}
+  try { if (typeof hudStack === 'function') hudStack(); } catch (_) {}
 }
 setInterval(() => { try { subChip(); } catch (_) {} }, 1000);
 function quickSub() {
@@ -16694,7 +16698,8 @@ const UPDATES = [
   { id: 100, title: '2.13.8 · The Maw fight, rebuilt', items: ["The intro cutscene now plays every time you take on the Maw.", "The Greater Maw is bigger and nastier: bone armour, a crown of teeth, more eyes, glowing cracks and whipping tendrils.", "It fires purple rings now. Its spawns hold the line between you and it, with a red glow so you can see them.", "Your squadron's lasers fly all the way in and burst on its hide. No more name tags; your allies talk over comms instead.", "Not everyone makes it home. B.U.R.P. takes it hard.", "A final phase: the Maw morphs, the squadron forms up around you, and B.U.R.P. offers fight mode. Mega guns, explosions, smoke, and Vega yelling to keep firing.", "Fight comms are a small strip at the bottom of the screen, out of your way.", "The Greater Maw is in the 3D Asset Studio, so you can edit it there."] },
   { id: 101, title: '2.13.9 · Every place has a sound', items: ["Ambient sound everywhere: ship hum and vents, birds on Earth, desert wind on Mezar, surf on the Ocean World, crowd murmur in the Zeltac and the arenas, machines in Robot City, thunder on Zarlich, and the Maw's low groan.", "Rain, acid rain, snow and sandstorms add their own layer outdoors.", "It sits under the music, crossfades as you travel, and has its own Ambience slider in Settings → Sound."] },
   { id: 102, title: '2.13.10 · Lab stations and a steadier garage', items: ["The Lab keeps everything it makes. Switching a recipe moves finished doses to a lab shelf, and Collect empties the shelf and every station into your bag.", "Build up to 3 lab stations, each brewing its own recipe side by side.", "Two-column lists on a sideways phone (like Garage Gus) no longer flip to one column and back when you tap something."] },
-  { id: 103, title: '2.13.11 · Lab fixes', items: ["The Lab list no longer jumps back to the top while you scroll.", "Each lab station now shows what its drug does and what a dose costs.", "The Add station row is laid out properly on a sideways phone."] }
+  { id: 103, title: '2.13.11 · Lab fixes', items: ["The Lab list no longer jumps back to the top while you scroll.", "Each lab station now shows what its drug does and what a dose costs.", "The Add station row is laid out properly on a sideways phone."] },
+  { id: 104, title: '2.13.12 · The real ending', items: ["The Greater Maw's last, morphed phase takes longer to burn down.", "Killing the Greater Maw for the first time rolls a new ending and the credits straight away, with the whole squadron flying home through the wormhole. Afterwards you land in New Jamestown next to Captain Vega.", "On touch screens, the USE button sits in the right-hand button column, and the gun and ammo box moves next to your HP so FIRE never covers it.", "The menu tiles have new icons drawn from the game's own 3D models, and the text no longer spills over the tiles outside fullscreen."] }
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -17147,8 +17152,9 @@ function mawDoomStep(A, dt) {
   return true;
 }
 // ---- the fight ----
+const MAW_FINAL_TOUGH = 0.6; // the last, morphed phase soaks more: every hit lands at 60%
 function mawDamage(n, byYou, at) {
-  if (MAW.dead || !MAW.obj) return; MAW.hp -= n;
+  if (MAW.dead || !MAW.obj) return; if (MAW.final) n *= MAW_FINAL_TOUGH; MAW.hp -= n;
   const f = MAW.hp / MAW.max, ph = f > 0.66 ? 1 : f > 0.33 ? 2 : 3;
   if (ph !== MAW.phase && !MAW.final) { MAW.phase = ph; MAW.obj.userData.rage = ph - 1; SFX.boom(); if (fly) fly.shake = 0.6;
     toast(ph === 2 ? 'IT SPAWNS' : 'IT\'S ENRAGED', ph === 2 ? 'The Maw tears off pieces of itself' : 'Every eye opens at once', 2.5); }
@@ -17357,7 +17363,8 @@ function mawDeath() {
   const shake = (k) => { m.position.copy(MAW_C).add(V(rand(-1, 1), rand(-1, 1), rand(-1, 1)).multiplyScalar(2 + k * 4)); };
   const popTo = (n) => { while (popped < n && popped < U.eyes.length) { const e = U.eyes[popped++]; burst(e.getWorldPosition(V(0, 0, 0)), '#ff2a3a', 10, 30); e.visible = false; } };
   const leave = () => { m.visible = false; levelGroup.remove(flash);
-    toast('THE GREATER MAW IS DEAD', first ? 'Return to Captain Vega on Earth' : 'The rift remembers. It will be back.', 4); SFX.level();
+    toast('THE GREATER MAW IS DEAD', first ? 'The galaxy can breathe again' : 'The rift remembers. It will be back.', 4); SFX.level();
+    if (first) { setTimeout(mawEnding, 1800); return; }
     setTimeout(() => { if (LEVEL.id !== 'maw') return; player.hp = player.groundHp != null ? player.groundHp : maxHpGround(); player.groundHp = null; const p = wormholePos(); travel('space', { at: { x: p.x + 120, y: p.y, z: p.z + 120, yaw: 0.8 } }); }, 3500); };
   runCutscene({ lock: first ? 4 : 1, shots: (first ? [
     { text: 'It screams, and there is no sound.', dur: 4, cam: (t, k) => { U.rage = 3; mawAnim(m, T(), camera.position); shake(k); popTo(Math.floor(k * U.eyes.length * 0.6)); camLook(V(Math.sin(k) * 220, 60, 360), MAW_C); } },
@@ -17369,6 +17376,14 @@ function mawDeath() {
   ]), onEnd: leave });
 }
 
+// the first kill rolls the ending and credits straight away, then lands you in New Jamestown beside Vega for the hand-in
+function mawEnding() {
+  S.flags = S.flags || {}; S.flags.creditsSeen = 1; markDirty(); rollCredits(false);
+  const iv = setInterval(() => { if (document.getElementById('ending')) return; clearInterval(iv);
+    player.hp = player.groundHp != null ? player.groundHp : maxHpGround(); player.groundHp = null; travel('earth');
+    setTimeout(() => { const v = npcObjs.vega && npcObjs.vega.obj; if (v && LEVEL.id === 'earth') { const a = v.rotation.y; player.pos.x = v.position.x + Math.sin(a) * 3.2; player.pos.z = v.position.z + Math.cos(a) * 3.2; player.yaw = a; }
+      toast('HOME', 'Captain Vega is waiting for you', 4); }, 1100); }, 400);
+}
 // ---- the Watcher's death on Vector: it dies, and tears the wormhole open ----
 { const _k = kill; kill = function (e) { const r = _k.apply(this, arguments);
   try { if (e && e.sp && e.sp.type === 'watcher' && LEVEL && LEVEL.id === 'vector') { const first = !(S.flags && S.flags.watcherDied); S.flags = S.flags || {}; S.flags.watcherDied = 1; S.flags.wormhole = 1; markDirty();
@@ -19065,6 +19080,49 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  #inv .det table{font-size:12px}#inv .det td{padding:2px 0}#inv .det td:last-child{font-size:13px}#inv .det p{margin:3px 0;font-size:12px}
 }
 </style>`);
+
+// ---- touch HUD tidy (2.13.11): the USE button joins the right-hand button column, and the gun/ammo box moves next to the HP panel so FIRE never covers it ----
+const HUD_COL = ['tHeal', 'tNade', 'tMelee', 'tReload'];
+function hudStack() {
+  const sub = $('tSub'), am = $('ammo'), vit = $('vitals'), B = document.body.classList;
+  const touch = matchMedia('(pointer: coarse)').matches, special = B.contains('driving') || B.contains('flying');
+  if (sub) { const col = HUD_COL.map(id => $(id)).filter(e => { if (!e || !e.offsetParent) return false; const c = getComputedStyle(e); return c.display !== 'none' && c.visibility !== 'hidden' && +c.opacity > 0.05; });
+    if (!sub.hidden && col.length && !special) { const rs = col.map(e => e.getBoundingClientRect()), top = rs.reduce((a, r) => r.top < a.top ? r : a), gap = rs.length > 1 ? Math.abs(rs[0].top - rs[1].top) : top.height + 5;
+      sub.style.setProperty('left', 'auto', 'important'); sub.style.setProperty('bottom', 'auto', 'important');
+      const cr = parseFloat(sub.style.right) || 0, ct = parseFloat(sub.style.top) || 0; sub.style.setProperty('right', cr + 'px', 'important'); sub.style.setProperty('top', ct + 'px', 'important');
+      const r = sub.getBoundingClientRect(), k = r.width / (sub.offsetWidth || 1) || 1, mp = $('map'), mb = mp && mp.offsetParent ? mp.getBoundingClientRect().bottom + 20 : 0, side = top.top - gap < mb, dx = (top.left + top.width / 2 - (side ? gap : 0)) - (r.left + r.width / 2), dy = (side ? top.top : top.top - gap) - r.top;
+      if (Math.abs(dx) > 1) sub.style.setProperty('right', Math.round(cr - dx / k) + 'px', 'important'); if (Math.abs(dy) > 1) sub.style.setProperty('top', Math.round(ct + dy / k) + 'px', 'important'); }
+    else ['right', 'left', 'top', 'bottom'].forEach(k => sub.style.removeProperty(k)); }
+  if (am && vit) { const v = vit.getBoundingClientRect(), w = am.offsetWidth, menu = $('pullTab'), lim = menu && menu.offsetParent ? menu.getBoundingClientRect().left - 8 : innerWidth * 0.5;
+    if (touch && !special && v.width && v.right + 10 + w <= lim) { am.style.setProperty('right', 'auto', 'important'); am.style.textAlign = 'left';
+      const cur = parseFloat(am.style.left) || 0; am.style.setProperty('left', cur + 'px', 'important'); const r = am.getBoundingClientRect(), k = r.width / (am.offsetWidth || 1) || 1, want = v.right + 10;
+      if (Math.abs(r.left - want) > 1) am.style.setProperty('left', Math.round(cur + (want - r.left) / k) + 'px', 'important'); }
+    else { am.style.removeProperty('left'); am.style.removeProperty('right'); am.style.textAlign = ''; } }
+}
+setInterval(() => { try { if (state === 'play') hudStack(); } catch (_) {} }, 500);
+addEventListener('resize', () => setTimeout(hudStack, 100));
+// ---- menu icons drawn from the game's own 3D models (2.13.11): rendered once into little transparent pictures, emoji stay as the fallback ----
+const MENU_ICONS = { tcShip: () => makeStarship(), tcVeh: () => makeBattleCar('#d23a2a'), tcBag: () => makeSalvageCrate(), tcJournal: () => makeBeacon(), tcSocial: () => makeTrooper(), tcSet: () => makeDroid() };
+function menuIcons() {
+  let R; try { R = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true }); } catch (_) { return; }
+  R.setSize(128, 128, false); R.setClearColor(0x000000, 0); R.outputEncoding = THREE.sRGBEncoding;
+  const sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, 1, 0.01, 1000);
+  sc.add(new THREE.AmbientLight(0xffffff, 0.75)); const sun = new THREE.DirectionalLight(0xffffff, 0.9); sun.position.set(2, 4, 3); sc.add(sun);
+  for (const id in MENU_ICONS) { const b = $(id); if (!b) continue;
+    try { const o = MENU_ICONS[id](); o.traverse(c => { if (c.isSprite || c.isPoints) c.visible = false; }); sc.add(o); o.updateMatrixWorld(true);
+      const box = new THREE.Box3(); o.traverse(c => { if (!c.isMesh || !c.visible) return; let v = true; for (let q = c.parent; q; q = q.parent) if (!q.visible) v = false; const m = c.material; if (!v || (m && (m.blending === THREE.AdditiveBlending || (m.transparent && m.opacity < 0.5)))) return; box.expandByObject(c); }); const sp = box.getBoundingSphere(new THREE.Sphere()), d = sp.radius / Math.sin(THREE.MathUtils.degToRad(15)) * 1.02;
+      cam.position.copy(sp.center).add(new THREE.Vector3(1, 0.55, 1.35).normalize().multiplyScalar(d)); cam.lookAt(sp.center); cam.near = d / 50; cam.far = d * 3; cam.updateProjectionMatrix();
+      R.render(sc, cam); b.style.setProperty('--ico', `url(${R.domElement.toDataURL('image/png')})`); b.classList.add('ico3d'); sc.remove(o); } catch (e) { console.warn('menu icon', id, e); } }
+  R.dispose(); try { R.forceContextLoss(); } catch (_) {}
+}
+document.head.insertAdjacentHTML('beforeend', `<style>
+#menuDrop .tabCat.ico3d::before { content: '' !important; display: block; width: min(68px, 12vh); height: min(68px, 12vh); flex: none; background: var(--ico) center / contain no-repeat; filter: drop-shadow(0 2px 3px rgba(0,0,0,.55)); }
+@media (max-height: 460px) { body #tabWrap #menuDrop .tabCat { flex-direction: row !important; justify-content: flex-start !important; text-align: left !important; gap: 10px !important; padding: 6px 10px !important; overflow: hidden; }
+  #menuDrop .tabCat.ico3d::before { width: min(60px, 16vh); height: min(60px, 16vh); } #menuDrop .tabCat::before { font-size: min(30px, 8vh) !important; }
+  #menuDrop .tabCat small { font: 600 12px var(--ui, sans-serif) !important; letter-spacing: 0 !important; word-spacing: normal !important; text-align: left; display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } }
+@media (max-height: 300px) { #menuDrop .tabCat small { display: none !important; } }
+</style>`);
+setTimeout(() => { try { menuIcons(); } catch (_) {} }, 1500);
 
 // =================== AMBIENCE (2.13.9): a sound bed for every place, built live on the game's audio engine ===================
 // Each place gets layers: a filtered-noise bed (wind, surf, rain, vents, crowd wash) that swells slowly, an optional low hum

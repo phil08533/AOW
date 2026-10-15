@@ -174,3 +174,46 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  #inv .det table{font-size:12px}#inv .det td{padding:2px 0}#inv .det td:last-child{font-size:13px}#inv .det p{margin:3px 0;font-size:12px}
 }
 </style>`);
+
+// ---- touch HUD tidy (2.13.11): the USE button joins the right-hand button column, and the gun/ammo box moves next to the HP panel so FIRE never covers it ----
+const HUD_COL = ['tHeal', 'tNade', 'tMelee', 'tReload'];
+function hudStack() {
+  const sub = $('tSub'), am = $('ammo'), vit = $('vitals'), B = document.body.classList;
+  const touch = matchMedia('(pointer: coarse)').matches, special = B.contains('driving') || B.contains('flying');
+  if (sub) { const col = HUD_COL.map(id => $(id)).filter(e => { if (!e || !e.offsetParent) return false; const c = getComputedStyle(e); return c.display !== 'none' && c.visibility !== 'hidden' && +c.opacity > 0.05; });
+    if (!sub.hidden && col.length && !special) { const rs = col.map(e => e.getBoundingClientRect()), top = rs.reduce((a, r) => r.top < a.top ? r : a), gap = rs.length > 1 ? Math.abs(rs[0].top - rs[1].top) : top.height + 5;
+      sub.style.setProperty('left', 'auto', 'important'); sub.style.setProperty('bottom', 'auto', 'important');
+      const cr = parseFloat(sub.style.right) || 0, ct = parseFloat(sub.style.top) || 0; sub.style.setProperty('right', cr + 'px', 'important'); sub.style.setProperty('top', ct + 'px', 'important');
+      const r = sub.getBoundingClientRect(), k = r.width / (sub.offsetWidth || 1) || 1, mp = $('map'), mb = mp && mp.offsetParent ? mp.getBoundingClientRect().bottom + 20 : 0, side = top.top - gap < mb, dx = (top.left + top.width / 2 - (side ? gap : 0)) - (r.left + r.width / 2), dy = (side ? top.top : top.top - gap) - r.top;
+      if (Math.abs(dx) > 1) sub.style.setProperty('right', Math.round(cr - dx / k) + 'px', 'important'); if (Math.abs(dy) > 1) sub.style.setProperty('top', Math.round(ct + dy / k) + 'px', 'important'); }
+    else ['right', 'left', 'top', 'bottom'].forEach(k => sub.style.removeProperty(k)); }
+  if (am && vit) { const v = vit.getBoundingClientRect(), w = am.offsetWidth, menu = $('pullTab'), lim = menu && menu.offsetParent ? menu.getBoundingClientRect().left - 8 : innerWidth * 0.5;
+    if (touch && !special && v.width && v.right + 10 + w <= lim) { am.style.setProperty('right', 'auto', 'important'); am.style.textAlign = 'left';
+      const cur = parseFloat(am.style.left) || 0; am.style.setProperty('left', cur + 'px', 'important'); const r = am.getBoundingClientRect(), k = r.width / (am.offsetWidth || 1) || 1, want = v.right + 10;
+      if (Math.abs(r.left - want) > 1) am.style.setProperty('left', Math.round(cur + (want - r.left) / k) + 'px', 'important'); }
+    else { am.style.removeProperty('left'); am.style.removeProperty('right'); am.style.textAlign = ''; } }
+}
+setInterval(() => { try { if (state === 'play') hudStack(); } catch (_) {} }, 500);
+addEventListener('resize', () => setTimeout(hudStack, 100));
+// ---- menu icons drawn from the game's own 3D models (2.13.11): rendered once into little transparent pictures, emoji stay as the fallback ----
+const MENU_ICONS = { tcShip: () => makeStarship(), tcVeh: () => makeBattleCar('#d23a2a'), tcBag: () => makeSalvageCrate(), tcJournal: () => makeBeacon(), tcSocial: () => makeTrooper(), tcSet: () => makeDroid() };
+function menuIcons() {
+  let R; try { R = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true }); } catch (_) { return; }
+  R.setSize(128, 128, false); R.setClearColor(0x000000, 0); R.outputEncoding = THREE.sRGBEncoding;
+  const sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, 1, 0.01, 1000);
+  sc.add(new THREE.AmbientLight(0xffffff, 0.75)); const sun = new THREE.DirectionalLight(0xffffff, 0.9); sun.position.set(2, 4, 3); sc.add(sun);
+  for (const id in MENU_ICONS) { const b = $(id); if (!b) continue;
+    try { const o = MENU_ICONS[id](); o.traverse(c => { if (c.isSprite || c.isPoints) c.visible = false; }); sc.add(o); o.updateMatrixWorld(true);
+      const box = new THREE.Box3(); o.traverse(c => { if (!c.isMesh || !c.visible) return; let v = true; for (let q = c.parent; q; q = q.parent) if (!q.visible) v = false; const m = c.material; if (!v || (m && (m.blending === THREE.AdditiveBlending || (m.transparent && m.opacity < 0.5)))) return; box.expandByObject(c); }); const sp = box.getBoundingSphere(new THREE.Sphere()), d = sp.radius / Math.sin(THREE.MathUtils.degToRad(15)) * 1.02;
+      cam.position.copy(sp.center).add(new THREE.Vector3(1, 0.55, 1.35).normalize().multiplyScalar(d)); cam.lookAt(sp.center); cam.near = d / 50; cam.far = d * 3; cam.updateProjectionMatrix();
+      R.render(sc, cam); b.style.setProperty('--ico', `url(${R.domElement.toDataURL('image/png')})`); b.classList.add('ico3d'); sc.remove(o); } catch (e) { console.warn('menu icon', id, e); } }
+  R.dispose(); try { R.forceContextLoss(); } catch (_) {}
+}
+document.head.insertAdjacentHTML('beforeend', `<style>
+#menuDrop .tabCat.ico3d::before { content: '' !important; display: block; width: min(68px, 12vh); height: min(68px, 12vh); flex: none; background: var(--ico) center / contain no-repeat; filter: drop-shadow(0 2px 3px rgba(0,0,0,.55)); }
+@media (max-height: 460px) { body #tabWrap #menuDrop .tabCat { flex-direction: row !important; justify-content: flex-start !important; text-align: left !important; gap: 10px !important; padding: 6px 10px !important; overflow: hidden; }
+  #menuDrop .tabCat.ico3d::before { width: min(60px, 16vh); height: min(60px, 16vh); } #menuDrop .tabCat::before { font-size: min(30px, 8vh) !important; }
+  #menuDrop .tabCat small { font: 600 12px var(--ui, sans-serif) !important; letter-spacing: 0 !important; word-spacing: normal !important; text-align: left; display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } }
+@media (max-height: 300px) { #menuDrop .tabCat small { display: none !important; } }
+</style>`);
+setTimeout(() => { try { menuIcons(); } catch (_) {} }, 1500);

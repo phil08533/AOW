@@ -24,7 +24,7 @@ function scanModels() {
     'trooper': 'Characters & Troopers', 'civilian': 'Characters & Troopers', 'playerchar': 'Characters & Troopers',
     'elismas': 'Characters & Troopers', 'maxurge': 'Characters & Troopers', 'drome': 'Characters & Troopers',
     'greatermaw': 'Bosses & Mechs', 'eyewatcher': 'Creatures & Aliens', 'kragmech': 'Bosses & Mechs', 'siegebot': 'Bosses & Mechs', 'mysticmodel': 'Bosses & Mechs',
-    'dropship': 'Vehicles & Drones', 'dronemodel': 'Vehicles & Drones', 'trainingdrone': 'Vehicles & Drones', 'hulk': 'Vehicles & Drones',
+    'dropship': 'Vehicles & Drones', 'battlecar': 'Vehicles & Drones', 'hovercar': 'Vehicles & Drones', 'carstyle': 'Vehicles & Drones', 'tankmodel': 'Vehicles & Drones', 'mechmodel': 'Vehicles & Drones', 'starship': 'Vehicles & Drones', 'dronemodel': 'Vehicles & Drones', 'trainingdrone': 'Vehicles & Drones', 'hulk': 'Vehicles & Drones',
     'gianttree': 'Props & Environment', 'fern': 'Props & Environment', 'pine': 'Props & Environment',
     'icespike': 'Props & Environment', 'hive': 'Props & Environment', 'wreck': 'Props & Environment',
     'beacon': 'Props & Environment', 'jtbuilding': 'Props & Environment', 'town': 'Props & Environment', 'land': 'Props & Environment'

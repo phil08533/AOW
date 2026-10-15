@@ -64,7 +64,7 @@ const tabBtn = (id, label, fn) => { const b = document.createElement('button'); 
     stGame: tabBtn('stGame', 'Game', () => openSettingsTab('game'))
   };
   const home = document.createElement('div'); home.className = 'tabPage'; home.dataset.p = 'home'; drop.appendChild(home);
-  for (const [id, label, sub, page] of TAB_HOME) { const b = document.createElement('button'); b.className = 'hbtn win tabCat'; b.id = id; b.innerHTML = `${label}<small>${sub}</small>`;
+  for (const [id, label, sub, page] of TAB_HOME) { const b = document.createElement('button'); b.className = 'hbtn win tabCat'; b.id = id; b.innerHTML = `<span class="tcT">${label}<small>${sub}</small></span>`;
     b.addEventListener('click', e => { if (page) { e.stopPropagation(); SFX.ui(); tabGo(page); } else { if (!dlgOpen) openBag(); } }); home.appendChild(b); }
   const placed = new Set();
   for (const [p, P] of Object.entries(TAB_PAGES)) { if (!P.ids) continue; const pg = document.createElement('div'); pg.className = 'tabPage'; pg.dataset.p = p; pg.hidden = true; drop.appendChild(pg);

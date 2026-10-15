@@ -126,7 +126,7 @@ function subChip() {
   subChipEl.hidden = !on || (!act.length && !subOwned().length);
   if (!subChipEl.hidden) subChipEl.innerHTML = (act.length ? act.map(id => `<span style="color:${SUBS[id].col}">✦${Math.ceil((subEnd(id) - now) / 60000)}m</span>`).join(' ') : '✦ Use') + (tripOn() ? ' <span style="color:#ff3b2a">☠</span>' : '') + ' <kbd>U</kbd>';
   tSub.hidden = !on || !subOwned().length;
-  try { const h = $('tReload'); if (h && !tSub.hidden) tSub.style.setProperty('bottom', getComputedStyle(h).bottom, 'important'); } catch (_) {}
+  try { if (typeof hudStack === 'function') hudStack(); } catch (_) {}
 }
 setInterval(() => { try { subChip(); } catch (_) {} }, 1000);
 function quickSub() {

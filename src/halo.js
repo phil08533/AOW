@@ -176,15 +176,15 @@ function haloEnter(pi) {
 }
 function haloExit() {
   const Q = HALO_PORTALS[1 - HALO.from], m = Q.nx, sp = Math.min(HALO.s * 0.45, 75);
-  HALO.on = false; VEL.hyper = null; HALO.root.visible = false; HALO.town.visible = false; HALO.cool = performance.now() + 4000;
+  HALO.on = false; VEL.hyper = null; HALO.root.visible = false; HALO.town.visible = false; HALO.cool = performance.now() + 4000; if (RC.on && !RC.free && RC.T && RC.T.halo) RC.haloDone = true;
   player.pos.set(Q.x - m * 12, 0, Q.z); player.pos.y = floorAt(player.pos.x, player.pos.z); player.yaw = m > 0 ? Math.PI / 2 : -Math.PI / 2;
   RC.vx = -m * sp; RC.vz = 0; RC.v = sp; RC.vr = 0; VEL.cp = null; VEL.kick = Math.max(VEL.kick || 0, 0.6);
   camera.up.set(0, 1, 0); camera.fov = HALO.fov0; camera.far = 300; camera.updateProjectionMatrix();
   if (VEL.carObj) VEL.carObj.rotation.order = 'XYZ';
   for (const H of VEL.hrain || []) H.l.visible = true;
   SFX.boom && SFX.boom(); FX.shake = Math.min(1, (FX.shake || 0) + 0.6); const pay = HALO.pads * 3 + HALO.bestChain * 5; S.cr += pay;
-  toast('HALO LINE', `Around the planet in ${((performance.now() - HALO.t0) / 1000).toFixed(1)}s · top ${Math.round(HALO.top * 3.6)} km/h · ${HALO.pads} pads · best chain ${HALO.bestChain} · +${pay} cr`, 3.5);
-  S.halo = S.halo || { runs: 0, best: 0 }; S.halo.runs++; S.halo.best = Math.max(S.halo.best || 0, Math.round(HALO.top * 3.6)); S.halo.chain = Math.max(S.halo.chain || 0, HALO.bestChain); markDirty();
+  toast('HALO LINE', `Around the planet in ${((performance.now() - HALO.t0) / 1000).toFixed(1)}s · top ${velMph(HALO.top)} mph · ${HALO.pads} pads · best chain ${HALO.bestChain} · +${pay} cr`, 3.5);
+  S.halo = S.halo || { runs: 0, best: 0 }; S.halo.runs++; S.halo.best = Math.max(S.halo.best || 0, velMph(HALO.top)); S.halo.chain = Math.max(S.halo.chain || 0, HALO.bestChain); markDirty();
 }
 function haloAbort() { if (!HALO.on) return; HALO.on = false; for (const H of VEL.hrain || []) H.l.visible = true; camera.far = 300; VEL.hyper = null; if (HALO.root) HALO.root.visible = false; if (HALO.town) HALO.town.visible = false; camera.up.set(0, 1, 0); camera.fov = HALO.fov0 || 72; camera.updateProjectionMatrix(); if (VEL.carObj) VEL.carObj.rotation.order = 'XYZ'; }
 function haloStep(dt) {
@@ -218,7 +218,7 @@ function haloStep(dt) {
   const fov = HALO.fov0 + Math.min(26, (HALO.s - 40) * 0.11) + HALO.kick * 6; if (Math.abs(camera.fov - fov) > 0.2) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); }
   camera.position.x += (Math.random() - 0.5) * Math.min(0.06, HALO.s * 0.0002); camera.position.y += (Math.random() - 0.5) * Math.min(0.06, HALO.s * 0.0002);
   // HUD
-  $('velSpd').textContent = Math.round(HALO.s * 3.6); $('zoneN').textContent = ph === 1 ? 'HALO LINE · PRISM DEEP' : 'HALO LINE'; $('zoneL').textContent = `${Math.min(100, Math.round(HALO.d / HALO_LEN * 100))}% around the planet · ${HALO.chain > 1 ? 'chain ×' + HALO.chain + ' · ' : ''}A/D steer around the tube · Shift boost`; SFX.engine && SFX.engine(Math.min(1.4, 0.6 + HALO.s / 260), Math.min(1, HALO.s / 120)); $('zone').style.opacity = 1;
+  $('velSpd').textContent = velMph(HALO.s); $('zoneN').textContent = ph === 1 ? 'HALO LINE · PRISM DEEP' : 'HALO LINE'; $('zoneL').textContent = `${Math.min(100, Math.round(HALO.d / HALO_LEN * 100))}% around the planet · ${HALO.chain > 1 ? 'chain ×' + HALO.chain + ' · ' : ''}A/D steer around the tube · Shift boost`; SFX.engine && SFX.engine(Math.min(1.4, 0.6 + HALO.s / 260), Math.min(1, HALO.s / 120)); $('zone').style.opacity = 1;
   HALO.flash = Math.max(0, HALO.flash - dt * 2);
   if (HALO.d >= HALO_LEN) haloExit();
 }
@@ -233,9 +233,11 @@ function haloStep(dt) {
     if (HALO.park) { player.pos.copy(HALO.park); } RC.vx = 0; RC.vz = 0; RC.v = 0;
     for (const H of VEL.hrain || []) H.l.visible = false;
     if (state === 'play' && !dlgOpen) haloStep(Math.min(dt, 0.05)); else if (VEL.carObj) { VEL.carObj.rotation.order = 'ZYX'; } return; }
-  if (!RC.on || !RC.free || performance.now() < HALO.cool) return;
+  // free drive rides either gate; the Halo Run race only lets you in through the east gate once you reach it
+  const hr = RC.on && !RC.free && RC.T && RC.T.halo && RC.gate === RC.T.tunnelGate && !RC.haloDone;
+  if (!RC.on || (!RC.free && !hr) || performance.now() < HALO.cool) return;
   const vx = RC.vx || 0, vz = RC.vz || 0;
-  HALO_PORTALS.forEach((P, i) => { const ox = (player.pos.x - P.x) * P.nx; if (Math.abs(player.pos.z - P.z) < 7.5 && ox > -2.5 && ox < 6 && vx * P.nx > 6) { HALO.t0 = performance.now(); HALO.top = 0; haloEnter(i); } });
+  HALO_PORTALS.forEach((P, i) => { if (hr && i !== 0) return; const ox = (player.pos.x - P.x) * P.nx; if (Math.abs(player.pos.z - P.z) < 7.5 && ox > -2.5 && ox < 6 && vx * P.nx > 6) { HALO.t0 = performance.now(); HALO.top = 0; haloEnter(i); } });
 }; }
 // no parking or camera mishaps mid-tunnel
 { const _tf = toggleFreeDrive; toggleFreeDrive = function () { if (HALO.on) { toast('HALO LINE', 'Hang on, you can park when you come out the other side!', 1.5); return true; } return _tf(); }; }

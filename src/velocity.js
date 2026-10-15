@@ -33,8 +33,10 @@ for (const k of Object.keys(RTRACKS)) delete RTRACKS[k];
 Object.assign(RTRACKS, {
   storm: { name: 'Storm Sprint', pay: 1, gap: 150, gold: 31, col: '#4fd2ff', pts: [[0, 130], [90, 195], [200, 175], [255, 60], [220, -70], [120, -160], [-10, -200], [-120, -170]] },
   magnet: { name: 'Magnet Mile', pay: 1.6, gap: 150, gold: 38, col: '#c86aff', pts: [[0, 130], [-90, 200], [-200, 180], [-260, 60], [-200, -60], [-80, -120], [40, -70], [150, -20], [240, 30], [200, 150]] },
-  thunder: { name: 'Thunder Run', pay: 2.4, gap: 160, gold: 37.5, col: '#ffd36a', pts: [[0, 130], [0, 240], [-120, 290], [-230, 200], [-180, 80], [-60, 30], [60, -80], [180, -130], [260, -60], [230, 120], [120, 250], [40, 300]] } });
-{ const _tl = trackLen; trackLen = function (T) { _tl(T); if (T.gap) { T.gates = []; for (let g = T.gap; g < T.len - T.gap * 0.5; g += T.gap) T.gates.push(g); T.gates.push(T.len); } }; }
+  thunder: { name: 'Thunder Run', pay: 2.4, gap: 160, gold: 37.5, col: '#ffd36a', pts: [[0, 130], [0, 240], [-120, 290], [-230, 200], [-180, 80], [-60, 30], [60, -80], [180, -130], [260, -60], [230, 120], [120, 250], [40, 300]] },
+  // out the east gate, all the way around the planet in the Halo Line, and home from the west gate
+  halo: { name: 'Halo Run', pay: 3, bonus: true, halo: true, par: 48, col: '#ff3bd1', pts: [[0, 130], [140, 80], [276, 34], [-276, 34], [-190, 70], [-90, 120], [0, 150]] } });
+{ const _tl = trackLen; trackLen = function (T) { _tl(T); if (T.halo) { const L = T.seg.map(q => q[3]); T.gates = [L[1] * 0.6, L[2], L[2] + T.seg[2][2], L[4], L[5], T.len]; T.needHalo = 2; T.tunnelGate = 2; return; } if (T.gap) { T.gates = []; for (let g = T.gap; g < T.len - T.gap * 0.5; g += T.gap) T.gates.push(g); T.gates.push(T.len); } }; }
 for (let i = LB_BOARDS.length - 1; i >= 0; i--) if (/^race_/.test(LB_BOARDS[i][0])) LB_BOARDS.splice(i, 1);
 LB_BOARDS.push(...Object.entries(RTRACKS).map(([k, T]) => ['race_' + k, T.name + ' (best time)', 'asc', v => v.toFixed(2) + 's']));
 if (QDEFS.v1) { QDEFS.v1.obj[0].t = 'racewin_storm'; QDEFS.v1.obj[0].text = 'Get gold on the Storm Sprint'; QDEFS.v1.intro = ["New driver! Welcome to Velocity. The ground's glass, the sky's angry and the cars ride on magnets. Everything here is a race.", "Take the Storm Sprint and get under the gold time. Then I'll know you're real."]; QDEFS.v1.outro = ["A winner! Gus can tune your magnets when you're ready. Magnet Mile and Thunder Run are waiting."]; }
@@ -223,14 +225,15 @@ raceDrive = function (dt) {
   if (RC.count > 0) { const c0 = Math.ceil(RC.count); RC.count -= dt; const c1 = Math.ceil(RC.count); if (c1 !== c0) { toast(c1 > 0 ? String(c1) : 'GO!', T.name, 0.8); if (c1 > 0) SFX.ui(); else SFX.horn(); } if (RC.count <= 0) RC.t0 = gameTime; VEL.ref = player.pos.y; return; }
   velPhysics(dt);
   const gs = T.gates[RC.gate], [gx, gz] = trackAt(T, gs), gd = Math.hypot(player.pos.x - gx, player.pos.z - gz);
-  if (gd < 9.5) { RC.gate++; SFX.coin(); if (RC.gate >= T.gates.length) return finishRace2(); toast(`GATE ${RC.gate}/${T.gates.length}`, '', 0.8); }
+  if (gd < 9.5 && !(T.needHalo && RC.gate >= T.needHalo && !RC.haloDone)) { RC.gate++; SFX.coin(); if (RC.gate >= T.gates.length) return finishRace2(); toast(`GATE ${RC.gate}/${T.gates.length}`, '', 0.8); }
   if (!RC.beacon) { RC.beacon = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 60, 10, 1, true), new THREE.MeshBasicMaterial({ color: '#ffd36a', transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide, fog: false })); levelGroup.add(RC.beacon); }
   { const g2 = T.gates[Math.min(RC.gate, T.gates.length - 1)], [bx, bz] = trackAt(T, g2); RC.beacon.position.set(bx, groundH(bx, bz) + 30, bz); }
   const left = gd + (T.len - T.gates[Math.min(RC.gate, T.gates.length - 1)]);
   $('zoneN').textContent = `${T.name} · time trial`; $('zoneL').textContent = `Gate ${RC.gate + 1}/${T.gates.length} · ${Math.max(0, Math.round(left))} m to go · ${(gameTime - RC.t0).toFixed(1)}s`; $('zone').style.opacity = 1; zoneT = 1;
 };
 { const _sr = startRace2; startRace2 = function (tid) { _sr(tid); RC.vx = 0; RC.vz = 0; RC.vy = 0; VEL.bm = velStats().bcap; VEL.kick = 0; VEL.dm = 0; VEL.ref = 1; player.pos.y = floorAt(player.pos.x, player.pos.z); VEL.cp = null; const T = RC.T; toast(T.name.toUpperCase(), `${Math.round(T.len)} m · ${T.gates.length} ring gates · gold under ${velPar(T).toFixed(0)}s`, 2.5); }; }
-const velPar = T => T.len / (T.gold || 31);
+const velPar = T => T.par || T.len / (T.gold || 31);
+function velMph(v) { return Math.round(Math.abs(v || 0) * 2.237 * 2.4); }
 finishRace2 = function () {
   const T = RC.T, R = rs(), el = gameTime - RC.t0, par = velPar(T), keep = { vx: RC.vx || 0, vz: RC.vz || 0 }, medal = el <= par ? 0 : el <= par * 1.2 ? 1 : el <= par * 1.5 ? 2 : 3;
   RC.on = false; if (RC.beacon) levelGroup.remove(RC.beacon); SFX.engine(0, 0);
@@ -239,7 +242,7 @@ finishRace2 = function () {
   if (!best || el < best) R.best[RC.tid] = +el.toFixed(2); if (medal === 0) { R.wins[RC.tid] = (R.wins[RC.tid] || 0) + 1; questProgressKill('racewin_' + RC.tid); }
   toast(['🥇 GOLD!', '🥈 SILVER', '🥉 BRONZE', 'FINISHED'][medal], `${el.toFixed(1)}s (gold under ${par.toFixed(0)}s) · +${pay} cr${!best || el < best ? ' · NEW BEST' : ''}`, 5); medal === 0 ? (SFX.level(), SFX.cheer()) : SFX.quest();
   log(`${T.name}: ${el.toFixed(1)}s, ${['gold', 'silver', 'bronze', 'no'][medal]} medal (+${pay} cr).`, 'loot');
-  const allWon = Object.keys(RTRACKS).every(k => (R.wins[k] || 0) > 0); if (allWon && !R.owned.includes('phantom')) { R.owned.push('phantom'); S.flags = S.flags || {}; S.flags.racerCape = true; toast('GRAND CHAMPION', 'Gold on every course: The Phantom car + Checkered Cape!', 6); }
+  const allWon = Object.keys(RTRACKS).filter(k => !RTRACKS[k].bonus).every(k => (R.wins[k] || 0) > 0); if (allWon && !R.owned.includes('phantom')) { R.owned.push('phantom'); S.flags = S.flags || {}; S.flags.racerCape = true; toast('GRAND CHAMPION', 'Gold on every course: The Phantom car + Checkered Cape!', 6); }
   if (typeof lbPush === 'function') lbPush(true); checkReady(); markDirty();
   // keep driving after the finish
   RC = { on: true, free: true, vx: keep.vx, vz: keep.vz, vy: 0 };
@@ -256,10 +259,10 @@ openGarage = function () {
   const prev = (style, name) => setPreview(() => { const [c, s, p] = velPaint(R); return velCar(style, c, s, p); }, name);
   const btn = (txt, on, fn, dis) => { const b = document.createElement('button'); b.className = 'pbtn' + (on ? ' go' : ''); b.style.padding = '5px 10px'; b.textContent = txt; b.disabled = !!dis; b.addEventListener('click', fn); return b; };
   const row = (name, meta, b, dotCol) => { const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = dotCol || '#9aa1aa'; const nm = document.createElement('span'); nm.textContent = name; const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = meta; r.append(dot, nm, mt); if (b) r.append(b); rows.appendChild(r); return r; };
-  const render = () => { rows.textContent = ''; const K = velStats(); $('dlgLine').textContent = `${S.cr} cr. Driving the ${RCARS[R.car].name}: top ${Math.round(K.top * 3.6)} km/h, grip ${K.grip.toFixed(1)}, boost ${K.bcap.toFixed(2)}.`;
+  const render = () => { rows.textContent = ''; const K = velStats(); $('dlgLine').textContent = `${S.cr} cr. Driving the ${RCARS[R.car].name}: top ${velMph(K.top)} mph, grip ${K.grip.toFixed(1)}, boost ${K.bcap.toFixed(2)}.`;
     for (const [k, C2] of Object.entries(RCARS)) { const own = R.owned.includes(k), price = k === 'hbike' && typeof bikeOwned === 'function' && bikeOwned() ? 0 : C2.price;
       const b = own ? btn('Drive', false, () => { R.car = k; markDirty(); render(); prev(C2.style, C2.name); }, R.car === k) : btn(price ? 'Buy' : 'Take', false, () => { S.cr -= price; R.owned.push(k); R.car = k; SFX.item(); markDirty(); render(); prev(C2.style, C2.name); }, C2.prize || S.cr < price);
-      const r = row(`${C2.name} · ${Math.round(C2.top * 3.6)} km/h`, own ? (R.car === k ? 'Driving' : 'Owned') : C2.prize ? 'Gold on all 3 courses' : price ? price + ' cr' : 'Free with your bike', b, own ? '#6fdc5a' : '#9aa1aa'); r.addEventListener('pointerenter', () => prev(C2.style, C2.name)); }
+      const r = row(`${C2.name} · ${velMph(C2.top)} mph`, own ? (R.car === k ? 'Driving' : 'Owned') : C2.prize ? 'Gold on all 3 courses' : price ? price + ' cr' : 'Free with your bike', b, own ? '#6fdc5a' : '#9aa1aa'); r.addEventListener('pointerenter', () => prev(C2.style, C2.name)); }
     for (const [k, [nm, what]] of Object.entries(VEL_UP)) { const L = R.up[k], max = L >= 5, cost = VEL_COST[L];
       row(`${nm} ${'▮'.repeat(L)}${'▯'.repeat(5 - L)}`, max ? 'Maxed' : `${what} · ${cost} cr`, btn(max ? 'Max' : 'Upgrade', false, () => { S.cr -= cost; R.up[k]++; SFX.item(); markDirty(); render(); }, max || S.cr < cost), '#4fd2ff'); }
     const swatches = (label, list, cur, set) => { const r = document.createElement('div'); r.className = 'rowi nodot'; r.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;align-items:center'; const l = document.createElement('span'); l.textContent = label; l.style.minWidth = '64px'; r.appendChild(l);
@@ -273,7 +276,7 @@ openGarage = function () {
 // ---- every frame: the camera, your car, the headlight, the HUD ----
 function velHudEl() {
   if (VEL.hud) return VEL.hud; const h = document.createElement('div'); h.id = 'velHud';
-  h.innerHTML = '<b id="velSpd">0</b><small>km/h</small><div class="vb"><i id="velBst"></i></div><div class="vb dr"><i id="velDrf"></i></div>';
+  h.innerHTML = '<b id="velSpd">0</b><small>mph</small><div class="vb"><i id="velBst"></i></div><div class="vb dr"><i id="velDrf"></i></div>';
   const st = document.createElement('style'); st.textContent = `#velHud{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 46px);transform:translateX(-50%);z-index:6;display:none;text-align:center;color:#e8f0ff;font-family:var(--mono,monospace);text-shadow:0 2px 4px #000;pointer-events:none}
 #velHud b{font-size:34px;line-height:1}#velHud small{display:block;font-size:11px;opacity:.8;margin-bottom:4px}#velHud .vb{width:180px;height:7px;background:rgba(0,0,0,.45);border-radius:4px;overflow:hidden;margin:3px auto}#velHud .vb i{display:block;height:100%;width:0;background:#4fd2ff}#velHud .vb.dr i{background:#c86aff}
 body.velocity #ammo,body.velocity #cross{display:none!important}body.driving #tFire,body.driving #tReload,body.driving #tMelee,body.driving #tNade,body.driving #tJump{display:none!important}body.driving #tBoost{display:grid!important}
@@ -314,7 +317,7 @@ window.addEventListener('keydown', e => { if (e.code === 'KeyC' && !e.repeat && 
   else { camera.position.copy(player.pos).addScaledVector(f, 1.0); camera.position.y += 1.2 + VEL_HOVER - 0.08; camera.rotation.set(-0.06, player.yaw, clamp(-(RC.vr || 0) * 0.01, -0.12, 0.12)); vmCar.visible = false; }
   VEL.ref = player.pos.y;
   // HUD
-  const K = velStats(); $('velSpd').textContent = Math.round(sp * 3.6); $('velBst').style.width = Math.round(VEL.bm / K.bcap * 100) + '%'; $('velDrf').style.width = Math.round(VEL.dm / 2.5 * 100) + '%';
+  const K = velStats(); $('velSpd').textContent = velMph(sp); $('velBst').style.width = Math.round(VEL.bm / K.bcap * 100) + '%'; $('velDrf').style.width = Math.round(VEL.dm / 2.5 * 100) + '%';
   velStreaks(dt, sp);
 }; }
 function velStreaks(dt, sp) {

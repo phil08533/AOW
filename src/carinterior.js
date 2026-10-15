@@ -1,6 +1,6 @@
 // =================== VELOCITY CAR INTERIOR: a real cabin for the cockpit camera ===================
 // Replaces the old flat dash with a full cabin: padded dash, a gauge cluster with a live speedometer, a three-spoke wheel
-// with paddles, a center screen (speed, radio, mini radar), vents, door panels, a rear-view mirror, mood lighting that
+// with paddles, a center screen (speed, now playing, mini radar), vents, door panels, a rear-view mirror, mood lighting that
 // follows the storm's rainbow, and a spot on the dash for your bobblehead.
 const CABIN = { built: false };
 function cabinTex(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const t = new THREE.CanvasTexture(c); return { c, x: c.getContext('2d'), t }; }
@@ -57,14 +57,14 @@ function cabinBuild(g) {
   CABIN.built = true;
 }
 function cabinDraw(sp, K) {
-  const { x, c, t } = CABIN.cl, w = c.width, h = c.height, f = Math.min(1, sp / K.top), kmh = Math.round(sp * 3.6), boost = VEL.bm / K.bcap;
+  const { x, c, t } = CABIN.cl, w = c.width, h = c.height, f = Math.min(1, sp / K.top), kmh = velMph(sp), boost = VEL.bm / K.bcap;
   x.fillStyle = '#05080e'; x.fillRect(0, 0, w, h);
   // speed arc
   x.lineWidth = 12; x.strokeStyle = '#162232'; x.beginPath(); x.arc(110, 108, 70, Math.PI * 0.8, Math.PI * 2.2); x.stroke();
   const g = x.createLinearGradient(40, 0, 180, 0); g.addColorStop(0, '#4fd2ff'); g.addColorStop(0.7, '#c86aff'); g.addColorStop(1, '#ff3b5a'); x.strokeStyle = g; x.beginPath(); x.arc(110, 108, 70, Math.PI * 0.8, Math.PI * (0.8 + 1.4 * f)); x.stroke();
   for (let i = 0; i <= 10; i++) { const a = Math.PI * (0.8 + 0.14 * i); x.strokeStyle = '#3a4a60'; x.lineWidth = 2; x.beginPath(); x.moveTo(110 + Math.cos(a) * 52, 108 + Math.sin(a) * 52); x.lineTo(110 + Math.cos(a) * 58, 108 + Math.sin(a) * 58); x.stroke(); }
   const na = Math.PI * (0.8 + 1.4 * f); x.strokeStyle = '#ff6a3a'; x.lineWidth = 4; x.beginPath(); x.moveTo(110, 108); x.lineTo(110 + Math.cos(na) * 62, 108 + Math.sin(na) * 62); x.stroke();
-  x.fillStyle = '#fff'; x.font = '700 30px system-ui,sans-serif'; x.textAlign = 'center'; x.fillText(kmh, 110, 120); x.font = '600 13px system-ui,sans-serif'; x.fillStyle = '#7f9ab8'; x.fillText('KM/H', 110, 140);
+  x.fillStyle = '#fff'; x.font = '700 30px system-ui,sans-serif'; x.textAlign = 'center'; x.fillText(kmh, 110, 120); x.font = '600 13px system-ui,sans-serif'; x.fillStyle = '#7f9ab8'; x.fillText('MPH', 110, 140);
   // middle: drive state
   x.fillStyle = RC.drift ? '#c86aff' : RC.boost ? '#ffd36a' : '#4fd2ff'; x.font = '800 44px system-ui,sans-serif'; x.fillText(RC.drift ? 'DRIFT' : RC.boost ? 'BOOST' : 'HOVER', 290, 78);
   x.font = '600 14px system-ui,sans-serif'; x.fillStyle = '#7f9ab8'; x.fillText(`MAG FIELD ${VEL_HOVER.toFixed(2)} m · ${(typeof VEL.rbT === 'number' && VEL.rbT > 0) ? 'LIGHTNING' : 'STORM'}`, 290, 104);
@@ -76,13 +76,14 @@ function cabinDraw(sp, K) {
   t.needsUpdate = true;
   // center screen: radio and a little radar
   const S2 = CABIN.cs, y = S2.x, W2 = S2.c.width, H2 = S2.c.height; y.fillStyle = '#060a12'; y.fillRect(0, 0, W2, H2);
-  const st = typeof radioNow === 'function' ? radioNow() : null;
-  y.fillStyle = '#4fd2ff'; y.font = '700 18px system-ui,sans-serif'; y.textAlign = 'left'; y.fillText(st ? '📻 ' + st.name : '📻 Radio off', 12, 28);
-  y.fillStyle = '#9fb4cc'; y.font = '500 13px system-ui,sans-serif'; y.fillText(st ? st.track : 'R to tune', 12, 48);
+  // now playing: the planet's soundtrack (the radio lives in your ship)
+  const tid = MUS.list && PLAYLISTS[MUS.list] ? PLAYLISTS[MUS.list][MUS.idx] : null, ttl = tid ? ((typeof RADIO_TITLES !== 'undefined' && RADIO_TITLES[tid]) || tid) : '';
+  y.fillStyle = '#4fd2ff'; y.font = '700 18px system-ui,sans-serif'; y.textAlign = 'left'; y.fillText('♪ Now playing', 12, 28);
+  y.fillStyle = '#9fb4cc'; y.font = '500 13px system-ui,sans-serif'; y.fillText(ttl || (PREFS.music ? 'Velocity' : 'Music off'), 12, 48);
   y.strokeStyle = '#1c2a3c'; y.lineWidth = 1; const cx = 230, cy = 125, R = 62; for (const r of [R, R * 0.6, R * 0.3]) { y.beginPath(); y.arc(cx, cy, r, 0, Math.PI * 2); y.stroke(); }
   y.fillStyle = '#6fdc5a'; y.beginPath(); y.moveTo(cx, cy - 6); y.lineTo(cx - 4, cy + 4); y.lineTo(cx + 4, cy + 4); y.fill();
   const fy = player.yaw; for (const T of VEL.traffic || []) { const dx = T.x - player.pos.x, dz = T.z - player.pos.z, rx = dx * Math.cos(fy) - dz * Math.sin(fy), rz = dx * Math.sin(fy) + dz * Math.cos(fy), d = Math.hypot(rx, rz); if (d > 120) continue; y.fillStyle = '#ff9a3c'; y.fillRect(cx + rx / 120 * R - 2, cy + rz / 120 * R - 2, 4, 4); }
-  y.fillStyle = '#9fb4cc'; y.font = '600 12px system-ui,sans-serif'; y.fillText('TRAFFIC', 196, 196); y.fillText(`${Math.round(sp * 3.6)} km/h`, 12, 100);
+  y.fillStyle = '#9fb4cc'; y.font = '600 12px system-ui,sans-serif'; y.fillText('TRAFFIC', 196, 196); y.fillText(`${velMph(sp)} mph`, 12, 100);
   y.fillStyle = '#5a6a80'; y.fillText(LEVEL && LEVEL.name || '', 12, 120); S2.t.needsUpdate = true;
 }
 { const _st = step; step = function (dt) { _st(dt);

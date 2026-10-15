@@ -160,11 +160,24 @@ function labTick() { // brew what the time and materials allow; no materials mea
 setInterval(() => { try { const O = outS(), had = !!O.lab; O.lab = roomLvl('lab') > 0; labTick();
   if (O.lab && !O.bounty) { O.bounty = 300 + O.rep * 10; O.growT = O.obT = Date.now(); O.huntT = Date.now() + 90000; if (!had) log('The Marshals heard about your Lab. You stay Wanted while it runs.', 'loot'); try { outPush(); } catch (_) {} }
   if (had && !O.lab && O.bounty && outTier() < 3) { O.bounty = 0; O.obT = 0; try { outPush(); } catch (_) {} } } catch (_) {} }, 5000);
+// where the batch is at: ready, waiting on materials, full, or counting down to the next dose
+function labState() { const L = labS(), need = LAB_RECIPES[L.r] || {}, ev = labEvery(), mm = ms => { const t = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+  if (L.n >= labMax()) return { text: `Full: ${L.n} doses waiting. Collect to keep brewing.`, k: 1, short: 'FULL · collect' };
+  if (!costOk(need)) return { text: `Stopped: needs ${costLabel(need)} for the next dose.`, k: 0, short: 'Needs ' + costLabel(need) };
+  const left = ev - (Date.now() - L.t); return { text: `Next dose in ${mm(left)}${L.n ? ` · ${L.n} ready` : ''}`, k: clamp(1 - left / ev, 0, 1), short: `${mm(left)}${L.n ? ' · ' + L.n + ' ready' : ''}` }; }
 function openLab() {
   labTick(); const L = labS(); openDlg('Lab', `Level ${roomLvl('lab')}`); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  // a live timer: the next dose counts down while the console is open
+  const timer = document.createElement('div'); timer.style.cssText = 'margin:6px 0 2px;font:600 14px var(--mono,monospace);color:#c8a8ff';
+  const bar = document.createElement('div'); bar.style.cssText = 'height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:4px'; const fill = document.createElement('i'); fill.style.cssText = 'display:block;height:100%;width:0;background:linear-gradient(90deg,#8f6ad0,#ff6aa8)'; bar.appendChild(fill);
+  const tick = () => { if (!timer.isConnected) { clearInterval(iv); return; } labTick(); const st = labState(); timer.firstChild.textContent = st.text; fill.style.width = Math.round(st.k * 100) + '%'; const c = [...$('dlgActs').children].find(b => /^Collect/.test(b.textContent)); if (c) { c.textContent = 'Collect ' + L.n; c.disabled = !L.n; } };
+  timer.appendChild(document.createElement('span')); timer.appendChild(bar);
   const render = () => { labTick(); rows.textContent = ''; const need = LAB_RECIPES[L.r];
-    $('dlgLine').textContent = `Brewing ${SUBS[L.r].name}: ${L.n} of ${labMax()} doses ready. One every ${Math.round(labEvery() / 60000)} min, using ${costLabel(need)} each${costOk(need) ? '' : ' (you are out of materials, so it has stopped)'}.`;
-    itemRows(rows, Object.keys(LAB_RECIPES).map(id => [id, S.inv[id] || 0, `${costLabel(LAB_RECIPES[id])} a dose`, [[L.r === id ? 'Brewing' : 'Brew this', () => { if (L.r !== id) { L.r = id; L.n = 0; L.t = Date.now(); markDirty(); SFX.ui(); render(); } }, L.r === id]]])); };
+    $('dlgLine').textContent = `Brewing ${SUBS[L.r].name}: ${L.n} of ${labMax()} doses ready. One every ${Math.round(labEvery() / 60000)} min, using ${costLabel(need)} each.`;
+    $('dlgLine').appendChild(timer);
+    // switching recipes keeps your finished doses: they go into your bag first
+    itemRows(rows, Object.keys(LAB_RECIPES).map(id => [id, S.inv[id] || 0, `${costLabel(LAB_RECIPES[id])} a dose`, [[L.r === id ? 'Brewing' : 'Brew this', () => { if (L.r !== id) { if (L.n) { const n = Math.min(L.n, invRoomFor(L.r)); if (n < L.n) { invFullNote(L.r); return; } S.inv[L.r] = (S.inv[L.r] || 0) + n; log(`+${n} ${SUBS[L.r].name}`, 'loot'); } L.r = id; L.n = 0; L.t = Date.now(); markDirty(); SFX.ui(); openLab(); } }, L.r === id]]])); tick(); };
+  const iv = setInterval(tick, 1000);
   $('dlgActs').before(rows);
   acts([['Collect ' + L.n, () => { if (!L.n) return; const n = Math.min(L.n, invRoomFor(L.r)); if (n < 1) { invFullNote(L.r); return; } S.inv[L.r] = (S.inv[L.r] || 0) + n; L.n -= n; L.t = Date.now(); SFX.coin(); log(`+${n} ${SUBS[L.r].name}`, 'loot'); markDirty(); openLab(); }, true, !L.n],
     ['Tear down the Lab', () => labTearDown()], ['Close', closeDlg]]); render();
@@ -182,6 +195,8 @@ function labRoom(s, cx, cz, far, outer, faceIn, term, props) {
   const vat = new THREE.Group(); part(vat, Cy(0.75, 0.85, 1.1, 14), '#2a2c32', 0, 0.55, 0); const liq = part(vat, Cy(0.68, 0.68, 0.05, 14), glow('#8f6ad0'), 0, 1.1, 0);
   vat.position.set(cx - s.side * 0.4, 0, cz + 2.6); props.add(vat); solid(vat.position.x, vat.position.z, 0.9);
   const pl = new THREE.PointLight(0xa070ff, 0.8, 8); pl.position.set(cx, 1.6, cz + 2.4); props.add(pl);
+  { const sg = labelSprite(768, 72); sg.scale.set(3.6, 0.34, 1); sg.position.set(vat.position.x, 2.2, vat.position.z); props.add(sg); let last = '', nt = 0;
+    levelAnims.push(t => { if (t < nt) return; nt = t + 1; labTick(); const v = labState().short; if (v !== last) { last = v; drawPlate(sg, SUBS[labS().r].name, v, '#c8a8ff', null); } }); }
   levelAnims.push(t => { liq.position.y = 1.1 + Math.sin(t * 3) * 0.02; flasks.forEach((f, i) => { f.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.08); }); pl.intensity = 0.7 + Math.sin(t * 4) * 0.15; });
   term(cx + s.side * 0.5, s.z0 + 0.6, '#c8a8ff', 'Lab console (brew, collect)', openLab, 0);
 }

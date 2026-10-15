@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Script Studio · Art of War</title>
+<style>
+:root { --bg: #0b1220; --panel: #121c30; --panel2: #18243c; --line: #26365a; --text: #e6ecf8; --dim: #8fa0c0; --gold: #ffd36a; --blue: #6ad0ff; --green: #6fdc8c; --red: #ff6a6a; --mono: ui-monospace, Menlo, Consolas, monospace; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; height: 100vh; display: flex; flex-direction: column; }
+header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: #0e1628; flex-wrap: wrap; }
+header b { color: var(--gold); letter-spacing: .06em; }
+header .sp { flex: 1; }
+button, select, input, textarea { font: inherit; color: var(--text); }
+button { background: var(--panel2); border: 1px solid var(--line); border-radius: 7px; padding: 6px 12px; cursor: pointer; }
+button:hover { border-color: var(--blue); }
+button.pri { background: #1d5b3a; border-color: #2f8f5c; }
+button.warn { background: #5b1d1d; border-color: #8f2f2f; }
+button.sm { padding: 3px 8px; font-size: 12px; }
+button:disabled { opacity: .45; cursor: default; }
+select, input[type=text], input[type=number], textarea { background: #0c1528; border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+textarea { width: 100%; resize: vertical; min-height: 38px; }
+.layout { flex: 1; display: flex; min-height: 0; }
+nav { width: 290px; border-right: 1px solid var(--line); overflow-y: auto; padding: 8px; background: #0d1527; flex: none; }
+nav h4 { margin: 14px 6px 4px; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .1em; }
+nav a { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; border-radius: 6px; color: var(--text); text-decoration: none; cursor: pointer; }
+nav a:hover { background: var(--panel2); }
+nav a.on { background: #1b2d4d; color: var(--gold); }
+nav a small { color: var(--dim); font-family: var(--mono); }
+nav a.edited span::after { content: " ●"; color: var(--gold); font-size: 10px; }
+main { flex: 1; overflow-y: auto; padding: 18px 22px 60px; }
+h2 { margin: 0 0 4px; color: var(--gold); font-size: 20px; }
+.when { color: var(--blue); margin-bottom: 14px; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); margin-bottom: 8px; }
+.row .who { font: 700 11px var(--mono); color: var(--blue); margin-bottom: 3px; }
+.row .orig { font-size: 12px; color: var(--dim); margin-top: 4px; }
+.row .orig s { color: #6f7f9f; }
+.row .btns { display: flex; flex-direction: column; gap: 4px; }
+.row.changed { border-color: #6b5a2a; }
+.tools { display: flex; gap: 8px; margin: 10px 0 16px; flex-wrap: wrap; }
+.note { color: var(--dim); font-size: 13px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+.grid { display: grid; grid-template-columns: 150px 1fr 60px; gap: 8px 12px; align-items: center; }
+.grid label { color: var(--dim); }
+.grid input[type=range] { width: 100%; accent-color: var(--blue); }
+.grid .v { font-family: var(--mono); text-align: right; }
+.bar { height: 10px; background: #0c1528; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #2f8f5c, #6ad0ff); transition: width .3s; }
+.log { font: 12px var(--mono); color: var(--dim); white-space: pre-wrap; max-height: 160px; overflow: auto; background: #0a1222; border-radius: 6px; padding: 8px; margin-top: 8px; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 99px; background: #1b2d4d; font-size: 12px; color: var(--blue); }
+.packs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.packs button.on { border-color: var(--gold); color: var(--gold); }
+#toast { position: fixed; right: 16px; bottom: 16px; background: #1d5b3a; border: 1px solid #2f8f5c; padding: 10px 14px; border-radius: 8px; display: none; max-width: 420px; }
+#toast.err { background: #5b1d1d; border-color: #8f2f2f; }
+</style>
+</head>
+<body>
+<header>
+  <b>🎙 SCRIPT STUDIO</b><span class="note">B.U.R.P.'s lines, cutscene captions, battle radio and voice packs</span>
+  <span class="sp"></span>
+  <span id="dirty" class="note"></span>
+  <button id="save" class="pri">💾 Save &amp; Rebuild</button>
+  <a href="/dev.html"><button>📦 Asset Studio</button></a>
+  <a href="/" target="_blank"><button>🎮 Play</button></a>
+</header>
+<div class="layout"><nav id="nav"></nav><main id="main"><p class="note">Loading…</p></main></div>
+<div id="toast"></div>
+<script>
+const $ = id => document.getElementById(id);
+const hash = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, '0'); };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let INV = null, SC = null, CLIPS = {}, view = { t: 'packs' }, dirty = false, previewPack = 'burp';
+
+// ---- voices you can pick ----
+const KOKORO = { 'American female': ['af_heart', 'af_bella', 'af_nicole', 'af_sarah', 'af_sky', 'af_nova', 'af_river', 'af_jessica', 'af_kore', 'af_aoede', 'af_alloy'], 'American male': ['am_michael', 'am_fenrir', 'am_puck', 'am_echo', 'am_eric', 'am_liam', 'am_onyx', 'am_adam', 'am_santa'],
+  'British female': ['bf_emma', 'bf_isabella', 'bf_alice', 'bf_lily'], 'British male': ['bm_george', 'bm_fable', 'bm_lewis', 'bm_daniel'],
+  'Other languages (read English with an accent)': ['ff_siwis', 'em_alex', 'ef_dora', 'im_nicola', 'if_sara', 'pm_alex', 'pf_dora', 'hm_omega', 'hm_psi', 'hf_alpha', 'hf_beta', 'jm_kumo', 'jf_alpha', 'zm_yunjian', 'zm_yunxi', 'zf_xiaobei', 'zf_xiaoxiao'] };
+const PIPER = { 'British': [['en_GB-alan-medium', 'Alan (male)'], ['en_GB-northern_english_male-medium', 'Northern English man'], ['en_GB-cori-high', 'Cori (female)'], ['en_GB-alba-medium', 'Alba (Scottish female)'], ['en_GB-jenny_dioco-medium', 'Jenny (female)'], ['en_GB-southern_english_female-low', 'Southern English woman'], ['en_GB-semaine-medium', 'Semaine (4 actors: speaker 0-3)'], ['en_GB-aru-medium', 'Aru (12 voices: speaker 0-11)'], ['en_GB-vctk-medium', 'VCTK (109 voices: speaker 0-108)']],
+  'American': [['en_US-ryan-high', 'Ryan (male)'], ['en_US-joe-medium', 'Joe (male)'], ['en_US-john-medium', 'John (male)'], ['en_US-norman-medium', 'Norman (older male)'], ['en_US-bryce-medium', 'Bryce (male)'], ['en_US-kusal-medium', 'Kusal (male)'], ['en_US-hfc_male-medium', 'HFC male'], ['en_US-danny-low', 'Danny (male)'], ['en_US-sam-medium', 'Sam'], ['en_US-reza_ibrahim-medium', 'Reza (male)'], ['en_US-lessac-high', 'Lessac (female)'], ['en_US-amy-medium', 'Amy (female)'], ['en_US-kristin-medium', 'Kristin (female)'], ['en_US-kathleen-low', 'Kathleen (female)'], ['en_US-hfc_female-medium', 'HFC female'], ['en_US-ljspeech-high', 'LJ (female)'], ['en_US-arctic-medium', 'Arctic (18 voices: speaker 0-17)'], ['en_US-l2arctic-medium', 'L2 Arctic (24 accented voices)'], ['en_US-libritts_r-medium', 'LibriTTS (904 voices: speaker 0-903)']] };
+const FX = [['pitch', 'Pitch (semitones)', -12, 12, 0.5, 0], ['ring', 'Robot ring', 0, 1, 0.01, 0], ['ringHz', 'Ring speed (Hz)', 10, 200, 1, 52], ['echo', 'Metal echo', 0, 1.5, 0.05, 0], ['radio', 'Radio / comms', 0, 1, 0.05, 0], ['reverb', 'Big room', 0, 1, 0.05, 0], ['doubler', 'Doubler (two of him)', 0, 1, 0.05, 0], ['crush', 'Bit crush (bits, 0 = off)', 0, 16, 1, 0], ['volume', 'Volume', 0.3, 1.2, 0.05, 1]];
+const PRESETS = {
+  'Classic B.U.R.P.': { engine: 'kokoro', voice: 'bm_george', speed: 1, fx: { ring: 0.45, ringHz: 52, echo: 1, crush: 9 } },
+  'Deep robot': { engine: 'kokoro', voice: 'am_onyx', speed: 0.92, fx: { pitch: -4, ring: 0.6, ringHz: 38, echo: 1.2, crush: 7 } },
+  'Tiny helper bot': { engine: 'kokoro', voice: 'af_sky', speed: 1.12, fx: { pitch: 4, ring: 0.35, ringHz: 90, echo: 0.6, crush: 10 } },
+  'Radio comms': { engine: 'kokoro', voice: 'bm_lewis', speed: 1.02, fx: { radio: 0.85, crush: 11 } },
+  'Evil AI': { engine: 'kokoro', voice: 'bm_daniel', voice2: 'am_onyx', mix: 0.5, speed: 0.88, fx: { pitch: -2, doubler: 0.7, reverb: 0.45, ring: 0.2, ringHz: 30 } },
+  'Butler (no effects)': { engine: 'kokoro', voice: 'bm_fable', speed: 0.98, fx: {} },
+  'Piper: Alan the robot': { engine: 'piper', voice: 'en_GB-alan-medium', speed: 1, fx: { ring: 0.45, ringHz: 52, echo: 1, crush: 9 } },
+  'Chipmunk': { engine: 'kokoro', voice: 'am_puck', speed: 1.15, fx: { pitch: 9, echo: 0.3 } }
+};
+
+async function api(url, opt) { const r = await fetch(url, opt); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || r.statusText); return j; }
+function toast(t, err) { const el = $('toast'); el.textContent = t; el.className = err ? 'err' : ''; el.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.display = 'none', err ? 8000 : 3500); }
+function setDirty(v) { dirty = v; $('dirty').textContent = v ? 'Unsaved changes' : ''; renderNav(); }
+addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+async function load() {
+  const j = await api('/api/script'); INV = j.inventory; SC = j.script; CLIPS = j.clips || {}; INV.spoken = j.spoken;
+  SC.burp = SC.burp || {}; SC.say = SC.say || {}; SC.voice = SC.voice || { active: 'burp', packs: {} }; SC.voice.packs = SC.voice.packs || {};
+  if (!SC.voice.packs.burp) SC.voice.packs.burp = Object.assign({ name: 'B.U.R.P. (classic)' }, JSON.parse(JSON.stringify(PRESETS['Classic B.U.R.P.'])));
+  previewPack = SC.voice.active || 'burp'; renderNav(); render();
+}
+const sayGroups = () => { const g = {}; for (const L of INV.say) (g[L.group] = g[L.group] || []).push(L); return g; };
+const trigLines = k => Array.isArray(SC.burp[k]) ? SC.burp[k] : INV.kinds[k].lines;
+function renderNav() {
+  if (!INV) return; const n = $('nav'); let h = '<h4>Voice</h4>' + link({ t: 'packs' }, '🎚 Voice packs', Object.keys(SC.voice.packs).length);
+  h += '<h4>B.U.R.P. triggers</h4>'; for (const k of Object.keys(INV.kinds).sort()) h += link({ t: 'trig', k }, k, trigLines(k).length, Array.isArray(SC.burp[k]));
+  const G = sayGroups(); h += '<h4>Other lines</h4>'; for (const g of Object.keys(G)) h += link({ t: 'say', g }, g, G[g].length, G[g].some(L => SC.say[L.id] != null));
+  n.innerHTML = h; n.querySelectorAll('a').forEach(a => a.onclick = () => { view = JSON.parse(a.dataset.v); renderNav(); render(); });
+}
+function link(v, label, count, edited) { const on = JSON.stringify(v) === JSON.stringify(view); return `<a data-v='${esc(JSON.stringify(v))}' class="${on ? 'on' : ''} ${edited ? 'edited' : ''}"><span>${esc(label)}</span><small>${count}</small></a>`; }
+function render() {
+  const m = $('main'); if (!INV) return;
+  if (view.t === 'trig') return renderTrig(m, view.k);
+  if (view.t === 'say') return renderSay(m, view.g);
+  renderPacks(m);
+}
+// ---- a B.U.R.P. trigger: its whole list ----
+function renderTrig(m, k) {
+  const K = INV.kinds[k], L = trigLines(k).slice(), edited = Array.isArray(SC.burp[k]);
+  m.innerHTML = `<h2>${esc(k)}</h2><div class="when">When: ${esc(K.desc)}</div><div class="note">B.U.R.P. picks one of these at random each time (never the same line twice in a row). ${edited ? '<span class="pill">edited</span>' : ''}</div>
+    <div class="tools"><button id="add">+ Add a line</button>${edited ? '<button id="reset" class="warn">Reset to the original lines</button>' : ''}<span class="note">Preview voice: ${packSelect()}</span></div><div id="rows"></div>`;
+  const rows = $('rows'), commit = () => { SC.burp[k] = L.filter(s => s.trim()); setDirty(true); };
+  L.forEach((t, i) => { const r = document.createElement('div'); r.className = 'row'; r.innerHTML = `<div><textarea rows="2">${esc(t)}</textarea></div><div class="btns"><button class="sm play" title="Hear it">▶</button><button class="sm del" title="Delete">🗑</button></div>`;
+    const ta = r.querySelector('textarea'); ta.oninput = () => { L[i] = ta.value; commit(); };
+    r.querySelector('.del').onclick = () => { L.splice(i, 1); commit(); renderTrig(m, k); }; r.querySelector('.play').onclick = () => play(ta.value); rows.appendChild(r); });
+  $('add').onclick = () => { L.push(''); SC.burp[k] = L.slice(); setDirty(true); renderTrig(m, k); const t = m.querySelectorAll('textarea'); t[t.length - 1].focus(); };
+  if ($('reset')) $('reset').onclick = () => { delete SC.burp[k]; setDirty(true); renderTrig(m, k); };
+  wirePackSelect();
+}
+// ---- one-off lines, captions, radio: reword in place ----
+function renderSay(m, g) {
+  const G = sayGroups()[g] || []; const spoken = G.some(L => L.kind === 'burp');
+  m.innerHTML = `<h2>${esc(g)}</h2><div class="when">${G[0] && G[0].kind === 'caption' ? 'The captions shown during this cutscene, in order.' : G[0] && G[0].kind === 'radio' ? 'Radio chatter from the squadron during the Greater Maw fight.' : 'Lines B.U.R.P. says once, at a set moment in the story.'}</div>
+    <div class="note">Change the words, or clear a box to go back to the original. Lines show where they live in the code (file:line).</div>${spoken ? `<div class="tools"><span class="note">Preview voice: ${packSelect()}</span></div>` : '<div style="height:12px"></div>'}<div id="rows"></div>`;
+  const rows = $('rows');
+  for (const L of G) { const cur = SC.say[L.id] != null ? SC.say[L.id] : L.text, ch = SC.say[L.id] != null; const r = document.createElement('div'); r.className = 'row' + (ch ? ' changed' : '');
+    r.innerHTML = `<div>${L.who ? `<div class="who">${esc(L.who)}</div>` : ''}<textarea rows="2">${esc(cur)}</textarea><div class="orig">${ch ? `Original: <s>${esc(L.text)}</s> · ` : ''}${esc(L.file)}:${L.line}</div></div><div class="btns">${L.kind === 'burp' ? '<button class="sm play" title="Hear it">▶</button>' : ''}<button class="sm rs" title="Back to the original" ${ch ? '' : 'disabled'}>↺</button></div>`;
+    const ta = r.querySelector('textarea'); ta.oninput = () => { const v = ta.value; if (!v.trim() || v === L.text) delete SC.say[L.id]; else SC.say[L.id] = v; setDirty(true); };
+    r.querySelector('.rs').onclick = () => { delete SC.say[L.id]; setDirty(true); renderSay(m, g); }; const p = r.querySelector('.play'); if (p) p.onclick = () => play(ta.value); rows.appendChild(r); }
+  wirePackSelect();
+}
+function packSelect() { return `<select id="pp">${Object.keys(SC.voice.packs).map(id => `<option value="${id}" ${id === previewPack ? 'selected' : ''}>${esc(SC.voice.packs[id].name || id)}</option>`).join('')}</select>`; }
+function wirePackSelect() { const s = $('pp'); if (s) s.onchange = () => previewPack = s.value; }
+// ---- hearing a line: play its clip if it exists, otherwise make it first ----
+let audio = null;
+async function play(text, pack) {
+  pack = pack || previewPack; text = (text || '').trim(); if (!text) return; const h = hash(text);
+  if ((CLIPS[pack] || []).includes(h)) return playUrl(`/voice/${pack}/${h}.mp3?${Date.now()}`);
+  if (dirty) toast('Making this clip… (your unsaved text edits are only used for this preview)');
+  try { await api('/api/voice/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pack, settings: SC.voice.packs[pack], texts: [text], preview: true }) }); }
+  catch (e) { return toast('Could not make the clip: ' + e.message, true); }
+  const J = await waitJob(); if (J.error) return toast(J.error, true); playUrl(`/voice/_preview/${h}.mp3?${Date.now()}`);
+}
+function playUrl(u) { try { if (audio) audio.pause(); } catch (_) {} audio = new Audio(u); audio.play().catch(e => toast('Could not play: ' + e.message, true)); }
+async function waitJob(onTick) { for (;;) { const J = await api('/api/voice/job'); if (onTick) onTick(J); if (!J.running) return J; await new Promise(r => setTimeout(r, 600)); } }
+// ---- voice packs ----
+function renderPacks(m) {
+  const P = SC.voice.packs; if (!P[previewPack]) previewPack = Object.keys(P)[0]; const id = previewPack, V = P[id]; V.fx = V.fx || {};
+  const have = (CLIPS[id] || []).length, need = INV.spoken.length, missing = INV.spoken.filter(h => !(CLIPS[id] || []).includes(h)).length;
+  m.innerHTML = `<h2>Voice packs</h2><div class="note">A pack is one way B.U.R.P. can sound: a voice model, a speed and effects. Every line he speaks gets a clip per pack, and the player picks the pack in Settings → Sound.</div>
+  <div class="packs" style="margin-top:12px">${Object.keys(P).map(k => `<button data-p="${k}" class="${k === id ? 'on' : ''}">${esc(P[k].name || k)}${k === SC.voice.active ? ' ★' : ''}</button>`).join('')}<button id="newPack">+ New pack</button></div>
+  <div class="card"><div class="grid">
+    <label>Pack name</label><input type="text" id="pName" value="${esc(V.name || id)}"><span></span>
+    <label>Folder</label><span class="note">dist/voice/${esc(id)}/ · <b>${have}</b> clips (${missing} of ${need} lines still need one)</span><span></span>
+    <label>Engine</label><select id="pEng"><option value="kokoro">Kokoro (54 voices, blendable)</option><option value="piper">Piper (100+ voices, downloads on first use)</option></select><span></span>
+    <label>Voice</label><span id="voiceBox"></span><span></span>
+    <label>Speed</label><input type="range" id="pSpeed" min="0.6" max="1.5" step="0.01" value="${V.speed || 1}"><span class="v" id="pSpeedV">${(+V.speed || 1).toFixed(2)}</span>
+  </div></div>
+  <div class="card"><b>Effects</b> <span class="note">(applied after the voice, in this order)</span><div class="grid" style="margin-top:10px" id="fxBox"></div>
+    <div class="tools"><span class="note">Start from a preset:</span><select id="preset"><option value="">Choose…</option>${Object.keys(PRESETS).map(p => `<option>${esc(p)}</option>`).join('')}</select></div></div>
+  <div class="card"><b>Try it</b><div class="tools"><input type="text" id="tryText" style="flex:1;min-width:260px" value="Captain, want me to activate fight mode?"><button id="tryBtn" class="pri">▶ Preview</button></div>
+    <div class="note">Previews use the settings on screen, even before you save.</div></div>
+  <div class="card"><b>Make the clips</b><div class="tools"><button id="genMissing" class="pri">Generate missing (${missing})</button><button id="genAll">Regenerate all ${need}</button><button id="mkDefault" ${id === SC.voice.active ? 'disabled' : ''}>★ Make this the default voice</button><button id="dupPack">Duplicate</button>${id !== 'burp' ? '<button id="delPack" class="warn">Delete pack</button>' : ''}<button id="setup">Install voice tools</button></div>
+    <div class="bar"><i id="bar"></i></div><div class="log" id="log">Generating runs on this computer. The first time, press "Install voice tools" (needs Python 3), and the voice models download on first use (Kokoro about 330 MB, each Piper voice 20 to 110 MB).
+After generating, tell Claude (or push to GitHub) so the new clips get uploaded with the game.</div></div>`;
+  m.querySelectorAll('.packs button[data-p]').forEach(b => b.onclick = () => { previewPack = b.dataset.p; renderPacks(m); });
+  $('pName').oninput = e => { V.name = e.target.value; setDirty(true); };
+  $('pEng').value = V.engine || 'kokoro'; $('pEng').onchange = e => { V.engine = e.target.value; V.voice = V.engine === 'piper' ? 'en_GB-alan-medium' : 'bm_george'; delete V.voice2; delete V.mix; delete V.speaker; setDirty(true); renderPacks(m); };
+  $('pSpeed').oninput = e => { V.speed = +e.target.value; $('pSpeedV').textContent = V.speed.toFixed(2); setDirty(true); };
+  voiceBox(V); fxBox(V);
+  $('preset').onchange = e => { const p = PRESETS[e.target.value]; if (!p) return; Object.assign(V, JSON.parse(JSON.stringify(p))); if (!p.voice2) { delete V.voice2; delete V.mix; } setDirty(true); renderPacks(m); };
+  $('tryBtn').onclick = async () => { const t = $('tryText').value.trim(); if (!t) return; $('tryBtn').disabled = true; try { await api('/api/voice/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pack: id, settings: V, texts: [t], preview: true }) }); const J = await waitJob(showJob); if (J.error) toast(J.error, true); else playUrl(`/voice/_preview/${hash(t)}.mp3?${Date.now()}`); } catch (e) { toast(e.message, true); } $('tryBtn').disabled = false; };
+  const gen = async force => { if (dirty) { if (!confirm('Save your changes first? (Generating uses the saved pack settings and lines.)')) return; await save(); }
+    try { await api('/api/voice/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pack: id, force }) }); const J = await waitJob(showJob); if (J.error) toast(J.error, true); else { toast('Clips made. The game was rebuilt with them.'); await reloadClips(); renderPacks(m); } } catch (e) { toast(e.message, true); } };
+  $('genMissing').onclick = () => gen(false); $('genAll').onclick = () => { if (confirm(`Remake all ${need} clips for "${V.name || id}"? This takes a while.`)) gen(true); };
+  $('mkDefault').onclick = () => { SC.voice.active = id; setDirty(true); renderPacks(m); };
+  $('dupPack').onclick = () => newPack(JSON.parse(JSON.stringify(V)), (V.name || id) + ' copy');
+  $('newPack').onclick = () => newPack(JSON.parse(JSON.stringify(PRESETS['Classic B.U.R.P.'])), 'New voice');
+  if ($('delPack')) $('delPack').onclick = () => { if (!confirm(`Delete the pack "${V.name || id}"? (Its clip folder stays on disk.)`)) return; delete P[id]; if (SC.voice.active === id) SC.voice.active = 'burp'; previewPack = 'burp'; setDirty(true); renderPacks(m); };
+  $('setup').onclick = async () => { try { await api('/api/voice/setup', { method: 'POST' }); const J = await waitJob(showJob); if (J.error) toast(J.error, true); else toast('Voice tools installed.'); } catch (e) { toast(e.message, true); } };
+}
+function newPack(settings, name) { let n = prompt('Name for the new voice pack:', name); if (!n) return; let id = n.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 30) || 'voice'; while (SC.voice.packs[id]) id += '2'; settings.name = n; SC.voice.packs[id] = settings; previewPack = id; setDirty(true); renderPacks($('main')); }
+function voiceBox(V) {
+  const b = $('voiceBox');
+  if ((V.engine || 'kokoro') === 'kokoro') {
+    const opts = sel => Object.entries(KOKORO).map(([g, L]) => `<optgroup label="${g}">${L.map(v => `<option ${v === sel ? 'selected' : ''}>${v}</option>`).join('')}</optgroup>`).join('');
+    b.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="v1">${opts(V.voice || 'bm_george')}</select><span class="note">blend with</span><select id="v2"><option value="">nobody</option>${opts(V.voice2 || '')}</select><input type="range" id="mix" min="0" max="1" step="0.05" value="${V.mix || 0}" style="width:120px" ${V.voice2 ? '' : 'disabled'}><span class="note" id="mixV">${Math.round((V.mix || 0) * 100)}%</span></div>`;
+    $('v1').onchange = e => { V.voice = e.target.value; setDirty(true); };
+    $('v2').onchange = e => { V.voice2 = e.target.value || undefined; if (!V.voice2) delete V.mix; else V.mix = V.mix || 0.5; setDirty(true); voiceBox(V); };
+    $('mix').oninput = e => { V.mix = +e.target.value; $('mixV').textContent = Math.round(V.mix * 100) + '%'; setDirty(true); };
+  } else {
+    const known = Object.values(PIPER).flat().some(([k]) => k === V.voice);
+    b.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="v1">${Object.entries(PIPER).map(([g, L]) => `<optgroup label="${g}">${L.map(([k, n]) => `<option value="${k}" ${k === V.voice ? 'selected' : ''}>${esc(n)}</option>`).join('')}</optgroup>`).join('')}<option value="__custom" ${known ? '' : 'selected'}>Other (type its name)…</option></select>
+      <input type="text" id="vCustom" placeholder="e.g. en_US-joe-medium" value="${known ? '' : esc(V.voice || '')}" style="width:220px;${known ? 'display:none' : ''}"><span class="note">speaker</span><input type="number" id="spk" min="0" value="${V.speaker != null ? V.speaker : ''}" placeholder="—" style="width:70px"></div>
+      <div class="note" style="margin-top:4px">Any voice from huggingface.co/rhasspy/piper-voices works: type its name, like en_US-joe-medium.</div>`;
+    $('v1').onchange = e => { if (e.target.value === '__custom') { $('vCustom').style.display = ''; return; } $('vCustom').style.display = 'none'; V.voice = e.target.value; setDirty(true); };
+    $('vCustom').oninput = e => { V.voice = e.target.value.trim(); setDirty(true); };
+    $('spk').oninput = e => { if (e.target.value === '') delete V.speaker; else V.speaker = +e.target.value; setDirty(true); };
+  }
+}
+function fxBox(V) {
+  const b = $('fxBox'); b.innerHTML = FX.map(([k, l, lo, hi, st, def]) => `<label>${l}</label><input type="range" data-k="${k}" min="${lo}" max="${hi}" step="${st}" value="${V.fx[k] != null ? V.fx[k] : def}"><span class="v" id="fx_${k}">${V.fx[k] != null ? V.fx[k] : def}</span>`).join('');
+  b.querySelectorAll('input').forEach(i => i.oninput = () => { V.fx[i.dataset.k] = +i.value; $('fx_' + i.dataset.k).textContent = i.value; setDirty(true); });
+}
+function showJob(J) { const bar = $('bar'), log = $('log'); if (bar) bar.style.width = (J.total ? Math.round(J.done / J.total * 100) : 0) + '%'; if (log) log.textContent = (J.running ? `Working: ${J.done} / ${J.total}\n` : '') + (J.log || []).join('\n') + (J.error ? '\n' + J.error : ''); }
+async function reloadClips() { const j = await api('/api/script'); CLIPS = j.clips || {}; INV.spoken = j.spoken; }
+async function save() {
+  $('save').disabled = true;
+  try { for (const k in SC.burp) SC.burp[k] = SC.burp[k].filter(s => s && s.trim()); const j = await api('/api/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(SC) }); setDirty(false); await reloadClips(); toast('Saved. ' + (j.build || '')); render(); }
+  catch (e) { toast('Save failed: ' + e.message, true); }
+  $('save').disabled = false;
+}
+$('save').onclick = save;
+addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); save(); } });
+load().catch(e => { $('main').innerHTML = `<p class="note">Could not load: ${esc(e.message)}. Open this page from the game server on this computer (node server.js, then http://localhost:8080/script).</p>`; });
+</script>
+</body>
+</html>

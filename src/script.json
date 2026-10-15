@@ -1,0 +1,22 @@
+{
+  "burp": {},
+  "say": {},
+  "voice": {
+    "active": "burp",
+    "packs": {
+      "burp": {
+        "name": "B.U.R.P. (classic)",
+        "engine": "kokoro",
+        "voice": "bm_george",
+        "lang": "en-gb",
+        "speed": 1.0,
+        "fx": {
+          "ring": 0.45,
+          "ringHz": 52,
+          "echo": 1.0,
+          "crush": 9
+        }
+      }
+    }
+  }
+}

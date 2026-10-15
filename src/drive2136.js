@@ -115,27 +115,17 @@ function haloBlackTex() { if (haloBlackTex.t) return haloBlackTex.t; const c = d
     // the hull is thick: a short tunnel of dark plating out to the outer skin
     const hullM = toonNS('#2a2c32', 'hull'); for (const s of [-1, 1]) { part(levelGroup, B(0.06, vh, 0.9), hullM, s * vw / 2, cy, Lz + 0.6); part(levelGroup, B(vw, 0.06, 0.9), hullM, 0, cy + s * vh / 2, Lz + 0.6); }
     const sky = new THREE.Group(); sky.position.set(0, cy, Lz); levelGroup.add(sky);
-    // stars in three depths so they slide against each other as you walk
-    for (const [n, d0, d1, sz, op] of [[500, 40, 120, 1.6, 0.9], [900, 120, 240, 1.3, 0.8], [260, 18, 40, 2.2, 1]]) { const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), c = new THREE.Color();
-      for (let i = 0; i < n; i++) { const d = d0 + Math.random() * (d1 - d0); pos[i * 3] = (Math.random() - 0.5) * d * 1.6; pos[i * 3 + 1] = (Math.random() - 0.5) * d * 1.1; pos[i * 3 + 2] = d; c.setHSL(Math.random() < 0.2 ? 0.08 : 0.6, 0.5, 0.75 + Math.random() * 0.25); col.set([c.r, c.g, c.b], i * 3); }
-      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-      sky.add(new THREE.Points(g, new THREE.PointsMaterial({ size: sz, sizeAttenuation: false, vertexColors: true, transparent: true, opacity: op, fog: false, depthWrite: false }))); }
-    // a nebula far back
-    { const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d'); for (const [px, py, r, col] of [[90, 110, 110, 'rgba(140,70,200,.5)'], [170, 150, 90, 'rgba(50,120,200,.45)'], [140, 80, 70, 'rgba(220,90,160,.3)']]) { const g = x.createRadialGradient(px, py, 0, px, py, r); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 256, 256); }
-      const neb = new THREE.Mesh(new THREE.PlaneGeometry(420, 300), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); neb.rotation.y = Math.PI; neb.position.set(30, 10, 250); sky.add(neb); }
-    // the planet you're orbiting, and its moon
-    const pl = new THREE.Mesh(new THREE.SphereGeometry(26, 32, 20), new THREE.MeshBasicMaterial({ map: planetTex(S.orbit || 'earth'), fog: false })); pl.position.set(-30, -26, 120); sky.add(pl);
-    { const a = new THREE.Mesh(new THREE.SphereGeometry(27.5, 32, 20), new THREE.MeshBasicMaterial({ color: '#8fd0ff', transparent: true, opacity: 0.18, side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); a.position.copy(pl.position); sky.add(a); }
-    const moon = new THREE.Mesh(new THREE.SphereGeometry(3, 16, 12), new THREE.MeshBasicMaterial({ map: planetTex('moon'), color: '#d8d4cc', fog: false })); moon.position.set(22, 10, 90); sky.add(moon);
-    // tumbling rocks drifting past, near enough to show depth
-    const rocks = []; for (let i = 0; i < 9; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.4 + Math.random() * 1.2, 0), new THREE.MeshLambertMaterial({ color: new THREE.Color(['#6a6058', '#7a7068', '#5a524c'][i % 3]), emissive: new THREE.Color('#2a2420'), flatShading: true, fog: false }));
-      const d = 9 + Math.random() * 40; r.position.set((Math.random() - 0.5) * d * 1.4, (Math.random() - 0.5) * d * 0.8, d); r.userData = { v: 0.4 + Math.random() * 1.2, sx: Math.random() * 2, sy: Math.random() * 2, w: d * 0.8 }; sky.add(r); rocks.push(r); }
-    // dust right outside the glass
-    const dn = 120, dp = new Float32Array(dn * 3); for (let i = 0; i < dn; i++) { dp[i * 3] = (Math.random() - 0.5) * 8; dp[i * 3 + 1] = (Math.random() - 0.5) * 5; dp[i * 3 + 2] = 1 + Math.random() * 10; }
-    const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.BufferAttribute(dp, 3)); const dust = new THREE.Points(dg, new THREE.PointsMaterial({ color: '#cfe6ff', size: 0.035, transparent: true, opacity: 0.6, fog: false, depthWrite: false })); sky.add(dust);
-    let lt = null; levelAnims.push(t => { const dt = lt == null ? 0.016 : clamp(t - lt, 0, 0.05); lt = t; pl.rotation.y = t * 0.03; moon.position.x = 22 + Math.sin(t * 0.05) * 4;
-      for (const r of rocks) { const u = r.userData; r.position.x += u.v * dt; if (r.position.x > u.w) r.position.x = -u.w; r.rotation.x += u.sx * dt * 0.3; r.rotation.y += u.sy * dt * 0.3; }
-      const a = dg.attributes.position.array; for (let i = 0; i < dn; i++) { a[i * 3] += dt * 0.25; if (a[i * 3] > 4) a[i * 3] = -4; } dg.attributes.position.needsUpdate = true; });
+    // one light layer of stars far out (cheap on phones), and now and then a ship crossing the window
+    { const n = 260, pos = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const d = 70 + Math.random() * 150; pos[i * 3] = (Math.random() - 0.5) * d * 1.4; pos[i * 3 + 1] = (Math.random() - 0.5) * d; pos[i * 3 + 2] = d; }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); sky.add(new THREE.Points(g, new THREE.PointsMaterial({ color: '#dfe8ff', size: 1.4, sizeAttenuation: false, fog: false, depthWrite: false }))); }
+    const ship = new THREE.Group(), hullC = new THREE.MeshBasicMaterial({ color: '#5a6070', fog: false }), darkC = new THREE.MeshBasicMaterial({ color: '#2a2e38', fog: false });
+    part(ship, B(1.2, 0.5, 4.2), hullC, 0, 0, 0); part(ship, B(4.2, 0.12, 1.4), darkC, 0, 0, 0.6); part(ship, B(0.6, 0.35, 1.0), darkC, 0, 0.35, -0.6);
+    for (const s of [-1, 1]) part(ship, B(0.35, 0.35, 0.3), new THREE.MeshBasicMaterial({ color: '#ffb03b', fog: false }), s * 0.35, 0, 2.2);
+    ship.visible = false; sky.add(ship); const SH = { next: 6 + Math.random() * 10, on: false };
+    // ships start and finish well outside what the window can see, so nothing pops in
+    levelAnims.push(t => { if (!SH.on) { if (t < SH.next) return; const dir = Math.random() < 0.5 ? 1 : -1, d = 80 + Math.random() * 70; SH.on = true; SH.t0 = t; SH.dir = dir; SH.dur = 14 + Math.random() * 8; SH.d = d; SH.y = (Math.random() - 0.5) * d * 0.4; ship.rotation.set(0, dir > 0 ? -Math.PI / 2 : Math.PI / 2, (Math.random() - 0.5) * 0.3); ship.scale.setScalar(1 + Math.random() * 1.5); ship.visible = true; }
+      const k = (t - SH.t0) / SH.dur; if (k >= 1) { SH.on = false; ship.visible = false; SH.next = t + 20 + Math.random() * 35; return; }
+      ship.position.set(SH.dir * (-1 + 2 * k) * SH.d * 2.2, SH.y, SH.d); });
   } catch (e) { console.warn('hall viewport', e); }
 }; }
 

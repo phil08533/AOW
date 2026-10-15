@@ -181,27 +181,28 @@ function labCollect() { const L = labS(); let got = 0, full = false;
   for (const T of L.st) { if (!T.n) continue; const had = T.n >= labMax(); T.n -= take(T.r, T.n); if (had) T.t = Date.now(); }
   if (full) invFullNote(Object.keys(L.shelf)[0] || L.st[0].r); if (got) { SFX.coin(); log(`Collected ${got} dose${got > 1 ? 's' : ''} from the Lab`, 'loot'); } markDirty(); }
 function openLab() {
-  labTick(); const L = labS(); openDlg('Lab', `Level ${roomLvl('lab')} · ${L.st.length} station${L.st.length > 1 ? 's' : ''}`); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  labTick(); const L = labS(); openDlg('Lab', `Level ${roomLvl('lab')} · ${L.st.length} station${L.st.length > 1 ? 's' : ''}`); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.dataset.one = '1';
   const bars = [];
   const tick = () => { if (!rows.isConnected) { clearInterval(iv); return; } labTick(); bars.forEach(([T, txt, fill]) => { const st = labStation(T); txt.textContent = st.text; fill.style.width = Math.round(st.k * 100) + '%'; });
     const c = [...$('dlgActs').children].find(b => /^Collect/.test(b.textContent)); if (c) { const n = labReady(); c.textContent = 'Collect ' + n; c.disabled = !n; } };
-  const render = () => { labTick(); rows.textContent = ''; bars.length = 0;
+  const render = () => { labTick(); const keep = rows.scrollTop; rows.textContent = ''; bars.length = 0;
     const shelf = Object.entries(L.shelf).filter(([, n]) => n > 0).map(([id, n]) => `${n} ${SUBS[id].name}`).join(', ');
     $('dlgLine').textContent = `Each station brews one dose every ${Math.round(labEvery() / 60000)} min and holds ${labMax()}. Switching a recipe keeps what's done on the shelf.` + (shelf ? ` Shelf: ${shelf}.` : '');
     L.st.forEach((T, si) => {
       const hd = document.createElement('div'); hd.style.cssText = 'margin:8px 2px 2px;font-weight:700;color:#c8a8ff;display:flex;flex-direction:column;gap:3px';
       const top = document.createElement('span'); top.textContent = `STATION ${si + 1} · ${SUBS[T.r].name}`; const txt = document.createElement('span'); txt.style.cssText = 'font:600 13px var(--mono,monospace);color:#d8c8ff';
       const bar = document.createElement('div'); bar.style.cssText = 'height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden'; const fill = document.createElement('i'); fill.style.cssText = 'display:block;height:100%;width:0;background:linear-gradient(90deg,#8f6ad0,#ff6aa8)'; bar.appendChild(fill);
-      hd.append(top, txt, bar); rows.appendChild(hd); bars.push([T, txt, fill]);
+      const eff = document.createElement('span'); eff.style.cssText = 'font:500 12.5px/1.35 system-ui,sans-serif;color:#b9b0d0;white-space:normal'; eff.textContent = 'Effects: ' + SUBS[T.r].desc + ' Costs ' + costLabel(LAB_RECIPES[T.r]) + ' a dose.';
+      hd.append(top, eff, txt, bar); rows.appendChild(hd); bars.push([T, txt, fill]);
       const r = document.createElement('div'); r.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px';
-      for (const id of Object.keys(LAB_RECIPES)) { const b = document.createElement('button'); b.className = 'pbtn' + (T.r === id ? ' go' : ''); b.style.padding = '5px 9px'; b.textContent = SUBS[id].name; b.title = costLabel(LAB_RECIPES[id]) + ' a dose';
+      for (const id of Object.keys(LAB_RECIPES)) { const b = document.createElement('button'); b.className = 'pbtn' + (T.r === id ? ' go' : ''); b.style.padding = '5px 9px'; b.textContent = SUBS[id].name; b.title = SUBS[id].desc + ' ' + costLabel(LAB_RECIPES[id]) + ' a dose';
         b.addEventListener('click', () => { if (T.r === id) return; if (T.n) { L.shelf[T.r] = (L.shelf[T.r] || 0) + T.n; log(`${T.n} ${SUBS[T.r].name} moved to the lab shelf`, 'loot'); } T.r = id; T.n = 0; T.t = Date.now(); markDirty(); SFX.ui(); render(); });
         r.appendChild(b); }
       rows.appendChild(r); });
     const nx = LAB_STATION_COST[L.st.length];
-    if (nx) { const r = document.createElement('div'); r.className = 'rowi'; const nm = document.createElement('span'); nm.textContent = `Add station ${L.st.length + 1}: brews a second recipe side by side`; const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = costLabel(nx);
+    if (nx) { const r = document.createElement('div'); r.className = 'rowi'; r.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap'; const nm = document.createElement('span'); nm.style.flex = '1 1 180px'; nm.textContent = `Add station ${L.st.length + 1}: brews another recipe at the same time`; const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = costLabel(nx);
       const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = 'Build'; b.disabled = !costOk(nx); b.addEventListener('click', () => { costPay(nx); L.st.push({ r: 'voidspice', t: Date.now(), n: 0 }); SFX.level(); log('New lab station built.', 'loot'); markDirty(); openLab(); }); r.append(nm, mt, b); rows.appendChild(r); }
-    tick(); };
+    tick(); if (keep) rows.scrollTop = keep; };
   const iv = setInterval(tick, 1000);
   $('dlgActs').before(rows);
   acts([['Collect ' + labReady(), () => { labCollect(); render(); }, true, !labReady()],

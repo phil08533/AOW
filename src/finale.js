@@ -459,7 +459,9 @@ function mawStep(dt, t) {
         burst(end, crit ? '#ffd36a' : '#ff6a8a', crit ? 6 : 3, crit ? 24 : 14); hitmark(false); mawDamage(dmg / 2 * (crit ? 1.6 : 1), true); } } }
   return r; }; }
 { const _kr = killRaider; killRaider = function (r) { const res = _kr(r); if (r && r.maw) { const F = fly, i = F.raiders.indexOf(r); if (i >= 0) F.raiders.splice(i, 1); levelGroup.remove(r.obj); } return res; }; }
-{ const _mc = musContext; musContext = function (dt) { const r = _mc(dt); if (LEVEL && LEVEL.id === 'maw' && !MAW.dead) return 'eyeboss'; return r; }; }
+// the last, morphed phase gets its own track (Orchestral Mayhem, Phil's pick), looping until the Maw dies
+TRACKS.mayhem = 'music/mayhem.mp3'; PLAYLISTS.mawfinal = ['mayhem'];
+{ const _mc = musContext; musContext = function (dt) { const r = _mc(dt); if (LEVEL && LEVEL.id === 'maw' && !MAW.dead) return MAW.final ? 'mawfinal' : 'eyeboss'; return r; }; }
 
 // ---- the last phase: it morphs, the squadron forms up on you, and B.U.R.P. offers fight mode ----
 const MAW_FM_ASK = 'Captain, want me to activate fight mode?', MAW_FM_ON = 'Fight mode, activated.';
@@ -502,6 +504,7 @@ function mawFinalStep(dt, t) {
   const F = fly;
   // explosions and smoke boil off it, more of them once the mega guns are tearing in
   MAW.blastT -= dt; if (MAW.blastT <= 0) { MAW.blastT = MAW.mega ? 0.28 + Math.random() * 0.25 : 0.9 + Math.random() * 0.6; mawBlast(MAW.mega && Math.random() < 0.4); }
+  if (MAW.mega && MAW.nowSaid && BURP.maw_final && BURP.maw_final.length) { MAW.burpT = (MAW.burpT == null ? 9 : MAW.burpT) - dt; if (MAW.burpT <= 0) { MAW.burpT = 11 + Math.random() * 5; const L = BURP.maw_final.filter(l => l !== MAW.lastBurp), l = (L.length ? L : BURP.maw_final)[(Math.random() * (L.length || BURP.maw_final.length)) | 0]; MAW.lastBurp = l; MAW.vegaT = Math.max(MAW.vegaT, 4); mawBurp(l, 4.5); } }
   if (MAW.mega) { MAW.vegaT -= dt; if (MAW.vegaT <= 0) { MAW.vegaT = 14; mawComms('CAPTAIN VEGA', ['Keep firing!', 'Don\'t let up! Keep firing!', 'It\'s breaking! Keep firing, Captain!'][(Math.random() * 3) | 0], 3); } }
   if (!MAW.mega || !player.alive) return;
   // mega guns: a storm of shots from every hardpoint while you fire (or while it's in your sights)

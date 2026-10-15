@@ -185,3 +185,9 @@ function labRoom(s, cx, cz, far, outer, faceIn, term, props) {
   levelAnims.push(t => { liq.position.y = 1.1 + Math.sin(t * 3) * 0.02; flasks.forEach((f, i) => { f.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.08); }); pl.intensity = 0.7 + Math.sin(t * 4) * 0.15; });
   term(cx + s.side * 0.5, s.z0 + 0.6, '#c8a8ff', 'Lab console (brew, collect)', openLab, 0);
 }
+// start screen: a checkbox so players pick before they begin (2.12.4)
+{ const note = $('saveNote'); if (note) { const l = document.createElement('label'); l.id = 'subsPick'; l.style.cssText = 'display:flex;align-items:center;gap:8px;width:min(100%,290px);font-size:14px;color:var(--dim);cursor:pointer;text-align:left';
+  const c = document.createElement('input'); c.type = 'checkbox'; c.id = 'subsChk'; c.checked = !!PREFS.subs; c.style.cssText = 'width:18px;height:18px;accent-color:#ffd36a;flex:none';
+  const t = document.createElement('span'); t.innerHTML = 'Drugs &amp; drinks in the game <small>(you can change this later in Settings)</small>';
+  c.addEventListener('change', () => { PREFS.subs = c.checked; savePrefs(); try { renderSettings(); subChip(); invQuickRender(); } catch (_) {} SFX.ui(); });
+  l.append(c, t); note.before(l); } }

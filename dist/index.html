@@ -17450,7 +17450,7 @@ let velSplash = null; // set below; the rain in velstorm.js calls it where a dro
 // You can steer all the way around the tube, hit speed pads, and hold boost. No crashing, no failing.
 const HALO_PORTALS = [{ x: 292, z: 34, nx: 1 }, { x: -292, z: 34, nx: -1 }];
 const HALO = { on: false, d: 0, s: 0, th: 0, thv: 0, thCam: 0, from: 0, cool: 0, slots: [], town: null, T0: new THREE.Vector3(0, -3000, 0), got: new Set(), flash: 0, park: null, fov0: 72, kick: 0, built: false, last: 0, glassSeen: false };
-const HALO_R = 7, HALO_SEG = 24, HALO_N = 15, HALO_LEN = 3600, HALO_GLASS = [820, 2420];
+const HALO_R = 7, HALO_SEG = 24, HALO_N = 15, HALO_LEN = 5600, HALO_GLASS = [1000, 3800];
 LORE_FACTIONS.push(['The Hydrans of Prism Deep', 'speedway', 'Velocity\'s other people. Hydrans breathe hydrogen and live in Prism Deep, a city of glowing domes at the bottom of the Glass Sea, far under the racing flats. Their breath rises through the vents as rainbow vapor, the magnet storm charges it, and it falls back as the rainbow rain. They built the Halo Line, a magnet tube that rings the whole planet, to move cargo. Drivers sneak rides through it. Nobody visits Prism Deep: the air would kill you, and the water would crush what was left.']);
 if (LORE.speedway) LORE.speedway[1] = 'The racing planet, and a magnet: the ground field holds every car a hand above the glass, and the storm never stops. The rain falls in rainbows because of the Hydrans living under the Glass Sea. At the east and west edges of the flats, the Halo Line gates throw you around the planet.';
 
@@ -17518,6 +17518,7 @@ function haloBuildTube() {
     HALO.slots.push({ g, panels, solid, chev, glass, ring, ringMat, stripMat, strips, ribs, pad, v: null });
   }
 }
+const haloLine = v => 1.7 * Math.sin(v * 0.13) + 1.0 * Math.sin(v * 0.047 + 1.3);
 function haloDress(sl, v) {
   const dist = v * HALO_SEG, ph = haloPhase(dist), pal = ph === 2 ? HALO_PAL_B : HALO_PAL_A, col = pal[((v % 4) + 4) % 4];
   for (const p of sl.panels) { const left = Math.sin(p.ph) < -0.15 || (Math.cos(p.ph) < -0.55 && Math.sin(p.ph) < 0.3); p.m.material = ph === 1 && left ? sl.glass : (Math.abs(p.ph) < 0.01 && ph !== 1 ? sl.chev : sl.solid); }
@@ -17526,8 +17527,9 @@ function haloDress(sl, v) {
   sl.stripMat.color.set(ph === 1 ? '#7fdfff' : pal[((v + 1) % 4 + 4) % 4]); sl.strips.forEach(s => { s.s.visible = ph !== 1 || Math.sin(s.ph) > 0.1 || Math.abs(s.ph) < 0.01; });
   sl.ribs.forEach(r => { r.visible = ph === 1; });
   // a speed pad on some segments, at a fixed spot around the tube
-  const has = ph !== 3 && v > 2 && haloHash(v) < (ph === 1 ? 0.22 : 0.4); sl.pad.visible = has && !HALO.got.has(v);
-  if (has) { const a = (haloHash(v + 7777) - 0.5) * Math.PI * (ph === 1 ? 1.3 : 2); sl.pad.position.set((HALO_R - 0.15) * Math.sin(a), -(HALO_R - 0.15) * Math.cos(a), -HALO_SEG * 0.5); sl.pad.rotation.set(0, 0, a); sl.padA = a; } else sl.padA = null;
+  // pads come in runs that follow one flowing line around the tube, so a clean run is a chain of barrel rolls
+  const has = ph !== 3 && v > 3 && haloHash(Math.floor(v / 7) + 31) < (ph === 1 ? 0.65 : 0.7) && v % 7 !== 0; sl.pad.visible = has && !HALO.got.has(v);
+  if (has) { const a = haloLine(v) * (ph === 1 ? 0.55 : 1); sl.pad.position.set((HALO_R - 0.15) * Math.sin(a), -(HALO_R - 0.15) * Math.cos(a), -HALO_SEG * 0.5); sl.pad.rotation.set(0, 0, a); sl.padA = a; } else sl.padA = null;
   sl.v = v;
 }
 
@@ -17542,11 +17544,11 @@ function haloBuildTown() {
   { const p = bed.geometry.attributes.position; for (let i = 0; i < p.count; i++) p.setZ(i, Math.sin(p.getX(i) * 0.05) * 4 + Math.cos(p.getY(i) * 0.03) * 5); p.needsUpdate = true; }
   // light shafts from the surface
   for (let i = 0; i < 18; i++) { const r = new THREE.Mesh(new THREE.PlaneGeometry(14 + Math.random() * 20, 260), new THREE.MeshBasicMaterial({ map: T.ray, color: '#bff8ff', transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide }));
-    r.position.set(-60 - Math.random() * 190, 20, -650 + i * 75 + Math.random() * 30); r.rotation.set(0, Math.PI / 2, 0.25); town.add(r); anims.push(t => { r.material.opacity = 0.05 + Math.sin(t * 0.7 + i) * 0.03; }); }
+    r.position.set(-60 - Math.random() * 190, 20, -1100 + i * 125 + Math.random() * 30); r.rotation.set(0, Math.PI / 2, 0.25); town.add(r); anims.push(t => { r.material.opacity = 0.05 + Math.sin(t * 0.7 + i) * 0.03; }); }
   // domes: glowing glass bubbles in every color, with spires and walkway tubes between them
   const domes = [];
   for (let i = 0; i < 16; i++) {
-    const r = 14 + Math.random() * 30, x = -70 - Math.random() * 170, z = -640 + i * 82 + (Math.random() - 0.5) * 30, hue = (i * 0.137) % 1, col = new THREE.Color().setHSL(hue, 0.85, 0.6);
+    const r = 14 + Math.random() * 30, x = -70 - Math.random() * 170, z = -1100 + i * 140 + (Math.random() - 0.5) * 30, hue = (i * 0.137) % 1, col = new THREE.Color().setHSL(hue, 0.85, 0.6);
     const d = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide, fog: false }));
     d.position.set(x, -70, z); town.add(d);
     const core = new THREE.Mesh(new THREE.SphereGeometry(r * 0.35, 12, 8), new THREE.MeshBasicMaterial({ color: col.clone().lerp(new THREE.Color('#ffffff'), 0.5), fog: false })); core.position.set(x, -70 + r * 0.3, z); town.add(core);
@@ -17558,10 +17560,10 @@ function haloBuildTown() {
   for (let i = 0; i + 1 < domes.length; i++) { const a = domes[i], b = domes[i + 1], len = Math.hypot(b.x - a.x, b.z - a.z), tube = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, len, 8, 1, true), new THREE.MeshBasicMaterial({ color: '#bfefff', transparent: true, opacity: 0.25, depthWrite: false, side: THREE.DoubleSide, fog: false }));
     tube.position.set((a.x + b.x) / 2, -66, (a.z + b.z) / 2); tube.rotation.set(Math.PI / 2, 0, Math.atan2(b.x - a.x, b.z - a.z)); tube.rotation.order = 'YXZ'; tube.rotation.set(Math.PI / 2, Math.atan2(b.x - a.x, b.z - a.z), 0); town.add(tube); }
   // kelp-glass forests that sway
-  for (let i = 0; i < 70; i++) { const h = 10 + Math.random() * 40, k = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.8, h, 5), new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(Math.random(), 0.8, 0.5), fog: false })); k.geometry.translate(0, h / 2, 0);
-    k.position.set(-45 - Math.random() * 210, -70, -680 + Math.random() * 1360); town.add(k); const ph = Math.random() * 6; anims.push(t => { k.rotation.z = Math.sin(t * 0.8 + ph) * 0.12; k.rotation.x = Math.cos(t * 0.6 + ph) * 0.08; }); }
+  for (let i = 0; i < 110; i++) { const h = 10 + Math.random() * 40, k = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.8, h, 5), new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(Math.random(), 0.8, 0.5), fog: false })); k.geometry.translate(0, h / 2, 0);
+    k.position.set(-45 - Math.random() * 210, -70, -1150 + Math.random() * 2300); town.add(k); const ph = Math.random() * 6; anims.push(t => { k.rotation.z = Math.sin(t * 0.8 + ph) * 0.12; k.rotation.x = Math.cos(t * 0.6 + ph) * 0.08; }); }
   // the rainbow vents: columns of colored bubbles rising to the surface, where the rainbow rain begins
-  const BN = 900, bpos = new Float32Array(BN * 3), bcol = new Float32Array(BN * 3), bg = new THREE.BufferGeometry(), vents = [[-110, -380], [-180, -60], [-95, 210], [-200, 470]], bub = [];
+  const BN = 900, bpos = new Float32Array(BN * 3), bcol = new Float32Array(BN * 3), bg = new THREE.BufferGeometry(), vents = [[-110, -820], [-180, -280], [-95, 260], [-200, 800]], bub = [];
   for (let i = 0; i < BN; i++) { const vnt = vents[i % vents.length], c = new THREE.Color().setHSL(Math.random(), 1, 0.65); bub.push([vnt[0] + (Math.random() - 0.5) * 12, -70 + Math.random() * 190, vnt[1] + (Math.random() - 0.5) * 12, 6 + Math.random() * 10, vnt]); bcol.set([c.r, c.g, c.b], i * 3); }
   bg.setAttribute('position', new THREE.BufferAttribute(bpos, 3)); bg.setAttribute('color', new THREE.BufferAttribute(bcol, 3));
   const bpts = new THREE.Points(bg, new THREE.PointsMaterial({ size: 2.2, map: T.dot, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); bpts.frustumCulled = false; town.add(bpts);
@@ -17596,20 +17598,20 @@ function haloBuildTown() {
   }
   anims.push(t => { for (const j of jobs) j(t); });
   // window watchers: a few curious Hydrans drifting right up by the glass, tracking the cars that roar past
-  for (let i = 0; i < 12; i++) { const h = mkHydran(2.2 + Math.random() * 1.6, Math.random()); town.add(h); const x0 = -24 - Math.random() * 34, z0 = -560 + i * 100 + Math.random() * 40, y0 = -8 + Math.random() * 16;
+  for (let i = 0; i < 12; i++) { const h = mkHydran(2.2 + Math.random() * 1.6, Math.random()); town.add(h); const x0 = -24 - Math.random() * 34, z0 = -1000 + i * 170 + Math.random() * 40, y0 = -8 + Math.random() * 16;
     jobs.push(t => { h.position.set(x0 + Math.sin(t * 0.6 + i) * 3, y0 + Math.sin(t * 1.3 + i) * 2, z0 + Math.sin(t * 0.25 + i) * 10); h.rotation.y = -Math.PI / 2 + Math.sin(t + i) * 0.3; const u = h.userData, p = 1 + Math.sin(t * 2.4 + i) * 0.12; u.bell.scale.set(p, 2 - p, p); u.heart.material.color.setHSL((t * 0.3 + i * 0.13) % 1, 1, 0.75); }); }
   // a few huge Hydran signs in their glowing script, and a whale-sized hydrogen tanker drifting overhead
   for (let i = 0; i < 6; i++) { const s = new THREE.Mesh(new THREE.PlaneGeometry(26, 8), new THREE.MeshBasicMaterial({ map: signTex(['◇ ∿ ◈ ∿ ◇', 'PRISM DEEP', '≋ HYDRO ≋', '∴ HALO ∴', 'H₂ ONLY', '◈ ◇ ◈'][i], '#06121e', '#7ff8ff'), transparent: true, opacity: 0.85, fog: false, side: THREE.DoubleSide }));
-    s.position.set(-60 - Math.random() * 60, -10 + Math.random() * 30, -560 + i * 220); s.rotation.y = Math.PI / 2; town.add(s); anims.push(t => { s.material.opacity = 0.65 + Math.sin(t * 3 + i) * 0.2; }); }
+    s.position.set(-60 - Math.random() * 60, -10 + Math.random() * 30, -1000 + i * 400); s.rotation.y = Math.PI / 2; town.add(s); anims.push(t => { s.material.opacity = 0.65 + Math.sin(t * 3 + i) * 0.2; }); }
   { const tk = new THREE.Group(); const body = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10), new THREE.MeshBasicMaterial({ color: '#3a5a7a', fog: false })); body.scale.set(16, 9, 52); tk.add(body);
     for (let k = 0; k < 6; k++) { const l = new THREE.Mesh(new THREE.SphereGeometry(1.4, 8, 6), new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(k / 6, 1, 0.65), fog: false })); l.position.set(15.5, 0, -30 + k * 12); tk.add(l); }
-    tk.position.set(-150, 60, 0); town.add(tk); anims.push(t => { tk.position.z = Math.sin(t * 0.05) * 300; tk.position.y = 60 + Math.sin(t * 0.3) * 4; }); }
+    tk.position.set(-150, 60, 0); town.add(tk); anims.push(t => { tk.position.z = Math.sin(t * 0.05) * 700; tk.position.y = 60 + Math.sin(t * 0.3) * 4; }); }
 }
 
 // ---- riding the line ----
 function haloEnter(pi) {
   const P = HALO_PORTALS[pi]; if (!HALO.built) { haloBuildTube(); haloBuildTown(); HALO.built = true; }
-  HALO.on = true; HALO.from = pi; HALO.d = 0; HALO.th = 0; HALO.thv = 0; HALO.thCam = 0; HALO.got.clear(); HALO.flash = 1; HALO.kick = 0; HALO.glassSeen = false;
+  HALO.on = true; HALO.from = pi; HALO.d = 0; HALO.th = 0; HALO.thv = 0; HALO.thCam = 0; HALO.got.clear(); HALO.pads = 0; HALO.chain = 0; HALO.bestChain = 0; HALO.flash = 1; HALO.kick = 0; HALO.glassSeen = false;
   HALO.s = Math.max(45, Math.hypot(RC.vx || 0, RC.vz || 0)); HALO.park = player.pos.clone(); HALO.root.visible = true; HALO.town.visible = false;
   HALO.fov0 = camera.fov; camera.far = 1500; camera.updateProjectionMatrix(); VEL.hyper = HALO;
   for (const sl of HALO.slots) sl.v = null;
@@ -17625,34 +17627,35 @@ function haloExit() {
   camera.up.set(0, 1, 0); camera.fov = HALO.fov0; camera.far = 300; camera.updateProjectionMatrix();
   if (VEL.carObj) VEL.carObj.rotation.order = 'XYZ';
   for (const H of VEL.hrain || []) H.l.visible = true;
-  SFX.boom && SFX.boom(); FX.shake = Math.min(1, (FX.shake || 0) + 0.6); toast('HALO LINE', `Around the planet in ${((performance.now() - HALO.t0) / 1000).toFixed(1)}s · top ${Math.round(HALO.top * 3.6)} km/h`, 3);
-  S.halo = S.halo || { runs: 0, best: 0 }; S.halo.runs++; S.halo.best = Math.max(S.halo.best || 0, Math.round(HALO.top * 3.6)); markDirty();
+  SFX.boom && SFX.boom(); FX.shake = Math.min(1, (FX.shake || 0) + 0.6); const pay = HALO.pads * 3 + HALO.bestChain * 5; S.cr += pay;
+  toast('HALO LINE', `Around the planet in ${((performance.now() - HALO.t0) / 1000).toFixed(1)}s · top ${Math.round(HALO.top * 3.6)} km/h · ${HALO.pads} pads · best chain ${HALO.bestChain} · +${pay} cr`, 3.5);
+  S.halo = S.halo || { runs: 0, best: 0 }; S.halo.runs++; S.halo.best = Math.max(S.halo.best || 0, Math.round(HALO.top * 3.6)); S.halo.chain = Math.max(S.halo.chain || 0, HALO.bestChain); markDirty();
 }
 function haloAbort() { if (!HALO.on) return; HALO.on = false; for (const H of VEL.hrain || []) H.l.visible = true; camera.far = 300; VEL.hyper = null; if (HALO.root) HALO.root.visible = false; if (HALO.town) HALO.town.visible = false; camera.up.set(0, 1, 0); camera.fov = HALO.fov0 || 72; camera.updateProjectionMatrix(); if (VEL.carObj) VEL.carObj.rotation.order = 'XYZ'; }
 function haloStep(dt) {
   const K = velStats(), steer = ((keys.KeyD || keys.ArrowRight) ? 1 : 0) - ((keys.KeyA || keys.ArrowLeft) ? 1 : 0) + (move.x || 0), boost = keys.ShiftLeft || keys.ShiftRight;
   const top = 150 + K.top * 1.2, want = boost ? top * 1.35 : top;
-  HALO.s += (want - HALO.s) * Math.min(1, dt * (boost ? 0.9 : 0.55)); HALO.s += HALO.kick * dt * 60; HALO.kick = Math.max(0, HALO.kick - dt * 1.5);
+  HALO.s += (want - HALO.s) * Math.min(1, dt * (boost ? 0.9 : 0.55)); HALO.s = Math.min(want + 70, HALO.s + HALO.kick * dt * 45); HALO.kick = Math.max(0, HALO.kick - dt * 1.5);
   HALO.top = Math.max(HALO.top || 0, HALO.s);
   // steering swings you around the tube; it eases in and out so it feels like a car, not a dial
-  HALO.thv += (clamp(steer, -1, 1) * 2.6 - HALO.thv) * Math.min(1, dt * 7); HALO.th += HALO.thv * dt;
-  HALO.thCam += (HALO.th - HALO.thCam) * Math.min(1, dt * 5);
+  HALO.thv += (clamp(steer, -1, 1) * 2.9 - HALO.thv) * Math.min(1, dt * (steer ? 7 : 5)); HALO.th += HALO.thv * dt;
+  HALO.thCam += (HALO.th - HALO.thCam) * Math.min(1, dt * 8);
   const d0 = HALO.d; HALO.d += HALO.s * dt;
   // segments: slot k shows virtual segment v = first + k, scrolled so the car sits at z = 0
   const first = Math.floor(HALO.d / HALO_SEG) - 2;
   for (let k = 0; k < HALO.slots.length; k++) { const v = first + k, sl = HALO.slots[(((v % HALO_N) + HALO_N) % HALO_N)]; if (sl.v !== v) haloDress(sl, v); sl.g.position.z = -(v * HALO_SEG - HALO.d); }
   // pads you drive over
-  for (const sl of HALO.slots) { if (sl.padA == null || !sl.pad.visible) continue; const pz = sl.v * HALO_SEG + HALO_SEG * 0.5; if (pz > d0 && pz <= HALO.d) { let da = Math.atan2(Math.sin(HALO.th - sl.padA), Math.cos(HALO.th - sl.padA)); if (Math.abs(da) < 0.38) { HALO.got.add(sl.v); sl.pad.visible = false; HALO.kick = 1.2; HALO.flash = Math.max(HALO.flash, 0.5); SFX.coin && SFX.coin(); FX.shake = Math.min(1, (FX.shake || 0) + 0.15); } } }
+  for (const sl of HALO.slots) { if (sl.padA == null || !sl.pad.visible) continue; const pz = sl.v * HALO_SEG + HALO_SEG * 0.5; if (pz > d0 && pz <= HALO.d) { let da = Math.atan2(Math.sin(HALO.th - sl.padA), Math.cos(HALO.th - sl.padA)); if (Math.abs(da) < 0.42) { HALO.got.add(sl.v); sl.pad.visible = false; HALO.pads++; HALO.chain++; HALO.bestChain = Math.max(HALO.bestChain, HALO.chain); HALO.kick = 0.9 + Math.min(8, HALO.chain) * 0.08; if (HALO.chain % 10 === 0) toast('CHAIN ×' + HALO.chain, 'Unreal line', 0.9); HALO.flash = Math.max(HALO.flash, 0.5); SFX.coin && SFX.coin(); FX.shake = Math.min(1, (FX.shake || 0) + 0.15); } else { HALO.chain = 0; } } }
   for (const sl of HALO.slots) if (sl.pad.visible) sl.pad.children[1].material.opacity = 0.45 + Math.sin(gameTime * 10) * 0.25;
   // the window onto Prism Deep: the city drifts past slower than the tube, so it reads as far away
   const ph = haloPhase(HALO.d); HALO.town.visible = HALO.d > HALO_GLASS[0] - 400 && HALO.d < HALO_GLASS[1] + 200;
   if (!HALO.deep) { HALO.deep = new THREE.Mesh(new THREE.PlaneGeometry(4000, 2400), new THREE.MeshBasicMaterial({ color: '#04202e', fog: false })); HALO.deep.position.set(0, 0, -1200); HALO.root.add(HALO.deep); }
   HALO.deep.visible = HALO.town.visible;
-  if (HALO.town.visible) { HALO.town.position.z = HALO.T0.z + (HALO.d - (HALO_GLASS[0] + HALO_GLASS[1]) / 2) * 0.5; for (const a of HALO.townAnims) a(gameTime, dt); }
+  if (HALO.town.visible) { HALO.town.position.z = HALO.T0.z + (HALO.d - (HALO_GLASS[0] + HALO_GLASS[1]) / 2) * 0.4; for (const a of HALO.townAnims) a(gameTime, dt); }
   if (ph === 1 && !HALO.glassSeen) { HALO.glassSeen = true; toast('PRISM DEEP', 'The Hydran city under the Glass Sea. They breathe hydrogen. Do not knock.', 3.5); }
   // the car rides the inside of the tube, hovering off whatever wall is "down"
   const car = VEL.carObj, rr = HALO_R - VEL_HOVER - 0.32, up = V(-Math.sin(HALO.th), Math.cos(HALO.th), 0);
-  if (car) { car.visible = VEL.cam !== 0; car.rotation.order = 'ZYX'; car.position.set(HALO.T0.x + rr * Math.sin(HALO.th), HALO.T0.y - rr * Math.cos(HALO.th) + Math.sin(gameTime * 6) * 0.04, HALO.T0.z); car.rotation.set(0, Math.PI, HALO.th - HALO.thv * 0.06); }
+  if (car) { car.visible = VEL.cam !== 0; car.rotation.order = 'ZYX'; car.position.set(HALO.T0.x + rr * Math.sin(HALO.th), HALO.T0.y - rr * Math.cos(HALO.th) + Math.sin(gameTime * 6) * 0.04, HALO.T0.z); car.rotation.set(Math.min(0.08, HALO.kick * 0.05), Math.PI - HALO.thv * 0.07, HALO.th - HALO.thv * 0.11); }
   // camera: chase or cockpit, rolling with the tube
   const cu = V(-Math.sin(HALO.thCam), Math.cos(HALO.thCam), 0), cpos = V(HALO.T0.x + rr * Math.sin(HALO.thCam), HALO.T0.y - rr * Math.cos(HALO.thCam), HALO.T0.z);
   if (VEL.cam === 0) { camera.position.copy(cpos).addScaledVector(cu, 0.95); camera.up.copy(cu); camera.lookAt(camera.position.clone().add(V(0, 0, -10))); }
@@ -17660,7 +17663,7 @@ function haloStep(dt) {
   const fov = HALO.fov0 + Math.min(26, (HALO.s - 40) * 0.11) + HALO.kick * 6; if (Math.abs(camera.fov - fov) > 0.2) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); }
   camera.position.x += (Math.random() - 0.5) * Math.min(0.06, HALO.s * 0.0002); camera.position.y += (Math.random() - 0.5) * Math.min(0.06, HALO.s * 0.0002);
   // HUD
-  $('velSpd').textContent = Math.round(HALO.s * 3.6); $('zoneN').textContent = ph === 1 ? 'HALO LINE · PRISM DEEP' : 'HALO LINE'; $('zoneL').textContent = `${Math.min(100, Math.round(HALO.d / HALO_LEN * 100))}% around the planet · A/D steer around the tube · Shift boost`; $('zone').style.opacity = 1;
+  $('velSpd').textContent = Math.round(HALO.s * 3.6); $('zoneN').textContent = ph === 1 ? 'HALO LINE · PRISM DEEP' : 'HALO LINE'; $('zoneL').textContent = `${Math.min(100, Math.round(HALO.d / HALO_LEN * 100))}% around the planet · ${HALO.chain > 1 ? 'chain ×' + HALO.chain + ' · ' : ''}A/D steer around the tube · Shift boost`; SFX.engine && SFX.engine(Math.min(1.4, 0.6 + HALO.s / 260), Math.min(1, HALO.s / 120)); $('zone').style.opacity = 1;
   HALO.flash = Math.max(0, HALO.flash - dt * 2);
   if (HALO.d >= HALO_LEN) haloExit();
 }

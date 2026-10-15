@@ -332,7 +332,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.14.5</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.15</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -7642,8 +7642,8 @@ LEVELS.moon = {
     for (const [ox, oz, h, col] of [[-8, -8, 7, '#e8e4dc'], [8, -8, 9, '#cfe6ff'], [0, -11, 12, '#e8e4dc'], [-11, 1, 5, '#c8c8d0'], [11, 1, 5, '#c8c8d0']]) { const t = makeCityBlock(3.4, h, 3.4, col, '#4fd2ff'); at(t, dx + ox, dz + oz); box(dx + ox, dz + oz, 1.8, 1.8); }
     dropshipPad(0, -6, 0, 'Return to your ship');
     // earthrise
-    const earth = new THREE.Mesh(new THREE.SphereGeometry(60, 24, 16), new THREE.MeshBasicMaterial({ map: planetTex('earth'), fog: false })); earth.position.set(-120, 140, -260); levelGroup.add(earth); levelAnims.push(t => { earth.rotation.y = t * 0.02; });
-    const cl = new THREE.Mesh(new THREE.SphereGeometry(61, 24, 16), new THREE.MeshBasicMaterial({ map: planetTex('earth', 'clouds'), transparent: true, fog: false, depthWrite: false })); cl.position.copy(earth.position); levelGroup.add(cl);
+    const earth = new THREE.Mesh(new THREE.SphereGeometry(36, 24, 16), new THREE.MeshBasicMaterial({ map: planetTex('earth'), fog: false })); earth.position.set(-72, 84, -156); levelGroup.add(earth); levelAnims.push(t => { earth.rotation.y = t * 0.02; earth.position.set(player.pos.x - 72, player.pos.y + 84, player.pos.z - 156); cl.position.copy(earth.position); }) // sits inside the camera's far plane and rides along like the sky, so it never clips away;
+    const cl = new THREE.Mesh(new THREE.SphereGeometry(36.6, 24, 16), new THREE.MeshBasicMaterial({ map: planetTex('earth', 'clouds'), transparent: true, fog: false, depthWrite: false })); cl.position.copy(earth.position); levelGroup.add(cl);
     const sunL = new THREE.DirectionalLight(0xffffff, 1.0); sunL.position.set(80, 120, 40); levelGroup.add(sunL);
     // helium mines: rigs, ore carts, glowing crystals
     for (let i = 0; i < 5; i++) { const a = i * 1.25, x = Z.mines.x + Math.cos(a) * 10, z = Z.mines.z + Math.sin(a) * 10, rig = new THREE.Group(); for (const s of [-1, 1]) part(rig, B(0.3, 6, 0.3), '#c9a43a', s * 1.2, 3, 0, 0, 0, -0.18 * s); part(rig, B(3, 0.4, 0.4), '#c9a43a', 0, 5.8, 0); part(rig, Cy(0.15, 0.15, 6, 6), '#5d636c', 0, 3, 0); at(rig, x, z, a); solid(x, z, 1.2); }
@@ -10569,7 +10569,7 @@ LEVELS.zfloor = {
       part(props, B(0.2, 3, 4), glow('#ff3b2a'), -W + 0.4, 2, 0);
     }
     // crowd on safe decks
-    if (th !== 'engine' && th !== 'aliens' && th !== 'bridge' && th !== 'bar' && th !== 'homes') { const ppl = []; for (let i = 0; i < 8; i++) { const o = buildChar(() => makeCivilian(['#c8402f', '#3b4f7a', '#5a6a3a', '#8a6fc4'][i % 4], '#2c2a28', ['#e0b892', '#8a5a3a', '#9fe8ff'][i % 3], '#1e1a18'), 'civ'); o.position.set(-20 + i * 5, 0, -2 + (i % 2) * 4); blob(o, 0.45); levelGroup.add(o); ppl.push(o); MOVERS.push([o, 0.45]); }
+    if (th !== 'engine' && th !== 'aliens' && th !== 'bridge' && th !== 'bar' && th !== 'homes' && th !== 'under') { const ppl = []; for (let i = 0; i < 8; i++) { const o = buildChar(() => makeCivilian(['#c8402f', '#3b4f7a', '#5a6a3a', '#8a6fc4'][i % 4], '#2c2a28', ['#e0b892', '#8a5a3a', '#9fe8ff'][i % 3], '#1e1a18'), 'civ'); o.position.set(-20 + i * 5, 0, -2 + (i % 2) * 4); blob(o, 0.45); levelGroup.add(o); ppl.push(o); MOVERS.push([o, 0.45]); }
       const sts = ppl.map(() => ({}));
       levelAnims.push(t => ppl.forEach((o, i) => { const a = t * 0.15 + i * 0.8, x = Math.cos(a) * (8 + i), z = Math.sin(a) * (5 + i % 3); o.rotation.y = Math.atan2(-Math.sin(a) * (8 + i), Math.cos(a) * (5 + i % 3)); o.position.set(x, 0, z); animRig(o, sts[i], 1 / 60, t); })); }
   }
@@ -10580,6 +10580,209 @@ LEVELS.zfloor = {
   const sg = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 0.8), new THREE.MeshBasicMaterial({ map: signTex(`ELEVATOR · ${ZTOP} FLOORS`, '#0f1757', '#ffd75e') })); sg.position.set(22, 5.6, 33.5); sg.rotation.y = Math.PI; props.add(sg);
   INTERACTS.push({ x: 22, z: 30, r: 3.5, label: `Elevator (${ZTOP} floors)`, fn: openElevator }); }; }
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); if (id === 'zfloor') { S.where = 'zeltac'; S.orbit = 'zeltac'; } if (['fort', 'skycity', 'zarlich', 'vector'].includes(id)) S.orbit = id; if (id === 'forestlife' || id === 'swift') S.orbit = 'earth'; return r; }; }
+
+// =================== THE LUCKY ASTEROID (2.15): a casino and two playable arcade cabinets in the Zeltac's Neon Arcade ===================
+// Casino (left side of the floor): six slot machines, a high-low card table and a space poker table with NPC players and chip stacks.
+// Arcade (back row): the SPACE SNAKE and SPACE ROCKS cabinets are real games. Beat your best for credits.
+// Odds: slots return about 90%, high-low pays 95% of fair odds, poker is you against two NPCs for a fixed pot.
+// Save fields: S.arcade = { snake, rocks } best scores.
+
+// ---------------- cards ----------------
+const CS_SUITS = [['★', '#ffd36a'], ['☾', '#8fe3ff'], ['☄', '#ff6a5a'], ['⬢', '#9fff6a']];
+const CS_RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+function csDeck() { const d = []; for (let s = 0; s < 4; s++) for (let r = 0; r < 13; r++) d.push({ r, s }); for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; } return d; }
+function csCardHtml(c, held, hidden) {
+  if (hidden) return `<span class="cscard back">◆</span>`;
+  const [sym, col] = CS_SUITS[c.s]; return `<span class="cscard${held ? ' held' : ''}" style="color:${col}"><b>${CS_RANKS[c.r]}</b>${sym}</span>`;
+}
+// poker hand value: [category, tiebreak ranks...]; higher array wins
+function csHandValue(h) {
+  const rs = h.map(c => c.r).sort((a, b) => b - a), cnt = {}; rs.forEach(r => { cnt[r] = (cnt[r] || 0) + 1; });
+  const groups = Object.entries(cnt).map(([r, n]) => [n, +r]).sort((a, b) => b[0] - a[0] || b[1] - a[1]);
+  const flush = h.every(c => c.s === h[0].s), uniq = [...new Set(rs)];
+  let straight = uniq.length === 5 && rs[0] - rs[4] === 4, top = rs[0]; if (uniq.length === 5 && rs[0] === 12 && rs[1] === 3) { straight = true; top = 3; } // A-2-3-4-5
+  if (straight && flush) return [8, top]; if (groups[0][0] === 4) return [7, groups[0][1], groups[1][1]]; if (groups[0][0] === 3 && groups[1][0] === 2) return [6, groups[0][1], groups[1][1]];
+  if (flush) return [5, ...rs]; if (straight) return [4, top]; if (groups[0][0] === 3) return [3, ...groups.map(g => g[1])]; if (groups[0][0] === 2 && groups[1][0] === 2) return [2, ...groups.map(g => g[1])];
+  if (groups[0][0] === 2) return [1, ...groups.map(g => g[1])]; return [0, ...rs];
+}
+const CS_HAND_NAMES = ['High card', 'A pair', 'Two pair', 'Three of a kind', 'Straight', 'Flush', 'Full house', 'Four of a kind', 'Straight flush'];
+const csCmp = (a, b) => { for (let i = 0; i < Math.max(a.length, b.length); i++) { const d = (a[i] || 0) - (b[i] || 0); if (d) return d; } return 0; };
+// NPC draw: keep anything paired or better, a four-card flush, or the two highest cards
+function csNpcHold(h) { const v = csHandValue(h); if (v[0] >= 4) return h.map(() => true); if (v[0] >= 1) { const cnt = {}; h.forEach(c => { cnt[c.r] = (cnt[c.r] || 0) + 1; }); return h.map(c => cnt[c.r] > 1); }
+  const bySuit = {}; h.forEach(c => { bySuit[c.s] = (bySuit[c.s] || 0) + 1; }); const fs = Object.keys(bySuit).find(s => bySuit[s] === 4); if (fs != null) return h.map(c => c.s === +fs);
+  const top = [...h].sort((a, b) => b.r - a.r).slice(0, 2); return h.map(c => top.includes(c)); }
+
+// ---------------- dialog helpers ----------------
+function csPanel(html) { clearRows(); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.innerHTML = html; $('dlgActs').before(rows); return rows; }
+const csCan = bet => { if (S.cr >= bet) return true; $('dlgLine').textContent = `You need ${bet} cr on you for that.`; SFX.hit && SFX.hit(); return false; };
+
+// ---------------- slots ----------------
+function openSlots() {
+  openDlg('The Lucky Asteroid', 'Slot machine');
+  $('dlgLine').textContent = 'Three in a row pays 8×, three diamonds 20×, a pair next to each other pays 1.5×.';
+  const P = csPanel('<div class="csreels"><span>🍒</span><span>⭐</span><span>🚀</span></div>');
+  let busy = false;
+  const spin = bet => { if (busy || !csCan(bet)) return; busy = true; S.cr -= bet; markDirty(); const sy = ['🍒', '⭐', '🚀', '👾', '💎'], r = [0, 0, 0].map(() => sy[randi(0, sy.length - 1)]), els = [...P.querySelectorAll('.csreels span')]; let t = 0;
+    const iv = setInterval(() => { t++; els.forEach((e, i) => { if (t < 6 + i * 4) e.textContent = sy[randi(0, sy.length - 1)]; else e.textContent = r[i]; }); SFX.ui && SFX.ui();
+      if (t >= 14) { clearInterval(iv); busy = false; const win = r[0] === r[1] && r[1] === r[2] ? (r[0] === '💎' ? 20 : 8) : (r[0] === r[1] || r[1] === r[2]) ? 1.5 : 0, pay = Math.round(bet * win);
+        S.cr += pay; markDirty(); if (pay) { SFX.coin && SFX.coin(); P.querySelector('.csreels').classList.add('win'); setTimeout(() => P.querySelector('.csreels') && P.querySelector('.csreels').classList.remove('win'), 900); }
+        $('dlgLine').textContent = pay ? `You win ${pay} cr!` : 'Nothing. The machine hums smugly.'; } }, 70); };
+  acts([['Spin 50', () => spin(50), true], ['Spin 250', () => spin(250)], ['Spin 1000', () => spin(1000)], ['Leave', closeDlg]]);
+}
+
+// ---------------- high-low ----------------
+function openHighLow() {
+  openDlg('Dealer Pip', 'High-Low');
+  let card = csDeck()[0], bet = 100;
+  const P = csPanel('');
+  const show = (msg, next) => { P.innerHTML = `<div class="cshand">${csCardHtml(card)}${next ? ' → ' + csCardHtml(next) : ''}</div>`; $('dlgLine').textContent = msg; };
+  const odds = hi => { const n = hi ? 12 - card.r : card.r; return n > 0 ? (0.95 * 12 / n) : 0; }; // ties lose
+  const play = hi => { if (!csCan(bet)) return; const m = odds(hi); if (!m) { $('dlgLine').textContent = hi ? "Nothing beats an ace. Go lower." : 'Nothing is lower than a 2. Go higher.'; return; }
+    S.cr -= bet; const next = csDeck().find(c => !(c.r === card.r && c.s === card.s)); const won = hi ? next.r > card.r : next.r < card.r, pay = won ? Math.round(bet * m) : 0; S.cr += pay; markDirty(); if (pay) SFX.coin && SFX.coin(); else SFX.hit && SFX.hit();
+    show(won ? `Right! You win ${pay} cr.` : next.r === card.r ? 'A tie. The house takes it.' : 'Wrong way. The house takes it.', next); card = next; setTimeout(render, 1100); };
+  const render = () => { if (!dlgOpen) return; show(`Higher pays ${odds(true) ? odds(true).toFixed(2) + '×' : '–'}, lower pays ${odds(false) ? odds(false).toFixed(2) + '×' : '–'}. Bet: ${bet} cr.`);
+    acts([['Higher', () => play(true), true], ['Lower', () => play(false), true], [`Bet ${bet === 100 ? 500 : bet === 500 ? 1000 : 100}`, () => { bet = bet === 100 ? 500 : bet === 500 ? 1000 : 100; render(); }], ['Leave', closeDlg]]); };
+  render();
+}
+
+// ---------------- space poker (five-card draw against two NPCs) ----------------
+const CS_POKER_NPCS0 = ['Gambler Rook', 'Lady Nyx'];
+function openPoker(o = {}) {
+  const CS_POKER_NPCS = o.npcs || CS_POKER_NPCS0, ANTES = o.antes || [100, 500, 2000];
+  openDlg(o.dealer || 'Dealer Vex', o.title || 'Space poker');
+  let ante = ANTES[0], G = null;
+  const P = csPanel('');
+  const intro = () => { G = null; P.innerHTML = '<div class="csnote">' + (o.note || 'Five-card draw. Everyone antes, you swap any cards once, best hand takes the pot. Rook and Nyx play it straight.') + '</div>'; $('dlgLine').textContent = `Ante ${ante} cr. Pot is three antes.`;
+    acts([['Deal me in', deal, true], [`Ante ${ANTES[(ANTES.indexOf(ante) + 1) % 3]}`, () => { ante = ANTES[(ANTES.indexOf(ante) + 1) % 3]; intro(); }], ['Leave', closeDlg]]); };
+  const deal = () => { if (!csCan(ante)) return; S.cr -= ante; markDirty(); const d = csDeck(); G = { d, me: d.splice(0, 5), npc: [d.splice(0, 5), d.splice(0, 5)], hold: [false, false, false, false, false] }; SFX.ui && SFX.ui(); drawPhase(); };
+  const handRow = (who, h, hold, hidden, note) => `<div class="csrow"><span class="cswho">${who}</span><span class="cshand">${h.map((c, i) => `<span data-i="${i}">${csCardHtml(c, hold && hold[i], hidden)}</span>`).join('')}</span>${note ? `<span class="csval">${note}</span>` : ''}</div>`;
+  const drawPhase = () => { P.innerHTML = handRow(CS_POKER_NPCS[0], G.npc[0], null, true) + handRow(CS_POKER_NPCS[1], G.npc[1], null, true) + handRow('You', G.me, G.hold, false, CS_HAND_NAMES[csHandValue(G.me)[0]]);
+    P.querySelectorAll('.csrow:last-child [data-i]').forEach(e => e.addEventListener('click', () => { const i = +e.dataset.i; G.hold[i] = !G.hold[i]; SFX.ui && SFX.ui(); drawPhase(); }));
+    $('dlgLine').textContent = 'Tap the cards you want to KEEP, then Draw. Unheld cards get swapped.';
+    acts([['Draw', showdown, true], ['Keep all', () => { G.hold = G.hold.map(() => true); showdown(); }]]); };
+  const showdown = () => { G.me = G.me.map((c, i) => G.hold[i] ? c : G.d.shift()); G.npc = G.npc.map(h => { const k = csNpcHold(h); return h.map((c, i) => k[i] ? c : G.d.shift()); });
+    const vals = [csHandValue(G.me), ...G.npc.map(csHandValue)]; let best = 0; for (let i = 1; i < 3; i++) if (csCmp(vals[i], vals[best]) > 0) best = i;
+    const tie = vals.filter(v => csCmp(v, vals[best]) === 0).length > 1, pot = ante * 3, meWin = best === 0 || (tie && csCmp(vals[0], vals[best]) === 0);
+    const pay = meWin ? (tie ? Math.round(pot / vals.filter(v => csCmp(v, vals[best]) === 0).length) : pot) : 0; S.cr += pay; markDirty();
+    P.innerHTML = handRow(CS_POKER_NPCS[0], G.npc[0], null, false, CS_HAND_NAMES[vals[1][0]]) + handRow(CS_POKER_NPCS[1], G.npc[1], null, false, CS_HAND_NAMES[vals[2][0]]) + handRow('You', G.me, null, false, CS_HAND_NAMES[vals[0][0]]);
+    P.querySelectorAll('.csrow')[best === 0 ? 2 : best - 1].classList.add('cswin');
+    if (pay) SFX.coin && SFX.coin(); $('dlgLine').textContent = meWin ? (tie ? `Split pot. You take ${pay} cr.` : `You win with ${CS_HAND_NAMES[vals[0][0]].toLowerCase()}! +${pay} cr.`) : `${CS_POKER_NPCS[best - 1]} takes it with ${CS_HAND_NAMES[vals[best][0]].toLowerCase()}.`;
+    acts([['Deal again', deal, true], ['Change ante', intro], ['Leave', closeDlg]]); };
+  intro();
+}
+
+// ---------------- arcade cabinets: SPACE SNAKE and SPACE ROCKS ----------------
+const ARC = { on: false };
+function arcOpen(game) {
+  if (ARC.on) return; ARC.on = true; dlgOpen = true; firing = false; if (document.pointerLockElement) document.exitPointerLock(); $('touch').hidden = true;
+  const ov = document.createElement('div'); ov.id = 'arcOv'; ov.innerHTML = `<div class="arcBox"><div class="arcTop"><b>${game === 'snake' ? 'SPACE SNAKE' : 'SPACE ROCKS'}</b><span id="arcScore">0</span><button class="pbtn" id="arcX">✕</button></div><canvas id="arcCv" width="480" height="360"></canvas><div class="arcHelp">${game === 'snake' ? 'Arrows / WASD or swipe to steer. Eat the stars, miss your tail.' : 'Arrows / WASD to turn and thrust, Space to fire. On a phone: the buttons below.'}</div>${game === 'rocks' && TOUCH ? '<div class="arcPad"><button data-k="L">⟲</button><button data-k="U">▲</button><button data-k="R">⟳</button><button data-k="F">FIRE</button></div>' : ''}</div>`;
+  document.body.appendChild(ov); const cv = ov.querySelector('canvas'), x = cv.getContext('2d'); ARC.keys = {}; ARC.game = game; ARC.ov = ov;
+  const best = (S.arcade = S.arcade || {})[game] || 0; let score = 0, over = false, raf = 0, last = performance.now();
+  const setScore = v => { score = v; ov.querySelector('#arcScore').textContent = `${v}   best ${Math.max(best, v)}`; };
+  const finish = () => { if (over) return; over = true; let pay = Math.min(400, game === 'snake' ? score * 4 : Math.floor(score / 10)); const nb = score > best; if (nb) { S.arcade[game] = score; pay += 100; }
+    if (pay) { S.cr += pay; SFX.coin && SFX.coin(); } markDirty();
+    x.fillStyle = 'rgba(0,0,0,.6)'; x.fillRect(0, 0, 480, 360); x.fillStyle = '#ffd36a'; x.font = 'bold 34px monospace'; x.textAlign = 'center'; x.fillText('GAME OVER', 240, 150); x.font = '18px monospace'; x.fillStyle = '#fff';
+    x.fillText(`Score ${score}${nb ? '  NEW BEST!' : ''}`, 240, 190); x.fillText(pay ? `+${pay} cr` : 'No payout', 240, 220); x.fillText('Tap or press Enter to play again', 240, 270); };
+  const close = () => { cancelAnimationFrame(raf); ov.remove(); ARC.on = false; removeEventListener('keydown', kd, true); removeEventListener('keyup', ku, true); closeDlg(); };
+  const restart = () => { cancelAnimationFrame(raf); close(); setTimeout(() => arcOpen(game), 30); };
+  const kd = e => { const k = e.code; e.stopPropagation(); if (k === 'Escape') { e.preventDefault(); return close(); } if (over && (k === 'Enter' || k === 'Space')) { e.preventDefault(); return restart(); } ARC.keys[k] = true; if (/Arrow|Space/.test(k)) e.preventDefault(); if (game === 'snake') snakeTurn(k); };
+  const ku = e => { ARC.keys[e.code] = false; e.stopPropagation(); };
+  addEventListener('keydown', kd, true); addEventListener('keyup', ku, true);
+  ov.querySelector('#arcX').addEventListener('click', close);
+  cv.addEventListener('pointerdown', () => { if (over) restart(); });
+  ov.querySelectorAll('.arcPad button').forEach(b => { const k = { L: 'ArrowLeft', U: 'ArrowUp', R: 'ArrowRight', F: 'Space' }[b.dataset.k]; b.addEventListener('pointerdown', e => { e.preventDefault(); ARC.keys[k] = true; }); for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => { ARC.keys[k] = false; }); });
+  // stars behind both games
+  const bg = Array.from({ length: 70 }, () => [Math.random() * 480, Math.random() * 360, Math.random()]);
+  const drawBg = () => { x.fillStyle = '#05060f'; x.fillRect(0, 0, 480, 360); for (const [sx, sy, b] of bg) { x.fillStyle = `rgba(200,220,255,${0.25 + b * 0.5})`; x.fillRect(sx, sy, 1.5, 1.5); } };
+  // ---- snake ----
+  let snakeTurn = () => {};
+  if (game === 'snake') {
+    const N = 24, C = 20, cols = 24, rows = 18; let sn = [[12, 9], [11, 9], [10, 9]], dir = [1, 0], ndir = [1, 0], food = null, acc = 0, step = 0.14;
+    const place = () => { do { food = [randi(0, cols - 1), randi(0, rows - 1)]; } while (sn.some(s => s[0] === food[0] && s[1] === food[1])); }; place();
+    snakeTurn = k => { const m = { ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1], ArrowLeft: [-1, 0], KeyA: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0] }[k]; if (m && !(m[0] === -dir[0] && m[1] === -dir[1])) ndir = m; };
+    let sx0 = null, sy0 = null; cv.addEventListener('touchstart', e => { sx0 = e.touches[0].clientX; sy0 = e.touches[0].clientY; }, { passive: true });
+    cv.addEventListener('touchmove', e => { if (sx0 == null) return; const dx = e.touches[0].clientX - sx0, dy = e.touches[0].clientY - sy0; if (Math.hypot(dx, dy) < 24) return; snakeTurn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'ArrowRight' : 'ArrowLeft') : (dy > 0 ? 'ArrowDown' : 'ArrowUp')); sx0 = e.touches[0].clientX; sy0 = e.touches[0].clientY; e.preventDefault(); }, { passive: false });
+    const tick = now => { const dt = Math.min(0.1, (now - last) / 1000); last = now; if (!over) { acc += dt; while (acc > step && !over) { acc -= step; dir = ndir; const h = [sn[0][0] + dir[0], sn[0][1] + dir[1]];
+          if (h[0] < 0 || h[1] < 0 || h[0] >= cols || h[1] >= rows || sn.some(s => s[0] === h[0] && s[1] === h[1])) { drawS(); finish(); break; }
+          sn.unshift(h); if (h[0] === food[0] && h[1] === food[1]) { setScore(score + 1); SFX.ui && SFX.ui(); place(); step = Math.max(0.065, step * 0.97); } else sn.pop(); } if (!over) drawS(); } raf = requestAnimationFrame(tick); };
+    const drawS = () => { drawBg(); x.strokeStyle = '#2a3a6a'; x.strokeRect(0.5, 0.5, 479, 359); const t = performance.now() / 200;
+      x.fillStyle = '#ffd36a'; x.beginPath(); const fx = food[0] * C + C / 2, fy = food[1] * C + C / 2; for (let i = 0; i < 10; i++) { const r = i % 2 ? 4 : 9 + Math.sin(t) * 1.2, a = i / 10 * Math.PI * 2 - Math.PI / 2; x.lineTo(fx + Math.cos(a) * r, fy + Math.sin(a) * r); } x.fill();
+      sn.forEach((s, i) => { x.fillStyle = i ? `hsl(${170 + i * 4},90%,${60 - Math.min(30, i)}%)` : '#9fff6a'; x.fillRect(s[0] * C + 1, s[1] * C + 1, C - 2, C - 2); }); };
+    setScore(0); raf = requestAnimationFrame(tick);
+  }
+  // ---- rocks ----
+  if (game === 'rocks') {
+    const sh = { x: 240, y: 180, a: -Math.PI / 2, vx: 0, vy: 0, cd: 0, inv: 2 }; let rocks = [], shots = [], lives = 3, wave = 0;
+    const spawnWave = () => { wave++; for (let i = 0; i < 3 + wave; i++) { let rx, ry; do { rx = Math.random() * 480; ry = Math.random() * 360; } while (Math.hypot(rx - sh.x, ry - sh.y) < 120); const a = Math.random() * 6.28, sp = 30 + Math.random() * 30 + wave * 6; rocks.push({ x: rx, y: ry, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 34, sd: Math.random() * 100 }); } };
+    spawnWave();
+    const wrap = o => { o.x = (o.x + 480) % 480; o.y = (o.y + 360) % 360; };
+    const tick = now => { const dt = Math.min(0.05, (now - last) / 1000); last = now; const K = ARC.keys;
+      if (!over) {
+        if (K.ArrowLeft || K.KeyA) sh.a -= 3.6 * dt; if (K.ArrowRight || K.KeyD) sh.a += 3.6 * dt; const th = K.ArrowUp || K.KeyW;
+        if (th) { sh.vx += Math.cos(sh.a) * 220 * dt; sh.vy += Math.sin(sh.a) * 220 * dt; } sh.vx *= 0.99; sh.vy *= 0.99; sh.x += sh.vx * dt; sh.y += sh.vy * dt; wrap(sh); sh.cd -= dt; sh.inv -= dt;
+        if ((K.Space || K.KeyJ) && sh.cd <= 0) { sh.cd = 0.22; shots.push({ x: sh.x + Math.cos(sh.a) * 12, y: sh.y + Math.sin(sh.a) * 12, vx: Math.cos(sh.a) * 420 + sh.vx, vy: Math.sin(sh.a) * 420 + sh.vy, t: 0.9 }); }
+        shots.forEach(s => { s.x += s.vx * dt; s.y += s.vy * dt; s.t -= dt; wrap(s); }); shots = shots.filter(s => s.t > 0);
+        rocks.forEach(r => { r.x += r.vx * dt; r.y += r.vy * dt; wrap(r); });
+        for (const s of shots) for (const r of rocks) if (!r.dead && s.t > 0 && Math.hypot(s.x - r.x, s.y - r.y) < r.r) { s.t = 0; r.dead = true; setScore(score + (r.r > 30 ? 20 : r.r > 15 ? 50 : 100)); SFX.ui && SFX.ui();
+          if (r.r > 12) for (let k = 0; k < 2; k++) { const a = Math.random() * 6.28; rocks.push({ x: r.x, y: r.y, vx: Math.cos(a) * (60 + wave * 8), vy: Math.sin(a) * (60 + wave * 8), r: r.r / 2, sd: Math.random() * 100 }); } }
+        rocks = rocks.filter(r => !r.dead);
+        if (sh.inv <= 0 && rocks.some(r => Math.hypot(r.x - sh.x, r.y - sh.y) < r.r + 8)) { lives--; SFX.hit && SFX.hit(); if (lives <= 0) { drawR(); finish(); } else { Object.assign(sh, { x: 240, y: 180, vx: 0, vy: 0, inv: 2 }); } }
+        if (!rocks.length) spawnWave();
+        if (!over) drawR(th); }
+      raf = requestAnimationFrame(tick); };
+    const drawR = th => { drawBg(); x.strokeStyle = '#c9d6ff'; x.lineWidth = 2;
+      rocks.forEach(r => { x.beginPath(); for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2, rr = r.r * (0.78 + 0.22 * Math.sin(r.sd + i * 2.3)); x.lineTo(r.x + Math.cos(a) * rr, r.y + Math.sin(a) * rr); } x.closePath(); x.stroke(); });
+      x.fillStyle = '#ffd36a'; shots.forEach(s => x.fillRect(s.x - 2, s.y - 2, 4, 4));
+      if (sh.inv <= 0 || Math.floor(sh.inv * 8) % 2) { x.save(); x.translate(sh.x, sh.y); x.rotate(sh.a); x.strokeStyle = '#9fff6a'; x.beginPath(); x.moveTo(14, 0); x.lineTo(-10, -9); x.lineTo(-6, 0); x.lineTo(-10, 9); x.closePath(); x.stroke(); if (th) { x.strokeStyle = '#ff8a3a'; x.beginPath(); x.moveTo(-8, -4); x.lineTo(-16 - Math.random() * 6, 0); x.lineTo(-8, 4); x.stroke(); } x.restore(); }
+      x.fillStyle = '#fff'; x.font = '14px monospace'; x.textAlign = 'left'; x.fillText('♥'.repeat(lives) + `  wave ${wave}`, 10, 20); };
+    setScore(0); raf = requestAnimationFrame(tick);
+  }
+}
+
+// ---------------- the floor: people, furniture and machines ----------------
+{ const _zn = zNpcs; zNpcs = function (n, th) { const L = _zn(n, th); if (th !== 'arcade') return L;
+    const lux = L.find(d => d.id === 'slots' + n); if (lux) { lux.x = -19; lux.z = 11; lux.face = Math.PI; lux.role = 'Casino host · slots'; lux.custom = [['Play a slot machine', openSlots]]; }
+    const c = (id, name, role, col, skin, x, z, face, extra, idle) => Object.assign({ id: id + n, name, role, rig: 'civ', make: () => makeCivilian(col, '#1e1c22', skin, '#2a2430', '#ffd36a'), x, z, face, idle }, extra);
+    L.push(c('vex', 'Dealer Vex', 'Space poker · five-card draw', '#1e1c22', '#9fe8ff', -20, -5.6, 0, { custom: [['Sit down for space poker', openPoker]] }, ["Cards don't lie. Players do. Sit down."]));
+    L.push(c('rook', 'Gambler Rook', 'Poker regular', '#5a3a2a', '#c58a64', -22.6, -2.4, Math.PI * 0.75, {}, ["I've lost this ship twice. Won it back once.", "Don't look at my cards. Don't look at my face either."]));
+    L.push(c('nyx', 'Lady Nyx', 'Poker regular', '#8a3a8a', '#e0b892', -17.4, -2.4, -Math.PI * 0.75, {}, ["Sit down, darling. I need someone to take money from.", "I never bluff. Except always."]));
+    L.push(c('pip', 'Dealer Pip', 'High-Low · higher or lower', '#2a5a3a', '#8a5a3a', -20, 5.4, Math.PI, { custom: [['Play high-low', openHighLow]] }, ["Higher or lower. That's the whole game. People still lose."]));
+    return L; }; }
+{ const _b = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _b.call(this); if (zTheme(ZF.floor) !== 'arcade') return;
+    const felt = toon('#1f6a3a', 'cloth'), rail = toon('#5a2a1e', 'wood'), gold = toon('#ffd36a');
+    // red carpet and a sign over the casino side
+    part(props, B(15, 0.03, 26), toonNS('#6a1a24', 'carpet'), -21, 0.02, 0); part(props, B(14.4, 0.035, 25.4), toonNS('#c9a43a', 'carpet'), -21, 0.021, 0); part(props, B(13.6, 0.04, 24.6), toonNS('#6a1a24', 'carpet'), -21, 0.022, 0);
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(9, 1.5), new THREE.MeshBasicMaterial({ map: signTex('THE LUCKY ASTEROID', '#1a0a1e', '#ffd36a') })); sg.position.set(-13.4, 5.4, 0); sg.rotation.y = Math.PI / 2; props.add(sg);
+    for (const z of [-12.6, 12.6]) { part(props, Cy(0.18, 0.18, 6.8, 8), toon('#c9a43a'), -13.6, 3.4, z); }
+    // poker table: an oval of green felt, chip stacks and dealt cards
+    { const tb = new THREE.Group(); part(tb, Cy(1.6, 1.6, 0.12, 24), felt, 0, 0.9, 0).scale.set(1.5, 1, 1); part(tb, new THREE.TorusGeometry(1.6, 0.12, 6, 28), rail, 0, 0.96, 0, Math.PI / 2).scale.set(1.5, 1, 1); part(tb, Cy(0.35, 0.5, 0.85, 10), '#2a2c32', 0, 0.42, 0);
+      [[-1.6, 0.6], [1.6, 0.6], [0, -1.0], [0, 0.9]].forEach(([cx, cz], k) => { for (let i = 0; i < 4; i++) part(tb, Cy(0.11, 0.11, 0.04, 10), toon(['#c8402f', '#3b4f7a', '#e8e4dc', '#1e1c22'][i]), cx + (i % 2) * 0.24, 1.0 + Math.floor(i / 2) * 0.05 + (i % 3) * 0.04, cz + (i > 1 ? 0.2 : 0)); for (let i = 0; i < 2; i++) part(tb, B(0.18, 0.01, 0.26), '#f4f8ff', cx * 0.6 + i * 0.2 - 0.1, 0.975, cz * 0.6, 0, 0.3 * (i ? 1 : -1)); });
+      part(tb, B(0.6, 0.012, 0.3), toon('#ffd36a'), 0, 0.975, 0); tb.position.set(-20, 0, -2.4); props.add(tb); box(-20, -2.4, 2.5, 1.7);
+      const lamp = new THREE.PointLight(0xffe2a0, 0.6, 7, 1.6); lamp.position.set(-20, 3.2, -2.4); levelGroup.add(lamp); part(props, Cy(0.5, 0.9, 0.5, 12, true), '#2a2c32', -20, 3.4, -2.4); part(props, Cy(0.02, 0.02, 3.3, 4), '#1e1c22', -20, 5.3, -2.4); }
+    // high-low table: a half moon
+    { const tb = new THREE.Group(); part(tb, new THREE.CylinderGeometry(1.4, 1.4, 0.12, 20, 1, false, -Math.PI / 2, Math.PI), felt, 0, 0.9, 0); part(tb, B(2.8, 0.85, 0.2), rail, 0, 0.45, 0.05); for (let i = 0; i < 3; i++) part(tb, B(0.18, 0.01, 0.26), '#f4f8ff', -0.5 + i * 0.5, 0.975, -0.6);
+      tb.position.set(-20, 0, 4.3); tb.rotation.y = Math.PI; props.add(tb); box(-20, 4.3, 1.5, 0.8); }
+    // six slot machines along the casino wall, lights chasing
+    for (let i = 0; i < 6; i++) { const z = -11 + i * 4.3, m = new THREE.Group(); part(m, B(1.0, 2.0, 1.1), toon('#3a1a2a', 'hull'), 0, 1.0, 0); part(m, B(0.06, 0.7, 0.9), toon('#f4f8ff'), 0.53, 1.4, 0); for (let k = 0; k < 3; k++) part(m, B(0.07, 0.5, 0.22), toon(['#c8402f', '#ffd36a', '#4fd2ff'][(i + k) % 3]), 0.55, 1.4, -0.28 + k * 0.28);
+      part(m, B(0.3, 0.3, 1.1), gold, 0, 2.15, 0); part(m, Cy(0.03, 0.03, 0.5, 5), '#8a8e96', 0.3, 1.5, 0.6); part(m, new THREE.SphereGeometry(0.07, 8, 6), toon('#c8402f'), 0.3, 1.78, 0.6);
+      const lt = new THREE.Mesh(B(0.04, 0.12, 1.0), new THREE.MeshBasicMaterial({ color: '#ff6aa8' })); lt.position.set(0.55, 1.9, 0); m.add(lt); levelAnims.push(t => { lt.material.color.setHSL((t * 0.3 + i * 0.15) % 1, 0.9, 0.6); });
+      m.position.set(-28.6, 0, z); levelGroup.add(m); box(-28.6, z, 0.6, 0.6); INTERACTS.push({ x: -27.2, z, r: 1.4, label: 'Slot machine', fn: openSlots }); }
+    // the two playable cabinets get proper marquees
+    [['snake', 'SPACE SNAKE', '#9fff6a', -3.6], ['rocks', 'SPACE ROCKS', '#8fe3ff', 3.2]].forEach(([g, nm, col, x]) => { const mq = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.36), new THREE.MeshBasicMaterial({ map: signTex(nm, '#05060f', col) })); mq.position.set(x, 2.55, -19.45); props.add(mq);
+      INTERACTS.push({ x, z: -18.4, r: 1.6, label: `Play ${nm}${S.arcade && S.arcade[g] ? ` (best ${S.arcade[g]})` : ''}`, fn: () => arcOpen(g) }); }); }; }
+document.head.insertAdjacentHTML('beforeend', `<style>
+.cscard { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 46px; height: 64px; margin: 2px; border-radius: 7px; background: #f4f1e8; border: 2px solid #1e1c22; font: 700 20px var(--mono, monospace); line-height: 1; box-shadow: 0 2px 4px rgba(0,0,0,.4); cursor: pointer; text-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.cscard b { color: #1e1c22; font-size: 18px; text-shadow: none; } .cscard.back { background: repeating-linear-gradient(45deg,#3b4f7a 0 6px,#2a3756 6px 12px); color: #ffd36a; }
+.cscard.held { transform: translateY(-6px); border-color: #ffd36a; box-shadow: 0 0 0 2px #ffd36a, 0 4px 8px rgba(0,0,0,.5); }
+.cshand { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; } .csrow { display: flex; align-items: center; gap: 10px; padding: 4px 6px; border-radius: 8px; } .csrow.cswin { background: rgba(255,211,106,.18); }
+.cswho { min-width: 92px; font-weight: 700; color: #cfd6e0; } .csval { color: #ffd36a; font-size: 13px; } .csnote { padding: 6px; color: #cfd6e0; }
+.csreels { display: flex; justify-content: center; gap: 10px; font-size: 44px; padding: 8px; } .csreels span { background: #0b0f1c; border: 2px solid #ffd36a; border-radius: 10px; width: 68px; text-align: center; } .csreels.win span { border-color: #9fff6a; box-shadow: 0 0 14px #9fff6a; }
+#arcOv { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.78); display: grid; place-items: center; touch-action: none; }
+#arcOv .arcBox { width: min(96vw, 560px); background: #10121c; border: 3px solid #c86aff; border-radius: 14px; padding: 10px; box-shadow: 0 0 30px rgba(200,106,255,.4); }
+#arcOv .arcTop { display: flex; align-items: center; gap: 10px; color: #fff; font: 700 16px var(--mono, monospace); margin-bottom: 6px; } #arcOv .arcTop b { color: #ffd36a; letter-spacing: .1em; } #arcOv #arcScore { flex: 1; text-align: right; }
+#arcOv canvas { width: 100%; height: auto; max-height: 62vh; object-fit: contain; display: block; border-radius: 6px; image-rendering: pixelated; }
+#arcOv .arcHelp { color: #9fb0c8; font-size: 12px; margin-top: 6px; } #arcOv .arcPad { display: flex; gap: 8px; margin-top: 8px; } #arcOv .arcPad button { flex: 1; height: 52px; border-radius: 10px; border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.12); color: #fff; font: 700 18px var(--hud, sans-serif); touch-action: none; }
+</style>`);
 
 // =================== CHARACTER CREATOR: faces from the 2×3 head-design sheet ===================
 const FACE = {
@@ -11024,7 +11227,7 @@ function visitApt(rid) {
 function spawnRoommate() {
   const rid = Object.keys(romS()).find(id => romOf(id).ship); if (!rid || !ROMANCE[rid]) return;
   const R = ROMANCE[rid], M = romOf(rid), q = SHIP_ROOMS.find(r => r.id === 'quarters') || SHIP_ROOMS[0]; if (!q) return;
-  const x = (q.x0 + q.x1) / 2 + (q.side > 0 ? 2 : -2), z = q.zc - 2.2;
+  const x = (q.x0 + q.x1) / 2 - q.side * 0.4, z = q.zc + 0.5; // across the room from the bunk, so the bed and the partner each get their own button
   makeNpc({ id: 'roomie', romId: rid, name: R.name, role: 'Lives on your ship', rig: R.rig || 'civ', make: R.make, x, z, face: q.side > 0 ? -Math.PI / 2 : Math.PI / 2, custom: [['♥ Hang out', () => openRomance(rid, true)]], idle: R.lines[5] }, [0, 0]);
   if (Date.now() - (M.gift || 0) > 20 * 60 * 1000) { M.gift = Date.now(); const k = R.likes.filter(i => ITEMS[i])[randi(0, R.likes.filter(i => ITEMS[i]).length - 1)]; if (k) { S.inv[k] = (S.inv[k] || 0) + 1; } const cr = 100 + randi(0, 200); S.cr += cr; markDirty(); setTimeout(() => log(`${R.name} left you a gift: ${k ? ITEMS[k].name + ' and ' : ''}${cr} credits. "${R.lines[5][0]}"`, 'loot'), 1500); }
 }
@@ -12508,14 +12711,14 @@ function useStim() {
   levelAnims.push(t => { strobe.intensity = (Math.floor(t * 8) % 7 === 0) ? 2.2 : 0; wash.color.set(cols[Math.floor(t * 0.5) % 5]); });
   // the crowd on the floor
   const looks = [['#ff3b8a', '#1e1c22', '#e0b892', '#1e1a18'], ['#3bd2ff', '#3a2a4a', '#8a5a3a', '#ffd36a'], ['#ffd23a', '#2c2a28', '#c58a64', '#c8402f'], ['#8a3bff', '#1e1c22', '#9fe8ff', '#e8e4dc'], ['#3bff8a', '#3a3d44', '#e0b892', '#5a3a22'], ['#e8e4dc', '#c8402f', '#8a5a3a', '#1e1a18']];
-  for (let k = 0; k < 14; k++) { const L = looks[k % looks.length], o = buildChar(() => makeCivilian(...L, cols[k % 5]), 'civ'), a = k * 2.39, r = 1.2 + (k % 4) * 1.2, bx = Math.cos(a) * r, bz = 6.5 + Math.sin(a) * r * 0.9, ph = k * 0.7, st = {};
+  for (let k = 0; k < 14; k++) { const L = looks[k % looks.length], o = buildChar(() => makeCivilian(...L, cols[k % 5]), 'civ'), a = k < 6 ? k * 1.047 : (k - 6) * 0.785 + 0.39, r = k < 6 ? 2.6 : 4.3, bx = Math.cos(a) * r, bz = 6.5 + Math.sin(a) * r * 0.9, ph = k * 0.7, st = {};
     o.position.set(bx, 0.06, bz); levelGroup.add(o);
     levelAnims.push(t => { const b = Math.abs(Math.sin(t * 4.2 + ph)); o.position.y = 0.06 + b * 0.18; o.rotation.y = ph + Math.sin(t * 1.1 + ph) * 1.4; o.rotation.z = Math.sin(t * 4.2 + ph) * 0.08; animRig(o, st, 0.016, t); }); }
 }; }
 // the President of the New United States is here, and he is having a very good time
 function makePrez() { const g = makeCivilian('#1e2a4a', '#1e2a4a', '#e8b896', '#e8e0c8', '#c8402f'); part(g, B(0.08, 0.5, 0.03), '#c8402f', 0.03, 1.3, 0.14); part(g, B(0.52, 0.08, 0.3), toon('#e8e4dc', 'cloth'), 0, 1.5, 0, 0, 0, 0.5); part(g, B(0.2, 0.06, 0.04), glow('#ffd36a'), -0.12, 1.42, 0.14); for (const s of [-1, 1]) part(g, B(0.1, 0.05, 0.03), '#1e1c22', s * 0.06, 1.79, 0.13); const v = part(g, Cy(0.03, 0.03, 0.12, 6), glow('#c86aff'), 0.36, 0.95, 0.12); return g; }
 { const _bn = barNpcs; barNpcs = function () { const list = _bn();
-  list.push({ id: 'prez', name: 'President Duke Starling', role: 'President of the New United States · off duty', rig: 'civ', make: makePrez, x: 1.5, z: 6.5, face: 2.6,
+  list.push({ id: 'prez', name: 'President Duke Starling', role: 'President of the New United States · off duty', rig: 'civ', make: makePrez, x: 0, z: 6.5, face: Math.PI,
     custom: [['🎉 Party with the President', () => partyWithPrez()]],
     idle: ["THIS SONG! THIS IS MY SONG! Every song is my song tonight!", "Don't tell the Senate I'm here. Don't tell the Senate I'm anywhere.", "You wanna know the secret to running a country? Neither do I. Have some Nebula Dust.", "I signed three bills today. With my FEET. Dancing feet.", "Zeltac moon-moss, trooper. It's not illegal if you're in orbit. I checked. I made it legal. I'm the president."] });
   list.push({ id: 'djnova', name: 'DJ Nova', role: 'On the decks', rig: 'xr17', make: () => recolor(makeXR17(), { '#9aa1aa': '#ff3b8a', '#5d636c': '#1e1c22' }), x: 0, z: 22.4, face: Math.PI, idle: ["NEXT TRACK: ALSO BANGING.", "I HAVE 4,000 SONGS. I PLAY FOUR. THE PEOPLE KNOW WHAT THEY WANT."] });
@@ -12604,7 +12807,7 @@ function musContext(dt) {
   if (state === 'menu') return null;
   // romance: talking to your love interest, or they're close by
   const love = id => { const M = romS()[id]; return M && (M.partner || romStage(M.aff) >= 3); };
-  let rom = MUS.romDlg; if (!rom) for (const k in npcObjs) { const N = npcObjs[k]; if (N.def && N.def.romId && love(N.def.romId) && N.obj.visible && N.obj.position.distanceTo(player.pos) < 7) { rom = true; break; } }
+  const rom = MUS.romDlg; // only while you're actually talking to them
   if (rom) return 'romance';
   // fights: a boss in the fight, or anything hunting you
   if (state === 'play' && !LEVEL.fly) {
@@ -13601,12 +13804,12 @@ function padFocusNav(scope, dir) {
     // LB modifier layer
     if (b(4)) { if (!PAD2.lbDown) { PAD2.lbDown = true; PAD2.lbCombo = false; }
       const combo = (i, fn) => { if (hit(i)) { PAD2.lbCombo = true; try { fn(); } catch (_) {} } };
-      combo(3, () => typeof swapWeapon === 'function' && swapWeapon()); combo(2, () => quickHeal()); combo(1, () => openCodex && openCodex());
+      combo(3, () => typeof cycleWeapon === 'function' && cycleWeapon()); combo(2, () => quickHeal()); combo(1, () => openCodex && openCodex());
       combo(0, () => typeof toggleDance === 'function' && inLounge() ? toggleDance() : null); combo(5, () => swapHand());
     } else if (PAD2.lbDown) { PAD2.lbDown = false; if (!PAD2.lbCombo) openBag(); }
     if (hit(11)) quickHeal();
     // Y with nothing to reload swaps gun/staff instead
-    if (hit(3) && !b(4) && (S.clip || (gun() && gun().mana)) && typeof otherSlot === 'function' && otherSlot()) swapWeapon();
+    if (hit(3) && !b(4) && (S.clip || (gun() && gun().mana)) && typeof cycleWeapon === 'function') cycleWeapon();
   }
   // hide from the base handler what this layer handles: LB taps, R3, and face buttons while LB is held
   const save = PAD.prev.slice(); const mask = [4, 11]; if (b(4)) mask.push(0, 1, 2, 3, 5);
@@ -15975,12 +16178,7 @@ Object.assign(ENEMY, {
   if (th === 'under') return [];
   return _zs(n, th); }; }
 { const _zb = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _zb.call(this); const th = zTheme(ZF.floor);
-  if (th === 'under') {
-    for (let i = 0; i < 10; i++) { const x = -24 + (i % 5) * 12, z = i < 5 ? -18 : 14; part(props, B(1.2, 1.2, 1.2), toon('#3a2e26'), x, 0.6, z, 0, i); box(x, z, 0.6, 0.6); }
-    part(props, B(10, 1.1, 1.4), toon('#2a1e2a'), 0, 0.55, -16); box(0, -16, 5, 0.7); const sg = new THREE.Mesh(new THREE.PlaneGeometry(7, 1.2), new THREE.MeshBasicMaterial({ map: signTex('THE UNDERCROFT', '#1a0a20', '#c86aff') })); sg.position.set(0, 4.2, -27.6); props.add(sg);
-    part(props, B(3, 1.8, 0.1), toon('#1e1c22'), -14, 1.6, -27.5); INTERACTS.push({ x: -14, z: -25.5, r: 2.4, label: 'Hit board (contracts on players)', fn: () => openHitBoard() });
-    for (const [x, z, c] of [[-10, -10, 0xc86aff], [10, -10, 0xff6aa8], [0, 8, 0xc86aff]]) { const l = new THREE.PointLight(c, 1.0, 22); l.position.set(x, 5, z); levelGroup.add(l); }
-  }
+  // the Undercroft itself is built in undercroft.js
   if (th === 'archive') {
     for (let i = 0; i < 12; i++) { const x = -24 + (i % 6) * 9.6, z = i < 6 ? -10 : 6; part(props, B(1.2, 4.5, 6), toon('#5a4a3a', 'wood'), x, 2.25, z); for (let k = 0; k < 4; k++) part(props, B(1.25, 0.08, 6), toon('#3a2e26'), x, 0.6 + k * 1.1, z); box(x, z, 0.6, 3); }
     part(props, B(6, 1.0, 2.4), toon('#3a4a7a'), 0, 0.5, -22); part(props, B(6.2, 0.06, 2.6), toon('#c9a43a'), 0, 1.02, -22); box(0, -22, 3, 1.2);
@@ -16804,6 +17002,7 @@ const UPDATES = [
   { id: 110, title: '2.14.3 · Vega narrates every cutscene, iPhone fix', items: ['iPhones and iPads: the game no longer crashes on load (Safari has no mouse lock, and one line assumed it did).', 'Vega, the voice from the opening film, now reads every cutscene and the prologue out loud. Shots wait for her to finish.', 'Opening film: the stray "And…" is gone, your wingmen fly in formation beside you, the enemy fleet is spread out and mixed, the battle has six kinds of robots, and dropped guns lie flat on the ground.', 'Prologue: the stars are smaller and calmer, and the odd ball of stars around one planet is gone.'] },
   { id: 111, title: '2.14.4 · A real hangar, a proper catch card', items: ['Hangar: the floor pad no longer flickers. Your selected war vehicle now turns on a lit turntable, with a gantry crane overhead, a tool wall, a red tool chest, tyre stacks, fuel drums, a fuel pump and guide lights to the launch door.', 'Fishing: the fish you caught now swims in front of its card, and the card waits for you to tap Continue (or press Enter or E).', 'Phones: the USE button can no longer land on top of the radar.', 'New drawn icons for the camera and repair buttons. The ship and the car share the same camera icon.'] },
   { id: 112, title: "2.14.5 · The Angler's Den, rooms that grow, Vega's film", items: ["New ship room: the Angler's Den. Mount your catches on 12 wall plaques, each showing the fish and your best length. Take one down any time to get the fish back. It also has a rod rack, an armchair and a big aquarium.", 'Upgraded ship rooms now look upgraded. Lv 2 and 3 each add a themed prop, Lv 4 hangs a banner and a second light, and Lv 5 adds gold trim and a crest at the door.', 'Ship corridor: the hull posts no longer stand in doorways, and the crane hook that was floating in the hall is back inside the hangar.', 'Fishing: the Bug Pond, Fern Pond and Coolant Canal are bigger, your cast always lands in water, and Coil in Robot City moved back from the dock.', 'Opening film: Captain Vega is the hero now (you are a fresh recruit), and the soldiers that were standing inside her are gone. Her ship flies the film\'s space battle.', 'Prologue: the ball of stars is gone, the stars are dimmer so the planets stand out, the thing behind Vector is now the Watcher rising out of the dark, and Drome\'s flagship wears a setting-sun sigil instead of a big red dot. With voice off, the prologue no longer stalls on its first line.'] },
+  { id: 113, title: '2.15 · The Lucky Asteroid, the Undercroft dive and a bigger lounge', items: ['The Neon Arcade has a casino now: the Lucky Asteroid. Six slot machines, a high-low table and a space poker table with Rook and Nyx. Win real credits', 'Two playable arcade cabinets: SPACE SNAKE and SPACE ROCKS. Good scores pay out a few credits', 'The Undercroft is a proper hive of scum and villainy: the Rusty Rivet bar, a band, back-room poker with One-Eye Jax, a members-only back room, wanted posters, drunks and smoke', 'The Starlight Lounge got a second bar, VIP couches, plants, waiter bots and people mingling. The President has his own spot and the dancers no longer walk through him', 'When a person and a thing are both in reach (like your partner and your bed), the one you are looking at gets the button. Your roommate also stands away from the bunk now', 'Romance music only plays while you are talking to them', 'Q, Y and the weapon box all cycle gun, staff, melee. Staffs are their own magic slot again', 'The weapon box stays the same size for ammo, spells and the shield', 'New energy shield: a glowing kite shield with the setting-sun sigil', 'Muzzle flashes now come out of the end of each barrel', 'Earth no longer shrinks and vanishes when you look at it from the Moon'] },
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -19470,6 +19669,250 @@ body.driving #tCam.icoBtn { display: flex !important; }
 .icoBtn small { font: 700 8px var(--hud, sans-serif); letter-spacing: .05em; color: #fff; opacity: .9; margin-top: 1px; }
 </style>`);
 
+// =================== THE UNDERCROFT: a wretched hive of scum and villainy ===================
+// A dive cantina under the Senate Archive: the Rusty Rivet bar, a band nobody asked for, back-room poker,
+// a members-only back room, wanted posters, drunks and smoke. The Mole and the Fence still do business here.
+Object.assign(ZTHEMES.under, { floor: '#221d19', neon: '#6a2418', col: '#4a2a1e' });
+function ucPoster(name, crime, reward, hue, you) {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 176; const x = c.getContext('2d');
+  x.fillStyle = you ? '#e8d9a8' : '#d9c79a'; x.fillRect(0, 0, 128, 176);
+  for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(80,50,20,${Math.random() * 0.14})`; x.fillRect(Math.random() * 128, Math.random() * 176, 3, 3); }
+  x.fillStyle = '#3a1e10'; x.font = 'bold 26px Impact, "Arial Narrow", sans-serif'; x.textAlign = 'center'; x.fillText('WANTED', 64, 30);
+  x.fillStyle = `hsl(${hue},28%,32%)`; x.fillRect(24, 40, 80, 72); x.fillStyle = '#1e1410'; x.beginPath(); x.arc(64, 70, 17, 0, 7); x.fill(); x.fillRect(38, 88, 52, 24);
+  if (you) { x.fillStyle = '#c8402f'; x.font = 'bold 40px Impact, sans-serif'; x.fillText('?', 64, 84); }
+  x.fillStyle = '#3a1e10'; x.font = 'bold 14px "Arial Narrow", sans-serif'; x.fillText(name.toUpperCase(), 64, 130, 120);
+  x.font = '11px "Arial Narrow", sans-serif'; x.fillText(crime, 64, 145, 120); x.fillStyle = '#8a1e10'; x.font = 'bold 15px Impact, sans-serif'; x.fillText(reward, 64, 166, 120);
+  const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t;
+}
+const UC_POSTERS = [['Krell the Gut', 'Ate a customs officer', '5,000 CR', 20], ['Twin Vasko', 'Both of them', '8,000 CR', 200], ['Madame Slyth', 'Poisoned a senator', '12,000 CR', 300], ['Gorvo', 'Stole a moon', '40,000 CR', 90],
+  ['Skeets', 'Unpaid bar tab', '45 CR', 50], ['Doc Ninefinger', 'Unlicensed surgery', '6,500 CR', 160], ['The Hum', 'Unknown', '20,000 CR', 260], ['Rax Vorell', 'Piracy, 31 counts', '15,000 CR', 0]];
+function ucChar(make, rigN, x, z, ry, fn) { const o = buildChar(make, rigN); o.position.set(x, 0, z); o.rotation.y = ry; blob(o, 0.45); levelGroup.add(o); solid(x, z, 0.45);
+  const st = {}, ph = Math.random() * 6; levelAnims.push(t => { if (!o.parent) return; if (fn) fn(o, t, ph); animRig(o, st, 1 / 60, t); }); return o; }
+const ucSway = (o, t, ph) => { o.rotation.z = Math.sin(t * 0.9 + ph) * 0.06; };
+const ucChat = ry => (o, t, ph) => { o.rotation.y = ry + Math.sin(t * 0.7 + ph) * 0.35; };
+const ucBob = (o, t, ph) => { o.position.y = Math.abs(Math.sin(t * 4 + ph)) * 0.1; o.rotation.z = Math.sin(t * 2 + ph) * 0.05; };
+function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() < 0.03) burst(o.position.clone().add(V(0.15, y || 1.55, 0.2)), '#9a9aa0', 1, 0.35); }); }
+// who is where
+{ const _zn = zNpcs; zNpcs = function (n, th) { const L = _zn(n, th); if (th !== 'under') return L;
+  const mole = L.find(d => d.id === 'mole'); if (mole) Object.assign(mole, { x: -24.6, z: -4, face: Math.PI / 2, role: 'Informant · corner booth' });
+  const fence = L.find(d => d.id === 'fence2'); if (fence) Object.assign(fence, { x: -23, z: 21, face: Math.PI / 2, role: 'The Fence · back room' });
+  L.push({ id: 'grubb', name: 'Grubb', role: 'Bartender · the Rusty Rivet', rig: 'chunk', make: () => makeChunkMonster('#5a6a3a', '#3e4a28', '#8a9a5a', '#3a2a1e', false), x: 0, z: -22.4, face: 0, heal: true,
+    custom: [['Rotgut (25 cr)', () => { if (S.cr < 25) { toast('NO CREDIT', 'Grubb does not do tabs. Grubb does do kneecaps.', 2.5); return; } S.cr -= 25; player.hp = Math.min(player.maxHp || player.hp, player.hp + 40); markDirty(); closeDlg(); toast('ROTGUT', 'It burns. It keeps burning. +40 HP', 2.5); SFX.coin && SFX.coin(); }],
+      ['Buy the bar a round (300 cr)', () => { if (S.cr < 300) { toast('NO CREDIT', 'Not enough credits to make friends.', 2); return; } S.cr -= 300; S.buffs = S.buffs || {}; S.buffs.rest = Math.max(S.buffs.rest || 0, Date.now()) + 5 * 60000; markDirty(); closeDlg(); toast('A ROUND ON YOU', 'The whole dive cheers. Nobody stabs you tonight. Rested buff.', 3); SFX.quest && SFX.quest(); }]],
+    idle: ["WHAT. You drink or you leave. Leaving is extra.", "No blasters at the bar. Knives are fine. Knives are tradition.", "Last guy asked for water. We buried him in it.", "You're not Marshal, are you? Marshals pay double. And then they pay again."] });
+  L.push({ id: 'jax', name: 'One-Eye Jax', role: 'Back-room poker · high stakes', rig: 'civ', make: () => makeCivilian('#3a2a1e', '#1e1c22', '#8a5a3a', '#1e1a18', '#c8402f'), x: 20, z: -21.2, face: 0,
+    custom: [['Sit in on a hand', () => openPoker({ dealer: 'One-Eye Jax', title: 'Back-room poker', npcs: ['One-Eye Jax', 'Slick Venn'], antes: [250, 1000, 5000], note: "Five-card draw, Undercroft rules: same as upstairs, but nobody's watching. Jax swears he only has the one eye for cards." })]],
+    idle: ["Sit. Cards are honest. Everyone else in here's a liar.", "Lost the eye in a hand of poker. Won the guy's ship though.", "Venn cheats. I cheat better. You'll be fine."] });
+  L.push({ id: 'knuckles', name: 'Knuckles', role: 'Bouncer · back room', rig: 'chunk', make: () => makeChunkMonster('#4a4e56', '#2c2f36', '#6a6e78', '#1e1c22', false), x: -14.4, z: 23.5, face: Math.PI / 2,
+    idle: ["Members only. You're a member if Marlo's cousin says you are. He says you are. Go on.", "I don't start fights. I finish them. Usually by sitting on people.", "Shoes off in the back room. Kidding. Nobody in there has shoes."] });
+  L.push({ id: 'velma', name: 'Velma Voss', role: 'Singer · the Undercroft band', rig: 'elismas', make: () => recolor(makeElismas(), { '#9aa1aa': '#8a2a4a', '#5d636c': '#3a1e2a' }), x: -23, z: -21.5, face: 0.2,
+    idle: ["This next one's about a man who owed me money. It's a short song.", "Tips go in the jar. Tips that don't go in the jar go in the band.", "We know four songs. Two of them are the same song slower."] });
+  return L; }; }
+// the room
+{ const _b = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _b.call(this); if (zTheme(ZF.floor) !== 'under') return;
+  const W = 30, D = 28, H = 7, rust = toon('#5a3a26', 'panel'), dark = toon('#1e1a18', 'panel'), wood = toon('#4a3020', 'wood'), metal = toon('#3a3d44', 'panel');
+  // grime on the floor: oily puddles and stains
+  for (let i = 0; i < 14; i++) { const p = new THREE.Mesh(new THREE.CircleGeometry(0.6 + (i % 4) * 0.4, 12), new THREE.MeshBasicMaterial({ color: i % 3 ? '#0c0a08' : '#0e140c', transparent: true, opacity: 0.45, depthWrite: false })); p.rotation.x = -Math.PI / 2; p.scale.y = 0.6 + (i % 3) * 0.2; p.position.set(-24 + ((i * 37) % 48), 0.012 + i * 0.0005, -20 + ((i * 23) % 44)); props.add(p); }
+  // pipes along the ceiling, one of them leaking
+  for (let i = 0; i < 4; i++) part(props, Cy(0.22, 0.22, W * 2, 8), i % 2 ? rust : metal, 0, H - 0.5 - (i % 2) * 0.45, -22 + i * 13, 0, 0, Math.PI / 2);
+  for (const [x, z] of [[6, -9], [-10, 17]]) levelAnims.push(t => { if (Math.random() < 0.025) burst(V(x, H - 0.8, z), '#5a8a6a', 1, 0.2); });
+  // grime on the walls: rusted wainscot and patch plates
+  for (const sx of [-1, 1]) { part(props, B(0.12, 2.2, D * 2 - 1), rust, sx * (W - 0.36), 1.1, 0); part(props, B(0.14, 0.12, D * 2 - 1), metal, sx * (W - 0.38), 2.22, 0); for (let i = 0; i < 5; i++) part(props, B(0.14, 0.9 + (i % 2) * 0.5, 1.4), i % 2 ? dark : rust, sx * (W - 0.4), 3.6 + (i % 3) * 0.5, -20 + i * 10 + sx * 2, 0, 0, (i - 2) * 0.05); }
+  // shady booths along the right wall: hooded types doing quiet business
+  const hood = (shirt, eye) => () => { const g = makeCivilian(shirt, '#14120f', '#2a2430', '#14120f', shirt); part(g, new THREE.ConeGeometry(0.34, 0.62, 8), toon(shirt, 'cloth'), 0, 1.86, -0.02); part(g, B(0.42, 0.5, 0.4), toon(shirt, 'cloth'), 0, 1.62, -0.04); for (const s of [-1, 1]) part(g, B(0.06, 0.03, 0.02), glow(eye), s * 0.07, 1.7, 0.21); return g; };
+  for (const [z, n] of [[-1, 2], [6, 1], [13, 2]]) { part(props, B(1.4, 1.1, 3.8), toon('#3a1e1a', 'cloth'), W - 1.2, 0.55, z); part(props, B(0.4, 2.0, 3.8), toon('#3a1e1a', 'cloth'), W - 0.6, 1.0, z); part(props, B(1.2, 0.08, 1.6), wood, W - 3.2, 0.85, z); part(props, Cy(0.08, 0.1, 0.8, 6), dark, W - 3.2, 0.42, z); box(W - 2, z, 2, 1.9);
+    part(props, Cy(0.05, 0.05, 0.12, 6), glow('#7fff6a'), W - 3.0, 0.95, z + 0.3);
+    for (let k = 0; k < n; k++) { const o = ucChar(hood(['#2a2a30', '#3a2a1e', '#1e2a2a'][(k + z + 30) % 3], ['#ff3b2a', '#7fff6a', '#ffd36a'][(k + z + 30) % 3]), 'civ', W - 1.9, z + (n > 1 ? (k ? 0.9 : -0.9) : 0), -Math.PI / 2, ucChat(-Math.PI / 2)); if (k) ucSmoke(o); } }
+  // a jukebox nobody is allowed to touch
+  { part(props, B(1.4, 2.0, 0.9), toon('#5a1e2a'), -W + 0.9, 1.0, 6); const jb = part(props, Cy(0.6, 0.6, 0.92, 16, 1, false, 0, Math.PI), new THREE.MeshBasicMaterial({ color: '#ffb347' }), -W + 0.9, 2.0, 6, Math.PI / 2, 0, Math.PI / 2); props.remove(jb); levelGroup.add(jb);
+    for (let i = 0; i < 4; i++) part(props, B(0.06, 1.3, 0.05), glow(['#ff6aa8', '#4fd2ff', '#7fff6a', '#ffd36a'][i]), -W + 1.62, 1.0, 5.6 + i * 0.27); box(-W + 0.9, 6, 0.7, 0.5);
+    levelAnims.push(t => jb.material.color.setHSL((t * 0.08) % 1, 0.8, 0.55)); }
+  // ---- THE RUSTY RIVET: the bar on the back wall ----
+  part(props, B(16, 1.1, 1.3), wood, 0, 0.55, -20); part(props, B(16.4, 0.1, 1.6), rust, 0, 1.15, -20); part(props, B(16, 0.14, 0.12), glow('#c8402f'), 0, 0.12, -19.32); box(0, -20, 8, 0.7);
+  part(props, B(18, 4.2, 0.4), dark, 0, 2.1, -D + 0.6);
+  for (let r = 0; r < 3; r++) { part(props, B(16, 0.08, 0.5), rust, 0, 1.6 + r * 0.9, -D + 0.9); for (let i = 0; i < 16; i++) part(props, Cy(0.08, 0.08, 0.42 + (i % 3) * 0.08, 6), glow(['#5a8a3a', '#8a5a2a', '#6a2a1e', '#c8a03a'][(i * 3 + r) % 4]), -7.4 + i * 0.95, 1.86 + r * 0.9, -D + 0.9); }
+  const rv = new THREE.Mesh(new THREE.PlaneGeometry(6, 0.9), new THREE.MeshBasicMaterial({ map: signTex('THE RUSTY RIVET', '#140806', '#ff5a2a') })); rv.position.set(0, 3.2, -19.2); rv.rotation.x = 0; levelGroup.add(rv); part(props, B(0.05, 1.4, 0.05), metal, -2.6, 4.3, -19.2); part(props, B(0.05, 1.4, 0.05), metal, 2.6, 4.3, -19.2);
+  levelAnims.push(t => { rv.visible = !(Math.sin(t * 13) > 0.93 && Math.sin(t * 1.7) > 0.4); });
+  const nb = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.6), new THREE.MeshBasicMaterial({ map: signTex('NO BLASTERS', '#1e1410', '#d9c79a') })); nb.position.set(7.4, 2.6, -D + 0.85); props.add(nb);
+  for (let i = 0; i < 7; i++) { const x = -6 + i * 2; part(props, Cy(0.26, 0.26, 0.08, 8), toon('#4a2a1e', 'cloth'), x, 0.78, -18.4); part(props, Cy(0.04, 0.04, 0.75, 5), metal, x, 0.39, -18.4); }
+  for (let i = 0; i < 9; i++) part(props, Cy(0.05, 0.06, 0.24, 6), glow(['#5a8a3a', '#8a5a2a', '#c8a03a'][i % 3]), -7 + i * 1.7 + (i % 2) * 0.4, 1.32, -19.8 + (i % 3) * 0.2);
+  // patrons hunched at the bar, one asleep face-down on it
+  const P = [() => recolor(makeBugHybrid(), { '#5f8a3a': '#6a5a2a', '#3e5e26': '#4a3a1e' }), () => makeCivilian('#3a3430', '#1e1c22', '#8fae6a', '#1e1a18', '#5a3a22'), () => recolor(makeSpearman(), { '#7fae63': '#8a4a6a', '#4f7a3c': '#5a2a4a' }), () => makeCivilian('#5a2a1e', '#2c2a28', '#c58a64', '#cfcac0', '#3a3d44')];
+  const PR = ['bughybrid', 'civ', 'spearman', 'civ'];
+  [-5, -1, 3].forEach((x, i) => { const o = ucChar(P[i], PR[i], x, -18.2, Math.PI, ucSway); if (i === 1) ucSmoke(o); });
+  { const o = ucChar(P[3], 'civ', 6.4, -18.6, Math.PI, null); o.userData.rig.torso.rotation.x = 0.9; o.position.z = -18.9; let k = 0; levelAnims.push(t => { if (!o.parent) return; o.userData.rig.torso.rotation.x = 0.85 + Math.sin(t * 0.6) * 0.04; if (++k % 140 === 0) burst(o.position.clone().add(V(0, 1.6, -0.5)), '#cfe8ff', 1, 0.2); }); }
+  // ---- the band, stage left ----
+  part(props, B(10, 0.5, 7), toon('#2a1e1a', 'wood'), -24, 0.25, -23.5); box(-24, -23.5, 5, 3.5); part(props, B(10, 0.06, 0.08), glow('#c86aff'), -24, 0.52, -20.02);
+  for (const s of [-1, 1]) { part(props, B(1.2, 2.2, 1), dark, -24 + s * 4.2, 1.6, -25.8); for (let k = 0; k < 2; k++) part(props, Cy(0.34, 0.34, 0.05, 12), metal, -24 + s * 4.2, 1.1 + k * 0.9, -25.28, Math.PI / 2); }
+  part(props, Cy(0.5, 0.5, 0.5, 12), toon('#8a2a1e'), -26.2, 0.75, -24.4); part(props, Cy(0.3, 0.3, 0.3, 10), toon('#8a2a1e'), -25.2, 0.95, -24.0); part(props, Cy(0.36, 0.36, 0.02, 12), glow('#c8a03a'), -26.8, 1.5, -23.6);
+  part(props, Cy(0.03, 0.03, 1.3, 5), metal, -22.8, 1.15, -21.4); part(props, new THREE.SphereGeometry(0.08, 8, 6), metal, -22.8, 1.82, -21.4);
+  ucChar(() => recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a7a', '#3e5e26': '#2a3a5a' }), 'bughybrid', -26.2, -25.4, 0.3, (o, t, ph) => { o.position.y = 0.5 + Math.abs(Math.sin(t * 6)) * 0.05; const R = o.userData.rig; R.armL.rotation.x = -0.9 + Math.sin(t * 12) * 0.5; R.armR.rotation.x = -0.9 - Math.sin(t * 12) * 0.5; });
+  { const o = ucChar(() => recolor(makeMaxurge(), {}), 'maxurge', -20.6, -24.6, -0.4, (o, t) => { o.position.y = 0.5 + Math.abs(Math.sin(t * 3)) * 0.06; o.rotation.z = Math.sin(t * 1.5) * 0.06; }); part(o, B(0.16, 1.1, 0.06), toon('#6a3a1e', 'wood'), 0.1, 1.2, 0.3, 0, 0, 0.8); }
+  const spot = new THREE.PointLight(0xc86aff, 1.3, 14, 1.6); spot.position.set(-23, 4.5, -21); levelGroup.add(spot);
+  const jar = part(props, Cy(0.18, 0.15, 0.32, 10), new THREE.MeshLambertMaterial({ color: '#9ad8c8', transparent: true, opacity: 0.5 }), -20.4, 0.66, -20.6); jar.renderOrder = 2;
+  // velma's spotlight bob is on the NPC itself (she sways a little)
+  setTimeout(() => { const N = typeof npcObjs !== 'undefined' && npcObjs.velma; if (!N) return; const o = N.obj, y0 = o.position.y, r0 = o.rotation.y; levelAnims.push(t => { if (!o.parent) return; o.position.y = y0 + 0.5 + Math.abs(Math.sin(t * 2.2)) * 0.04; o.rotation.y = r0 + Math.sin(t * 0.8) * 0.4; }); }, 80);
+  // ---- back-room poker, stage right ----
+  part(props, Cy(1.5, 1.5, 0.1, 18), toon('#1f4a2a', 'cloth'), 20, 0.86, -18.6); part(props, Cy(1.6, 1.6, 0.08, 18), wood, 20, 0.8, -18.6); part(props, Cy(0.22, 0.4, 0.8, 8), dark, 20, 0.4, -18.6); solid(20, -18.6, 1.6);
+  for (let i = 0; i < 9; i++) { const a = i * 0.7; part(props, Cy(0.09, 0.09, 0.04 + (i % 3) * 0.05, 10), toon(['#c8402f', '#e8e4dc', '#3b4f7a'][i % 3]), 20 + Math.cos(a) * 0.5, 0.94, -18.6 + Math.sin(a) * 0.5); }
+  for (let i = 0; i < 4; i++) part(props, B(0.18, 0.01, 0.26), toon('#e8e4dc'), 19.2 + i * 0.5, 0.92, -17.8 + (i % 2) * 0.2, 0, i * 0.4);
+  part(props, Cy(0.04, 0.04, 0.12, 6), glow('#c8a03a'), 21, 0.97, -18.2);
+  ucChar(() => makeCivilian('#2a3a4a', '#1e1c22', '#9fe8ff', '#cfcac0', '#c9a43a'), 'civ', 21.9, -18.6, -Math.PI / 2, ucChat(-Math.PI / 2));
+  { const o = ucChar(() => recolor(makeStagrone(), {}), 'stagrone', 18.1, -18.4, Math.PI / 2, ucChat(Math.PI / 2)); ucSmoke(o, 2.0); }
+  ucChar(() => makeCivilian('#6a2a4a', '#1e1c22', '#e0b892', '#5a3a22', '#c86aff'), 'civ', 20, -16.4, Math.PI, ucChat(Math.PI));
+  const bulb = new THREE.PointLight(0xffb347, 1.2, 9, 1.8); bulb.position.set(20, 3.2, -18.6); levelGroup.add(bulb); part(props, Cy(0.02, 0.02, 3.4, 4), dark, 20, H - 1.9, -18.6); const shade = part(props, new THREE.ConeGeometry(0.7, 0.45, 12, 1, true), toon('#3a5a3a'), 20, 3.5, -18.6); props.remove(shade); levelGroup.add(shade);
+  const bm = part(props, new THREE.SphereGeometry(0.12, 8, 6), new THREE.MeshBasicMaterial({ color: '#ffd38a' }), 20, 3.25, -18.6); props.remove(bm); levelGroup.add(bm);
+  levelAnims.push(t => { const s = Math.sin(t * 0.9) * 0.25; shade.position.x = bm.position.x = bulb.position.x = 20 + s; bulb.intensity = Math.random() < 0.03 ? 0.2 : 1.2; });
+  // ---- the back room (members only) in the front-left corner ----
+  part(props, B(14, H, 0.4), rust, -23, H / 2, 12); box(-23, 12, 7, 0.2);
+  part(props, B(0.4, H, 5.4), rust, -16, H / 2, 14.7); box(-16, 14.7, 0.2, 2.7); part(props, B(0.4, H, 4.6), rust, -16, H / 2, 25.7); box(-16, 25.7, 0.2, 2.3);
+  part(props, B(0.4, H - 3.2, 3.6), rust, -16, 3.2 + (H - 3.2) / 2, 21.2); part(props, B(0.12, 3.2, 0.12), metal, -16, 1.6, 19.5); part(props, B(0.12, 3.2, 0.12), metal, -16, 1.6, 23.0);
+  const curtain = []; for (let i = 0; i < 6; i++) { const c = part(props, B(0.05, 3.1, 0.55), toon('#5a1e2a', 'cloth'), -16, 1.6, 19.9 + i * 0.58); props.remove(c); levelGroup.add(c); curtain.push(c); }
+  levelAnims.push(t => curtain.forEach((c, i) => { const d = player.pos.distanceTo(c.position) < 1.4; c.rotation.y = d ? 1.2 : Math.sin(t * 0.8 + i) * 0.05; }));
+  const mo = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.7), new THREE.MeshBasicMaterial({ map: signTex('MEMBERS ONLY', '#140806', '#7fff6a') })); mo.position.set(-15.7, 3.8, 21.2); mo.rotation.y = Math.PI / 2; props.add(mo);
+  for (let i = 0; i < 8; i++) { const x = -28.4 + (i % 4) * 1.5, z = 26.4 - Math.floor(i / 4) * 1.6; part(props, B(1.3, 1.1, 1.3), toon(i % 3 ? '#3a2e26' : '#2a3a2a', 'wood'), x, 0.55, z, 0, i * 0.2); if (i % 2 === 0) part(props, B(0.5, 0.2, 0.5), glow('#7fff6a'), x, 1.2, z); box(x, z, 0.7, 0.7); }
+  part(props, B(2.6, 0.9, 1.4), wood, -26.5, 0.45, 15.4); box(-26.5, 15.4, 1.3, 0.7); for (let i = 0; i < 6; i++) part(props, B(0.24, 0.12, 0.24), glow(['#ff6aa8', '#7fff6a', '#c86aff'][i % 3]), -27.4 + i * 0.36, 0.96, 15.4);
+  part(props, Cy(0.35, 0.35, 1.2, 10), metal, -24.2, 0.6, 15.2); part(props, Cy(0.1, 0.1, 0.5, 6), metal, -24.2, 1.45, 15.2);
+  const gl = new THREE.PointLight(0x7fff6a, 1.1, 12, 1.6); gl.position.set(-23, 4.5, 20); levelGroup.add(gl);
+  // ---- the hit board stays on the back wall ----
+  part(props, B(3, 1.8, 0.1), toon('#1e1c22'), -12, 1.6, -27.5); INTERACTS.push({ x: -12, z: -25.5, r: 2.4, label: 'Hit board (contracts on players)', fn: () => openHitBoard() });
+  const hb = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 0.5), new THREE.MeshBasicMaterial({ map: signTex('CONTRACTS', '#140806', '#c8402f') })); hb.position.set(-12, 2.9, -27.4); props.add(hb);
+  // ---- wanted posters on both side walls and the back wall ----
+  const wnt = typeof isWanted === 'function' && isWanted(), bty = wnt && typeof outS === 'function' ? outS().bounty : 0;
+  const spots = [[-W + 0.35, -14, Math.PI / 2], [-W + 0.35, -11, Math.PI / 2], [-W + 0.35, 2, Math.PI / 2], [W - 0.35, -12, -Math.PI / 2], [W - 0.35, -8, -Math.PI / 2], [W - 0.35, 4, -Math.PI / 2], [W - 0.35, 7, -Math.PI / 2], [-9.4, -D + 0.85, 0], [9.4, -D + 0.85, 0]];
+  spots.forEach(([x, z, ry], i) => { const you = wnt && i === 4, d = you ? ['You', 'Known to this bar', `${(bty || 1000).toLocaleString()} CR`, 0] : UC_POSTERS[i % UC_POSTERS.length];
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.24), new THREE.MeshBasicMaterial({ map: ucPoster(d[0], d[1], d[2], d[3], you) })); m.position.set(x, 2.1 + (i % 2) * 0.25, z); m.rotation.set(0, ry, (i % 3 - 1) * 0.06); props.add(m); });
+  // ---- the floor: barrel tables, arm wrestlers, drunks ----
+  const barrel = (x, z) => { part(props, Cy(0.55, 0.55, 1.1, 12), toon('#5a3a22', 'wood'), x, 0.55, z); part(props, Cy(0.57, 0.57, 0.08, 12), metal, x, 0.3, z); part(props, Cy(0.57, 0.57, 0.08, 12), metal, x, 0.85, z); part(props, Cy(0.8, 0.8, 0.06, 12), wood, x, 1.12, z); solid(x, z, 0.85); };
+  for (const [x, z, a] of [[-6, -2, 0.4], [7, 6, 2.2], [-4, 10, 1.3]]) { barrel(x, z); part(props, Cy(0.06, 0.06, 0.24, 6), glow('#c8a03a'), x + 0.2, 1.27, z); for (let k = 0; k < 2; k++) { const aa = a + k * 2.6, px = x + Math.cos(aa) * 1.15, pz = z + Math.sin(aa) * 1.15, ry = Math.atan2(x - px, z - pz);
+    const mk = [() => makeCivilian(['#3a3430', '#4a2a2a', '#2a3a2a'][k], '#1e1c22', ['#8fae6a', '#c58a64', '#9fe8ff'][Math.abs(k + Math.round(x)) % 3], '#1e1a18', '#3a3d44'), () => recolor(makeSpearman(), { '#7fae63': '#6a6a3a', '#4f7a3c': '#3a3a1e' })][Math.abs(k + Math.round(z)) % 2];
+    const o = ucChar(mk, Math.abs(k + Math.round(z)) % 2 ? 'spearman' : 'civ', px, pz, ry, ucChat(ry)); if (k === 0) ucSmoke(o, Math.abs(k + Math.round(z)) % 2 ? 1.0 : 1.55); } }
+  barrel(13, -6); const aw = [], awA = [1, -1].map(s => { const o = ucChar(() => makeChunkMonster(s > 0 ? '#7a5a3a' : '#4a5a6a', s > 0 ? '#5a3a22' : '#2c3a4a', s > 0 ? '#9a7a5a' : '#6a7a8a', '#1e1c22', false), 'chunk', 13 + s * 1.25, -6, s > 0 ? -Math.PI / 2 : Math.PI / 2, null); aw.push(o); return o; });
+  levelAnims.push(t => { const lean = Math.sin(t * 0.7) * 0.12 + Math.sin(t * 5.3) * 0.03; aw.forEach((o, i) => { const R = o.userData.rig; R.armR.rotation.x = -1.2; R.armL.rotation.x = -0.3; R.torso.rotation.z = (i ? -1 : 1) * lean; }); });
+  // passed out on the floor, with the bottle that did it
+  { const o = buildChar(() => makeCivilian('#5a4a2a', '#2c2a28', '#c58a64', '#1e1a18', '#3a3d44'), 'civ'); o.position.set(9.5, 0.22, 13); o.rotation.set(-Math.PI / 2, 0, 0.4); levelGroup.add(o); solid(9.5, 13.6, 0.6); part(props, Cy(0.06, 0.06, 0.3, 6), glow('#5a8a3a'), 10.4, 0.07, 12.2, 0, 0, Math.PI / 2);
+    levelAnims.push(t => { if (o.parent && Math.random() < 0.006) burst(o.position.clone().add(V(0, 0.5, 0.7)), '#cfe8ff', 1, 0.15); }); }
+  // and one who is still walking, badly
+  { const o = buildChar(() => makeCivilian('#4a3a5a', '#1e1c22', '#8fae6a', '#cfcac0', '#c86aff'), 'civ'); blob(o, 0.45); levelGroup.add(o); MOVERS.push([o, 0.45]); const st = {};
+    levelAnims.push(t => { if (!o.parent) return; const a = t * 0.18, x = 2 + Math.cos(a) * 6 + Math.sin(t * 1.3) * 0.6, z = 2 + Math.sin(a) * 4; o.rotation.y = Math.atan2(-Math.sin(a) * 6, Math.cos(a) * 4) + Math.sin(t * 2.1) * 0.4; o.position.set(x, 0, z); o.rotation.z = Math.sin(t * 1.7) * 0.14; animRig(o, st, 1 / 60, t); }); }
+  // dim, dirty light and a haze of smoke
+  for (const [x, z, c, i] of [[0, -16, 0xff5a2a, 1.0], [8, 4, 0x8a3a2a, 0.7], [-8, 2, 0x5a8a4a, 0.5], [14, 16, 0x8a3a2a, 0.6]]) { const l = new THREE.PointLight(c, i, 20, 1.6); l.position.set(x, 4.6, z); levelGroup.add(l); }
+  { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 2, 32, 32, 32); g.addColorStop(0, 'rgba(160,150,140,0.5)'); g.addColorStop(1, 'rgba(160,150,140,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    const tex = new THREE.CanvasTexture(c), haze = [];
+    for (let i = 0; i < 10; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.22, depthWrite: false })); s.scale.set(9, 4, 1); levelGroup.add(s); haze.push(s); }
+    levelAnims.push(t => haze.forEach((s, i) => s.position.set(-22 + ((i * 11 + t * 0.4) % 46), 3.6 + (i % 3) * 0.6, -22 + ((i * 17) % 42)))); }
+}; }
+
+// =================== THE STARLIGHT LOUNGE, FILLED OUT ===================
+// The President gets his own VIP spot in the middle of the floor (the dancers ring around him now),
+// plus a second bar, a VIP couch corner, plants, waiter bots, and people mingling with drinks.
+{ const _bn = barNpcs; barNpcs = function () { const L = _bn();
+  const ves = L.find(d => d.name === 'Vesper'); if (ves) ves.z = 12.8;
+  L.push({ id: 'cometbar', name: 'Lyra', role: 'The Comet Bar · cocktails', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#1e1c22', '#9fe8ff', '#c86aff', '#ff6aa8'), x: 22, z: 25.2, face: Math.PI, heal: true,
+    custom: [['Comet cocktail (40 cr)', () => { if (S.cr < 40) { toast('NOT ENOUGH', 'Lyra raises one perfect eyebrow.', 2); return; } S.cr -= 40; player.hp = Math.min(player.maxHp || player.hp, player.hp + 60); markDirty(); closeDlg(); toast('COMET COCKTAIL', 'It sparkles on the way down. +60 HP', 2.5); SFX.coin && SFX.coin(); }]],
+    idle: ["Moe-bot does volume. I do art. The art costs more.", "The President tips in commemorative coins with his own face on them.", "Try the Supernova. It's on fire. On purpose."] });
+  L.push({ id: 'vipguard', name: 'Agent Brooks', role: 'Secret Service · very tired', rig: 'civ', make: () => makeCivilian('#1e1c22', '#1e1c22', '#8a5a3a', '#1e1a18', '#1e1c22'), x: 6.6, z: 0.4, face: -Math.PI * 0.75,
+    idle: ["I have protected this man through two wars and a pie-eating contest. This is the worst one.", "Please don't give him anything. Anything at all.", "He signed an executive order making this song the national anthem. Twice."] });
+  return L; }; }
+{ const _bb = buildBar; buildBar = function (T, W, D, H, rnd) { _bb(T, W, D, H, rnd);
+  const wood = toon('#3a2a1e', 'wood'), gold = toon('#c9a43a'), velvet = toon('#7a1e3a', 'cloth'), metal = '#2b2a2c';
+  // the President's VIP spot: a gold ring on the floor and four little rope posts
+  const ring = new THREE.Mesh(new THREE.RingGeometry(1.25, 1.4, 32), new THREE.MeshBasicMaterial({ color: '#ffd36a' })); ring.rotation.x = -Math.PI / 2; ring.position.set(0, 0.07, 6.5); levelGroup.add(ring);
+  levelAnims.push(t => ring.material.color.setHSL(0.12, 0.9, 0.5 + Math.sin(t * 3) * 0.12));
+  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4; part(props, Cy(0.05, 0.08, 0.9, 6), gold, Math.cos(a) * 1.6, 0.45, 6.5 + Math.sin(a) * 1.6); part(props, new THREE.SphereGeometry(0.08, 8, 6), gold, Math.cos(a) * 1.6, 0.92, 6.5 + Math.sin(a) * 1.6); }
+  // ---- the Comet Bar: back right ----
+  part(props, B(8, 1.1, 1.2), toon('#2a1e3a', 'panel'), 22, 0.55, 23.6); part(props, B(8.3, 0.1, 1.5), gold, 22, 1.15, 23.6); part(props, B(8, 0.08, 0.1), glow('#4fd2ff'), 22, 0.15, 22.98); box(22, 23.6, 4, 0.7);
+  part(props, B(8, 3.2, 0.3), wood, 22, 1.6, D - 0.5); for (let r = 0; r < 2; r++) for (let i = 0; i < 12; i++) part(props, Cy(0.07, 0.07, 0.42, 6), glow(['#4fd2ff', '#c86aff', '#ff6aa8'][(i + r) % 3]), 18.6 + i * 0.62, 2.0 + r * 0.9, D - 0.75);
+  const cs = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 0.8), new THREE.MeshBasicMaterial({ map: signTex('COMET BAR', '#0e0a1e', '#4fd2ff') })); cs.position.set(22, 4.0, D - 0.6); cs.rotation.y = Math.PI; levelGroup.add(cs);
+  for (let i = 0; i < 4; i++) { const x = 19.4 + i * 1.75; part(props, Cy(0.26, 0.26, 0.08, 10), velvet, x, 0.8, 22.2); part(props, Cy(0.04, 0.04, 0.78, 5), metal, x, 0.4, 22.2); }
+  // ---- the VIP couches: back left ----
+  for (const [x, z, ry] of [[-22, 25.4, 0], [-25.6, 21.6, Math.PI / 2], [-18.4, 21.6, -Math.PI / 2]]) { const g = new THREE.Group(); part(g, B(3.6, 0.5, 1.1), velvet, 0, 0.35, 0); part(g, B(3.6, 0.9, 0.3), velvet, 0, 0.8, 0.45); for (const s of [-1, 1]) part(g, B(0.3, 0.7, 1.1), velvet, s * 1.8, 0.5, 0); g.position.set(x, 0, z); g.rotation.y = ry + Math.PI; props.add(g); box(x, z, ry ? 0.6 : 1.9, ry ? 1.9 : 0.6); }
+  part(props, B(2, 0.4, 1.2), toon('#1e1c22', 'panel'), -22, 0.2, 21.6); part(props, B(2.04, 0.04, 1.24), gold, -22, 0.41, 21.6); box(-22, 21.6, 1, 0.6); part(props, Cy(0.12, 0.08, 0.3, 8), glow('#ffd36a'), -22.4, 0.58, 21.6); part(props, Cy(0.04, 0.04, 0.4, 6), glow('#7fff6a'), -21.5, 0.6, 21.4);
+  for (let i = 0; i < 5; i++) { const x = -26.5 + i * 2.25; part(props, Cy(0.05, 0.08, 1.0, 6), gold, x, 0.5, 18.4); if (i < 4) { const rope = part(props, Cy(0.03, 0.03, 2.25, 6), velvet, x + 1.12, 0.82, 18.4, 0, 0, Math.PI / 2); } }
+  const vs = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.6), new THREE.MeshBasicMaterial({ map: signTex('VIP', '#1e0e1a', '#ffd36a') })); vs.position.set(-22, 4.2, D - 0.6); vs.rotation.y = Math.PI; levelGroup.add(vs);
+  const L = new THREE.PointLight(0xffd36a, 0.8, 14, 1.6); L.position.set(-22, 4.5, 22); levelGroup.add(L); const L2 = new THREE.PointLight(0x4fd2ff, 0.8, 14, 1.6); L2.position.set(22, 4.5, 22); levelGroup.add(L2);
+  // people: lounging VIPs, bar regulars and mingling groups
+  const P = [['#ffd36a', '#1e1c22', '#e0b892', '#5a3a22', '#ff6aa8'], ['#c86aff', '#2a1e3a', '#8a5a3a', '#1e1a18', '#ffd36a'], ['#e8e4dc', '#3a3d44', '#c58a64', '#c8402f', '#4fd2ff'], ['#3bd2ff', '#1e1c22', '#9fe8ff', '#e8e4dc', '#ff6aa8'], ['#ff3b8a', '#1e1c22', '#e0b892', '#1e1a18', '#ffd36a'], ['#2a5a3a', '#1e1c22', '#8a5a3a', '#ffd36a', '#c9a43a']];
+  const guy = (k, x, z, ry, fn, y) => { const o = buildChar(() => makeCivilian(...P[k % P.length]), 'civ'); o.position.set(x, y || 0, z); o.rotation.y = ry; blob(o, 0.4); levelGroup.add(o); if (!y) solid(x, z, 0.4); const st = {}, ph = k * 1.3; levelAnims.push(t => { if (!o.parent) return; fn && fn(o, t, ph); animRig(o, st, 1 / 60, t); }); return o; };
+  const chat = ry => (o, t, ph) => { o.rotation.y = ry + Math.sin(t * 0.6 + ph) * 0.4; };
+  const glass = (o, c) => part(o, Cy(0.05, 0.035, 0.16, 6), glow(c), 0.3, 1.0, 0.18);
+  // seated on the VIP couches (low and leaning back)
+  for (const [k, x, z, ry] of [[0, -23, 25.2, Math.PI], [1, -21, 25.2, Math.PI], [2, -25.4, 21.6, -Math.PI / 2], [3, -18.6, 22.2, Math.PI / 2]]) { const o = guy(k, x, z, ry, (o, t, ph) => { o.rotation.y = ry + Math.sin(t * 0.4 + ph) * 0.2; }, -0.4); o.userData.rig.torso.rotation.x = -0.25; glass(o, '#7fff6a'); }
+  // at the Comet Bar
+  for (const [k, x] of [[4, 19.4], [5, 22.9], [2, 24.6]]) glass(guy(k, x, 21.4, 0, chat(0)), '#4fd2ff');
+  // mingling groups with drinks
+  for (const [cx, cz] of [[-7, -11], [7, -11], [-20, 9], [20, 10]]) for (let k = 0; k < 3; k++) { const a = k * 2.09 + cx, x = cx + Math.cos(a) * 1.0, z = cz + Math.sin(a) * 1.0, ry = Math.atan2(cx - x, cz - z); glass(guy(k + Math.abs(cx), x, z, ry, chat(ry)), ['#ff6aa8', '#ffd36a', '#4fd2ff'][k]); }
+  // potted palms around the edges
+  const palm = (x, z) => { part(props, Cy(0.45, 0.35, 0.8, 10), toon('#c9a43a'), x, 0.4, z); part(props, Cy(0.08, 0.1, 1.8, 6), toon('#5a3a22', 'wood'), x, 1.6, z); for (let i = 0; i < 6; i++) { const a = i * 1.047; part(props, B(1.3, 0.05, 0.32), toon(i % 2 ? '#3f7a3a' : '#4f8a3a', 'leaves'), x + Math.cos(a) * 0.55, 2.4, z + Math.sin(a) * 0.55, 0, -a, -0.45); } solid(x, z, 0.5); };
+  for (const [x, z] of [[-9, -20], [9, -20], [-W + 1.2, -14], [W - 1.2, -14], [-W + 1.2, 17], [W - 1.2, 17], [-16, 26.6], [16, 26.6], [-5.6, 26.4], [5.6, 26.4]]) palm(x, z);
+  // little hanging lamps over the round tables
+  for (const [x, z] of [[-8, -4], [8, -4], [-14, 14], [14, 14], [-10, 16], [10, 16]]) { part(props, Cy(0.015, 0.015, 2.4, 4), metal, x, H - 1.2, z); part(props, new THREE.ConeGeometry(0.4, 0.35, 10, 1, true), toon('#c9a43a'), x, H - 2.5, z); part(props, new THREE.SphereGeometry(0.1, 8, 6), glow('#ffd38a'), x, H - 2.6, z); }
+  // two waiter bots doing laps with trays
+  for (let i = 0; i < 2; i++) { const o = buildChar(() => recolor(makeXR17(), { '#9aa1aa': '#e8e4dc', '#5d636c': '#1e1c22' }), 'xr17'); part(o, Cy(0.32, 0.32, 0.03, 12), toon('#c9a43a'), 0, 0.98, 0.32); for (let k = 0; k < 3; k++) part(o, Cy(0.04, 0.03, 0.14, 6), glow(['#ff6aa8', '#4fd2ff', '#ffd36a'][k]), -0.12 + k * 0.12, 1.06, 0.32);
+    blob(o, 0.4); levelGroup.add(o); MOVERS.push([o, 0.4]); const st = {};
+    levelAnims.push(t => { if (!o.parent) return; const a = t * 0.16 + i * Math.PI, x = Math.cos(a) * 10, z = -4 + Math.sin(a) * 6; o.position.set(x, 0, z); o.rotation.y = Math.atan2(-Math.sin(a) * 10, Math.cos(a) * 6); animRig(o, st, 1 / 60, t); }); }
+}; }
+
+// =================== 2.15 FIXES: one weapon cycle, a steady weapon box, a better shield, flashes on the barrel ===================
+// ---- Q, Y and the weapon box all cycle the same way: gun → staff → (both, New Game+) → melee → gun ----
+function loadoutFill() { const sl = loadoutSlots(); const best = f => S.guns.filter(id => GUNS[id] && f(id)).sort((a, b) => (GUNS[b].req || 0) - (GUNS[a].req || 0))[0];
+  if (!sl.staff) { const s = best(isStaffId); if (s) sl.staff = s; } if (!sl.gun) { const g = best(id => !isStaffId(id)); if (g) sl.gun = g; } return sl; }
+function weaponMode() { return handMelee() ? 'melee' : S.dual && dualOn() ? 'both' : isStaffId(S.gun) ? 'staff' : 'gun'; }
+function weaponSeq() { const sl = loadoutFill(); return ['gun', 'staff', 'both', 'melee'].filter(m => m === 'melee' || (m === 'gun' && sl.gun) || (m === 'staff' && sl.staff) || (m === 'both' && sl.gun && sl.staff && canDual())); }
+cycleWeapon = function () {
+  if (state !== 'play' || dlgOpen || LEVEL.fly || S.riding || (typeof inLounge === 'function' && inLounge())) return;
+  const seq = weaponSeq(), cur = weaponMode(), next = seq[(seq.indexOf(cur) + 1) % seq.length], sl = S.slots;
+  if (next === 'melee') { S.dual = false; if (!handMelee()) swapHand(); return; }
+  if (handMelee()) { S.hand = 'gun'; firing = false; SHIELD.blocking = false; meleeShown = null; refreshMeleeModel(); }
+  const want = next === 'gun' ? sl.gun : sl.staff;
+  if (S.gun !== want) { if (!S.guns.includes(want)) return; WMEM[S.gun] = { ammo: player.ammo, manaF: player.manaF, t: gameTime }; S.gun = want; const m = WMEM[want], g = GUNS[want];
+    if (m) { const regen = g.mana ? (gameTime - m.t) * g.mag / (g.reload * 2.2) : 0; player.ammo = Math.min(g.mag, Math.floor((m.manaF != null ? m.manaF : m.ammo) + regen)); player.manaF = g.mana ? player.ammo : null; } else { player.ammo = g.mag; player.manaF = null; }
+    player.reloading = 0; player.cool = Math.max(player.cool, 0.15); firing = false; }
+  S.dual = next === 'both'; if (S.dual) { OFF.id = null; toast('DUAL WIELD', `${GUNS[sl.staff].name} + ${GUNS[sl.gun].name}`, 1.4); }
+  SFX.ui && SFX.ui(); markDirty();
+  log(`${next === 'both' ? 'Gun and staff' : GUNS[S.gun].name} out. ${TOUCH ? 'Tap the weapon box' : 'Q or Y'} for ${({ gun: 'your gun', staff: 'your staff', both: 'both', melee: 'melee' })[seq[(seq.indexOf(next) + 1) % seq.length]]}.`);
+};
+const cycleNext2 = () => { const seq = weaponSeq(), n = seq[(seq.indexOf(weaponMode()) + 1) % seq.length]; return ({ gun: '◈ gun', staff: '✦ staff', both: '◈✦ both', melee: '⚔ melee' })[n]; };
+{ const _oh = offHud; offHud = function (on) { if ((on && GUNS[OFF.id]) || LEVEL.fly || state !== 'play') return _oh(on); const t = `<span class="k">${TOUCH ? 'tap' : 'Q'} ⇄</span> ${cycleNext2()}`; if (t !== offTxt) { offTxt = t; offEl.innerHTML = t; } }; }
+// Y used to only flip gun/staff; it now walks the same cycle as Q
+window.addEventListener('keydown', e => { if (e.code === 'KeyY' && state === 'play' && !dlgOpen && !chatOpen() && !e.repeat) { e.stopImmediatePropagation(); cycleWeapon(); } }, true);
+// ---- the weapon box keeps one size whether it shows ammo, a spell or the shield ----
+{ const st = document.createElement('style'); st.textContent = `
+#ammo { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; }
+body:not(.touch) #ammo { width: 214px; height: 98px; }
+body.touch #ammo { height: 84px; }
+#ammo .n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#ammo .n > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+`; document.head.appendChild(st); }
+// ---- the shield: a proper energy kite shield with a rim, a sun sigil and hex light; it sits off to the left and doesn't blanket the screen ----
+{ const kids = vmShield.children.slice(); kids.forEach(c => vmShield.remove(c));
+  const sh = new THREE.Shape(); sh.moveTo(0, 0.2); sh.quadraticCurveTo(0.15, 0.2, 0.16, 0.12); sh.quadraticCurveTo(0.16, -0.06, 0, -0.22); sh.quadraticCurveTo(-0.16, -0.06, -0.16, 0.12); sh.quadraticCurveTo(-0.15, 0.2, 0, 0.2);
+  const hexTex = (() => { const c = document.createElement('canvas'); c.width = 128; c.height = 160; const x = c.getContext('2d'), g = x.createRadialGradient(64, 70, 6, 64, 80, 96); g.addColorStop(0, 'rgba(140,220,255,.55)'); g.addColorStop(1, 'rgba(40,120,220,.15)'); x.fillStyle = g; x.fillRect(0, 0, 128, 160);
+    x.strokeStyle = 'rgba(200,240,255,.35)'; x.lineWidth = 1.5; for (let r = 0; r < 12; r++) for (let q = 0; q < 8; q++) { const cx = q * 17 + (r % 2) * 8.5, cy = r * 15; x.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + Math.PI / 6; x.lineTo(cx + Math.cos(a) * 9, cy + Math.sin(a) * 9); } x.closePath(); x.stroke(); }
+    const t = new THREE.CanvasTexture(c); return t; })();
+  const geo = new THREE.ShapeGeometry(sh, 16); { const p = geo.attributes.position, uv = geo.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) + 0.16) / 0.32, (p.getY(i) + 0.22) / 0.42); }
+  const face = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: hexTex, color: '#ffffff', transparent: true, opacity: 0.3, depthWrite: false, depthTest: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); face.renderOrder = 3; vmShield.add(face);
+  const pts = sh.getPoints(40).map(p => new THREE.Vector3(p.x, p.y, 0.002)); const rim = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 60, 0.006, 5, true), new THREE.MeshBasicMaterial({ color: '#cfeaff', transparent: true, opacity: 0.9, depthTest: false, depthWrite: false })); rim.renderOrder = 4; vmShield.add(rim);
+  const sun = new THREE.Mesh(new THREE.CircleGeometry(0.045, 20, 0, Math.PI), new THREE.MeshBasicMaterial({ color: '#ffd36a', transparent: true, opacity: 0.85, depthTest: false, depthWrite: false, side: THREE.DoubleSide })); sun.position.set(0, 0.0, 0.003); sun.renderOrder = 5; vmShield.add(sun);
+  for (const y of [-0.012, -0.03]) { const bar = new THREE.Mesh(new THREE.PlaneGeometry(0.12 - (y < -0.02 ? 0.03 : 0), 0.008), sun.material); bar.position.set(0, y, 0.003); bar.renderOrder = 5; vmShield.add(bar); }
+  const grip = part(vmShield, Cy(0.012, 0.012, 0.12, 6), '#3a3d44', 0, 0, -0.03, 0, 0, Math.PI / 2); grip.renderOrder = 2;
+  const emit = part(vmShield, B(0.05, 0.03, 0.02), glow('#6fc8ff'), 0, -0.16, -0.012); emit.renderOrder = 2;
+  vmShield.userData.face = face; vmShield.userData.rim = rim; vmShield.userData.sun = sun; }
+{ const _uh = updateHands; updateHands = function (dt, t) { _uh(dt, t); if (!vmShield.visible) return; const up = SHIELD.blocking ? 1 : 0, U = vmShield.userData, lowHp = SHIELD.hp / SHIELD.max;
+  U.k = (U.k || 0) + (up - (U.k || 0)) * Math.min(1, dt * 12); const k = U.k;
+  vmShield.position.set(-0.27 + k * 0.1, -0.2 + k * 0.08 + Math.sin(t * 2) * 0.004, -0.5); vmShield.rotation.set(0.05, 0.55 - k * 0.4, 0.06 - k * 0.06); vmShield.scale.setScalar(0.62 + k * 0.2);
+  U.face.material.opacity = 0.18 + k * 0.32 + SHIELD.flash * 1.5; U.face.material.color.setRGB(1, 0.55 + lowHp * 0.45, 0.55 + lowHp * 0.45);
+  U.rim.material.opacity = 0.45 + k * 0.5; U.rim.material.color.set(SHIELD.flash > 0 ? '#ffffff' : lowHp < 0.3 ? '#ff8a6a' : '#cfeaff'); U.sun.material.opacity = 0.5 + k * 0.4;
+  U.face.material.map.offset.y = (t * 0.05) % 1; }; }
+// ---- muzzle flashes sit on the end of the barrel of whatever gun you hold ----
+function gunMuzzle(g) { if (!g) return null; if (g.userData.muzzle) return g.userData.muzzle; const top = !!(GUNS[S.gun] && GUNS[S.gun].mana);
+  g.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(g.matrixWorld).invert(), m = new THREE.Matrix4(), bb = new THREE.Box3(); let best = null;
+  g.traverse(o => { if (!o.isMesh || o.isSprite || !o.geometry || (o.material && o.material.blending === THREE.AdditiveBlending)) return; if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); m.multiplyMatrices(inv, o.matrixWorld); bb.copy(o.geometry.boundingBox).applyMatrix4(m);
+    if (top ? (!best || bb.max.y > best.max.y) : (!best || bb.max.z > best.max.z + 0.005 || (Math.abs(bb.max.z - best.max.z) < 0.005 && (bb.max.x - bb.min.x) < (best.max.x - best.min.x)))) best = bb.clone(); });
+  if (!best) return null; const c = best.getCenter(V(0, 0, 0)); return (g.userData.muzzle = top ? c : V(c.x, c.y, best.max.z + 0.04)); }
+{ const _mf = muzzleFlash; muzzleFlash = function () { const g = typeof vmGun !== 'undefined' ? vmGun : null, n = g ? g.children.length : 0; _mf(); const mz = gunMuzzle(g); if (g && mz) for (let i = n; i < g.children.length; i++) if (g.children[i].isSprite) g.children[i].position.copy(mz); }; }
+{ const _gs = gunShotFx; gunShotFx = function () { const g = vmGun, n = g ? g.children.length : 0; _gs(); const mz = gunMuzzle(g); if (g && mz) for (let i = n; i < g.children.length; i++) g.children[i].position.copy(mz); }; }
+
 // =================== AMBIENCE (2.13.9): a sound bed for every place, built live on the game's audio engine ===================
 // Each place gets layers: a filtered-noise bed (wind, surf, rain, vents, crowd wash) that swells slowly, an optional low hum
 // (engines, machines, the Maw), and little one-shots on timers (birds, drips, creaks, beeps, distant thunder, crowd murmur).
@@ -20467,7 +20910,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyE') { if (nearNpc) talk(nearNpc); else if (nearAct) nearAct.fn(); }
   if (e.code === 'KeyJ') openQuestLog();
   if (e.code === 'KeyT') recallToShip();
-  if (e.code === 'KeyQ' || e.code === 'KeyF') swapHand();
+  if (e.code === 'KeyQ') cycleWeapon(); else if (e.code === 'KeyF') swapHand();
   if (e.code === 'KeyZ') throwOrd();
   if (e.code === 'KeyL') launchShip();
   if (e.code === 'KeyB') openBag();
@@ -20800,9 +21243,12 @@ function step(dt) {
   if (zid !== zoneShown) { zoneShown = zid; if (zn) { $('zoneN').textContent = zn.name; $('zoneL').textContent = zn.lvl; $('zone').style.opacity = 1; zoneT = 3; } }
   if (zoneT > 0) { zoneT -= dt; if (zoneT <= 0) $('zone').style.opacity = 0; }
   // NPC proximity
-  nearNpc = null; let nd = 3.2;
-  for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible) continue; const d = N.obj.position.distanceTo(player.pos); if (d < nd) { nd = d; nearNpc = id; } }
-  nearAct = null; if (!nearNpc) { let ad = 1e9; for (const a of INTERACTS) { const d = Math.hypot(player.pos.x - a.x, player.pos.z - a.z); if (d < a.r && d < ad) { ad = d; nearAct = a; } } }
+  // everything in reach (people and things); when more than one is, the one you're looking at wins
+  nearNpc = null; nearAct = null; { const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw), cand = [];
+    const score = (x, z, d) => { const dx = x - player.pos.x, dz = z - player.pos.z, l = Math.hypot(dx, dz) || 1; return (1 - (dx * fx + dz * fz) / l) * 3 + d * 0.15; };
+    for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible) continue; const d = N.obj.position.distanceTo(player.pos); if (d < 3.2) cand.push([score(N.obj.position.x, N.obj.position.z, d), id, null]); }
+    for (const a of INTERACTS) { const d = Math.hypot(player.pos.x - a.x, player.pos.z - a.z); if (d < a.r) cand.push([score(a.x, a.z, d), null, a]); }
+    if (cand.length) { cand.sort((a, b) => a[0] - b[0]); nearNpc = cand[0][1]; nearAct = cand[0][2]; } }
   const tb = $('talk'); if ((nearNpc || nearAct) && !dlgOpen) { tb.hidden = false; tb.innerHTML = ''; tb.append(nearNpc ? 'Talk to ' + npcObjs[nearNpc].def.name : nearAct.label); if (!TOUCH) { const k = document.createElement('kbd'); k.textContent = 'E'; tb.append(k); } } else tb.hidden = true;
   for (const id in npcObjs) { const N = npcObjs[id]; const d = N.obj.position.distanceTo(player.pos); N.obj.visible = d < 60 && npcShown(N); N.plate.visible = d < 30 && d > 1.8; if (d < 6) { const want = Math.atan2(player.pos.x - N.obj.position.x, player.pos.z - N.obj.position.z); let df = Math.atan2(Math.sin(want - N.obj.rotation.y), Math.cos(want - N.obj.rotation.y)); N.obj.rotation.y += df * Math.min(1, dt * 4); } if (N.obj.userData.anim) N.obj.userData.anim(t); if (!N.anim) N.anim = {}; if (d < 40) { N.anim.gest = dlgOpen && nearNpc === id ? Math.max(0, Math.sin(t * 3)) * 0.5 : 0; animRig(N.obj, N.anim, dt, t); } }
   // enemies

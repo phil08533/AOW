@@ -520,8 +520,8 @@ LEVELS.moon = {
     for (const [ox, oz, h, col] of [[-8, -8, 7, '#e8e4dc'], [8, -8, 9, '#cfe6ff'], [0, -11, 12, '#e8e4dc'], [-11, 1, 5, '#c8c8d0'], [11, 1, 5, '#c8c8d0']]) { const t = makeCityBlock(3.4, h, 3.4, col, '#4fd2ff'); at(t, dx + ox, dz + oz); box(dx + ox, dz + oz, 1.8, 1.8); }
     dropshipPad(0, -6, 0, 'Return to your ship');
     // earthrise
-    const earth = new THREE.Mesh(new THREE.SphereGeometry(60, 24, 16), new THREE.MeshBasicMaterial({ map: planetTex('earth'), fog: false })); earth.position.set(-120, 140, -260); levelGroup.add(earth); levelAnims.push(t => { earth.rotation.y = t * 0.02; });
-    const cl = new THREE.Mesh(new THREE.SphereGeometry(61, 24, 16), new THREE.MeshBasicMaterial({ map: planetTex('earth', 'clouds'), transparent: true, fog: false, depthWrite: false })); cl.position.copy(earth.position); levelGroup.add(cl);
+    const earth = new THREE.Mesh(new THREE.SphereGeometry(36, 24, 16), new THREE.MeshBasicMaterial({ map: planetTex('earth'), fog: false })); earth.position.set(-72, 84, -156); levelGroup.add(earth); levelAnims.push(t => { earth.rotation.y = t * 0.02; earth.position.set(player.pos.x - 72, player.pos.y + 84, player.pos.z - 156); cl.position.copy(earth.position); }) // sits inside the camera's far plane and rides along like the sky, so it never clips away;
+    const cl = new THREE.Mesh(new THREE.SphereGeometry(36.6, 24, 16), new THREE.MeshBasicMaterial({ map: planetTex('earth', 'clouds'), transparent: true, fog: false, depthWrite: false })); cl.position.copy(earth.position); levelGroup.add(cl);
     const sunL = new THREE.DirectionalLight(0xffffff, 1.0); sunL.position.set(80, 120, 40); levelGroup.add(sunL);
     // helium mines: rigs, ore carts, glowing crystals
     for (let i = 0; i < 5; i++) { const a = i * 1.25, x = Z.mines.x + Math.cos(a) * 10, z = Z.mines.z + Math.sin(a) * 10, rig = new THREE.Group(); for (const s of [-1, 1]) part(rig, B(0.3, 6, 0.3), '#c9a43a', s * 1.2, 3, 0, 0, 0, -0.18 * s); part(rig, B(3, 0.4, 0.4), '#c9a43a', 0, 5.8, 0); part(rig, Cy(0.15, 0.15, 6, 6), '#5d636c', 0, 3, 0); at(rig, x, z, a); solid(x, z, 1.2); }

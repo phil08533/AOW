@@ -111,7 +111,7 @@ function visitApt(rid) {
 function spawnRoommate() {
   const rid = Object.keys(romS()).find(id => romOf(id).ship); if (!rid || !ROMANCE[rid]) return;
   const R = ROMANCE[rid], M = romOf(rid), q = SHIP_ROOMS.find(r => r.id === 'quarters') || SHIP_ROOMS[0]; if (!q) return;
-  const x = (q.x0 + q.x1) / 2 + (q.side > 0 ? 2 : -2), z = q.zc - 2.2;
+  const x = (q.x0 + q.x1) / 2 - q.side * 0.4, z = q.zc + 0.5; // across the room from the bunk, so the bed and the partner each get their own button
   makeNpc({ id: 'roomie', romId: rid, name: R.name, role: 'Lives on your ship', rig: R.rig || 'civ', make: R.make, x, z, face: q.side > 0 ? -Math.PI / 2 : Math.PI / 2, custom: [['♥ Hang out', () => openRomance(rid, true)]], idle: R.lines[5] }, [0, 0]);
   if (Date.now() - (M.gift || 0) > 20 * 60 * 1000) { M.gift = Date.now(); const k = R.likes.filter(i => ITEMS[i])[randi(0, R.likes.filter(i => ITEMS[i]).length - 1)]; if (k) { S.inv[k] = (S.inv[k] || 0) + 1; } const cr = 100 + randi(0, 200); S.cr += cr; markDirty(); setTimeout(() => log(`${R.name} left you a gift: ${k ? ITEMS[k].name + ' and ' : ''}${cr} credits. "${R.lines[5][0]}"`, 'loot'), 1500); }
 }

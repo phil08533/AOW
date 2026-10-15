@@ -27,12 +27,12 @@ function padFocusNav(scope, dir) {
     // LB modifier layer
     if (b(4)) { if (!PAD2.lbDown) { PAD2.lbDown = true; PAD2.lbCombo = false; }
       const combo = (i, fn) => { if (hit(i)) { PAD2.lbCombo = true; try { fn(); } catch (_) {} } };
-      combo(3, () => typeof swapWeapon === 'function' && swapWeapon()); combo(2, () => quickHeal()); combo(1, () => openCodex && openCodex());
+      combo(3, () => typeof cycleWeapon === 'function' && cycleWeapon()); combo(2, () => quickHeal()); combo(1, () => openCodex && openCodex());
       combo(0, () => typeof toggleDance === 'function' && inLounge() ? toggleDance() : null); combo(5, () => swapHand());
     } else if (PAD2.lbDown) { PAD2.lbDown = false; if (!PAD2.lbCombo) openBag(); }
     if (hit(11)) quickHeal();
     // Y with nothing to reload swaps gun/staff instead
-    if (hit(3) && !b(4) && (S.clip || (gun() && gun().mana)) && typeof otherSlot === 'function' && otherSlot()) swapWeapon();
+    if (hit(3) && !b(4) && (S.clip || (gun() && gun().mana)) && typeof cycleWeapon === 'function') cycleWeapon();
   }
   // hide from the base handler what this layer handles: LB taps, R3, and face buttons while LB is held
   const save = PAD.prev.slice(); const mask = [4, 11]; if (b(4)) mask.push(0, 1, 2, 3, 5);

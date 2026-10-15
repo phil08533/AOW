@@ -14,14 +14,14 @@
   levelAnims.push(t => { strobe.intensity = (Math.floor(t * 8) % 7 === 0) ? 2.2 : 0; wash.color.set(cols[Math.floor(t * 0.5) % 5]); });
   // the crowd on the floor
   const looks = [['#ff3b8a', '#1e1c22', '#e0b892', '#1e1a18'], ['#3bd2ff', '#3a2a4a', '#8a5a3a', '#ffd36a'], ['#ffd23a', '#2c2a28', '#c58a64', '#c8402f'], ['#8a3bff', '#1e1c22', '#9fe8ff', '#e8e4dc'], ['#3bff8a', '#3a3d44', '#e0b892', '#5a3a22'], ['#e8e4dc', '#c8402f', '#8a5a3a', '#1e1a18']];
-  for (let k = 0; k < 14; k++) { const L = looks[k % looks.length], o = buildChar(() => makeCivilian(...L, cols[k % 5]), 'civ'), a = k * 2.39, r = 1.2 + (k % 4) * 1.2, bx = Math.cos(a) * r, bz = 6.5 + Math.sin(a) * r * 0.9, ph = k * 0.7, st = {};
+  for (let k = 0; k < 14; k++) { const L = looks[k % looks.length], o = buildChar(() => makeCivilian(...L, cols[k % 5]), 'civ'), a = k < 6 ? k * 1.047 : (k - 6) * 0.785 + 0.39, r = k < 6 ? 2.6 : 4.3, bx = Math.cos(a) * r, bz = 6.5 + Math.sin(a) * r * 0.9, ph = k * 0.7, st = {};
     o.position.set(bx, 0.06, bz); levelGroup.add(o);
     levelAnims.push(t => { const b = Math.abs(Math.sin(t * 4.2 + ph)); o.position.y = 0.06 + b * 0.18; o.rotation.y = ph + Math.sin(t * 1.1 + ph) * 1.4; o.rotation.z = Math.sin(t * 4.2 + ph) * 0.08; animRig(o, st, 0.016, t); }); }
 }; }
 // the President of the New United States is here, and he is having a very good time
 function makePrez() { const g = makeCivilian('#1e2a4a', '#1e2a4a', '#e8b896', '#e8e0c8', '#c8402f'); part(g, B(0.08, 0.5, 0.03), '#c8402f', 0.03, 1.3, 0.14); part(g, B(0.52, 0.08, 0.3), toon('#e8e4dc', 'cloth'), 0, 1.5, 0, 0, 0, 0.5); part(g, B(0.2, 0.06, 0.04), glow('#ffd36a'), -0.12, 1.42, 0.14); for (const s of [-1, 1]) part(g, B(0.1, 0.05, 0.03), '#1e1c22', s * 0.06, 1.79, 0.13); const v = part(g, Cy(0.03, 0.03, 0.12, 6), glow('#c86aff'), 0.36, 0.95, 0.12); return g; }
 { const _bn = barNpcs; barNpcs = function () { const list = _bn();
-  list.push({ id: 'prez', name: 'President Duke Starling', role: 'President of the New United States · off duty', rig: 'civ', make: makePrez, x: 1.5, z: 6.5, face: 2.6,
+  list.push({ id: 'prez', name: 'President Duke Starling', role: 'President of the New United States · off duty', rig: 'civ', make: makePrez, x: 0, z: 6.5, face: Math.PI,
     custom: [['🎉 Party with the President', () => partyWithPrez()]],
     idle: ["THIS SONG! THIS IS MY SONG! Every song is my song tonight!", "Don't tell the Senate I'm here. Don't tell the Senate I'm anywhere.", "You wanna know the secret to running a country? Neither do I. Have some Nebula Dust.", "I signed three bills today. With my FEET. Dancing feet.", "Zeltac moon-moss, trooper. It's not illegal if you're in orbit. I checked. I made it legal. I'm the president."] });
   list.push({ id: 'djnova', name: 'DJ Nova', role: 'On the decks', rig: 'xr17', make: () => recolor(makeXR17(), { '#9aa1aa': '#ff3b8a', '#5d636c': '#1e1c22' }), x: 0, z: 22.4, face: Math.PI, idle: ["NEXT TRACK: ALSO BANGING.", "I HAVE 4,000 SONGS. I PLAY FOUR. THE PEOPLE KNOW WHAT THEY WANT."] });

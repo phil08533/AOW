@@ -95,7 +95,7 @@ LEVELS.zfloor = {
       part(props, B(0.2, 3, 4), glow('#ff3b2a'), -W + 0.4, 2, 0);
     }
     // crowd on safe decks
-    if (th !== 'engine' && th !== 'aliens' && th !== 'bridge' && th !== 'bar' && th !== 'homes') { const ppl = []; for (let i = 0; i < 8; i++) { const o = buildChar(() => makeCivilian(['#c8402f', '#3b4f7a', '#5a6a3a', '#8a6fc4'][i % 4], '#2c2a28', ['#e0b892', '#8a5a3a', '#9fe8ff'][i % 3], '#1e1a18'), 'civ'); o.position.set(-20 + i * 5, 0, -2 + (i % 2) * 4); blob(o, 0.45); levelGroup.add(o); ppl.push(o); MOVERS.push([o, 0.45]); }
+    if (th !== 'engine' && th !== 'aliens' && th !== 'bridge' && th !== 'bar' && th !== 'homes' && th !== 'under') { const ppl = []; for (let i = 0; i < 8; i++) { const o = buildChar(() => makeCivilian(['#c8402f', '#3b4f7a', '#5a6a3a', '#8a6fc4'][i % 4], '#2c2a28', ['#e0b892', '#8a5a3a', '#9fe8ff'][i % 3], '#1e1a18'), 'civ'); o.position.set(-20 + i * 5, 0, -2 + (i % 2) * 4); blob(o, 0.45); levelGroup.add(o); ppl.push(o); MOVERS.push([o, 0.45]); }
       const sts = ppl.map(() => ({}));
       levelAnims.push(t => ppl.forEach((o, i) => { const a = t * 0.15 + i * 0.8, x = Math.cos(a) * (8 + i), z = Math.sin(a) * (5 + i % 3); o.rotation.y = Math.atan2(-Math.sin(a) * (8 + i), Math.cos(a) * (5 + i % 3)); o.position.set(x, 0, z); animRig(o, sts[i], 1 / 60, t); })); }
   }

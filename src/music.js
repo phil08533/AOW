@@ -36,7 +36,7 @@ function musContext(dt) {
   if (state === 'menu') return null;
   // romance: talking to your love interest, or they're close by
   const love = id => { const M = romS()[id]; return M && (M.partner || romStage(M.aff) >= 3); };
-  let rom = MUS.romDlg; if (!rom) for (const k in npcObjs) { const N = npcObjs[k]; if (N.def && N.def.romId && love(N.def.romId) && N.obj.visible && N.obj.position.distanceTo(player.pos) < 7) { rom = true; break; } }
+  const rom = MUS.romDlg; // only while you're actually talking to them
   if (rom) return 'romance';
   // fights: a boss in the fight, or anything hunting you
   if (state === 'play' && !LEVEL.fly) {

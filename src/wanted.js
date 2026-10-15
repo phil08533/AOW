@@ -132,12 +132,7 @@ Object.assign(ENEMY, {
   if (th === 'under') return [];
   return _zs(n, th); }; }
 { const _zb = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _zb.call(this); const th = zTheme(ZF.floor);
-  if (th === 'under') {
-    for (let i = 0; i < 10; i++) { const x = -24 + (i % 5) * 12, z = i < 5 ? -18 : 14; part(props, B(1.2, 1.2, 1.2), toon('#3a2e26'), x, 0.6, z, 0, i); box(x, z, 0.6, 0.6); }
-    part(props, B(10, 1.1, 1.4), toon('#2a1e2a'), 0, 0.55, -16); box(0, -16, 5, 0.7); const sg = new THREE.Mesh(new THREE.PlaneGeometry(7, 1.2), new THREE.MeshBasicMaterial({ map: signTex('THE UNDERCROFT', '#1a0a20', '#c86aff') })); sg.position.set(0, 4.2, -27.6); props.add(sg);
-    part(props, B(3, 1.8, 0.1), toon('#1e1c22'), -14, 1.6, -27.5); INTERACTS.push({ x: -14, z: -25.5, r: 2.4, label: 'Hit board (contracts on players)', fn: () => openHitBoard() });
-    for (const [x, z, c] of [[-10, -10, 0xc86aff], [10, -10, 0xff6aa8], [0, 8, 0xc86aff]]) { const l = new THREE.PointLight(c, 1.0, 22); l.position.set(x, 5, z); levelGroup.add(l); }
-  }
+  // the Undercroft itself is built in undercroft.js
   if (th === 'archive') {
     for (let i = 0; i < 12; i++) { const x = -24 + (i % 6) * 9.6, z = i < 6 ? -10 : 6; part(props, B(1.2, 4.5, 6), toon('#5a4a3a', 'wood'), x, 2.25, z); for (let k = 0; k < 4; k++) part(props, B(1.25, 0.08, 6), toon('#3a2e26'), x, 0.6 + k * 1.1, z); box(x, z, 0.6, 3); }
     part(props, B(6, 1.0, 2.4), toon('#3a4a7a'), 0, 0.5, -22); part(props, B(6.2, 0.06, 2.6), toon('#c9a43a'), 0, 1.02, -22); box(0, -22, 3, 1.2);

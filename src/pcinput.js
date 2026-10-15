@@ -1,15 +1,12 @@
 // =================== PC CONTROLS: the mouse goes straight back to aiming when a menu closes ===================
 // Before: closing a menu left the mouse free, so your first click both grabbed the mouse AND fired a shot.
-// Now: closing any menu re-captures the mouse, a click that only grabs the mouse never fires, and Esc opens the pause menu in one press.
+// Now: closing a menu takes the mouse back for aiming on its own (the click or key that closed it counts as the gesture the browser needs).
+// If the browser still says no (it does for a moment after Esc), the cursor stays hidden and the next click only grabs the mouse, never fires.
 let lockWorks = false, lockDrop = 0;
 document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement === stage) lockWorks = true; });
 { const _ex = document.exitPointerLock.bind(document); document.exitPointerLock = function () { lockDrop = performance.now(); return _ex(); }; }
 const uiBusy = () => dlgOpen || chatOpen() || !$('menuDrop').hidden || !!document.getElementById('ending') || (typeof CUT !== 'undefined' && CUT.on) || (typeof PHOTO !== 'undefined' && PHOTO.on) || (typeof baseState !== 'undefined' && baseState.on);
 function relock() { if (TOUCH || state !== 'play' || uiBusy() || document.pointerLockElement) return; lock(); }
-{ const _c = closeDlg; closeDlg = function (...a) { const r = _c.apply(this, a); setTimeout(relock, 30); return r; }; }
-// any click on a HUD button that doesn't open something else puts you back in the fight
-window.addEventListener('click', e => { if (e.target === stage) return; setTimeout(relock, 60); });
-$('chatIn').addEventListener('keydown', e => { if (e.key === 'Enter') setTimeout(relock, 30); });
 // the first click after a menu only grabs the mouse; it doesn't shoot
 stage.addEventListener('mousedown', e => { if (TOUCH || state !== 'play' || uiBusy() || document.pointerLockElement || !lockWorks) return; lock(); e.stopImmediatePropagation(); }, true);
 // Esc while aiming: the browser frees the mouse and swallows the key, so open the pause menu right away instead of needing a second Esc
@@ -36,6 +33,7 @@ function pickSlot(want) {
 window.addEventListener('keydown', e => {
   if (e.repeat || chatOpen() || (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName))) return;
   const n = /^Digit([1-9])$/.exec(e.code); if (!n || state !== 'play') return;
+  if (!$('menuDrop').hidden) { if (typeof tabletNum === 'function') tabletNum(+n[1]); e.preventDefault(); e.stopImmediatePropagation(); return; }
   if (dlgOpen) { const bs = [...$('dlgActs').querySelectorAll('button')].filter(b => !b.disabled); const b = bs[+n[1] - 1]; if (b) { b.click(); e.preventDefault(); e.stopImmediatePropagation(); } return; }
   if (n[1] === '1') pickSlot('gun'); else if (n[1] === '2') pickSlot('staff'); else if (n[1] === '3') pickSlot('melee');
 }, true);
@@ -49,3 +47,9 @@ window.addEventListener('keydown', e => {
 window.addEventListener('keydown', e => { if (e.code === 'KeyI' && !e.repeat && state === 'play' && !dlgOpen && !chatOpen()) openBag(); });
 { let pausedAt = 0; document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement) pausedAt = performance.now(); });
   window.addEventListener('keydown', e => { if (e.code === 'Escape' && state === 'pause' && performance.now() - pausedAt < 350) e.stopImmediatePropagation(); }, true); }
+// aim comes back by itself the moment a menu closes
+{ let wasBusy = true;
+  setInterval(() => { const busy = state !== 'play' || uiBusy(); if (wasBusy && !busy) relock(); wasBusy = busy; document.body.classList.toggle('aimfree', !TOUCH && !busy && !document.pointerLockElement); }, 50);
+  for (const ev of ['pointerup', 'keyup']) window.addEventListener(ev, () => setTimeout(relock, 0), true);
+  const st = document.createElement('style'); st.textContent = 'body.aimfree #stage{cursor:none}'; document.head.appendChild(st); }
+{ const _cd = closeDlg; closeDlg = function () { const r = _cd(); setTimeout(relock, 0); return r; }; }

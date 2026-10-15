@@ -6,7 +6,7 @@ const HUD_SIZES = [['Small', 0.72], ['Medium', 0.86], ['Large', 1]];
 function applyHudSize() {
   const z = HUD_SIZES[PREFS.hudSize][1];
   $('hudsizecss').textContent = `#hud > *:not(#toast):not(#zone):not(#menuDrop):not(.hudbtns), #hud .hudbtns > *:not(#menuDrop), #touch > * { zoom: ${z}; }
-  ${PREFS.compact ? '#quest ul, #quest .ch, #log, #clock, #online { display: none !important; } #ctape { opacity: .75; }' : ''}`;
+  ${PREFS.compact ? '#quest ul, #quest .ch, #clock, #online { display: none !important; } #log > :not(.chat) { display: none !important; } #ctape { opacity: .75; }' : ''}`;
 }
 applyHudSize();
 { const anchor = $('setMusic').previousElementSibling; const mk = (label, id, fn) => { const l = document.createElement('span'); l.textContent = label; const b = document.createElement('button'); b.className = 'pbtn'; b.id = id; b.addEventListener('click', () => { fn(); savePrefs(); applyHudSize(); renderSettings(); SFX.ui(); }); anchor.before(l, b); };

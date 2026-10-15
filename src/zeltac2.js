@@ -8,7 +8,7 @@ const ZTHEMES = {
   aliens: { name: 'Alien Quarter', col: '#7a2a2a', floor: '#3a2a2a', neon: '#ff3b2a', safe: false }
 };
 ZTHEMES.bar = { name: 'Starlight Lounge', col: '#5a2a4a', floor: '#2a1a24', neon: '#ff6aa8', safe: true };
-const ZLIST = [null, 'plaza', 'market', 'homes', 'hydro', 'bar', 'arcade', 'engine', 'aliens', 'bridge'], ZTOP = ZLIST.length - 1;
+const ZLIST = [null, 'plaza', 'market', 'homes', 'hydro', 'bar', 'arcade', 'engine', 'aliens', 'under', 'archive', 'bridge'], ZTOP = ZLIST.length - 1;
 const zTheme = n => ZLIST[n] || 'market';
 const ZF = { floor: 1 };
 function zFloorName(n) { if (n === 1) return 'Zeltac Plaza'; if (n === ZTOP) return "Captain's Bridge"; return `Floor ${n} · ${ZTHEMES[zTheme(n)].name}`; }

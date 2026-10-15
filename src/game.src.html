@@ -84,9 +84,10 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outl
 #log .loot { color: var(--gold); }
 #log .chat b { color: var(--ally); font-weight: 600; }
 #log .ai { color: #b8f0ff; } #log .ai b { color: #6fdc5a; }
-#toast { position: absolute; left: 50%; top: 34%; transform: translate(-50%, -50%); text-align: center; opacity: 0; transition: opacity .3s; width: 92vw; }
-#toast .big { font-size: clamp(30px, 8vw, 58px); font-weight: 700; letter-spacing: .04em; line-height: 1; color: #fff; text-shadow: 3px 3px 0 #000, 0 0 18px rgba(255,154,60,.6); }
-#toast .sm { font-size: 17px; color: var(--gold); text-shadow: 2px 2px 0 #000; }
+#toast { position: absolute; left: 50%; top: auto !important; bottom: calc(env(safe-area-inset-bottom, 0px) + 100px); transform: translateX(-50%); text-align: center; opacity: 0; transition: opacity .3s; width: auto; max-width: min(70vw, 520px); padding: 5px 14px 6px; border-radius: 10px; background: rgba(8,14,26,.5); border: 1px solid rgba(255,255,255,.12); pointer-events: none; }
+#toast .big { font-size: 14px !important; font-weight: 700; letter-spacing: .14em; line-height: 1.2; color: #ffe7b0; text-shadow: none !important; }
+#toast .sm { font-size: 12px !important; color: rgba(232,236,248,.85); text-shadow: none; }
+#toast .sm:empty { display: none; }
 body.flying #talk { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 38%); padding: 5px 12px; font-size: 13px; opacity: 0.85; }
 #talk { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); transform: translateX(-50%); pointer-events: auto; cursor: pointer; padding: 8px 16px; font-size: 16px; font-weight: 600; color: var(--text); }
 #talk kbd { font-family: var(--num); font-size: 18px; padding: 0 5px; border: 1px solid var(--edge); margin-left: 8px; }
@@ -306,7 +307,7 @@ body.flying #tBoost { display: grid; }
       <div class="field"><label for="nickIn">Callsign</label><input id="nickIn" maxlength="16" autocomplete="off"></div>
       <div class="field"><label>Armor color</label><div class="swatches" id="swatches"></div></div>
       <span id="saveNote"></span>
-      <button class="cta win blink" id="playBtn">Press Start</button>
+      <button class="cta win" id="playBtn">Press Start</button>
       <div class="keys" id="keysDesk">
         <b>WASD</b><span>Move · Shift to sprint</span>
         <b>Mouse</b><span>Aim · click to fire</span>
@@ -328,7 +329,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 1.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.13.12</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -367,6 +368,22 @@ body.flying #tBoost { display: grid; }
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
 <script>
+// Phones (iPhone most of all) hide the dev console, so the first real error shows on screen where a tester can screenshot it.
+(function () {
+  let shown = 0;
+  function show(msg) {
+    if (shown++ > 2 || !document.body) return;
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;left:8px;right:8px;top:8px;z-index:99999;background:#3a0b12;color:#ffd6d6;border:1px solid #ff5a6a;border-radius:8px;padding:10px 12px;font:12px/1.4 monospace;white-space:pre-wrap;word-break:break-word';
+    d.textContent = 'Something broke (tap to hide). Send a screenshot of this to the devs:\n' + msg + '\n' + navigator.userAgent;
+    d.onclick = () => d.remove(); document.body.appendChild(d);
+  }
+  window.addEventListener('error', e => { if (!e || !e.message) { if (e && e.target && e.target.tagName === 'SCRIPT') show('Could not load ' + e.target.src + ' (blocked or offline?)'); return; } show(e.message + ' @' + (e.lineno || '?') + ':' + (e.colno || '?')); }, true);
+  window.addEventListener('unhandledrejection', e => { const r = e && e.reason; if (r && r.name === 'NotAllowedError') return; show('Promise: ' + (r && (r.stack || r.message) || r)); });
+  window.addEventListener('load', () => { if (typeof THREE === 'undefined') show('The 3D engine (three.js) did not load. A content blocker or a weak connection can cause this; try turning off blockers and reloading.'); });
+})();
+</script>
+<script>
 (function () {
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -382,6 +399,7 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.autoClear = false;
 if (RSTYLE !== 'retro') { renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.physicallyCorrectLights = false; }
 stage.appendChild(renderer.domElement);
+renderer.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); const d = document.createElement('div'); d.style.cssText = 'position:fixed;inset:0;z-index:99998;display:flex;align-items:center;justify-content:center;background:rgba(5,8,20,.92);color:#fff;font:16px/1.5 sans-serif;text-align:center;padding:24px'; d.innerHTML = '<div>The phone ran out of graphics memory.<br>Your progress is saved.<br><br><b>Tap to reload</b><br><small>Tip: Menu → Settings → Look → PS1 Classic uses the least memory.</small></div>'; d.onclick = () => location.reload(); document.body.appendChild(d); try { writeLocal(); } catch (_) {} }, false);
 const scene = new THREE.Scene();
 const HORIZON = new THREE.Color('#f0a15e');
 scene.fog = new THREE.Fog(HORIZON, 20, 74);
@@ -637,20 +655,26 @@ const GFX = [
 ];
 const gfxNow = () => GFX[PREFS.gfx == null ? 1 : PREFS.gfx] || GFX[1];
 const postMat = new THREE.ShaderMaterial({
-  uniforms: { tex: { value: low.texture }, res: { value: new THREE.Vector2(320, 240) }, bloom: { value: 0 }, sat: { value: 1 }, con: { value: 1 }, warm: { value: 0 }, dith: { value: 1 }, q: { value: 31 }, vig: { value: 0.35 }, scan: { value: 0 } }, depthTest: false, depthWrite: false,
+  uniforms: { tex: { value: low.texture }, res: { value: new THREE.Vector2(320, 240) }, bloom: { value: 0 }, sat: { value: 1 }, con: { value: 1 }, warm: { value: 0 }, dith: { value: 1 }, q: { value: 31 }, vig: { value: 0.35 }, scan: { value: 0 }, hue: { value: 0 }, wob: { value: 0 }, ghost: { value: 0 }, tint: { value: new THREE.Color(1, 1, 1) }, tintA: { value: 0 }, dark: { value: 0 }, ftime: { value: 0 } }, depthTest: false, depthWrite: false,
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
   fragmentShader: [
-    'uniform sampler2D tex; uniform vec2 res; uniform float bloom, sat, con, warm, dith, q, vig, scan; varying vec2 vUv;',
+    'uniform sampler2D tex; uniform vec2 res; uniform float bloom, sat, con, warm, dith, q, vig, scan, hue, wob, ghost, tintA, dark, ftime; uniform vec3 tint; varying vec2 vUv;',
+    'vec3 hueRot(vec3 c, float a){ const vec3 k = vec3(0.57735); float ca = cos(a); return c * ca + cross(k, c) * sin(a) + k * dot(k, c) * (1.0 - ca); }',
     'float b2(vec2 a){ a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }',
     'float b4(vec2 a){ return b2(0.5 * a) * 0.25 + b2(a); }',
     'vec3 bright(vec2 uv){ vec3 s = texture2D(tex, uv).rgb; float l = max(max(s.r, s.g), s.b); return s * smoothstep(0.62, 1.0, l); }',
     'void main(){',
-    '  vec2 px = floor(vUv * res);',
+    '  vec2 uw = vUv; if (wob > 0.0) uw += wob * 0.008 * vec2(sin(uw.y * 17.0 + ftime * 2.1), cos(uw.x * 13.0 + ftime * 1.7));',
+    '  vec2 px = floor(uw * res);',
     '  vec3 c = texture2D(tex, (px + 0.5) / res).rgb;',
+    '  if (ghost > 0.0) { vec2 g = vec2(ghost * 0.014 * sin(ftime * 0.9), ghost * 0.008); vec3 a = texture2D(tex, (px + 0.5) / res + g).rgb, b = texture2D(tex, (px + 0.5) / res - g).rgb; c = mix(c, vec3(a.r, c.g, b.b), 0.6) * 0.75 + (a + b) * 0.125 * ghost; }',
     '  if (bloom > 0.0) { vec3 b = vec3(0.0); vec2 o = 1.0 / res;',
     '    vec2 uv0 = (px + 0.5) / res; for (int i = -1; i <= 1; i++) for (int j = -1; j <= 1; j++) { vec2 d = vec2(float(i), float(j)); b += bright(uv0 + d * o * 2.5) * (1.0 - length(d) * 0.3); }',
     '    c += b / 5.0 * bloom; }',
     '  float l = dot(c, vec3(0.299, 0.587, 0.114)); c = mix(vec3(l), c, sat); c = (c - 0.5) * con + 0.5; c += vec3(warm, warm * 0.35, -warm);',
+    '  if (hue != 0.0) c = clamp(hueRot(c, hue), 0.0, 1.0);',
+    '  if (tintA > 0.0) c = mix(c, c * tint * 1.6, tintA);',
+    '  if (dark > 0.0) { float dl = dot(c, vec3(0.299, 0.587, 0.114)); c = mix(c, vec3(dl) * vec3(0.7, 0.75, 0.9), dark * 0.8) * (1.0 - dark * 0.45); }',
     '  if (dith > 0.5) c += (b4(px) - 0.5) / q;',
     '  c = floor(c * q + 0.5) / q;',
     '  if (scan > 0.0) c *= 1.0 - scan * step(0.5, fract(px.y * 0.5));',
@@ -708,8 +732,8 @@ const GUNS = {
   c10: { name: 'Lvl 10 Carbine', dmg: 34, rate: 0.12, mag: 26, reload: 1.15, req: 6, price: 450 },
   r15: { name: 'Lvl 15 Rifle', dmg: 46, rate: 0.11, mag: 32, reload: 1.1, req: 9, price: 1100 },
   h20: { name: 'Lvl 20 Hive Repeater', dmg: 58, rate: 0.1, mag: 40, reload: 1.1, req: 12, price: 2400 },
-  s25: { name: 'Lvl 25 Stinger Rifle', dmg: 75, rate: 0.14, mag: 24, reload: 1.2, req: 15, price: 4200 },
-  f30: { name: 'Lvl 30 Frost Carbine', dmg: 92, rate: 0.1, mag: 36, reload: 1.1, req: 20, price: 7000 },
+  s25: { name: 'Lvl 25 Stinger Rifle', dmg: 95, rate: 0.14, mag: 24, reload: 1.2, req: 15, price: 4200 },
+  f30: { name: 'Lvl 30 Frost Carbine', dmg: 80, rate: 0.1, mag: 36, reload: 1.1, req: 20, price: 7000 },
   p35: { name: 'Lvl 35 Plasma Rifle', dmg: 120, rate: 0.13, mag: 30, reload: 1.2, req: 24, price: 11000 }
 };
 const ENEMY = {
@@ -908,7 +932,7 @@ function spawnDrop(p, kind, id, n) {
 
 // =================== HUD helpers ===================
 let toastT = 0;
-function toast(big, sm, dur) { $('toastBig').textContent = big; $('toastSm').textContent = sm || ''; $('toast').style.opacity = 1; toastT = dur || 2.4; }
+function toast(big, sm, dur) { $('toastBig').textContent = big; $('toastSm').textContent = sm || ''; $('toast').style.opacity = 0.82; toastT = Math.min(dur || 2.4, 3); }
 let hitT = 0;
 function hitmark(kill) { const h = $('hitmark'); h.classList.toggle('kill', !!kill); h.style.opacity = 1; hitT = 0.12; }
 function log(text, cls, who) {
@@ -1010,12 +1034,12 @@ function openStore(tab, who) {
   const render = () => {
     $('dlgLine').textContent = tab === 'sell' ? `${who} buys all loot. You have ${S.cr} cr.` : `Supplies. You have ${S.cr} cr.`;
     if (tab === 'sell') {
-      const list = Object.entries(S.inv).filter(([k]) => ITEMS[k] && !ITEMS[k].quest && k !== 'medkit').map(([k, n]) => [k, n, sellPrice(k) + ' cr each' + (ITEMS[k].fish ? ' (fish buyers pay double)' : ''), [['Sell 1', () => sell(k, 1)], ['All', () => sell(k, n)]]]);
+      const list = Object.entries(S.inv).filter(([k]) => ITEMS[k] && !ITEMS[k].quest && !ITEMS[k].illegal && k !== 'medkit').map(([k, n]) => [k, n, sellPrice(k) + ' cr each' + (ITEMS[k].fish ? ' (fish buyers pay double)' : ''), [['Sell 1', () => sell(k, 1)], ['All', () => sell(k, n)]]]);
       itemRows(rows, list);
-    } else itemRows(rows, [['medkit', S.inv.medkit || 0, '25 cr', [['Buy', () => { if (S.cr >= 25) { S.cr -= 25; S.inv.medkit = (S.inv.medkit || 0) + 1; markDirty(); render(); } }, S.cr < 25]]]]);
+    } else itemRows(rows, [['medkit', S.inv.medkit || 0, '25 cr', [['Buy', () => { if (S.cr >= 25) { S.cr -= 25; S.inv.medkit = (S.inv.medkit || 0) + 1; markDirty(); render(); } }, S.cr < 25]]]].concat(subStoreRows(render)));
   };
   const sell = (k, n) => { n = Math.min(n, S.inv[k] || 0); S.cr += n * sellPrice(k); S.inv[k] -= n; if (!S.inv[k]) delete S.inv[k]; log(`Sold ${n} ${ITEMS[k].name} for ${n * sellPrice(k)} cr`, 'loot'); markDirty(); render(); renderQuest(); };
-  const sellAll = () => { let total = 0; for (const [k, n] of Object.entries(S.inv)) if (ITEMS[k] && !ITEMS[k].quest && k !== 'medkit' && !questNeeds(k)) { total += n * sellPrice(k); delete S.inv[k]; } if (total) { S.cr += total; log(`Sold loot for ${total} cr`, 'loot'); markDirty(); } render(); };
+  const sellAll = () => { let total = 0; for (const [k, n] of Object.entries(S.inv)) if (ITEMS[k] && !ITEMS[k].quest && !ITEMS[k].illegal && !ITEMS[k].food && k !== 'medkit' && !questNeeds(k)) { total += n * sellPrice(k); delete S.inv[k]; } if (total) { S.cr += total; log(`Sold loot for ${total} cr`, 'loot'); markDirty(); } render(); };
   acts([['Sell', () => { tab = 'sell'; render(); }], ['Buy medkits', () => { tab = 'buy'; render(); }], ['Sell all loot', sellAll, true], ['Done', closeDlg]]);
   $('dlgActs').before(rows); rows.id = 'shopRows'; render();
   const kill = () => { rows.remove(); }; const prev = closeDlg; $('dlg').addEventListener('close', kill, { once: true });
@@ -1227,7 +1251,7 @@ window.addEventListener('keydown', e => {
   if (dlgOpen) { if (e.repeat) return; const go = $('dlgActs').querySelector('.go:not(:disabled)');
     if (e.code === 'Escape') { closeDlg(); e.stopImmediatePropagation(); } else if ((e.code === 'KeyE' || e.code === 'Space') && go) { go.click(); e.preventDefault(); } else if (e.code === 'KeyE') closeDlg(); return; }
   keys[e.code] = true;
-  if (e.code === 'KeyR') { if (baseState.on) { baseState.rot ^= 1; } else reload(); }
+  if (e.code === 'KeyR') { if (baseState.on) { baseState.rot = ((baseState.rot | 0) + 1) % 4; } else reload(); }
   if (e.code === 'KeyG') setBuild(!baseState.on);
   if (e.code === 'KeyX') { if (baseState.on) { baseState.remove = !baseState.remove; renderBuildBar(); } else toggleBike(); }
   if (e.code === 'Escape' && baseState.on) { setBuild(false); }
@@ -1378,7 +1402,7 @@ try {
 } catch (_) {}
 $('buildBtn').addEventListener('click', () => { if (!dlgOpen) setBuild(!baseState.on); });
 $('bPlace').addEventListener('click', placePiece);
-$('bRotate').addEventListener('click', () => { baseState.rot ^= 1; SFX.ui(); });
+$('bRotate').addEventListener('click', () => { baseState.rot = ((baseState.rot | 0) + 1) % 4; SFX.ui(); });
 $('bRemove').addEventListener('click', () => { baseState.remove = !baseState.remove; SFX.ui(); renderBuildBar(); });
 $('bDone').addEventListener('click', () => setBuild(false));
 $('menuBtn').addEventListener('click', () => { if (!dlgOpen && !chatOpen()) setState('pause'); });
@@ -1429,7 +1453,7 @@ function fire() {
   if (!S.clip) player.ammo--; player.cool = g.rate * (hasGear('eye') ? 0.85 : 1); kick = 1;
   SFX.shot(); flash.visible = true; flashLight.intensity = 2.2; setTimeout(() => { flash.visible = false; flashLight.intensity = 0; }, 45);
   const o = camera.getWorldPosition(V(0, 0, 0)), base = V(0, 0, 0); camera.getWorldDirection(base);
-  const shots = g.pellets || 1, spr = g.spread || 0.012, dmg0 = g.dmg * (1 + (S.lvl - 1) * 0.06) * (1 + 0.12 * gunTier(S.gun)) * (hasGear('ring') ? 1.15 : 1);
+  const shots = g.pellets || 1, spr = g.spread || 0.012, dmg0 = g.dmg * (1 + (S.lvl - 1) * 0.045) * (1 + 0.08 * gunTier(S.gun)) * (hasGear('ring') ? 1.15 : 1) * subDmg();
   let any = false, killed = false;
   for (let p = 0; p < shots; p++) {
     dirV.copy(base); dirV.x += (Math.random() - 0.5) * spr; dirV.y += (Math.random() - 0.5) * spr; dirV.z += (Math.random() - 0.5) * spr; dirV.normalize();
@@ -1465,7 +1489,7 @@ function kill(e) {
   const p = e.obj.position.clone();
   burst(p.clone().add(V(0, e.def.hy, 0)), '#f6b56a', 14, 6);
   // loot
-  const crN = Math.round(rand(e.def.cr[0], e.def.cr[1]) * (1 + 0.2 * (e.lv - 1)));
+  const crN = Math.round(rand(e.def.cr[0], e.def.cr[1]) * (1 + 0.2 * (e.lv - 1)) * subCr());
   spawnDrop(p, 'cr', null, crN);
   for (const [id, ch] of e.def.drops || []) {
     if (ITEMS[id].quest && (S.inv[id] || !questWants(id))) continue;
@@ -1473,10 +1497,17 @@ function kill(e) {
   }
   if (Math.random() < 0.08) spawnDrop(p, 'item', 'medkit', 1);
   questProgressKill(e.sp.type); if (e.sp.bounty) setTimeout(bountyDone, 1600);
-  gainXp(Math.round(e.def.xp * (1 + 0.3 * (e.lv - 1))));
+  gainXp(killXp(e));
   if (e.def.boss || e.def.elite) burp('boss');
   if (e.def.boss || e.def.elite) toast(e.def.name.toUpperCase() + ' DEFEATED', 'Grab the loot', 3.5);
   checkReady(); markDirty();
+}
+// Kill XP falls off when you out-level the enemy, and a boss is worth about one level of its own.
+function killXp(e) {
+  let x = e.def.xp * (1 + 0.3 * (e.lv - 1));
+  if (e.def.boss) x = Math.min(x, xpNeed(e.lv));
+  const over = S.lvl - e.lv - 2; if (over > 0) x *= Math.max(0.05, 1 - 0.2 * over);
+  return Math.max(1, Math.round(x));
 }
 function gainXp(n) {
   S.xp += n;
@@ -1490,7 +1521,7 @@ function hurt(dmg, src) {
   if (player.hp > 0 && player.hp < maxHp() * 0.28) burp('low_hp');
   if (player.hp <= 0) {
     player.hp = 0; player.alive = false;
-    const lost = LEVEL.id === 'arena' ? 0 : Math.floor(S.cr * 0.1); S.cr -= lost; markDirty(); if (LEVEL.id === 'arena') arenaOnDeath();
+    const lost = LEVEL.id === 'arena' ? 0 : Math.floor(S.cr * 0.1); S.cr -= lost; markDirty(); if (LEVEL.id === 'arena') arenaOnDeath(); else if (typeof outlawOnDeath === 'function') outlawOnDeath();
     $('deadTxt').textContent = lost ? `You dropped ${lost} cr. Bank your credits with Old Nash to keep them safe.` : 'Heal up in the Safe Zone and get back out there.';
     setState('dead'); setTimeout(() => burp('death'), 300);
   }
@@ -1524,15 +1555,15 @@ function step(dt) {
   let mx = frozen ? 0 : (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x, mz = frozen ? 0 : (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0) + move.y;
   const ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; }
   fwd.set(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)); right.set(-fwd.z, 0, fwd.x);
-  const speed = ((sprint || (TOUCH && Math.hypot(move.x, move.y) > 0.95)) ? 7.4 : 4.8) * (player.wet ? 0.6 : 1) * (baseState.on ? 0.8 : 1) * (hasGear('cape') ? 1.12 : 1) * (RACE.on ? 2.3 : 1) * (S.riding ? 2.6 : 1) * (hasGear('gboots') ? 1.15 : 1);
+  const speed = ((sprint || (TOUCH && Math.hypot(move.x, move.y) > 0.95)) ? 7.4 : 4.8) * (player.wet ? 0.6 : 1) * (baseState.on ? 0.8 : 1) * (hasGear('cape') ? 1.12 : 1) * (RACE.on ? 2.3 : 1) * (S.riding ? 2.6 : 1) * (hasGear('gboots') ? 1.15 : 1) * subSpeed();
   vmSub.visible = !!S.inSub; if (S.inSub) vm.visible = false; vmCar.visible = !!RC.on; if (RC.on || VH.on) vm.visible = false; if (!VH.on) for (const k in vmVeh) vmVeh[k].visible = false; updateAir(dt);
   let ground = 0;
   if (S.inSub) { subStep(dt, mx, mz, sprint); ground = player.pos.y; } else if (RC.on && LEVEL.id === 'speedway') { raceDrive(dt); ground = player.pos.y; } else if (VH.on) { vehStep(dt, mx, mz); ground = player.pos.y; } else if (swimHere()) { swimStep(dt, mx, mz, sprint); ground = player.pos.y; } else {
   player.pos.addScaledVector(fwd, mz * speed * dt).addScaledVector(right, mx * speed * dt);
   collide(player.pos, 0.35, false);
-  ground = floorAt(player.pos.x, player.pos.z); const swim = ground < WATER_Y - 1.15 && !inDome(); if (swim) ground = WATER_Y - 1.15;
+  ground = floorAt(player.pos.x, player.pos.z); const swim = ground < WATER_Y - 1.15 && !inDome(); if (swim && !LEVEL.ocean) ground = WATER_Y - 1.15; // ocean: stepping out of a dome you stay at the bottom and start swimming
   const wasWet = player.wet; player.wet = ground < WATER_Y - 0.25; if (player.wet && !wasWet) SFX.splash(); }
-  for (const [lx, lz, lr] of LAVA) if (Math.hypot(player.pos.x - lx, player.pos.z - lz) < lr && player.pos.y < 2.9) hurt(22 * dt, false);
+  for (const [lx, lz, lr, ly] of LAVA) if (Math.hypot(player.pos.x - lx, player.pos.z - lz) < lr && player.pos.y < (ly != null ? ly : 2.55) + 0.35) hurt(22 * dt, false);
   const hover = hasGear('jet') && !player.onGround && (keys.Space || jetHeld) && player.jet > 0;
   if (hover) { player.jet -= dt; player.vy = Math.max(player.vy, 1.2); if (Math.random() < 0.4) burst(player.pos.clone().add(V(0, 0.4, 0)), '#ff9a3c', 1, 1.5); }
   if (!S.inSub && !RC.on && !VH.on && !swimHere()) { player.vy -= 18 * (LEVEL.gravity || 1) * dt; player.pos.y += player.vy * dt; }
@@ -1565,10 +1596,11 @@ function step(dt) {
   for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible) continue; const d = N.obj.position.distanceTo(player.pos); if (d < nd) { nd = d; nearNpc = id; } }
   nearAct = null; if (!nearNpc) { let ad = 1e9; for (const a of INTERACTS) { const d = Math.hypot(player.pos.x - a.x, player.pos.z - a.z); if (d < a.r && d < ad) { ad = d; nearAct = a; } } }
   const tb = $('talk'); if ((nearNpc || nearAct) && !dlgOpen) { tb.hidden = false; tb.innerHTML = ''; tb.append(nearNpc ? 'Talk to ' + npcObjs[nearNpc].def.name : nearAct.label); if (!TOUCH) { const k = document.createElement('kbd'); k.textContent = 'E'; tb.append(k); } } else tb.hidden = true;
-  for (const id in npcObjs) { const N = npcObjs[id]; const d = N.obj.position.distanceTo(player.pos); N.obj.visible = d < 60 && npcShown(N); N.plate.visible = d < 30; if (d < 6) { const want = Math.atan2(player.pos.x - N.obj.position.x, player.pos.z - N.obj.position.z); let df = Math.atan2(Math.sin(want - N.obj.rotation.y), Math.cos(want - N.obj.rotation.y)); N.obj.rotation.y += df * Math.min(1, dt * 4); } if (N.obj.userData.anim) N.obj.userData.anim(t); if (!N.anim) N.anim = {}; if (d < 40) { N.anim.gest = dlgOpen && nearNpc === id ? Math.max(0, Math.sin(t * 3)) * 0.5 : 0; animRig(N.obj, N.anim, dt, t); } }
+  for (const id in npcObjs) { const N = npcObjs[id]; const d = N.obj.position.distanceTo(player.pos); N.obj.visible = d < 60 && npcShown(N); N.plate.visible = d < 30 && d > 1.8; if (d < 6) { const want = Math.atan2(player.pos.x - N.obj.position.x, player.pos.z - N.obj.position.z); let df = Math.atan2(Math.sin(want - N.obj.rotation.y), Math.cos(want - N.obj.rotation.y)); N.obj.rotation.y += df * Math.min(1, dt * 4); } if (N.obj.userData.anim) N.obj.userData.anim(t); if (!N.anim) N.anim = {}; if (d < 40) { N.anim.gest = dlgOpen && nearNpc === id ? Math.max(0, Math.sin(t * 3)) * 0.5 : 0; animRig(N.obj, N.anim, dt, t); } }
   // enemies
   const pSafe = inSafe(player.pos);
   for (const e of enemies) {
+    if (e.netRemote && typeof netEnemyStep === 'function' && netEnemyStep(e, dt, t)) continue;
     const o = e.obj, def = e.def;
     if (e.dead) {
       if (e.dead < 2) { e.dead += dt; o.rotation.x = -Math.min(Math.PI / 2, e.dead * 4); o.position.y -= dt * (e.dead > 0.6 ? 1.2 : 0); if (e.dead >= 2) o.visible = false; }
@@ -1577,13 +1609,13 @@ function step(dt) {
       continue;
     }
     const d2p = o.position.distanceTo(player.pos);
-    o.visible = d2p < 64; e.plate.visible = d2p < 36;
+    o.visible = d2p < 64; e.plate.visible = d2p < 36 && d2p > 2.4;
     if (d2p > 75) continue;
     if (o.userData.anim && d2p < 45) o.userData.anim(t + e.seed);
     const px0 = o.position.x, pz0 = o.position.z;
     const dx = player.pos.x - o.position.x, dz = player.pos.z - o.position.z, d = Math.hypot(dx, dz) || 1e-3;
     const home = Math.hypot(o.position.x - e.zone.x, o.position.z - e.zone.z);
-    if (!e.aggro && d < (def.boss ? 16 : 12) && !pSafe && player.alive) e.aggro = true;
+    if (!e.aggro && !def.passive && d < (def.boss ? 16 : 12) && !pSafe && player.alive) e.aggro = true;
     const leash = e.zone.r + (def.boss || def.elite ? 45 : 20);
     if (e.aggro && (home > leash || !player.alive)) { e.aggro = false; e.wander = V(e.zone.x, 0, e.zone.z); }
     if (!e.aggro && e.hp < e.max && gameTime - e.lastHit > (def.boss || def.elite ? 45 : 15) && (d > 30 || !player.alive)) { e.hp = Math.min(e.max, e.hp + e.max * 0.02 * dt); updatePlate(e); }
@@ -1634,10 +1666,13 @@ function step(dt) {
   for (let i = drops.length - 1; i >= 0; i--) {
     const dr = drops[i]; dr.life -= dt; dr.m.rotation.y += dt * 2; dr.m.position.y = Math.sin(t * 3 + dr.seed) * 0.08;
     const dd = Math.hypot(dr.g.position.x - player.pos.x, dr.g.position.z - player.pos.z);
-    if (dd < 4 && dd > 0.3 && player.alive) { dr.g.position.x += (player.pos.x - dr.g.position.x) * dt * 4; dr.g.position.z += (player.pos.z - dr.g.position.z) * dt * 4; }
-    if (dd < 1.4 && player.alive) {
+    const held = dr.noPick && gameTime < dr.noPick;
+    if (dd < 4 && dd > 0.3 && player.alive && !held && !dr.full) { dr.g.position.x += (player.pos.x - dr.g.position.x) * dt * 4; dr.g.position.z += (player.pos.z - dr.g.position.z) * dt * 4; }
+    if (dr.full && dd > 2.5) dr.full = false; // walk away and back to retry a refused pickup
+    if (dd < 1.4 && player.alive && !held && !dr.full) {
       if (dr.kind === 'cr') { S.cr += dr.n; log(`+${dr.n} cr`, 'loot'); SFX.coin(); }
-      else { S.inv[dr.id] = (S.inv[dr.id] || 0) + dr.n; log(`+${dr.n} ${ITEMS[dr.id].name}`, 'loot'); SFX.item(); }
+      else if (!invAdd(dr.id, dr.n)) { dr.full = true; dr.life = Math.max(dr.life, 60); continue; }
+      else { log(`+${dr.n} ${ITEMS[dr.id].name}`, 'loot'); SFX.item(); }
       scene.remove(dr.g); drops.splice(i, 1); markDirty(); checkReady(); continue;
     }
     if (dr.life <= 0) { scene.remove(dr.g); drops.splice(i, 1); }

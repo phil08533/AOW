@@ -303,6 +303,7 @@ const SFX = (() => {
   wire();
   return {
     init,
+    ctx() { return ac; }, voiceOut() { return master; },
     setMusic(mode) { const k = PREFS.musicVol == null ? 1 : Math.max(0, Math.min(1, PREFS.musicVol)) / 0.7; if (musicGain) musicGain.gain.value = mode === 1 ? 0.16 * k : 0; if (chipGain) chipGain.gain.value = mode === 2 ? 0.11 * k : 0; },
     setSfx(on) { if (sfxGain) sfxGain.gain.value = on ? 1 : 0; },
     shot(g) { gunShot(g || (typeof gun === 'function' ? gun() : null)); },
@@ -338,6 +339,18 @@ const SFX = (() => {
     // talking: a burst of pitched blips, like a voice made of beeps
     babble(pitch, n) { if (!ac || ac.currentTime - babbleT < 0.1) return; babbleT = ac.currentTime; for (let i = 0; i < (n || 8); i++) tone(i % 3 ? 'square' : 'triangle', pitch * (0.8 + Math.random() * 0.5), 0, 0.05, 0.035, i * 0.065); },
     engine(level, pitch) { loop('engine', 'sawtooth', 50 + pitch * 90, level * 0.06); },
+    // the magnet cars: a deep sub hum with a slow electric throb on top, so it feels like the floor is buzzing
+    // the ambience engine (ambience.js) builds its own beds on the same context, straight into the master bus
+    _ctx() { return ac ? { ac, master } : null; },
+    maghum(level, pitch) { if (!ac) return; let M = loops.maghum;
+      if (!M) { const g = ac.createGain(), lp = ac.createBiquadFilter(), sub = ac.createOscillator(), mid = ac.createOscillator(), buzz = ac.createOscillator(), bg = ac.createGain(), trem = ac.createOscillator(), tg = ac.createGain();
+        lp.type = 'lowpass'; lp.frequency.value = 260; lp.Q.value = 2.2; sub.type = 'sine'; mid.type = 'triangle'; buzz.type = 'sawtooth'; bg.gain.value = 0.22; g.gain.value = 0;
+        trem.type = 'sine'; trem.frequency.value = 7; tg.gain.value = 0;
+        sub.connect(g); mid.connect(g); buzz.connect(bg); bg.connect(lp); lp.connect(g); trem.connect(tg); tg.connect(g.gain); g.connect(sfxGain);
+        for (const o of [sub, mid, buzz, trem]) o.start(); M = loops.maghum = { g, sub, mid, buzz, trem, tg, lp }; }
+      const t = ac.currentTime, f = 31 + pitch * 26, v = level * 0.2;
+      M.sub.frequency.setTargetAtTime(f, t, 0.1); M.mid.frequency.setTargetAtTime(f * 2, t, 0.1); M.buzz.frequency.setTargetAtTime(f * 3.01, t, 0.1); M.lp.frequency.setTargetAtTime(160 + pitch * 220, t, 0.1);
+      M.trem.frequency.setTargetAtTime(5 + pitch * 9, t, 0.2); M.g.gain.setTargetAtTime(v, t, 0.12); M.tg.gain.setTargetAtTime(v * 0.35, t, 0.12); },
     bike(level) { loop('bike', 'sawtooth', 70 + level * 160, level > 0.01 ? 0.04 + level * 0.03 : 0); },
     hum(on) { loop('hum', 'sawtooth', 92, on ? 0.018 : 0); },
     talk() { tone('triangle', 520, 0, 0.05, 0.08); tone('triangle', 660, 0, 0.06, 0.08, 0.05); },

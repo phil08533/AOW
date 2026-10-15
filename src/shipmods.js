@@ -1,6 +1,7 @@
 // =================== SHIP MODS: paint and parts for the Setting Sun, some scavenged in space and on planets ===================
 const SHIP_PAINTS = [['Gunmetal', '#9aa1aa', 1], ['Arctic', '#e8eef2', 1], ['Olive Drab', '#6f7a3e', 1], ['Midnight', '#2a3756', 1], ['Crimson', '#8a1e1e', 0], ['Sunset Gold', '#c9a43a', 0], ['Void Black', '#1e1c22', 0], ['Nebula Violet', '#5a2a8a', 0], ['Coral', '#e86a5a', 0], ['Toxic Green', '#5aff6a', 0]];
 const SHIP_ACCENTS = [['Team color', null, 1], ['Orange', '#ff8a2a', 1], ['Ice', '#4fd2ff', 1], ['Hazard', '#ffd36a', 0], ['Blood', '#ff2a3a', 0], ['Pink', '#ff6aa8', 0], ['Chrome', '#e8e4dc', 0]];
+const SHIP_EXHAUST = [['Sunfire orange', '#ff9a3c', 1], ['Plasma blue', '#4fd2ff', 1], ['Toxic green', '#7fff6a', 1], ['Hot pink', '#ff6aa8', 1], ['Royal violet', '#c86aff', 1], ['White hot', '#f4f4ff', 1], ['Blood red', '#ff2a3a', 1], ['Gold', '#ffd36a', 1], ['Rainbow', 'rainbow', 1]];
 const SHIP_PARTS = {
   wing: [['Standard wings', 1, {}], ['Swept wings', 1, { sp: 0.04 }], ['Delta wing', 0, { sp: 0.06 }], ['Biplane wings', 0, { hull: 0.08 }], ['Blade wings', 0, { sp: 0.05, laser: 0.05 }], ['Drome talons', 0, { laser: 0.1 }]],
   eng: [['Twin thrusters', 1, {}], ['Quad thrusters', 0, { sp: 0.08 }], ['Ion drive', 0, { sp: 0.12 }], ['Mega thruster', 0, { sp: 0.18, hull: -0.05 }]],
@@ -9,8 +10,8 @@ const SHIP_PARTS = {
   pod: [['No pods', 1, {}], ['Missile pods', 0, { laser: 0.12 }], ['Antenna array', 1, {}], ['Armor plating', 0, { hull: 0.15, sp: -0.04 }], ['Trophy spikes', 0, { hull: 0.05 }]]
 };
 const SM_SLOTS = [['wing', 'Wings'], ['eng', 'Engines'], ['nose', 'Nose'], ['fin', 'Fins'], ['pod', 'Extras']];
-const smS = () => { S.sm = S.sm || { p: 0, a: 0, wing: 0, eng: 0, nose: 0, fin: 0, pod: 0, own: {} }; S.sm.own = S.sm.own || {}; return S.sm; };
-const smOwn = (k, i) => { const T = k === 'p' ? SHIP_PAINTS : k === 'a' ? SHIP_ACCENTS : SHIP_PARTS[k]; return !!(T[i] && (T[i][T === SHIP_PAINTS || T === SHIP_ACCENTS ? 2 : 1] || smS().own[k + i])); };
+const smS = () => { S.sm = S.sm || { p: 0, a: 0, x: 0, wing: 0, eng: 0, nose: 0, fin: 0, pod: 0, own: {} }; S.sm.own = S.sm.own || {}; return S.sm; };
+const smOwn = (k, i) => { const T = k === 'p' ? SHIP_PAINTS : k === 'a' ? SHIP_ACCENTS : k === 'x' ? SHIP_EXHAUST : SHIP_PARTS[k]; return !!(T[i] && (T[i][T === SHIP_PAINTS || T === SHIP_ACCENTS || T === SHIP_EXHAUST ? 2 : 1] || smS().own[k + i])); };
 function shipMod(stat) { const M = smS(); let m = 1; for (const [k] of SM_SLOTS) { const P = SHIP_PARTS[k][M[k]]; if (P && P[2][stat]) m += P[2][stat]; } if (stat === 'laser' && typeof romPerk === 'function' && romPerk('laser')) m += 0.15; return m; }
 const smCode = M => [M.p, M.a, M.wing, M.eng, M.nose, M.fin, M.pod].join('.');
 const smParse = c => { const p = String(c || '').split('.').map(Number); return { p: p[0] || 0, a: p[1] || 0, wing: p[2] || 0, eng: p[3] || 0, nose: p[4] || 0, fin: p[5] || 0, pod: p[6] || 0 }; };
@@ -57,15 +58,15 @@ function openShipMods() {
   const render = () => { rows.textContent = '';
     const total = ['sp', 'hull', 'laser'].map(k => `${k === 'sp' ? 'speed' : k} ${Math.round((shipMod(k) - 1) * 100) >= 0 ? '+' : ''}${Math.round((shipMod(k) - 1) * 100)}%`).join(' · ');
     $('dlgLine').textContent = `Locked parts and paints are scavenged: fly through salvage in space, or find salvage crates on planets. Bonuses: ${total}.`;
-    const T = tab === 'p' ? SHIP_PAINTS : tab === 'a' ? SHIP_ACCENTS : SHIP_PARTS[tab];
-    T.forEach((it, i) => { const own = smOwn(tab, i), on = M[tab] === i, r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = (tab === 'p' || tab === 'a') ? (it[1] || S.col) : '#9aa1aa';
-      const nm = document.createElement('span'); nm.textContent = it[0] + (tab !== 'p' && tab !== 'a' && Object.keys(it[2]).length ? ` · ${statTxt(it[2])}` : ''); const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '13px'; mt.textContent = own ? (on ? 'Fitted' : 'Owned') : 'Scavenge';
+    const T = tab === 'p' ? SHIP_PAINTS : tab === 'a' ? SHIP_ACCENTS : tab === 'x' ? SHIP_EXHAUST : SHIP_PARTS[tab];
+    T.forEach((it, i) => { const own = smOwn(tab, i), on = M[tab] === i, r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = tab === 'x' ? (it[1] === 'rainbow' ? 'linear-gradient(90deg,#ff2a3a,#ffd36a,#7fff6a,#4fd2ff,#c86aff)' : it[1]) : (tab === 'p' || tab === 'a') ? (it[1] || S.col) : '#9aa1aa';
+      const nm = document.createElement('span'); nm.textContent = it[0] + (tab !== 'p' && tab !== 'a' && tab !== 'x' && Object.keys(it[2]).length ? ` · ${statTxt(it[2])}` : ''); const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '13px'; mt.textContent = own ? (on ? 'Fitted' : 'Owned') : 'Scavenge';
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = on ? '✓' : 'Fit'; b.disabled = !own || on;
       b.addEventListener('click', () => { M[tab] = i; markDirty(); sendPresence(true); SFX.item(); render(); pv(); if (LEVEL.fly && fly && fly.ship) { const old = fly.ship, nw = makeStarship(S.col); nw.position.copy(old.position); nw.quaternion.copy(old.quaternion); levelGroup.remove(old); levelGroup.add(nw); fly.ship = nw; } });
       r.style.cursor = 'pointer'; r.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') return; setPreview(() => { const g = makeStarship(S.col, Object.assign({}, M, { [tab]: i })); g.rotation.y = Math.PI * 0.8; return g; }, own ? it[0] : it[0] + ' (not found yet)'); });
       r.append(dot, nm, mt, b); rows.appendChild(r); }); };
   $('dlgActs').before(rows);
-  acts([['Paint', () => { tab = 'p'; render(); }, true], ['Accent', () => { tab = 'a'; render(); }], ...SM_SLOTS.map(([k, n]) => [n, () => { tab = k; render(); }]), ['Done', closeDlg]]);
+  acts([['Paint', () => { tab = 'p'; render(); }, true], ['Accent', () => { tab = 'a'; render(); }], ['Exhaust', () => { tab = 'x'; render(); }], ...SM_SLOTS.map(([k, n]) => [n, () => { tab = k; render(); }]), ['Done', closeDlg]]);
   render(); showPreviewIn(rows); pv();
 }
 // ---------- scavenging ----------

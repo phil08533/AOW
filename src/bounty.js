@@ -10,8 +10,8 @@ const BH_RANKS = [
 const BH_TIERS = { C: { mult: 1, hp: 3, lv: 0, rank: 0, col: '#9aa1aa' }, B: { mult: 1.9, hp: 5, lv: 2, rank: 1, col: '#6fdc5a' }, A: { mult: 3.2, hp: 8, lv: 4, rank: 3, col: '#4fa8ff' }, S: { mult: 5.5, hp: 12, lv: 6, rank: 5, col: '#ffd36a' } };
 GEAR.hvisor = { name: "Hunter's Visor", desc: '+20% damage to bosses, elites and bounties', col: '#ff6a1a' };
 GEAR.gboots = { name: 'Grav Boots', desc: '+15% run speed', col: '#9fe8ff' };
-GUNS.bh30 = { name: 'Marshal Repeater', dmg: 115, rate: 0.09, mag: 40, reload: 1.3, req: 1, price: 0, col: '#ffd36a', kind: 'carbine' };
-GUNS.bh60 = { name: 'Lvl 60 Judgement Cannon', dmg: 520, splash: 4.5, rate: 0.85, mag: 8, reload: 2.0, req: 1, price: 0, col: '#ff3b2a', kind: 'plasma' };
+GUNS.bh30 = { name: 'Marshal Repeater', dmg: 55, rate: 0.09, mag: 40, reload: 1.3, req: 12, price: 0, col: '#ffd36a', kind: 'carbine' };
+GUNS.bh60 = { name: 'Lvl 60 Judgement Cannon', dmg: 520, splash: 4.5, rate: 0.85, mag: 8, reload: 2.0, req: 25, price: 0, col: '#ff3b2a', kind: 'plasma' };
 MELEE.bsaber = { name: 'Marshal Saber', dmg: 520, rate: 0.42, reach: 3.2, req: 1, price: 0, saber: true };
 ARMORS.marshal = { name: 'Marshal Armor', lvl: 1, flag: 'marshalArmor', def: 0.2, trim: '#c9a43a', visor: '#ffd36a' };
 CAPES.marshal = { name: "Marshal's Cape", lvl: 1, flag: 'marshalArmor', col: '#2a3a7a', trim: '#ffd36a' };
@@ -27,12 +27,12 @@ function genBounty() {
   const B = bhState(), rank = bhRankIdx(), tiers = Object.keys(BH_TIERS).filter(k => BH_TIERS[k].rank <= rank), tier = pick(tiers), T = BH_TIERS[tier];
   const planets = ['earth', 'mezar', 'capitone', 'robot', 'ocean'].filter(p => LEVELS[p] && planetOpen(p) && p !== 'earth' || (p === 'earth')), space = shipUnlocked() && Math.random() < 0.22;
   const name = `${pick(BH_FIRST)} "${pick(BH_TITLES)}" ${pick(BH_LAST)}`;
-  if (space) { const lv = Math.max(8, S.lvl + T.lv); return { id: 'b' + Date.now() + randi(0, 999), name, tier, planet: 'space', zone: null, type: 'raider', lv, crime: pick(BH_CRIMES), reward: Math.round((400 + lv * 70) * T.mult), xp: Math.round((120 + lv * 12) * T.mult) }; }
+  if (space) { const lv = Math.max(8, S.lvl + T.lv); return { id: 'b' + Date.now() + randi(0, 999), name, tier, planet: 'space', zone: null, type: 'raider', lv, crime: pick(BH_CRIMES), reward: Math.round((260 + lv * 45) * T.mult), xp: Math.round((120 + lv * 12) * T.mult) }; }
   const pl = pick(planets), L = LEVELS[pl];
   const sps = L.spawns.filter(s => { const d = ENEMY[s.type]; return d && !d.boss && !d.elite && !s.at; });
   if (!sps.length) return null;
   const sp = pick(sps), lv = Math.max(sp.lv[1], S.lvl) + T.lv;
-  return { id: 'b' + Date.now() + randi(0, 999), name, tier, planet: pl, zone: sp.zone, type: sp.type, lv, crime: pick(BH_CRIMES), reward: Math.round((300 + lv * 60) * T.mult), xp: Math.round((100 + lv * 10) * T.mult) };
+  return { id: 'b' + Date.now() + randi(0, 999), name, tier, planet: pl, zone: sp.zone, type: sp.type, lv, crime: pick(BH_CRIMES), reward: Math.round((200 + lv * 40) * T.mult), xp: Math.round((100 + lv * 10) * T.mult) };
 }
 function refreshBoard(force) {
   const B = bhState();

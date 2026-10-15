@@ -6,9 +6,9 @@ Object.assign(ITEMS, {
 });
 FISH_TABLES.canal = [['rustcan', 12, 0], ['chromecarp', 50, 0.6], ['voltfish', 12, 0.85]];
 Object.assign(GUNS, {
-  r40: { name: 'Lvl 40 Railgun', dmg: 330, rate: 1.0, mag: 6, reload: 1.7, req: 28, price: 16000, col: '#4fd2ff', kind: 'long' },
+  r40: { name: 'Lvl 40 Railgun', dmg: 700, rate: 1.0, mag: 6, reload: 1.7, req: 28, price: 16000, col: '#4fd2ff', kind: 'long' },
   g45: { name: 'Lvl 45 Gatling', dmg: 72, rate: 0.06, mag: 120, reload: 2.6, req: 31, price: 22000, col: '#ffd36a', kind: 'carbine' },
-  x50: { name: 'Lvl 50 Pulse Cannon', dmg: 320, splash: 4, rate: 0.8, mag: 8, reload: 2.0, req: 35, price: 32000, col: '#ff3b6a', kind: 'plasma' }
+  x50: { name: 'Lvl 50 Pulse Cannon', dmg: 500, splash: 4, rate: 0.8, mag: 8, reload: 2.0, req: 35, price: 32000, col: '#ff3b6a', kind: 'plasma' }
 });
 MELEE.saber = { name: 'Ion Saber', dmg: 620, rate: 0.5, reach: 3.0, req: 32, price: 26000, saber: true };
 RIGS.zr = { type: 'biped', hip: 0.98, neck: 1.7, armX: 0.4, ax: 0.5, sh: 1.58, legX: 0.16 };
@@ -47,7 +47,7 @@ LEVELS.robot = {
     { id: 'sparkplug', name: 'Sparkplug', role: 'Super Store · buys anything', rig: null, make: () => recolor(makeF162(), { '#6a7a6a': '#c9a43a' }), x: -7, z: 7, shop: 'store', idle: ["EVERYTHING MUST GO. Especially your loot. To me."] },
     { id: 'r731', name: 'R7-31', role: 'Gunsmith unit', rig: 'xr17', make: () => recolor(makeXR17(), { '#9aa1aa': '#5d636c', '#5d636c': '#c8402f' }), x: 7, z: 7, shop: 'guns', guns: ['r40', 'g45', 'x50', 'p35'], melee: ['staff', 'master', 'saber'], idle: ["WEAPONS. SALE. NOW.", "Bring Gear Cogs. I build better."] },
     { id: 'r733', name: 'R7-33', role: 'Repair unit · heals', rig: 'xr17', make: () => recolor(makeXR17(), { '#9aa1aa': '#e8e4dc', '#5d636c': '#c8402f' }), x: -8, z: -1, face: 1.4, heal: true, idle: ["Patching flesh is like patching chrome. Mostly."] },
-    { id: 'zip', name: 'Zip', role: 'Hover Cup host', rig: null, make: () => makeHoverBot(), x: 8, z: -1, face: -1.4, racer: true, idle: ["Fastest lap on the Hover Track wins. Wanna try?"] },
+    { id: 'zip', name: 'Zip', role: 'Retired racer', rig: null, make: () => makeHoverBot(), x: 8, z: -1, face: -1.4, idle: ["The Hover Cup's done. All the real racers went to Velocity. Hover cars! Lightning! I'm jealous!", "Velocity's a magnet planet. Your car floats on the field. Mine just floats on hope."] },
     { id: 'coil', name: 'Coil', role: 'Coolant fisher · buys fish', rig: 'civ', make: () => makeCivilian('#5d636c', '#2c2a28', '#9fe8ff', '#1e1a18', '#ffd23a'), x: 18, z: 12, face: 0.8, shop: 'fish', rods: [1, 2, 3], idle: ["Fish in coolant? They adapted. Kinda."] }
   ],
   spawns: [
@@ -82,8 +82,7 @@ LEVELS.robot = {
       INTERACTS.push({ x: Z.grave.x + 8, z: Z.grave.z - 8, r: 2.6, label: 'Old terminal (ghost signal)', fn: () => foundQuest('rf1') }); }
     // hover track: banked ring of glowing posts + checkpoints
     for (let i = 0; i < 32; i++) { const a = i / 32 * Math.PI * 2; for (const rr of [13, 19]) { const x = Z.track.x + Math.cos(a) * rr, z = Z.track.z + Math.sin(a) * rr * 0.8; part(props, Cy(0.15, 0.15, 1.2, 6), glow(i % 2 ? '#ff3b6a' : '#ffd23a'), x, groundH(x, z) + 0.6, z); } }
-    RACE.cps = []; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, x = Z.track.x + Math.cos(a) * 16, z = Z.track.z + Math.sin(a) * 16 * 0.8, ring = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.18, 6, 16), glow('#4fd2ff'));
-      ring.position.set(x, groundH(x, z) + 2.2, z); ring.rotation.y = -a; levelGroup.add(ring); RACE.cps.push({ x, z, ring }); }
+    RACE.cps = []; // the Hover Cup ring race was retired; racing lives on Velocity now
     // factory: smokestacks and conveyor
     for (let i = 0; i < 4; i++) { const x = Z.factory.x - 9 + i * 6, z = Z.factory.z - 9, g = new THREE.Group(); part(g, Cy(1, 1.3, 12, 8), '#4a3a36', 0, 6, 0); part(g, Cy(1.05, 1.05, 0.5, 8), glow('#ff6a1a'), 0, 11.5, 0); at(g, x, z); solid(x, z, 1.3); }
     part(props, B(14, 0.8, 2), '#2b2a2c', Z.factory.x, groundH(Z.factory.x, Z.factory.z + 8) + 0.4, Z.factory.z + 8); box(Z.factory.x, Z.factory.z + 8, 7, 1);
@@ -136,10 +135,10 @@ defQuest('r5', { ch: 'Robot City · Chapter 4', title: 'Tower of Death', giver: 
   obj: [{ kind: 'item', t: 'overcore', n: 1, text: 'Defeat the Overseer and take his core', zone: 'tower' }],
   outro: ["His core is still warm. Listen... it's broadcasting.", "\"THE SETTING SUN RISES. ALL WORLDS WILL BURN RED.\"", "He's coming himself now. Whatever the Setting Sun is, we'll be ready. Thank you, gunner. Robot City is free.", "(Chapter 5 is being written by Phil and Caleb. Stay tuned.)"],
   reward: { cr: 8000, xp: 20000, take: { overcore: 1 } } });
-defQuest('rs1', { ch: 'Robot City · Side job', title: 'The Hover Cup', giver: 'zip', turnIn: 'zip', req: ['r1'],
-  intro: ["Two laps, sixteen rings, under forty-five seconds. Do it and the cup is yours."],
-  obj: [{ kind: 'kill', t: 'race45', n: 1, text: 'Win the Hover Cup (under 45s)', zone: 'track' }],
-  outro: ["CHAMPION! The crowd... well, I'm the crowd. Still! Champion!"], reward: { cr: 3000, xp: 6000, items: { cell: 2 } } });
+defQuest('rs1', { ch: 'Robot City · Side job', title: 'Pit Row Calling', giver: 'zip', turnIn: 'vroom', req: ['r1'],
+  intro: ["The Hover Cup shut down. Everyone fast moved to Velocity, the magnet storm planet.", "Tell Vroom in Pit Row that Zip sent you. He owes me a tire. Several tires."],
+  obj: [{ kind: 'reach', zone: 'pits', planet: 'speedway', n: 1, text: 'Fly to Velocity and reach Pit Row' }],
+  outro: ["Zip sent you? Ha! Tell him the tires are in the mail. They are not in the mail.", "Grab a car and go. The flats are yours."], reward: { cr: 3000, xp: 6000, items: { cell: 2 } } });
 defQuest('rs2', { ch: 'Robot City · Side job', title: 'Trash Talk', giver: 'sparkplug', turnIn: 'sparkplug', req: ['r1'],
   intro: ["The F-162s keep raiding Sparkplug's dumpsters. RUDE. Eight of them, please."],
   obj: [{ kind: 'kill', t: 'f162', n: 8, text: 'Defeat F-162 "Trashy" bots', zone: 'grave' }],

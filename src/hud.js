@@ -23,6 +23,8 @@ body { text-shadow: 0 1px 2px rgba(0,0,0,.9); }
 .cta::before, .pbtn:hover::before, .pbtn:focus-visible::before { content: none; }
 .rowi { border-bottom: 1px solid rgba(127,233,255,.12); font-family: var(--hud); font-weight: 500; }
 .rowi .meta { font-family: var(--mono); font-size: 15px; color: #9fd8ea; }
+.rowi { grid-template-columns: 14px minmax(100px, 1.5fr) minmax(64px, 1fr) auto; } .rowi.nodot { grid-template-columns: minmax(100px, 1.5fr) minmax(64px, 1fr) auto; } .rowi .meta { text-align: right; overflow-wrap: break-word; min-width: 0; } .cols2 .rowi .meta { font-size: 12px; } .cols2 .rowi { font-size: 13px; gap: 6px; }
+@media (max-height: 520px) { .dlg { max-height: calc(100vh - 14px); } #dlg .prevWrap { position: absolute; right: 14px; top: 10px; width: 168px; margin: 0; z-index: 1; } #dlg .prevWrap canvas { border-width: 1px; } #dlg .prevLbl { font-size: 10px; } #dlg:has(.prevWrap) .line, #dlg:has(.prevWrap) h3 { padding-right: 180px; } }
 /* top-left: objective tracker, no box, a cyan rail */
 #quest { background: linear-gradient(90deg, rgba(5,12,24,.55), rgba(5,12,24,0)); border: 0; box-shadow: none; border-left: 2px solid var(--hl); border-radius: 0; padding: 4px 10px 6px; backdrop-filter: none; }
 #quest .ch { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; color: var(--hl); }
@@ -61,8 +63,8 @@ body.menuopen #touch { display: none !important; }
 #ammo .n small { font-size: 17px; color: #9fd8ea; }
 #ammo .g { font: 700 12px var(--hud); letter-spacing: .08em; text-transform: uppercase; color: var(--amber); }
 /* center text */
-#zone .n { font-family: var(--hud); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(22px, 5.6vw, 36px); }
-#zone .l { font-family: var(--mono); font-size: 15px; letter-spacing: .14em; color: var(--hl); text-transform: uppercase; }
+#zone .n { font-family: var(--hud); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(15px, 2.8vw, 22px); opacity: .85; }
+#zone .l { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--hl); text-transform: uppercase; }
 #toast .big { font-family: var(--hud); letter-spacing: .1em; text-transform: uppercase; text-shadow: 0 2px 8px #000, 0 0 22px rgba(255,154,60,.55); }
 #toast .sm { font-family: var(--hud); font-weight: 600; font-size: 18px; color: var(--amber); }
 #log { font-family: var(--hud); font-weight: 600; font-size: 14px; }
@@ -217,5 +219,5 @@ body.menuopen #pullTab { opacity: 0; pointer-events: none; }
   tab.addEventListener('click', () => open(true));
   let sy = null; tab.addEventListener('touchstart', e => { sy = e.touches[0].clientY; }, { passive: true }); tab.addEventListener('touchend', e => { if (sy != null && sy - e.changedTouches[0].clientY > 20) open(true); sy = null; });
   let dy = null; drop.addEventListener('touchstart', e => { dy = e.touches[0].clientY; }, { passive: true }); drop.addEventListener('touchend', e => { if (dy != null && e.changedTouches[0].clientY - dy > 50) open(false); dy = null; });
-  window.addEventListener('keydown', e => { if (e.code === 'Tab' && state === 'play' && !dlgOpen && !chatOpen()) { e.preventDefault(); open(drop.hidden); } else if (e.code === 'Escape' && !drop.hidden) { open(false); e.stopImmediatePropagation(); } }, true);
+  window.addEventListener('keydown', e => { if (e.code === 'Tab' && state === 'play' && !dlgOpen && !chatOpen()) { e.preventDefault(); open(drop.hidden); } else if (e.code === 'Escape' && !drop.hidden) { if (typeof tabletBack === 'function') tabletBack(); else open(false); e.stopImmediatePropagation(); } }, true);
 }

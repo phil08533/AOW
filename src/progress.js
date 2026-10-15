@@ -3,7 +3,7 @@ const ST = () => { S.stats = S.stats || { kills: 0, bosses: 0, fish: 0, deaths: 
 // ---- counters ----
 { const _k = kill; kill = function (e) { const r = _k(e); const T = ST(); T.kills++; T.kt[e.sp.type] = (T.kt[e.sp.type] || 0) + 1; if (e.def.boss) T.bosses++; if (e.sp.raid) T.raids++; dailyTick(); return r; }; }
 { const _q = questProgressFish; questProgressFish = function (...a) { ST().fish++; dailyTick(); return _q.apply(this, a); }; }
-{ const _c = completeQuest; completeQuest = function (id) { const r = _c(id); ST().quests++; checkAch(); if (id === 'w3') setTimeout(rollCredits, 4500); return r; }; }
+{ const _c = completeQuest; completeQuest = function (id) { const r = _c(id); ST().quests++; checkAch(); if (id === 'w4' && !(S.flags && S.flags.creditsSeen)) setTimeout(rollCredits, 4500); return r; }; }
 { const _r = respawn; respawn = function () { ST().deaths++; return _r(); }; }
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); if (LEVELS[id] && !['ship', 'space', 'apt', 'zfloor'].includes(id)) ST().worlds[id] = 1; return r; }; }
 { let lastCr = null; setInterval(() => { try { if (state !== 'play') return; if (lastCr != null && S.cr > lastCr) { ST().crEarned += S.cr - lastCr; dailyTick(); } lastCr = S.cr; } catch (_) {} }, 1000); }
@@ -61,7 +61,7 @@ function openCodex(tab) {
   if (tab === 'best') { const types = Object.keys(ENEMY); const seen = types.filter(t => T.kt[t]); $('dlgLine').textContent = `Bestiary: ${seen.length} / ${types.length} creatures defeated. Undiscovered ones stay hidden.`; for (const t of types) { const k = T.kt[t] || 0, d = ENEMY[t]; row(k ? `<b>${d.name}</b>${d.boss ? ' ★' : ''}` : '<b>???</b>', k ? `${k} defeated` : '', k ? (d.boss ? 'Boss' : d.fly ? 'Flyer' : d.ranged || d.lob ? 'Ranged' : 'Melee') : '', !!k); } }
   if (tab === 'stats') { $('dlgLine').textContent = `${S.nick} · Level ${S.lvl}${S.asc ? ' · Ascension ' + S.asc : ''}`; [['Enemies defeated', T.kills], ['Bosses defeated', T.bosses], ['Raiders defeated', T.raids], ['Fish caught', T.fish], ['Quests finished', T.quests], ['Credits earned', T.crEarned.toLocaleString()], ['Worlds visited', Object.keys(T.worlds).length], ['Knocked out', T.deaths], ['Achievements', `${Object.keys(S.ach).length}/${ACH.length}`]].forEach(([a, b]) => row(`<b>${a}</b>`, String(b), '')); }
   if (tab === 'daily') { const D = dailies(); $('dlgLine').textContent = 'Three new challenges every day, the same for everyone. Each pays credits and 3 Raid Tokens.'; D.picks.forEach((i, j) => { const c = DAILY_POOL[i], p = Math.min(c.n, dailyProg(D, c)), d = D.done.includes(j); row(`<b>${c.text}</b>`, `${p.toLocaleString()} / ${c.n.toLocaleString()}`, d ? 'Done' : `${c.cr} cr`, d); }); }
-  if (tab === 'credits') { $('dlgLine').textContent = 'ART OF WAR: SETTING SUN'; [['Created by', 'Philip Gonzales & Caleb Dingus'], ['Original art', 'Phil & Caleb\'s high-school notebooks (plus one sketch by Ethan)'], ['Built in colaborration with', 'Philip & Claude/Gemini/Codex, as the dev team'], ['Engine', 'Three.js in your browser'], ['Thanks', 'Everyone who flew the Setting Sun']].forEach(([a, b]) => row(`<b>${a}</b>`, '', b)); }
+  if (tab === 'credits') { $('dlgLine').textContent = 'ART OF WAR: SETTING SUN'; [['Created by', 'Philip Gonzales & Caleb Dingus'], ['Original art', 'Phil & Caleb\'s high-school notebooks (plus one sketch by Ethan)'], ['Built in collaboration with', 'Philip & Claude/Gemini/Codex, as the dev team'], ['Engine', 'Three.js in your browser'], ['Thanks', 'Everyone who flew the Setting Sun']].forEach(([a, b]) => row(`<b>${a}</b>`, '', b)); }
   $('dlgActs').before(rows);
   acts([['Achievements', () => openCodex('ach'), tab === 'ach'], ['Daily', () => openCodex('daily'), tab === 'daily'], ['Bestiary', () => openCodex('best'), tab === 'best'], ['Stats', () => openCodex('stats'), tab === 'stats'], ['Credits', () => openCodex('credits'), tab === 'credits'], ...(gameBeaten() ? [['✦ New Game+', () => openAscend()]] : []), ['Close', closeDlg]]);
 }
@@ -77,7 +77,7 @@ function rollCredits() {
 }
 // ---- New Game+: replay the story with tougher enemies and better rewards, keep everything you own ----
 // New Game+ only opens once every story chapter is finished, ending with the Watcher
-function gameBeaten() { if (!qDone('w3')) return false; for (const id in QDEFS) { const q = QDEFS[id]; if (q.main && /Chapter/.test(q.ch || '') && !qDone(id)) return false; } return true; }
+function gameBeaten() { if (!qDone('w4')) return false; for (const id in QDEFS) { const q = QDEFS[id]; if (q.main && /Chapter/.test(q.ch || '') && !qDone(id)) return false; } return true; }
 function openAscend() {
   if (!gameBeaten()) { toast('NEW GAME+ LOCKED', 'Finish the story first'); return; }
   const a = S.asc || 0; openDlg('New Game+', `Ascension ${a} → ${a + 1}`);

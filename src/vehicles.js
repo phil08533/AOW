@@ -146,7 +146,7 @@ let VH = { on: false };
 const vehS = () => { S.veh = S.veh || { owned: [], sel: null, res: { arm: 0, wpn: 0, eng: 0 } }; S.veh.res = S.veh.res || { arm: 0, wpn: 0, eng: 0 }; return S.veh; };
 const vehMaxHp = id => Math.round(VEH[id].hp * (1 + vehS().res.arm * 0.25));
 const vehDmg = id => VEH[id].gun.dmg * (1 + vehS().res.wpn * 0.25) * (1 + S.lvl * 0.02);
-const vehTop = id => VEH[id].top * (1 + vehS().res.eng * 0.12);
+const vehTop = id => VEH[id].top * (1 + vehS().res.eng * 0.12) * (1 + 0.04 * Math.max(0, roomLvl('hangar') - 1));
 // cockpit view models
 const vmVeh = {}; for (const id in VEH) { const g = new THREE.Group(); camera.add(g); g.visible = false; vmVeh[id] = g; }
 { const g = vmVeh.battlecar; part(g, B(1.6, 0.1, 1.0), '#8a3a2e', 0, -0.75, -1.3); for (const s of [-1, 1]) { part(g, B(0.1, 0.1, 0.7), '#3a3d44', 0.55 * s, -0.55, -1.0); part(g, Cy(0.025, 0.025, 0.4, 6), '#2b2a2c', 0.55 * s, -0.55, -1.5, Math.PI / 2); }

@@ -28,8 +28,10 @@ function heightExact(x, z) {
     h = h * (1 - w) + zh * w; interior = Math.max(interior, smooth(1 - d / fr, 0, 0.25));
   }
   if (!T.noTerrace) { const k = Math.min(smooth(roadDist(x, z), 2.6, 6.5), 1 - interior); h = h * (1 - k) + terrace(h, T.step || 1.6) * k; }
-  const rv = polyDist(x, z, RIVER); if (rv < 6) h = Math.min(h, -1.5 + (h + 1.5) * smooth(rv, 1.8, 4.6));
-  for (const [px, pz, pr] of POOLS) { const d = Math.hypot(x - px, z - pz); if (d < pr + 2) h = Math.min(h, -1.0 + (h + 1.0) * smooth(d, pr * 0.6, pr + 1.5)); }
+  // rivers and pools always dig below this world's water line, so they hold water (a high water line left Zarlich's lake dry)
+  const wl = WATER_Y > -50 ? WATER_Y : 0, rb = Math.min(-1.5, wl - 0.7), pb = Math.min(-1.0, wl - 0.6);
+  const rv = polyDist(x, z, RIVER); if (rv < 6) h = Math.min(h, rb + (h - rb) * smooth(rv, 1.8, 4.6));
+  for (const [px, pz, pr] of POOLS) { const d = Math.hypot(x - px, z - pz); if (d < pr + 2) h = Math.min(h, pb + (h - pb) * smooth(d, pr * 0.6, pr + 1.5)); }
   for (const [px, pz, pr, ly] of LAVA) { const base = (ly != null ? ly : 2.55) - 0.35; const d = Math.hypot(x - px, z - pz); if (d < pr + 1.5) h = Math.min(h, base + (h - base) * smooth(d, pr * 0.7, pr + 1.2)); }
   if (LEVEL.carve) h = LEVEL.carve(x, z, h);
   return h;
@@ -48,7 +50,7 @@ function floorAt(x, z) {
   let h = groundH(x, z);
   for (const s of SURFACES) {
     const dx = x - s.x, dz = z - s.z, a = dx * s.ux + dz * s.uz, b = -dx * s.uz + dz * s.ux;
-    if (Math.abs(a) <= s.hl && Math.abs(b) <= s.hw) h = Math.max(h, s.y);
+    if (Math.abs(a) <= s.hl && Math.abs(b) <= s.hw) h = Math.max(h, s.y + a * (s.slope || 0));
   }
   return h;
 }

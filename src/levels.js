@@ -72,11 +72,21 @@ function wallRing(cx, cz, R, gate, half, mat, mat2, hgt, n) {
 function bridgeOn(path) {
   const a = path[0], b = path[1], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L;
   let best = 0, bd = 1e9; for (let t = 0; t <= 1; t += 0.005) { const d = polyDist(a[0] + dx * t, a[1] + dz * t, RIVER); if (d < bd) { bd = d; best = t; } }
-  const cx = a[0] + dx * best, cz = a[1] + dz * best, hl = 5.2, y = Math.max(groundH(cx - ux * hl, cz - uz * hl), groundH(cx + ux * hl, cz + uz * hl), WATER_Y + 0.6) + 0.12;
-  const g = new THREE.Group(); g.position.set(cx, y, cz); g.rotation.y = Math.atan2(ux, uz);
-  for (let i = 0; i < 14; i++) part(g, B(2.8, 0.14, 0.7), toon(i % 2 ? '#9a7650' : '#8a6a44', 'wood'), 0, -0.07, -hl + 0.37 + i * 0.75);
-  for (const s of [-1, 1]) { part(g, B(0.14, 0.14, hl * 2), toon('#6a4f34', 'wood'), 1.35 * s, 0.75, 0); for (let k = 0; k < 6; k++) part(g, B(0.14, 0.8, 0.14), toon('#6a4f34', 'wood'), 1.35 * s, 0.35, -hl + 0.3 + k * 2.05); part(g, B(0.3, 2.2, 0.3), toon('#6a4f34', 'wood'), 1.35 * s, -1.1, 0); }
-  props.add(g); SURFACES.push({ x: cx, z: cz, ux, uz, hl, hw: 1.4, y });
+  const cx = a[0] + dx * best, cz = a[1] + dz * best, W = WATER_Y > -50 ? WATER_Y : -1, dry = W + 0.35;
+  // walk out from the river along the path to the first dry ground on each bank; the deck runs bank to bank and slopes to meet both,
+  // so it never floats in the air or sinks into a hill (one high bank used to leave a 34 m deck hanging metres over the other side)
+  const bank = s => { for (let d = 1; d < 30; d += 0.5) if (groundH(cx + ux * d * s, cz + uz * d * s) >= dry) return d; return 30; };
+  const dA = Math.max(4.6, bank(1) + 1.4), dB = Math.max(4.6, bank(-1) + 1.4);
+  const yA = Math.max(groundH(cx + ux * dA, cz + uz * dA), W + 0.5) + 0.1, yB = Math.max(groundH(cx - ux * dB, cz - uz * dB), W + 0.5) + 0.1;
+  const span = dA + dB, hl = span / 2, mid = (dA - dB) / 2, mx = cx + ux * mid, mz = cz + uz * mid, ym = (yA + yB) / 2, slope = (yA - yB) / span;
+  const outer = new THREE.Group(); outer.position.set(mx, ym, mz); outer.rotation.y = Math.atan2(ux, uz);
+  const g = new THREE.Group(); g.rotation.x = -Math.atan(slope); outer.add(g); const hd = hl / Math.cos(Math.atan(slope)), n = Math.ceil(hd * 2 / 0.75);
+  for (let i = 0; i < n; i++) part(g, B(2.8, 0.14, 0.7), toon(i % 2 ? '#9a7650' : '#8a6a44', 'wood'), 0, -0.07, -hd + 0.37 + i * 0.75);
+  for (const s of [-1, 1]) { part(g, B(0.14, 0.14, hd * 2), toon('#6a4f34', 'wood'), 1.35 * s, 0.75, 0); for (let k = 0; k <= Math.floor((hd * 2 - 0.6) / 2.05); k++) part(g, B(0.14, 0.8, 0.14), toon('#6a4f34', 'wood'), 1.35 * s, 0.35, -hd + 0.3 + k * 2.05); }
+  // posts straight down into the riverbed
+  for (let k = -Math.floor(hl / 4); k <= Math.floor(hl / 4); k++) { const d = k * 4, px = mx + ux * d, pz = mz + uz * d, top = ym + d * slope, bot = Math.min(groundH(px, pz), W) - 0.6, h = top - bot; if (h < 0.3) continue;
+    for (const s of [-1, 1]) part(outer, B(0.3, h, 0.3), toon('#6a4f34', 'wood'), 1.35 * s, d * slope - 0.1 - h / 2, d); }
+  props.add(outer); SURFACES.push({ x: mx, z: mz, ux, uz, hl, hw: 1.4, y: ym, slope });
 }
 function dropshipPad(x, z, ry, label) {
   const pad = new THREE.Group();
@@ -289,9 +299,9 @@ LEVELS.mezar = {
 // ---------------- YOUR SHIP ----------------
 const ROOMS = {
   bridge: { name: 'Bridge', fixed: true },
-  quarters: { name: 'Crew Quarters', cost: {}, desc: 'Sleep for a full heal and Well Rested (+15% XP for 15 min). Wardrobe and personal log.' },
+  quarters: { name: 'Crew Quarters', cost: {}, desc: 'Sleep for a full heal and Well Rested (bonus XP for a while). Wardrobe and personal log.' },
   armory: { name: 'Armory', cost: { cr: 400, circuit: 6 }, desc: 'Gun rack, upgrade workbench and an ordnance rack that refills your charges.' },
-  cargo: { name: 'Cargo Bay', cost: { cr: 300, scrap: 10 }, desc: 'Cargo manifest: sell your loot from the ship. Plenty of room to decorate.' },
+  cargo: { name: 'Cargo Bay', cost: { cr: 300, scrap: 10 }, desc: 'Ship storage: beam loot up from your backpack (100 slots, upgrades to a Black Hole Box). Cargo manifest to sell loot.' },
   med: { name: 'Med Bay', cost: { cr: 350, crystal: 3 }, desc: 'Healing pod and a stim station (take 25% less damage for 10 min).' },
   trophy: { name: 'Trophy Hall', cost: { cr: 600 }, desc: 'Shows off every boss you beat, plus the Hall of Records leaderboards.' },
   garden: { name: 'Hydro Garden', cost: { cr: 450, shell: 6 }, desc: 'Grows medkits over time. Fish tank included.' },
@@ -352,10 +362,12 @@ LEVELS.ship = {
       quarters: { floor: toonNS('#7a4a3a', 'carpet'), wall: toonNS('#a08060', 'woodwall'), ceil: toonNS('#5a4a40', 'ceil'), light: '#ffd8a0' },
       armory: { floor: toonNS('#6a6e76', 'tread'), wall: toonNS('#5a5e66', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ff8a6a' },
       cargo: { floor: toonNS('#8a7a5a', 'grate'), wall: toonNS('#8a6a4a', 'hull'), ceil: toonNS('#4a4038', 'ceil'), light: '#ffd36a' },
+      lab: { floor: toonNS('#2a2c32', 'tile'), wall: toonNS('#3a2e44', 'tile'), ceil: toonNS('#2a2a36', 'ceil'), light: '#c8a8ff' },
       med: { floor: toonNS('#e8eef2', 'tile'), wall: toonNS('#d8e8ec', 'tile'), ceil: toonNS('#e8eef2', 'ceil'), light: '#e8ffff' },
       trophy: { floor: toonNS('#d8d2c8', 'marble'), wall: toonNS('#6a1e24', 'woodwall'), ceil: toonNS('#3a1e22', 'ceil'), light: '#ffd36a' },
       garden: { floor: toonNS('#4a6a3a', 'grass'), wall: toonNS('#8ab8a0', 'tile'), ceil: toonNS('#cfe8d8', 'ceil'), light: '#e8ffd8' },
-      hangar: { floor: toonNS('#6a6a6a', 'grate'), wall: toonNS('#7a7e86', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ffffff' }
+      hangar: { floor: toonNS('#6a6a6a', 'grate'), wall: toonNS('#7a7e86', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ffffff' },
+      range: { floor: toonNS('#4a4e56', 'tread'), wall: toonNS('#3a3438', 'hull'), ceil: toonNS('#2a2c32', 'ceil'), light: '#ffe8c8' }
     };
     rooms.forEach((id, k) => {
       const s = roomSlot(k); SHIP_ROOMS.push(Object.assign({ id }, s));
@@ -389,6 +401,7 @@ LEVELS.ship = {
         box(far - s.side * 0.5, cz - 0.4, 1.0, 4.2);
         for (const z of [s.z0 + 0.3, s.z1 - 0.3]) part(props, B(Math.abs(s.x1 - s.x0) - 0.6, 0.012, 0.3), toon('#ffd36a', 'hazard'), cx, 0.014, z);
         term(cx - s.side * 1.0, s.z1 - 0.6, '#ffd36a', 'Cargo manifest (sell loot)', () => openStore('sell', 'Cargo manifest'), Math.PI);
+        cargoStorage(s, cx, cz, far, term);
       }
       if (id === 'med') {
         const pod = new THREE.Group(); part(pod, Cy(0.7, 0.7, 0.3, 10), '#d8e8ec', 0, 0.15, 0); const gl = part(pod, Cy(0.6, 0.6, 2.0, 10), glow('#6fdc5a'), 0, 1.2, 0); gl.material = gl.material.clone(); gl.material.transparent = true; gl.material.opacity = 0.35; part(pod, Cy(0.7, 0.7, 0.3, 10), '#d8e8ec', 0, 2.3, 0); pod.position.set(far, 0, cz - 2); props.add(pod); solid(far, cz - 2, 0.7);
@@ -408,6 +421,8 @@ LEVELS.ship = {
         box(far, cz, 0.6, 4.2); INTERACTS.push({ x: far - s.side * 1.2, z: cz, r: 2.4, label: 'Harvest garden', fn: harvestGarden });
         { const tank = new THREE.Group(); part(tank, B(1.6, 0.4, 0.8), '#3a3d44', 0, 0.2, 0); const w = part(tank, B(1.5, 1.0, 0.7), new THREE.MeshBasicMaterial({ color: '#4fa8ff', transparent: true, opacity: 0.35, depthWrite: false }), 0, 0.9, 0); for (let f = 0; f < 3; f++) { const fish = part(tank, B(0.12, 0.06, 0.03), glow(['#ff9a3c', '#ffd36a', '#ff6aa8'][f]), 0, 0.9, 0); levelAnims.push(t => { fish.position.x = Math.sin(t * 0.8 + f * 2) * 0.6; fish.position.y = 0.75 + f * 0.15 + Math.sin(t * 1.3 + f) * 0.05; fish.rotation.y = Math.cos(t * 0.8 + f * 2) > 0 ? 0 : Math.PI; }); } tank.position.set(cx, 0, s.z1 - 0.6); props.add(tank); box(cx, s.z1 - 0.6, 0.8, 0.4); }
       }
+      if (id === 'lab') labRoom(s, cx, cz, far, outer, faceIn, term, props);
+      if (id === 'range' && typeof rangeRoom === 'function') rangeRoom(s, cx, cz, outer, term, props);
       if (id === 'hangar') {
         part(props, B(0.2, 2.8, 6), toon('#c9a43a', 'hazard'), outer - s.side * 0.12, 1.4, cz);
         part(props, B(5, 0.012, 5), toon('#ffd36a', 'hazard'), cx, 0.014, cz); part(props, B(4.4, 0.013, 4.4), toonNS('#6a6a6a', 'grate'), cx, 0.016, cz);
@@ -475,10 +490,10 @@ function trophyList() {
   return out;
 }
 function harvestGarden() {
-  const now = Date.now(), last = S.ship.garden || 0, ready = Math.floor((now - last) / 600000);
+  const now = Date.now(), last = S.ship.garden || 0, ready = Math.floor((now - last) / gardenEvery()), most = gardenMax();
   openDlg('Hydro Garden', 'Harvest');
-  if (!last) { S.ship.garden = now; $('dlgLine').textContent = 'Seeds planted. A medkit grows every 10 minutes, up to 3 at a time.'; markDirty(); }
-  else if (ready > 0) { const n = Math.min(3, ready); S.inv.medkit = (S.inv.medkit || 0) + n; S.ship.garden = now; $('dlgLine').textContent = `You harvested ${n} medkit${n > 1 ? 's' : ''}.`; SFX.item(); markDirty(); }
+  if (!last) { S.ship.garden = now; $('dlgLine').textContent = `Seeds planted. A medkit grows every ${Math.round(gardenEvery() / 60000)} minutes, up to ${most} at a time.`; markDirty(); }
+  else if (ready > 0) { const n = Math.min(most, ready); S.inv.medkit = (S.inv.medkit || 0) + n; S.ship.garden = now; $('dlgLine').textContent = `You harvested ${n} medkit${n > 1 ? 's' : ''}.`; SFX.item(); markDirty(); }
   else $('dlgLine').textContent = 'Nothing ripe yet. Check back in a few minutes.';
   acts([['Close', closeDlg]]);
 }
@@ -503,6 +518,8 @@ function loadLevel(id, opts) {
   POOLS.length = 0; L.pools.forEach(p => POOLS.push(p)); LAVA.length = 0; L.lava.forEach(p => LAVA.push(p));
   WATER_Y = L.water; WORLD_C.set(L.center[0], 0, L.center[1]); WORLD_R = L.radius;
   L.safes.forEach(s => SAFES.push(s));
+  // lava sits on the ground: if the land under a lava pool is lower than the usual lava level, drop the pool to it (no more floating lava)
+  if (L.terrain) for (const l of LAVA) if (l[3] == null) { const keep = LAVA.splice(0); const nat = heightExact(l[0], l[1]); keep.forEach(k => LAVA.push(k)); if (nat < 2.2) l[3] = nat + 0.3; }
   buildHeightGrid();
   if (L.terrain) levelGroup.add(makeGround());
   levelGroup.add(makeWater());
@@ -532,7 +549,7 @@ function loadLevel(id, opts) {
 const resumeWhere = () => S.where && planetOpen(S.where) ? S.where : shipUnlocked() ? 'ship' : 'earth';
 function travel(id, opts) {
   SFX.warp();
-  const fade = $('fade'); fade.hidden = false; fade.style.opacity = 1; $('fadeTxt').textContent = id === 'ship' ? 'Boarding the Setting Sun…' : id === 'space' ? 'Taking the helm…' : id === 'zeltac' ? 'Docking at the Zeltac Ship…' : `Landing on ${LEVELS[id].name}…`;
+  const fade = $('fade'); fade.hidden = false; fade.style.opacity = 1; $('fadeTxt').textContent = id === 'ship' ? 'Boarding the Setting Sun…' : id === 'space' ? 'Taking the helm…' : id === 'zeltac' ? 'Docking at the Zeltac Ship…' : id === 'maw' ? 'Entering the wormhole…' : `Landing on ${LEVELS[id].name}…`;
   SFX.ui();
   setTimeout(() => { loadLevel(id, opts); markDirty(); setTimeout(() => { fade.style.opacity = 0; setTimeout(() => { fade.hidden = true; }, 400); toast(LEVELS[id].name.toUpperCase(), LEVELS[id].tag, 3); burp(id === 'ship' ? 'ship' : id === 'space' ? 'space' : 'land'); }, 150); }, 450);
 }
@@ -575,12 +592,14 @@ function openShipTerminal() {
     rows.textContent = '';
     $('dlgLine').textContent = `Add rooms to grow your ship. ${S.cr} cr on hand.`;
     Object.entries(ROOMS).forEach(([id, R]) => {
-      if (R.fixed) return;
+      if (R.fixed || (R.hide && R.hide() && !S.ship.rooms.includes(id))) return;
       const own = S.ship.rooms.includes(id), r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = own ? '#6fdc5a' : '#8fe3ff';
       const nm = document.createElement('span'); nm.textContent = `${R.name} — ${R.desc}`;
-      const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = own ? 'Installed' : costLabel(R.cost);
-      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = own ? '✓' : 'Build'; b.disabled = own || !costOk(R.cost);
+      const lv = roomLvl(id), nc = own && lv < 5 ? roomUpCost(id, lv + 1) : null; if (own) nm.textContent = `${R.name} · Level ${lv}${lv < 5 ? ` → ${lv + 1}: ${roomUpText(id, lv + 1)}` : ' (max): ' + roomUpText(id, 5)}`;
+      const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = own ? (nc ? costLabel(nc) : 'Maxed') : costLabel(R.cost);
+      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = own ? (nc ? 'Upgrade' : '✓') : 'Build'; b.disabled = own ? !nc || !costOk(nc) : !costOk(R.cost);
+      if (own) { if (nc) b.addEventListener('click', () => roomUpgrade(id)); r.append(dot, nm, mt, b); rows.appendChild(r); return; }
       b.addEventListener('click', () => { costPay(R.cost); S.ship.rooms.push(id); markDirty(); SFX.level(); closeDlg(); loadLevel('ship', { at: { x: player.pos.x, z: player.pos.z, yaw: player.yaw } }); toast('ROOM ADDED', R.name); if (typeof burp === 'function') burp('room'); });
       r.append(dot, nm, mt, b); rows.appendChild(r);
     });

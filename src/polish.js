@@ -96,15 +96,17 @@ window.addEventListener('keydown', e => {
   const mk = (id, label, fn) => { const b = document.createElement('button'); b.className = ref.className; b.id = id; b.textContent = label; b.addEventListener('click', () => { drop.hidden = true; $('menuToggle').setAttribute('aria-expanded', 'false'); fn(); }); drop.insertBefore(b, ref); };
   mk('playersBtn', '👥 Players online', () => openOnline()); mk('photoBtn', '📷 Photo mode', () => setPhoto(true)); mk('helpBtn', '❓ Controls', () => openControls()); }
 // arrival title card the first time you set foot on a world
-const arrive = document.createElement('div'); arrive.id = 'arrive'; arrive.style.cssText = 'position:fixed;left:0;right:0;top:24%;text-align:center;pointer-events:none;z-index:20;opacity:0;transition:opacity .9s;text-shadow:0 2px 0 #000,0 0 18px rgba(0,0,0,.8)'; document.body.appendChild(arrive);
+const arrive = document.createElement('div'); arrive.id = 'arrive'; arrive.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 30%);max-width:min(92vw,520px);padding:8px 18px 10px;border-radius:12px;background:rgba(8,14,26,.55);text-align:center;pointer-events:none;z-index:20;opacity:0;transition:opacity .7s;text-shadow:0 1px 0 #000'; document.body.appendChild(arrive);
 function arrivalCard(id) {
   const L = LEVELS[id]; if (!L) return; const lore = LORE[id];
-  arrive.innerHTML = `<div style="font-size:13px;letter-spacing:6px;color:#ffd36a">NEW WORLD DISCOVERED</div><div style="font-size:clamp(34px,7vw,64px);font-weight:bold;color:#fff;margin:4px 0">${(L.name || id).toUpperCase()}</div><div style="font-size:16px;color:#e8ecf8">${L.tag || ''}${L.lvls ? ' · ' + L.lvls : ''}</div>${lore ? '<div style="font-size:12px;color:#c8d0e8;margin-top:8px">Lore entry added to your Codex (C)</div>' : ''}`;
-  arrive.style.opacity = 1; $('toast').style.opacity = 0; toastT = 0; SFX.level && SFX.level(); clearTimeout(arrive._t); arrive._t = setTimeout(() => arrive.style.opacity = 0, 3800);
+  arrive.innerHTML = `<div style="font-size:10px;letter-spacing:.2em;color:#ffd36a">NEW WORLD DISCOVERED</div><div style="font-size:clamp(20px,3.6vw,30px);font-weight:bold;color:#fff;margin:2px 0;line-height:1.1">${(L.name || id).toUpperCase()}</div><div style="font-size:13px;color:#e8ecf8">${L.tag || ''}${L.lvls ? ' · ' + L.lvls : ''}</div>${lore ? '<div style="font-size:11px;color:#c8d0e8;margin-top:4px;opacity:.8">Lore entry added to your Codex (C)</div>' : ''}`;
+  arrive.style.opacity = 0.9; $('toast').style.opacity = 0; toastT = 0; SFX.level && SFX.level(); clearTimeout(arrive._t); arrive._t = setTimeout(() => arrive.style.opacity = 0, 3000); arrive._until = performance.now() + 3000;
 }
+// toasts that pop while the arrival card is up wait their turn instead of landing on top of it
+{ const _to = toast; toast = function (big, sm, dur) { const wait = (arrive._until || 0) - performance.now(); if (wait > 0) { setTimeout(() => toast(big, sm, dur), wait + 250); return; } return _to(big, sm, dur); }; }
 { const _ll = loadLevel; loadLevel = function (id, o) {
   const known = !!ST().worlds[id], r = _ll(id, o);
-  if (!known && state === 'play' && LORE[id] && !['ship', 'space'].includes(id)) setTimeout(() => { if (LEVEL.id === id) arrivalCard(id); }, 900);
+  if (!known && state === 'play' && LORE[id] && !['ship', 'space'].includes(id)) { const show = () => { if (LEVEL.id !== id) return; if (state === 'cut') { setTimeout(show, 700); return; } if (state === 'play') arrivalCard(id); }; setTimeout(show, 900); }
   return r;
 }; }
 // one-time contextual tips for new players (each shows once per save)
@@ -232,3 +234,9 @@ function settlePads(L) {
 { const _ll = loadLevel; loadLevel = function (id, o) { PADS.length = 0; return _ll(id, o); }; }
 // the HUD weapon line just shows ordnance charges now (Phil: no gun name)
 { const _u = updateHud; updateHud = function () { _u(); if (!LEVEL.fly && !handMelee()) $('gunLbl').textContent = `◆ ${ordCharges} ordnance`; else if (!LEVEL.fly) $('gunLbl').textContent = `◆ ${ordCharges} ordnance`; }; }
+// signs seen from behind used to read backwards: give each two-sided sign a proper back face instead
+function unmirrorSigns(root) {
+  const list = []; root.traverse(o => { const m = o.material; if (o.isMesh && m && !Array.isArray(m) && m.map && m.map.userData && m.map.userData.sign && m.side === THREE.DoubleSide && !o.userData.unmir) list.push(o); });
+  for (const o of list) { o.userData.unmir = true; const f = o.material.clone(); f.side = THREE.FrontSide; o.material = f; const b = new THREE.Mesh(o.geometry, f); b.rotation.y = Math.PI; b.userData.unmir = true; o.add(b); }
+}
+{ const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); try { unmirrorSigns(levelGroup); setTimeout(() => { try { unmirrorSigns(scene); } catch (_) {} }, 1500); } catch (_) {} return r; }; }

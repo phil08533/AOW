@@ -264,7 +264,7 @@ function meleeAttack() {
   const hits = enemies.filter(e => !e.dead).map(e => { const dx = e.obj.position.x - player.pos.x, dz = e.obj.position.z - player.pos.z, d = Math.hypot(dx, dz); return { e, d, dot: (dx * fx + dz * fz) / (d || 1) }; })
     .filter(h => h.d < M.reach + h.e.def.r * h.e.sc && h.dot > (M.sweep ? -0.2 : 0.45) && Math.abs(h.e.obj.position.y - player.pos.y) < 3).sort((a, b) => a.d - b.d).slice(0, M.sweep ? 6 : 3);
   for (const { e } of hits) {
-    const dmg = M.dmg * (1 + (S.lvl - 1) * 0.06) * (hasGear('ring') ? 1.15 : 1) * (hasGear('armblade') ? 1.3 : 1);
+    const dmg = M.dmg * (1 + (S.lvl - 1) * 0.045) * (hasGear('ring') ? 1.15 : 1) * (hasGear('armblade') ? 1.3 : 1) * subDmg();
     e.hp -= dmg; e.hitT = 0.15; e.aggro = true; e.lastHit = gameTime; e.anim.hit = 0.18; n++;
     burst(e.obj.position.clone().add(V(0, e.def.hy * e.sc, 0)), M.saber ? SABER_COLS[saberCfg().col] : S.melee === 'staff' ? '#9fe8ff' : '#fff1c8', 8, 4);
     if (S.melee === 'staff') e.cd = Math.max(e.cd, 1.2);
@@ -283,9 +283,9 @@ function updateMelee(dt) {
 
 // ---------------- more guns, each with its own model ----------------
 Object.assign(GUNS, {
-  sg8: { name: 'Lvl 8 Scatter Blaster', dmg: 13, pellets: 7, spread: 0.06, rate: 0.65, mag: 6, reload: 1.5, req: 5, price: 380, col: '#c8402f', kind: 'scatter' },
-  k18: { name: 'Lvl 18 Long Rifle', dmg: 210, rate: 0.9, mag: 5, reload: 1.6, req: 12, price: 3600, col: '#6fdc5a', kind: 'long' },
-  l28: { name: 'Lvl 28 Rocket Launcher', dmg: 170, splash: 3.4, rate: 1.0, mag: 4, reload: 1.8, req: 19, price: 9000, col: '#ff6a1a', kind: 'rocket' }
+  sg8: { name: 'Lvl 8 Scatter Blaster', dmg: 22, pellets: 7, spread: 0.06, rate: 0.65, mag: 6, reload: 1.5, req: 5, price: 380, col: '#c8402f', kind: 'scatter' },
+  k18: { name: 'Lvl 18 Long Rifle', dmg: 210, rate: 0.75, mag: 5, reload: 1.6, req: 12, price: 3600, col: '#6fdc5a', kind: 'long' },
+  l28: { name: 'Lvl 28 Rocket Launcher', dmg: 380, splash: 3.4, rate: 1.0, mag: 4, reload: 1.8, req: 19, price: 9000, col: '#ff6a1a', kind: 'rocket' }
 });
 Object.assign(GUNS.b5, { col: '#4fa8ff' }); Object.assign(GUNS.c10, { col: '#ffd36a', kind: 'carbine' }); Object.assign(GUNS.r15, { col: '#c86aff', kind: 'rifle' });
 Object.assign(GUNS.h20, { col: '#ffd23a', kind: 'hive' }); Object.assign(GUNS.s25, { col: '#ff3b2a', kind: 'rifle' }); Object.assign(GUNS.f30, { col: '#9fe8ff', kind: 'carbine' }); Object.assign(GUNS.p35, { col: '#c86aff', kind: 'plasma' });

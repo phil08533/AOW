@@ -97,16 +97,39 @@ placePiece = function () {
   if (!furnOwned(baseState.type)) { S.cr -= def.price; S.furn = S.furn || {}; S.furn[baseState.type] = 1; SFX.coin(); log(`Bought ${def.name} (${def.price} cr). Place as many as you like.`, 'loot'); }
   myBase().push([baseState.type, c.gx, c.gz, c.rot]); SFX.item(); afterBaseChange();
 };
+// ---- decorating you can see: a see-through copy of the real piece, its footprint, and a yellow arrow out of its front ----
+const FG = { g: null, type: null, ok: null };
+const fgMatOk = new THREE.MeshBasicMaterial({ color: '#8affb0', transparent: true, opacity: 0.55, depthWrite: false });
+const fgMatBad = new THREE.MeshBasicMaterial({ color: '#ff5a4d', transparent: true, opacity: 0.55, depthWrite: false });
+function fgBuild(type) {
+  if (FG.g) scene.remove(FG.g); const d = PIECES[type].dim, g = new THREE.Group(), m = pieceModel(type, S.col);
+  m.traverse(o => { if (o.isMesh) o.material = fgMatOk; }); g.add(m); g.userData.model = m;
+  const foot = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(Math.max(0.4, d[0]), Math.max(0.4, d[2])).rotateX(-Math.PI / 2)), new THREE.LineBasicMaterial({ color: '#ffffff' })); foot.position.y = 0.04; g.add(foot);
+  const am = new THREE.MeshBasicMaterial({ color: '#ffd36a', side: THREE.DoubleSide, depthWrite: false, transparent: true, opacity: 0.95 });
+  const sh = new THREE.Shape(); sh.moveTo(-0.45, 0); sh.lineTo(0.45, 0); sh.lineTo(0, 0.6); sh.closePath();
+  const tip = new THREE.Mesh(new THREE.ShapeGeometry(sh).rotateX(Math.PI / 2), am); tip.position.set(0, 0.05, Math.max(0.2, d[2] / 2) + 0.4); g.add(tip);
+  const stem = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.4).rotateX(-Math.PI / 2), am); stem.position.set(0, 0.05, Math.max(0.2, d[2] / 2) + 0.2); g.add(stem);
+  g.userData.am = am; scene.add(g); FG.g = g; FG.type = type; FG.ok = true;
+}
 const _updGhost = updateGhost;
-updateGhost = function () { _updGhost(); if (baseState.on && !baseState.remove) { const def = PIECES[baseState.type], why = canBuild(baseState.type, targetCell().gx, targetCell().gz); $('buildMsg').textContent = why || `Place ${def.name}${furnOwned(baseState.type) ? '' : ` · buy for ${def.price} cr`} · R rotates`; } };
+updateGhost = function () {
+  if (!baseState.on || !onShip() || baseState.remove) { if (FG.g) FG.g.visible = false; _updGhost(); if (baseState.on && baseState.remove) $('buildMsg').textContent = $('buildMsg').textContent.replace(' (refunds half)', ''); return; }
+  if (ghost) ghost.visible = false;
+  const c = targetCell(), def = PIECES[baseState.type], why = canBuild(baseState.type, c.gx, c.gz);
+  if (FG.type !== baseState.type || !FG.g) fgBuild(baseState.type);
+  FG.g.visible = true; FG.g.position.set(c.gx * CELL, pieceY(myBase(), c.gx, c.gz, def.layer), c.gz * CELL); FG.g.rotation.y = c.rot * Math.PI / 2;
+  const ok = !why; if (FG.ok !== ok) { FG.ok = ok; FG.g.userData.model.traverse(o => { if (o.isMesh) o.material = ok ? fgMatOk : fgMatBad; }); }
+  const t = performance.now() / 1000; fgMatOk.opacity = fgMatBad.opacity = 0.5 + Math.sin(t * 4) * 0.12; FG.g.userData.am.opacity = 0.75 + Math.sin(t * 6) * 0.2;
+  $('buildMsg').textContent = why || `${def.name}${furnOwned(baseState.type) ? '' : ` · ${def.price} cr`} · yellow arrow = front · Rotate turns it`;
+};
 baseState.cat = 'Living'; baseState.type = 'sofa';
 renderBuildBar = function () {
   const bar = $('buildPieces'); bar.textContent = '';
   let cats = $('buildCats'); if (!cats) { cats = document.createElement('div'); cats.id = 'buildCats'; cats.className = 'bpieces'; bar.before(cats); }
-  cats.textContent = ''; FURN_CATS.forEach(cn => { const b = document.createElement('button'); b.className = 'pbtn' + (baseState.cat === cn ? ' go' : ''); b.style.padding = '3px 8px'; b.style.fontSize = '12px'; b.textContent = cn; b.addEventListener('click', () => { baseState.cat = cn; const first = Object.keys(PIECES).find(k => PIECES[k].cat === cn); if (first) baseState.type = first; baseState.remove = false; SFX.ui(); renderBuildBar(); }); cats.appendChild(b); });
+  cats.textContent = ''; FURN_CATS.forEach(cn => { const b = document.createElement('button'); b.className = 'pbtn' + (baseState.cat === cn ? ' go' : ''); b.textContent = cn; b.addEventListener('click', () => { baseState.cat = cn; const first = Object.keys(PIECES).find(k => PIECES[k].cat === cn); if (first) baseState.type = first; baseState.remove = false; SFX.ui(); renderBuildBar(); }); cats.appendChild(b); });
   Object.entries(PIECES).filter(([, p]) => p.cat === baseState.cat).forEach(([id, p]) => {
     const b = document.createElement('button'); b.className = 'pbtn' + (baseState.type === id && !baseState.remove ? ' go' : '');
-    const n = document.createElement('span'); n.textContent = p.name; const c = document.createElement('small'); c.style.display = 'block'; c.style.fontSize = '11px';
+    const n = document.createElement('span'); n.textContent = p.name; const c = document.createElement('small');
     c.textContent = furnOwned(id) ? (p.price ? 'Owned' : 'Free') : `${p.price} cr`; c.style.color = furnOwned(id) || S.cr >= p.price ? 'var(--dim)' : '#ff8a80';
     b.append(n, c); b.addEventListener('click', () => { baseState.type = id; baseState.remove = false; SFX.ui(); renderBuildBar(); }); bar.appendChild(b); });
   $('bRemove').classList.toggle('go', baseState.remove);
@@ -115,11 +138,11 @@ renderBuildBar = function () {
 };
 setBuild = function (on) {
   if (on && !onShip()) { log('Decorating happens on your ship. Board it and open Decorate from the menu.'); return; }
-  baseState.on = on; $('buildBar').hidden = !on; $('ammo').hidden = on; firing = false;
-  if (on) { renderBuildBar(); log('Decorate: aim at the floor of a room, pick furniture, click/tap to place, R rotates.'); } else if (ghost) ghost.visible = false;
+  baseState.on = on; $('buildBar').hidden = !on; $('ammo').hidden = on; firing = false; document.body.classList.toggle('decor', !!on);
+  if (on) { closeTablet(); renderBuildBar(); log('Decorate: look at a spot on the floor, pick a piece, then Place. The yellow arrow is its front.'); } else { if (ghost) ghost.visible = false; if (FG.g) FG.g.visible = false; }
 };
 // planet bases are retired: only your ship's furniture renders
-{ const _rb = renderBase; renderBase = function (key, pieces, col, own) { if (key !== 'ship') return; const r = _rb(key, cleanPieces(pieces), col, own); const g = baseState.groups.get('ship'); if (g) { g.userData.boxes = []; for (const p of cleanPieces(pieces)) { const d = PIECES[p[0]]; if (!d || !d.solid || p[0] === 'wall') continue; const hx = (p[3] ? d.dim[2] : d.dim[0]) / 2, hz = (p[3] ? d.dim[0] : d.dim[2]) / 2; g.userData.boxes.push([p[1] * CELL, p[2] * CELL, hx, hz]); } for (const p of cleanPieces(pieces)) if (p[0] === 'wall') g.userData.boxes.push(p[3] ? [p[1] * CELL, p[2] * CELL, 0.17, 1.0] : [p[1] * CELL, p[2] * CELL, 1.0, 0.17]); rebuildBaseColliders(); } furnInteracts(pieces); return r; }; }
+{ const _rb = renderBase; renderBase = function (key, pieces, col, own) { if (key !== 'ship') return; const r = _rb(key, cleanPieces(pieces), col, own); const g = baseState.groups.get('ship'); if (g) { g.userData.boxes = []; for (const p of cleanPieces(pieces)) { const d = PIECES[p[0]]; if (!d || !d.solid || p[0] === 'wall') continue; const hx = (p[3] % 2 ? d.dim[2] : d.dim[0]) / 2, hz = (p[3] % 2 ? d.dim[0] : d.dim[2]) / 2; g.userData.boxes.push([p[1] * CELL, p[2] * CELL, hx, hz]); } for (const p of cleanPieces(pieces)) if (p[0] === 'wall') g.userData.boxes.push(p[3] % 2 ? [p[1] * CELL, p[2] * CELL, 0.17, 1.0] : [p[1] * CELL, p[2] * CELL, 1.0, 0.17]); rebuildBaseColliders(); } furnInteracts(pieces); return r; }; }
 function furnInteracts(pieces) {
   for (let i = INTERACTS.length - 1; i >= 0; i--) if (INTERACTS[i].furn) INTERACTS.splice(i, 1);
   for (const p of cleanPieces(pieces)) { const x = p[1] * CELL, z = p[2] * CELL, t = p[0], add = (label, fn) => INTERACTS.push({ x, z, r: 1.6, label, fn, furn: true, quiet: true });
@@ -135,5 +158,22 @@ function furnInteracts(pieces) {
   }
 }
 // hide the Build button off-ship, rename it Decorate
-{ const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); const b = $('buildBtn'); if (b) { b.hidden = id !== 'ship'; b.textContent = 'Decorate'; } if (id !== 'ship' && baseState.on) setBuild(false); return r; }; }
+{ const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); const b = $('buildBtn'); if (b) { b.hidden = false; if (b.firstChild && b.firstChild.nodeType === 3) b.firstChild.textContent = 'Decorate'; else if (!b.querySelector('.why')) b.textContent = 'Decorate'; } if (id !== 'ship' && baseState.on) setBuild(false); return r; }; }
 window.__furn = { get rooms() { return SHIP_ROOMS; } };
+// ---- a compact decorate bar: docked at the top on phones, the bottom on PC, with the HUD clutter tucked away ----
+{ const st = document.createElement('style'); st.textContent = `
+body.decor #quest, body.decor #log, body.decor #zone, body.decor #raidBar, body.decor #map, body.decor #ctape, body.decor #qbar, body.decor #toast, body.decor #compass { visibility: hidden !important; }
+#buildBar { width: min(calc(100% - 24px), 600px) !important; padding: 6px 8px 7px !important; gap: 5px !important; background: rgba(8,14,26,.78) !important; }
+#buildBar .bhead { font-size: 12px; align-items: center; } #buildBar .bhead span { font-size: 12px !important; }
+#buildBar #buildCats { gap: 4px; } #buildBar #buildCats .pbtn { padding: 2px 8px !important; font-size: 11px !important; min-height: 0; }
+#buildBar #buildPieces .pbtn { padding: 4px 9px !important; font-size: 12px; min-height: 0; } #buildBar #buildPieces small { margin-left: 6px; font-size: 10px; opacity: .8; }
+#buildBar .bacts { align-items: center; flex-wrap: nowrap; } #buildBar .bacts .bmsg { flex: 1; font-size: 12px; min-width: 0; color: var(--dim); }
+#buildBar .bacts .pbtn { padding: 5px 11px !important; font-size: 12px; flex: 0 0 auto; }
+@media (pointer: coarse) { #buildBar { top: calc(env(safe-area-inset-top, 0px) + 6px) !important; bottom: auto !important; } }
+@media (pointer: coarse) and (max-height: 520px) { #buildBar .bacts .bmsg { font-size: 11px; } body.decor #tFire, body.decor #tJump { opacity: .35; } }`; document.head.appendChild(st);
+  const acts = document.querySelector('#buildBar .bacts'), msg = $('buildMsg'); if (acts && msg) acts.prepend(msg);
+  const rb = $('bRotate'); if (rb) rb.textContent = '↻ Rotate'; }
+// ---- hanging decor (shares its models with the editor): it hangs from the ship's ceiling over the spot you pick ----
+for (const [id, nm, pr] of [['hanglamp', 'Hanging lamp', 150], ['chainlight', 'Chain light', 300], ['hangplant', 'Hanging plant', 120], ['hangbanner', 'Hanging banner', 200]]) {
+  FURN[id] = [nm, 'Decor', pr, [0.8, 0.3, 0.8], 1, 0]; PIECES[id] = { name: nm, cost: {}, price: pr, cat: 'Decor', layer: 1, dim: [0.8, 0.3, 0.8], solid: 0, hang: true }; }
+{ const _pm = pieceModel; pieceModel = function (type, col) { if (!HANG_MODELS[type]) return _pm(type, col); const g = new THREE.Group(), h = new THREE.Group(); HANG_MODELS[type](h); h.position.y = 3.18; g.add(h); return g; }; }

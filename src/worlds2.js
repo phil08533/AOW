@@ -375,7 +375,7 @@ LEVELS.vector = {
     { id: 'eyes', name: 'Field of Eyes', lvl: 'Lv 47–49', x: 42, z: 22, r: 22, col: '#3a1a24', h: -0.5 },
     { id: 'maw', name: 'The Maw', lvl: 'Lv 50 · final boss', x: 0, z: 72, r: 20, fr: 14, col: '#140e18', h: -3 }
   ],
-  paths: [[[0, -2], [-42, 22]], [[0, -2], [42, 22]], [[0, -2], [0, 72]]], river: [], pools: [], lava: [[0, 72, 5, 0.4]],
+  paths: [[[0, -2], [-42, 22]], [[0, -2], [42, 22]], [[0, -2], [0, 72]]], river: [], pools: [], lava: [[0, 72, 5]],
   safes: [{ x: 0, z: -14, r: 12 }], spawn: { x: 0, z: -20, yaw: Math.PI }, pad: { x: -7, z: -22 }, menu: { x: 0, z: 10, r: 46, h: 14 }, npcBase: [0, -14],
   npcs: [
     { id: 'lumen', name: 'Lumen', role: 'Keeper of the last light', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#3a2a4a', '#f4e8d8', '#ffffff', '#ffd36a'), x: 0, z: 6, face: Math.PI, heal: true, idle: ["Stay in the light. It's not a metaphor. Please stay in the actual light.", "Drome was a servant. Everything here serves the one in the Maw."] },

@@ -24,8 +24,8 @@ function scanModels() {
     'blaster': 'Weapons', 'xr17': 'Weapons', 'gunmodel': 'Weapons', 'meleemodel': 'Weapons', 'spearman': 'Weapons',
     'trooper': 'Characters & Troopers', 'civilian': 'Characters & Troopers', 'playerchar': 'Characters & Troopers',
     'elismas': 'Characters & Troopers', 'maxurge': 'Characters & Troopers', 'drome': 'Characters & Troopers',
-    'kragmech': 'Bosses & Mechs', 'siegebot': 'Bosses & Mechs', 'mysticmodel': 'Bosses & Mechs',
-    'dropship': 'Vehicles & Drones', 'dronemodel': 'Vehicles & Drones', 'trainingdrone': 'Vehicles & Drones', 'hulk': 'Vehicles & Drones',
+    'greatermaw': 'Bosses & Mechs', 'eyewatcher': 'Creatures & Aliens', 'kragmech': 'Bosses & Mechs', 'siegebot': 'Bosses & Mechs', 'mysticmodel': 'Bosses & Mechs',
+    'dropship': 'Vehicles & Drones', 'battlecar': 'Vehicles & Drones', 'hovercar': 'Vehicles & Drones', 'carstyle': 'Vehicles & Drones', 'tankmodel': 'Vehicles & Drones', 'mechmodel': 'Vehicles & Drones', 'starship': 'Vehicles & Drones', 'dronemodel': 'Vehicles & Drones', 'trainingdrone': 'Vehicles & Drones', 'hulk': 'Vehicles & Drones',
     'gianttree': 'Props & Environment', 'fern': 'Props & Environment', 'pine': 'Props & Environment',
     'icespike': 'Props & Environment', 'hive': 'Props & Environment', 'wreck': 'Props & Environment',
     'beacon': 'Props & Environment', 'jtbuilding': 'Props & Environment', 'town': 'Props & Environment', 'land': 'Props & Environment'
@@ -33,6 +33,13 @@ function scanModels() {
 
   const files = fs.readdirSync(SRC_DIR).filter(f => f.endsWith('.js') || f === 'game.src.html');
   const list = [];
+  // helper functions a model calls that the studio doesn't provide (e.g. deadGlow for the Greater Maw):
+  // their source rides along as `deps` so the preview can run the model as written
+  const STUDIO_HAS = new Set(['part', 'B', 'Cy', 'E', 'seg', 'chain', 'eyes', 'toon', 'glow', 'V']);
+  const fnSrc = {};
+  for (const f of files) { const c = fs.readFileSync(path.join(SRC_DIR, f), 'utf8'), re = /^function\s+([A-Za-z0-9_$]+)\s*\(/gm; let q;
+    while ((q = re.exec(c)) !== null) { let b = 0, st = false, e = -1; for (let i = q.index; i < c.length; i++) { if (c[i] === '{') { b++; st = true; } else if (c[i] === '}') { b--; if (st && !b) { e = i + 1; break; } } } if (e > 0 && !fnSrc[q[1]]) fnSrc[q[1]] = c.slice(q.index, e); } }
+  const depsOf = (code, self) => { const seen = new Set([self]), out = []; const walk = (src, d) => { if (d > 2) return; for (const m of src.matchAll(/\b([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/g)) { const n = m[1]; if (seen.has(n) || STUDIO_HAS.has(n) || !fnSrc[n] || /^make[A-Z]/.test(n)) continue; seen.add(n); out.push(fnSrc[n]); walk(fnSrc[n], d + 1); } }; walk(code, 0); return out.join('\n'); };
   for (const f of files) {
     const content = fs.readFileSync(path.join(SRC_DIR, f), 'utf8');
     let m;
@@ -68,6 +75,7 @@ function scanModels() {
         file: f,
         category: cat,
         params,
+        deps: depsOf(fnCode, fnName),
         startLine,
         endLine,
         code: fnCode
@@ -448,7 +456,16 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // only pages served from this machine (dev.html, the game) may use the dev API. Other websites open in your browser
+    // could otherwise send edits to localhost, since the browser would happily deliver them
+    const origin = req.headers.origin;
+    if (origin && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      res.statusCode = 403;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Access denied: Developer API only accepts requests from pages on this machine' }));
+      return;
+    }
+    if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 

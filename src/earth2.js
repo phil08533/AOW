@@ -383,6 +383,8 @@ LEVELS.forestlife = {
     { zone: 'heart', type: 'spriggan', n: 3, lv: [12, 14] }, { zone: 'heart', type: 'rotking', n: 1, lv: [14, 14], at: [0, 4] }
   ],
   build() {
+    // a footbridge where the Heartwood path crosses the river
+    bridgeOn([PATHS[2][0], PATHS[2][1]]);
     // the Tree of Life
     const tree = new THREE.Group(); part(tree, Cy(2.2, 3.4, 16, 9), toon('#6a4a2e', 'wood'), 0, 8, 0);
     for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; chain(tree, [[Math.cos(a) * 2.5, 0.5, Math.sin(a) * 2.5], [Math.cos(a) * 4.5, 0.2, Math.sin(a) * 4.5], [Math.cos(a) * 6, -0.3, Math.sin(a) * 6]], 0.6, toon('#5a3a22', 'wood'), 0.2); }

@@ -35,6 +35,6 @@ if (RSTYLE !== 'retro') {
   { const _ue = updateEnv; updateEnv = function (a, b) { _ue(a, b); if (LEVEL && !LEVEL.fly && !LEVEL.indoor) { scene.fog.near *= 2.4; scene.fog.far *= 3.2; } sun.intensity *= 1.55; hemi.intensity *= 0.72; fill.intensity *= 0.6; }; }
   BLOB_MAT.opacity = 0.45;
   { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); setTimeout(() => HD.shadowize(), 50); return r; }; }
-  { const _rs = resize; resize = function () { _rs(); HD.resize(stage.clientWidth, stage.clientHeight); renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); }; }
+  { const _rs = resize; resize = function () { _rs(); HD.resize(stage.clientWidth, stage.clientHeight); renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, TOUCH ? 1.5 : 2)); }; }
   setTimeout(() => { try { resize(); } catch (_) {} }, 0); window.addEventListener('resize', () => HD.resize(stage.clientWidth, stage.clientHeight));
 }

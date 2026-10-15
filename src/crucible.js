@@ -95,7 +95,7 @@ for (const id of ['w_25', 'w_75']) GUNS[id].name = `${GUNS[id].name} · ${GUNS[i
   if (player.cool > 0 || player.ammo <= 0) return _f();
   const o = camera.getWorldPosition(V(0, 0, 0)), d = V(0, 0, 0); camera.getWorldDirection(d); let best = null, bt = 45;
   for (const r of remotes.values()) { const c = r.obj.position.clone().add(V(0, 1.1, 0)), t = raySphere(o, d, c, 0.9); if (t > 0 && t < bt) { bt = t; best = r; } }
-  const amt = g.dmg * (1 + (S.lvl - 1) * 0.06) * 1.4;
+  const amt = g.dmg * (1 + (S.lvl - 1) * 0.045) * 1.4;
   if (best) { player.ammo--; player.cool = g.rate; tracer(o.clone().add(d.clone().multiplyScalar(0.5)), best.obj.position.clone().add(V(0, 1.1, 0)), '#6fdc5a'); burst(best.obj.position.clone().add(V(0, 1.2, 0)), '#6fdc5a', 16, 3); SFX.ui();
     const targets = [best]; if (g.bloom) for (const r of remotes.values()) if (r !== best && r.obj.position.distanceTo(best.obj.position) < 6) targets.push(r);
     for (const r of targets) if (room && r.peerId) room.emit('heal', { to: r.peerId, a: Math.round(amt), n: S.nick }).catch(() => {});

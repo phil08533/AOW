@@ -42,7 +42,7 @@ function pieceY(pieces, gx, gz, layer) {
 }
 function cleanPieces(list) {
   if (!Array.isArray(list)) return [];
-  return list.slice(0, 200).filter(p => Array.isArray(p) && PIECES[p[0]] && Number.isInteger(p[1]) && Number.isInteger(p[2]) && Math.abs(p[1]) < 80 && Math.abs(p[2]) < 80).map(p => [p[0], p[1], p[2], p[3] ? 1 : 0]);
+  return list.slice(0, 200).filter(p => Array.isArray(p) && PIECES[p[0]] && Number.isInteger(p[1]) && Number.isInteger(p[2]) && Math.abs(p[1]) < 80 && Math.abs(p[2]) < 80).map(p => [p[0], p[1], p[2], (p[3] | 0) & 3]);
 }
 function renderBase(key, pieces, col, own) {
   const old = baseState.groups.get(key); if (old) scene.remove(old);
@@ -50,9 +50,9 @@ function renderBase(key, pieces, col, own) {
   const g = new THREE.Group(); g.userData.turrets = []; g.userData.fires = []; g.userData.boxes = []; g.userData.surfaces = [];
   for (const p of pieces) {
     const [type, gx, gz, rot] = p, def = PIECES[type], x = gx * CELL, z = gz * CELL, y = pieceY(pieces, gx, gz, def.layer);
-    const m = mergeChar(pieceModel(type, col)); m.position.set(x, y, z); m.rotation.y = rot ? Math.PI / 2 : 0; g.add(m);
+    const m = mergeChar(pieceModel(type, col)); m.position.set(x, y, z); m.rotation.y = (rot | 0) * Math.PI / 2; g.add(m);
     if (type === 'floor') g.userData.surfaces.push({ x, z, ux: 1, uz: 0, hl: 1, hw: 1, y: y + 0.22, base: true });
-    if (type === 'wall') g.userData.boxes.push(rot ? [x, z, 0.17, 1.0] : [x, z, 1.0, 0.17]);
+    if (type === 'wall') g.userData.boxes.push(rot % 2 ? [x, z, 0.17, 1.0] : [x, z, 1.0, 0.17]);
     if (type === 'turret' || type === 'crate' || type === 'lamp') g.userData.boxes.push([x, z, type === 'lamp' ? 0.18 : 0.42, type === 'lamp' ? 0.18 : 0.42]);
     if (type === 'turret' && own) g.userData.turrets.push({ head: m.userData.head, x, y: y + 1.2, z, cd: 0 });
     if (type === 'fire') g.userData.fires.push({ x, z, flame: m.userData.flame });
@@ -89,8 +89,9 @@ function canBuild(type, gx, gz) {
 function targetCell() {
   const f = V(-Math.sin(player.yaw), 0, -Math.cos(player.yaw));
   const p = player.pos.clone().addScaledVector(f, 3.6);
-  const auto = Math.abs(f.x) > Math.abs(f.z) ? 1 : 0;
-  return { gx: Math.round(p.x / CELL), gz: Math.round(p.z / CELL), rot: auto ^ baseState.rot };
+  // the piece's front faces you by default; Rotate turns it a quarter at a time
+  const face = ((Math.round(player.yaw / (Math.PI / 2)) % 4) + 4) % 4;
+  return { gx: Math.round(p.x / CELL), gz: Math.round(p.z / CELL), rot: (face + (baseState.rot | 0)) % 4 };
 }
 const ghostOk = new THREE.MeshBasicMaterial({ color: '#6fdc5a', transparent: true, opacity: 0.42, depthWrite: false });
 const ghostBad = new THREE.MeshBasicMaterial({ color: '#ff4a3d', transparent: true, opacity: 0.42, depthWrite: false });

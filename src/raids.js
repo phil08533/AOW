@@ -10,6 +10,8 @@ function raidHud() {
   if (!raidEl) { raidEl = document.createElement('button'); raidEl.id = 'raidBar'; raidEl.className = 'hbtn win'; $('hud').appendChild(raidEl); raidEl.addEventListener('click', () => { const R = raidNow(); if (R.active && LEVEL.id !== R.world && planetOpen(R.world) && shipUnlocked()) travel(R.world); }); }
   const R = raidNow(), name = LEVELS[R.world] ? LEVELS[R.world].name : R.world, mm = ms => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}`;
   if (state !== 'play' || LEVEL.fly && !R.active) { raidEl.hidden = true; return; }
+  // new players without a ship, or raids on worlds you can't reach yet, are just noise
+  const here = R.active && LEVEL.id === R.world; if (!here && (!shipUnlocked() || (R.active && !planetOpen(R.world)))) { raidEl.hidden = true; return; }
   raidEl.hidden = false;
   raidEl.textContent = R.active ? (LEVEL.id === R.world ? `⚔ RAID HERE · wave ${RAID.wave} · ${mm(R.left)} · ${RAID.kills} kills` : `⚔ RAID on ${name} · ${mm(R.left)}${planetOpen(R.world) && shipUnlocked() ? ' · tap to go' : ''}`) : `Next raid: ${LEVELS[RAID_WORLDS[(R.key + 1) % RAID_WORLDS.length]].name} in ${mm(R.next)}`;
   raidEl.style.borderColor = R.active ? '#ff6a5a' : '';
@@ -25,17 +27,17 @@ function raidSpawn(type, x, z, lv, tag) {
 }
 function raidTick() {
   const R = raidNow();
-  if (RAID.key !== R.key) { RAID.key = R.key; RAID.wave = 0; RAID.nextWave = 0; RAID.kills = 0; RAID.boss = false; if (R.active) { toast('RAID ALERT', `Drome's remnants are hitting ${LEVELS[R.world].name}!`, 4); SFX.horn(); } }
+  if (RAID.key !== R.key) { RAID.key = R.key; RAID.wave = 0; RAID.nextWave = 0; RAID.kills = 0; RAID.boss = false; if (R.active) { raidNote('RAID ALERT', `Drome's remnants are hitting ${LEVELS[R.world].name}!`, 4); SFX.horn(); } }
   if (!R.active || LEVEL.id !== R.world || state !== 'play' || LEVEL.fly) return;
   const lv = Math.max(S.lvl, 3);
   if (gameTime > RAID.nextWave) { RAID.wave++; RAID.nextWave = gameTime + 35; const A = raidAnchor(), ts = raidTypes(), n = Math.min(4 + RAID.wave, 9);
     for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; raidSpawn(ts[i % ts.length], A.x + Math.cos(a) * 6, A.z + Math.sin(a) * 6, lv + (i % 3 === 0 ? 1 : 0)); }
-    if (RAID.wave >= 6 && !RAID.boss) { RAID.boss = true; raidSpawn(raidBossType(), A.x, A.z, lv + 2); toast('RAID BOSS', `${ENEMY[raidBossType()].name} leads the raid!`, 3); }
-    else toast(`RAID WAVE ${RAID.wave}`, `${n} raiders at the edge of town`, 2.2); SFX.horn(); }
+    if (RAID.wave >= 6 && !RAID.boss) { RAID.boss = true; raidSpawn(raidBossType(), A.x, A.z, lv + 2); raidNote('RAID BOSS', `${ENEMY[raidBossType()].name} leads the raid!`, 3); }
+    else raidNote(`RAID WAVE ${RAID.wave}`, `${n} raiders at the edge of town`, 2.2); SFX.horn(); }
   // clean up raiders that are too far gone (fell, left the map)
 }
 ITEMS.raidtoken = { name: 'Raid Token', v: 0, col: '#ff6a5a' };
-{ const _k = kill; kill = function (e) { const r = _k(e); if (e.sp && e.sp.raid) { RAID.kills++; S.inv.raidtoken = (S.inv.raidtoken || 0) + (e.def.boss ? 10 : 1); S.cr += e.def.boss ? 800 : 25; if (e.def.boss) { toast('RAID BOSS DOWN', '+10 Raid Tokens · +800 cr', 3); SFX.level(); } markDirty(); } return r; }; }
+{ const _k = kill; kill = function (e) { const r = _k(e); if (e.sp && e.sp.raid) { RAID.kills++; S.inv.raidtoken = (S.inv.raidtoken || 0) + (e.def.boss ? 10 : 1); S.cr += e.def.boss ? 800 : 25; if (e.def.boss) { raidNote('RAID BOSS DOWN', '+10 Raid Tokens · +800 cr', 3); SFX.level(); } markDirty(); } return r; }; }
 // enemies spawned for a raid never respawn
 { const _re = resetEnemy; resetEnemy = function (e) { if (e.sp && e.sp.raid && e.dead) { e.gone = true; scene.remove(e.obj); return; } return _re(e); }; }
 setInterval(() => { try { raidTick(); raidHud(); for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i].gone) enemies.splice(i, 1); } catch (_) {} }, 500);

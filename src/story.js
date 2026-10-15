@@ -38,7 +38,7 @@ function rollCredits(replay) {
   if (document.getElementById('ending')) return;
   const ov = document.createElement('div'); ov.id = 'ending'; ov.style.cssText = 'position:fixed;inset:0;z-index:60;background:#000;overflow:hidden;font-family:var(--ui);color:#e8ecf8';
   const cv = document.createElement('canvas'); cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%'; ov.appendChild(cv);
-  const cap = document.createElement('div'); cap.style.cssText = 'position:absolute;left:0;right:0;bottom:18%;text-align:center;font-family:var(--hud);font-weight:600;letter-spacing:.04em;font-size:clamp(18px,4.4vw,30px);padding:0 24px;text-shadow:0 2px 6px #000;transition:opacity .6s;opacity:0'; ov.appendChild(cap);
+  const cap = document.createElement('div'); cap.id = 'endCap'; cap.style.cssText = 'position:absolute;left:0;right:0;bottom:18%;text-align:center;font-family:var(--hud);font-weight:600;letter-spacing:.04em;font-size:clamp(18px,4.4vw,30px);padding:0 24px;text-shadow:0 2px 6px #000;transition:opacity .6s;opacity:0'; ov.appendChild(cap);
   const roll = document.createElement('div'); roll.style.cssText = 'position:absolute;left:0;right:0;top:100%;text-align:center;font-size:18px;line-height:1.75;padding:0 20px;text-shadow:0 2px 6px #000'; ov.appendChild(roll);
   const bar = document.createElement('div'); bar.style.cssText = 'position:absolute;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;gap:8px;z-index:2';
   const ffb = document.createElement('button'), skb = document.createElement('button'); [ffb, skb].forEach(b => { b.className = 'pbtn'; b.style.cssText = 'font-size:15px;padding:8px 14px;background:rgba(0,0,0,.55)'; });

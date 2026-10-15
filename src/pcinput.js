@@ -4,7 +4,7 @@
 // If the browser still says no (it does for a moment after Esc), the cursor stays hidden and the next click only grabs the mouse, never fires.
 let lockWorks = false, lockDrop = 0;
 document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement === stage) lockWorks = true; });
-{ const _ex = document.exitPointerLock.bind(document); document.exitPointerLock = function () { lockDrop = performance.now(); return _ex(); }; }
+if (document.exitPointerLock) { const _ex = document.exitPointerLock.bind(document); document.exitPointerLock = function () { lockDrop = performance.now(); return _ex(); }; }
 const uiBusy = () => dlgOpen || chatOpen() || !$('menuDrop').hidden || !!document.getElementById('ending') || (typeof CUT !== 'undefined' && CUT.on) || (typeof PHOTO !== 'undefined' && PHOTO.on) || (typeof baseState !== 'undefined' && baseState.on);
 function relock() { if (TOUCH || state !== 'play' || uiBusy() || document.pointerLockElement) return; lock(); }
 // the first click after a menu only grabs the mouse; it doesn't shoot

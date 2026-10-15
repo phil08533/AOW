@@ -5,11 +5,11 @@
 TRACKS.risingsun = 'music/risingsun.mp3'; TRACKS.eventhorizon = 'music/eventhorizon.mp3';
 PLAYLISTS.trailer = ['risingsun']; PLAYLISTS.eyeboss = ['eventhorizon'];
 const TRL_VO = [ // [time in seconds, line]
-  [3.0, 'Hidden deep in the evil of war… is an art.'], [13.2, 'An art that few will ever find.'],
-  [23.0, 'Generals are artists.'], [30.2, 'They command the field. They control the action.'],
-  [41.0, 'Few warriors can master this art.'], [55.0, 'I have…'],
-  [59.0, 'Every stroke makes a picture upon the field.'], [71.0, 'A fallen trooper paints a masterpiece…'], [84.0, 'And…'],
-  [90.0, 'Yes… war is an art.'], [104.5, 'And only those who find this art…'], [121.5, '…will live.']
+  [3.0, 'Hidden deep in the evil of war… is an art.', 1], [13.2, 'An art that few will ever find.', 2],
+  [23.0, 'Generals are artists.', 3], [30.2, 'They command the field. They control the action.', 4],
+  [41.0, 'Few warriors can master this art.', 5], [55.0, 'I have…', 6],
+  [59.0, 'Every stroke makes a picture upon the field.', 7], [71.0, 'A fallen trooper paints a masterpiece…', 8],
+  [90.0, 'Yes… war is an art.', 10], [104.5, 'And only those who find this art…', 11], [121.5, '…will live.', 12]
 ];
 const TRL_END = 134;
 const TRL = { on: false };
@@ -24,7 +24,7 @@ function trlVoice() { if (!window.speechSynthesis) return null; const vs = speec
   return vs.find(v => /female|samantha|victoria|karen|moira|tessa|fiona|serena|zira|susan|hazel|libby|sonia|aria|jenny/i.test(v.name)) || vs.find(v => /UK/i.test(v.name)) || vs[0]; }
 // recorded narration (voice/trailer/t1..t12.mp3, one per TRL_VO line); the browser voice only fills in if a clip won't play
 const TRL_CLIPS = {};
-function trlClip(i) { const k = 't' + (i + 1); if (!TRL_CLIPS[k]) { const a = new Audio('voice/trailer/' + k + '.mp3'); a.preload = 'auto'; TRL_CLIPS[k] = a; } return TRL_CLIPS[k]; }
+function trlClip(n) { const k = 't' + n; if (!TRL_CLIPS[k]) { const a = new Audio('voice/trailer/' + k + '.mp3'); a.preload = 'auto'; TRL_CLIPS[k] = a; } return TRL_CLIPS[k]; }
 function trlNarrate(i, text) {
   if (PREFS.voice === false || !PREFS.sfx) return;
   const a = trlClip(i); a.currentTime = 0; a.volume = 1;
@@ -83,7 +83,7 @@ function trlBuildGround() {
   // the fallen and their broken weapons
   const gunIds = Object.keys(GUNS).filter(k => !GUNS[k].mana).slice(0, 12);
   for (let i = 0; i < 12; i++) { const f = buildChar(() => i % 3 ? makeTrooper() : makeXR17()); f.rotation.set(-Math.PI / 2, i * 1.3, 0); const a = i * 2.2, d = 4 + (i * 7) % 26; f.position.set(Math.cos(a) * d, gy(Math.cos(a) * d, Math.sin(a) * d - 8) + 0.2, Math.sin(a) * d - 8); W.add(f); }
-  for (let i = 0; i < 14; i++) { try { const g = makeGunModel(gunIds[i % gunIds.length]); g.scale.setScalar(1.6); g.rotation.set(Math.PI / 2, i, 0.3); const a = i * 2.7, d = 2.5 + (i * 5) % 20; put(g, Math.cos(a) * d, Math.sin(a) * d - 6, 0, 0.12).rotation.set(Math.PI / 2, 0, i); } catch (_) {} }
+  for (let i = 0; i < 14; i++) { try { const g = makeGunModel(gunIds[i % gunIds.length]); g.scale.setScalar(1.6); const a = i * 2.7, d = 2.5 + (i * 5) % 20; put(g, Math.cos(a) * d, Math.sin(a) * d - 6, i * 1.3, 0.16).rotation.z = Math.PI / 2; } catch (_) {} }
   // wrecked vehicles and fires
   for (const [x, z, r] of [[-22, -30, 0.4], [26, -12, 2.2], [-34, 18, 1.1], [14, -48, 2.8]]) { const t = makeTankModel('#3a3a32'); t.scale.setScalar(1.6); put(t, x, z, r).rotation.z = 0.25; }
   const flames = []; { const ft = trlGradTex([[0, 'rgba(255,240,180,1)'], [0.35, 'rgba(255,140,40,.8)'], [1, 'rgba(255,60,10,0)']]);
@@ -91,11 +91,13 @@ function trlBuildGround() {
   // the warrior and the enemy machines
   const warrior = buildChar(() => makePlayerChar(myLook(), S.col), 'trooper'); W.add(warrior);
   const sword = makeMeleeModel('master'); sword.scale.setScalar(1.4); const R = warrior.userData.rig; (R && R.armR ? R.armR : warrior).add(sword); sword.position.set(0, -0.5, 0.12); sword.rotation.set(Math.PI / 2, 0, 0);
-  const foes = []; for (let i = 0; i < 6; i++) { const e = buildChar(makeXR17, 'xr17'); e.scale.setScalar(1.25); W.add(e); foes.push(e); }
+  const MIX = [[makeXR17, 'xr17', 1.25], [typeof makeZR306 === 'function' ? makeZR306 : makeXR17, null, 1.1], [typeof makeK872 === 'function' ? makeK872 : makeXR17, null, 1.1], [typeof makeXGPolice === 'function' ? makeXGPolice : makeXR17, null, 1.1], [typeof makeDrillbot === 'function' ? makeDrillbot : makeXR17, null, 1], [typeof makeSiegeBot === 'function' ? makeSiegeBot : makeXR17, null, 0.8]];
+  const mkFoe = i => { const [mk, rg, sc] = MIX[i % MIX.length]; let e; try { e = buildChar(mk, rg && RIGS[rg] ? rg : undefined); } catch (_) { e = buildChar(makeXR17, 'xr17'); } e.scale.setScalar(sc); return e; };
+  const foes = []; for (let i = 0; i < 6; i++) { const e = i < 2 ? buildChar(makeXR17, 'xr17') : mkFoe(i - 1); if (i < 2) e.scale.setScalar(1.25); W.add(e); foes.push(e); }
   const foeGun = makeGunModel('c10'); foeGun.scale.setScalar(1.6); W.add(foeGun);
   // the armies in the fog
   const ranks = [];
-  for (let i = 0; i < 18; i++) { const e = buildChar(makeXR17); e.scale.setScalar(1.25); const x = -28 + (i % 9) * 7, z = -58 - Math.floor(i / 9) * 7; put(e, x, z, 0); ranks.push([e, x, z, -1]); }
+  for (let i = 0; i < 18; i++) { const e = mkFoe(i); const x = -28 + (i % 9) * 7, z = -58 - Math.floor(i / 9) * 7; put(e, x, z, 0); ranks.push([e, x, z, -1]); }
   for (let i = 0; i < 14; i++) { const e = buildChar(makeTrooper, 'trooper'); const x = -24 + (i % 7) * 8, z = 34 + Math.floor(i / 7) * 6; put(e, x, z, Math.PI); ranks.push([e, x, z, 1]); }
   // the general on the ridge, with a glowing battle map
   const ridge = new THREE.Mesh(geo(new THREE.BoxGeometry(12, 8, 10)), toon('#2e2a26', 'stone')); put(ridge, 34, 30, 0.3, 3.6);
@@ -171,8 +173,8 @@ function trlBuildSpace() {
     const glare = new THREE.Sprite(new THREE.SpriteMaterial({ map: trlGradTex([[0, '#ffffff'], [0.1, 'rgba(255,230,190,.9)'], [0.4, 'rgba(255,170,90,.18)'], [1, 'rgba(0,0,0,0)']]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); glare.position.set(-900, 260, -1700); glare.scale.setScalar(700); W.add(glare); }
   const fleetPos = V(0, 0, -900); const fleet = new THREE.Group(); fleet.position.copy(fleetPos); W.add(fleet);
   const hero = makeStarship(S.col); hero.scale.setScalar(2); fleet.add(hero);
-  const allies = []; for (let i = 0; i < 6; i++) { const s = mergeChar(makeStarship(['#c9a43a', '#4fa8ff', '#6fdc5a', '#ff8a5a', '#c86aff', '#e8e4dc'][i])); s.scale.setScalar(1.6); fleet.add(s); allies.push({ s, a: i * 1.05, r: 18 + (i % 3) * 7, h: (i % 2 ? 4 : -5) }); }
-  const foes = []; for (let i = 0; i < 28; i++) { const r = mergeChar(makeRaider()); r.scale.setScalar(2.2); fleet.add(r); foes.push({ r, x: (i % 7 - 3) * 9, y: (Math.floor(i / 7) - 1.5) * 8, z: -150 - (i % 3) * 10, dead: 0 }); }
+  const allies = []; const VF = [[-10, 1, 6], [10, 1, 6], [-20, -2, 13], [20, -2, 13], [-5, 7, 18], [5, -6, 18]]; for (let i = 0; i < 6; i++) { const s = mergeChar(makeStarship(['#c9a43a', '#4fa8ff', '#6fdc5a', '#ff8a5a', '#c86aff', '#e8e4dc'][i])); s.scale.setScalar(1.6); fleet.add(s); allies.push({ s, o: VF[i], ph: i * 1.7 }); }
+  const foes = []; for (let i = 0; i < 24; i++) { const big = i % 6 === 2; let r; try { r = mergeChar(big ? makeHulk('drome') : makeRaider()); } catch (_) { r = mergeChar(makeRaider()); } r.scale.setScalar(big ? 0.55 : 2.0); if (r.userData.beacon) r.userData.beacon.visible = false; fleet.add(r); foes.push({ r, x: (i % 6 - 2.5) * 24 + (Math.floor(i / 6) % 2) * 12, y: (Math.floor(i / 6) - 1.5) * 17, z: -150 - (i % 3) * 22 - (big ? 30 : 0), dead: 0 }); }
   const lasers = []; for (let i = 0; i < 36; i++) { const m = new THREE.Mesh(geo(new THREE.BoxGeometry(0.15, 0.15, 6)), glow(i % 2 ? '#ff2a3a' : '#5fd0ff')); m.visible = false; fleet.add(m); lasers.push({ m, life: 0, v: V() }); }
   return { W, own, galaxy, neb, star, fleet, hero, allies, foes, lasers };
 }
@@ -312,7 +314,7 @@ function trlSpace(Sp, C, T, dt, fx, sfx) {
     const k = trlK(T, 109.5, 114), e = 1 - Math.pow(1 - k, 3); Sp.star.position.set(0, 0, 0); const d = 6 + e * 1100; trlCam(C, d * 0.35, d * 0.55, d, 0, 0, 0); Sp.fleet.visible = false; return; }
   Sp.fleet.visible = true;
   // allies circle; foes hold their wall then dive in
-  Sp.allies.forEach((A, i) => { const a = A.a + T * (0.25 + i * 0.02); A.s.position.set(Math.cos(a) * A.r, A.h + Math.sin(T + i) * 2, Math.sin(a) * A.r * 0.6 + (T > 118 ? -(T - 118) * 6 : 40)); A.s.rotation.set(0, -a + Math.PI / 2, Math.sin(a) * 0.5); });
+  const loose = T > 121 ? Math.min(1, (T - 121) / 2) : 0; Sp.allies.forEach(A => { const [ox, oy, oz] = A.o, w = Math.sin(T * 0.9 + A.ph); A.s.position.set(H.position.x + ox * (1 + loose * 0.6) + w * (1.5 + loose * 6), H.position.y + oy + Math.cos(T * 0.7 + A.ph) * (1 + loose * 4), H.position.z + oz); A.s.rotation.set(0, 0, -w * (0.25 + loose * 0.5)); });
   Sp.foes.forEach((F, i) => { if (F.dead > 0) { F.dead += dt; F.r.rotation.x += dt * 3; F.r.position.y -= dt * 4; F.r.visible = F.dead < 2; return; } const adv = T > 120 ? (T - 120) * 4 : 0; F.r.position.set(F.x + Math.sin(T * 0.7 + i) * 2, F.y + Math.cos(T * 0.5 + i) * 1.5, F.z + adv); F.r.rotation.set(0, 0, Math.sin(T + i) * 0.2); });
   // lasers
   for (const L of Sp.lasers) { if (L.life <= 0) continue; L.life -= dt; L.m.position.addScaledVector(L.v, dt); if (L.life <= 0) L.m.visible = false; }
@@ -352,7 +354,7 @@ function playTrailer(opts) {
   const C = new THREE.PerspectiveCamera(48, camera.aspect, 0.1, 4000); const fxG = trlFx(G.W), fxS = trlFx(Sp.W);
   const sfx = k => { try { if (k === 'boom') SFX.boom(); else if (k === 'shot') SFX.shot(GUNS.l28 ? 'l28' : undefined); else if (k === 'swing') SFX.swing(); else if (k === 'hit') SFX.hit(); else if (k === 'kill') SFX.kill(); else if (k === 'zap') SFX.zap(); } catch (_) {} };
   TRL.scene = G.W; TRL.cam = C;
-  musForce('trailer'); const said = new Set(); TRL_VO.forEach((_, i) => trlClip(i));
+  musForce('trailer'); const said = new Set(); TRL_VO.forEach(v => trlClip(v[2]));
   let clock = 0, last = performance.now(), done = false, capT = null;
   const finish = () => { if (done) return; done = true; TRL.on = false; TRL.scene = null; try { speechSynthesis.cancel(); } catch (_) {} for (const k in TRL_CLIPS) { try { TRL_CLIPS[k].pause(); } catch (_) {} }
     musRelease('trailer'); cv.style.filter = cvFilter; ov.remove(); skip.remove(); [G, Sp].forEach(X => X.own.forEach(g => { try { g.dispose(); } catch (_) {} }));
@@ -369,7 +371,7 @@ function playTrailer(opts) {
     let f = T < 2.5 ? 1 : T < 6 ? 1 - (T - 2.5) / 3.5 : 0; if (T > 20.5 && T < 22.5) f = Math.sin((T - 20.5) / 2 * Math.PI) * 0.92; if (T > 130.3) f = 1; fade.style.opacity = f;
     let w = 0; if (T > 107.5 && T < 109.5) w = (T - 107.5) / 2; else if (T >= 109.5 && T < 111.5) w = 1 - (T - 109.5) / 2; else if (T > 129.9 && T < 130.4) w = 1; white.style.opacity = w;
     title.style.opacity = T > 130.8 ? 1 : 0;
-    for (const [at, line] of TRL_VO) if (T >= at && !said.has(at)) { said.add(at); cap.style.opacity = 0; clearTimeout(capT); capT = setTimeout(() => { cap.textContent = line; cap.style.opacity = 1; }, 250); trlNarrate(TRL_VO.findIndex(v => v[0] === at), line); setTimeout(() => { if (cap.textContent === line) cap.style.opacity = 0; }, 5600); }
+    for (const [at, line] of TRL_VO) if (T >= at && !said.has(at)) { said.add(at); cap.style.opacity = 0; clearTimeout(capT); capT = setTimeout(() => { cap.textContent = line; cap.style.opacity = 1; }, 250); trlNarrate(TRL_VO.find(v => v[0] === at)[2], line); setTimeout(() => { if (cap.textContent === line) cap.style.opacity = 0; }, 5600); }
     try { if (T < 109.5) { TRL.scene = G.W; trlShot(G, Sp, C, T, dt, fxG, sfx); fxG.tick(dt); } else { TRL.scene = Sp.W; trlSpace(Sp, C, T, dt, fxS, sfx); fxS.tick(dt); } } catch (err) { console.warn('trailer shot', err); }
     if (T > TRL_END || (onSong && m.ended)) finish();
   };

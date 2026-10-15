@@ -332,7 +332,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.14.2</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.14.3</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -12080,7 +12080,7 @@ function rollCredits(replay) {
   if (document.getElementById('ending')) return;
   const ov = document.createElement('div'); ov.id = 'ending'; ov.style.cssText = 'position:fixed;inset:0;z-index:60;background:#000;overflow:hidden;font-family:var(--ui);color:#e8ecf8';
   const cv = document.createElement('canvas'); cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%'; ov.appendChild(cv);
-  const cap = document.createElement('div'); cap.style.cssText = 'position:absolute;left:0;right:0;bottom:18%;text-align:center;font-family:var(--hud);font-weight:600;letter-spacing:.04em;font-size:clamp(18px,4.4vw,30px);padding:0 24px;text-shadow:0 2px 6px #000;transition:opacity .6s;opacity:0'; ov.appendChild(cap);
+  const cap = document.createElement('div'); cap.id = 'endCap'; cap.style.cssText = 'position:absolute;left:0;right:0;bottom:18%;text-align:center;font-family:var(--hud);font-weight:600;letter-spacing:.04em;font-size:clamp(18px,4.4vw,30px);padding:0 24px;text-shadow:0 2px 6px #000;transition:opacity .6s;opacity:0'; ov.appendChild(cap);
   const roll = document.createElement('div'); roll.style.cssText = 'position:absolute;left:0;right:0;top:100%;text-align:center;font-size:18px;line-height:1.75;padding:0 20px;text-shadow:0 2px 6px #000'; ov.appendChild(roll);
   const bar = document.createElement('div'); bar.style.cssText = 'position:absolute;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;gap:8px;z-index:2';
   const ffb = document.createElement('button'), skb = document.createElement('button'); [ffb, skb].forEach(b => { b.className = 'pbtn'; b.style.cssText = 'font-size:15px;padding:8px 14px;background:rgba(0,0,0,.55)'; });
@@ -12697,6 +12697,7 @@ PLAYLISTS.cutscene = ['hymn'];
 // =================== PROLOGUE: the first-time-aboard film, now a tour of the galaxy with narration ===================
 // Lines are subtitles until Phil's recordings arrive; each recording is voice/<id>.mp3 and listed in VOICE_READY.
 const VOICE_READY = [];
+const prologueVoiced = L => typeof narrIds === 'function' && narrIds().has(burpHash(L.text)); // Vega's narrator clips (2.14.3)
 const PROLOGUE = [
   { id: 'p1', shot: 'galaxy', text: 'Long before you were born, the galaxy was a quiet place. A dozen worlds, turning in the light of one old sun.' },
   { id: 'p2', shot: 'earth', text: 'Earth was the heart of it. Humans and aliens, traders and troopers, all living under the same sky.' },
@@ -12724,11 +12725,11 @@ function buildDiorama() {
   const eye = new THREE.Group(); const white = new THREE.Mesh(new THREE.SphereGeometry(10, 20, 14), new THREE.MeshBasicMaterial({ color: '#ff2a3a', fog: false })); white.scale.set(1.6, 0.05, 0.4); eye.add(white); const pupil = new THREE.Mesh(new THREE.SphereGeometry(4, 16, 12), new THREE.MeshBasicMaterial({ color: '#000000', fog: false })); pupil.position.z = 3; pupil.scale.set(1, 0.05, 0.5); eye.add(pupil); eye.add(glowSprite('rgba(255,40,60,.6)', 50)); eye.position.copy(P.vector.position).add(V(0, 0, 0)); g.add(eye); P.eye = eye; P.eyeW = white; P.eyeP = pupil;
   const myShip = makeStarship(S.col); myShip.scale.setScalar(1.2); g.add(myShip); P.ship = myShip;
   // the sky around the model galaxy: a full sphere of stars, a faint Milky Way band and a few soft nebulae, so every shot has stars behind it
-  { const n = 4200, p = new Float32Array(n * 3), c = new Float32Array(n * 3), col = new THREE.Color();
-    for (let i = 0; i < n; i++) { let u = Math.random() * 2 - 1, a = Math.random() * 6.28; if (i % 3 === 0) u = (Math.random() - 0.5) * 0.18; const r = 1700, q = Math.sqrt(1 - u * u); p.set([Math.cos(a) * q * r, u * r, Math.sin(a) * q * r], i * 3);
-      col.setHSL(0.08 + Math.random() * 0.6, 0.35, 0.55 + Math.random() * 0.45); c.set([col.r, col.g, col.b], i * 3); }
+  { const n = TOUCH ? 1400 : 2200, p = new Float32Array(n * 3), c = new Float32Array(n * 3), col = new THREE.Color();
+    for (let i = 0; i < n; i++) { let u = Math.random() * 2 - 1, a = Math.random() * 6.28; if (i % 5 === 0) u = (Math.random() - 0.5) * 0.25; const r = 1700, q = Math.sqrt(1 - u * u); p.set([Math.cos(a) * q * r, u * r, Math.sin(a) * q * r], i * 3);
+      col.setHSL(0.08 + Math.random() * 0.6, 0.3, 0.3 + Math.random() * Math.random() * 0.6); c.set([col.r, col.g, col.b], i * 3); }
     const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(p, 3)); sg.setAttribute('color', new THREE.BufferAttribute(c, 3));
-    const st = new THREE.Points(sg, new THREE.PointsMaterial({ size: 1.8, sizeAttenuation: false, vertexColors: true, fog: false, depthWrite: false })); st.rotation.set(0.35, 0, 0.2); g.add(st); P.stars = st;
+    const st = new THREE.Points(sg, new THREE.PointsMaterial({ size: TOUCH ? 1 : 1.4, sizeAttenuation: false, vertexColors: true, fog: false, depthWrite: false })); st.rotation.set(0.35, 0, 0.2); g.add(st); P.stars = st;
     const nt = typeof trlSmokeTex === 'function' ? trlSmokeTex() : null;
     if (nt) [['#5a2a8a', 1, 0.2], ['#1a4a8a', 2.3, -0.15], ['#8a3a2a', 3.8, 0.1], ['#2a6a7a', 5.1, 0.25]].forEach(([cl, a, y]) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: nt, color: cl, transparent: true, opacity: 0.4, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); s.position.set(Math.cos(a) * 1500, y * 1500, Math.sin(a) * 1500); s.scale.setScalar(1800); g.add(s); }); }
   levelGroup.add(g); return { g, C0, P, sun };
@@ -12754,7 +12755,7 @@ function prologueShot(D, name, t, k) { // t = seconds into the line, k = 0..1 pr
 function prologueTint(ov, name) { const red = ['fleet', 'burn'].includes(name) ? 0.28 : name === 'eye' ? 0.4 : 0; ov.querySelector('#cuttint').style.opacity = red; }
 shipIntro = function (replay) {
   if (CUT.on) return; CUT.on = true; S.flags = S.flags || {};
-  const prevState = state === 'cut' ? 'play' : state; setState('cut'); $('hud').hidden = true; $('touch').hidden = true; vm.visible = false; const far0 = camera.far; camera.far = 3000; camera.updateProjectionMatrix();
+  const prevState = state === 'cut' ? 'play' : state; setState('cut'); $('hud').hidden = true; $('touch').hidden = true; vm.visible = false; const starsVis = stars.visible; stars.visible = false; const far0 = camera.far; camera.far = 3000; camera.updateProjectionMatrix();
   const ov = document.createElement('div'); ov.id = 'cutov'; ov.style.cssText = 'position:fixed;inset:0;z-index:40;pointer-events:none';
   ov.innerHTML = '<div id="cuttint" style="position:absolute;inset:0;background:radial-gradient(ellipse at center, rgba(255,40,30,.2), rgba(120,0,0,.9));opacity:0;transition:opacity 1.6s"></div><div style="position:absolute;left:0;right:0;top:0;height:11vh;background:#000"></div><div style="position:absolute;left:0;right:0;bottom:0;height:11vh;background:#000"></div><div id="cutcap" style="position:absolute;left:6%;right:6%;bottom:13vh;text-align:center;color:#fff;font:600 clamp(15px,3.6vw,24px) var(--hud,sans-serif);letter-spacing:.03em;line-height:1.35;text-shadow:0 2px 8px #000,0 0 2px #000;opacity:0;transition:opacity .6s"></div><div id="cuttitle" style="position:absolute;left:0;right:0;top:40%;text-align:center;color:#ffe08a;font:700 clamp(30px,8vw,64px) var(--hud,sans-serif);letter-spacing:.2em;text-shadow:0 4px 16px #000;opacity:0;transition:opacity 1.5s">PROLOGUE</div>';
   const skip = document.createElement('button'); skip.className = 'pbtn'; skip.textContent = 'Skip ▸'; skip.style.cssText = 'position:fixed;right:16px;bottom:calc(11vh + 14px);z-index:41;pointer-events:auto;opacity:0;transition:opacity .6s;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.5);color:#fff'; skip.hidden = true;
@@ -12764,15 +12765,15 @@ shipIntro = function (replay) {
   const voice = new Audio(); voice.preload = 'auto';
   let li = -1, lineT0 = performance.now(), lineDur = 6, done = false; const t0 = performance.now(), MIN_LOCK = 12, cap = ov.querySelector('#cutcap'), title = ov.querySelector('#cuttitle');
   const startLine = i => { li = i; const L = PROLOGUE[i]; lineT0 = performance.now(); lineDur = lineSecs(L); cap.style.opacity = 0; setTimeout(() => { if (!done) { cap.textContent = L.text; cap.style.opacity = 1; } }, 250); prologueTint(ov, L.shot);
-    if (VOICE_READY.includes(L.id)) { voice.src = `voice/${L.id}.mp3`; voice.volume = 1; voice.play().then(() => { if (isFinite(voice.duration)) lineDur = voice.duration + 0.8; }).catch(() => {}); if (MUS.cur) musFade(MUS.cur, musVol() * 0.35, 0.6); } };
-  const end = () => { if (done) return; done = true; window.__cutscene_done = true; const cd = document.createElement('div'); cd.id = 'cutscene_done'; document.body.appendChild(cd); voice.pause(); musRelease('cutscene'); levelGroup.remove(D.g); levelGroup.remove(me); ov.remove(); skip.remove(); if (!replay) { S.flags.prologue1 = 1; S.flags.shipIntro = 1; markDirty(); } camera.far = far0; camera.updateProjectionMatrix(); CUT.on = false; setState(prevState); player.pos.set(0, 0, -4); player.yaw = 0; vm.visible = true; if (!replay) toast('THE SETTING SUN', 'Welcome aboard, Captain', 3); };
+    if (prologueVoiced(L)) { voice.src = PREFS.voice === false || !PREFS.sfx ? '' : `voice/narrator/${burpHash(L.text)}.mp3`; voice.volume = 1; voice.play().then(() => { if (isFinite(voice.duration)) lineDur = voice.duration + 0.8; }).catch(() => {}); if (MUS.cur) musFade(MUS.cur, musVol() * 0.35, 0.6); } };
+  const end = () => { if (done) return; done = true; stars.visible = starsVis; window.__cutscene_done = true; const cd = document.createElement('div'); cd.id = 'cutscene_done'; document.body.appendChild(cd); voice.pause(); musRelease('cutscene'); levelGroup.remove(D.g); levelGroup.remove(me); ov.remove(); skip.remove(); if (!replay) { S.flags.prologue1 = 1; S.flags.shipIntro = 1; markDirty(); } camera.far = far0; camera.updateProjectionMatrix(); CUT.on = false; setState(prevState); player.pos.set(0, 0, -4); player.yaw = 0; vm.visible = true; if (!replay) toast('THE SETTING SUN', 'Welcome aboard, Captain', 3); };
   skip.addEventListener('click', end);
   setTimeout(() => { title.style.opacity = 1; setTimeout(() => { title.style.opacity = 0; }, 2600); }, 400);
   const lead = 4;
   const tick = () => { if (done) return; const el = (performance.now() - t0) / 1000;
     if (el > MIN_LOCK && skip.hidden) { skip.hidden = false; requestAnimationFrame(() => { skip.style.opacity = 1; }); }
     if (el < lead) { prologueShot(D, 'galaxy', el, el / (lead + lineSecs(PROLOGUE[0])) ); }
-    else { if (li < 0) startLine(0); const lt = (performance.now() - lineT0) / 1000; if (lt > lineDur && !(VOICE_READY.includes(PROLOGUE[li].id) && !voice.paused && !voice.ended)) { if (li + 1 < PROLOGUE.length) startLine(li + 1); else if (lt > lineDur + 2) return end(); }
+    else { if (li < 0) startLine(0); const lt = (performance.now() - lineT0) / 1000; if (lt > lineDur && !(prologueVoiced(PROLOGUE[li]) && !voice.paused && !voice.ended)) { if (li + 1 < PROLOGUE.length) startLine(li + 1); else if (lt > lineDur + 2) return end(); }
       const L = PROLOGUE[li], k = Math.min(1, ((performance.now() - lineT0) / 1000) / lineDur); prologueShot(D, L.shot, (performance.now() - lineT0) / 1000 + (li === 0 ? lead : 0), li === 0 ? Math.min(1, (el) / (lead + lineDur)) : k); }
     requestAnimationFrame(tick); };
   tick();
@@ -13639,7 +13640,7 @@ function raidNote(big, sm) { raidNoteTxt = `⚔ ${big}${sm ? ' · ' + sm : ''}`;
 // If the browser still says no (it does for a moment after Esc), the cursor stays hidden and the next click only grabs the mouse, never fires.
 let lockWorks = false, lockDrop = 0;
 document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement === stage) lockWorks = true; });
-{ const _ex = document.exitPointerLock.bind(document); document.exitPointerLock = function () { lockDrop = performance.now(); return _ex(); }; }
+if (document.exitPointerLock) { const _ex = document.exitPointerLock.bind(document); document.exitPointerLock = function () { lockDrop = performance.now(); return _ex(); }; }
 const uiBusy = () => dlgOpen || chatOpen() || !$('menuDrop').hidden || !!document.getElementById('ending') || (typeof CUT !== 'undefined' && CUT.on) || (typeof PHOTO !== 'undefined' && PHOTO.on) || (typeof baseState !== 'undefined' && baseState.on);
 function relock() { if (TOUCH || state !== 'play' || uiBusy() || document.pointerLockElement) return; lock(); }
 // the first click after a menu only grabs the mouse; it doesn't shoot
@@ -14277,11 +14278,11 @@ let diveT = 0;
 TRACKS.risingsun = 'music/risingsun.mp3'; TRACKS.eventhorizon = 'music/eventhorizon.mp3';
 PLAYLISTS.trailer = ['risingsun']; PLAYLISTS.eyeboss = ['eventhorizon'];
 const TRL_VO = [ // [time in seconds, line]
-  [3.0, 'Hidden deep in the evil of war… is an art.'], [13.2, 'An art that few will ever find.'],
-  [23.0, 'Generals are artists.'], [30.2, 'They command the field. They control the action.'],
-  [41.0, 'Few warriors can master this art.'], [55.0, 'I have…'],
-  [59.0, 'Every stroke makes a picture upon the field.'], [71.0, 'A fallen trooper paints a masterpiece…'], [84.0, 'And…'],
-  [90.0, 'Yes… war is an art.'], [104.5, 'And only those who find this art…'], [121.5, '…will live.']
+  [3.0, 'Hidden deep in the evil of war… is an art.', 1], [13.2, 'An art that few will ever find.', 2],
+  [23.0, 'Generals are artists.', 3], [30.2, 'They command the field. They control the action.', 4],
+  [41.0, 'Few warriors can master this art.', 5], [55.0, 'I have…', 6],
+  [59.0, 'Every stroke makes a picture upon the field.', 7], [71.0, 'A fallen trooper paints a masterpiece…', 8],
+  [90.0, 'Yes… war is an art.', 10], [104.5, 'And only those who find this art…', 11], [121.5, '…will live.', 12]
 ];
 const TRL_END = 134;
 const TRL = { on: false };
@@ -14296,7 +14297,7 @@ function trlVoice() { if (!window.speechSynthesis) return null; const vs = speec
   return vs.find(v => /female|samantha|victoria|karen|moira|tessa|fiona|serena|zira|susan|hazel|libby|sonia|aria|jenny/i.test(v.name)) || vs.find(v => /UK/i.test(v.name)) || vs[0]; }
 // recorded narration (voice/trailer/t1..t12.mp3, one per TRL_VO line); the browser voice only fills in if a clip won't play
 const TRL_CLIPS = {};
-function trlClip(i) { const k = 't' + (i + 1); if (!TRL_CLIPS[k]) { const a = new Audio('voice/trailer/' + k + '.mp3'); a.preload = 'auto'; TRL_CLIPS[k] = a; } return TRL_CLIPS[k]; }
+function trlClip(n) { const k = 't' + n; if (!TRL_CLIPS[k]) { const a = new Audio('voice/trailer/' + k + '.mp3'); a.preload = 'auto'; TRL_CLIPS[k] = a; } return TRL_CLIPS[k]; }
 function trlNarrate(i, text) {
   if (PREFS.voice === false || !PREFS.sfx) return;
   const a = trlClip(i); a.currentTime = 0; a.volume = 1;
@@ -14355,7 +14356,7 @@ function trlBuildGround() {
   // the fallen and their broken weapons
   const gunIds = Object.keys(GUNS).filter(k => !GUNS[k].mana).slice(0, 12);
   for (let i = 0; i < 12; i++) { const f = buildChar(() => i % 3 ? makeTrooper() : makeXR17()); f.rotation.set(-Math.PI / 2, i * 1.3, 0); const a = i * 2.2, d = 4 + (i * 7) % 26; f.position.set(Math.cos(a) * d, gy(Math.cos(a) * d, Math.sin(a) * d - 8) + 0.2, Math.sin(a) * d - 8); W.add(f); }
-  for (let i = 0; i < 14; i++) { try { const g = makeGunModel(gunIds[i % gunIds.length]); g.scale.setScalar(1.6); g.rotation.set(Math.PI / 2, i, 0.3); const a = i * 2.7, d = 2.5 + (i * 5) % 20; put(g, Math.cos(a) * d, Math.sin(a) * d - 6, 0, 0.12).rotation.set(Math.PI / 2, 0, i); } catch (_) {} }
+  for (let i = 0; i < 14; i++) { try { const g = makeGunModel(gunIds[i % gunIds.length]); g.scale.setScalar(1.6); const a = i * 2.7, d = 2.5 + (i * 5) % 20; put(g, Math.cos(a) * d, Math.sin(a) * d - 6, i * 1.3, 0.16).rotation.z = Math.PI / 2; } catch (_) {} }
   // wrecked vehicles and fires
   for (const [x, z, r] of [[-22, -30, 0.4], [26, -12, 2.2], [-34, 18, 1.1], [14, -48, 2.8]]) { const t = makeTankModel('#3a3a32'); t.scale.setScalar(1.6); put(t, x, z, r).rotation.z = 0.25; }
   const flames = []; { const ft = trlGradTex([[0, 'rgba(255,240,180,1)'], [0.35, 'rgba(255,140,40,.8)'], [1, 'rgba(255,60,10,0)']]);
@@ -14363,11 +14364,13 @@ function trlBuildGround() {
   // the warrior and the enemy machines
   const warrior = buildChar(() => makePlayerChar(myLook(), S.col), 'trooper'); W.add(warrior);
   const sword = makeMeleeModel('master'); sword.scale.setScalar(1.4); const R = warrior.userData.rig; (R && R.armR ? R.armR : warrior).add(sword); sword.position.set(0, -0.5, 0.12); sword.rotation.set(Math.PI / 2, 0, 0);
-  const foes = []; for (let i = 0; i < 6; i++) { const e = buildChar(makeXR17, 'xr17'); e.scale.setScalar(1.25); W.add(e); foes.push(e); }
+  const MIX = [[makeXR17, 'xr17', 1.25], [typeof makeZR306 === 'function' ? makeZR306 : makeXR17, null, 1.1], [typeof makeK872 === 'function' ? makeK872 : makeXR17, null, 1.1], [typeof makeXGPolice === 'function' ? makeXGPolice : makeXR17, null, 1.1], [typeof makeDrillbot === 'function' ? makeDrillbot : makeXR17, null, 1], [typeof makeSiegeBot === 'function' ? makeSiegeBot : makeXR17, null, 0.8]];
+  const mkFoe = i => { const [mk, rg, sc] = MIX[i % MIX.length]; let e; try { e = buildChar(mk, rg && RIGS[rg] ? rg : undefined); } catch (_) { e = buildChar(makeXR17, 'xr17'); } e.scale.setScalar(sc); return e; };
+  const foes = []; for (let i = 0; i < 6; i++) { const e = i < 2 ? buildChar(makeXR17, 'xr17') : mkFoe(i - 1); if (i < 2) e.scale.setScalar(1.25); W.add(e); foes.push(e); }
   const foeGun = makeGunModel('c10'); foeGun.scale.setScalar(1.6); W.add(foeGun);
   // the armies in the fog
   const ranks = [];
-  for (let i = 0; i < 18; i++) { const e = buildChar(makeXR17); e.scale.setScalar(1.25); const x = -28 + (i % 9) * 7, z = -58 - Math.floor(i / 9) * 7; put(e, x, z, 0); ranks.push([e, x, z, -1]); }
+  for (let i = 0; i < 18; i++) { const e = mkFoe(i); const x = -28 + (i % 9) * 7, z = -58 - Math.floor(i / 9) * 7; put(e, x, z, 0); ranks.push([e, x, z, -1]); }
   for (let i = 0; i < 14; i++) { const e = buildChar(makeTrooper, 'trooper'); const x = -24 + (i % 7) * 8, z = 34 + Math.floor(i / 7) * 6; put(e, x, z, Math.PI); ranks.push([e, x, z, 1]); }
   // the general on the ridge, with a glowing battle map
   const ridge = new THREE.Mesh(geo(new THREE.BoxGeometry(12, 8, 10)), toon('#2e2a26', 'stone')); put(ridge, 34, 30, 0.3, 3.6);
@@ -14443,8 +14446,8 @@ function trlBuildSpace() {
     const glare = new THREE.Sprite(new THREE.SpriteMaterial({ map: trlGradTex([[0, '#ffffff'], [0.1, 'rgba(255,230,190,.9)'], [0.4, 'rgba(255,170,90,.18)'], [1, 'rgba(0,0,0,0)']]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); glare.position.set(-900, 260, -1700); glare.scale.setScalar(700); W.add(glare); }
   const fleetPos = V(0, 0, -900); const fleet = new THREE.Group(); fleet.position.copy(fleetPos); W.add(fleet);
   const hero = makeStarship(S.col); hero.scale.setScalar(2); fleet.add(hero);
-  const allies = []; for (let i = 0; i < 6; i++) { const s = mergeChar(makeStarship(['#c9a43a', '#4fa8ff', '#6fdc5a', '#ff8a5a', '#c86aff', '#e8e4dc'][i])); s.scale.setScalar(1.6); fleet.add(s); allies.push({ s, a: i * 1.05, r: 18 + (i % 3) * 7, h: (i % 2 ? 4 : -5) }); }
-  const foes = []; for (let i = 0; i < 28; i++) { const r = mergeChar(makeRaider()); r.scale.setScalar(2.2); fleet.add(r); foes.push({ r, x: (i % 7 - 3) * 9, y: (Math.floor(i / 7) - 1.5) * 8, z: -150 - (i % 3) * 10, dead: 0 }); }
+  const allies = []; const VF = [[-10, 1, 6], [10, 1, 6], [-20, -2, 13], [20, -2, 13], [-5, 7, 18], [5, -6, 18]]; for (let i = 0; i < 6; i++) { const s = mergeChar(makeStarship(['#c9a43a', '#4fa8ff', '#6fdc5a', '#ff8a5a', '#c86aff', '#e8e4dc'][i])); s.scale.setScalar(1.6); fleet.add(s); allies.push({ s, o: VF[i], ph: i * 1.7 }); }
+  const foes = []; for (let i = 0; i < 24; i++) { const big = i % 6 === 2; let r; try { r = mergeChar(big ? makeHulk('drome') : makeRaider()); } catch (_) { r = mergeChar(makeRaider()); } r.scale.setScalar(big ? 0.55 : 2.0); if (r.userData.beacon) r.userData.beacon.visible = false; fleet.add(r); foes.push({ r, x: (i % 6 - 2.5) * 24 + (Math.floor(i / 6) % 2) * 12, y: (Math.floor(i / 6) - 1.5) * 17, z: -150 - (i % 3) * 22 - (big ? 30 : 0), dead: 0 }); }
   const lasers = []; for (let i = 0; i < 36; i++) { const m = new THREE.Mesh(geo(new THREE.BoxGeometry(0.15, 0.15, 6)), glow(i % 2 ? '#ff2a3a' : '#5fd0ff')); m.visible = false; fleet.add(m); lasers.push({ m, life: 0, v: V() }); }
   return { W, own, galaxy, neb, star, fleet, hero, allies, foes, lasers };
 }
@@ -14584,7 +14587,7 @@ function trlSpace(Sp, C, T, dt, fx, sfx) {
     const k = trlK(T, 109.5, 114), e = 1 - Math.pow(1 - k, 3); Sp.star.position.set(0, 0, 0); const d = 6 + e * 1100; trlCam(C, d * 0.35, d * 0.55, d, 0, 0, 0); Sp.fleet.visible = false; return; }
   Sp.fleet.visible = true;
   // allies circle; foes hold their wall then dive in
-  Sp.allies.forEach((A, i) => { const a = A.a + T * (0.25 + i * 0.02); A.s.position.set(Math.cos(a) * A.r, A.h + Math.sin(T + i) * 2, Math.sin(a) * A.r * 0.6 + (T > 118 ? -(T - 118) * 6 : 40)); A.s.rotation.set(0, -a + Math.PI / 2, Math.sin(a) * 0.5); });
+  const loose = T > 121 ? Math.min(1, (T - 121) / 2) : 0; Sp.allies.forEach(A => { const [ox, oy, oz] = A.o, w = Math.sin(T * 0.9 + A.ph); A.s.position.set(H.position.x + ox * (1 + loose * 0.6) + w * (1.5 + loose * 6), H.position.y + oy + Math.cos(T * 0.7 + A.ph) * (1 + loose * 4), H.position.z + oz); A.s.rotation.set(0, 0, -w * (0.25 + loose * 0.5)); });
   Sp.foes.forEach((F, i) => { if (F.dead > 0) { F.dead += dt; F.r.rotation.x += dt * 3; F.r.position.y -= dt * 4; F.r.visible = F.dead < 2; return; } const adv = T > 120 ? (T - 120) * 4 : 0; F.r.position.set(F.x + Math.sin(T * 0.7 + i) * 2, F.y + Math.cos(T * 0.5 + i) * 1.5, F.z + adv); F.r.rotation.set(0, 0, Math.sin(T + i) * 0.2); });
   // lasers
   for (const L of Sp.lasers) { if (L.life <= 0) continue; L.life -= dt; L.m.position.addScaledVector(L.v, dt); if (L.life <= 0) L.m.visible = false; }
@@ -14624,7 +14627,7 @@ function playTrailer(opts) {
   const C = new THREE.PerspectiveCamera(48, camera.aspect, 0.1, 4000); const fxG = trlFx(G.W), fxS = trlFx(Sp.W);
   const sfx = k => { try { if (k === 'boom') SFX.boom(); else if (k === 'shot') SFX.shot(GUNS.l28 ? 'l28' : undefined); else if (k === 'swing') SFX.swing(); else if (k === 'hit') SFX.hit(); else if (k === 'kill') SFX.kill(); else if (k === 'zap') SFX.zap(); } catch (_) {} };
   TRL.scene = G.W; TRL.cam = C;
-  musForce('trailer'); const said = new Set(); TRL_VO.forEach((_, i) => trlClip(i));
+  musForce('trailer'); const said = new Set(); TRL_VO.forEach(v => trlClip(v[2]));
   let clock = 0, last = performance.now(), done = false, capT = null;
   const finish = () => { if (done) return; done = true; TRL.on = false; TRL.scene = null; try { speechSynthesis.cancel(); } catch (_) {} for (const k in TRL_CLIPS) { try { TRL_CLIPS[k].pause(); } catch (_) {} }
     musRelease('trailer'); cv.style.filter = cvFilter; ov.remove(); skip.remove(); [G, Sp].forEach(X => X.own.forEach(g => { try { g.dispose(); } catch (_) {} }));
@@ -14641,7 +14644,7 @@ function playTrailer(opts) {
     let f = T < 2.5 ? 1 : T < 6 ? 1 - (T - 2.5) / 3.5 : 0; if (T > 20.5 && T < 22.5) f = Math.sin((T - 20.5) / 2 * Math.PI) * 0.92; if (T > 130.3) f = 1; fade.style.opacity = f;
     let w = 0; if (T > 107.5 && T < 109.5) w = (T - 107.5) / 2; else if (T >= 109.5 && T < 111.5) w = 1 - (T - 109.5) / 2; else if (T > 129.9 && T < 130.4) w = 1; white.style.opacity = w;
     title.style.opacity = T > 130.8 ? 1 : 0;
-    for (const [at, line] of TRL_VO) if (T >= at && !said.has(at)) { said.add(at); cap.style.opacity = 0; clearTimeout(capT); capT = setTimeout(() => { cap.textContent = line; cap.style.opacity = 1; }, 250); trlNarrate(TRL_VO.findIndex(v => v[0] === at), line); setTimeout(() => { if (cap.textContent === line) cap.style.opacity = 0; }, 5600); }
+    for (const [at, line] of TRL_VO) if (T >= at && !said.has(at)) { said.add(at); cap.style.opacity = 0; clearTimeout(capT); capT = setTimeout(() => { cap.textContent = line; cap.style.opacity = 1; }, 250); trlNarrate(TRL_VO.find(v => v[0] === at)[2], line); setTimeout(() => { if (cap.textContent === line) cap.style.opacity = 0; }, 5600); }
     try { if (T < 109.5) { TRL.scene = G.W; trlShot(G, Sp, C, T, dt, fxG, sfx); fxG.tick(dt); } else { TRL.scene = Sp.W; trlSpace(Sp, C, T, dt, fxS, sfx); fxS.tick(dt); } } catch (err) { console.warn('trailer shot', err); }
     if (T > TRL_END || (onSong && m.ended)) finish();
   };
@@ -16778,6 +16781,7 @@ const UPDATES = [
   { id: 107, title: '2.14 · The Art of War, remastered', items: ['The opening film for new troopers is back and rebuilt: a burning sunset over the battlefield, smoke columns, real fire, a proper fireball, and a giant stone trooper rising from the rubble.', 'Vega now narrates it out loud, and the space battle has a full sky of stars and nebulae. Replay it from Codex, then Cinema, or skip it with Settings → Story scenes.', 'The Prologue aboard your ship has stars all around every shot.', 'Port Kelp: the side docks now run out to sea instead of into the huts, the fishing docks line up with them, and the lighthouse stands on solid ground.', 'The skeletons on Vector lie the right way, ribs arching over the spine.', 'Phones no longer flash a half-built start card while the game loads.'] },
   { id: 108, title: '2.14.1 · Moon quest fix', items: ['Breathing Room on the Moon can be finished again: moon mites keep dropping O2 Filters until you have all four. Before, they stopped after the first one.', 'The same fix lets Sky City droid chips keep dropping until you have the five the quest asks for.'] },
   { id: 109, title: '2.14.2 · One weapon button, model icons everywhere', items: ['Phones: tap the weapon box to cycle gun → staff → melee. The separate SWAP button is gone and Reload takes its spot.', 'The weapon box stays the same size and in the same place whichever weapon you hold.', 'Every button inside the menu tablet (Ship, Vehicles, Journal, Social, Settings) now has a little icon made from the game\'s own models.', 'If something breaks on a phone, the red error box now lists every error in order, first one on top, so testers can screenshot the real cause.'] },
+  { id: 110, title: '2.14.3 · Vega narrates every cutscene, iPhone fix', items: ['iPhones and iPads: the game no longer crashes on load (Safari has no mouse lock, and one line assumed it did).', 'Vega, the voice from the opening film, now reads every cutscene and the prologue out loud. Shots wait for her to finish.', 'Opening film: the stray "And…" is gone, your wingmen fly in formation beside you, the enemy fleet is spread out and mixed, the battle has six kinds of robots, and dropped guns lie flat on the ground.', 'Prologue: the stars are smaller and calmer, and the odd ball of stars around one planet is gone.'] },
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -18363,7 +18367,7 @@ function rangeHit(o, d) {
   return r; }; }
 
 // generated by tools/burpvo_ids.py: which B.U.R.P. lines have a recorded clip, per voice pack
-const BURP_VO_PACKS = {'burp': new Set('0199a781 019d19f9 0255d943 0272ce6c 07ff4d15 08f68083 0a3f0e98 0b5aada5 0b5b9ad0 0c83301d 0ce14908 0f98b3a9 0f9d7604 0ffd248d 1040a9a1 11547848 12f689fb 130b7be1 14a56f61 15e2a0ec 169a1cc7 16c63d2e 17769fd6 1835dd59 186dd066 1884f842 18bde740 1a238512 1aac7874 1b0b7e2d 1b168626 1c684c6d 1d620c60 1e7e71fe 1ee52a4d 1f3dc10f 1f8fabb8 21276758 21361572 222043b4 228e75a3 22da18a5 22fe9834 23169ea9 24996c37 24e92d9e 261cb8cf 26756b04 26ed5cb1 27852aed 28dceb21 290ea7d4 29d1db4a 2c3fd6a9 2e1dc3fd 2e327e93 2f68f916 314127fa 329faad2 3394cd97 33a34814 3409c1aa 3495f47f 361445ec 36503201 375372c3 3acf1777 3b6163c8 3bb3d5f8 3bc3edfd 3c9dc359 3ce3ba0b 3d1f3920 3f1f93b2 4239f99b 4245e2b8 4262ca97 428a1dc4 43b1f06c 44231a0f 460462b9 4669d7e1 46dfff49 4844c9b4 48cabbb3 498deb51 4aeac610 4b882f2e 4c27c008 4d9f57a0 4dd86691 4e4404de 4f1e2408 4fb37c79 4fe7816d 5022a5ea 5035ef3b 507a7caf 517b6335 520d6549 5239f162 53b70b38 5426a2b1 54571b61 5bd3fc56 5ce95245 5dec733a 60735f21 607cf32d 60d55737 6239564c 6289c1b2 62b93e73 630d304b 633c2f0f 65155efe 66b6dd60 66be4e32 68be3d12 68ff0303 6a55255b 6a60a1a5 6a67f9a3 6b1edd7f 6b44fd90 6ba296f2 6e3b9360 6f38c58a 704cedb8 7175f12d 71f43a89 72a328ae 75c37b0d 75db8717 77848a3f 79b4dca7 7b2c8288 7bc06ab5 7cc3785e 7d010e55 7e05cca4 824eb1fb 82f43991 8428f81b 843e5c16 85f121bf 87ba333d 880722bf 8960ce93 898df94e 89f8b85b 8af45176 8b01d880 8b669cf1 8bbafad9 8beed01d 8bef3d7d 8cd8d5d7 8d717d12 8da0d8e5 8f4f0a07 8f504a40 90af9507 919e2cd5 91e7b0ed 9399c1da 93cda89d 94fcde0d 9515c8d9 95e45a64 9a522975 9b10c514 9c6ed4ba 9c6ff8ee 9ce5101f 9d9e0bbf 9da6b676 9ffe0bf6 a0419699 a1a63a41 a21329cf a27b0e0b a46ac4ab a5679e21 a577a6ab a643dab8 a6cbc662 a70ffc20 a8cf46f1 ac657fef addb9d41 aef75b0e b1b07d1f b1c6f9fe b1dd6580 b3313235 b3a15d17 b5083958 b5280fa7 b5796e10 b6829a2a b6981842 b73ea286 b8481534 b96d9eb7 bb876ff0 bc424774 bc8ea102 bd5988a3 bd7eeb7a bdf735a0 bf151b6f bfab3f26 c04a4cc5 c071787a c0e0125e c1633150 c16f5077 c3168789 c39e5ecf c41959f0 c43a58aa c57b4558 c6a3a56d c889b0fd c8ce0e51 c978dfd2 c9fc3394 ca12a505 cbf88ef6 cc9b4071 ce6b3377 cf58242e cf76d3f5 cfb78867 d1b6a80a d2773270 d38d3bcc d4c11e65 d5304665 d670f8ed d67716bc d6f9f475 d866bac5 d9114a98 da1c7eff dc0be44f dc1c2c42 dc2e6774 df6ed76e e2862c03 e3bd8605 e41cb0e5 e4610eff e6f2a7ad e80780d1 e9102419 ea68da11 ebd594d3 ec0eb3ed ec67f42e ec88c940 ecdf15ee ed2bca2a ee7a9ec4 eec7d9b6 f0599600 f147cf66 f16080c3 f260d871 f2c7fbf6 f44dbc69 f507a014 f6377eb0 f639e89a f6c703ba f7d2c3d9 fa17109a fb81eeef fc26a633 fcb3fb9b fcda019c fd85cb42 fe72c880 fe9211b5 fef443a7 ff0c92ca'.split(' ').filter(Boolean))};
+const BURP_VO_PACKS = {'burp': new Set('0199a781 019d19f9 0255d943 0272ce6c 07ff4d15 08f68083 0a3f0e98 0b5aada5 0b5b9ad0 0c83301d 0ce14908 0f98b3a9 0f9d7604 0ffd248d 1040a9a1 11547848 12f689fb 130b7be1 14a56f61 15e2a0ec 169a1cc7 16c63d2e 17769fd6 1835dd59 186dd066 1884f842 18bde740 1a238512 1aac7874 1b0b7e2d 1b168626 1c684c6d 1d620c60 1e7e71fe 1ee52a4d 1f3dc10f 1f8fabb8 21276758 21361572 222043b4 228e75a3 22da18a5 22fe9834 23169ea9 24996c37 24e92d9e 261cb8cf 26756b04 26ed5cb1 27852aed 28dceb21 290ea7d4 29d1db4a 2c3fd6a9 2e1dc3fd 2e327e93 2f68f916 314127fa 329faad2 3394cd97 33a34814 3409c1aa 3495f47f 361445ec 36503201 375372c3 3acf1777 3b6163c8 3bb3d5f8 3bc3edfd 3c9dc359 3ce3ba0b 3d1f3920 3f1f93b2 4239f99b 4245e2b8 4262ca97 428a1dc4 43b1f06c 44231a0f 460462b9 4669d7e1 46dfff49 4844c9b4 48cabbb3 498deb51 4aeac610 4b882f2e 4c27c008 4d9f57a0 4dd86691 4e4404de 4f1e2408 4fb37c79 4fe7816d 5022a5ea 5035ef3b 507a7caf 517b6335 520d6549 5239f162 53b70b38 5426a2b1 54571b61 5bd3fc56 5ce95245 5dec733a 60735f21 607cf32d 60d55737 6239564c 6289c1b2 62b93e73 630d304b 633c2f0f 65155efe 66b6dd60 66be4e32 68be3d12 68ff0303 6a55255b 6a60a1a5 6a67f9a3 6b1edd7f 6b44fd90 6ba296f2 6e3b9360 6f38c58a 704cedb8 7175f12d 71f43a89 72a328ae 75c37b0d 75db8717 77848a3f 79b4dca7 7b2c8288 7bc06ab5 7cc3785e 7d010e55 7e05cca4 824eb1fb 82f43991 8428f81b 843e5c16 85f121bf 87ba333d 880722bf 8960ce93 898df94e 89f8b85b 8af45176 8b01d880 8b669cf1 8bbafad9 8beed01d 8bef3d7d 8cd8d5d7 8d717d12 8da0d8e5 8f4f0a07 8f504a40 90af9507 919e2cd5 91e7b0ed 9399c1da 93cda89d 94fcde0d 9515c8d9 95e45a64 9a522975 9b10c514 9c6ed4ba 9c6ff8ee 9ce5101f 9d9e0bbf 9da6b676 9ffe0bf6 a0419699 a1a63a41 a21329cf a27b0e0b a46ac4ab a5679e21 a577a6ab a643dab8 a6cbc662 a70ffc20 a8cf46f1 ac657fef addb9d41 aef75b0e b1b07d1f b1c6f9fe b1dd6580 b3313235 b3a15d17 b5083958 b5280fa7 b5796e10 b6829a2a b6981842 b73ea286 b8481534 b96d9eb7 bb876ff0 bc424774 bc8ea102 bd5988a3 bd7eeb7a bdf735a0 bf151b6f bfab3f26 c04a4cc5 c071787a c0e0125e c1633150 c16f5077 c3168789 c39e5ecf c41959f0 c43a58aa c57b4558 c6a3a56d c889b0fd c8ce0e51 c978dfd2 c9fc3394 ca12a505 cbf88ef6 cc9b4071 ce6b3377 cf58242e cf76d3f5 cfb78867 d1b6a80a d2773270 d38d3bcc d4c11e65 d5304665 d670f8ed d67716bc d6f9f475 d866bac5 d9114a98 da1c7eff dc0be44f dc1c2c42 dc2e6774 df6ed76e e2862c03 e3bd8605 e41cb0e5 e4610eff e6f2a7ad e80780d1 e9102419 ea68da11 ebd594d3 ec0eb3ed ec67f42e ec88c940 ecdf15ee ed2bca2a ee7a9ec4 eec7d9b6 f0599600 f147cf66 f16080c3 f260d871 f2c7fbf6 f44dbc69 f507a014 f6377eb0 f639e89a f6c703ba f7d2c3d9 fa17109a fb81eeef fc26a633 fcb3fb9b fcda019c fd85cb42 fe72c880 fe9211b5 fef443a7 ff0c92ca'.split(' ').filter(Boolean)), 'narrator': new Set('03633958 09504935 0a827643 0d16eae7 0f12ae5d 107c677a 1a55038c 20cf9aee 288f0c11 2e518428 30dabd6f 332e1391 374b457c 46ab76de 59709bcf 5a83c8f6 5d2995ab 5f864ac7 619ae97d 648062c4 7590830c 78e504a5 7d277f26 8ffcb52e 9af586f5 9cf05b18 ae9422ca af73daf8 bd4ff930 bd973f31 bfd9d2c6 c081e7fa c3295abb ca9fee4b cea35653 d962c599 dcb97d15 ddee420d deb34f40 e68a8db0 efbd83b9 fd58e27f'.split(' ').filter(Boolean)), 'trailer': new Set('t1 t10 t11 t12 t2 t3 t4 t5 t6 t7 t8 t9'.split(' ').filter(Boolean))};
 const BURP_VO = BURP_VO_PACKS.burp || new Set();
 
 // =================== B.U.R.P.'s real voice ===================
@@ -19368,6 +19372,34 @@ function voicePack() { const P = voicePacks(), want = PREFS.vpack || (SCRIPT.voi
   sel.addEventListener('change', () => { PREFS.vpack = sel.value; savePrefs(); try { burpVoBuf.clear(); } catch (_) {} burpSay('Voice check. This is how I sound now.'); });
   anchor.before(l, sel); if (typeof SET_OF !== 'undefined') SET_OF.setVpack = 'snd'; } }
 { const _rs = renderSettings; renderSettings = function () { _rs(); if ($('setVpack')) $('setVpack').value = voicePack(); }; }
+
+// =================== NARRATOR (2.14.3): Vega reads every cutscene caption out loud ===================
+// Clips live in voice/narrator/<burpHash of the caption>.mp3 (made with tools/voicegen.py, the same voice as the opening film).
+// A caption with no clip just stays silent. Lines spoken by another character (SKYE:, ELISMAS: ...) are left to the subtitles.
+const NARR = { a: null };
+const narrIds = () => (typeof BURP_VO_PACKS !== 'undefined' && BURP_VO_PACKS.narrator) || new Set();
+function narrStop() { if (NARR.a) { try { NARR.a.pause(); } catch (_) {} NARR.a = null; } }
+function narrSay(text, onDur) {
+  if (!text || PREFS.voice === false || !PREFS.sfx) return null; const id = burpHash(text); if (!narrIds().has(id)) return null;
+  narrStop(); const a = new Audio('voice/narrator/' + id + '.mp3'); a.volume = 1; NARR.a = a;
+  if (onDur) a.addEventListener('loadedmetadata', () => { if (isFinite(a.duration)) onDur(a.duration); });
+  a.play().then(() => { if (MUS.cur) musFade(MUS.cur, musVol() * 0.45, 0.4); a.onended = () => { if (NARR.a === a && MUS.cur) musFade(MUS.cur, musVol(), 0.9); }; }).catch(() => {});
+  return a;
+}
+// runCutscene: speak each shot's caption as the shot starts, and hold the shot until she has finished
+{ const _rc = runCutscene; runCutscene = function (opt) {
+  if (opt && opt.shots && !CUT.on) opt.shots.forEach(sh => { if (!sh.text || !sh.cam) return; const cam = sh.cam; let said = false;
+    let a = null; const d0 = sh.dur;
+    sh.cam = function (t, k) { if (!said) { said = true; a = narrSay(sh.text, d => { sh.dur = Math.max(sh.dur, d + 0.7); }); }
+      if (a && NARR.a === a && !a.paused && !a.ended && t < d0 + 15) sh.dur = Math.max(sh.dur, t + 0.4); // still talking: hold the shot
+      return cam.apply(this, arguments); }; });
+  const wasOn = CUT.on, r = _rc.apply(this, arguments);
+  if (!wasOn && CUT.on) { const iv = setInterval(() => { if (!CUT.on) { clearInterval(iv); narrStop(); if (MUS.cur) musFade(MUS.cur, musVol(), 0.6); } }, 300); }
+  return r; }; }
+// the ending's captions
+{ const _rc = rollCredits; rollCredits = function () { const r = _rc.apply(this, arguments); const ov = document.getElementById('ending'); if (!ov) return r;
+  let last = ''; const iv = setInterval(() => { const e = document.getElementById('ending'); if (!e) { clearInterval(iv); narrStop(); return; } const c = e.querySelector('.cap, #endCap') || null; const txt = c ? c.textContent : ''; if (txt && txt !== last && +getComputedStyle(c).opacity > 0.2) { last = txt; narrSay(txt); } }, 200);
+  return r; }; }
 
 
 // =================== STATE + SAVE ===================

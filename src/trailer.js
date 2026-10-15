@@ -89,7 +89,7 @@ function trlBuildGround() {
   const flames = []; { const ft = trlGradTex([[0, 'rgba(255,240,180,1)'], [0.35, 'rgba(255,140,40,.8)'], [1, 'rgba(255,60,10,0)']]);
     for (const L of fires) { const f = new THREE.Group(); for (let k = 0; k < 4; k++) { const c = new THREE.Sprite(new THREE.SpriteMaterial({ map: ft, color: ['#ff5a1a', '#ff8a2a', '#ffb050', '#ff7020'][k], transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); c.position.set((k - 1.5) * 0.25, 0.5 + (k % 2) * 0.5, 0); c.scale.set(1.3 - k * 0.15, 2 - k * 0.2, 1); f.add(c); } put(f, L.position.x, L.position.z); flames.push(f); } }
   // the warrior and the enemy machines
-  const warrior = buildChar(() => makePlayerChar(myLook(), S.col), 'trooper'); W.add(warrior);
+  const warrior = buildChar(() => recolor(makeTrooper(), { '#6f7a3e': '#3b4f7a', '#4a5229': '#2a3756', '#c9b27c': '#d9c48a' }), 'trooper'); W.add(warrior); // Captain Vega (2.14.5): you are a fresh recruit, the film is hers
   const sword = makeMeleeModel('master'); sword.scale.setScalar(1.4); const R = warrior.userData.rig; (R && R.armR ? R.armR : warrior).add(sword); sword.position.set(0, -0.5, 0.12); sword.rotation.set(Math.PI / 2, 0, 0);
   const MIX = [[makeXR17, 'xr17', 1.25], [typeof makeZR306 === 'function' ? makeZR306 : makeXR17, null, 1.1], [typeof makeK872 === 'function' ? makeK872 : makeXR17, null, 1.1], [typeof makeXGPolice === 'function' ? makeXGPolice : makeXR17, null, 1.1], [typeof makeDrillbot === 'function' ? makeDrillbot : makeXR17, null, 1], [typeof makeSiegeBot === 'function' ? makeSiegeBot : makeXR17, null, 0.8]];
   const mkFoe = i => { const [mk, rg, sc] = MIX[i % MIX.length]; let e; try { e = buildChar(mk, rg && RIGS[rg] ? rg : undefined); } catch (_) { e = buildChar(makeXR17, 'xr17'); } e.scale.setScalar(sc); return e; };
@@ -110,7 +110,7 @@ function trlBuildGround() {
     for (let i = 0; i < 9; i++) { const k = (t * 0.25 + i * 0.11) % 1; mx.fillStyle = '#5fd0ff'; mx.fillRect(20 + i * 10, 100 - k * 60, 5, 5); mx.fillStyle = '#ff4a3a'; mx.fillRect(18 + i * 10, 22 + Math.sin(t + i) * 4, 5, 5); }
     mx.strokeStyle = '#ffd36a'; mx.lineWidth = 2; mx.beginPath(); mx.moveTo(64, 110); mx.lineTo(64 + Math.sin(t) * 20, 40); mx.stroke(); mapTex.needsUpdate = true; };
   // charging soldiers, artillery, aircraft
-  const chargers = []; for (let i = 0; i < 8; i++) { const c = buildChar(makeTrooper, 'trooper'); W.add(c); chargers.push([c, -10 + i * 2.6, 26 + (i % 3) * 2, {}]); }
+  const chargers = []; for (let i = 0; i < 8; i++) { const c = buildChar(makeTrooper, 'trooper'); W.add(c); const cx = -10 + i * 2.6, cz = 26 + (i % 3) * 2; put(c, cx, cz, Math.PI); chargers.push([c, cx, cz, {}]); } // parked at their start, not on top of Vega (2.14.5)
   const guns = []; for (let i = 0; i < 3; i++) { const t = makeTankModel('#4a5a3a'); t.scale.setScalar(1.5); put(t, -46 + i * 9, 40, Math.PI * 0.9); guns.push(t); }
   const planes = []; for (let i = 0; i < 3; i++) { const p = makeDropship(); p.scale.setScalar(1.6); W.add(p); planes.push(p); }
   // the standard
@@ -172,7 +172,7 @@ function trlBuildSpace() {
     const n = new THREE.Sprite(new THREE.SpriteMaterial({ map: ct, color: col, transparent: true, opacity: 0.38, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); n.position.set(x, y, z); n.scale.setScalar(sz * 1.5); W.add(n); });
     const glare = new THREE.Sprite(new THREE.SpriteMaterial({ map: trlGradTex([[0, '#ffffff'], [0.1, 'rgba(255,230,190,.9)'], [0.4, 'rgba(255,170,90,.18)'], [1, 'rgba(0,0,0,0)']]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); glare.position.set(-900, 260, -1700); glare.scale.setScalar(700); W.add(glare); }
   const fleetPos = V(0, 0, -900); const fleet = new THREE.Group(); fleet.position.copy(fleetPos); W.add(fleet);
-  const hero = makeStarship(S.col); hero.scale.setScalar(2); fleet.add(hero);
+  const hero = makeStarship('#3b4f7a'); hero.scale.setScalar(2); fleet.add(hero);
   const allies = []; const VF = [[-10, 1, 6], [10, 1, 6], [-20, -2, 13], [20, -2, 13], [-5, 7, 18], [5, -6, 18]]; for (let i = 0; i < 6; i++) { const s = mergeChar(makeStarship(['#c9a43a', '#4fa8ff', '#6fdc5a', '#ff8a5a', '#c86aff', '#e8e4dc'][i])); s.scale.setScalar(1.6); fleet.add(s); allies.push({ s, o: VF[i], ph: i * 1.7 }); }
   const foes = []; for (let i = 0; i < 24; i++) { const big = i % 6 === 2; let r; try { r = mergeChar(big ? makeHulk('drome') : makeRaider()); } catch (_) { r = mergeChar(makeRaider()); } r.scale.setScalar(big ? 0.55 : 2.0); if (r.userData.beacon) r.userData.beacon.visible = false; fleet.add(r); foes.push({ r, x: (i % 6 - 2.5) * 24 + (Math.floor(i / 6) % 2) * 12, y: (Math.floor(i / 6) - 1.5) * 17, z: -150 - (i % 3) * 22 - (big ? 30 : 0), dead: 0 }); }
   const lasers = []; for (let i = 0; i < 36; i++) { const m = new THREE.Mesh(geo(new THREE.BoxGeometry(0.15, 0.15, 6)), glow(i % 2 ? '#ff2a3a' : '#5fd0ff')); m.visible = false; fleet.add(m); lasers.push({ m, life: 0, v: V() }); }
@@ -200,7 +200,7 @@ function trlShot(G, Sp, C, T, dt, fx, sfx) {
   const W = G.warrior, R = W.userData.rig, gy = G.gy;
   const wp = (x, z, ry) => { W.position.set(x, gy(x, z), z); if (ry != null) W.rotation.y = ry; };
   // ambient life: fires flicker, ash and embers drift, the armies sway, map glows
-  const t = T; G.planes.forEach(p => { p.visible = T >= 35.6 && T < 37.6; }); G.foes.forEach((f, i) => { f.visible = T >= (i < 2 ? 43 : 58) && T < 88; }); if (G.foeGun) G.foeGun.visible = T >= 43 && T < 88;
+  const t = T; G.planes.forEach(p => { p.visible = T >= 35.6 && T < 37.6; }); G.chargers.forEach(([c]) => { c.visible = T >= 31.5; }); G.foes.forEach((f, i) => { f.visible = T >= (i < 2 ? 43 : 58) && T < 88; }); if (G.foeGun) G.foeGun.visible = T >= 43 && T < 88;
   G.flames.forEach((f, i) => { f.scale.set(1, 0.85 + Math.sin(t * 9 + i) * 0.15, 1); }); G.fires.forEach((L, i) => { L.intensity = 1.2 + Math.sin(t * 13 + i * 2) * 0.4; });
   if (Math.random() < dt * 14) fx.add(V(C.position.x + (Math.random() - 0.5) * 16, C.position.y + 6, C.position.z - 4 - Math.random() * 10), '#9a948c', 1, 1, { add: false, op: 0.55, life: 3, size: 0.08, g: 0.4 });
   if (Math.random() < dt * 6) fx.add(V(C.position.x + (Math.random() - 0.5) * 8, C.position.y - 1.5, C.position.z - 3 - Math.random() * 6), '#ff8a3a', 1, 1.2, { up: 1.2, life: 2.4, size: 0.07 });
@@ -350,7 +350,7 @@ function playTrailer(opts) {
   { const gc = document.createElement('canvas'); gc.width = gc.height = 160; const gx = gc.getContext('2d'), id = gx.createImageData(160, 160); for (let i = 0; i < id.data.length; i += 4) { const v = Math.random() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; } gx.putImageData(id, 0, 0); ov.querySelector('#trlGrain').style.backgroundImage = `url(${gc.toDataURL()})`; }
   const grain = ov.querySelector('#trlGrain'), cv = renderer.domElement, cvFilter = cv.style.filter; cv.style.filter = 'contrast(1.12) saturate(1.12) brightness(1.04)';
   const fade = ov.querySelector('#trlFade'), white = ov.querySelector('#trlWhite'), cap = ov.querySelector('#trlCap'), title = ov.querySelector('#trlTitle');
-  let G, Sp; try { G = trlBuildGround(); Sp = trlBuildSpace(); } catch (err) { console.warn('trailer', err); TRL.on = false; CUT.on = false; ov.remove(); skip.remove(); setState(prevState); if (opts.onEnd) opts.onEnd(); return; }
+  let G, Sp; try { G = trlBuildGround(); Sp = trlBuildSpace(); TRL.G = G; } catch (err) { console.warn('trailer', err); TRL.on = false; CUT.on = false; ov.remove(); skip.remove(); setState(prevState); if (opts.onEnd) opts.onEnd(); return; }
   const C = new THREE.PerspectiveCamera(48, camera.aspect, 0.1, 4000); const fxG = trlFx(G.W), fxS = trlFx(Sp.W);
   const sfx = k => { try { if (k === 'boom') SFX.boom(); else if (k === 'shot') SFX.shot(GUNS.l28 ? 'l28' : undefined); else if (k === 'swing') SFX.swing(); else if (k === 'hit') SFX.hit(); else if (k === 'kill') SFX.kill(); else if (k === 'zap') SFX.zap(); } catch (_) {} };
   TRL.scene = G.W; TRL.cam = C;

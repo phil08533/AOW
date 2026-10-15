@@ -50,7 +50,12 @@ function fshStart(F) {
   FSH.F = F; FSH.st = F.st; FSH.hits = 0; FSH.t = 0; FSH.fly = -1; fshCatchHide(); fshRodSet(S.rod || 1); FSH.holder.visible = true;
   const s = fshSpotNear(); FSH.spot = s;
   if (s) { player.yaw = s.ice ? player.yaw : s.ry + Math.PI; player.pitch = s.ice ? -0.7 : -0.22;
-    if (s.ice) FSH.to = V(s.x, s.y + 0.1, s.z); else { const d = 2.8 + rand(3, 4.5), ux = Math.sin(s.ry), uz = Math.cos(s.ry); FSH.to = V(s.x + ux * d + rand(-1, 1) * uz, WATER_Y + 0.03, s.z + uz * d - rand(-1, 1) * ux); FSH.shore = V(s.x + ux * 2.4, WATER_Y + 0.03, s.z + uz * 2.4); } }
+    if (s.ice) FSH.to = V(s.x, s.y + 0.1, s.z); else { const ux = Math.sin(s.ry), uz = Math.cos(s.ry);
+      // walk out from the dock and find where the water really is, so the bobber never lands in the grass (2.14.5)
+      const wet = (x, z) => groundH(x, z) < WATER_Y - 0.05; let a = -1, b = -1; for (let d = 1.2; d < 10; d += 0.2) { if (wet(s.x + ux * d, s.z + uz * d)) { if (a < 0) a = d; b = d; } else if (a >= 0) break; }
+      let d = a < 0 ? 2.8 + rand(3, 4.5) : a + (b - a) * rand(0.45, 0.7); if (a >= 0) d = Math.min(d, a + 4.5);
+      let side = rand(-1, 1); if (a >= 0) for (let k = 0; k < 4 && !wet(s.x + ux * d + side * uz, s.z + uz * d - side * ux); k++) side *= 0.5;
+      FSH.to = V(s.x + ux * d + side * uz, WATER_Y + 0.03, s.z + uz * d - side * ux); const sh = a < 0 ? 2.4 : Math.max(1.2, a + 0.2); FSH.shore = V(s.x + ux * sh, WATER_Y + 0.03, s.z + uz * sh); } }
   else { const ux = -Math.sin(player.yaw), uz = -Math.cos(player.yaw); FSH.to = V(player.pos.x + ux * 6, Math.max(WATER_Y, floorAt(player.pos.x + ux * 6, player.pos.z + uz * 6)) + 0.03, player.pos.z + uz * 6); FSH.shore = V(player.pos.x + ux * 1.5, FSH.to.y, player.pos.z + uz * 1.5); }
   if (!FSH.shore) FSH.shore = FSH.to.clone();
 }

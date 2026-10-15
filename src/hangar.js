@@ -3,8 +3,8 @@
 function hangarDress(s, cx, cz, outer, props) {
   const sd = s.side, H = 3.2, wall = outer - sd * 0.2;
   // turntable with a glowing rim and your vehicle on it
-  const tt = new THREE.Group(); tt.position.set(cx, 0.07, cz); props.add(tt);
-  part(tt, Cy(1.75, 1.8, 0.1, 40), toonNS('#2a2c32', 'deck'), 0, 0.05, 0); const rim = part(tt, new THREE.TorusGeometry(1.78, 0.04, 6, 48), glow('#4fd2ff'), 0, 0.1, 0, Math.PI / 2);
+  const tt = new THREE.Group(); tt.position.set(cx, 0.07, cz); levelGroup.add(tt); // moving parts live outside props (props get merged into one static mesh)
+  part(tt, Cy(1.75, 1.8, 0.1, 40), toonNS('#2a2c32', 'deck'), 0, 0.05, 0); const rim = part(tt, new THREE.TorusGeometry(1.78, 0.04, 6, 48), new THREE.MeshBasicMaterial({ color: '#4fd2ff', transparent: true }), 0, 0.1, 0, Math.PI / 2);
   for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; part(tt, B(0.5, 0.012, 0.08), glow('#ffd36a'), Math.cos(a) * 1.45, 0.105, Math.sin(a) * 1.45, 0, -a); }
   const V0 = typeof vehS === 'function' ? vehS() : null, vid = V0 && (V0.sel && V0.owned.includes(V0.sel) ? V0.sel : V0.owned[0]);
   const spin = new THREE.Group(); spin.position.y = 0.1; tt.add(spin);
@@ -15,7 +15,7 @@ function hangarDress(s, cx, cz, outer, props) {
   solid(cx, cz, 1.6);
   // gantry crane across the ceiling with a hook over the pad
   for (const dz of [-2.3, 2.3]) part(props, B(9.6, 0.22, 0.22), toon('#c9a43a', 'hazard'), (s.x0 + s.x1) / 2, H - 0.2, cz + dz);
-  const trolley = new THREE.Group(); props.add(trolley); part(trolley, B(0.6, 0.25, 5), '#3a3d44', 0, H - 0.42, cz); part(trolley, Cy(0.02, 0.02, 0.9, 4), '#1e1c22', 0, H - 1.0, cz); part(trolley, new THREE.TorusGeometry(0.12, 0.035, 6, 12, Math.PI * 1.4), '#8a8e96', 0, H - 1.5, cz);
+  const trolley = new THREE.Group(); levelGroup.add(trolley); part(trolley, B(0.6, 0.25, 5), '#3a3d44', 0, H - 0.42, cz); part(trolley, Cy(0.02, 0.02, 0.9, 4), '#1e1c22', 0, H - 1.0, cz); part(trolley, new THREE.TorusGeometry(0.12, 0.035, 6, 12, Math.PI * 1.4), '#8a8e96', 0, H - 1.5, cz);
   levelAnims.push(t => { trolley.position.x = cx + Math.sin(t * 0.18) * 1.8; });
   // tool wall: pegboard, tools, a rolling red tool chest
   const tw = wall - sd * 0.02; part(props, B(0.05, 1.4, 3.2), toonNS('#3a3d44', 'deck'), tw, 1.5, cz + 0.2);
@@ -28,7 +28,7 @@ function hangarDress(s, cx, cz, outer, props) {
   // fuel pump by the launch door
   { const pm = new THREE.Group(); part(pm, B(0.5, 1.3, 0.4), toon('#e8e4dc', 'hull'), 0, 0.65, 0); part(pm, B(0.4, 0.25, 0.02), glow('#6fdc5a'), 0, 1.05, 0.21); part(pm, Cy(0.03, 0.03, 0.8, 5), C.dark, 0.2, 0.5, 0.25, 0.4); pm.position.set(cx + sd * 2.6, 0, s.z1 - 0.7); pm.rotation.y = Math.PI; props.add(pm); solid(cx + sd * 2.6, s.z1 - 0.7, 0.35); }
   // guide lights from the pad to the launch door, and hanging work lights
-  const dots = []; for (let i = 0; i < 4; i++) { dots.push(part(props, B(0.5, 0.02, 0.18), glow('#4fd2ff'), cx, 0.03, cz + 2.8 + i * 0.5)); }
-  levelAnims.push(t => dots.forEach((d, i) => { d.material.opacity = 0.35 + 0.65 * Math.max(0, Math.sin(t * 4 - i * 0.9)); d.material.transparent = true; }));
+  const dots = []; for (let i = 0; i < 4; i++) { dots.push(part(levelGroup, B(0.5, 0.02, 0.18), new THREE.MeshBasicMaterial({ color: '#4fd2ff', transparent: true }), cx, 0.08, cz + 2.8 + i * 0.5)); }
+  levelAnims.push(t => dots.forEach((d, i) => { d.material.opacity = 0.35 + 0.65 * Math.max(0, Math.sin(t * 4 - i * 0.9)); }));
   for (const dz of [-3.3, 3.3]) { part(props, Cy(0.015, 0.015, 0.6, 4), '#1e1c22', cx - sd * 2.5, H - 0.3, cz + dz); part(props, Cy(0.18, 0.28, 0.2, 10, true), '#3a3d44', cx - sd * 2.5, H - 0.68, cz + dz); part(props, Cy(0.17, 0.17, 0.02, 10), glow('#fff2d0'), cx - sd * 2.5, H - 0.78, cz + dz); }
 }

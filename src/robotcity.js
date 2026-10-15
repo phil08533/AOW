@@ -39,7 +39,7 @@ LEVELS.robot = {
     { id: 'tower', name: 'Tower of Death', lvl: 'Lv 36–40', x: -42, z: 66, r: 16, fr: 16, col: '#1e1c22', h: 0.6 }
   ],
   paths: [[[0, -16], [0, 10]], [[0, 10], [48, 2]], [[0, 10], [-50, 8]], [[0, 10], [0, 40]], [[0, 40], [42, 58]], [[0, 40], [-42, 66]], [[-50, 8], [-42, 66]]],
-  river: [], pools: [[22, -22, 4]], lava: [],
+  river: [], pools: [[22, -22, 5.2]], lava: [],
   safes: [{ x: STORE[0], z: STORE[1], r: 13 }], spawn: { x: 0, z: -24, yaw: Math.PI }, pad: { x: 0, z: -13 },
   menu: { x: 0, z: 0, r: 40, h: 16 }, npcBase: STORE,
   npcs: [
@@ -48,7 +48,7 @@ LEVELS.robot = {
     { id: 'r731', name: 'R7-31', role: 'Gunsmith unit', rig: 'xr17', make: () => recolor(makeXR17(), { '#9aa1aa': '#5d636c', '#5d636c': '#c8402f' }), x: 7, z: 7, shop: 'guns', guns: ['r40', 'g45', 'x50', 'p35'], melee: ['staff', 'master', 'saber'], idle: ["WEAPONS. SALE. NOW.", "Bring Gear Cogs. I build better."] },
     { id: 'r733', name: 'R7-33', role: 'Repair unit · heals', rig: 'xr17', make: () => recolor(makeXR17(), { '#9aa1aa': '#e8e4dc', '#5d636c': '#c8402f' }), x: -8, z: -1, face: 1.4, heal: true, idle: ["Patching flesh is like patching chrome. Mostly."] },
     { id: 'zip', name: 'Zip', role: 'Retired racer', rig: null, make: () => makeHoverBot(), x: 8, z: -1, face: -1.4, idle: ["The Hover Cup's done. All the real racers went to Velocity. Hover cars! Lightning! I'm jealous!", "Velocity's a magnet planet. Your car floats on the field. Mine just floats on hope."] },
-    { id: 'coil', name: 'Coil', role: 'Coolant fisher · buys fish', rig: 'civ', make: () => makeCivilian('#5d636c', '#2c2a28', '#9fe8ff', '#1e1a18', '#ffd23a'), x: 18, z: 12, face: 0.8, shop: 'fish', rods: [1, 2, 3], idle: ["Fish in coolant? They adapted. Kinda."] }
+    { id: 'coil', name: 'Coil', role: 'Coolant fisher · buys fish', rig: 'civ', make: () => makeCivilian('#5d636c', '#2c2a28', '#9fe8ff', '#1e1a18', '#ffd23a'), x: 13, z: 17, face: 0.8, shop: 'fish', rods: [1, 2, 3], idle: ["Fish in coolant? They adapted. Kinda."] }
   ],
   spawns: [
     { zone: 'streets', type: 'xgpolice', n: 6, lv: [28, 31] }, { zone: 'streets', type: 'hoverbot', n: 4, lv: [28, 30] },

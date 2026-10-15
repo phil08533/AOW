@@ -164,7 +164,7 @@ LEVELS.earth = {
   ],
   paths: [[[0, -13], [0, 4]], [[0, 4], [44, 4]], [[0, 4], [-46, 8]], [[0, 4], [4, 52]], [[4, 52], [47, 55]], [[4, 52], [-34, 60]]],
   river: [[-22, -55], [-19, -32], [-16, -8], [-19, 12], [-17, 30]],
-  pools: [[-52, 2, 3.2], [-40, 18, 2.6], [-55, 16, 2.2], [-38, 0, 2]],
+  pools: [[-52, 2, 4.4], [-40, 18, 2.6], [-55, 16, 2.2], [-38, 0, 2]],
   lava: [[-52, 58, 1.8], [-40, 66, 1.6], [-58, 74, 2.2], [-33, 52, 1.8]],
   carve: (x, z, h) => { const nd = Math.hypot(x + 24, z + 62); return nd < 4 ? Math.min(h, 4.9 + (h - 4.9) * smooth(nd, 2, 3.8)) : h; },
   safes: [{ x: TOWN.x, z: TOWN.z, r: 10.2 }],
@@ -356,7 +356,8 @@ LEVELS.ship = {
       let z = -2; for (const g of gaps) { if (g - 1.3 > z) wall(2 * side, z, 2 * side, g - 1.3); z = g + 1.3; } if (Lz > z) wall(2 * side, z, 2 * side, Lz);
       for (const g of gaps) { for (const dz of [-1.35, 1.35]) part(props, B(0.32, H, 0.12), '#2a2c32', 2 * side, H / 2, g + dz); part(props, B(0.32, 0.3, 2.8), '#2a2c32', 2 * side, H - 0.15, g); }
     }
-    for (let z = 0; z < Lz; z += 3) for (const s of [-1, 1]) part(props, B(0.08, H, 0.18), '#5d636c', 1.84 * s, H / 2, z);
+    // hull ribs, but never inside a doorway (2.14.5: they used to stand in the middle of some doors)
+    for (let z = 0; z < Lz; z += 3) for (const s of [-1, 1]) { if (doors.some(d => d.side === s && Math.abs(z - d.zc) < 1.6)) continue; part(props, B(0.08, H, 0.18), '#5d636c', 1.84 * s, H / 2, z); }
     // ---- rooms: each with its own floor, walls, ceiling, light colour and a job ----
     const LOOK = {
       quarters: { floor: toonNS('#7a4a3a', 'carpet'), wall: toonNS('#a08060', 'woodwall'), ceil: toonNS('#5a4a40', 'ceil'), light: '#ffd8a0' },
@@ -367,6 +368,7 @@ LEVELS.ship = {
       trophy: { floor: toonNS('#d8d2c8', 'marble'), wall: toonNS('#6a1e24', 'woodwall'), ceil: toonNS('#3a1e22', 'ceil'), light: '#ffd36a' },
       garden: { floor: toonNS('#4a6a3a', 'grass'), wall: toonNS('#8ab8a0', 'tile'), ceil: toonNS('#cfe8d8', 'ceil'), light: '#e8ffd8' },
       hangar: { floor: toonNS('#6a6a6a', 'grate'), wall: toonNS('#7a7e86', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ffffff' },
+      angler: { floor: toonNS('#6a4a34', 'wood'), wall: toonNS('#3e5258', 'hull'), ceil: toonNS('#2a2c32', 'ceil'), light: '#ffe2b8' },
       range: { floor: toonNS('#4a4e56', 'tread'), wall: toonNS('#3a3438', 'hull'), ceil: toonNS('#2a2c32', 'ceil'), light: '#ffe8c8' }
     };
     rooms.forEach((id, k) => {
@@ -423,6 +425,8 @@ LEVELS.ship = {
       }
       if (id === 'lab') labRoom(s, cx, cz, far, outer, faceIn, term, props);
       if (id === 'range' && typeof rangeRoom === 'function') rangeRoom(s, cx, cz, outer, term, props);
+      if (id === 'angler' && typeof anglerRoom === 'function') anglerRoom(s, cx, cz, outer, term, props);
+      if (typeof roomUpDress === 'function') roomUpDress(id, s, cx, cz, inner, props);
       if (id === 'hangar') {
         part(props, B(0.2, 2.8, 6), toon('#c9a43a', 'hazard'), outer - s.side * 0.12, 1.4, cz);
         // the pad sits clearly above the deck so the stripes never flicker into the floor (2.14.4)

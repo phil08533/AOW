@@ -28,7 +28,7 @@ function makeHulk(type) {
     for (let i = 0; i < 8; i++) part(g, B(0.6 * s, 0.6 * s, 0.2), glow(i % 3 ? T.light : '#ffffff'), (i % 2 ? 4.6 : -4.6) * s, 1.4 * s, (-14 + i * 4) * s);
     part(g, B(9.4 * s, 0.6 * s, 2 * s), T.trim, 0, -1 * s, -14 * s);
     if (type === 'derelict') for (let i = 0; i < 6; i++) part(g, B(3 * s, 3 * s, 3 * s), '#3a3d44', (Math.random() - 0.5) * 30 * s, (Math.random() - 0.5) * 16 * s, (Math.random() - 0.5) * 40 * s, i, i * 2, i);
-    if (type === 'flagship') { for (let i = 0; i < 6; i++) part(g, Cy(0.6 * s, 0.6 * s, 6 * s, 6), '#26232a', (i % 2 ? 4 : -4) * s, 3.4 * s, (-12 + i * 4) * s, Math.PI / 2); part(g, new THREE.CircleGeometry(4 * s, 20), glow('#b3262c'), 0, 0.4 * s, -17.1 * s, 0, Math.PI); }
+    if (type === 'flagship') { for (let i = 0; i < 6; i++) part(g, Cy(0.6 * s, 0.6 * s, 6 * s, 6), '#26232a', (i % 2 ? 4 : -4) * s, 3.4 * s, (-12 + i * 4) * s, Math.PI / 2); part(g, new THREE.CircleGeometry(4 * s, 24), toon('#1e1a20'), 0, 0.4 * s, -17.1 * s, 0, Math.PI); part(g, new THREE.RingGeometry(3.3 * s, 3.8 * s, 24), glow('#b3262c'), 0, 0.4 * s, -17.15 * s, 0, Math.PI); part(g, new THREE.CircleGeometry(1.9 * s, 16, 0, Math.PI), glow('#b3262c'), 0, 0.7 * s, -17.15 * s, 0, Math.PI); for (let k = 0; k < 2; k++) part(g, B((4.6 - k * 1.2) * s, 0.3 * s, 0.1 * s), glow('#b3262c'), 0, (0.2 - k * 0.8) * s, -17.15 * s); } // Drome's sigil, not a big red dot (2.14.5)
   }
   const beacon = glowSprite(T.light, 18 * s); beacon.position.y = 9 * s; g.add(beacon); g.userData.beacon = beacon;
   return g;

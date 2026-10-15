@@ -23,7 +23,8 @@
     VEL.traffic = []; const styles = ['wedge', 'muscle', 'jet', 'manta', 'wedge', 'muscle', 'jet', 'manta', 'wedge'];
     for (let i = 0; i < 9; i++) {
       const c = mergeChar(velCar(styles[i], RPAINTS[(i * 3 + 1) % RPAINTS.length], VEL_STRIPES[(i * 5) % VEL_STRIPES.length], i % 4));
-      for (const s of [-1, 1]) { part(c, B(0.32, 0.12, 0.06), glow('#fff4d0'), s * 0.55, 0.45, -1.75); part(c, B(0.34, 0.1, 0.06), glow('#ff2a3a'), s * 0.55, 0.5, 1.75); }
+      for (const s of [-1, 1]) { part(c, B(0.32, 0.12, 0.06), glow('#fff4d0'), s * 0.55, 0.45, 1.75); part(c, B(0.34, 0.1, 0.06), glow('#ff2a3a'), s * 0.55, 0.5, -1.75); }
+      { const cone = new THREE.Mesh(new THREE.ConeGeometry(2.2, 9, 12, 1, true), new THREE.MeshBasicMaterial({ color: '#fff0c8', transparent: true, opacity: 0.08, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); cone.rotation.x = Math.PI / 2; cone.position.set(0, 0.45, 6.2); c.add(cone); }
       levelGroup.add(c);
       const T = { obj: c, a: 70 + (i % 5) * 42 + Math.random() * 20, b: 60 + ((i * 7) % 5) * 38, cx: (i % 3 - 1) * 30, cz: 60 + (i % 2) * 30, th: Math.random() * Math.PI * 2, dir: i % 2 ? 1 : -1, sp: 20 + Math.random() * 9, wob: 10 + Math.random() * 16, push: V(0, 0, 0), x: 0, z: 0 };
       VEL.traffic.push(T);
@@ -36,7 +37,7 @@
       const x = T.cx + Math.cos(T.th) * T.a + T.push.x, z = T.cz + Math.sin(T.th) * T.b + Math.sin(T.th * 3) * T.wob + T.push.z;
       const dx = x - T.x, dz = z - T.z; T.x = x; T.z = z; T.push.multiplyScalar(Math.exp(-dt * 1.2));
       const g = groundH(x, z); T.obj.position.set(x, g + 0.35 + Math.sin(gameTime * 4 + T.th) * 0.04, z);
-      if (Math.hypot(dx, dz) > 1e-4) T.obj.rotation.y = Math.atan2(dx, dz) + Math.PI;
+      if (Math.hypot(dx, dz) > 1e-4) T.obj.rotation.y = Math.atan2(dx, dz);
       // bump into you
       if (Math.abs(p.y - g) > 2.5) continue;
       const ox = p.x - x, oz = p.z - z, d = Math.hypot(ox, oz), R = RC.on ? 2.6 : 1.9;
@@ -99,7 +100,7 @@
     if (W.c.style.display === 'none') W.c.style.display = 'block';
     const w = Math.round(innerWidth / 2), h = Math.round(innerHeight / 2); if (W.c.width !== w || W.c.height !== h) { W.c.width = w; W.c.height = h; }
     W.t += dt; if (W.t < 1 / 30) return; const T = W.t; W.t = 0; const x = W.x, top = h * 0.03, bot = h * 0.62;
-    W.acc += T * (40 + sp * 1.5); while (W.acc >= 1 && W.drops.length < 140) { W.acc -= 1; W.drops.push({ x: Math.random() * w, y: top + Math.random() * (bot - top), r: 2 + Math.random() * 3.4, hue: (gameTime * 40 + Math.random() * 360) % 360, vy: 0, life: 4 + Math.random() * 4 }); }
+    W.acc += T * (70 + sp * 2); while (W.acc >= 1 && W.drops.length < 220) { W.acc -= 1; W.drops.push({ x: Math.random() * w, y: top + Math.random() * (bot - top), r: 1.2 + Math.pow(Math.random(), 2) * 4.5, hue: (gameTime * 40 + Math.random() * 360) % 360, vy: 0, life: 4 + Math.random() * 4 }); }
     // the wipers sweep every 1.4s
     const ph = (gameTime % 1.4) / 1.4, ang = Math.PI * (0.06 + 0.84 * (ph < 0.5 ? ph * 2 : 2 - ph * 2)), piv = [[w * 0.3, bot + h * 0.06], [w * 0.72, bot + h * 0.06]], L = Math.min(w * 0.46, h * 0.95);
     x.clearRect(0, 0, w, h);
@@ -107,10 +108,19 @@
       d.vy += (sp > 8 ? -sp * 0.5 : 10 + d.r * 4) * T; d.y += d.vy * T; d.x += (d.x - w / 2) * sp * 0.0018 * T * 30;
       let wiped = false; for (const [px, py] of piv) { const a = Math.atan2(py - d.y, d.x - px), r2 = Math.hypot(d.x - px, py - d.y); if (r2 < L && Math.abs(a - (Math.PI - ang)) < 0.09) wiped = true; }
       if (wiped || d.life <= 0 || d.y < top - 4 || d.y > bot + 6 || d.x < -4 || d.x > w + 4) { W.drops.splice(i, 1); continue; }
-      const streak = Math.min(18, Math.abs(d.vy) * 0.08);
-      x.strokeStyle = `hsla(${d.hue},90%,72%,0.55)`; x.lineWidth = d.r * 0.9; if (streak > 1) { x.beginPath(); x.moveTo(d.x, d.y); x.lineTo(d.x, d.y - Math.sign(d.vy) * streak); x.stroke(); }
-      x.fillStyle = `hsla(${d.hue},95%,74%,0.6)`; x.beginPath(); x.arc(d.x, d.y, d.r, 0, Math.PI * 2); x.fill();
-      x.fillStyle = 'rgba(255,255,255,0.7)'; x.fillRect(d.x - d.r * 0.4, d.y - d.r * 0.5, Math.max(1, d.r * 0.4), Math.max(1, d.r * 0.4)); }
+      // a drop is clear water: dark rim on the bottom, bright glint on top, a faint rainbow tint, and a wet trail when it runs
+      const rr = d.r, run = Math.abs(d.vy) > 6;
+      if (run) { d.trail = d.trail || []; d.trail.push(d.x, d.y); if (d.trail.length > 24) d.trail.splice(0, 2); x.strokeStyle = 'rgba(200,220,255,0.10)'; x.lineWidth = rr * 0.9; x.beginPath(); for (let k = 0; k < d.trail.length; k += 2) (k ? x.lineTo : x.moveTo).call(x, d.trail[k], d.trail[k + 1]); x.stroke(); }
+      const sx = rr * (run ? 0.8 : 1), sy = rr * (run ? 1.35 : 1);
+      x.save(); x.translate(d.x, d.y); x.scale(sx, sy);
+      const gd = x.createRadialGradient(-0.25, -0.3, 0.05, 0, 0, 1); gd.addColorStop(0, 'rgba(255,255,255,0.08)'); gd.addColorStop(0.55, `hsla(${d.hue},70%,80%,0.10)`); gd.addColorStop(0.85, 'rgba(10,14,22,0.35)'); gd.addColorStop(1, 'rgba(10,14,22,0)');
+      x.fillStyle = gd; x.beginPath(); x.arc(0, 0, 1, 0, Math.PI * 2); x.fill();
+      x.fillStyle = 'rgba(255,255,255,0.75)'; x.beginPath(); x.arc(-0.35, -0.4, 0.22, 0, Math.PI * 2); x.fill();
+      x.fillStyle = `hsla(${d.hue},90%,75%,0.35)`; x.beginPath(); x.arc(0.25, 0.45, 0.18, 0, Math.PI * 2); x.fill(); x.restore(); }
+    // a fine mist of tiny droplets everywhere
+    if (!W.mist || W.mist.w !== w) { W.mist = { w, p: Array.from({ length: 260 }, () => [Math.random(), Math.random(), 0.4 + Math.random() * 0.9]) }; }
+    for (let k = 0; k < 5; k++) { const q = W.mist.p[(Math.random() * W.mist.p.length) | 0]; q[0] = Math.random(); q[1] = Math.random(); }
+    x.fillStyle = 'rgba(220,235,255,0.22)'; for (const [mx, my, mr] of W.mist.p) { const yy = top + my * (bot - top); x.beginPath(); x.arc(mx * w, yy, mr, 0, Math.PI * 2); x.fill(); }
     x.lineCap = 'round'; for (const [px, py] of piv) { const ex = px + Math.cos(Math.PI - ang) * L, ey = py - Math.sin(Math.PI - ang) * L;
       x.strokeStyle = 'rgba(8,10,14,0.92)'; x.lineWidth = Math.max(3, h * 0.012); x.beginPath(); x.moveTo(px, py); x.lineTo(ex, ey); x.stroke();
       x.strokeStyle = 'rgba(40,44,52,0.95)'; x.lineWidth = Math.max(2, h * 0.006); x.beginPath(); x.moveTo(px + (ex - px) * 0.25, py + (ey - py) * 0.25); x.lineTo(ex, ey); x.stroke(); }
@@ -140,10 +150,10 @@
     if (!VEL.hemi0) VEL.hemi0 = hemi.color.clone();
     VEL.nextRb -= dt; if (VEL.nextRb <= 0) { VEL.nextRb = 2 + Math.random() * 4; ENV.flash = Math.max(ENV.flash, 0.9); VEL.lastFlash = ENV.flash; velBolt(Math.random() < 0.4); SFX.thunder && SFX.thunder(0.15 + Math.random() * 0.9); }
     VEL.rbT = Math.max(0, VEL.rbT - dt * 2.4); const fk = Math.max(VEL.rbT, ENV.flash * 0.6);
-    const fogBase = new THREE.Color('#262b34'), sk = skyMat.uniforms;
-    scene.fog.near = 7; scene.fog.far = 58; scene.fog.color.copy(fogBase).lerp(VEL.rbCol, fk * 0.55);
+    const fogBase = new THREE.Color('#151920'), sk = skyMat.uniforms;
+    scene.fog.near = 7; scene.fog.far = 58; scene.fog.color.copy(fogBase).lerp(VEL.rbCol, fk * 0.3);
     const fogLin = scene.fog.color; sk.hor.value.copy(fogLin); sk.mid.value.copy(fogLin).multiplyScalar(0.8); sk.top.value.multiplyScalar(0.35).lerp(VEL.rbCol, fk * 0.5); sk.mid.value.lerp(VEL.rbCol, fk * 0.35);
-    sun.intensity *= 0.55; hemi.color.copy(VEL.hemi0).lerp(VEL.rbCol, fk);
+    sun.intensity *= 0.3; hemi.intensity *= 0.55; clouds.visible = false; skyRing.visible = false; stars.visible = false; hemi.color.copy(VEL.hemi0).lerp(VEL.rbCol, fk * 0.5);
     if (renderer && renderer.setClearColor) { /* the HD pass clears to HORIZON; keep it stormy */ HORIZON.copy(fogBase); } }; }
 
   // ---- park the car and get out; it stays there ----
@@ -188,4 +198,74 @@
     trafficStep(dt); sprayStep(dt, RC.on, sp);
     if (VEL.parked && VEL.parked.parent) VEL.parked.position.y = floorAt(VEL.parked.position.x, VEL.parked.position.z) + 0.1 + Math.sin(gameTime * 3) * 0.03;
   }; }
+
+  // ---- round 2: heavy rain, a storm-cloud ceiling, brighter headlights, your car waiting, shady locals, quick car swap ----
+  function velRainMake() {
+    const N = 1600, pos = new Float32Array(N * 6), col = new Float32Array(N * 6), g = new THREE.BufferGeometry(), c = new THREE.Color();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    for (let i = 0; i < N; i++) { c.setHSL(Math.random(), 0.7, 0.75); col.set([c.r * 0.5, c.g * 0.5, c.b * 0.5, c.r, c.g, c.b], i * 6); }
+    const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false })); l.frustumCulled = false; levelGroup.add(l);
+    VEL.hrain = { l, N, p: Array.from({ length: N }, () => [0, -999, 0, 0]) };
+  }
+  function velRainStep(dt) {
+    const H = VEL.hrain; if (!H) return; const cp = camera.position, a = H.l.geometry.attributes.position.array, wx = 5, wz = 2, vx = -(RC.vx || 0) * 0.15, vz = -(RC.vz || 0) * 0.15;
+    for (let i = 0; i < H.N; i++) { const q = H.p[i];
+      if (q[1] < cp.y - 6 || Math.abs(q[0] - cp.x) > 26 || Math.abs(q[2] - cp.z) > 26) { q[0] = cp.x + (Math.random() - 0.5) * 50; q[2] = cp.z + (Math.random() - 0.5) * 50; q[1] = cp.y + 4 + Math.random() * 22; q[3] = 34 + Math.random() * 14; }
+      q[1] -= q[3] * dt; q[0] += wx * dt; q[2] += wz * dt;
+      const len = 0.06; a.set([q[0], q[1], q[2], q[0] - (wx + vx) * len, q[1] + q[3] * len, q[2] - (wz + vz) * len], i * 6); }
+    H.l.geometry.attributes.position.needsUpdate = true;
+  }
+  let cloudTex = null;
+  const velCloudTex = () => cloudTex || (cloudTex = (() => { const S2 = 128, c = document.createElement('canvas'); c.width = c.height = S2; const x = c.getContext('2d');
+    for (let i = 0; i < 46; i++) { const px = 20 + Math.random() * 88, py = 20 + Math.random() * 88, r = 14 + Math.random() * 30, g = x.createRadialGradient(px, py, 0, px, py, r); const v = 30 + Math.random() * 40; g.addColorStop(0, `rgba(${v},${v + 4},${v + 12},0.55)`); g.addColorStop(1, `rgba(${v},${v},${v},0)`); x.fillStyle = g; x.fillRect(0, 0, S2, S2); }
+    const t = new THREE.CanvasTexture(c); return t; })());
+  function velCloudsMake() {
+    const g = new THREE.Group(); levelGroup.add(g); VEL.cdeck = g; VEL.cdeckM = [];
+    for (let i = 0; i < 34; i++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: velCloudTex(), color: '#3a404c', transparent: true, opacity: 0.95, depthWrite: false, fog: false, side: THREE.DoubleSide }));
+      const sz = 60 + Math.random() * 70; m.scale.set(sz, sz, 1); m.rotation.x = Math.PI / 2; m.rotation.z = Math.random() * 6.28; m.position.set((Math.random() - 0.5) * 300, 34 + Math.random() * 18, (Math.random() - 0.5) * 300); m.renderOrder = -1; g.add(m); VEL.cdeckM.push(m); }
+  }
+  function velCloudsStep(dt) {
+    if (!VEL.cdeck) return; const cp = camera.position, fk = Math.max(VEL.rbT, ENV.flash * 0.6), c = new THREE.Color('#2e333d').lerp(VEL.rbCol, fk * 0.8).lerp(new THREE.Color('#ffffff'), fk * 0.15);
+    for (const m of VEL.cdeckM) { m.position.x += 3 * dt; m.position.z += 1.2 * dt; m.rotation.z += dt * 0.01;
+      if (m.position.x - cp.x > 150) m.position.x -= 300; if (m.position.x - cp.x < -150) m.position.x += 300; if (m.position.z - cp.z > 150) m.position.z -= 300; if (m.position.z - cp.z < -150) m.position.z += 300; m.material.color.copy(c); }
+  }
+  function velBeam() { const cone = new THREE.Mesh(new THREE.ConeGeometry(3.4, 16, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#fff4dc', transparent: true, opacity: 0.035, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); cone.geometry.translate(0, -8, 0); cone.rotation.x = -Math.PI / 2; levelGroup.add(cone); VEL.beam = cone; }
+  // your car waits right in front of you when you arrive
+  function velArrivalCar() {
+    if (VEL.parked) return; const R = velR(); const car = mergeChar(velMyCar()); const x = -4, z = -2, yaw = Math.PI;
+    car.position.set(x, VCITY.y + 0.1, z); car.rotation.y = yaw + Math.PI; levelGroup.add(car); VEL.parked = car; VEL.parkYaw = yaw;
+    const it = { x, z, r: 3.4, label: '🚗 Get in your car', fn: () => enterParked() }; VEL.parkIt = it; INTERACTS.push(it);
+  }
+  // shady locals in Pit Row
+  const SHADY = [
+    { id: 'vshade1', name: 'Slick Dez', role: 'Sells "spare parts"', rig: 'civ', make: () => makeCivilian('#1e1c22', '#2c2a28', '#c58a64', '#111', '#c86aff'), x: -19, z: -6, face: 1.6, idle: ["Need a magnet coil? Fell off a truck. A hover truck. It hovered off.", "Don't ask where the stripes came from. Stripes are stripes.", "I didn't see you. You didn't see me. We're both very bad at seeing."] },
+    { id: 'vshade2', name: 'Mags', role: 'Takes bets', rig: 'civ', make: () => makeCivilian('#3a2a1e', '#1e1c22', '#8a5a3c', '#2a1e18', '#ffd36a'), x: 20, z: -8, face: -1.6, idle: ["Five hundred says you clip a traffic car on the first turn. Easy money.", "The house always wins. I am the house. The house is soaking wet."] },
+    { id: 'vshade3', name: 'The Hood', role: '...', rig: 'civ', make: () => makeCivilian('#2b2a2c', '#1e1c22', '#e0b892', '#1e1c22', '#ff3b2a'), x: -12, z: -34, face: 0.4, idle: ["...", "The lightning here isn't natural. Somebody's charging something under the flats.", "Keep your engine running. Things go missing in Pit Row."] },
+    { id: 'vshade4', name: 'Rusty', role: 'Junk racer', rig: 'xr17', make: () => recolor(makeXR17(), { '#9aa1aa': '#6a5a4a', '#5d636c': '#3a2e26' }), x: 14, z: -30, face: -0.5, idle: ["I RACED ONCE. I LOST ONCE. I AM STILL LOSING. PLEASE DO NOT LOOK AT MY TIRES.", "SPARE CHANGE FOR A BROKEN DRIVE BELT?"] }
+  ];
+  for (const n of SHADY) if (!LEVELS.speedway.npcs.some(m => m.id === n.id)) LEVELS.speedway.npcs.push(n);
+  // Menu → Vehicle: pick which of your cars to drive
+  function openCarSwap() {
+    const R = velR(); openDlg('Your cars', 'Pick one to drive'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+    const go = k => { R.car = k; markDirty(); closeDlg(); SFX.ui(); if (RC.on) return; dropParked(); VEL.entering = true; try { toggleFreeDrive(); } finally { VEL.entering = false; } };
+    for (const k of R.owned) { const C2 = RCARS[k]; if (!C2) continue; const r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.textContent = `${C2.name}${R.car === k ? ' · driving' : ''}`;
+      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = R.car === k && RC.on ? '✓ In use' : 'Drive'; b.disabled = R.car === k && RC.on; b.addEventListener('click', () => go(k)); r.append(nm, b); rows.appendChild(r); }
+    $('dlgActs').before(rows); $('dlgLine').textContent = R.owned.length > 1 ? 'Swap cars any time. Gus in Pit Row sells more.' : 'You only own one car so far. Garage Gus in Pit Row sells more.';
+    acts([['Garage', () => { closeDlg(); openGarage(); }], ['Close', closeDlg]]);
+  }
+  function openVehSwap() {
+    const V0 = vehS(); if (V0.owned.length < 2) { toggleVehicle(); return; }
+    openDlg('Vehicles', 'Pick one to drive'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+    for (const id of V0.owned) { const D = VEH[id]; if (!D) continue; const r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.textContent = `${D.name}${V0.sel === id ? ' · selected' : ''}`;
+      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = 'Drive'; b.addEventListener('click', () => { V0.sel = id; markDirty(); closeDlg(); toggleVehicle(); }); r.append(nm, b); rows.appendChild(r); }
+    $('dlgActs').before(rows); $('dlgLine').textContent = 'Pick a vehicle and it rolls up next to you.'; acts([['Vehicle bay', () => { closeDlg(); openVehicleBay(); }], ['Close', closeDlg]]);
+  }
+  setTimeout(() => { const old = $('vehBtn'); if (old) { const nb = old.cloneNode(true); old.replaceWith(nb); // after the base game wires its own click
+    nb.addEventListener('click', () => { $('menuDrop').hidden = true;
+      if (on()) { if (RC.on && RC.free) { toggleFreeDrive(); return; } openCarSwap(); return; }
+      if (VH.on) { toggleVehicle(); return; } const V0 = vehS(); if (V0.owned.length && vehOK()) openVehSwap(); else openVehicleBay(); }); } }, 0);
+  { const _b2 = LEVELS.speedway.build; LEVELS.speedway.build = function () { const r = _b2.apply(this, arguments); velRainMake(); velCloudsMake(); velBeam(); velArrivalCar(); return r; }; }
+  { const _st2 = step; step = function (dt) { _st2(dt); if (!on()) return; velRainStep(dt); velCloudsStep(dt);
+    if (VEL.lamp) { if (RC.on) { VEL.lamp.intensity = 6; VEL.lamp.distance = 120; VEL.lamp.angle = 0.62; } }
+    if (VEL.beam) { VEL.beam.visible = !!RC.on && VEL.cam !== 0; if (RC.on) { const f = V(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)); VEL.beam.position.copy(player.pos).addScaledVector(f, 1.9).add(V(0, 0.75, 0)); VEL.beam.rotation.set(0, player.yaw, 0); VEL.beam.rotateX(Math.PI / 2 - 0.06); } } }; }
 }

@@ -340,6 +340,8 @@ const SFX = (() => {
     babble(pitch, n) { if (!ac || ac.currentTime - babbleT < 0.1) return; babbleT = ac.currentTime; for (let i = 0; i < (n || 8); i++) tone(i % 3 ? 'square' : 'triangle', pitch * (0.8 + Math.random() * 0.5), 0, 0.05, 0.035, i * 0.065); },
     engine(level, pitch) { loop('engine', 'sawtooth', 50 + pitch * 90, level * 0.06); },
     // the magnet cars: a deep sub hum with a slow electric throb on top, so it feels like the floor is buzzing
+    // the ambience engine (ambience.js) builds its own beds on the same context, straight into the master bus
+    _ctx() { return ac ? { ac, master } : null; },
     maghum(level, pitch) { if (!ac) return; let M = loops.maghum;
       if (!M) { const g = ac.createGain(), lp = ac.createBiquadFilter(), sub = ac.createOscillator(), mid = ac.createOscillator(), buzz = ac.createOscillator(), bg = ac.createGain(), trem = ac.createOscillator(), tg = ac.createGain();
         lp.type = 'lowpass'; lp.frequency.value = 260; lp.Q.value = 2.2; sub.type = 'sine'; mid.type = 'triangle'; buzz.type = 'sawtooth'; bg.gain.value = 0.22; g.gain.value = 0;

@@ -59,7 +59,7 @@ let velSplash = null; // set below; the rain in velstorm.js calls it where a dro
   { const _b = LEVELS.speedway.build; LEVELS.speedway.build = function () { const r = _b.apply(this, arguments); W.wet = false; try { wetGround(); } catch (e) { console.warn('wet', e); } return r; }; }
   { const _st = step; step = function (dt) { _st(dt); if (!on() || !W.wet) return; const t = gameTime, sh = VEL.shields || (VEL.shields = []); sh.length = 0;
     // your car (driving or parked)
-    const mine = RC.on ? VEL.carObj : VEL.parked;
+    const mine = VEL.hyper ? null : RC.on ? VEL.carObj : VEL.parked;
     if (mine && mine.parent && mine.visible !== false) { const sp = RC.on ? Math.hypot(RC.vx || 0, RC.vz || 0) : 0; placeGlow('me', mine, RC.on ? player.yaw + Math.PI : mine.rotation.y, sp, t); sh.push([mine.position.x, mine.position.y, mine.position.z]);
       shedFrom('me', mine, RC.on ? RC.vx || 0 : 0, RC.on ? RC.vz || 0 : 0, 26 + sp * 1.4, dt); } else { const G = W.glows.get('me'); if (G) G.visible = false; }
     // traffic

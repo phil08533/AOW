@@ -194,7 +194,7 @@
       u.wheel.rotation.z += (-st * 1.2 - u.wheel.rotation.z) * Math.min(1, dt * 10); const R = velR(); u.hood.material.color.set(RPAINTS[R.paint || 0]).convertSRGBToLinear();
       const K = velStats(), f = Math.min(1, sp / K.top); u.dial.scale.setScalar(0.5 + f * 0.6); u.dial2.scale.setScalar(0.5 + (VEL.bm / K.bcap) * 0.6);
       camera.position.y += Math.sin(gameTime * 23) * Math.min(0.012, sp * 0.0004); }
-    windStep(dt, cockOn, sp);
+    windStep(dt, cockOn && !VEL.hyper, sp);
     trafficStep(dt); sprayStep(dt, RC.on, sp);
     if (VEL.parked && VEL.parked.parent) VEL.parked.position.y = floorAt(VEL.parked.position.x, VEL.parked.position.z) + VEL_HOVER + Math.sin(gameTime * 3) * 0.05;
   }; }

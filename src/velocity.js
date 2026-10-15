@@ -303,7 +303,7 @@ window.addEventListener('keydown', e => { if (e.code === 'KeyC' && !e.repeat && 
   const R = velR(), key = [R.car, R.paint, R.stripe, R.pat].join('|');
   if (key !== VEL.carKey || !VEL.carObj || !VEL.carObj.parent) { if (VEL.carObj && VEL.carObj.parent) VEL.carObj.parent.remove(VEL.carObj); VEL.carObj = mergeChar(velMyCar()); levelGroup.add(VEL.carObj); VEL.carKey = key; }
   const car = VEL.carObj, f = V(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)), sp = Math.hypot(RC.vx || 0, RC.vz || 0);
-  car.visible = true; car.position.copy(player.pos); car.position.y += VEL_HOVER + Math.sin(gameTime * 4.2) * 0.07; // Velocity is a magnet: cars float on the field car.rotation.set(clamp(-(RC.vy || 0) * 0.02, -0.3, 0.3), player.yaw + Math.PI, clamp((RC.vr || 0) * 0.012, -0.2, 0.2));
+  car.visible = true; car.position.copy(player.pos); car.position.y += VEL_HOVER + Math.sin(gameTime * 4.2) * 0.07; /* Velocity is a magnet: cars float on the field */ car.rotation.set(clamp(-(RC.vy || 0) * 0.02, -0.3, 0.3), player.yaw + Math.PI, clamp((RC.vr || 0) * 0.012, -0.2, 0.2));
   // headlight
   VEL.lamp.intensity = 2.4; VEL.lamp.position.copy(player.pos).addScaledVector(f, 1.8).add(V(0, 0.9, 0)); VEL.lampT.position.copy(player.pos).addScaledVector(f, 22); VEL.lampT.position.y = player.pos.y - 0.5;
   // camera

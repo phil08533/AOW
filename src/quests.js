@@ -145,6 +145,7 @@ function objPlanet(q, o) { return o.planet || NPC_HOME[q.turnIn] || NPC_HOME[q.g
 function objHave(o, p) { return o.kind === 'item' ? Math.min(o.n, S.inv[o.t] || 0) : o.kind === 'level' ? Math.min(o.n, S.lvl) : Math.min(o.n, p || 0); }
 const objDone = (o, p) => objHave(o, p) >= o.n;
 function questWants(item) { for (const id in S.qst) { const s = S.qst[id]; if (s.st !== 'active' && s.st !== 'ready') continue; if (QDEFS[id].obj.some(o => o.kind === 'item' && o.t === item)) return true; } return false; }
+function questNeed(item) { let n = 0; for (const id in S.qst) { const s = S.qst[id]; if (s.st !== 'active' && s.st !== 'ready') continue; for (const o of QDEFS[id].obj) if (o.kind === 'item' && o.t === item) n = Math.max(n, o.n); } return n; }
 function startQuest(id, silent) {
   const q = QDEFS[id]; S.qst[id] = { st: 'active', p: q.obj.map(() => 0) }; S.track = id; if (q.onStart) q.onStart();
   if (!silent) { log('Quest started: ' + q.title); toast('NEW QUEST', q.title); SFX.quest(); }

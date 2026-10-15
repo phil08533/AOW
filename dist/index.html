@@ -332,7 +332,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.14</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.14.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -4947,6 +4947,7 @@ function objPlanet(q, o) { return o.planet || NPC_HOME[q.turnIn] || NPC_HOME[q.g
 function objHave(o, p) { return o.kind === 'item' ? Math.min(o.n, S.inv[o.t] || 0) : o.kind === 'level' ? Math.min(o.n, S.lvl) : Math.min(o.n, p || 0); }
 const objDone = (o, p) => objHave(o, p) >= o.n;
 function questWants(item) { for (const id in S.qst) { const s = S.qst[id]; if (s.st !== 'active' && s.st !== 'ready') continue; if (QDEFS[id].obj.some(o => o.kind === 'item' && o.t === item)) return true; } return false; }
+function questNeed(item) { let n = 0; for (const id in S.qst) { const s = S.qst[id]; if (s.st !== 'active' && s.st !== 'ready') continue; for (const o of QDEFS[id].obj) if (o.kind === 'item' && o.t === item) n = Math.max(n, o.n); } return n; }
 function startQuest(id, silent) {
   const q = QDEFS[id]; S.qst[id] = { st: 'active', p: q.obj.map(() => 0) }; S.track = id; if (q.onStart) q.onStart();
   if (!silent) { log('Quest started: ' + q.title); toast('NEW QUEST', q.title); SFX.quest(); }
@@ -16774,6 +16775,7 @@ const UPDATES = [
   { id: 105, title: '2.13.13 · Voice packs', items: ["B.U.R.P. can now come in more than one voice. When there's more than one voice pack, pick yours in Settings → Sound.", "Behind the scenes: a Script Studio for editing B.U.R.P.'s lines, cutscene captions and the battle radio, and for making new voices."] },
   { id: 106, title: '2.13.14 · Orchestral Mayhem', items: ["The Greater Maw's last phase has its own soundtrack, Orchestral Mayhem, looping until it dies.", "B.U.R.P. cheers you on through fight mode with new lines."] },
   { id: 107, title: '2.14 · The Art of War, remastered', items: ['The opening film for new troopers is back and rebuilt: a burning sunset over the battlefield, smoke columns, real fire, a proper fireball, and a giant stone trooper rising from the rubble.', 'Vega now narrates it out loud, and the space battle has a full sky of stars and nebulae. Replay it from Codex, then Cinema, or skip it with Settings → Story scenes.', 'The Prologue aboard your ship has stars all around every shot.', 'Port Kelp: the side docks now run out to sea instead of into the huts, the fishing docks line up with them, and the lighthouse stands on solid ground.', 'The skeletons on Vector lie the right way, ribs arching over the spine.', 'Phones no longer flash a half-built start card while the game loads.'] },
+  { id: 108, title: '2.14.1 · Moon quest fix', items: ['Breathing Room on the Moon can be finished again: moon mites keep dropping O2 Filters until you have all four. Before, they stopped after the first one.', 'The same fix lets Sky City droid chips keep dropping until you have the five the quest asks for.'] },
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -20405,7 +20407,7 @@ function kill(e) {
   const crN = Math.round(rand(e.def.cr[0], e.def.cr[1]) * (1 + 0.2 * (e.lv - 1)) * subCr());
   spawnDrop(p, 'cr', null, crN);
   for (const [id, ch] of e.def.drops || []) {
-    if (ITEMS[id].quest && (S.inv[id] || !questWants(id))) continue;
+    if (ITEMS[id].quest && (S.inv[id] || 0) >= questNeed(id)) continue;
     if (Math.random() < ch) spawnDrop(p, 'item', id, 1);
   }
   if (Math.random() < 0.08) spawnDrop(p, 'item', 'medkit', 1);

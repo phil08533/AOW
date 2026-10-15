@@ -244,6 +244,9 @@ body.flying #tBoost { display: grid; }
 #fade { position: fixed; inset: 0; z-index: 50; background: #02030a; display: flex; align-items: center; justify-content: center; transition: opacity .4s; }
 #fade[hidden] { display: none !important; }
 #fadeTxt { color: var(--gold); font-size: 26px; letter-spacing: 2px; }
+/* the start card stays hidden until the game script has run, so phones never flash the bare, half-built card while the page loads */
+html:not(.ready) #start .sheet > .win.sheet { display: none; }
+html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block; text-align: center; margin-top: 18px; color: #ffd36a; letter-spacing: .2em; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -329,7 +332,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.13.14</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.14</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1718,7 +1721,7 @@ window.addEventListener('pagehide', () => { writeLocal(); });
 const _closeDlgRef = closeDlg;
 $('dlg').addEventListener('click', e => { if (e.target.closest('.pbtn')) setTimeout(() => { if ($('dlg').hidden) clearRows(); }, 0); });
 const dlgObserver = new MutationObserver(() => { if ($('dlg').hidden) clearRows(); }); dlgObserver.observe($('dlg'), { attributes: true, attributeFilter: ['hidden'] });
-resize(); setState('menu'); refreshNpcs(); renderQuest(); requestAnimationFrame(frame);
+resize(); setState('menu'); refreshNpcs(); renderQuest(); requestAnimationFrame(frame); document.documentElement.classList.add('ready');
 window.__game = { get LEVEL() { return LEVEL; }, loadLevel, travel, skipTutorial, openQuestLog, openGalaxy, openShipTerminal, openWorkbench, INTERACTS, QDEFS, startQuest, foundQuest, completeQuest, questTarget, checkReady, ENV, setBuild, placePiece, baseState, renderBase, renderer, S, get S2() { return S; }, player, enemies, npcObjs, drops, setState, talk, step, fire: () => fire(), get fly() { return fly; }, get petObj() { return petObj; }, startBout: () => startBout(), startWaves: () => startWaves(), openBookie: () => openBookie(), get ARENA() { return ARENA; }, spaceFire: () => shipFire(), get state() { return state; }, get dlgOpen() { return dlgOpen; }, closeDlg, kill, gainXp, Z, groundH, openStore, openGuns, openBag, syncPeers, remotes };
 })();
 </script>

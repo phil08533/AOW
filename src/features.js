@@ -65,7 +65,7 @@ function buildFishSpots(id) {
   if (id === 'earth') { add('Crystal Lake', 'lake', Z.lake.x, Z.lake.z, 0.3, 4); add('Crystal Lake', 'lake', Z.lake.x, Z.lake.z, -2.2, 4); add('Bug Pond', 'pond', ...ET(-52, 2), 0.4); add('The River', 'river', LEVELS.earth.river[2][0] + 3, LEVELS.earth.river[2][1], 0, 0.5); }
   if (id === 'mezar') { add('Glass Oasis', 'oasis', -44, 20, 0.2, 2); add('Glass Oasis', 'oasis', -44, 20, 2.6, 2); }
   if (id === 'robot') add('Coolant Canal', 'canal', 22, -22, 2.4, 2);
-  if (id === 'ocean') { fishSpot('North Dock', 'sea', PORT[0] + 1.6, PORT[1] + 22, PORT[0] + 1.6, PORT[1] + 40); fishSpot('West Dock', 'sea', PORT[0] - 21, PORT[1] + 3, PORT[0] - 40, PORT[1] + 3); }
+  if (id === 'ocean') { fishSpot('North Dock', 'sea', PORT[0], PORT[1] + 23.8, PORT[0], PORT[1] + 40); fishSpot('West Dock', 'sea', PORT[0] - 21.8, PORT[1] + 2, PORT[0] - 40, PORT[1] + 2); }
   if (id === 'capitone') { add('Fern Pond', 'frost', 50, 6, 3.6); add('Tree River', 'frost', -20, -12, 0, 0.5); fishSpot('Ice Hole', 'icehole', Z.frozen.x - 10, Z.frozen.z + 10, Z.frozen.x, Z.frozen.z, true); }
 }
 let fishing = null;

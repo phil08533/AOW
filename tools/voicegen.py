@@ -112,10 +112,10 @@ def effects(a, sr, F):
         q = 2 ** max(2, bits); m = max(1e-6, np.abs(a).max()); a = np.round(a / m * q) / q * m
     m = max(1e-6, np.abs(a).max()); return np.clip(a / m * 0.85 * float(F.get('volume', 1.0) or 1.0), -1, 1)
 
-def mp3(a, sr, path):
+def mp3(a, sr, path, kbps=40):
     import lameenc
     pcm = (np.clip(a, -1, 1) * 32767).astype(np.int16)
-    enc = lameenc.Encoder(); enc.set_bit_rate(40); enc.set_in_sample_rate(sr); enc.set_channels(1); enc.set_quality(5)
+    enc = lameenc.Encoder(); enc.set_bit_rate(int(kbps)); enc.set_in_sample_rate(sr); enc.set_channels(1); enc.set_quality(5)
     tmp = path + '.part'; open(tmp, 'wb').write(enc.encode(pcm.tobytes()) + enc.flush()); os.replace(tmp, path)
 
 def main():
@@ -129,7 +129,7 @@ def main():
         if job.get('force') or not os.path.exists(path):
             spoken = text.replace('B.U.R.P.', 'Burp')
             for a_, b_ in (P.get('say_as') or {}).items(): spoken = spoken.replace(a_, b_)
-            a, sr = eng(spoken, P); mp3(effects(a, sr, P.get('fx') or P), sr, path); made += 1
+            a, sr = eng(spoken, P); mp3(effects(a, sr, P.get('fx') or P), sr, path, P.get('kbps', 40)); made += 1
         say('PROGRESS', i + 1, n)
     say('DONE', made)
 

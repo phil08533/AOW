@@ -27,6 +27,14 @@ function buildDiorama() {
   const fleet = []; for (let i = 0; i < 9; i++) { const h = makeHulk(i === 4 ? 'flagship' : 'drome'); h.scale.setScalar(i === 4 ? 0.5 : 0.35); h.position.set(-120 + (i % 3) * 25, 30 + Math.floor(i / 3) * 10, 200 + Math.floor(i / 3) * 22 + (i % 2) * 8); h.rotation.y = Math.PI * 0.85; if (h.userData.beacon) h.userData.beacon.visible = false; g.add(h); fleet.push(h); } P.fleet = fleet;
   const eye = new THREE.Group(); const white = new THREE.Mesh(new THREE.SphereGeometry(10, 20, 14), new THREE.MeshBasicMaterial({ color: '#ff2a3a', fog: false })); white.scale.set(1.6, 0.05, 0.4); eye.add(white); const pupil = new THREE.Mesh(new THREE.SphereGeometry(4, 16, 12), new THREE.MeshBasicMaterial({ color: '#000000', fog: false })); pupil.position.z = 3; pupil.scale.set(1, 0.05, 0.5); eye.add(pupil); eye.add(glowSprite('rgba(255,40,60,.6)', 50)); eye.position.copy(P.vector.position).add(V(0, 0, 0)); g.add(eye); P.eye = eye; P.eyeW = white; P.eyeP = pupil;
   const myShip = makeStarship(S.col); myShip.scale.setScalar(1.2); g.add(myShip); P.ship = myShip;
+  // the sky around the model galaxy: a full sphere of stars, a faint Milky Way band and a few soft nebulae, so every shot has stars behind it
+  { const n = 4200, p = new Float32Array(n * 3), c = new Float32Array(n * 3), col = new THREE.Color();
+    for (let i = 0; i < n; i++) { let u = Math.random() * 2 - 1, a = Math.random() * 6.28; if (i % 3 === 0) u = (Math.random() - 0.5) * 0.18; const r = 1700, q = Math.sqrt(1 - u * u); p.set([Math.cos(a) * q * r, u * r, Math.sin(a) * q * r], i * 3);
+      col.setHSL(0.08 + Math.random() * 0.6, 0.35, 0.55 + Math.random() * 0.45); c.set([col.r, col.g, col.b], i * 3); }
+    const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(p, 3)); sg.setAttribute('color', new THREE.BufferAttribute(c, 3));
+    const st = new THREE.Points(sg, new THREE.PointsMaterial({ size: 1.8, sizeAttenuation: false, vertexColors: true, fog: false, depthWrite: false })); st.rotation.set(0.35, 0, 0.2); g.add(st); P.stars = st;
+    const nt = typeof trlSmokeTex === 'function' ? trlSmokeTex() : null;
+    if (nt) [['#5a2a8a', 1, 0.2], ['#1a4a8a', 2.3, -0.15], ['#8a3a2a', 3.8, 0.1], ['#2a6a7a', 5.1, 0.25]].forEach(([cl, a, y]) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: nt, color: cl, transparent: true, opacity: 0.4, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); s.position.set(Math.cos(a) * 1500, y * 1500, Math.sin(a) * 1500); s.scale.setScalar(1800); g.add(s); }); }
   levelGroup.add(g); return { g, C0, P, sun };
 }
 // world position helper

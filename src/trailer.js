@@ -22,6 +22,15 @@ function musRelease(list) { if (list && MUS.force !== list) return; MUS.force = 
 function trlVoice() { if (!window.speechSynthesis) return null; const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); if (!vs.length) return null;
   // the narrator is Captain Vega: a woman's voice, low and steady
   return vs.find(v => /female|samantha|victoria|karen|moira|tessa|fiona|serena|zira|susan|hazel|libby|sonia|aria|jenny/i.test(v.name)) || vs.find(v => /UK/i.test(v.name)) || vs[0]; }
+// recorded narration (voice/trailer/t1..t12.mp3, one per TRL_VO line); the browser voice only fills in if a clip won't play
+const TRL_CLIPS = {};
+function trlClip(i) { const k = 't' + (i + 1); if (!TRL_CLIPS[k]) { const a = new Audio('voice/trailer/' + k + '.mp3'); a.preload = 'auto'; TRL_CLIPS[k] = a; } return TRL_CLIPS[k]; }
+function trlNarrate(i, text) {
+  if (PREFS.voice === false || !PREFS.sfx) return;
+  const a = trlClip(i); a.currentTime = 0; a.volume = 1;
+  const duck = () => { if (MUS.cur) musFade(MUS.cur, musVol() * 0.5, 0.4); a.onended = () => { if (MUS.cur && TRL.on && !TRL.hush) musFade(MUS.cur, musVol(), 0.9); }; };
+  a.play().then(duck).catch(() => trlSay(text));
+}
 function trlSay(text) {
   if (!(PREFS.voice !== false && PREFS.sfx && window.speechSynthesis && window.SpeechSynthesisUtterance)) return;
   try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.replace(/…/g, '...')); const v = trlVoice(); if (v) u.voice = v; u.pitch = 0.8; u.rate = 0.82; u.volume = 1;
@@ -30,19 +39,41 @@ function trlSay(text) {
 // ---- little helpers ----
 const trlE = k => k * k * (3 - 2 * k), trlK = (T, a, b) => clamp((T - a) / (b - a), 0, 1);
 function trlGradTex(stops) { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); stops.forEach(([o, col]) => g.addColorStop(o, col)); x.fillStyle = g; x.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); return t; }
+// soft, lumpy smoke (many faint blobs) instead of a single round gradient
+function trlSmokeTex() { if (TRL.smokeTex) return TRL.smokeTex; const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+  for (let i = 0; i < 46; i++) { const a = Math.random() * 6.28, d = Math.random() * 30, px = 64 + Math.cos(a) * d, py = 64 + Math.sin(a) * d, r = 14 + Math.random() * 22, g = x.createRadialGradient(px, py, 0, px, py, r);
+    g.addColorStop(0, 'rgba(255,255,255,.16)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); }
+  return (TRL.smokeTex = new THREE.CanvasTexture(c)); }
+// a painted sky: deep night overhead, a burning band on the horizon, and the setting sun
+function trlSky(W, top, mid, hor, low, sunDir, sunCol, sunSize) {
+  const c = document.createElement('canvas'); c.width = 4; c.height = 256; const x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, top); g.addColorStop(0.36, mid); g.addColorStop(0.5, hor); g.addColorStop(0.56, low); g.addColorStop(1, low); x.fillStyle = g; x.fillRect(0, 0, 4, 256);
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 32, 16), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), side: THREE.BackSide, fog: false, depthWrite: false })); sky.renderOrder = -2; W.add(sky);
+  const sun = new THREE.Sprite(new THREE.SpriteMaterial({ map: trlGradTex([[0, '#fff6dc'], [0.18, sunCol], [0.32, 'rgba(255,90,40,.35)'], [1, 'rgba(255,60,30,0)']]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+  sun.position.copy(sunDir).normalize().multiplyScalar(820); sun.scale.setScalar(sunSize); sun.renderOrder = -1; W.add(sun);
+  // a few long cloud streaks across the sun
+  const ct = trlSmokeTex(); for (let i = 0; i < 7; i++) { const cl = new THREE.Sprite(new THREE.SpriteMaterial({ map: ct, color: i % 2 ? '#3a1a1c' : '#5a2a22', transparent: true, opacity: 0.85, depthWrite: false, fog: false }));
+    const a = Math.atan2(sunDir.x, sunDir.z) + (i - 3) * 0.22; cl.position.set(Math.sin(a) * 780, 40 + (i % 3) * 38 + sunDir.y * 2, Math.cos(a) * 780); cl.scale.set(420, 46, 1); cl.renderOrder = -1; W.add(cl); }
+  return { sky, sun };
+}
 function trlPose(o, p) { const R = o.userData.rig; if (!R) return; for (const k of ['armL', 'armR', 'legL', 'legR', 'head']) if (R[k]) { R[k].rotation.x = p[k] || 0; R[k].rotation.z = p[k + 'Z'] || 0; } if (R.torso) { R.torso.rotation.y = p.twist || 0; R.torso.rotation.x = p.lean || 0; } }
 function trlRun(o, ph, amt) { const s = Math.sin(ph) * 0.9 * amt; return { legL: s, legR: -s, armL: -s * 0.7, lean: 0.18 * amt }; }
 // ---- the battlefield ----
 function trlBuildGround() {
-  const W = new THREE.Scene(), own = []; W.background = new THREE.Color('#0b0a0c'); W.fog = new THREE.FogExp2('#16121a', 0.018);
+  const W = new THREE.Scene(), own = []; W.background = new THREE.Color('#1a0c10'); W.fog = new THREE.FogExp2('#3a1a18', 0.0105);
   const geo = g => { own.push(g); return g; };
-  W.add(new THREE.HemisphereLight('#6a7088', '#1a1410', 0.55)); const sun = new THREE.DirectionalLight('#ffb070', 0.75); sun.position.set(-40, 18, -30); W.add(sun);
+  const sunDir = V(-0.32, 0.07, -1); trlSky(W, '#04040a', '#1c0d1e', '#b4441c', '#2a1412', sunDir, 'rgba(255,150,70,.95)', 200);
+  W.add(new THREE.HemisphereLight('#8a7a98', '#2a1a14', 0.75)); const sun = new THREE.DirectionalLight('#ffa060', 1.15); sun.position.copy(sunDir).multiplyScalar(80); W.add(sun);
+  const rim = new THREE.DirectionalLight('#6a8aff', 0.35); rim.position.set(30, 20, 40); W.add(rim);
+  // black smoke columns rising off the far battle, leaning in the wind
+  { const ct = trlSmokeTex(); for (let i = 0; i < 9; i++) { const a = -2.2 + i * 0.55, d = 150 + (i % 3) * 60; for (let k = 0; k < 12; k++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: ct, color: k < 2 ? '#6a2a14' : '#140e10', transparent: true, opacity: 0.95 - k * 0.05, depthWrite: false, fog: false }));
+    sp.position.set(Math.sin(a) * d + k * k * 0.5, 4 + k * 7, Math.cos(a) * d - 40); sp.scale.setScalar(14 + k * 5); sp.material.rotation = k; W.add(sp); } } }
   const flash = new THREE.PointLight('#ffb070', 0, 160, 2); W.add(flash);
   const fires = []; for (const [x, z] of [[-8, -16], [10, -26], [-18, 6]]) { const L = new THREE.PointLight('#ff7a2a', 1.4, 26, 2); L.position.set(x, 1.5, z); W.add(L); fires.push(L); }
   // mud with craters
   const gg = geo(new THREE.PlaneGeometry(420, 420, 60, 60)); gg.rotateX(-Math.PI / 2); const pa = gg.attributes.position;
   for (let i = 0; i < pa.count; i++) { const x = pa.getX(i), z = pa.getZ(i); pa.setY(i, Math.sin(x * 0.11) * Math.cos(z * 0.09) * 0.5 + Math.sin(x * 0.03 + z * 0.05) * 1.2 - (Math.hypot(x, z) < 5 ? 0 : 0)); } gg.computeVertexNormals();
-  W.add(new THREE.Mesh(gg, toon('#2a2420', 'grime')));
+  W.add(new THREE.Mesh(gg, toon('#3a2c24', 'grime')));
   const gy = (x, z) => Math.sin(x * 0.11) * Math.cos(z * 0.09) * 0.5 + Math.sin(x * 0.03 + z * 0.05) * 1.2;
   const put = (o, x, z, ry, y) => { o.position.set(x, gy(x, z) + (y || 0), z); o.rotation.y = ry || 0; W.add(o); return o; };
   for (let i = 0; i < 26; i++) { const c = new THREE.Mesh(geo(new THREE.CircleGeometry(1.5 + (i % 4), 12).rotateX(-Math.PI / 2)), toon('#15110f', 'grime')); const a = i * 2.39, d = 8 + (i * 13) % 70; put(c, Math.cos(a) * d, Math.sin(a) * d - 20, 0, 0.06); }
@@ -55,7 +86,8 @@ function trlBuildGround() {
   for (let i = 0; i < 14; i++) { try { const g = makeGunModel(gunIds[i % gunIds.length]); g.scale.setScalar(1.6); g.rotation.set(Math.PI / 2, i, 0.3); const a = i * 2.7, d = 2.5 + (i * 5) % 20; put(g, Math.cos(a) * d, Math.sin(a) * d - 6, 0, 0.12).rotation.set(Math.PI / 2, 0, i); } catch (_) {} }
   // wrecked vehicles and fires
   for (const [x, z, r] of [[-22, -30, 0.4], [26, -12, 2.2], [-34, 18, 1.1], [14, -48, 2.8]]) { const t = makeTankModel('#3a3a32'); t.scale.setScalar(1.6); put(t, x, z, r).rotation.z = 0.25; }
-  const flames = []; for (const L of fires) { const f = new THREE.Group(); for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(geo(new THREE.ConeGeometry(0.5 - k * 0.12, 1.6 - k * 0.3, 6)), glow(['#ff4a1a', '#ff8a2a', '#ffd36a'][k])); c.position.y = 0.7 + k * 0.1; f.add(c); } put(f, L.position.x, L.position.z); flames.push(f); }
+  const flames = []; { const ft = trlGradTex([[0, 'rgba(255,240,180,1)'], [0.35, 'rgba(255,140,40,.8)'], [1, 'rgba(255,60,10,0)']]);
+    for (const L of fires) { const f = new THREE.Group(); for (let k = 0; k < 4; k++) { const c = new THREE.Sprite(new THREE.SpriteMaterial({ map: ft, color: ['#ff5a1a', '#ff8a2a', '#ffb050', '#ff7020'][k], transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); c.position.set((k - 1.5) * 0.25, 0.5 + (k % 2) * 0.5, 0); c.scale.set(1.3 - k * 0.15, 2 - k * 0.2, 1); f.add(c); } put(f, L.position.x, L.position.z); flames.push(f); } }
   // the warrior and the enemy machines
   const warrior = buildChar(() => makePlayerChar(myLook(), S.col), 'trooper'); W.add(warrior);
   const sword = makeMeleeModel('master'); sword.scale.setScalar(1.4); const R = warrior.userData.rig; (R && R.armR ? R.armR : warrior).add(sword); sword.position.set(0, -0.5, 0.12); sword.rotation.set(Math.PI / 2, 0, 0);
@@ -90,20 +122,29 @@ function trlBuildGround() {
   const rub = ['#4a4640', '#3a3632', '#5d636c', '#6a5a4a', '#2b2a2c', '#7a6a58'];
   const lump = (cx, cy, cz, sx, sy, sz, n) => { for (let i = 0; i < n; i++) { const s = 0.6 + Math.random() * 1.8, m = new THREE.Mesh(geo(i % 3 ? new THREE.BoxGeometry(s, s * (0.5 + Math.random()), s * 0.8) : new THREE.DodecahedronGeometry(s * 0.6, 0)), toon(rub[i % rub.length], i % 4 ? 'stone' : 'panel'));
     m.position.set(cx + (Math.random() - 0.5) * sx, cy + (Math.random() - 0.5) * sy, cz + (Math.random() - 0.5) * sz); m.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3); statue.add(m); } };
-  for (const s of [-1, 1]) { lump(3 * s, 5, 0, 3, 10, 3, 26); lump(3.4 * s, 0.8, 0.6, 4, 1.6, 5, 8); lump(7.8 * s, 17, 0, 2.6, 9, 2.6, 18); }
-  lump(0, 15, 0, 9, 10, 5, 60); lump(0, 23.5, 0, 3.4, 4, 3.4, 18); lump(0, 20.5, 0, 12, 2.2, 4, 16);
-  for (let i = 0; i < 10; i++) { try { const g = makeGunModel(gunIds[i % gunIds.length]); g.scale.setScalar(3.5); g.position.set((Math.random() - 0.5) * 8, 12 + Math.random() * 10, 2.4); g.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3); statue.add(g); } catch (_) {} }
-  const great = makeMeleeModel('master'); great.scale.setScalar(16); great.position.set(-8.6, 0, 1.5); great.rotation.z = 0.05; statue.add(great);
-  const heart = new THREE.Mesh(geo(new THREE.OctahedronGeometry(1.2, 0)), glow('#ffd8a0')); heart.position.set(0, 16.5, 2.2); statue.add(heart);
+  // a giant trooper of cracked stone, leaning on a planted greatsword, with the battle's wreckage piled at its feet
+  const giant = buildChar(makeTrooper, 'trooper'); const ST = 13;
+  giant.traverse(o => { if (!o.isMesh) return; const c = o.material && o.material.color ? o.material.color.getHSL({}).l : 0.4; o.material = toon(c > 0.5 ? '#8a8276' : c > 0.25 ? '#6a6258' : '#4a443e', 'stone'); });
+  trlPose(giant, { armR: -0.5, armL: -0.5, armRZ: 0.22, armLZ: -0.22, head: 0.18 }); giant.scale.setScalar(ST); statue.add(giant);
+  const great = makeMeleeModel('master'); great.traverse(o => { if (o.isMesh) o.material = toon('#7a7268', 'stone'); }); great.scale.setScalar(15); great.rotation.x = Math.PI; statue.add(great);
+  { great.updateMatrixWorld(true); const bx = new THREE.Box3().setFromObject(great); great.position.set(-(bx.min.x + bx.max.x) / 2, 13 - bx.max.y, 6.2 - (bx.min.z + bx.max.z) / 2); }
+  lump(0, 0.8, 0, 14, 1.8, 12, 30); lump(0, 2.6, 1, 9, 2.4, 7, 16); lump(0, 15, 1.4, 5, 7, 1.2, 12); lump(-4.2, 13, 0, 1.6, 6, 1.6, 6); lump(4.2, 13, 0, 1.6, 6, 1.6, 6);
+  for (let i = 0; i < 10; i++) { try { const g = makeGunModel(gunIds[i % gunIds.length]); g.scale.setScalar(3.5); const a = i * 0.63; g.position.set(Math.cos(a) * (5 + i % 3), 1.2 + (i % 4) * 0.6, Math.sin(a) * (4 + i % 2)); g.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3); statue.add(g); } catch (_) {} }
+  // light leaking through the cracks in its chest
+  const heart = new THREE.Mesh(geo(new THREE.OctahedronGeometry(1.0, 0)), glow('#ffd8a0')); heart.position.set(0, 16.2, 2.0); statue.add(heart);
+  for (let i = 0; i < 7; i++) { const c = new THREE.Mesh(geo(new THREE.BoxGeometry(0.16, 1.6 + (i % 3) * 1.1, 0.2)), glow('#ffb860')); const a = i * 0.9; c.position.set(Math.cos(a) * 1.4, 16.2 + Math.sin(a) * 1.5, 2.05); c.rotation.z = a + 1.2; statue.add(c); }
   const heartL = new THREE.PointLight('#ffc070', 0, 40, 2); heartL.position.set(0, 16.5, 5); statue.add(heartL);
   statue.position.set(SX, gy(SX, SZ) - 0.5, SZ); W.add(statue);
   const falling = []; for (let i = 0; i < 10; i++) { const m = new THREE.Mesh(geo(new THREE.BoxGeometry(0.5, 0.4, 0.5)), toon(rub[i % 6], 'stone')); m.visible = false; W.add(m); falling.push({ m, t: Math.random() * 4 }); }
   // the big explosion
-  const boom = new THREE.Group(); const shells = [];
-  for (const [r, col, op] of [[1, '#ffe8b0', 1], [1.25, '#ff8a3a', 0.7], [1.6, '#5a4a40', 0.85]]) { const m = new THREE.Mesh(geo(new THREE.SphereGeometry(r, 18, 12)), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: op, depthWrite: false, fog: false })); boom.add(m); shells.push(m); }
+  const boom = new THREE.Group(); const shells = []; const ct = trlSmokeTex(), core = trlGradTex([[0, '#ffffff'], [0.3, 'rgba(255,220,150,.95)'], [1, 'rgba(255,120,40,0)']]);
+  // kind 0 = white-hot core, 1 = rolling fire, 2 = black smoke; each puff has its own drift so the cloud boils outwards
+  for (let i = 0; i < 16; i++) { const kind = i < 2 ? 0 : i < 9 ? 1 : 2; const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: kind ? ct : core, color: kind === 2 ? '#241a18' : kind === 1 ? ['#ff7a2a', '#ffb050', '#ff5a1a'][i % 3] : '#ffffff', transparent: true, depthWrite: false, fog: false, blending: kind === 2 ? THREE.NormalBlending : THREE.AdditiveBlending }));
+    m.userData = { kind, d: V((Math.random() - 0.5) * 1.6, 0.2 + Math.random() * (kind === 2 ? 1.4 : 0.8), (Math.random() - 0.5) * 1.6), s: kind === 2 ? 1.3 : kind ? 1 : 0.8, r: Math.random() * 6 }; m.material.rotation = m.userData.r; boom.add(m); shells.push(m); }
+  const wave = new THREE.Mesh(geo(new THREE.RingGeometry(0.8, 1, 48)), new THREE.MeshBasicMaterial({ color: '#ffcf8a', transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })); wave.rotation.x = -Math.PI / 2; wave.position.y = -3.6; boom.add(wave);
   boom.position.set(0, 4, -42); boom.visible = false; W.add(boom);
   const debris = []; for (let i = 0; i < 26; i++) { const m = new THREE.Mesh(geo(new THREE.BoxGeometry(0.6, 0.5, 0.7)), toon(rub[i % 6], 'stone')); m.visible = false; W.add(m); debris.push({ m, v: V((Math.random() - 0.5) * 30, 8 + Math.random() * 20, (Math.random() - 0.5) * 30) }); }
-  return { W, own, gy, sun, flash, fires, flames, warrior, sword, foes, foeGun, ranks, general, holo, drawMap, chargers, guns, planes, banner, bearer, statue, heart, heartL, falling, boom, shells, debris };
+  return { W, own, gy, sun, flash, wave, fires, flames, warrior, sword, foes, foeGun, ranks, general, holo, drawMap, chargers, guns, planes, banner, bearer, statue, heart, heartL, falling, boom, shells, debris };
 }
 // ---- space ----
 function trlBuildSpace() {
@@ -123,6 +164,11 @@ function trlBuildSpace() {
   const star = new THREE.Sprite(new THREE.SpriteMaterial({ map: trlGradTex([[0, '#ffffff'], [0.25, 'rgba(255,240,200,.9)'], [1, 'rgba(255,200,120,0)']]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); star.scale.setScalar(30); W.add(star);
   for (const [x, y, z, r, c] of [[-120, -10, -260, 26, '#3f6fbf'], [170, 30, -420, 40, '#bf6a3f'], [60, -40, -160, 9, '#9aa1aa']]) { const m = new THREE.Mesh(geo(new THREE.SphereGeometry(r, 24, 16)), toon(c, 'stone')); m.position.set(x, y, z); W.add(m); }
   // the fleets: the Setting Sun and friends, and Drome's drone ships
+  { const n = 3500, p = new Float32Array(n * 3), c = new Float32Array(n * 3), col = new THREE.Color(); for (let i = 0; i < n; i++) { const u = Math.random() * 2 - 1, a = Math.random() * 6.28, r = 2600, q = Math.sqrt(1 - u * u); p.set([Math.cos(a) * q * r, u * r * 0.6, Math.sin(a) * q * r - 900], i * 3); col.setHSL(0.55 + Math.random() * 0.15, 0.4, 0.6 + Math.random() * 0.4); c.set([col.r, col.g, col.b], i * 3); }
+    const g = geo(new THREE.BufferGeometry()); g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setAttribute('color', new THREE.BufferAttribute(c, 3)); W.add(new THREE.Points(g, new THREE.PointsMaterial({ size: 1.6, sizeAttenuation: false, vertexColors: true, fog: false }))); }
+  { const ct = trlSmokeTex(); [['#6a2a9a', -700, 120, -1900, 1500], ['#1a5a9a', 500, -80, -2000, 1300], ['#9a3a2a', 0, 260, -1700, 900], ['#2a7a8a', -300, -300, -1800, 1100], ['#5a2a7a', 800, 300, -1500, 800]].forEach(([col, x, y, z, sz]) => {
+    const n = new THREE.Sprite(new THREE.SpriteMaterial({ map: ct, color: col, transparent: true, opacity: 0.38, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); n.position.set(x, y, z); n.scale.setScalar(sz * 1.5); W.add(n); });
+    const glare = new THREE.Sprite(new THREE.SpriteMaterial({ map: trlGradTex([[0, '#ffffff'], [0.1, 'rgba(255,230,190,.9)'], [0.4, 'rgba(255,170,90,.18)'], [1, 'rgba(0,0,0,0)']]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); glare.position.set(-900, 260, -1700); glare.scale.setScalar(700); W.add(glare); }
   const fleetPos = V(0, 0, -900); const fleet = new THREE.Group(); fleet.position.copy(fleetPos); W.add(fleet);
   const hero = makeStarship(S.col); hero.scale.setScalar(2); fleet.add(hero);
   const allies = []; for (let i = 0; i < 6; i++) { const s = mergeChar(makeStarship(['#c9a43a', '#4fa8ff', '#6fdc5a', '#ff8a5a', '#c86aff', '#e8e4dc'][i])); s.scale.setScalar(1.6); fleet.add(s); allies.push({ s, a: i * 1.05, r: 18 + (i % 3) * 7, h: (i % 2 ? 4 : -5) }); }
@@ -133,14 +179,21 @@ function trlBuildSpace() {
 // ---- sprites: smoke, embers, sparks, fireballs ----
 function trlFx(scene) {
   const tex = { soft: trlGradTex([[0, 'rgba(255,255,255,1)'], [0.4, 'rgba(255,255,255,.5)'], [1, 'rgba(255,255,255,0)']]) };
-  const pool = []; for (let i = 0; i < 140; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex.soft, transparent: true, depthWrite: false })); s.visible = false; scene.add(s); pool.push({ s, life: 0, v: V(), max: 1, g: 0, add: false }); }
-  const add = (p, col, n, spread, opt) => { opt = opt || {}; for (let i = 0; i < n; i++) { const q = pool.find(q => q.life <= 0); if (!q) return; q.s.visible = true; q.s.position.copy(p); q.s.material.color.set(col); q.s.material.blending = opt.add === false ? THREE.NormalBlending : THREE.AdditiveBlending; q.s.material.opacity = opt.op || 1;
+  const smoke = trlSmokeTex(); const pool = []; for (let i = 0; i < 140; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex.soft, transparent: true, depthWrite: false })); s.visible = false; scene.add(s); pool.push({ s, life: 0, v: V(), max: 1, g: 0, add: false }); }
+  const add = (p, col, n, spread, opt) => { opt = opt || {}; for (let i = 0; i < n; i++) { const q = pool.find(q => q.life <= 0); if (!q) return; q.s.visible = true; q.s.position.copy(p); q.s.material.color.set(col); q.s.material.blending = opt.add === false ? THREE.NormalBlending : THREE.AdditiveBlending; q.s.material.map = opt.add === false ? smoke : tex.soft; q.s.material.rotation = Math.random() * 6; q.s.material.opacity = opt.op || 1;
     q.v.set((Math.random() - 0.5) * spread, (opt.up || 0) + Math.random() * spread * 0.5, (Math.random() - 0.5) * spread); q.life = q.max = (opt.life || 1) * (0.6 + Math.random() * 0.6); q.size = opt.size || 0.4; q.grow = opt.grow || 0; q.op = opt.op || 1; q.g = opt.g || 0; } };
   const tick = (dt) => { for (const q of pool) { if (q.life <= 0) continue; q.life -= dt; if (q.life <= 0) { q.s.visible = false; continue; } q.v.y -= q.g * dt; q.s.position.addScaledVector(q.v, dt); const k = q.life / q.max; q.s.scale.setScalar(q.size * (1 + (1 - k) * q.grow)); q.s.material.opacity = q.op * Math.min(1, k * 2); } };
   return { add, tick, pool };
 }
 // ---- the camera director: every shot, keyed to the song's clock T ----
-function trlCam(C, px, py, pz, lx, ly, lz) { C.position.set(px, py, pz); C.lookAt(lx, ly, lz); }
+// the fireball at age k (0 = the blast, 1 = fully grown); fade 0..1 thins it out as the dust settles
+function trlBoom(G, k, fade) { const e = 1 - Math.pow(1 - Math.min(1, k), 2.2);
+  for (const m of G.shells) { const u = m.userData, R = (u.kind === 0 ? 4 + e * 10 : 5 + e * (u.kind === 2 ? 30 : 22)) * u.s;
+    m.position.copy(u.d).multiplyScalar(e * (u.kind === 2 ? 22 : 14)); m.scale.setScalar(R); m.material.rotation = u.r + k * 0.4 * (u.kind === 2 ? -1 : 1);
+    m.material.opacity = (u.kind === 0 ? Math.max(0, 1 - k * 1.4) : u.kind === 1 ? Math.max(0, 1 - k * 0.9) * 0.9 : Math.min(1, k * 3) * 0.92) * (1 - (fade || 0)); }
+  G.wave.scale.setScalar(2 + e * 70); G.wave.material.opacity = Math.max(0, 0.9 - k * 1.2) * (1 - (fade || 0)); }
+// a little hand-held drift on every shot so the camera breathes
+function trlCam(C, px, py, pz, lx, ly, lz) { const t = performance.now() / 1000, h = TRL.still ? 0 : 0.035; C.position.set(px + Math.sin(t * 0.9) * h, py + Math.sin(t * 1.3 + 1) * h, pz); C.lookAt(lx + Math.sin(t * 0.7 + 2) * h * 3, ly + Math.sin(t * 1.1) * h * 2, lz); }
 function trlShot(G, Sp, C, T, dt, fx, sfx) {
   const W = G.warrior, R = W.userData.rig, gy = G.gy;
   const wp = (x, z, ry) => { W.position.set(x, gy(x, z), z); if (ry != null) W.rotation.y = ry; };
@@ -231,7 +284,7 @@ function trlShot(G, Sp, C, T, dt, fx, sfx) {
       at('w1', 78, () => blast(V(-20, 0, -40), false)); at('w2', 80.5, () => blast(V(18, 0, -22), false)); at('w3', 82.4, () => blast(V(-4, 0, -52), false));
     } else { // "And…" the great blast, slow, and the sound drops away
       at('bigboom', 84.05, () => { G.boom.visible = true; G.debris.forEach(d => { d.m.visible = true; d.m.position.copy(G.boom.position); }); G.flash.position.set(0, 8, -38); G.flash.intensity = 14; TRL.hush = true; if (MUS.cur) musFade(MUS.cur, musVol() * 0.12, 0.5); sfx('boom'); setTimeout(() => sfx('boom'), 140); });
-      const k = trlK(T, 84, 88); G.shells.forEach((s, i) => { s.scale.setScalar(2 + k * (12 + i * 5)); s.material.opacity = (i === 2 ? 0.85 : 1 - k * 0.6) * (i === 0 ? 1 - k : 1); });
+      const k = trlK(T, 84, 88); trlBoom(G, k * 0.75, 0);
       G.debris.forEach(d => { d.m.position.addScaledVector(d.v, dt * 0.35); d.v.y -= 9 * dt * 0.35; d.m.rotation.x += dt * 2; d.m.rotation.y += dt * 1.4; });
       G.flash.intensity = Math.max(G.flash.intensity, 6 * (1 - k));
       trlCam(C, 0, 6 + k * 3, 30 - k * 16, 0, 7, -60);
@@ -240,9 +293,9 @@ function trlShot(G, Sp, C, T, dt, fx, sfx) {
   // ---------- SCENE 5 ----------
   else if (T < 104.5) {
     at('settle', 88, () => { G.statue.visible = true; TRL.hush = false; if (MUS.cur) musFade(MUS.cur, musVol(), 2.5); G.debris.forEach(d => { d.m.visible = false; }); });
-    const k = trlK(T, 88, 92); G.boom.visible = k < 1; G.shells.forEach((s, i) => { s.scale.setScalar(30 + i * 6 + k * 8); s.material.opacity = (1 - k) * (i === 2 ? 0.8 : 0.3); });
+    const k = trlK(T, 88, 93); G.boom.visible = k < 1; trlBoom(G, 0.75 + k * 0.25, k);
     G.heartL.intensity = 2 + Math.sin(T * 2.2) * 1.2; G.heart.scale.setScalar(1 + Math.sin(T * 2.2) * 0.12);
-    G.falling.forEach((f, i) => { f.t -= dt; if (f.t <= 0) { f.t = 2.5 + Math.random() * 3; f.m.visible = true; f.m.position.set(G.statue.position.x + (i % 2 ? 7 : -7) + Math.random(), G.statue.position.y + 20, G.statue.position.z + Math.random() * 2); f.v = 0; } f.v = (f.v || 0) + 9.8 * dt; f.m.position.y -= f.v * dt; if (f.m.position.y < gy(0, -60)) f.m.visible = false; });
+    G.falling.forEach((f, i) => { f.t -= dt; if (f.t <= 0) { f.t = 2.5 + Math.random() * 3; f.m.visible = true; f.m.position.set(G.statue.position.x + (i % 2 ? 4.4 : -4.4) + Math.random(), G.statue.position.y + 19, G.statue.position.z + Math.random() * 2); f.v = 0; } f.v = (f.v || 0) + 9.8 * dt; f.m.position.y -= f.v * dt; if (f.m.position.y < gy(0, -60)) f.m.visible = false; });
     const a = -0.6 + trlE(trlK(T, 88, 104.5)) * 2.4, r = 52 - trlK(T, 88, 104.5) * 14, sp = G.statue.position;
     trlCam(C, sp.x + Math.sin(a) * r, 8 + trlK(T, 88, 104.5) * 14, sp.z + Math.cos(a) * r, sp.x, 15, sp.z);
   }
@@ -285,20 +338,24 @@ function playTrailer(opts) {
   const prevState = state === 'cut' ? 'play' : state; setState('cut'); $('hud').hidden = true; $('touch').hidden = true; vm.visible = false; if (document.pointerLockElement) document.exitPointerLock();
   const ov = document.createElement('div'); ov.id = 'trailerOv'; ov.style.cssText = 'position:fixed;inset:0;z-index:40;pointer-events:none;font-family:var(--hud)';
   ov.innerHTML = `<div class="tb" style="position:absolute;left:0;right:0;top:0;height:10vh;background:#000"></div><div class="tb" style="position:absolute;left:0;right:0;bottom:0;height:10vh;background:#000"></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.62) 100%)"></div>
+    <div id="trlGrain" style="position:absolute;inset:-50%;opacity:.07;mix-blend-mode:overlay;background-size:160px 160px"></div>
     <div id="trlFade" style="position:absolute;inset:0;background:#000;opacity:1"></div><div id="trlWhite" style="position:absolute;inset:0;background:#fff;opacity:0"></div>
     <div id="trlCap" style="position:absolute;left:8%;right:8%;bottom:13vh;text-align:center;color:#e8e2d6;font:italic 500 clamp(16px,2.6vw,28px) Georgia,'Times New Roman',serif;letter-spacing:.04em;text-shadow:0 2px 12px #000;opacity:0;transition:opacity 1.2s"></div>
-    <div id="trlTitle" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#e8d6b0;opacity:0;transition:opacity 2s"><div style="font:700 clamp(30px,7vw,74px) Georgia,serif;letter-spacing:.3em">THE ART OF WAR</div><div style="font:600 clamp(12px,1.8vw,18px) var(--hud);letter-spacing:.6em;margin-top:10px;color:#c9a43a">SETTING SUN</div></div>`;
+    <div id="trlTitle" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#e8d6b0;opacity:0;transition:opacity 2s"><div style="width:clamp(70px,12vw,130px);height:clamp(35px,6vw,65px);border-radius:999px 999px 0 0;background:radial-gradient(circle at 50% 100%,#fff2c8 0,#ffb347 35%,#d8452a 75%,rgba(216,69,42,0) 100%);border-bottom:2px solid #c9a43a;margin-bottom:18px;box-shadow:0 -6px 40px rgba(255,140,60,.35)"></div><div style="font:700 clamp(30px,7vw,74px) Georgia,serif;letter-spacing:.3em">THE ART OF WAR</div><div style="font:600 clamp(12px,1.8vw,18px) var(--hud);letter-spacing:.6em;margin-top:10px;color:#c9a43a">SETTING SUN</div></div>`;
   const skip = document.createElement('button'); skip.className = 'pbtn'; skip.id = 'trlSkip'; skip.textContent = 'Skip ▸'; skip.style.cssText = 'position:fixed;right:16px;bottom:calc(10vh + 14px);z-index:41;pointer-events:auto;opacity:0;transition:opacity .6s;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff'; skip.hidden = true;
   document.body.append(ov, skip);
+  { const gc = document.createElement('canvas'); gc.width = gc.height = 160; const gx = gc.getContext('2d'), id = gx.createImageData(160, 160); for (let i = 0; i < id.data.length; i += 4) { const v = Math.random() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; } gx.putImageData(id, 0, 0); ov.querySelector('#trlGrain').style.backgroundImage = `url(${gc.toDataURL()})`; }
+  const grain = ov.querySelector('#trlGrain'), cv = renderer.domElement, cvFilter = cv.style.filter; cv.style.filter = 'contrast(1.12) saturate(1.12) brightness(1.04)';
   const fade = ov.querySelector('#trlFade'), white = ov.querySelector('#trlWhite'), cap = ov.querySelector('#trlCap'), title = ov.querySelector('#trlTitle');
   let G, Sp; try { G = trlBuildGround(); Sp = trlBuildSpace(); } catch (err) { console.warn('trailer', err); TRL.on = false; CUT.on = false; ov.remove(); skip.remove(); setState(prevState); if (opts.onEnd) opts.onEnd(); return; }
   const C = new THREE.PerspectiveCamera(48, camera.aspect, 0.1, 4000); const fxG = trlFx(G.W), fxS = trlFx(Sp.W);
   const sfx = k => { try { if (k === 'boom') SFX.boom(); else if (k === 'shot') SFX.shot(GUNS.l28 ? 'l28' : undefined); else if (k === 'swing') SFX.swing(); else if (k === 'hit') SFX.hit(); else if (k === 'kill') SFX.kill(); else if (k === 'zap') SFX.zap(); } catch (_) {} };
   TRL.scene = G.W; TRL.cam = C;
-  musForce('trailer'); const said = new Set();
+  musForce('trailer'); const said = new Set(); TRL_VO.forEach((_, i) => trlClip(i));
   let clock = 0, last = performance.now(), done = false, capT = null;
-  const finish = () => { if (done) return; done = true; TRL.on = false; TRL.scene = null; try { speechSynthesis.cancel(); } catch (_) {}
-    musRelease('trailer'); ov.remove(); skip.remove(); [G, Sp].forEach(X => X.own.forEach(g => { try { g.dispose(); } catch (_) {} }));
+  const finish = () => { if (done) return; done = true; TRL.on = false; TRL.scene = null; try { speechSynthesis.cancel(); } catch (_) {} for (const k in TRL_CLIPS) { try { TRL_CLIPS[k].pause(); } catch (_) {} }
+    musRelease('trailer'); cv.style.filter = cvFilter; ov.remove(); skip.remove(); [G, Sp].forEach(X => X.own.forEach(g => { try { g.dispose(); } catch (_) {} }));
     CUT.on = false; setState(prevState); $('hud').hidden = false; $('touch').hidden = !(TOUCH && state === 'play'); vm.visible = true;
     S.flags = S.flags || {}; S.flags.trailer = 1; PREFS.trailerSeen = 1; try { savePrefs(); } catch (_) {} markDirty(); if (opts.onEnd) opts.onEnd(); };
   skip.addEventListener('click', finish);
@@ -307,12 +364,12 @@ function playTrailer(opts) {
     // follow the song when it's playing, so the cuts land on the music
     const m = MUS.cur, onSong = m && MUS.list === 'trailer' && !m.paused && m.currentTime > 0.2 && m.currentTime > clock - 1; if (m && MUS.list === 'trailer') m.loop = false; clock = onSong ? m.currentTime : clock + dt; if (TRL.seek != null) { clock = TRL.seek; TRL.seek = null; if (onSong) m.currentTime = clock; } const T = clock;
     if (T > 4 && skip.hidden) { skip.hidden = false; requestAnimationFrame(() => { skip.style.opacity = 1; }); }
-    C.aspect = camera.aspect; C.updateProjectionMatrix();
+    C.aspect = camera.aspect; C.updateProjectionMatrix(); grain.style.transform = `translate(${(Math.random() * 40) | 0}px,${(Math.random() * 40) | 0}px)`;
     // fades: from black at the start, a dip between scenes 1 and 2, white into space, black at the end
     let f = T < 2.5 ? 1 : T < 6 ? 1 - (T - 2.5) / 3.5 : 0; if (T > 20.5 && T < 22.5) f = Math.sin((T - 20.5) / 2 * Math.PI) * 0.92; if (T > 130.3) f = 1; fade.style.opacity = f;
     let w = 0; if (T > 107.5 && T < 109.5) w = (T - 107.5) / 2; else if (T >= 109.5 && T < 111.5) w = 1 - (T - 109.5) / 2; else if (T > 129.9 && T < 130.4) w = 1; white.style.opacity = w;
     title.style.opacity = T > 130.8 ? 1 : 0;
-    for (const [at, line] of TRL_VO) if (T >= at && !said.has(at)) { said.add(at); cap.style.opacity = 0; clearTimeout(capT); capT = setTimeout(() => { cap.textContent = line; cap.style.opacity = 1; }, 250); trlSay(line); setTimeout(() => { if (cap.textContent === line) cap.style.opacity = 0; }, 5600); }
+    for (const [at, line] of TRL_VO) if (T >= at && !said.has(at)) { said.add(at); cap.style.opacity = 0; clearTimeout(capT); capT = setTimeout(() => { cap.textContent = line; cap.style.opacity = 1; }, 250); trlNarrate(TRL_VO.findIndex(v => v[0] === at), line); setTimeout(() => { if (cap.textContent === line) cap.style.opacity = 0; }, 5600); }
     try { if (T < 109.5) { TRL.scene = G.W; trlShot(G, Sp, C, T, dt, fxG, sfx); fxG.tick(dt); } else { TRL.scene = Sp.W; trlSpace(Sp, C, T, dt, fxS, sfx); fxS.tick(dt); } } catch (err) { console.warn('trailer shot', err); }
     if (T > TRL_END || (onSong && m.ended)) finish();
   };
@@ -321,12 +378,13 @@ function playTrailer(opts) {
 // draw the trailer's world instead of the game's while it plays
 { const _rr = renderer.render.bind(renderer); renderer.render = function (sc, cam) { if (TRL.on && TRL.scene && sc === scene) { if (cam === camera && camera.layers.mask === 2) return; return _rr(TRL.scene, TRL.cam); } return _rr(sc, cam); }; }
 // first start of every character (and anyone who has never seen it): the trailer, then the usual opening.
-// Off for now (Phil: saving it for later). Set to true to bring it back, Codex entry included.
-const TRL_AUTO = false;
+// Back on in 2.14 after the polish pass. Settings → Story scenes → Skip skips it like the other intros.
+const TRL_AUTO = true;
 if (TRL_AUTO) $('playBtn').addEventListener('click', () => {
   setTimeout(function chk(n) { if (state === 'menu' && (n || 0) < 40) return setTimeout(() => chk((n || 0) + 1), 250);
     if (state !== 'play' || TRL.on || (S.flags && S.flags.trailer) || new URLSearchParams(location.search).get('cutscene')) return;
     if (CUT.on) return; // something else already playing
+    if (typeof autoSkipCut === 'function') setTimeout(autoSkipCut, 50);
     playTrailer({ onEnd: () => { if (LEVEL.id === 'ship' && state === 'play' && !(S.flags && (S.flags.prologue1 || S.flags.shipIntro)) && typeof shipIntro === 'function') setTimeout(() => shipIntro(), 400); } });
   }, 300);
 });

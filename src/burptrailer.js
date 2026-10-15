@@ -13,11 +13,11 @@ const BTR_SHOTS = [
     cam: (k, t, A) => btrOrbit(A, 7 - k * 2.5, 0.7, 0.6 - k * 0.5, 0.6) },
   { lvl: 'earth', dur: 6, fp: ['b5', 'sg8', 'l28', 'lsaber', 'master'], setup: () => { SAFES.length = 0; btrFace(); return null; }, yaw: 0.05 },
   { lvl: 'earth', dur: 5, fp: ['m_ember', 'm_storm', 'm_void', 'w_20'], setup: () => { SAFES.length = 0; btrFace(); return null; }, yaw: -0.2 },
-  { lvl: 'ship', dur: 6, cam: (k, t, A) => btrOrbit(A, 7, 3.2 - k * 1.2, 0.3 + k * 1.4, 1.2) },
+  { lvl: 'ship', dur: 6, setup: () => V(0, 0, -8.5), cam: (k, t, A) => btrOrbit(A, 4.6, 2.6 - k * 0.9, 0.3 + k * 1.4, 1.2) },
   { lvl: 'space', dur: 6, cam: (k, t, A) => btrOrbit(A, 16 - k * 5, 4 + k * 2, 3.6 - k * 1.1, 0) },
   { lvl: 'speedway', dur: 6, setup: () => { if (VEL.parked) { const c = VEL.parked.position; player.pos.set(c.x + 1, c.y, c.z); } toggleFreeDrive(); player.pos.set(30, 0.3, 150); player.pos.y = floorAt(30, 150); player.yaw = 0.3; VEL.cam = 1; VEL.cp = null; return null; },
     tick: (k, t) => { keys.KeyW = true; keys.ShiftLeft = t > 1.2; keys.KeyD = Math.sin(t * 1.3) > 0.55; keys.KeyA = Math.sin(t * 1.3) < -0.55; if (t > 3.6) VEL.cam = 0; } },
-  { lvl: 'earth', dur: 5, fp: [], pitch: -0.25, yaw: 2.4, setup: () => { BTR.fish0 = S.fishBest ? Object.assign({}, S.fishBest) : null; setTimeout(() => { if (BTR.on) try { fshCatchShow({ fish: 'voidgulper', table: 'void' }); } catch (_) {} }, 600); return null; } },
+  { lvl: 'earth', dur: 5, fp: [], noGun: true, pitch: -0.12, yaw: 0, setup: () => { player.pos.set(-52, 0, 8.5); player.pos.y = floorAt(-52, 8.5); BTR.fish0 = S.fishBest ? Object.assign({}, S.fishBest) : null; setTimeout(() => { if (BTR.on) try { fshCatchShow({ fish: 'voidgulper', table: 'void' }); } catch (_) {} }, 900); return null; }, tick: () => { if (typeof FSH !== 'undefined' && FSH.catch) FSH.catch.holder.position.y += 0.22; } },
   { lvl: 'vector', dur: 7, setup: () => { let e = btrNearest(e => e.sp && e.sp.type === 'watcher', player.pos); if (!e && Z.maw) { try { makeEnemy({ zone: 'maw', type: 'watcher', n: 1, lv: [50, 50], at: [0, 2] }); } catch (_) {} e = btrNearest(e => e.sp && e.sp.type === 'watcher', player.pos); } BTR.boss = e; return e ? e.obj.position : null; },
     tick: () => { const e = BTR.boss; if (e && e.obj) { e.obj.visible = true; const f = floorAt(e.obj.position.x, e.obj.position.z) + 6; if (e.obj.position.y < f) e.obj.position.y += (f - e.obj.position.y) * 0.08; } },
     cam: (k, t, A) => btrOrbit(A, 26 - k * 12, 3 + k * 2, Math.PI - 0.35 + k * 0.3, 1) },
@@ -79,10 +79,12 @@ addEventListener('keydown', e => { if (BTR.on && e.code === 'Escape') btrEnd(); 
   if (!BTR.on || !BTR.sh) return; const sh = BTR.sh; BTR.t += dt; const k = Math.min(1, BTR.t / sh.dur);
   player.hp = maxHp(); $('hud').hidden = true; for (const id of ['velSpd', 'zone']) { const el = $(id); if (el) { const box = id === 'velSpd' ? el.parentElement : el; if (box && box.style.visibility !== 'hidden') { box.style.visibility = 'hidden'; (BTR.hid = BTR.hid || new Set()).add(box); } } } const tst = $('toast'); if (tst) tst.style.opacity = 0;
   if (sh.tick) sh.tick(k, BTR.t);
-  if (sh.fp) { vm.visible = true; player.ammo = 99; player.reloading = 0; if (player.mana != null) player.mana = 999;
+  if (sh.fp) { vm.visible = !sh.noGun; player.ammo = 99; player.reloading = 0; if (player.mana != null) player.mana = 999;
     if (sh.fp.length) { const gi = Math.min(sh.fp.length - 1, Math.floor(BTR.t / (sh.dur / sh.fp.length))); if (GUNS[sh.fp[gi]] && S.gun !== sh.fp[gi]) { S.gun = sh.fp[gi]; player.cool = 0; } player.yaw += Math.sin(BTR.t * 0.9) * dt * 0.25; try { fire(); } catch (_) {} } }
   else vm.visible = false;
   if (sh.cam) sh.cam(k, BTR.t, BTR.A);
   if (BTR.t > sh.dur) { BTR.sh = null; btrNext(); }
 }; }
+// the catch card normally closes with its dialog; on set there is no dialog, so hold it for the shot
+{ const _fc = fshCatchStep; fshCatchStep = function (dt) { if (!BTR.on) return _fc(dt); const d = dlgOpen; dlgOpen = true; try { return _fc(dt); } finally { dlgOpen = d; } }; }
 if (typeof SCENES !== 'undefined') SCENES.push(['burptrailer', '🤖 B.U.R.P. Trailer', () => true, () => setTimeout(btrStart, 200)]);

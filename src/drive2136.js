@@ -55,22 +55,6 @@ const velDriving = () => !!(LEVEL && LEVEL.id === 'speedway' && !LEVEL.fly && ty
 { const _rs = renderSettings; renderSettings = function () { _rs(); const b = $('setRaidBar'); if (b) b.textContent = PREFS.raidBar ? 'On' : 'Off'; }; }
 renderSettings(); try { showSetTab(setTab); } catch (_) {}
 
-// ---- the ship radio console, at the right end of the bridge consoles by the window ----
-function openShipRadio() {
-  openDlg('Ship radio', RADIO.st >= 0 ? RADIO_STATIONS[RADIO.st].name : 'Off');
-  $('dlgLine').textContent = 'The radio plays on board and while you fly the ship. Everywhere else you hear the normal soundtrack.' + (PREFS.music !== 3 ? ' (Set Music to Soundtrack in Settings to hear it.)' : '');
-  acts([...RADIO_STATIONS.map((s, i) => [`${RADIO.st === i ? '▶ ' : ''}${s.name} · ${s.tag}`, () => { radioTune(i); openShipRadio(); }, RADIO.st === i]), [RADIO.st >= 0 ? 'Turn it off' : 'Off', () => { radioTune(-1); openShipRadio(); }], ['Close', closeDlg]]);
-}
-{ const _b = LEVELS.ship.build; LEVELS.ship.build = function () { const r = _b.apply(this, arguments);
-  try { const g = new THREE.Group(), x = 3.45, z = -12.85; g.position.set(x, 0.95, z); g.rotation.y = -3 * 0.12; levelGroup.add(g);
-    part(g, B(0.62, 0.26, 0.3), '#1e2026', 0, 0.13, 0); part(g, B(0.5, 0.1, 0.02), glow('#ffb03b'), -0.02, 0.17, 0.152); part(g, B(0.02, 0.12, 0.025), glow('#ff3b5a'), -0.12, 0.17, 0.162);
-    for (const k of [-1, 1]) part(g, Cy(0.05, 0.05, 0.04, 10), '#9aa0aa', 0.22 * k + 0.02, 0.07, 0.16, Math.PI / 2, 0, 0);
-    part(g, B(0.02, 0.32, 0.02), '#9aa0aa', 0.24, 0.42, -0.08); const tip = part(g, B(0.05, 0.05, 0.05), glow('#4fd2ff'), 0.24, 0.6, -0.08);
-    levelAnims.push(t => { tip.visible = RADIO.st >= 0 ? Math.sin(t * 6) > -0.2 : false; });
-    INTERACTS.push({ x: 3.0, z: -12.25, r: 1.3, label: 'Ship radio', fn: openShipRadio });
-  } catch (e) { console.warn('radio console', e); }
-  return r; }; }
-
 // ---- blacklights on the Halo Line ramp: violet tubes overhead, glowing paint on the glass, no real lights needed ----
 function haloBlackTex() { if (haloBlackTex.t) return haloBlackTex.t; const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
   g.addColorStop(0, 'rgba(150,80,255,.85)'); g.addColorStop(0.45, 'rgba(110,40,255,.35)'); g.addColorStop(1, 'rgba(80,20,200,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); return haloBlackTex.t = new THREE.CanvasTexture(c); }
@@ -116,7 +100,7 @@ function haloBlackTex() { if (haloBlackTex.t) return haloBlackTex.t; const c = d
     const hullM = toonNS('#2a2c32', 'hull'); for (const s of [-1, 1]) { part(levelGroup, B(0.06, vh, 0.9), hullM, s * vw / 2, cy, Lz + 0.6); part(levelGroup, B(vw, 0.06, 0.9), hullM, 0, cy + s * vh / 2, Lz + 0.6); }
     const sky = new THREE.Group(); sky.position.set(0, cy, Lz); levelGroup.add(sky);
     // one light layer of stars far out (cheap on phones), and now and then a ship crossing the window
-    { const n = 260, pos = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const d = 70 + Math.random() * 150; pos[i * 3] = (Math.random() - 0.5) * d * 1.4; pos[i * 3 + 1] = (Math.random() - 0.5) * d; pos[i * 3 + 2] = d; }
+    { const n = 420, pos = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const d = 90 + Math.random() * 130, a = Math.random() * Math.PI * 2, cz = 0.04 + Math.random() * 0.96, r = Math.sqrt(1 - cz * cz); pos[i * 3] = Math.cos(a) * r * d; pos[i * 3 + 1] = Math.sin(a) * r * d; pos[i * 3 + 2] = cz * d; }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); sky.add(new THREE.Points(g, new THREE.PointsMaterial({ color: '#dfe8ff', size: 1.4, sizeAttenuation: false, fog: false, depthWrite: false }))); }
     const ship = new THREE.Group(), hullC = new THREE.MeshBasicMaterial({ color: '#5a6070', fog: false }), darkC = new THREE.MeshBasicMaterial({ color: '#2a2e38', fog: false });
     part(ship, B(1.2, 0.5, 4.2), hullC, 0, 0, 0); part(ship, B(4.2, 0.12, 1.4), darkC, 0, 0, 0.6); part(ship, B(0.6, 0.35, 1.0), darkC, 0, 0.35, -0.6);

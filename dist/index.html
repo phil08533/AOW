@@ -329,7 +329,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.13.6</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.13.7</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -6046,7 +6046,7 @@ function spaceStep(dt, t) {
   if (player.pos.length() > 3200) player.pos.setLength(3200);
   F.mkT = (F.mkT || 0) - dt;
   for (const M of F_markers) { const d = player.pos.distanceTo(M.P.pos), surf = Math.max(0, d - M.P.r);
-    M.sp.position.copy(M.P.pos).add(V(0, M.P.r * 1.08 + d * 0.06, 0)); M.sp.scale.set(d * 0.75, d * 0.07, 1); M.sp.visible = surf > 60;
+    M.sp.position.copy(M.P.pos).add(V(0, M.P.r * 1.08 + d * 0.06, 0)); M.sp.scale.set(d * 0.75, d * 0.07, 1); M.sp.visible = surf > 60 && !!PREFS.planetTags;
     if (F.mkT <= 0) { const L = LEVELS[M.id], locked = !M.P.survey && !(L && planetOpen(M.id)); drawPlate(M.sp, bodyName(M.id), (surf > 999 ? (surf / 1000).toFixed(1) + ' km' : Math.round(surf) + ' m') + (M.P.survey ? ((S.flags && S.flags['scan_' + M.id]) ? ' · scanned' : ' · uncharted') : locked ? ' · locked' : ''), M.P.survey ? '#c8a0ff' : locked ? '#9aa1aa' : '#8fe3ff', null); } }
   if (F.mkT <= 0) F.mkT = 0.5;
   F.roll += ((-st * 0.5 - (F.lastYaw != null ? (player.yaw - F.lastYaw) / Math.max(dt, 1e-3) * 0.08 : 0)) - F.roll) * Math.min(1, dt * 4); F.lastYaw = player.yaw;
@@ -6155,7 +6155,7 @@ LEVELS.zeltac = {
   npcs: [
     { id: 'rell', name: 'Harbor Master Rell', role: 'Mission center', rig: 'elismas', make: () => recolor(makeElismas(), { '#9aa1aa': '#5d7f99' }), x: -9, z: -8, face: 0.5, idle: ["Twenty floors of trouble and it's all mine.", "The board always has work for a pilot."] },
     { id: 'ozzo', name: 'Ozzo', role: 'Zeltac Exchange · buys anything', rig: 'bughybrid', make: () => recolor(makeBugHybrid(), { '#5f8a3a': '#8a6fc4', '#3e5e26': '#5d4a8a' }), x: 9, z: -8, face: -0.5, shop: 'store', idle: ["Ore, chips, fish, fangs. Ozzo buys from every world."] },
-    { id: 'brakka', name: 'Brakka', role: 'Shipwright', rig: 'chunk', make: () => makeChunkMonster('#c9a43a', '#8a6a2a', '#e8c890', '#5d636c', false), x: 12, z: 4, face: -1.3, shipwright: true, idle: ["Lasers, hull plates, engines. Bring ore, I make your ship sing."] },
+    { id: 'brakka', name: 'Brakka', role: 'Shipwright', rig: 'chunk', make: () => makeChunkMonster('#c9a43a', '#8a6a2a', '#e8c890', '#5d636c', false), x: 20.2, z: 7.2, face: Math.PI / 2, shipwright: true, idle: ["Lasers, hull plates, engines. Bring ore, I make your ship sing."] },
     { id: 'tova', name: 'Dr. Tova', role: 'Hospital', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#3b4f7a', '#8fae6a', '#1e1a18', '#c8402f'), x: -12, z: 4, face: 1.3, heal: true, idle: ["Space sickness, raider burns, I've seen it all."] },
     { id: 'vault', name: 'Vault-9', role: 'Bank', rig: 'xr17', make: () => recolor(makeXR17(), { '#9aa1aa': '#c9a43a' }), x: 0, z: -14, face: 0, bank: true, idle: ["DEPOSITS. ARE. SAFE."] },
     { id: 'pell', name: 'Pell', role: 'Fish buyer', rig: 'civ', make: () => makeCivilian('#2a5a7a', '#2c2a28', '#c58a64', '#ffb347'), x: -5, z: 12, face: Math.PI * 0.8, shop: 'fish', rods: [1, 2, 3], idle: ["Space fish? No. But I'll buy yours."] }
@@ -6180,8 +6180,8 @@ LEVELS.zeltac = {
     const front = (x, z, ry, label, col) => { const g = new THREE.Group(); part(g, B(6, 4, 0.4), '#3a3d44', 0, 2, 0); part(g, B(5.6, 0.1, 1.4), toon(col), 0, 3.2, 0.7, 0.2);
       const sg = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 0.9), new THREE.MeshBasicMaterial({ map: signTex(label, '#0f1757', '#ffd75e') })); sg.position.set(0, 3.7, 0.22); g.add(sg); part(g, B(3, 1.0, 0.8), toon('#8a6a44', 'wood'), 0, 0.5, 1.0);
       g.position.set(x, 0, z); g.rotation.y = ry; props.add(g); };
-    front(-9, -11.5, 0.5, 'MISSIONS', '#c8402f'); front(9, -11.5, -0.5, 'EXCHANGE', '#8a6fc4'); front(15, 4, -Math.PI / 2, 'SHIPWRIGHT', '#c9a43a'); front(-15, 4, Math.PI / 2, 'HOSPITAL', '#e8e4dc'); front(0, -17.5, 0, 'VAULT', '#c9a43a');
-    for (const [x, z] of [[-9, -11.5], [9, -11.5], [0, -17.5]]) box(x, z, 3, 0.6); box(15, 4, 0.6, 3); box(-15, 4, 0.6, 3);
+    front(-9, -11.5, 0.5, 'MISSIONS', '#c8402f'); front(9, -11.5, -0.5, 'EXCHANGE', '#8a6fc4'); front(-15, 4, Math.PI / 2, 'HOSPITAL', '#e8e4dc'); front(0, -17.5, 0, 'VAULT', '#c9a43a');
+    for (const [x, z] of [[-9, -11.5], [9, -11.5], [0, -17.5]]) box(x, z, 3, 0.6); box(-15, 4, 0.6, 3);
     // the alien barricade, from the sketch
     for (let i = 0; i < 7; i++) { part(props, B(2.2, 1.6, 1.2), toon(i % 2 ? '#a07a4a' : '#5d636c', i % 2 ? 'wood' : 'panel'), -18 + i * 2.6, 0.8, -26, 0, (i % 3) * 0.2); part(props, new THREE.ConeGeometry(0.2, 0.8, 4), C.red, -18 + i * 2.6, 2, -26); }
     box(-10.2, -26, 9.4, 1); { const sg = new THREE.Mesh(new THREE.PlaneGeometry(6, 1), new THREE.MeshBasicMaterial({ map: signTex('ALIEN QUARTER · KEEP OUT', '#3a0e0e', '#ff6a5a') })); sg.position.set(-10, 3.2, -25.3); props.add(sg); }
@@ -8222,22 +8222,22 @@ function updateOrd(dt) {
 function openGunMods(who) {
   openDlg(who || 'Gun mod bench', 'Paint · rounds · ordnance');
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
-  let gid = S.gun, tab = 'paint';
+  let gid = S.gun;
   const set = (k, v) => { S.gunLook = S.gunLook || {}; S.gunLook[gid] = Object.assign(gunLook(gid), { [k]: v }); markDirty(); SFX.ui(); };
   const pv = () => setPreview(() => { const m = makeGunModel(gid); m.rotation.y = Math.PI / 2; const g = new THREE.Group(); g.add(m); return g; }, `${GUNS[gid].name} · ${PROJ[gunLook(gid).proj].name}`);
   const render = () => {
     rows.textContent = ''; const L = gunLook(gid);
-    $('dlgLine').textContent = tab === 'ord' ? `Ordnance: press Z (NADE on phone) to throw. ${ORD_MAX} charges, one back every ${ORD_RECHARGE}s. Selected: ${ORD[ordSel()].name}.` : `Modding the ${GUNS[gid].name}. Paint and rounds are saved per gun.`;
+    $('dlgLine').textContent = `Modding the ${GUNS[gid].name}. Paint and rounds are saved per gun.`;
     const row = (label, items) => { const r = document.createElement('div'); r.style.display = 'flex'; r.style.flexWrap = 'wrap'; r.style.gap = '6px'; r.style.margin = '6px 0'; const h = document.createElement('div'); h.textContent = label; h.style.width = '100%'; h.style.color = 'var(--gold)'; r.appendChild(h); items.forEach(it => r.appendChild(it)); rows.appendChild(r); };
     const btn = (text, on, dis, fn, col) => { const b = document.createElement('button'); b.className = 'pbtn' + (on ? ' go' : ''); b.style.padding = '5px 9px'; b.textContent = text; b.disabled = !!dis; if (col) { b.style.borderColor = col; b.style.color = col; } b.addEventListener('click', fn); return b; };
     row('Gun', S.guns.map(id => btn(GUNS[id].name.replace(/^Lvl \d+ /, ''), id === gid, false, () => { gid = id; render(); pv(); })));
-    if (tab === 'paint') row('Paint', Object.entries(GUN_PAINTS).map(([k, c]) => btn(k[0].toUpperCase() + k.slice(1), L.paint === k, false, () => { set('paint', k); render(); pv(); }, c || undefined)));
-    if (tab === 'rounds') row('Rounds (projectiles)', Object.entries(PROJ).map(([k, P]) => btn(S.lvl >= P.lvl ? `${P.name}` : `${P.name} · Lv ${P.lvl}`, L.proj === k, S.lvl < P.lvl, () => { set('proj', k); render(); pv(); }, P.col || undefined)));
-    if (tab === 'rounds') { const d = document.createElement('div'); d.className = 'empty'; d.textContent = Object.entries(PROJ).map(([k, P]) => `${P.name}: ${P.desc}`).join(' · '); rows.appendChild(d); }
-    if (tab === 'ord') { row('Ordnance', Object.entries(ORD).map(([k, O]) => btn(S.lvl >= O.lvl ? O.name : `${O.name} · Lv ${O.lvl}`, ordSel() === k, S.lvl < O.lvl, () => { S.ord = k; markDirty(); SFX.ui(); render(); }, O.col))); const d = document.createElement('div'); d.className = 'empty'; d.textContent = Object.values(ORD).map(O => `${O.name}: ${O.desc}`).join(' · '); rows.appendChild(d); }
+    row('Paint', Object.entries(GUN_PAINTS).map(([k, c]) => btn(k[0].toUpperCase() + k.slice(1), L.paint === k, false, () => { set('paint', k); render(); pv(); }, c || undefined)));
+    row('Rounds', Object.entries(PROJ).map(([k, P]) => btn(S.lvl >= P.lvl ? `${P.name}` : `${P.name} · Lv ${P.lvl}`, L.proj === k, S.lvl < P.lvl, () => { set('proj', k); render(); pv(); }, P.col || undefined)));
+    { const d = document.createElement('div'); d.className = 'empty'; d.style.margin = '0 0 4px'; const P = PROJ[L.proj]; d.textContent = P ? `${P.name}: ${P.desc}` : ''; rows.appendChild(d); }
+    { row('Ordnance · Z or NADE to throw', Object.entries(ORD).map(([k, O]) => btn(S.lvl >= O.lvl ? O.name : `${O.name} · Lv ${O.lvl}`, ordSel() === k, S.lvl < O.lvl, () => { S.ord = k; markDirty(); SFX.ui(); render(); }, O.col))); const d = document.createElement('div'); d.className = 'empty'; d.style.margin = '0 0 4px'; d.textContent = `${ORD[ordSel()].name}: ${ORD[ordSel()].desc}`; rows.appendChild(d); }
   };
   $('dlgActs').before(rows);
-  acts([['Paint', () => { tab = 'paint'; render(); }, true], ['Rounds', () => { tab = 'rounds'; render(); }], ['Ordnance', () => { tab = 'ord'; render(); }], ['Done', () => { closeDlg(); vmGunId = null; }]]);
+  acts([['Done', () => { closeDlg(); vmGunId = null; }, true]]);
   render(); showPreviewIn(rows); pv();
 }
 // station on the ship next to the saber mods
@@ -16661,7 +16661,8 @@ const UPDATES = [
   { id: 95, title: '2.13.3 · Velocity, darker', items: ['Your car now waits right in front of you when you land in Pit Row. Walk up and press E or X to drive.', 'Menu → Vehicle now lets you pick which car to drive. On Velocity it lists your hover cars; elsewhere it lists your war vehicles.', 'Heavier rainbow rain, a rolling storm-cloud ceiling, and a much darker sky. The flash color of each lightning bolt lights up the clouds.', 'Brighter, longer headlights with a beam you can see in the rain.', 'Windshield rain looks like water now: clear beads with a glint and a dark rim, running streaks, and fine mist the wipers clear.', 'Traffic cars no longer drive backwards, and they have headlights.', 'Some shady locals moved into Pit Row.'] },
   { id: 96, title: '2.13.4 · Guns, a gun range and a real B.U.R.P.', items: ['Every gun got a makeover: sights, a light strip in its color, a muzzle brake and a slide that kicks back when you fire.', 'Alien guns now have a floating energy core, spinning rings and glowing vents, and burst a ring of their own color when fired. Regular guns flip out brass casings.', 'Other players now see your gun with its paint, and see it flash and fire.', 'New ship room: the Gun Range (1,200 cr and 6 circuits). It is the one place on the ship you can shoot, with free ammo, pop-up targets and a 30 second drill. Beat your best score for credits.', 'B.U.R.P. has a real robot voice now instead of the browser speech.'] },
   { id: 97, title: '2.13.5 · Cockpits, radio and the Halo Line', items: ["Ship cockpit: press C in space (or the camera button) to fly from the pilot's seat, with a live radar, hull and weapons screens, and a stick and throttle that move", "Ship ammo: 1 Lasers, 2 Plasma, 3 Flak, 4 homing Missiles (6 in the rack, they reload), 5 EMP that freezes raiders around you", "Radio: press R (or the radio button) in your ship or Velocity car to flip through four stations made from the soundtrack", "Bobbleheads: 9 to earn. They ride on your dash and wobble when you turn. N swaps them", "Velocity car cabin rebuilt: a live gauge cluster, a real steering wheel, a center screen with radio and traffic radar, vents, doors, mirror and storm-colored mood lights", "The Halo Line on Velocity: drive into the gates at the east and west edges and ride a magnet tube around the planet, past the glass window onto Prism Deep, the rainbow city of the Hydrans", "Velocity: lighter layered rain, a dark wet road with puddles, cars that hover on the magnet field and shed water, smoother steering at speed", "Robot City's Hover Cup ring race is retired. Zip now sends you to Pit Row on Velocity", "The Starlight Lounge bass now thumps, heavier near the speakers", "Other pilots in space are easier to spot: beacons, readable name tags, and ships that pitch and bank", "B.U.R.P.: 67 new recorded lines (fishing, the gun range, races, Velocity, low health, standing around) and a 60-second B.U.R.P. trailer in Codex, Cinema", "Balance: weak guns and staffs hit harder, and bounty rewards were evened out"] },
-  { id: 98, title: '2.13.6 · A cleaner Velocity, the Halo Run and fixes', items: ["Velocity driving screen: health, drone, pet, heal and the raid tracker step aside while you drive, and the drive hints fade after ten seconds", "Speed now reads in mph, and the hover cars hum a deep magnetic drone", "Drift, Boost, Use and Camera sit together in the bottom-right corner", "Halo Run: a new race out the east gate, all the way around the planet in the Halo Line, and home through the west gate", "Blacklights over the Halo Line ramps, and the tunnel barrels now run back into the cliff wall", "Your car has a proper floor and footwell, so the road no longer shows through under the dash", "The radio lives in your ship: turn it on at the console by the bridge window. It plays on board and while you fly; everywhere else you hear the normal soundtrack", "The hall viewport now looks out on open space: a field of stars and the odd ship passing by (kept light so phones stay smooth)", "Lab: a live countdown to the next dose, a sign over the vat, and switching recipes no longer throws away finished doses", "Raid tracker button is now a Settings switch (Game tab), off by default. Raid pop-ups still show", "Galaxy map and pause menu fit sideways phones"] }
+  { id: 98, title: '2.13.6 · A cleaner Velocity, the Halo Run and fixes', items: ["Velocity driving screen: health, drone, pet, heal and the raid tracker step aside while you drive, and the drive hints fade after ten seconds", "Speed now reads in mph, and the hover cars hum a deep magnetic drone", "Drift, Boost, Use and Camera sit together in the bottom-right corner", "Halo Run: a new race out the east gate, all the way around the planet in the Halo Line, and home through the west gate", "Blacklights over the Halo Line ramps, and the tunnel barrels now run back into the cliff wall", "Your car has a proper floor and footwell, so the road no longer shows through under the dash", "The radio lives in your ship: turn it on at the console by the bridge window. It plays on board and while you fly; everywhere else you hear the normal soundtrack", "The hall viewport now looks out on open space: a field of stars and the odd ship passing by (kept light so phones stay smooth)", "Lab: a live countdown to the next dose, a sign over the vat, and switching recipes no longer throws away finished doses", "Raid tracker button is now a Settings switch (Game tab), off by default. Raid pop-ups still show", "Galaxy map and pause menu fit sideways phones"] },
+  { id: 99, title: '2.13.7 · Fire everything, hold to heal, and a shipwright bay', items: ["One Fire button now fires every weapon your ship has fitted. The ammo picker is gone; buy plasma, flak, missiles and EMP as weapon mounts from Brakka or the bridge terminal.", "Hold Heal to top up until full. It only opens a new medkit when it needs one, and keeps the rest banked.", "New Repair button while flying: hold it to patch the hull, 2 cr per point, never more than needed.", "Flight buttons sit where the driving ones do. The radio and the lasers box are gone.", "Brakka has his own shipwright bay in the Zeltac lobby, welding away on a ship up on stands.", "Menus no longer flip through pages. Lists scroll, while the picture and Done always stay on screen. The gun mod bench shows paint, rounds and ordnance together.", "Backpack on a sideways phone: item details sit in two columns, with the buttons pinned.", "The ship hall window shows stars edge to edge, and a CREW QUARTERS door opens onto the crew's bunks.", "Planet name tags in space are now a setting, off by default."] }
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -18059,11 +18060,11 @@ const BTR_SHOTS = [
     cam: (k, t, A) => btrOrbit(A, 7 - k * 2.5, 0.7, 0.6 - k * 0.5, 0.6) },
   { lvl: 'earth', dur: 6, fp: ['b5', 'sg8', 'l28', 'lsaber', 'master'], setup: () => { SAFES.length = 0; btrFace(); return null; }, yaw: 0.05 },
   { lvl: 'earth', dur: 5, fp: ['m_ember', 'm_storm', 'm_void', 'w_20'], setup: () => { SAFES.length = 0; btrFace(); return null; }, yaw: -0.2 },
-  { lvl: 'ship', dur: 6, cam: (k, t, A) => btrOrbit(A, 7, 3.2 - k * 1.2, 0.3 + k * 1.4, 1.2) },
+  { lvl: 'ship', dur: 6, setup: () => V(0, 0, -8.5), cam: (k, t, A) => btrOrbit(A, 4.6, 2.6 - k * 0.9, 0.3 + k * 1.4, 1.2) },
   { lvl: 'space', dur: 6, cam: (k, t, A) => btrOrbit(A, 16 - k * 5, 4 + k * 2, 3.6 - k * 1.1, 0) },
   { lvl: 'speedway', dur: 6, setup: () => { if (VEL.parked) { const c = VEL.parked.position; player.pos.set(c.x + 1, c.y, c.z); } toggleFreeDrive(); player.pos.set(30, 0.3, 150); player.pos.y = floorAt(30, 150); player.yaw = 0.3; VEL.cam = 1; VEL.cp = null; return null; },
     tick: (k, t) => { keys.KeyW = true; keys.ShiftLeft = t > 1.2; keys.KeyD = Math.sin(t * 1.3) > 0.55; keys.KeyA = Math.sin(t * 1.3) < -0.55; if (t > 3.6) VEL.cam = 0; } },
-  { lvl: 'earth', dur: 5, fp: [], pitch: -0.25, yaw: 2.4, setup: () => { BTR.fish0 = S.fishBest ? Object.assign({}, S.fishBest) : null; setTimeout(() => { if (BTR.on) try { fshCatchShow({ fish: 'voidgulper', table: 'void' }); } catch (_) {} }, 600); return null; } },
+  { lvl: 'earth', dur: 5, fp: [], noGun: true, pitch: -0.12, yaw: 0, setup: () => { player.pos.set(-52, 0, 8.5); player.pos.y = floorAt(-52, 8.5); BTR.fish0 = S.fishBest ? Object.assign({}, S.fishBest) : null; setTimeout(() => { if (BTR.on) try { fshCatchShow({ fish: 'voidgulper', table: 'void' }); } catch (_) {} }, 900); return null; }, tick: () => { if (typeof FSH !== 'undefined' && FSH.catch) FSH.catch.holder.position.y += 0.22; } },
   { lvl: 'vector', dur: 7, setup: () => { let e = btrNearest(e => e.sp && e.sp.type === 'watcher', player.pos); if (!e && Z.maw) { try { makeEnemy({ zone: 'maw', type: 'watcher', n: 1, lv: [50, 50], at: [0, 2] }); } catch (_) {} e = btrNearest(e => e.sp && e.sp.type === 'watcher', player.pos); } BTR.boss = e; return e ? e.obj.position : null; },
     tick: () => { const e = BTR.boss; if (e && e.obj) { e.obj.visible = true; const f = floorAt(e.obj.position.x, e.obj.position.z) + 6; if (e.obj.position.y < f) e.obj.position.y += (f - e.obj.position.y) * 0.08; } },
     cam: (k, t, A) => btrOrbit(A, 26 - k * 12, 3 + k * 2, Math.PI - 0.35 + k * 0.3, 1) },
@@ -18125,12 +18126,14 @@ addEventListener('keydown', e => { if (BTR.on && e.code === 'Escape') btrEnd(); 
   if (!BTR.on || !BTR.sh) return; const sh = BTR.sh; BTR.t += dt; const k = Math.min(1, BTR.t / sh.dur);
   player.hp = maxHp(); $('hud').hidden = true; for (const id of ['velSpd', 'zone']) { const el = $(id); if (el) { const box = id === 'velSpd' ? el.parentElement : el; if (box && box.style.visibility !== 'hidden') { box.style.visibility = 'hidden'; (BTR.hid = BTR.hid || new Set()).add(box); } } } const tst = $('toast'); if (tst) tst.style.opacity = 0;
   if (sh.tick) sh.tick(k, BTR.t);
-  if (sh.fp) { vm.visible = true; player.ammo = 99; player.reloading = 0; if (player.mana != null) player.mana = 999;
+  if (sh.fp) { vm.visible = !sh.noGun; player.ammo = 99; player.reloading = 0; if (player.mana != null) player.mana = 999;
     if (sh.fp.length) { const gi = Math.min(sh.fp.length - 1, Math.floor(BTR.t / (sh.dur / sh.fp.length))); if (GUNS[sh.fp[gi]] && S.gun !== sh.fp[gi]) { S.gun = sh.fp[gi]; player.cool = 0; } player.yaw += Math.sin(BTR.t * 0.9) * dt * 0.25; try { fire(); } catch (_) {} } }
   else vm.visible = false;
   if (sh.cam) sh.cam(k, BTR.t, BTR.A);
   if (BTR.t > sh.dur) { BTR.sh = null; btrNext(); }
 }; }
+// the catch card normally closes with its dialog; on set there is no dialog, so hold it for the shot
+{ const _fc = fshCatchStep; fshCatchStep = function (dt) { if (!BTR.on) return _fc(dt); const d = dlgOpen; dlgOpen = true; try { return _fc(dt); } finally { dlgOpen = d; } }; }
 if (typeof SCENES !== 'undefined') SCENES.push(['burptrailer', '🤖 B.U.R.P. Trailer', () => true, () => setTimeout(btrStart, 200)]);
 
 // =================== CLUB BASS: the Starlight Lounge thumps like a real club ===================
@@ -18253,40 +18256,6 @@ function cabinDraw(sp, K) {
   if ((CABIN.drawT = (CABIN.drawT || 0) - dt) <= 0) { CABIN.drawT = 0.1; cabinDraw(sp, K); }
 }; }
 
-// =================== RADIO: stations you tune in your ship ===================
-// The radio lives in the ship: switch it on at the console by the bridge window, and it plays on board and while you
-// fly (R or the 📻 button flips stations at the helm). Everywhere else you hear the normal soundtrack. Stations are built from the game's
-// music library; each one has a slot for a DJ who will talk between songs later (RADIO_DJ hooks below).
-const RADIO_TITLES = { risingsun: 'Art of War: Rising Sun', overture: 'Velocity Overture', eventhorizon: 'Event Horizon', tidal: 'Tidal', nebula: 'Nebula', neon: 'Neon', wakeup: 'Wake Up', dancing: 'Dancing', hymn: 'Hymn', mushroom: 'Mushroom', enchanted: 'Enchanted', iloveyou: 'I Love You', apocalyptic: 'Apocalyptic', low: 'Low', c4po: 'C4PO' };
-const RADIO_STATIONS = [
-  { id: 'sunfm', name: 'Setting Sun FM', tag: 'the big songs', tracks: ['risingsun', 'overture', 'eventhorizon', 'tidal'], dj: null },
-  { id: 'nebula', name: 'Nebula 88.8', tag: 'club all night', tracks: ['nebula', 'neon', 'wakeup', 'dancing'], dj: null },
-  { id: 'ghost', name: 'Ghost Signal', tag: 'late night, low lights', tracks: ['hymn', 'mushroom', 'enchanted', 'iloveyou'], dj: null },
-  { id: 'raider', name: 'Raider Radio', tag: 'loud and illegal', tracks: ['apocalyptic', 'low', 'c4po'], dj: null },
-];
-RADIO_STATIONS.forEach(s => { PLAYLISTS['radio_' + s.id] = s.tracks.filter(t => TRACKS[t]); });
-const RADIO = { st: -1, btn: null };
-const radioInVehicle = () => !!(LEVEL && state === 'play' && (LEVEL.fly || LEVEL.id === 'ship'));
-const radioAtHelm = () => !!(LEVEL && state === 'play' && LEVEL.fly);
-function radioNow() { if (RADIO.st < 0) return null; const s = RADIO_STATIONS[RADIO.st], list = 'radio_' + s.id; const id = MUS.list === list ? PLAYLISTS[list][MUS.idx] : null; return { name: s.name, track: id ? (RADIO_TITLES[id] || id) : 'tuning…', station: s }; }
-function radioNext() { if (!radioInVehicle()) return; radioTune(RADIO.st + 1 >= RADIO_STATIONS.length ? -1 : RADIO.st + 1); }
-function radioTune(i) {
-  RADIO.st = i; S.radio = RADIO.st; markDirty();
-  if (RADIO.st >= 0) { const s = RADIO_STATIONS[RADIO.st], L = PLAYLISTS['radio_' + s.id]; for (let i = L.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [L[i], L[j]] = [L[j], L[i]]; }
-    if (PREFS.music !== 3) toast('📻 ' + s.name, 'Turn music to Soundtrack in Settings to hear the radio', 2.5); else toast('📻 ' + s.name, s.tag, 1.6); }
-  else toast('📻 Radio off', 'Back to the soundtrack', 1.2);
-  SFX.ui(); musUnlock(); musTick();
-}
-// while you're in a vehicle with the radio on, the station is what plays (cutscenes still win)
-{ const _mc = musContext; musContext = function (dt) { const r = _mc(dt); if (MUS.force) return r; if (RADIO.st >= 0 && radioInVehicle()) return 'radio_' + RADIO_STATIONS[RADIO.st].id; return r; }; }
-// a DJ hook for later: called when a new song starts on a station (quest-aware chatter goes here)
-const RADIO_DJ = { say: null };
-{ let lastKey = ''; setInterval(() => { const n = radioNow(); const k = n ? n.name + n.track : ''; if (k !== lastKey) { lastKey = k; if (n && n.track !== 'tuning…') { if (radioInVehicle()) toast('📻 ' + n.name, '♪ ' + n.track, 1.6); if (RADIO_DJ.say && n.station.dj) try { RADIO_DJ.say(n.station, n.track); } catch (_) {} } } }, 500); }
-window.addEventListener('keydown', e => { if (e.code !== 'KeyR' || e.repeat || !radioAtHelm() || dlgOpen || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return; e.stopImmediatePropagation(); e.preventDefault(); radioNext(); }, true);
-setInterval(() => { if (RADIO.st < 0 && S && typeof S.radio === 'number' && S.radio >= 0 && !RADIO.init) { RADIO.st = S.radio; } RADIO.init = true;
-  let b = RADIO.btn; if (!b) { b = RADIO.btn = document.createElement('button'); b.textContent = '📻'; b.title = 'Radio (R)'; b.style.cssText = 'position:fixed;right:calc(env(safe-area-inset-right,0px) + 14px);top:calc(env(safe-area-inset-top,0px) + 190px);z-index:22;width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:rgba(10,14,30,.7);font-size:20px;cursor:pointer'; b.addEventListener('click', e => { e.stopPropagation(); radioNext(); }); b.addEventListener('touchstart', e => { e.stopPropagation(); e.preventDefault(); radioNext(); }, { passive: false }); document.body.appendChild(b); }
-  b.hidden = !radioAtHelm() || dlgOpen; b.style.borderColor = RADIO.st >= 0 ? '#ffd36a' : 'rgba(255,255,255,.3)'; }, 300);
-
 // =================== SHIP AMMO: five ways to shoot in space ===================
 // 1 Lasers (the classic twin beams) · 2 Plasma (slow, heavy, purple) · 3 Flak (a spread that shreds swarms and rocks)
 // 4 Missiles (lock on and chase, 6 in the rack, they reload over time) · 5 EMP (a pulse that freezes raiders around you)
@@ -18304,42 +18273,49 @@ function sammoPick(i) { if (!LEVEL || !LEVEL.fly || i === SAMMO.i || !SHIP_AMMO[
 function sammoHud() {
   let h = SAMMO.hud; if (!h) { h = SAMMO.hud = document.createElement('div'); h.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 112px);transform:translateX(-50%);z-index:22;display:flex;gap:4px;pointer-events:auto;font:700 11px system-ui,sans-serif'; document.body.appendChild(h);
     SHIP_AMMO.forEach((a, i) => { const b = document.createElement('button'); b.style.cssText = 'border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:4px 7px;background:rgba(10,14,30,.7);color:#cfe0ff;font:inherit;cursor:pointer'; b.addEventListener('click', e => { e.stopPropagation(); sammoPick(i); }); b.addEventListener('touchstart', e => { e.stopPropagation(); e.preventDefault(); sammoPick(i); }, { passive: false }); h.appendChild(b); }); }
-  const show = LEVEL && LEVEL.fly && state === 'play' && !dlgOpen; h.hidden = !show; if (!show) return;
+  const show = false; h.hidden = true; if (!show) return;
   [...h.children].forEach((b, i) => { const a = SHIP_AMMO[i], on = i === SAMMO.i; b.textContent = (TOUCH ? '' : a.key + ' ') + a.name + (a.id === 'missile' ? ` ${SAMMO.rack}` : a.id === 'emp' && SAMMO.empT > gameTime ? ` ${Math.ceil(SAMMO.empT - gameTime)}s` : '');
     b.style.borderColor = on ? a.col : 'rgba(255,255,255,.2)'; b.style.color = on ? a.col : '#9fb0c8'; b.style.background = on ? 'rgba(20,28,60,.9)' : 'rgba(10,14,30,.6)'; });
 }
-addEventListener('keydown', e => { if (!LEVEL || !LEVEL.fly || state !== 'play' || dlgOpen || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return; const m = /^Digit([1-5])$/.exec(e.code); if (m) { sammoPick(+m[1] - 1); e.preventDefault(); } }, true);
 function sammoAim() { _e.set(player.pitch, player.yaw, 0); _q.setFromEuler(_e); shipFwd.set(0, 0, -1).applyQuaternion(_q); shipRight.set(1, 0, 0).applyQuaternion(_q); shipUp.set(0, 1, 0).applyQuaternion(_q); }
 function sammoTarget(maxA, maxD) { let best = null, bA = maxA; for (const r of fly.raiders) { if (r.dead) continue; const to = r.obj.position.clone().sub(player.pos), d = to.length(); if (d > maxD) continue; const a = to.normalize().angleTo(shipFwd); if (a < bA) { bA = a; best = r; } } return best; }
 function sammoHit(r, dmg, at, col) { if (!r || r.dead) return; r.hp -= dmg; r.aggro = true; burst(at || r.obj.position, col, 10, 16); hitmark(r.hp <= 0); if (r.hp <= 0) killRaider(r); else drawPlate(r.plate, (r.def && r.def.name) || 'Drome Raider', 'Lv ' + r.lv, hpColor(r.lv), r.hp / r.max); }
+// 2.13.7: no more picking an ammo type. The Fire button fires every weapon mount the ship has installed at once,
+// each on its own cooldown. Lasers are always fitted; the rest are bought as ship upgrades (shipGunsOwned).
+const shipGunsOwned = () => (S.ship && S.ship.guns) || {};
 { const _sf = shipFire; shipFire = function () {
-  const A = sammoCur(), F = fly; if (!F) return _sf.apply(this, arguments);
-  if (A.id === 'laser') return _sf.apply(this, arguments);
+  const F = fly; if (!F) return _sf.apply(this, arguments);
+  _sf.apply(this, arguments); const lc = F.cool;
+  const own = shipGunsOwned(); SAMMO.cd = SAMMO.cd || {};
+  for (const A of SHIP_AMMO) { if (A.id === 'laser' || !own[A.id] || (SAMMO.cd[A.id] || 0) > gameTime) continue;
+    if (A.id === 'emp' && !F.raiders.some(r => !r.dead && r.obj.position.distanceTo(player.pos) < 170)) continue;
+    SAMMO.cd[A.id] = gameTime + A.cool; sammoFireOne(A, _sf, this, arguments); }
+  F.cool = lc;
+}; }
+function sammoFireOne(A, _sf, self, args) { const F = fly;
   const L = SHIP_SYS.laser.lv[sysLv('laser')], d0 = L.dmg;
   if (A.id === 'plasma' || A.id === 'flak') {
     const _tr = tracer; tracer = (a, b) => _tr(a, b, A.col); L.dmg = d0 * A.mult;
     const y0 = player.yaw, p0 = player.pitch;
-    try { for (let k = 0; k < (A.pellets || 1); k++) { if (A.pellets) { player.yaw = y0 + rand(-0.07, 0.07); player.pitch = p0 + rand(-0.05, 0.05); } _sf.apply(this, arguments); } }
+    try { for (let k = 0; k < (A.pellets || 1); k++) { if (A.pellets) { player.yaw = y0 + rand(-0.07, 0.07); player.pitch = p0 + rand(-0.05, 0.05); } _sf.apply(self, args); } }
     finally { L.dmg = d0; tracer = _tr; player.yaw = y0; player.pitch = p0; }
-    F.cool = A.cool; F.shake = Math.max(F.shake, A.id === 'plasma' ? 0.12 : 0.08); if (A.id === 'plasma') { SFX.boom && SFX.boom(); }
+    F.shake = Math.max(F.shake, A.id === 'plasma' ? 0.12 : 0.08); if (A.id === 'plasma') { SFX.boom && SFX.boom(); }
     return;
   }
   sammoAim();
   if (A.id === 'missile') {
-    if (SAMMO.rack <= 0) { F.cool = 0.4; SFX.dry && SFX.dry(); toast('MISSILES', 'Rack empty, reloading', 0.8); return; }
-    SAMMO.rack--; F.cool = A.cool; const tgt = sammoTarget(0.6, 900);
+    if (SAMMO.rack <= 0) return;
+    SAMMO.rack--; const tgt = sammoTarget(0.6, 900);
     const m = new THREE.Group(); part(m, B(0.5, 0.5, 2.2), '#d8dce4', 0, 0, 0); part(m, B(0.6, 0.6, 0.4), glow('#ff5a3a'), 0, 0, 1.2); m.position.copy(player.pos).addScaledVector(shipUp, -1.6); levelGroup.add(m);
     SAMMO.missiles.push({ m, v: shipFwd.clone().multiplyScalar(Math.max(90, F.vel.length() + 60)), tgt, life: 6, dmg: sammoBaseDmg() * A.mult });
-    SFX.zap && SFX.zap(); F.shake = Math.max(F.shake, 0.1); sammoHud(); return;
+    SFX.zap && SFX.zap(); F.shake = Math.max(F.shake, 0.1); return;
   }
   if (A.id === 'emp') {
-    if ((SAMMO.empT || 0) > gameTime) { F.cool = 0.3; return; }
-    SAMMO.empT = gameTime + A.cool; F.cool = 0.5; SFX.boom && SFX.boom(); F.shake = Math.max(F.shake, 0.4);
+    SFX.boom && SFX.boom(); F.shake = Math.max(F.shake, 0.4);
     const ring = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), new THREE.MeshBasicMaterial({ color: '#4fd2ff', transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); ring.position.copy(player.pos); levelGroup.add(ring); SAMMO.rings.push({ m: ring, t: 0 });
-    let n = 0; for (const r of F.raiders) { if (r.dead || r.obj.position.distanceTo(player.pos) > 170) continue; r.stunT = gameTime + 3.5; r.stunAt = r.obj.position.clone(); n++; sammoHit(r, sammoBaseDmg() * A.mult, null, '#4fd2ff'); }
-    toast('EMP', n ? `${n} raider${n > 1 ? 's' : ''} frozen` : 'Nothing in range', 1); sammoHud(); return;
+    for (const r of F.raiders) { if (r.dead || r.obj.position.distanceTo(player.pos) > 170) continue; r.stunT = gameTime + 3.5; r.stunAt = r.obj.position.clone(); sammoHit(r, sammoBaseDmg() * A.mult, null, '#4fd2ff'); }
   }
-}; }
+}
 { const _st = step; step = function (dt) { _st(dt);
   if (!LEVEL || !LEVEL.fly || !fly) { if (SAMMO.hud) SAMMO.hud.hidden = true; if (SAMMO.missiles.length) { SAMMO.missiles.length = 0; } SAMMO.rings.length = 0; return; }
   if (S.shipAmmo && sammoCur().id !== S.shipAmmo) { const i = SHIP_AMMO.findIndex(a => a.id === S.shipAmmo); if (i >= 0) SAMMO.i = i; }
@@ -18355,6 +18331,20 @@ function sammoHit(r, dmg, at, col) { if (!r || r.dead) return; r.hp -= dmg; r.ag
   for (const r of fly.raiders) if (r.stunT && r.stunT > gameTime && !r.dead) { r.obj.position.copy(r.stunAt); r.vel.set(0, 0, 0); r.cd = Math.max(r.cd, 0.5); if (Math.random() < dt * 6) burst(r.obj.position, '#4fd2ff', 2, 6); }
   if ((SAMMO.hudT = (SAMMO.hudT || 0) - dt) <= 0) { SAMMO.hudT = 0.25; sammoHud(); }
 }; }
+// ---- weapon mounts for sale wherever ship systems are sold (Brakka in Zeltac, the bridge terminal) ----
+const SHIP_MOUNTS = { plasma: { cost: { cr: 3000, ore: 15 }, desc: 'Heavy purple bolts, slow but hard-hitting' }, flak: { cost: { cr: 2500, ore: 12 }, desc: 'A five-shot spread that shreds swarms and rocks' },
+  missile: { cost: { cr: 5000, ore: 20, circuit: 4 }, desc: 'Lock-on missiles, a rack of 6 that reloads' }, emp: { cost: { cr: 8000, starcrystal: 4 }, desc: 'A pulse that freezes nearby raiders' } };
+{ const _os = openShipSystems; openShipSystems = function () { _os.apply(this, arguments);
+  const rows = $('shopRows'); if (!rows) return; let box = null;
+  const render = () => { if (box) box.forEach(e => e.remove()); box = []; const add = e => { box.push(e); rows.appendChild(e); }; const hd = document.createElement('div'); hd.className = 'meta'; hd.style.cssText = 'margin:8px 2px 2px;font-weight:700;letter-spacing:.06em'; hd.textContent = 'WEAPON MOUNTS · all fire together'; add(hd);
+    const own = shipGunsOwned();
+    for (const A of SHIP_AMMO) { const r = document.createElement('div'), dot = document.createElement('span'); r.className = 'rowi'; dot.className = 'dot'; dot.style.background = A.col;
+      const nm = document.createElement('span'), M = SHIP_MOUNTS[A.id], have = A.id === 'laser' || own[A.id]; nm.textContent = `${A.name} · ${A.id === 'laser' ? 'Standard twin lasers' : M.desc}`;
+      const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = have ? 'Fitted' : costLabel(M.cost);
+      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = have ? '✓' : 'Fit'; b.disabled = have || !costOk(M.cost);
+      if (!have) b.addEventListener('click', () => { costPay(M.cost); S.ship.guns = Object.assign({}, S.ship.guns, { [A.id]: 1 }); SFX.level(); log(`${A.name} mounted. They fire with your lasers.`, 'loot'); markDirty(); render(); });
+      r.append(dot, nm, mt, b); add(r); } };
+  rows.addEventListener('click', () => setTimeout(() => { if (!rows.contains(box[0])) render(); }, 0)); render(); }; }
 
 // =================== BOBBLEHEADS: little figures on your dash that wobble when you drive and fly ===================
 // You earn them by doing things (see BOBBLES[].got). N swaps which one rides on the dash of your ship and your car.
@@ -18561,22 +18551,6 @@ const velDriving = () => !!(LEVEL && LEVEL.id === 'speedway' && !LEVEL.fly && ty
 { const _rs = renderSettings; renderSettings = function () { _rs(); const b = $('setRaidBar'); if (b) b.textContent = PREFS.raidBar ? 'On' : 'Off'; }; }
 renderSettings(); try { showSetTab(setTab); } catch (_) {}
 
-// ---- the ship radio console, at the right end of the bridge consoles by the window ----
-function openShipRadio() {
-  openDlg('Ship radio', RADIO.st >= 0 ? RADIO_STATIONS[RADIO.st].name : 'Off');
-  $('dlgLine').textContent = 'The radio plays on board and while you fly the ship. Everywhere else you hear the normal soundtrack.' + (PREFS.music !== 3 ? ' (Set Music to Soundtrack in Settings to hear it.)' : '');
-  acts([...RADIO_STATIONS.map((s, i) => [`${RADIO.st === i ? '▶ ' : ''}${s.name} · ${s.tag}`, () => { radioTune(i); openShipRadio(); }, RADIO.st === i]), [RADIO.st >= 0 ? 'Turn it off' : 'Off', () => { radioTune(-1); openShipRadio(); }], ['Close', closeDlg]]);
-}
-{ const _b = LEVELS.ship.build; LEVELS.ship.build = function () { const r = _b.apply(this, arguments);
-  try { const g = new THREE.Group(), x = 3.45, z = -12.85; g.position.set(x, 0.95, z); g.rotation.y = -3 * 0.12; levelGroup.add(g);
-    part(g, B(0.62, 0.26, 0.3), '#1e2026', 0, 0.13, 0); part(g, B(0.5, 0.1, 0.02), glow('#ffb03b'), -0.02, 0.17, 0.152); part(g, B(0.02, 0.12, 0.025), glow('#ff3b5a'), -0.12, 0.17, 0.162);
-    for (const k of [-1, 1]) part(g, Cy(0.05, 0.05, 0.04, 10), '#9aa0aa', 0.22 * k + 0.02, 0.07, 0.16, Math.PI / 2, 0, 0);
-    part(g, B(0.02, 0.32, 0.02), '#9aa0aa', 0.24, 0.42, -0.08); const tip = part(g, B(0.05, 0.05, 0.05), glow('#4fd2ff'), 0.24, 0.6, -0.08);
-    levelAnims.push(t => { tip.visible = RADIO.st >= 0 ? Math.sin(t * 6) > -0.2 : false; });
-    INTERACTS.push({ x: 3.0, z: -12.25, r: 1.3, label: 'Ship radio', fn: openShipRadio });
-  } catch (e) { console.warn('radio console', e); }
-  return r; }; }
-
 // ---- blacklights on the Halo Line ramp: violet tubes overhead, glowing paint on the glass, no real lights needed ----
 function haloBlackTex() { if (haloBlackTex.t) return haloBlackTex.t; const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
   g.addColorStop(0, 'rgba(150,80,255,.85)'); g.addColorStop(0.45, 'rgba(110,40,255,.35)'); g.addColorStop(1, 'rgba(80,20,200,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); return haloBlackTex.t = new THREE.CanvasTexture(c); }
@@ -18622,7 +18596,7 @@ function haloBlackTex() { if (haloBlackTex.t) return haloBlackTex.t; const c = d
     const hullM = toonNS('#2a2c32', 'hull'); for (const s of [-1, 1]) { part(levelGroup, B(0.06, vh, 0.9), hullM, s * vw / 2, cy, Lz + 0.6); part(levelGroup, B(vw, 0.06, 0.9), hullM, 0, cy + s * vh / 2, Lz + 0.6); }
     const sky = new THREE.Group(); sky.position.set(0, cy, Lz); levelGroup.add(sky);
     // one light layer of stars far out (cheap on phones), and now and then a ship crossing the window
-    { const n = 260, pos = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const d = 70 + Math.random() * 150; pos[i * 3] = (Math.random() - 0.5) * d * 1.4; pos[i * 3 + 1] = (Math.random() - 0.5) * d; pos[i * 3 + 2] = d; }
+    { const n = 420, pos = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const d = 90 + Math.random() * 130, a = Math.random() * Math.PI * 2, cz = 0.04 + Math.random() * 0.96, r = Math.sqrt(1 - cz * cz); pos[i * 3] = Math.cos(a) * r * d; pos[i * 3 + 1] = Math.sin(a) * r * d; pos[i * 3 + 2] = cz * d; }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); sky.add(new THREE.Points(g, new THREE.PointsMaterial({ color: '#dfe8ff', size: 1.4, sizeAttenuation: false, fog: false, depthWrite: false }))); }
     const ship = new THREE.Group(), hullC = new THREE.MeshBasicMaterial({ color: '#5a6070', fog: false }), darkC = new THREE.MeshBasicMaterial({ color: '#2a2e38', fog: false });
     part(ship, B(1.2, 0.5, 4.2), hullC, 0, 0, 0); part(ship, B(4.2, 0.12, 1.4), darkC, 0, 0, 0.6); part(ship, B(0.6, 0.35, 1.0), darkC, 0, 0.35, -0.6);
@@ -18651,6 +18625,176 @@ function haloBlackTex() { if (haloBlackTex.t) return haloBlackTex.t; const c = d
     lower.traverse(o => { o.renderOrder = 5; });
   } catch (e) { console.warn('cabin floor', e); }
   return r; }; }
+
+// =================== 2.13.7: the crew quarters door in the ship hall ===================
+// A sliding door at the far end of the hall, port side, signed CREW QUARTERS. It opens for anyone
+// who walks up, and now and then a crew member steps out, wanders the hall, and heads back in.
+const CREWQ_LINES = ["Off shift, Captain. Don't tell Ruiz I was napping.", "Bunks are tight but the pillows are real. Mostly.", "Somebody keeps eating the good rations. I have a list of suspects.", "Quiet in there for once. Pell's finally asleep."];
+{ const _dh = dressHall; dressHall = function () { _dh.apply(this, arguments);
+  try { const { Lz } = hallLayout(), z = Math.floor((Lz - 2.6) / 3) * 3 + 1.5, x = -1.82, dw = 1.1, dh = 2.2;
+    // clear the stretch of port wall the door goes on (crates, lockers or an extinguisher may sit there), between two hull ribs
+    const small = o => { if (!o.isMesh) return true; const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox(); const v = g.boundingBox.getSize(new THREE.Vector3()); return Math.max(v.x, v.z) < 1.6 && v.y < 2.4; };
+    for (const o of props.children.slice()) if (o.position.x < -1.0 && o.position.x > -1.95 && Math.abs(o.position.z - z) < 0.95 && o.position.y < 2.6 && small(o)) props.remove(o);
+    for (let i = BOXES.length - 1; i >= 0; i--) { const b = BOXES[i]; if (b[0] < -1.0 && b[0] > -1.95 && Math.abs(b[1] - z) < 1.2 && b[3] < 2) BOXES.splice(i, 1); }
+    for (let i = CIRCLES.length - 1; i >= 0; i--) { const c = CIRCLES[i]; if (c[0] < -1.0 && Math.abs(c[1] - z) < 1.2) CIRCLES.splice(i, 1); }
+    const frameM = toonNS('#2a2c32', 'hull'), doorM = toonNS('#5d636c', 'hull');
+    part(levelGroup, B(0.12, 0.16, dw + 0.32), frameM, x + 0.02, dh + 0.08, z);
+    for (const s of [-1, 1]) part(levelGroup, B(0.12, dh + 0.16, 0.16), frameM, x + 0.02, (dh + 0.16) / 2, z + s * (dw / 2 + 0.08));
+    part(levelGroup, B(0.02, dh, dw), new THREE.MeshBasicMaterial({ color: '#0a0c10' }), x - 0.025, dh / 2, z);
+    // two leaves that part sideways
+    const leaves = [-1, 1].map(s => { const l = new THREE.Group(); part(l, B(0.06, dh, dw / 2), doorM, 0, dh / 2, 0); part(l, B(0.065, 0.06, dw / 2 - 0.1), glow('#4fd2ff'), 0, 1.3, 0); part(l, B(0.065, dh - 0.3, 0.04), frameM, 0, dh / 2, -s * (dw / 4 - 0.04)); l.position.set(x, 0, z + s * dw / 4); levelGroup.add(l); return { l, s }; });
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.375), new THREE.MeshBasicMaterial({ map: signTex('CREW QUARTERS', '#16202c', '#ffd36a') })); sg.position.set(x + 0.06, dh + 0.42, z); sg.rotation.y = Math.PI / 2; levelGroup.add(sg);
+    const lamp = part(levelGroup, B(0.05, 0.08, 0.3), glow('#6fdc5a'), x + 0.06, dh + 0.14, z);
+    INTERACTS.push({ x: -1.1, z, r: 1.2, label: 'Crew quarters', fn: () => { openDlg('Crew quarters', 'Crew only'); $('dlgLine').textContent = "The crew's bunks, lockers and a very contested ration cabinet. Best to let them have their space, Captain."; acts([['Close', closeDlg, true]]); } });
+    // one off-shift crew member who comes and goes through the door
+    const o = buildChar(() => recolor(makeTrooper(), { '#6f7a3e': '#5a3a6a' }), 'trooper'); blob(o, 0.4); o.visible = false; levelGroup.add(o);
+    const C = { st: {}, mode: 'in', t: 8 + Math.random() * 12, tgt: 0, talk: 0 }, home = V(-1.5, 0, z);
+    INTERACTS.push({ get x() { return o.visible ? o.position.x : 99; }, get z() { return o.position.z; }, r: 1.5, label: 'Talk to Cook Vasquez', fn: () => { C.talk = 6; o.rotation.y = Math.atan2(player.pos.x - o.position.x, player.pos.z - o.position.z); openDlg('Ship cook', 'Cook Vasquez'); $('dlgLine').textContent = CREWQ_LINES[Math.floor(Math.random() * CREWQ_LINES.length)]; acts([['Carry on', closeDlg, true]]); } });
+    let open = 0, last = 0;
+    levelAnims.push(t => { const dt = Math.min(0.05, t - last || 0.016); last = t;
+      const near = p => Math.hypot(p.x - (x + 0.6), p.z - z) < 1.7;
+      let want = near(player.pos) || C.mode === 'out1' || C.mode === 'in1';
+      if (!want) for (const m of MOVERS) if (m[0] && m[0].visible && near(m[0].position)) { want = true; break; }
+      open += ((want ? 1 : 0) - open) * Math.min(1, dt * 7);
+      for (const { l, s } of leaves) l.position.z = z + s * (dw / 4 + open * dw / 2 * 0.92);
+      lamp.material.color.set(open > 0.5 ? '#ffd36a' : '#6fdc5a');
+      if (C.talk > 0) { C.talk -= dt; animRig(o, C.st, dt, t); return; }
+      const walk = (tx, tz, sp) => { const dx = tx - o.position.x, dz = tz - o.position.z, d = Math.hypot(dx, dz); if (d < 0.08) return true; const k = Math.min(d, sp * dt); o.position.x += dx / d * k; o.position.z += dz / d * k; o.rotation.y = Math.atan2(dx, dz); animRig(o, C.st, dt, t); return false; };
+      if (C.mode === 'in') { if ((C.t -= dt) <= 0) { C.mode = 'out1'; C.t = 0.6; o.position.set(x + 0.15, 0, z); o.visible = true; } return; }
+      if (C.mode === 'out1') { if ((C.t -= dt) > 0) return; if (walk(home.x, home.z, 1.1)) { C.mode = 'stroll'; C.tgt = 1 + Math.random() * Math.max(1, Lz - 5); } return; }
+      if (C.mode === 'stroll') { if (walk(-0.75, C.tgt, 1.1)) { C.mode = 'idle'; C.t = 3 + Math.random() * 6; } return; }
+      if (C.mode === 'idle') { animRig(o, C.st, dt, t); if ((C.t -= dt) <= 0) C.mode = 'back'; return; }
+      if (C.mode === 'back') { if (walk(home.x, home.z, 1.1)) C.mode = 'in1'; return; }
+      if (C.mode === 'in1') { if (walk(x + 0.15, z, 1.1)) { o.visible = false; C.mode = 'in'; C.t = 25 + Math.random() * 35; } return; }
+    });
+  } catch (e) { console.warn('crew quarters', e); }
+}; }
+
+// ---- Settings → Game: planet name tags in space (off by default) ----
+{ const anchor = $('setMusic').previousElementSibling, l = document.createElement('span'); l.textContent = 'Planet name tags'; const b = document.createElement('button'); b.className = 'pbtn'; b.id = 'setPlanetTags';
+  b.addEventListener('click', () => { PREFS.planetTags = !PREFS.planetTags; savePrefs(); renderSettings(); SFX.ui(); }); anchor.before(l, b);
+  SET_OF.setPlanetTags = 'game'; }
+{ const _rs = renderSettings; renderSettings = function () { _rs(); const b = $('setPlanetTags'); if (b) b.textContent = PREFS.planetTags ? 'On' : 'Off'; }; }
+renderSettings(); try { showSetTab(setTab); } catch (_) {}
+
+// ---- hold to heal / hold to repair: keeps topping up quickly while held, stops at full, never wastes a kit ----
+// A medkit is 50 health. Opening one puts its 50 into a pool; holding heal draws from the pool and only opens
+// another medkit when the pool runs dry, so whatever isn't needed stays banked for next time.
+// In flight the button becomes REPAIR: hull points cost credits, paid point by point, so nothing is overspent.
+const HOLD = { on: false, mode: null, min: 0, cr: 0, full: false };
+const REPAIR_CR = 2;
+function holdStart(tap) { if (state !== 'play' || dlgOpen) return; HOLD.mode = LEVEL && LEVEL.fly ? 'rep' : 'heal'; HOLD.min = tap ? 50 : 0; HOLD.on = !tap; HOLD.cr = 0; HOLD.full = false;
+  if (player.hp >= maxHp()) { toast(HOLD.mode === 'rep' ? 'HULL INTACT' : 'FULL HEALTH', '', 0.9); HOLD.mode = null; return; }
+  if (HOLD.mode === 'heal' && !(S.medPool > 0) && (S.inv.medkit || 0) < 1) { toast('NO MEDKITS', 'Buy them at a general store or clinic', 1.6); SFX.block && SFX.block(); HOLD.mode = null; return; }
+  if (HOLD.mode === 'rep' && S.cr < REPAIR_CR) { toast('NO CREDITS', 'Repairs cost ' + REPAIR_CR + ' cr per hull point', 1.6); HOLD.mode = null; return; }
+  SFX.ui(); }
+function holdEnd() { HOLD.on = false; }
+function holdTick(dt) {
+  if (!HOLD.mode) return; if (state !== 'play' || player.hp <= 0) { HOLD.mode = null; return; }
+  if (!HOLD.on && HOLD.min <= 0) { HOLD.mode = null; return; }
+  const mx = maxHp(); if (player.hp >= mx) { toast(HOLD.mode === 'rep' ? 'HULL REPAIRED' : 'FULL HEALTH', HOLD.mode === 'heal' && S.medPool > 0 ? Math.round(S.medPool) + ' left in the open medkit' : '', 1); HOLD.mode = null; markDirty(); return; }
+  let amt = Math.min(mx - player.hp, Math.max(70, mx * 0.9) * dt);
+  if (HOLD.mode === 'heal') { S.medPool = S.medPool || 0;
+    while (S.medPool < amt && (S.inv.medkit || 0) > 0) { S.inv.medkit--; if (!S.inv.medkit) delete S.inv.medkit; S.medPool += 50; }
+    amt = Math.min(amt, S.medPool); if (amt <= 0) { toast('OUT OF MEDKITS', '', 1.2); HOLD.mode = null; markDirty(); return; }
+    S.medPool -= amt; player.hp = Math.min(mx, player.hp + amt); if (Math.random() < dt * 14) burst(player.pos.clone().add(V(0, 1.2, 0)), '#5dff9a', 3, 2);
+  } else {
+    HOLD.cr += amt * REPAIR_CR; const pay = Math.floor(HOLD.cr); if (pay > S.cr) { amt = S.cr / REPAIR_CR; HOLD.cr = 0; S.cr = 0; player.hp = Math.min(mx, player.hp + amt); toast('OUT OF CREDITS', '', 1.2); HOLD.mode = null; markDirty(); return; }
+    S.cr -= pay; HOLD.cr -= pay; player.hp = Math.min(mx, player.hp + amt); if (Math.random() < dt * 10) burst(player.pos.clone().add(V(0, -1, 0)), '#ffd36a', 3, 6);
+  }
+  HOLD.min -= amt;
+}
+quickHeal = function () { holdStart(true); };
+useMedkit = (function (_u) { return function () { if (S.medPool >= 50 || (S.medPool > 0 && player.hp + S.medPool >= maxHp())) { const a = Math.min(maxHp() - player.hp, S.medPool); if (a <= 0) return; S.medPool -= a; player.hp += a; log(`Used the open medkit (+${Math.round(a)} health)`); markDirty(); return; } return _u.apply(this, arguments); }; })(useMedkit);
+{ const tH = $('tHeal'); tH.addEventListener('touchstart', () => { HOLD.on = true; HOLD.min = 0; }, { passive: true });
+  for (const ev of ['touchend', 'touchcancel']) tH.addEventListener(ev, holdEnd); }
+// the repair button sits just above Boost while flying
+const tRepair = document.createElement('button'); tRepair.className = 'tbtn'; tRepair.id = 'tRepair'; tRepair.setAttribute('aria-label', 'Repair the ship'); tRepair.innerHTML = '<i>🔧</i><small>REPAIR</small>'; $('touch').appendChild(tRepair);
+tRepair.style.cssText = 'display:none;position:fixed;font-size:11px;background:rgba(255,211,106,.35);flex-direction:column;align-items:center;justify-content:center;line-height:1';
+tRepair.addEventListener('touchstart', e => { holdStart(false); e.preventDefault(); }, { passive: false }); for (const ev of ['touchend', 'touchcancel']) tRepair.addEventListener(ev, holdEnd);
+tRepair.addEventListener('mousedown', () => holdStart(false)); addEventListener('mouseup', holdEnd);
+document.head.insertAdjacentHTML('beforeend', `<style>#tHeal{touch-action:none}body.flying #tRepair{display:flex!important}#tRepair i{font-style:normal;font-size:18px}
+body.flying #tFire { right: calc(env(safe-area-inset-right, 0px) + 14px) !important; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px) !important; width: 86px !important; height: 86px !important; top: auto !important; left: auto !important; }
+body.flying #tBoost { right: calc(env(safe-area-inset-right, 0px) + 110px) !important; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px) !important; width: 72px !important; height: 72px !important; top: auto !important; left: auto !important; }
+body.flying .flyCam { right: calc(env(safe-area-inset-right, 0px) + 31px) !important; bottom: calc(env(safe-area-inset-bottom, 0px) + 116px) !important; top: auto !important; width: 52px !important; height: 52px !important; border-radius: 50% !important; }
+#tRepair { right: calc(env(safe-area-inset-right, 0px) + 96px); bottom: calc(env(safe-area-inset-bottom, 0px) + 108px); width: 52px; height: 52px; }
+body.flying #ammo { display: none !important; }</style>`);
+addEventListener('keydown', e => { if (e.code !== 'KeyH' || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return; e.stopImmediatePropagation(); e.preventDefault(); if (!e.repeat) holdStart(false); }, true);
+addEventListener('keyup', e => { if (e.code === 'KeyH') holdEnd(); }, true);
+{ const _st = step; step = function (dt) { _st(dt); try { holdTick(dt);
+  if (typeof SCOCK !== 'undefined' && SCOCK.vb) SCOCK.vb.classList.add('flyCam');
+  tRepair.style.opacity = player.hp < maxHp() ? 1 : 0.45; } catch (e) { console.warn('hold', e); } }; }
+
+// ---- Zeltac: Brakka's shipwright bay. A ship up on stands with a panel open, a crane, a tool cart,
+// and Brakka at work on it: he leans in, the welder flares and sparks fly. Talk to him for ship upgrades. ----
+{ const _zb = LEVELS.zeltac.build; LEVELS.zeltac.build = function () { _zb.apply(this, arguments);
+  try { const cx = 24.5, cz = 6, Y = 0.02;
+    // the bay floor: a dark pad with hazard striping around the edge
+    part(props, B(10, 0.04, 14), '#2a2c32', cx, Y, cz);
+    for (let i = 0; i < 12; i++) { const k = i % 2 ? '#ffd36a' : '#1e1c22'; part(props, B(0.83, 0.05, 0.3), k, cx - 4.6 + i * 0.83 + 0.4, Y + 0.01, cz - 7); part(props, B(0.83, 0.05, 0.3), k, cx - 4.6 + i * 0.83 + 0.4, Y + 0.01, cz + 7); }
+    for (let i = 0; i < 16; i++) part(props, B(0.3, 0.05, 0.875), i % 2 ? '#ffd36a' : '#1e1c22', cx - 5, Y + 0.01, cz - 7 + i * 0.875 + 0.44);
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.3), new THREE.MeshBasicMaterial({ map: signTex('SHIPWRIGHT BAY', '#2a1e0a', '#ffd36a') })); sg.position.set(29.6, 5.4, cz); sg.rotation.y = -Math.PI / 2; props.add(sg);
+    // the ship on its stands, nose toward the plaza, one engine panel swung open
+    const ship = makeStarship('#c9a43a'); ship.scale.setScalar(0.62); ship.position.set(cx + 0.6, 1.55, cz); ship.rotation.y = Math.PI / 2; props.add(ship);
+    for (const [dx, dz] of [[-2.2, -1.6], [-2.2, 1.6], [2.4, 0]]) { part(props, Cy(0.14, 0.2, 1.2, 8), '#5d636c', cx + 0.6 + dx, 0.6, cz + dz); part(props, B(0.7, 0.08, 0.7), '#3a3d44', cx + 0.6 + dx, 0.06, cz + dz); }
+    const panel = part(props, B(0.05, 0.75, 1.1), '#c9a43a', cx - 0.5, 2.2, cz - 0.6); panel.rotation.x = -0.9;
+    part(props, B(0.04, 0.55, 0.9), new THREE.MeshBasicMaterial({ color: '#141418' }), cx - 0.52, 1.75, cz - 0.6);
+    box(cx + 0.6, cz, 3.6, 3.4);
+    // overhead crane with a hook and an engine block on the chain
+    part(props, B(0.3, 0.3, 13), '#c9a43a', cx + 3.8, 7.2, cz); for (const s of [-1, 1]) part(props, B(0.3, 7.2, 0.3), '#5d636c', cx + 3.8, 3.6, cz + s * 6.3);
+    part(props, B(0.6, 0.4, 0.6), '#3a3d44', cx + 3.8, 6.85, cz + 2.4); part(props, Cy(0.03, 0.03, 3.2, 4), '#2a2c32', cx + 3.8, 5.05, cz + 2.4);
+    part(props, B(0.9, 0.7, 1.2), '#5d636c', cx + 3.8, 3.1, cz + 2.4); part(props, Cy(0.28, 0.28, 0.3, 10), glow('#ff7a3a'), cx + 3.8, 3.1, cz + 3.05, Math.PI / 2, 0, 0);
+    // tool cart and parts crates
+    { const g = new THREE.Group(); part(g, B(1.2, 0.08, 0.7), '#c8402f', 0, 0.9, 0); part(g, B(1.2, 0.08, 0.7), '#c8402f', 0, 0.35, 0); for (const [x, z] of [[-0.55, -0.3], [0.55, -0.3], [-0.55, 0.3], [0.55, 0.3]]) part(g, B(0.05, 0.9, 0.05), '#3a3d44', x, 0.45, z);
+      part(g, B(0.4, 0.15, 0.25), '#2a2c32', -0.3, 1.02, 0); part(g, B(0.5, 0.04, 0.06), '#9aa1aa', 0.25, 0.97, -0.1, 0, 0.4, 0); part(g, Cy(0.08, 0.08, 0.35, 8), '#4fa8ff', 0.3, 1.1, 0.15);
+      g.position.set(cx - 3.6, 0, cz + 4.6); props.add(g); box(cx - 3.6, cz + 4.6, 0.65, 0.4); }
+    part(props, B(1.1, 0.9, 1.1), toonNS('#8a6a4a', 'wood'), cx + 3.4, 0.45, cz - 5.6); part(props, B(0.8, 0.6, 0.8), toonNS('#5a7a9a', 'hull'), cx + 3.4, 1.2, cz - 5.5, 0, 0.3, 0); box(cx + 3.4, cz - 5.6, 0.6, 0.6);
+    // Brakka at work: lean in, weld, step back
+    const flare = new THREE.Sprite(new THREE.SpriteMaterial({ color: '#9fe8ff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); flare.scale.setScalar(0.01); flare.position.set(cx - 0.55, 1.75, cz - 0.6); levelGroup.add(flare);
+    let last = 0; const W = { t: 0 };
+    levelAnims.push(t => { const dt = Math.min(0.05, t - last || 0.016); last = t; const n = npcObjs.brakka; if (!n || !n.obj) return; const o = n.obj;
+      const talking = Math.hypot(player.pos.x - o.position.x, player.pos.z - o.position.z) < 3;
+      if (talking) { o.rotation.x *= 0.8; flare.scale.setScalar(0.01); return; }
+      W.t += dt; const c = W.t % 6, weld = c > 1.2 && c < 4.2;
+      o.rotation.y = Math.PI / 2 + Math.sin(t * 0.7) * 0.15; o.rotation.x = (weld ? 0.18 : 0.02) * 0.4 + o.rotation.x * 0.6;
+      if (weld) { flare.scale.setScalar(0.25 + Math.random() * 0.45); if (Math.random() < dt * 18) burst(flare.position, Math.random() < 0.5 ? '#ffd36a' : '#ff9a3c', 3, 4); }
+      else flare.scale.setScalar(0.01);
+    });
+  } catch (e) { console.warn('shipwright bay', e); }
+}; }
+
+// ---- dialogs: no more pages. The header, the picture and the buttons stay put; only the list scrolls ----
+pageRows = function () {
+  const rows = $('shopRows'), old = $('pgBar'); if (old) old.remove();
+  if (!rows || $('dlg').hidden) { if ($('fltBar')) $('fltBar').remove(); return; }
+  const all = [...rows.children].filter(c => c.id !== 'pgBar');
+  rowFilter(rows, all);
+  rows.classList.remove('paged'); all.forEach(c => c.classList.remove('pgOff'));
+  const kids = all.filter(c => !c.classList.contains('fltOff'));
+  const wordy = kids.some(c => (c.textContent || '').length > 64), two = kids.length > 3 && innerHeight < 520 && innerWidth > 640 && !wordy && !rows.querySelector('canvas') && getComputedStyle(rows).display !== 'grid';
+  rows.classList.toggle('cols2s', two);
+  rows.style.maxHeight = ''; const dlg = $('dlg'), rest = dlg.scrollHeight - rows.offsetHeight, mh = parseFloat(getComputedStyle(dlg).maxHeight) || innerHeight;
+  const room = Math.max(110, Math.min(innerHeight * 0.94 - rest - 24, mh - rest - 12));
+  if (rows.scrollHeight > room + 2) { rows.style.maxHeight = room + 'px'; rows.classList.add('scrollList'); } else rows.classList.remove('scrollList');
+};
+document.head.insertAdjacentHTML('beforeend', `<style>
+#shopRows.scrollList { overflow-y: auto !important; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scrollbar-width: thin; padding-right: 4px; mask-image: linear-gradient(#000 calc(100% - 18px), transparent); }
+#shopRows.cols2s { display: grid !important; grid-template-columns: 1fr 1fr; column-gap: 14px; align-items: start; }
+#shopRows.cols2s > div:not(.rowi) { grid-column: 1 / -1; }
+</style>`);
+
+// ---- backpack on a sideways phone: the item panel gets two columns (picture left, stats right) and its buttons stay pinned ----
+document.head.insertAdjacentHTML('beforeend', `<style>
+@media (max-height:560px) and (min-width:600px){
+ #inv .det{width:min(640px,72vw);display:grid;grid-template-columns:40% 1fr;grid-auto-rows:min-content;column-gap:14px;align-content:start;padding-bottom:0}
+ #inv .det > *{grid-column:2;min-width:0}
+ #inv .det > .big{grid-column:1;grid-row:1 / span 12;height:min(220px,calc(100vh - 40px));position:sticky;top:0;margin:0}
+ #inv .det > .close{position:absolute;right:8px;top:8px;z-index:2}
+ #inv .det > h3{padding-right:44px}
+ #inv .det > .acts{position:sticky;bottom:0;background:#1b1d21;padding:6px 0 8px;margin-top:4px;box-shadow:0 -8px 12px #1b1d21}
+ #inv .det table{font-size:12px}#inv .det td{padding:2px 0}#inv .det td:last-child{font-size:13px}#inv .det p{margin:3px 0;font-size:12px}
+}
+</style>`);
 
 
 // =================== STATE + SAVE ===================

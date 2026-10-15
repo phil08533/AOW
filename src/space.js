@@ -321,7 +321,7 @@ function spaceStep(dt, t) {
   if (player.pos.length() > 3200) player.pos.setLength(3200);
   F.mkT = (F.mkT || 0) - dt;
   for (const M of F_markers) { const d = player.pos.distanceTo(M.P.pos), surf = Math.max(0, d - M.P.r);
-    M.sp.position.copy(M.P.pos).add(V(0, M.P.r * 1.08 + d * 0.06, 0)); M.sp.scale.set(d * 0.75, d * 0.07, 1); M.sp.visible = surf > 60;
+    M.sp.position.copy(M.P.pos).add(V(0, M.P.r * 1.08 + d * 0.06, 0)); M.sp.scale.set(d * 0.75, d * 0.07, 1); M.sp.visible = surf > 60 && !!PREFS.planetTags;
     if (F.mkT <= 0) { const L = LEVELS[M.id], locked = !M.P.survey && !(L && planetOpen(M.id)); drawPlate(M.sp, bodyName(M.id), (surf > 999 ? (surf / 1000).toFixed(1) + ' km' : Math.round(surf) + ' m') + (M.P.survey ? ((S.flags && S.flags['scan_' + M.id]) ? ' · scanned' : ' · uncharted') : locked ? ' · locked' : ''), M.P.survey ? '#c8a0ff' : locked ? '#9aa1aa' : '#8fe3ff', null); } }
   if (F.mkT <= 0) F.mkT = 0.5;
   F.roll += ((-st * 0.5 - (F.lastYaw != null ? (player.yaw - F.lastYaw) / Math.max(dt, 1e-3) * 0.08 : 0)) - F.roll) * Math.min(1, dt * 4); F.lastYaw = player.yaw;
@@ -430,7 +430,7 @@ LEVELS.zeltac = {
   npcs: [
     { id: 'rell', name: 'Harbor Master Rell', role: 'Mission center', rig: 'elismas', make: () => recolor(makeElismas(), { '#9aa1aa': '#5d7f99' }), x: -9, z: -8, face: 0.5, idle: ["Twenty floors of trouble and it's all mine.", "The board always has work for a pilot."] },
     { id: 'ozzo', name: 'Ozzo', role: 'Zeltac Exchange · buys anything', rig: 'bughybrid', make: () => recolor(makeBugHybrid(), { '#5f8a3a': '#8a6fc4', '#3e5e26': '#5d4a8a' }), x: 9, z: -8, face: -0.5, shop: 'store', idle: ["Ore, chips, fish, fangs. Ozzo buys from every world."] },
-    { id: 'brakka', name: 'Brakka', role: 'Shipwright', rig: 'chunk', make: () => makeChunkMonster('#c9a43a', '#8a6a2a', '#e8c890', '#5d636c', false), x: 12, z: 4, face: -1.3, shipwright: true, idle: ["Lasers, hull plates, engines. Bring ore, I make your ship sing."] },
+    { id: 'brakka', name: 'Brakka', role: 'Shipwright', rig: 'chunk', make: () => makeChunkMonster('#c9a43a', '#8a6a2a', '#e8c890', '#5d636c', false), x: 20.2, z: 7.2, face: Math.PI / 2, shipwright: true, idle: ["Lasers, hull plates, engines. Bring ore, I make your ship sing."] },
     { id: 'tova', name: 'Dr. Tova', role: 'Hospital', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#3b4f7a', '#8fae6a', '#1e1a18', '#c8402f'), x: -12, z: 4, face: 1.3, heal: true, idle: ["Space sickness, raider burns, I've seen it all."] },
     { id: 'vault', name: 'Vault-9', role: 'Bank', rig: 'xr17', make: () => recolor(makeXR17(), { '#9aa1aa': '#c9a43a' }), x: 0, z: -14, face: 0, bank: true, idle: ["DEPOSITS. ARE. SAFE."] },
     { id: 'pell', name: 'Pell', role: 'Fish buyer', rig: 'civ', make: () => makeCivilian('#2a5a7a', '#2c2a28', '#c58a64', '#ffb347'), x: -5, z: 12, face: Math.PI * 0.8, shop: 'fish', rods: [1, 2, 3], idle: ["Space fish? No. But I'll buy yours."] }
@@ -455,8 +455,8 @@ LEVELS.zeltac = {
     const front = (x, z, ry, label, col) => { const g = new THREE.Group(); part(g, B(6, 4, 0.4), '#3a3d44', 0, 2, 0); part(g, B(5.6, 0.1, 1.4), toon(col), 0, 3.2, 0.7, 0.2);
       const sg = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 0.9), new THREE.MeshBasicMaterial({ map: signTex(label, '#0f1757', '#ffd75e') })); sg.position.set(0, 3.7, 0.22); g.add(sg); part(g, B(3, 1.0, 0.8), toon('#8a6a44', 'wood'), 0, 0.5, 1.0);
       g.position.set(x, 0, z); g.rotation.y = ry; props.add(g); };
-    front(-9, -11.5, 0.5, 'MISSIONS', '#c8402f'); front(9, -11.5, -0.5, 'EXCHANGE', '#8a6fc4'); front(15, 4, -Math.PI / 2, 'SHIPWRIGHT', '#c9a43a'); front(-15, 4, Math.PI / 2, 'HOSPITAL', '#e8e4dc'); front(0, -17.5, 0, 'VAULT', '#c9a43a');
-    for (const [x, z] of [[-9, -11.5], [9, -11.5], [0, -17.5]]) box(x, z, 3, 0.6); box(15, 4, 0.6, 3); box(-15, 4, 0.6, 3);
+    front(-9, -11.5, 0.5, 'MISSIONS', '#c8402f'); front(9, -11.5, -0.5, 'EXCHANGE', '#8a6fc4'); front(-15, 4, Math.PI / 2, 'HOSPITAL', '#e8e4dc'); front(0, -17.5, 0, 'VAULT', '#c9a43a');
+    for (const [x, z] of [[-9, -11.5], [9, -11.5], [0, -17.5]]) box(x, z, 3, 0.6); box(-15, 4, 0.6, 3);
     // the alien barricade, from the sketch
     for (let i = 0; i < 7; i++) { part(props, B(2.2, 1.6, 1.2), toon(i % 2 ? '#a07a4a' : '#5d636c', i % 2 ? 'wood' : 'panel'), -18 + i * 2.6, 0.8, -26, 0, (i % 3) * 0.2); part(props, new THREE.ConeGeometry(0.2, 0.8, 4), C.red, -18 + i * 2.6, 2, -26); }
     box(-10.2, -26, 9.4, 1); { const sg = new THREE.Mesh(new THREE.PlaneGeometry(6, 1), new THREE.MeshBasicMaterial({ map: signTex('ALIEN QUARTER · KEEP OUT', '#3a0e0e', '#ff6a5a') })); sg.position.set(-10, 3.2, -25.3); props.add(sg); }

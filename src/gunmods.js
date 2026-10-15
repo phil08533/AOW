@@ -72,22 +72,22 @@ function updateOrd(dt) {
 function openGunMods(who) {
   openDlg(who || 'Gun mod bench', 'Paint · rounds · ordnance');
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
-  let gid = S.gun, tab = 'paint';
+  let gid = S.gun;
   const set = (k, v) => { S.gunLook = S.gunLook || {}; S.gunLook[gid] = Object.assign(gunLook(gid), { [k]: v }); markDirty(); SFX.ui(); };
   const pv = () => setPreview(() => { const m = makeGunModel(gid); m.rotation.y = Math.PI / 2; const g = new THREE.Group(); g.add(m); return g; }, `${GUNS[gid].name} · ${PROJ[gunLook(gid).proj].name}`);
   const render = () => {
     rows.textContent = ''; const L = gunLook(gid);
-    $('dlgLine').textContent = tab === 'ord' ? `Ordnance: press Z (NADE on phone) to throw. ${ORD_MAX} charges, one back every ${ORD_RECHARGE}s. Selected: ${ORD[ordSel()].name}.` : `Modding the ${GUNS[gid].name}. Paint and rounds are saved per gun.`;
+    $('dlgLine').textContent = `Modding the ${GUNS[gid].name}. Paint and rounds are saved per gun.`;
     const row = (label, items) => { const r = document.createElement('div'); r.style.display = 'flex'; r.style.flexWrap = 'wrap'; r.style.gap = '6px'; r.style.margin = '6px 0'; const h = document.createElement('div'); h.textContent = label; h.style.width = '100%'; h.style.color = 'var(--gold)'; r.appendChild(h); items.forEach(it => r.appendChild(it)); rows.appendChild(r); };
     const btn = (text, on, dis, fn, col) => { const b = document.createElement('button'); b.className = 'pbtn' + (on ? ' go' : ''); b.style.padding = '5px 9px'; b.textContent = text; b.disabled = !!dis; if (col) { b.style.borderColor = col; b.style.color = col; } b.addEventListener('click', fn); return b; };
     row('Gun', S.guns.map(id => btn(GUNS[id].name.replace(/^Lvl \d+ /, ''), id === gid, false, () => { gid = id; render(); pv(); })));
-    if (tab === 'paint') row('Paint', Object.entries(GUN_PAINTS).map(([k, c]) => btn(k[0].toUpperCase() + k.slice(1), L.paint === k, false, () => { set('paint', k); render(); pv(); }, c || undefined)));
-    if (tab === 'rounds') row('Rounds (projectiles)', Object.entries(PROJ).map(([k, P]) => btn(S.lvl >= P.lvl ? `${P.name}` : `${P.name} · Lv ${P.lvl}`, L.proj === k, S.lvl < P.lvl, () => { set('proj', k); render(); pv(); }, P.col || undefined)));
-    if (tab === 'rounds') { const d = document.createElement('div'); d.className = 'empty'; d.textContent = Object.entries(PROJ).map(([k, P]) => `${P.name}: ${P.desc}`).join(' · '); rows.appendChild(d); }
-    if (tab === 'ord') { row('Ordnance', Object.entries(ORD).map(([k, O]) => btn(S.lvl >= O.lvl ? O.name : `${O.name} · Lv ${O.lvl}`, ordSel() === k, S.lvl < O.lvl, () => { S.ord = k; markDirty(); SFX.ui(); render(); }, O.col))); const d = document.createElement('div'); d.className = 'empty'; d.textContent = Object.values(ORD).map(O => `${O.name}: ${O.desc}`).join(' · '); rows.appendChild(d); }
+    row('Paint', Object.entries(GUN_PAINTS).map(([k, c]) => btn(k[0].toUpperCase() + k.slice(1), L.paint === k, false, () => { set('paint', k); render(); pv(); }, c || undefined)));
+    row('Rounds', Object.entries(PROJ).map(([k, P]) => btn(S.lvl >= P.lvl ? `${P.name}` : `${P.name} · Lv ${P.lvl}`, L.proj === k, S.lvl < P.lvl, () => { set('proj', k); render(); pv(); }, P.col || undefined)));
+    { const d = document.createElement('div'); d.className = 'empty'; d.style.margin = '0 0 4px'; const P = PROJ[L.proj]; d.textContent = P ? `${P.name}: ${P.desc}` : ''; rows.appendChild(d); }
+    { row('Ordnance · Z or NADE to throw', Object.entries(ORD).map(([k, O]) => btn(S.lvl >= O.lvl ? O.name : `${O.name} · Lv ${O.lvl}`, ordSel() === k, S.lvl < O.lvl, () => { S.ord = k; markDirty(); SFX.ui(); render(); }, O.col))); const d = document.createElement('div'); d.className = 'empty'; d.style.margin = '0 0 4px'; d.textContent = `${ORD[ordSel()].name}: ${ORD[ordSel()].desc}`; rows.appendChild(d); }
   };
   $('dlgActs').before(rows);
-  acts([['Paint', () => { tab = 'paint'; render(); }, true], ['Rounds', () => { tab = 'rounds'; render(); }], ['Ordnance', () => { tab = 'ord'; render(); }], ['Done', () => { closeDlg(); vmGunId = null; }]]);
+  acts([['Done', () => { closeDlg(); vmGunId = null; }, true]]);
   render(); showPreviewIn(rows); pv();
 }
 // station on the ship next to the saber mods

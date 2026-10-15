@@ -187,13 +187,15 @@ function hudStack() {
       const r = sub.getBoundingClientRect(), k = r.width / (sub.offsetWidth || 1) || 1, mp = $('map'), mb = mp && mp.offsetParent ? mp.getBoundingClientRect().bottom + 20 : 0, side = top.top - gap < mb, dx = (top.left + top.width / 2 - (side ? gap : 0)) - (r.left + r.width / 2), dy = (side ? top.top : top.top - gap) - r.top;
       if (Math.abs(dx) > 1) sub.style.setProperty('right', Math.round(cr - dx / k) + 'px', 'important'); if (Math.abs(dy) > 1) sub.style.setProperty('top', Math.round(ct + dy / k) + 'px', 'important'); }
     else ['right', 'left', 'top', 'bottom'].forEach(k => sub.style.removeProperty(k)); }
-  if (am && vit) { const v = vit.getBoundingClientRect(), w = am.offsetWidth, menu = $('pullTab'), lim = menu && menu.offsetParent ? menu.getBoundingClientRect().left - 8 : innerWidth * 0.5;
-    if (touch && !special && v.width && v.right + 10 + w <= lim) { am.style.setProperty('right', 'auto', 'important'); am.style.textAlign = 'left';
+  if (am && vit) { const v = vit.getBoundingClientRect(), menu = $('pullTab'), lim = menu && menu.offsetParent ? menu.getBoundingClientRect().left - 8 : innerWidth * 0.5, ks = am.getBoundingClientRect().width / (am.offsetWidth || 1) || 1, avail = lim - v.right - 10;
+    // one fixed width for every weapon (gun numbers, staff name and mana bar, melee), so the box never jumps when you switch
+    if (touch && !special && v.width && avail >= 130 * ks) { am.style.width = Math.round(Math.min(avail, 200 * ks) / ks) + 'px'; am.style.boxSizing = 'border-box'; am.classList.add('fixw'); am.style.setProperty('right', 'auto', 'important'); am.style.textAlign = 'left';
       const cur = parseFloat(am.style.left) || 0; am.style.setProperty('left', cur + 'px', 'important'); const r = am.getBoundingClientRect(), k = r.width / (am.offsetWidth || 1) || 1, want = v.right + 10;
       if (Math.abs(r.left - want) > 1) am.style.setProperty('left', Math.round(cur + (want - r.left) / k) + 'px', 'important'); }
-    else { am.style.removeProperty('left'); am.style.removeProperty('right'); am.style.textAlign = ''; } }
+    else { am.style.removeProperty('left'); am.style.removeProperty('right'); am.style.textAlign = ''; am.style.width = ''; am.classList.remove('fixw'); } }
 }
 setInterval(() => { try { if (state === 'play') hudStack(); } catch (_) {} }, 500);
+{ const st = document.createElement('style'); st.textContent = '#ammo.fixw .n > span:first-child, #ammo.fixw .g { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } #ammo.fixw .n > span:first-child { font-size: 18px !important; }'; document.head.appendChild(st); }
 addEventListener('resize', () => setTimeout(hudStack, 100));
 // ---- menu icons drawn from the game's own 3D models (2.13.11): rendered once into little transparent pictures, emoji stay as the fallback ----
 const MENU_ICONS = { tcShip: () => makeStarship(), tcVeh: () => makeBattleCar('#d23a2a'), tcBag: () => makeSalvageCrate(), tcJournal: () => makeBeacon(), tcSocial: () => makeTrooper(), tcSet: () => makeDroid() };
@@ -210,10 +212,51 @@ function menuIcons() {
   R.dispose(); try { R.forceContextLoss(); } catch (_) {}
 }
 document.head.insertAdjacentHTML('beforeend', `<style>
+body #tabWrap #menuDrop .hbtn.ico3d:not(.tabCat)::before { content: '' !important; display: block; width: min(76px, 15vh); height: min(76px, 15vh); margin: 0 auto 4px; flex: none; background: var(--ico) center / contain no-repeat; filter: drop-shadow(0 2px 3px rgba(0,0,0,.55)); font-size: 0 !important; }
 #menuDrop .tabCat.ico3d::before { content: '' !important; display: block; width: min(68px, 12vh); height: min(68px, 12vh); flex: none; background: var(--ico) center / contain no-repeat; filter: drop-shadow(0 2px 3px rgba(0,0,0,.55)); }
 @media (max-height: 460px) { body #tabWrap #menuDrop .tabCat { flex-direction: row !important; justify-content: flex-start !important; text-align: left !important; gap: 10px !important; padding: 6px 10px !important; overflow: hidden; }
   #menuDrop .tabCat.ico3d::before { width: min(60px, 16vh); height: min(60px, 16vh); } #menuDrop .tabCat::before { font-size: min(30px, 8vh) !important; }
   #menuDrop .tabCat small { font: 600 12px var(--ui, sans-serif) !important; letter-spacing: 0 !important; word-spacing: normal !important; text-align: left; display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } }
 @media (max-height: 300px) { #menuDrop .tabCat small { display: none !important; } }
 </style>`);
+// sub-menu icons too (2.14.2): every tablet button gets a little model instead of an emoji
+const icoG = (fn) => () => { const g = new THREE.Group(); fn(g); return g; };
+Object.assign(MENU_ICONS, {
+  shipBtn: () => makeDropship(), launchBtn: () => makeStarship('#c9a43a'),
+  galaxyBtn: icoG(g => { const p = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), new THREE.MeshLambertMaterial({ map: planetTex('earth') })); g.add(p); const r = new THREE.Mesh(new THREE.RingGeometry(1.35, 1.75, 40), new THREE.MeshLambertMaterial({ color: '#d8c890', side: THREE.DoubleSide })); r.rotation.set(-1.25, 0.2, 0); g.add(r); const m = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 8), toon('#a8a8b0', 'stone')); m.position.set(1.6, 0.6, 0.4); g.add(m); }),
+  buildBtn: icoG(g => { part(g, B(1.6, 0.35, 0.7), toon('#3b6fa8', 'cloth'), 0, 0.35, 0); part(g, B(1.6, 0.6, 0.2), toon('#3b6fa8', 'cloth'), 0, 0.75, -0.3); for (const s of [-1, 1]) part(g, B(0.2, 0.5, 0.7), toon('#2f5a8a', 'cloth'), s * 0.8, 0.55, 0); part(g, Cy(0.03, 0.03, 1.2, 6), '#2b2a2c', 1.2, 0.6, -0.2); part(g, Cy(0.18, 0.25, 0.25, 8), glow('#ffd36a'), 1.2, 1.25, -0.2); }),
+  vehBtn: () => makeTankModel('#5a6a3a'),
+  bikeBtn: icoG(g => { part(g, B(0.5, 0.3, 1.8), toon('#c8402f'), 0, 0.5, 0); part(g, B(0.4, 0.25, 0.6), toon('#2b2a2c'), 0, 0.75, -0.2); part(g, B(0.7, 0.06, 0.08), '#3a3d44', 0, 0.95, 0.6); part(g, B(0.3, 0.12, 0.05), glow('#4fd2ff'), 0, 0.6, 0.91); for (const z of [-0.6, 0.6]) part(g, Cy(0.32, 0.32, 0.12, 12), glow('#7fe8ff'), 0, 0.22, z); }),
+  droneBtn: () => makeDroneModel({}),
+  questBtn: icoG(g => { part(g, B(1.2, 1.5, 0.04), toon('#efe0b8', 'cloth'), 0, 0, 0); for (const y of [-0.8, 0.8]) part(g, Cy(0.12, 0.12, 1.45, 10), toon('#8a5a2c', 'wood'), 0, y, 0.02, 0, 0, Math.PI / 2); for (let i = 0; i < 4; i++) part(g, B(0.8 - (i % 2) * 0.25, 0.06, 0.02), '#6a4a2a', -0.05, 0.45 - i * 0.28, 0.04); part(g, B(0.22, 0.22, 0.02), '#c8402f', 0.38, -0.5, 0.05, 0, 0, 0.78); }),
+  codexBtn: icoG(g => { part(g, B(1.3, 0.22, 1.7), toon('#7a2a2a', 'cloth'), 0, 0, 0); part(g, B(1.2, 0.18, 1.6), toon('#efe7d6', 'cloth'), 0.05, 0.02, 0); part(g, B(1.3, 0.04, 1.7), toon('#7a2a2a', 'cloth'), 0, 0.13, 0); part(g, B(0.5, 0.02, 0.5), glow('#ffd36a'), 0, 0.16, 0); }),
+  newsBtn: icoG(g => { part(g, B(1.5, 1.0, 0.1), toon('#2b2a2c', 'panel'), 0, 0, 0); part(g, B(1.36, 0.86, 0.02), glow('#1e5a7a'), 0, 0, 0.06); for (let i = 0; i < 4; i++) part(g, B(i ? 1.0 : 0.6, 0.08, 0.01), glow(i ? '#8fe3ff' : '#ffd36a'), i ? 0 : -0.3, 0.28 - i * 0.18, 0.08); }),
+  playersBtn: icoG(g => { const a = makeTrooper(), b = makeTrooper(); a.position.x = -0.35; b.position.set(0.35, 0, -0.3); g.add(a, b); }),
+  chatBtn: () => makeHoverBot ? makeHoverBot() : makeDroid(),
+  photoBtn: icoG(g => { part(g, B(1.4, 0.9, 0.6), toon('#2b2a2c', 'panel'), 0, 0, 0); part(g, Cy(0.34, 0.38, 0.4, 16), toon('#4a4d54', 'panel'), 0, 0, 0.45, Math.PI / 2); part(g, Cy(0.24, 0.24, 0.05, 16), glow('#5fd0ff'), 0, 0, 0.66, Math.PI / 2); part(g, B(0.3, 0.15, 0.2), '#3a3d44', -0.4, 0.52, 0); part(g, B(0.16, 0.1, 0.05), glow('#ff4a3a'), 0.5, 0.3, 0.31); }),
+  danceBtn: icoG(g => { g.add(new THREE.Mesh(new THREE.SphereGeometry(0.8, 10, 8), new THREE.MeshLambertMaterial({ color: '#cfd8e8', flatShading: true }))); for (let i = 0; i < 10; i++) { const a = i * 2.4, y = Math.sin(i * 1.7) * 0.6; const t = part(g, B(0.14, 0.14, 0.02), glow(['#ff4fd8', '#5fd0ff', '#ffd36a'][i % 3]), Math.cos(a) * Math.sqrt(0.64 - y * y) * 1.01, y, Math.sin(a) * Math.sqrt(0.64 - y * y) * 1.01); t.lookAt(0, 0, 0); } part(g, Cy(0.03, 0.03, 0.6, 5), '#3a3d44', 0, 1.1, 0); }),
+  stGfx: icoG(g => { part(g, B(1.6, 1.0, 0.1), toon('#2b2a2c', 'panel'), 0, 0.3, 0); part(g, B(1.46, 0.86, 0.02), glow('#3a7ab8'), 0, 0.3, 0.06); part(g, B(0.5, 0.3, 0.02), glow('#ffb347'), -0.3, 0.2, 0.08); part(g, B(0.4, 0.5, 0.02), glow('#6fdc5a'), 0.35, 0.3, 0.08); part(g, Cy(0.06, 0.06, 0.4, 6), '#3a3d44', 0, -0.4, 0); part(g, B(0.7, 0.06, 0.4), '#3a3d44', 0, -0.6, 0); }),
+  stSnd: icoG(g => { part(g, B(0.9, 1.4, 0.7), toon('#2b2a2c', 'panel'), 0, 0, 0); for (const [y, r] of [[0.3, 0.32], [-0.38, 0.2]]) { part(g, Cy(r, r, 0.04, 16), '#4a4d54', 0, y, 0.36, Math.PI / 2); part(g, Cy(r * 0.4, r * 0.4, 0.06, 12), glow('#5fd0ff'), 0, y, 0.38, Math.PI / 2); } }),
+  stCtl: icoG(g => { part(g, B(1.3, 0.35, 0.7), toon('#3a3d44', 'panel'), 0, 0, 0); for (const s of [-1, 1]) part(g, B(0.4, 0.3, 0.75), toon('#3a3d44', 'panel'), s * 0.62, -0.1, 0.12, 0.3, 0, s * 0.2); part(g, Cy(0.1, 0.1, 0.1, 10), '#1e1c22', -0.32, 0.22, 0.05); ['#ff4a3a', '#6fdc5a', '#5fd0ff', '#ffd36a'].forEach((c, i) => part(g, Cy(0.06, 0.06, 0.08, 8), glow(c), 0.35 + Math.cos(i * 1.57) * 0.12, 0.22, 0.05 + Math.sin(i * 1.57) * 0.12)); }),
+  stGame: () => makeDroid(),
+  helpBtn: icoG(g => { part(g, B(1.8, 0.12, 0.7), toon('#2b2a2c', 'panel'), 0, 0, 0); for (let r = 0; r < 3; r++) for (let c = 0; c < 9; c++) part(g, B(0.15, 0.06, 0.15), toon(r === 2 && c > 2 && c < 6 ? '#8a8f98' : '#5d636c', 'panel'), -0.72 + c * 0.18, 0.08, -0.2 + r * 0.2); }),
+  fullBtn: icoG(g => { for (const [x, y] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) { part(g, B(0.5, 0.12, 0.12), glow('#8fe3ff'), x * 0.55, y * 0.45, 0); part(g, B(0.12, 0.4, 0.12), glow('#8fe3ff'), x * 0.74, y * 0.3, 0); } part(g, B(1.2, 0.7, 0.05), toon('#1e3a5a', 'panel'), 0, 0, -0.1); }),
+  unstuckBtn: () => makeBeacon(),
+  logoutHudBtn: icoG(g => { part(g, B(1.0, 1.8, 0.12), toon('#5a3a22', 'wood'), 0, 0, 0); part(g, B(1.2, 2.0, 0.08), toon('#3a3d44', 'panel'), 0, 0.05, -0.08); part(g, Cy(0.06, 0.06, 0.1, 8), glow('#ffd36a'), 0.35, -0.05, 0.1, Math.PI / 2); part(g, B(0.6, 0.5, 0.02), glow('#ffb347'), 0, 0.5, 0.07); })
+});
 setTimeout(() => { try { menuIcons(); } catch (_) {} }, 1500);
+// ---- one weapon cycle (2.14.2): tap the weapon box to go gun → staff → melee → gun; the separate SWAP button is gone on touch ----
+function cycleWeapon() {
+  if (state !== 'play' || dlgOpen || LEVEL.fly || S.riding) return;
+  const st = otherSlot();
+  if (handMelee()) { if (isStaffId(S.gun) && st) swapWeapon(); else swapHand(); return; }
+  if (!isStaffId(S.gun) && st && !S.dual) { swapWeapon(); return; }
+  swapHand();
+}
+const cycleNext = () => handMelee() ? '◈ gun' : (!isStaffId(S.gun) && otherSlot() && !S.dual) ? '✦ staff' : '⚔ melee';
+document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#ammo') || state !== 'play' || dlgOpen || LEVEL.fly) return; e.stopPropagation(); e.preventDefault(); cycleWeapon(); }, true);
+{ const _oh = offHud; offHud = function (on) { if (!TOUCH || (on && GUNS[OFF.id]) || LEVEL.fly || state !== 'play') return _oh(on); const t = `<span class="k">tap ⇄</span> ${cycleNext()}`; if (t !== offTxt) { offTxt = t; offEl.innerHTML = t; } }; }
+// RELOAD drops into the slot SWAP used to hold, so the button column has no gap
+{ const st = document.createElement('style'); st.textContent = 'body.touch #tMelee { display: none !important; }'; document.head.appendChild(st);
+  const fix = () => { const m = $('tMelee'), r = $('tReload'); if (!m || !r) return; if (!TOUCH) return; r.style.removeProperty('bottom'); r.style.removeProperty('right'); const cm = getComputedStyle(m); r.style.setProperty('bottom', cm.bottom, 'important'); r.style.setProperty('right', cm.right, 'important'); };
+  if (TOUCH) document.body.classList.add('touch'); addEventListener('resize', () => setTimeout(fix, 50)); setTimeout(fix, 300); }

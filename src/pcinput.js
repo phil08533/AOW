@@ -40,9 +40,9 @@ window.addEventListener('keydown', e => {
 // show the number next to each menu option
 { const _a = acts; acts = function (list) { const r = _a(list); if (!TOUCH) { let k = 0; $('dlgActs').querySelectorAll('button').forEach(b => { if (!b.disabled && ++k <= 9) b.dataset.k = k; }); } return r; }; }
 { const st = document.createElement('style'); st.textContent = '#dlgActs .pbtn[data-k]::after{content:" " attr(data-k);font-size:11px;opacity:.6;margin-left:4px;padding:0 4px;border:1px solid currentColor;border-radius:3px}'; document.head.appendChild(st); }
-// mouse wheel swaps weapons: gun ⇄ staff when you carry both, otherwise gun ⇄ melee
+// mouse wheel cycles weapons: gun → staff → melee (2.14.2)
 { let wheelT = 0; stage.addEventListener('wheel', e => { if (TOUCH || state !== 'play' || uiBusy() || LEVEL.fly) return; e.preventDefault(); const now = performance.now(); if (now - wheelT < 220) return; wheelT = now;
-  if (otherSlot()) swapWeapon(); else swapHand(); }, { passive: false }); }
+  cycleWeapon(); }, { passive: false }); }
 // I opens the bag too, like most games
 window.addEventListener('keydown', e => { if (e.code === 'KeyI' && !e.repeat && state === 'play' && !dlgOpen && !chatOpen()) openBag(); });
 { let pausedAt = 0; document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement) pausedAt = performance.now(); });

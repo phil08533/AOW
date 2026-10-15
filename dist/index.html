@@ -17991,6 +17991,116 @@ const burpVoBuf = new Map(); let burpSrc = null;
     .then(a => ac.decodeAudioData(a)).then(buf => { burpVoBuf.set(id, buf); if (performance.now() - t0 < 6000) play(buf); }).catch(() => _bs(text));
 }; }
 
+// =================== MORE B.U.R.P.: lines for the quiet moments, and the triggers that were missing ===================
+// fishing, the gun range, the Halo Line, race results, Velocity, standing around, and low health. The trailer lines live here too.
+const BURP_MORE = {"fish": ["A fish. You have defeated a fish. Somewhere, a bard is not writing about this.","Nice catch. I'll log it under wildlife you outsmarted. It's a short list.","That fish had a family. Kidding. Fish don't do families. They do schools. Mostly dropouts.","Reel it in slowly. Fish can smell desperation. So can I.","Ooh, that one glows. Don't lick it. I mean it this time.","Fishing. The only sport where the opponent doesn't know it's playing.","Logged. Weight: respectable. Smell: under investigation.","Another one for the collection. I've named it Steve. They're all Steve."],"range": ["Drill complete. The targets have filed a formal complaint.","Good shooting. Now do it while something shoots back.","Those targets are made of foam and regret. Mostly regret.","Nice grouping. If an enemy ever stands perfectly still in a lane, we're unstoppable.","Free ammo on the range. Please stop trying to smuggle it out in your pockets.","I've updated your file. Can hit things that pop up politely.","Accuracy noted. I'll bring it up next time you miss a barn."],"halo": ["Around the whole planet in one breath. My gyros need a minute.","The Hydrans waved at you. Probably. It's hard to tell with jellyfish.","Top speed logged. Your eyeballs are now slightly flatter.","Fun fact. The Halo Line was built for cargo. You are technically cargo.","Recalibrating. Which way is down? Never mind. All of them.","We went through a glass tube under a sea at nine hundred kilometers an hour. On purpose.","Again? Sure. I didn't need that lunch module anyway."],"race_win": ["Gold! I'd hug you, but I'm a voice in a box. Consider yourself verbally squeezed.","First place. The other drivers are blaming the rain. The rain is blaming you.","Gold medal. I'm adding it to the trophy shelf. We don't have a trophy shelf. I'm adding one.","You won! Quick, act like you meant to do that.","Track record smashed. Mostly the record. Some of the track.","Victory. Gus will say it was his tuning. Gus says that about everything."],"race_lose": ["Not gold. But you finished, and the car is still mostly car shaped. Progress.","Silver is just gold that didn't try as hard. Kidding. Mostly.","Good news, you finished. Bad news, so did everyone else. First.","I've reviewed the replay. Recommendation: fewer walls.","Next time, try pointing the car at the gates. Revolutionary, I know.","Bronze! It's like gold, but humble."],"planet_speedway": ["Velocity. Magnet storm, rainbow rain, no speed limits. My kind of bad idea.","Welcome to Velocity. The ground is a magnet, the sky is angry, and the rain is technically someone's breath.","That rain is Hydran breath from the city under the sea. Try not to think about it. I already did. Too late.","The cars float here. So will you, if you stand under that lightning.","Velocity's motto is faster. Their second motto is also faster. Nobody reads the third.","Pit Row is the only dry spot on the planet. Guess where all the gossip lives."],"idle": ["I've alphabetized the cargo hold. Twice. Once by smell.","Still here? Great. I was just about to run out of things to judge.","I've been timing how long you've stood still. I'm calling it a hobby.","I have nine thousand backup protocols. None of them cover boredom.","Shall we go do something, or should I start reading the terms and conditions out loud?","Somewhere out there, a bounty is getting away. Just saying.","If you're waiting for a sign, this is it. The sign says go shoot something.","I'm composing a sad song about standing still. Verse one: you. Standing. There.","Standing still is a valid strategy. For trees.","My cooling fans just sighed. I didn't tell them to. They did it on their own."],"low_hp": ["Your health just went red. That's my least favorite color on you.","Medkit. Now. I am not writing another letter to your mother.","You're running on spite and fumes. The fumes are winning.","If you die, I inherit the ship. Please don't make that sound so tempting.","That noise you hear is your health bar crying.","Back off, heal up, then make them regret it. In that order."],"trailer": ["Hello. I'm B.U.R.P., your ship's AI. I was installed as a punishment. Nobody says whose.","This is Earth. The dogs are rabid and the property values are zero.","You get forty guns and staffs. Please point the dangerous end at the bad guys this time.","Spells, too. Fireball. Chain lightning. No reloading. Insufferably smug.","This is your ship. You build it room by room. One has a pool table. Priorities, Trooper.","Out here you mine asteroids, board pirate ships, and call it salvage.","Hover cars on a glass planet in a lightning storm. Brakes are a suggestion.","You can also fish. Twenty-six species. I've named them all Steve.","Eight chapters. Thirteen bosses. One very large eye. It is watching you buffer.","Other troopers are out there too. Some are even competent.","Free. Runs in your browser. I'll be on the bridge, judging you."]};
+for (const k in BURP_MORE) { if (k === 'trailer') continue; BURP[k] = (BURP[k] || []).concat(BURP_MORE[k]); }
+const burpMaybe = (k, p) => { if (Math.random() < p && typeof burp === 'function') setTimeout(() => burp(k), 700); };
+// a fish on the line
+if (typeof fshCatchShow === 'function') { const _f = fshCatchShow; fshCatchShow = function (F) { const r = _f.apply(this, arguments); burpMaybe('fish', 0.35); return r; }; }
+// a finished range drill
+if (typeof rangeEnd === 'function') { const _f = rangeEnd; rangeEnd = function (why) { const was = !!RANGE.drill; const r = _f.apply(this, arguments); if (was && !why) burpMaybe('range', 0.7); return r; }; }
+// out of the Halo Line (the very first ride has its own line on the way in)
+if (typeof haloExit === 'function') { const _f = haloExit; haloExit = function () { const r = _f.apply(this, arguments); if ((S.halo && S.halo.runs) > 1) burpMaybe('halo', 0.6); return r; }; }
+// a Velocity race result
+if (typeof finishRace2 === 'function') { const _f = finishRace2; finishRace2 = function () { const T = RC.T, R = S.racing, w0 = T && R && R.wins ? (R.wins[RC.tid] || 0) : 0; const r = _f.apply(this, arguments); const won = R && R.wins && (R.wins[RC.tid] || 0) > w0; burpMaybe(won ? 'race_win' : 'race_lose', 0.8); return r; }; }
+// low health and idling: both lists existed but nothing ever said them
+const BURPQ = { lowT: -999, lowWas: false, act: 0, idleT: 0 };
+addEventListener('keydown', () => { BURPQ.act = performance.now(); }, true); addEventListener('pointerdown', () => { BURPQ.act = performance.now(); }, true);
+{ const _st = step; step = function (dt) { _st(dt);
+  if (typeof player === 'undefined' || !LEVEL || player.dead || (typeof state !== 'undefined' && state !== 'play')) return; const now = performance.now();
+  const low = player.hp > 0 && player.hp < maxHp() * 0.25 && !LEVEL.fly; if (low && !BURPQ.lowWas && now - BURPQ.lowT > 60000) { BURPQ.lowT = now; burp('low_hp'); } BURPQ.lowWas = low;
+  if (!BURPQ.act) BURPQ.act = now; if (now - BURPQ.act > 50000 && now - BURPQ.idleT > 150000 && !dlgOpen && !(RC && RC.on)) { BURPQ.idleT = now; burp('idle'); } }; }
+
+// =================== THE B.U.R.P. TRAILER: a 60 second tour of the real game, narrated by the ship's AI ===================
+// Codex → Cinema → B.U.R.P. Trailer. It visits the real levels, so it is also the thing to screen-record for ads.
+// Nothing sticks: the save is snapshotted before and put back after, and you land where you started.
+const BTR = { on: false };
+const btrV = (x, y, z) => new THREE.Vector3(x, y, z);
+function btrOrbit(A, r, h, ang, lookH) { camera.position.set(A.x + Math.sin(ang) * r, A.y + h, A.z + Math.cos(ang) * r); camera.lookAt(A.x, A.y + (lookH == null ? 1.2 : lookH), A.z); }
+function btrFace() { const e = btrNearest(e => true, player.pos); if (!e) return; const t = e.obj.position, d = player.pos.distanceTo(t); if (d > 16) { const k = (d - 14) / d; player.pos.x += (t.x - player.pos.x) * k; player.pos.z += (t.z - player.pos.z) * k; player.pos.y = floorAt(player.pos.x, player.pos.z); } BTR.faceYaw = Math.atan2(-(t.x - player.pos.x), -(t.z - player.pos.z)); }
+function btrNearest(pred, from) { let best = null, bd = 1e9; for (const e of enemies) { if (e.dead || !pred(e)) continue; const d = e.obj.position.distanceTo(from); if (d < bd) { bd = d; best = e; } } return best; }
+// each shot: the level it needs, how long it runs, and either a camera move or a first-person beat
+const BTR_SHOTS = [
+  { lvl: 'ship', dur: 5, boot: true, cam: (k, t, A) => btrOrbit(A, 4.6 - k * 1.6, 1.5 + k * 0.3, 2.4 + k * 0.5, 1.3) },
+  { lvl: 'earth', dur: 5.2, setup: () => { const e = btrNearest(e => /dog/i.test(e.sp && e.sp.type || ''), player.pos); return e ? e.obj.position : null; },
+    cam: (k, t, A) => btrOrbit(A, 7 - k * 2.5, 0.7, 0.6 - k * 0.5, 0.6) },
+  { lvl: 'earth', dur: 6, fp: ['b5', 'sg8', 'l28', 'lsaber', 'master'], setup: () => { SAFES.length = 0; btrFace(); return null; }, yaw: 0.05 },
+  { lvl: 'earth', dur: 5, fp: ['m_ember', 'm_storm', 'm_void', 'w_20'], setup: () => { SAFES.length = 0; btrFace(); return null; }, yaw: -0.2 },
+  { lvl: 'ship', dur: 6, cam: (k, t, A) => btrOrbit(A, 7, 3.2 - k * 1.2, 0.3 + k * 1.4, 1.2) },
+  { lvl: 'space', dur: 6, cam: (k, t, A) => btrOrbit(A, 16 - k * 5, 4 + k * 2, 3.6 - k * 1.1, 0) },
+  { lvl: 'speedway', dur: 6, setup: () => { if (VEL.parked) { const c = VEL.parked.position; player.pos.set(c.x + 1, c.y, c.z); } toggleFreeDrive(); player.pos.set(30, 0.3, 150); player.pos.y = floorAt(30, 150); player.yaw = 0.3; VEL.cam = 1; VEL.cp = null; return null; },
+    tick: (k, t) => { keys.KeyW = true; keys.ShiftLeft = t > 1.2; keys.KeyD = Math.sin(t * 1.3) > 0.55; keys.KeyA = Math.sin(t * 1.3) < -0.55; if (t > 3.6) VEL.cam = 0; } },
+  { lvl: 'earth', dur: 5, fp: [], pitch: -0.25, yaw: 2.4, setup: () => { BTR.fish0 = S.fishBest ? Object.assign({}, S.fishBest) : null; setTimeout(() => { if (BTR.on) try { fshCatchShow({ fish: 'voidgulper', table: 'void' }); } catch (_) {} }, 600); return null; } },
+  { lvl: 'vector', dur: 7, setup: () => { let e = btrNearest(e => e.sp && e.sp.type === 'watcher', player.pos); if (!e && Z.maw) { try { makeEnemy({ zone: 'maw', type: 'watcher', n: 1, lv: [50, 50], at: [0, 2] }); } catch (_) {} e = btrNearest(e => e.sp && e.sp.type === 'watcher', player.pos); } BTR.boss = e; return e ? e.obj.position : null; },
+    tick: () => { const e = BTR.boss; if (e && e.obj) { e.obj.visible = true; const f = floorAt(e.obj.position.x, e.obj.position.z) + 6; if (e.obj.position.y < f) e.obj.position.y += (f - e.obj.position.y) * 0.08; } },
+    cam: (k, t, A) => btrOrbit(A, 26 - k * 12, 3 + k * 2, Math.PI - 0.35 + k * 0.3, 1) },
+  { lvl: 'capitone', dur: 4.5, cam: (k, t, A) => btrOrbit(A, 26 - k * 6, 12 - k * 5, 1.8 + k * 0.7, 1.5) },
+  { title: true, dur: 5.5 },
+];
+function btrStart() {
+  if (BTR.on || state !== 'play') return;
+  const lines = (typeof BURP_MORE !== 'undefined' && BURP_MORE.trailer) || [];
+  BTR.on = true; BTR.i = -1; BTR.snap = JSON.stringify(S); BTR.home = { lvl: LEVEL.id, at: { x: player.pos.x, z: player.pos.z, yaw: player.yaw }, hp: player.hp, gun: S.gun, ammo: player.ammo }; BTR.lines = lines;
+  const ov = document.createElement('div'); ov.id = 'btrOv'; ov.style.cssText = 'position:fixed;inset:0;z-index:45;pointer-events:none;font-family:system-ui,sans-serif';
+  ov.innerHTML = '<div style="position:absolute;left:0;right:0;top:0;height:10vh;background:#000"></div><div style="position:absolute;left:0;right:0;bottom:0;height:10vh;background:#000"></div>'
+    + '<div class="bk" style="position:absolute;inset:0;background:#000;opacity:1;transition:opacity .35s"></div>'
+    + '<div class="cc" style="position:absolute;left:7%;right:7%;bottom:12vh;text-align:center;color:#fff;font-weight:600;font-size:clamp(15px,3.4vw,24px);text-shadow:0 2px 6px #000,0 0 2px #000;opacity:0;transition:opacity .3s"><span style="color:#6fdc5a;letter-spacing:2px;font-size:.7em;display:block;margin-bottom:4px">B.U.R.P.</span><span class="tx"></span></div>'
+    + '<div class="tt" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .8s;color:#ffd75e;text-align:center"><div style="font-size:clamp(13px,2.4vw,18px);letter-spacing:6px;color:#9fe8ff">ART OF WAR</div><div style="font-size:clamp(34px,8vw,76px);font-weight:900;letter-spacing:3px;text-shadow:0 0 24px #ff6a3a">SETTING SUN</div><div style="margin-top:14px;font-size:clamp(14px,2.6vw,20px);color:#fff;letter-spacing:2px">Free · Play in your browser</div></div>';
+  const skip = document.createElement('button'); skip.className = 'pbtn'; skip.textContent = 'Skip ▸'; skip.style.cssText = 'position:fixed;right:16px;bottom:calc(10vh + 14px);z-index:46;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.5);color:#fff';
+  skip.addEventListener('click', () => btrEnd()); document.body.append(ov, skip); BTR.ov = ov; BTR.skip = skip;
+  if (document.pointerLockElement) document.exitPointerLock();
+  btrNext();
+}
+function btrNext() {
+  if (!BTR.on) return; BTR.i++; const sh = BTR_SHOTS[BTR.i]; if (!sh) return btrEnd();
+  const ov = BTR.ov, bk = ov.querySelector('.bk'), cc = ov.querySelector('.cc'); cc.style.opacity = 0; BTR.sh = null;
+  const go = () => {
+    if (!BTR.on) return; let A = null;
+    try { if (sh.lvl && LEVEL.id !== sh.lvl) loadLevel(sh.lvl); } catch (e) { console.warn('trailer load', e); }
+    BTR.prev = sh.lvl || BTR.prev;
+    try { A = sh.setup ? sh.setup() : null; } catch (e) { console.warn('trailer setup', e); }
+    BTR.A = A || player.pos.clone(); BTR.t = 0; BTR.sh = sh; BTR.gi = 0;
+    if (sh.fp) { player.yaw = (BTR.faceYaw || 0) + (sh.yaw || 0); BTR.faceYaw = 0; player.pitch = sh.pitch || 0.02; }
+    $('hud').hidden = true; $('touch').hidden = true;
+    const line = BTR.lines[BTR.i]; if (line) setTimeout(() => { if (!BTR.on) return; ov.querySelector('.tx').textContent = line; cc.style.opacity = 1; try { burpSay(line); } catch (_) {} }, sh.title ? 400 : 250);
+    if (sh.title) { ov.querySelector('.tt').style.opacity = 1; } else setTimeout(() => { bk.style.opacity = 0; }, 80);
+  };
+  // dip to black while a level loads, so the cut is clean
+  if (sh.title) { bk.style.opacity = 1; setTimeout(go, 400); } else if (BTR.i === 0 || sh.lvl !== BTR.prev || sh.setup) { bk.style.opacity = 1; setTimeout(go, 380); } else go();
+}
+function btrEnd() {
+  if (!BTR.on) return; BTR.on = false; BTR.sh = null;
+  try { if (typeof fshCatchHide === 'function') fshCatchHide(); } catch (_) {}
+  try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (_) {}
+  for (const k of ['KeyW', 'KeyA', 'KeyD', 'ShiftLeft']) keys[k] = false;
+  // put the save back exactly as it was, then go home
+  try { const snap = JSON.parse(BTR.snap); for (const k of Object.keys(S)) delete S[k]; Object.assign(S, snap); } catch (e) { console.warn('trailer restore', e); }
+  const H = BTR.home; try { loadLevel(H.lvl, { at: H.at }); } catch (e) { loadLevel('earth'); }
+  player.hp = H.hp; player.ammo = H.ammo; S.gun = H.gun; player.cool = 0; player.reloading = 0;
+  if (BTR.hid) { for (const b of BTR.hid) b.style.visibility = ''; BTR.hid = null; }
+  if (BTR.ov) BTR.ov.remove(); if (BTR.skip) BTR.skip.remove(); BTR.ov = BTR.skip = null;
+  setState('play'); vm.visible = true; markDirty();
+}
+// no pausing on set: Esc skips instead
+{ const _ss = setState; setState = function (st) { if (BTR.on && st === 'pause') return; return _ss.apply(this, arguments); }; }
+addEventListener('keydown', e => { if (BTR.on && e.code === 'Escape') btrEnd(); });
+// nothing hurts you on set, and the random lines hush while B.U.R.P. is narrating
+{ const _h = hurt; hurt = function () { if (BTR.on) return; return _h.apply(this, arguments); }; }
+{ const _b = burp; burp = function () { if (BTR.on) return; return _b.apply(this, arguments); }; }
+{ const _st = step; step = function (dt) {
+  _st(dt);
+  if (!BTR.on || !BTR.sh) return; const sh = BTR.sh; BTR.t += dt; const k = Math.min(1, BTR.t / sh.dur);
+  player.hp = maxHp(); $('hud').hidden = true; for (const id of ['velSpd', 'zone']) { const el = $(id); if (el) { const box = id === 'velSpd' ? el.parentElement : el; if (box && box.style.visibility !== 'hidden') { box.style.visibility = 'hidden'; (BTR.hid = BTR.hid || new Set()).add(box); } } } const tst = $('toast'); if (tst) tst.style.opacity = 0;
+  if (sh.tick) sh.tick(k, BTR.t);
+  if (sh.fp) { vm.visible = true; player.ammo = 99; player.reloading = 0; if (player.mana != null) player.mana = 999;
+    if (sh.fp.length) { const gi = Math.min(sh.fp.length - 1, Math.floor(BTR.t / (sh.dur / sh.fp.length))); if (GUNS[sh.fp[gi]] && S.gun !== sh.fp[gi]) { S.gun = sh.fp[gi]; player.cool = 0; } player.yaw += Math.sin(BTR.t * 0.9) * dt * 0.25; try { fire(); } catch (_) {} } }
+  else vm.visible = false;
+  if (sh.cam) sh.cam(k, BTR.t, BTR.A);
+  if (BTR.t > sh.dur) { BTR.sh = null; btrNext(); }
+}; }
+if (typeof SCENES !== 'undefined') SCENES.push(['burptrailer', '🤖 B.U.R.P. Trailer', () => true, () => setTimeout(btrStart, 200)]);
+
 
 // =================== STATE + SAVE ===================
 const COLORS = ['#6f7a3e', '#3b4f7a', '#8a3a2e', '#2f2c33', '#7a6a3a'];

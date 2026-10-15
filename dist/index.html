@@ -329,7 +329,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.13.7</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.13.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -16662,7 +16662,8 @@ const UPDATES = [
   { id: 96, title: '2.13.4 · Guns, a gun range and a real B.U.R.P.', items: ['Every gun got a makeover: sights, a light strip in its color, a muzzle brake and a slide that kicks back when you fire.', 'Alien guns now have a floating energy core, spinning rings and glowing vents, and burst a ring of their own color when fired. Regular guns flip out brass casings.', 'Other players now see your gun with its paint, and see it flash and fire.', 'New ship room: the Gun Range (1,200 cr and 6 circuits). It is the one place on the ship you can shoot, with free ammo, pop-up targets and a 30 second drill. Beat your best score for credits.', 'B.U.R.P. has a real robot voice now instead of the browser speech.'] },
   { id: 97, title: '2.13.5 · Cockpits, radio and the Halo Line', items: ["Ship cockpit: press C in space (or the camera button) to fly from the pilot's seat, with a live radar, hull and weapons screens, and a stick and throttle that move", "Ship ammo: 1 Lasers, 2 Plasma, 3 Flak, 4 homing Missiles (6 in the rack, they reload), 5 EMP that freezes raiders around you", "Radio: press R (or the radio button) in your ship or Velocity car to flip through four stations made from the soundtrack", "Bobbleheads: 9 to earn. They ride on your dash and wobble when you turn. N swaps them", "Velocity car cabin rebuilt: a live gauge cluster, a real steering wheel, a center screen with radio and traffic radar, vents, doors, mirror and storm-colored mood lights", "The Halo Line on Velocity: drive into the gates at the east and west edges and ride a magnet tube around the planet, past the glass window onto Prism Deep, the rainbow city of the Hydrans", "Velocity: lighter layered rain, a dark wet road with puddles, cars that hover on the magnet field and shed water, smoother steering at speed", "Robot City's Hover Cup ring race is retired. Zip now sends you to Pit Row on Velocity", "The Starlight Lounge bass now thumps, heavier near the speakers", "Other pilots in space are easier to spot: beacons, readable name tags, and ships that pitch and bank", "B.U.R.P.: 67 new recorded lines (fishing, the gun range, races, Velocity, low health, standing around) and a 60-second B.U.R.P. trailer in Codex, Cinema", "Balance: weak guns and staffs hit harder, and bounty rewards were evened out"] },
   { id: 98, title: '2.13.6 · A cleaner Velocity, the Halo Run and fixes', items: ["Velocity driving screen: health, drone, pet, heal and the raid tracker step aside while you drive, and the drive hints fade after ten seconds", "Speed now reads in mph, and the hover cars hum a deep magnetic drone", "Drift, Boost, Use and Camera sit together in the bottom-right corner", "Halo Run: a new race out the east gate, all the way around the planet in the Halo Line, and home through the west gate", "Blacklights over the Halo Line ramps, and the tunnel barrels now run back into the cliff wall", "Your car has a proper floor and footwell, so the road no longer shows through under the dash", "The radio lives in your ship: turn it on at the console by the bridge window. It plays on board and while you fly; everywhere else you hear the normal soundtrack", "The hall viewport now looks out on open space: a field of stars and the odd ship passing by (kept light so phones stay smooth)", "Lab: a live countdown to the next dose, a sign over the vat, and switching recipes no longer throws away finished doses", "Raid tracker button is now a Settings switch (Game tab), off by default. Raid pop-ups still show", "Galaxy map and pause menu fit sideways phones"] },
-  { id: 99, title: '2.13.7 · Fire everything, hold to heal, and a shipwright bay', items: ["One Fire button now fires every weapon your ship has fitted. The ammo picker is gone; buy plasma, flak, missiles and EMP as weapon mounts from Brakka or the bridge terminal.", "Hold Heal to top up until full. It only opens a new medkit when it needs one, and keeps the rest banked.", "New Repair button while flying: hold it to patch the hull, 2 cr per point, never more than needed.", "Flight buttons sit where the driving ones do. The radio and the lasers box are gone.", "Brakka has his own shipwright bay in the Zeltac lobby, welding away on a ship up on stands.", "Menus no longer flip through pages. Lists scroll, while the picture and Done always stay on screen. The gun mod bench shows paint, rounds and ordnance together.", "Backpack on a sideways phone: item details sit in two columns, with the buttons pinned.", "The ship hall window shows stars edge to edge, and a CREW QUARTERS door opens onto the crew's bunks.", "Planet name tags in space are now a setting, off by default."] }
+  { id: 99, title: '2.13.7 · Fire everything, hold to heal, and a shipwright bay', items: ["One Fire button now fires every weapon your ship has fitted. The ammo picker is gone; buy plasma, flak, missiles and EMP as weapon mounts from Brakka or the bridge terminal.", "Hold Heal to top up until full. It only opens a new medkit when it needs one, and keeps the rest banked.", "New Repair button while flying: hold it to patch the hull, 2 cr per point, never more than needed.", "Flight buttons sit where the driving ones do. The radio and the lasers box are gone.", "Brakka has his own shipwright bay in the Zeltac lobby, welding away on a ship up on stands.", "Menus no longer flip through pages. Lists scroll, while the picture and Done always stay on screen. The gun mod bench shows paint, rounds and ordnance together.", "Backpack on a sideways phone: item details sit in two columns, with the buttons pinned.", "The ship hall window shows stars edge to edge, and a CREW QUARTERS door opens onto the crew's bunks.", "Planet name tags in space are now a setting, off by default."] },
+  { id: 100, title: '2.13.8 · The Maw fight, rebuilt', items: ["The intro cutscene now plays every time you take on the Maw.", "The Greater Maw is bigger and nastier: bone armour, a crown of teeth, more eyes, glowing cracks and whipping tendrils.", "It fires purple rings now. Its spawns hold the line between you and it, with a red glow so you can see them.", "Your squadron's lasers fly all the way in and burst on its hide. No more name tags; your allies talk over comms instead.", "Not everyone makes it home. B.U.R.P. takes it hard.", "A final phase: the Maw morphs, the squadron forms up around you, and B.U.R.P. offers fight mode. Mega guns, explosions, smoke, and Vega yelling to keep firing.", "Fight comms are a small strip at the bottom of the screen, out of your way.", "The Greater Maw is in the 3D Asset Studio, so you can edit it there."] }
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -16787,16 +16788,17 @@ function makeGreaterMaw() {
   let sd = 7; const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
   const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
   const flesh = ['#2a1a28', '#3d2a38', '#4f3a48', '#5c2a38', '#46202e'], sph = (r, w, h) => new THREE.SphereGeometry(r, w || 18, h || 12);
-  const blob = (par, col, x, y, z, sx, sy, sz) => { const m = new THREE.Mesh(sph(1), typeof col === 'string' ? toon(col) : col); m.position.set(x, y, z); m.scale.set(sx, sy, sz); par.add(m); return m; };
+  const hiS = sph(1), loS = sph(1, 10, 7);
+  const blob = (par, col, x, y, z, sx, sy, sz, lo) => { const m = new THREE.Mesh(lo ? loS : hiS, typeof col === 'string' ? toon(col) : col); m.position.set(x, y, z); m.scale.set(sx, sy, sz); par.add(m); return m; };
   // the bloated core, lumpy and veined
-  blob(body, '#3d2a38', 0, 0, 0, 44, 40, 42);
+  const core = blob(body, '#3d2a38', 0, 0, 0, 44, 40, 42);
   for (let i = 0; i < 34; i++) { const u = rnd() * Math.PI * 2, v = Math.acos(2 * rnd() - 1), r = 8 + rnd() * 14, d = 36 + rnd() * 6;
-    blob(body, flesh[i % 5], Math.sin(v) * Math.cos(u) * d, Math.cos(v) * d * 0.9, Math.sin(v) * Math.sin(u) * d * (Math.sin(v) * Math.sin(u) > 0.6 ? 0.7 : 1), r, r * (0.7 + rnd() * 0.5), r); }
+    blob(body, flesh[i % 5], Math.sin(v) * Math.cos(u) * d, Math.cos(v) * d * 0.9, Math.sin(v) * Math.sin(u) * d * (Math.sin(v) * Math.sin(u) > 0.6 ? 0.7 : 1), r, r * (0.7 + rnd() * 0.5), r, true); }
   const veins = [];
   for (let i = 0; i < 16; i++) { const a = rnd() * 6.28, b = (rnd() - 0.5) * 2.4, v = new THREE.Mesh(new THREE.TorusGeometry(40 + rnd() * 4, 0.9 + rnd(), 5, 24, 1.2 + rnd() * 1.4), toon('#7a1e30')); v.rotation.set(b, a, rnd() * 6.28); body.add(v); veins.push(v); }
   // pustules that glow sick green
   const pus = [];
-  for (let i = 0; i < 18; i++) { const u = rnd() * 6.28, v = Math.acos(2 * rnd() - 1), d = 44; const m = blob(body, glow('#9fe86a'), Math.sin(v) * Math.cos(u) * d, Math.cos(v) * d * 0.9, Math.sin(v) * Math.sin(u) * d * 0.85, 2.4, 2.4, 2.4); pus.push(m); }
+  for (let i = 0; i < 18; i++) { const u = rnd() * 6.28, v = Math.acos(2 * rnd() - 1), d = 44; const m = blob(body, glow('#9fe86a'), Math.sin(v) * Math.cos(u) * d, Math.cos(v) * d * 0.9, Math.sin(v) * Math.sin(u) * d * 0.85, 2.4, 2.4, 2.4, true); pus.push(m); }
   // bone horns along the top
   for (let i = 0; i < 9; i++) { const a = -1.1 + i * 0.28, h = new THREE.Mesh(new THREE.ConeGeometry(4, 26 + (i % 3) * 8, 7), toon('#d8c8b0')); h.position.set(Math.sin(a) * 30, 34 + Math.cos(a) * 6, -6 - Math.abs(Math.sin(a)) * 8); h.rotation.set(-0.3, 0, -a * 0.9); body.add(h); }
   // THE eye, with lids that open and close
@@ -16815,9 +16817,10 @@ function makeGreaterMaw() {
     t.position.set(Math.cos(a) * 21, Math.sin(a) * 11, 4); t.rotation.z = a + Math.PI / 2; (top ? jawT : jawB).add(t); }
   // little eyes everywhere, every one of them watching
   const eyes = [];
-  for (let i = 0; i < 40; i++) { const u = rnd() * 6.28, v = 0.35 + rnd() * 2.4, d = 43 + rnd() * 3, e = new THREE.Group();
+  for (let i = 0; i < 64; i++) { const u = rnd() * 6.28, v = 0.35 + rnd() * 2.4, d = 43 + rnd() * 3, e = new THREE.Group();
     e.position.set(Math.sin(v) * Math.cos(u) * d, Math.cos(v) * d * 0.9, Math.sin(v) * Math.sin(u) * d); if (e.position.z > 26 && Math.abs(e.position.x) < 26 && e.position.y > -32) continue;
-    const s = 2 + rnd() * 3.5; blob(e, '#efe6d4', 0, 0, 0, s, s, s); blob(e, glow(i % 3 ? '#ff2a3a' : '#ff8a2a'), 0, 0, s * 0.8, s * 0.5, s * 0.5, s * 0.3);
+    const s = 2 + rnd() * 3.5; blob(e, '#efe6d4', 0, 0, 0, s, s, s, true); blob(e, glow(i % 3 ? '#ff2a3a' : '#ff8a2a'), 0, 0, s * 0.8, s * 0.5, s * 0.5, s * 0.3, true); blob(e, '#0a0608', 0, 0, s * 0.98, s * 0.14, s * 0.32, s * 0.1, true);
+    if (s > 4) { const lid = new THREE.Mesh(new THREE.TorusGeometry(s * 1.02, s * 0.22, 4, 12), toon('#4f3a48')); lid.position.z = s * 0.35; e.add(lid); }
     e.lookAt(e.position.clone().multiplyScalar(2)); body.add(e); eyes.push(e); }
   // tentacles: chains of segments that curl and whip
   const tents = [];
@@ -16827,19 +16830,57 @@ function makeGreaterMaw() {
       if (k % 2 === 0) { const sk = new THREE.Mesh(sph(r * 0.35, 8, 6), glow('#c86aff')); sk.position.set(0, r * 0.9, 6); sg.add(sk); }
       segs.push(sg); par = sg; r *= 0.84; }
     tents.push({ segs, ph: i * 0.7, a }); }
+  // armour: bony plates across the back and crown, each with a ridge of spikes
+  const plates = [], bone = toon('#6a5650'), boneDk = toon('#4a3a3a'), spikeM = toon('#d8c8b0');
+  for (let i = 0; i < 18; i++) { const u = rnd() * 6.28, v = 0.25 + rnd() * 1.9, n = V(Math.sin(v) * Math.cos(u), Math.cos(v) * 0.9, Math.sin(v) * Math.sin(u)); if (n.z > 0.45) continue;
+    const pg = new THREE.Group(); body.add(pg); plates.push({ pg, n });
+    const pl = new THREE.Mesh(loS, i % 3 ? bone : boneDk); pl.position.copy(n).multiplyScalar(45); pl.scale.set(13 + rnd() * 6, 9 + rnd() * 5, 2.6); pl.lookAt(n.clone().multiplyScalar(90)); pl.rotation.z += rnd() * 3; pg.add(pl);
+    const tg = V(0, 1, 0).cross(n); if (tg.lengthSq() < 0.01) tg.set(1, 0, 0); tg.normalize();
+    for (let k = -1; k <= 1; k++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(1.4, 5 + rnd() * 4, 5), spikeM); sp.position.copy(n).multiplyScalar(47).addScaledVector(tg, k * 4); sp.quaternion.setFromUnitVectors(V(0, 1, 0), n); pg.add(sp); } }
+  // a crown of teeth around the great eye
+  const eyeTeeth = new THREE.Group(); eye.add(eyeTeeth);
+  for (let i = 0; i < 22; i++) { const a = (i / 22) * Math.PI * 2, tt = new THREE.Mesh(new THREE.ConeGeometry(2, 9 + (i % 2) * 5, 5), spikeM); tt.position.set(Math.cos(a) * 29, Math.sin(a) * 29, 6); tt.rotation.set(0, 0, a - Math.PI / 2); tt.rotateX(0.5); eyeTeeth.add(tt); }
+  const socket = new THREE.Mesh(new THREE.TorusGeometry(28, 3.2, 6, 28), toon('#2a1420')); socket.position.z = 4; eye.add(socket);
+  // the outer jaw: a second, bigger ring of fangs
+  for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, f = new THREE.Mesh(new THREE.ConeGeometry(2.6, 11 + (i % 4) * 3, 6), spikeM); f.position.set(Math.cos(a) * 26, Math.sin(a) * 15, 2); f.rotation.z = a + Math.PI / 2; f.rotateX(-0.35); (Math.sin(a) > 0 ? jawT : jawB).add(f); }
+  const throat = deadGlow('255,110,40', 30); throat.position.set(0, 0, 2); mouth.add(throat);
+  // glowing cracks where the flesh has split, pulsing with its heartbeat
+  const crackM = new THREE.MeshBasicMaterial({ color: '#ff5a20', fog: false }), crackG = [];
+  for (let i = 0; i < 14; i++) { const a = rnd() * 6.28, b = (rnd() - 0.5) * 2.6, z0 = rnd() * 6.28;
+    for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(new THREE.TorusGeometry(45.2, 0.55, 3, 8, 0.16 + rnd() * 0.14), crackM); c.rotation.set(b + k * 0.06 * (rnd() - 0.5), a + k * 0.035, z0 + k * 0.17); body.add(c); crackG.push(c); } }
+  // thin whip tendrils trailing from its underside
+  for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2, root = new THREE.Group(); root.position.set(Math.cos(a) * 18, -36, Math.sin(a) * 18 - 4); root.lookAt(Math.cos(a) * 50, -140, Math.sin(a) * 50 - 20); body.add(root);
+    let par = root, segs = [], r = 3.2; for (let k = 0; k < 8; k++) { const sg = new THREE.Group(); sg.position.z = k ? 9 : 0; par.add(sg);
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.8, r, 10, 5), toon('#3a2436')); m.rotation.x = Math.PI / 2; m.position.z = 5; sg.add(m);
+      if (k === 7) { const tip = new THREE.Mesh(loS, glow('#ff2a3a')); tip.scale.setScalar(2.2); tip.position.z = 10; sg.add(tip); }
+      segs.push(sg); par = sg; r *= 0.86; }
+    tents.push({ segs, ph: 3 + i * 1.1, a, whip: 1 }); }
+  // the last form: great spikes that burst out of it (hidden until it morphs)
+  const morphG = new THREE.Group(); morphG.visible = false; body.add(morphG); const mSpike = glow('#ff4ae0'), mBone = toon('#e8d8f0');
+  for (let i = 0; i < 16; i++) { const u = rnd() * 6.28, v = 0.3 + rnd() * 2.5, n = V(Math.sin(v) * Math.cos(u), Math.cos(v), Math.sin(v) * Math.sin(u)); if (n.z > 0.6) continue;
+    const c = new THREE.Mesh(new THREE.ConeGeometry(4.5, 34 + rnd() * 26, 6), i % 3 ? mBone : mSpike); c.quaternion.setFromUnitVectors(V(0, 1, 0), n); c.position.copy(n).multiplyScalar(52); morphG.add(c); }
   const aura = deadGlow('255,40,60', 380); aura.position.z = -30; g.add(aura);
   const aura2 = deadGlow('160,60,255', 260); aura2.position.set(0, 0, -10); g.add(aura2);
-  g.userData = { body, eye, iris, ring, pupil, lidT, lidB, mouth, jawT, jawB, eyes, tents, pus, veins, aura, open: 1, rage: 0 };
+  g.userData = { body, eye, iris, ring, pupil, lidT, lidB, mouth, jawT, jawB, eyes, tents, pus, veins, aura, aura2, crackM, eyeTeeth, throat, plates, morphG, core, morph: 0, open: 1, rage: 0 };
   return g;
 }
 function mawAnim(g, t, aim) {
   const U = g.userData; if (!U) return;
   const p = 1 + Math.sin(t * 1.3) * 0.025 + U.rage * Math.sin(t * 9) * 0.01; U.body.scale.set(p, 1 / p, p);
-  for (const T of U.tents) T.segs.forEach((s, k) => { s.rotation.x = Math.sin(t * (1.1 + U.rage) + T.ph + k * 0.55) * (0.16 + k * 0.012); s.rotation.y = Math.cos(t * 0.9 + T.ph * 1.3 + k * 0.4) * 0.14; });
+  for (const T of U.tents) { const w = T.whip ? 1.8 : 1; T.segs.forEach((s, k) => { s.rotation.x = Math.sin(t * (1.1 + U.rage) * w + T.ph + k * 0.55) * (0.16 + k * 0.012) * w; s.rotation.y = Math.cos(t * 0.9 * w + T.ph * 1.3 + k * 0.4) * 0.14 * w; }); }
+  if (U.crackM) { const beat = Math.pow(Math.max(0, Math.sin(t * (2.4 + U.rage * 1.2))), 6); U.crackM.color.setRGB(0.6 + beat * 0.4 + U.rage * 0.1, 0.12 + beat * 0.35, 0.02 + beat * 0.1); }
+  if (U.eyeTeeth) U.eyeTeeth.rotation.z = Math.sin(t * 0.7) * 0.06 + U.rage * Math.sin(t * 7) * 0.02;
+  if (U.throat) U.throat.material.opacity = 0.6 + Math.sin(t * 4) * 0.3;
   const o = Math.max(0.05, U.open); U.lidT.rotation.x = -0.2 - o * 1.15; U.lidB.rotation.x = Math.PI + 0.2 + o * 1.15;
   const m = 0.5 + Math.sin(t * 2.2) * 0.5; U.jawT.position.y = m * 3; U.jawB.position.y = -m * 3;
   U.pus.forEach((q, i) => q.scale.setScalar(2 + Math.sin(t * 3 + i) * 0.8));
   U.aura.material.opacity = 0.7 + Math.sin(t * 2) * 0.25 + U.rage * 0.2;
+  // the last form: the armour splits away, spikes burst out, everything goes violet
+  if (U.morph > 0) { const k = U.morph; U.morphG.visible = true; U.morphG.scale.setScalar(Math.max(0.01, k * (1 + Math.sin(t * 6) * 0.05)));
+    U.plates.forEach((P, i) => { P.pg.position.copy(P.n).multiplyScalar(k * (10 + Math.sin(t * 3 + i) * 3)); });
+    const q = 1 + k * (0.08 + Math.sin(t * 5) * 0.05); U.body.scale.multiplyScalar(q);
+    U.aura.material.color.setRGB(1 - k * 0.3, 1 - k * 0.7, 1); U.aura2.material.opacity = 0.6 + k * 0.4; U.aura2.scale.setScalar(260 * (1 + k * 0.6 + Math.sin(t * 4) * 0.08 * k));
+    if (U.crackM) U.crackM.color.setRGB(0.9 + Math.sin(t * 9) * 0.1, 0.2 * (1 - k), 0.9 * k); }
   if (aim) { const lp = U.eye.worldToLocal(aim.clone()); const dx = clamp(lp.x / 400, -0.3, 0.3), dy = clamp(lp.y / 400, -0.3, 0.3);
     U.iris.position.set(dx * 14, dy * 14, 19); U.ring.position.set(dx * 14, dy * 14, 18.4); U.pupil.position.set(dx * 14, dy * 14, 24.5);
     U.eyes.forEach((e, i) => { if (e.visible && i % 4 === ((t * 2) | 0) % 4) e.lookAt(aim); }); }
@@ -16875,6 +16916,7 @@ function wormholeOpen() { return !!(S.flags && S.flags.wormhole) || qDone('w3') 
 function wormholePos() { const P = SPACE_BODIES.vector; return P.pos.clone().add(V(430, 140, -380)); }
 { const _ll = loadLevel; loadLevel = function (id, o) {
   const r = _ll(id, o); const bar = $('mawBar'); if (id !== 'maw') { if (bar) bar.remove(); const cm = $('mawComms'); if (cm) cm.remove(); }
+  if (MAW.fmCancel) { MAW.fmCancel(); MAW.fmCancel = null; }
   if (id === 'space' && wormholeOpen()) {
     const w = makeWormhole(60), p = wormholePos(); w.position.copy(p); levelGroup.add(w); WH.pos = p; WH.obj = w; WH.prompted = false;
     const lab = labelSprite(768, 72); levelGroup.add(lab); let mk = 0;
@@ -16931,12 +16973,18 @@ LEVELS.maw = {
     // the Greater Maw
     const m = makeGreaterMaw(); m.position.copy(MAW_C); m.scale.setScalar(MAW_S); levelGroup.add(m);
     const asc = S.asc || 0, max = Math.round(180000 * (1 + 0.35 * asc));
-    Object.assign(MAW, { obj: m, hp: max, max, t: 0, phase: 1, beam: null, beamT: 9, volT: 3, spawnT: 20, allies: [], alliesIn: false, dead: false, hurtAcc: 0, commsT: 6, said: 0, intro: false });
+    Object.assign(MAW, { obj: m, hp: max, max, t: 0, phase: 1, beam: null, beamT: 9, volT: 3, spawnT: 20, allies: [], alliesIn: false, dead: false, hurtAcc: 0, commsT: 6, said: 0, intro: false, ev: [], lost: [], nowSaid: false, shots: [], flashes: [], smoke: [], fxPool: null, final: 0, mega: false, megaCd: 0, blastT: 0, vegaT: 0 });
     fly.ship = makeStarship(S.col); levelGroup.add(fly.ship);
     fly.trail = []; for (let i = 0; i < 18; i++) { const tm = new THREE.Mesh(sparkGeo, glow('#ff9a3c')); tm.scale.setScalar(6); levelGroup.add(tm); fly.trail.push(tm); }
     levelAnims.push(t => { if (MAW.obj && !MAW.dead) mawAnim(MAW.obj, t, player.pos); });
     mawHud();
-    setTimeout(() => { if (LEVEL.id === 'maw' && state === 'play') mawIntro(); }, 700);
+    // the intro plays every time you come through: wait until the fade, dialogs and any other scene are done, then run it
+    const me = m, t0 = performance.now();
+    const tryIntro = () => { if (LEVEL.id !== 'maw' || MAW.obj !== me || MAW.intro) return;
+      if (state === 'play' && !dlgOpen && !CUT.on && performance.now() - t0 > 700) { mawIntro(); return; }
+      if (performance.now() - t0 > 20000 && state === 'play') { MAW.intro = true; return; }
+      setTimeout(tryIntro, 150); };
+    setTimeout(tryIntro, 300);
   }
 };
 function mawHud() {
@@ -16946,55 +16994,163 @@ function mawHud() {
   bar.hidden = state !== 'play' || LEVEL.id !== 'maw' || MAW.dead;
 }
 function mawComms(who, line, dur) {
-  let c = $('mawComms'); if (!c) { c = document.createElement('div'); c.id = 'mawComms'; c.style.cssText = 'position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 150px);transform:translateX(-50%);max-width:min(560px,86vw);z-index:6;pointer-events:none;padding:6px 12px;background:rgba(8,6,20,.72);border:1px solid #8fd0ff;border-radius:6px;font:600 14px var(--hud,sans-serif);color:#e8ecf8;text-align:center;transition:opacity .4s;opacity:0'; document.body.appendChild(c); }
+  let c = $('mawComms'); if (!c) { c = document.createElement('div'); c.id = 'mawComms'; c.style.cssText = 'position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);transform:translateX(-50%);width:max-content;max-width:min(480px,56vw);z-index:6;pointer-events:none;padding:3px 10px;background:rgba(8,6,20,.5);border:1px solid rgba(143,208,255,.45);border-radius:6px;font:600 12px/1.3 var(--hud,sans-serif);color:#e8ecf8;text-align:center;transition:opacity .4s;opacity:0'; document.body.appendChild(c); }
   c.innerHTML = `<span style="color:#8fd0ff">${who}:</span> ${line}`; c.style.opacity = 1; clearTimeout(c._t); c._t = setTimeout(() => { c.style.opacity = 0; }, (dur || 4.5) * 1000);
 }
 // ---- your friends ----
-const MAW_ALLIES = [['Captain Vega', '#3b4f7a'], ['Captain Skye', '#8fe3ff'], ['Ada-9', '#3f7d7a'], ['Harbor Master Rell', '#c9a43a'], ['General Hale', '#6f7a3e'], ['Lumen', '#e8e4dc'], ['Elismas', '#9aa1aa'], ['The Bug Master', '#c8a050'], ['Maxurge', '#4fa8ff'], ['Ramick', '#c8402f']];
-const MAW_CHATTER = [['CAPTAIN VEGA', 'Hit the big eye, rookie! Everything else is just meat.'], ['ADA-9', 'Calculating weak points. Result: all of it is gross. Keep firing.'], ['GENERAL HALE', 'Fort Ironrock never misses a fight. Tanks don\'t fly, so I brought the next best thing.'], ['ELISMAS', 'A true gunner never wastes a shot. You are wasting several. Aim.'],
+// the last three are Earth Defense Force wingmen who fly with the squadron; the Maw takes them, one by one
+const MAW_ALLIES = [['Captain Vega', '#3b4f7a'], ['Captain Skye', '#8fe3ff'], ['Ada-9', '#3f7d7a'], ['Harbor Master Rell', '#c9a43a'], ['General Hale', '#6f7a3e'], ['Lumen', '#e8e4dc'], ['Elismas', '#9aa1aa'], ['The Bug Master', '#c8a050'], ['Maxurge', '#4fa8ff'], ['Ramick', '#c8402f'], ['Lt. Vance', '#5a6e8a'], ['Ensign Park', '#7a8a9a'], ['Sgt. Okafor', '#6a7a5a']];
+// [hp fraction, ally, their last words (cut off), who answers, the answer, B.U.R.P.]
+const MAW_LOSSES = [
+  [0.64, 'Lt. Vance', 'It\'s on me, I can\'t shake it, I can\'t—', 'CAPTAIN VEGA', 'VANCE! ...Close it up, squadron. Close it up.', 'We lost Vance. Stay with me, Captain. Don\'t let it be for nothing.'],
+  [0.42, 'Ensign Park', 'Captain, the big eye is turning toward m—', 'CAPTAIN SKYE', 'Park\'s gone. She was nineteen.', 'Park is gone. I saved her last transmission. We will play it for her family. After we win.'],
+  [0.24, 'Sgt. Okafor', 'Rockets dry. Going in close. Tell my kids I—', 'GENERAL HALE', 'Okafor bought us that opening. Don\'t you dare waste it.', 'Okafor\'s signal just stopped. No jokes today, Captain. Please, be careful.'],
+];
+const MAW_NOW = 'It\'s now or never, Captain. Let\'s set this guy\'s sun.';
+function mawBurp(line, dur) { mawComms('B.U.R.P.', line, dur || 6); try { burpSay(line); } catch (_) {} try { log(line, 'ai', 'B.U.R.P.'); } catch (_) {} }
+const MAW_CHATTER = [['CAPTAIN VEGA', 'Hit the big eye, rookie! Everything else is just meat.'], ['LT. VANCE', 'Vance, Earth Defense Force. First time through a wormhole. Don\'t tell my mom.'], ['ENSIGN PARK', 'Park on your six, Captain. I\'ve got the little eyes.'], ['SGT. OKAFOR', 'Okafor here. Rockets hot. Point me at something ugly.'], ['ADA-9', 'Calculating weak points. Result: all of it is gross. Keep firing.'], ['GENERAL HALE', 'Fort Ironrock never misses a fight. Tanks don\'t fly, so I brought the next best thing.'], ['ELISMAS', 'A true gunner never wastes a shot. You are wasting several. Aim.'],
   ['THE BUG MASTER', 'The hive remembers this thing. The hive does not forgive it.'], ['MAXURGE', 'One eye sees farther than two. Let us see how far it sees with none.'], ['RAMICK', 'I left my sword at home. I regret nothing. LASERS!'], ['CAPTAIN SKYE', 'Watch for the beam! When the big eye locks on, MOVE.'], ['HARBOR MASTER RELL', 'I logged every ship that ever flew. This one\'s going in the book as a win.'], ['LUMEN', 'Its light is failing. Keep pushing, trooper!'], ['B.U.R.P.', 'Hull integrity: worrying. Morale: surprisingly high. Snacks: none.']];
 function mawAlliesArrive(quick) {
   if (MAW.alliesIn) return; MAW.alliesIn = true;
   MAW_ALLIES.forEach(([name, col], i) => { let o;
     try { o = makeStarship(col, { p: i % SHIP_PAINTS.length, a: i % SHIP_ACCENTS.length, wing: 0, eng: i % 2, nose: 0, fin: 0, pod: 0 }); } catch (_) { o = makeStarship(col); }
-    o.scale.setScalar(1.1); o.position.copy(MAW.back.position).add(V((i - 4.5) * 12, (i % 3) * 8, 0)); levelGroup.add(o);
-    const plate = labelSprite(512, 72); plate.scale.set(26, 3.6, 1); plate.position.y = 6; o.add(plate); drawPlate(plate, name, 'Ally', '#8fd0ff', null);
-    MAW.allies.push({ o, name, a: i * 0.63, R: 150 + (i % 4) * 26, h: ((i % 5) - 2) * 26, sp: 0.16 + (i % 3) * 0.04, cd: 0.5 + i * 0.13, enter: quick ? 1 : 0 }); });
-  if (quick) mawComms('CAPTAIN VEGA', 'Squadron, on the rookie. Let\'s finish this.');
+    o.scale.setScalar(1.1); o.position.copy(MAW.back.position).add(V((i - 6) * 12, (i % 3) * 8, 0)); levelGroup.add(o);
+    MAW.allies.push({ o, name, a: i * 0.483, R: 150 + (i % 4) * 26, h: ((i % 5) - 2) * 26, sp: 0.16 + (i % 3) * 0.04, cd: 0.5 + i * 0.13, enter: quick ? 1 : 0 }); });
+  if (quick) mawSquadIn();
+}
+function mawSquadIn() {
+  mawComms('CAPTAIN VEGA', 'Squadron, on the rookie. Let\'s finish this.');
+  mawAt(4.5, () => mawBurp('They came for you, Captain. All of them. Let\'s bring them home.'));
+}
+// scripted beats on the fight clock (pauses with the game)
+function mawAt(dt, fn) { MAW.ev.push({ at: MAW.t + dt, fn }); }
+// ---- light shows: ally laser bolts that fly to the Maw and burst on its hide ----
+let mawFlashTex = null;
+function mawFx() {
+  if (MAW.fxPool) return MAW.fxPool;
+  if (!mawFlashTex) { const cv = document.createElement('canvas'); cv.width = cv.height = 64; const x = cv.getContext('2d'), gr = x.createRadialGradient(32, 32, 1, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.25, 'rgba(255,220,150,0.8)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); mawFlashTex = new THREE.CanvasTexture(cv); }
+  const P = { beams: [], flashes: [], bi: 0, fi: 0, geo: new THREE.BoxGeometry(1, 1, 1), mats: {} };
+  for (let i = 0; i < 56; i++) { const m = new THREE.Mesh(P.geo, mawBeamMat0()); m.visible = false; levelGroup.add(m); P.beams.push(m); }
+  for (let i = 0; i < 18; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: mawFlashTex, color: '#ffd36a', blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false })); sp.visible = false; levelGroup.add(sp); P.flashes.push(sp); }
+  return (MAW.fxPool = P);
+}
+const mawBeamMats = {};
+function mawBeamMat(col) { return mawBeamMats[col] || (mawBeamMats[col] = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); }
+function mawBeamMat0() { return mawBeamMat('#8fe3ff'); }
+function mawFlash(p, col, size, life) { const P = mawFx(), sp = P.flashes[P.fi++ % P.flashes.length]; sp.position.copy(p); sp.material.color.set(col); sp.visible = true; MAW.flashes = MAW.flashes.filter(f => f.sp !== sp); MAW.flashes.push({ sp, t: 0, life: life || 0.3, size }); }
+function mawAllyShot(from, to, col, miss, big) { const P = mawFx(), m = P.beams[P.bi++ % P.beams.length]; MAW.shots = MAW.shots.filter(s => s.m !== m);
+  m.material = mawBeamMat(col); m.visible = true; m.position.copy(from); m.lookAt(to); m.scale.set(big ? 1.3 : 0.9, big ? 1.3 : 0.9, big ? 26 : 20); MAW.shots.push({ m, from: from.clone(), to: to.clone(), t: 0, dur: Math.max(0.08, from.distanceTo(to) / (big ? 1100 : 650)), col, miss, big }); }
+// ---- smoke and fire boiling off it in the last phase ----
+let mawSmokeTex = null;
+function mawSmokeSprite() {
+  const P = mawFx(); if (!P.smoke) { if (!mawSmokeTex) { const cv = document.createElement('canvas'); cv.width = cv.height = 64; const x = cv.getContext('2d');
+      for (let i = 0; i < 7; i++) { const cx = 20 + Math.random() * 24, cy = 20 + Math.random() * 24, r = 14 + Math.random() * 14, gr = x.createRadialGradient(cx, cy, 1, cx, cy, r); gr.addColorStop(0, 'rgba(70,64,72,0.55)'); gr.addColorStop(1, 'rgba(40,36,44,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); }
+      mawSmokeTex = new THREE.CanvasTexture(cv); }
+    P.smoke = []; P.si = 0; for (let i = 0; i < 26; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: mawSmokeTex, color: '#8a8290', transparent: true, depthWrite: false, fog: false })); sp.visible = false; levelGroup.add(sp); P.smoke.push(sp); } }
+  const sp = P.smoke[P.si++ % P.smoke.length]; MAW.smoke = MAW.smoke.filter(m => m.sp !== sp); return sp;
+}
+function mawBlast(big) {
+  const n = V(rand(-1, 1), rand(-0.7, 1), rand(-0.2, 1)).normalize(); if (player.pos.distanceTo(MAW_C) > 1) n.add(player.pos.clone().sub(MAW_C).normalize().multiplyScalar(0.8)).normalize();
+  const p = MAW_C.clone().addScaledVector(n, MAW_R * 0.9);
+  mawFlash(p, big ? '#ffb060' : '#ff7a3a', big ? 90 : 55, big ? 0.7 : 0.45); burst(p, '#ffd36a', big ? 12 : 6, 40); burst(p, '#ff5a20', big ? 8 : 4, 26);
+  for (let k = 0; k < (big ? 3 : 2); k++) { const sp = mawSmokeSprite(); sp.visible = true; sp.position.copy(p).addScaledVector(n, k * 6); sp.material.rotation = Math.random() * 6;
+    MAW.smoke.push({ sp, t: 0, life: 2.4 + Math.random() * 1.4, size: (big ? 70 : 45) + Math.random() * 30, v: n.clone().multiplyScalar(18 + Math.random() * 22).add(V(0, 6, 0)), spin: rand(-0.6, 0.6) }); }
+  if (big && player.pos.distanceTo(MAW_C) < 900) SFX.boom();
+}
+function mawFxStep(dt) {
+  for (let i = MAW.shots.length - 1; i >= 0; i--) { const s = MAW.shots[i]; s.t += dt; const k = Math.min(1, s.t / s.dur);
+    s.m.position.lerpVectors(s.from, s.to, k); if (k >= 1) { s.m.visible = false; MAW.shots.splice(i, 1); if (!s.miss) { mawFlash(s.to, s.col, (s.big ? 22 : 16) + Math.random() * 8, 0.28); if (Math.random() < (s.big ? 0.2 : 0.45)) burst(s.to, s.col, 3, 14); } } }
+  for (let i = MAW.smoke.length - 1; i >= 0; i--) { const m = MAW.smoke[i]; m.t += dt; const k = m.t / m.life;
+    if (k >= 1) { m.sp.visible = false; MAW.smoke.splice(i, 1); continue; } m.sp.position.addScaledVector(m.v, dt); m.sp.scale.setScalar(m.size * (0.4 + k * 1.4)); m.sp.material.opacity = 0.7 * (1 - k) * Math.min(1, k * 6); m.sp.material.rotation += dt * m.spin; }
+  for (let i = MAW.flashes.length - 1; i >= 0; i--) { const f = MAW.flashes[i]; f.t += dt; const k = f.t / f.life;
+    if (k >= 1) { f.sp.visible = false; MAW.flashes.splice(i, 1); continue; } f.sp.scale.setScalar(f.size * (0.6 + k * 0.8)); f.sp.material.opacity = 1 - k; }
+}
+// a point on the Maw's hide, on the side facing `from`
+function mawHitPoint(from) {
+  const n = from.clone().sub(MAW_C).normalize().add(V(rand(-0.55, 0.55), rand(-0.45, 0.45), rand(-0.55, 0.55))).normalize();
+  return MAW_C.clone().addScaledVector(n, MAW_R * 0.86);
 }
 function mawAllyStep(dt, t) {
+  mawFxStep(dt);
+  for (let i = MAW.allies.length - 1; i >= 0; i--) { const A = MAW.allies[i]; if (A.doom && mawDoomStep(A, dt)) { MAW.allies.splice(i, 1); } }
+  let fq = null; if (MAW.final >= 2) { _e.set(player.pitch, player.yaw, 0); fq = new THREE.Quaternion().setFromEuler(_e); }
+  const live = MAW.allies.filter(a => !a.doom);
   for (const A of MAW.allies) {
+    if (fq && !A.doom) { const i = live.indexOf(A), n = live.length, a = (i / n) * Math.PI * 2 + 0.3;
+      const off = V(Math.cos(a) * (26 + (i % 2) * 12), Math.sin(a) * (15 + (i % 2) * 7), 14 + (i % 3) * 8).applyQuaternion(fq);
+      A.o.position.lerp(player.pos.clone().add(off), Math.min(1, dt * 3.5)); A.o.quaternion.slerp(fq, Math.min(1, dt * 5));
+      if (MAW.dead) continue;
+      A.cd -= dt; if (A.cd <= 0) { A.cd = (MAW.mega ? 0.12 : 0.22) + Math.random() * 0.2; const from = A.o.position.clone(); mawAllyShot(from, mawHitPoint(from), A.name === 'Captain Vega' ? '#ffd36a' : A.name === 'Ramick' ? '#ff7a5a' : '#8fe3ff'); }
+      mawDamage(dt * 60 * (MAW.mega ? 1.6 : 1.2) * (1 + 0.35 * (S.asc || 0)), false);
+      continue; }
     A.a += A.sp * dt; const want = MAW_C.clone().add(V(Math.cos(A.a) * A.R, A.h + Math.sin(t * 0.5 + A.a) * 20, Math.sin(A.a) * A.R + 40));
     A.enter = Math.min(1, A.enter + dt * 0.35); A.o.position.lerp(want, A.enter < 1 ? dt * 1.2 : Math.min(1, dt * 3));
     const ahead = MAW_C.clone().add(V(Math.cos(A.a + 0.2) * A.R, A.h, Math.sin(A.a + 0.2) * A.R + 40)); A.o.lookAt(ahead); A.o.rotateY(Math.PI);
     if (MAW.dead) continue;
-    A.cd -= dt; if (A.cd <= 0 && A.enter > 0.6) { A.cd = 0.35 + Math.random() * 0.5; const hit = MAW_C.clone().add(V(rand(-30, 30), rand(-25, 25), rand(10, 40))); tracer(A.o.position.clone(), hit, A.name === 'Captain Vega' ? '#ffd36a' : '#8fe3ff'); if (Math.random() < 0.3) burst(hit, '#ffd36a', 3, 10); }
+    if (A.doom) continue;
+    A.cd -= dt; if (A.cd <= 0 && A.enter > 0.6) { A.cd = 0.35 + Math.random() * 0.5; const from = A.o.position.clone(), hit = mawHitPoint(from); mawAllyShot(from, hit, A.name === 'Captain Vega' ? '#ffd36a' : A.name === 'Ramick' ? '#ff7a5a' : '#8fe3ff'); }
     mawDamage(dt * 60 * (1 + 0.35 * (S.asc || 0)), false);
   }
+}
+// the Maw singles out a wingman: its eye burns a line to them, and they're gone
+function mawDoom(L) {
+  const A = MAW.allies.find(a => a.name === L[1]); if (!A || A.doom) return;
+  A.doom = { t: 0, beam: null, L }; MAW.lost.push(L[1]);
+  mawComms(L[1].toUpperCase(), L[2], 2.2);
+}
+function mawDoomStep(A, dt) {
+  const D = A.doom, L = D.L; D.t += dt; const eyeW = MAW.obj.userData.eye.getWorldPosition(V(0, 0, 0)), p = A.o.position;
+  A.o.rotation.z += dt * (2 + D.t * 6); p.add(V(rand(-0.6, 0.6), rand(-0.6, 0.6), rand(-0.6, 0.6)));
+  if (D.t > 0.5 && !D.beam) { D.beam = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: '#ff3a5a', transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); levelGroup.add(D.beam); }
+  if (D.beam) { const d = p.clone().sub(eyeW), len = d.length(); D.beam.position.copy(eyeW).addScaledVector(d, 0.5); D.beam.quaternion.setFromUnitVectors(V(0, 1, 0), d.normalize()); D.beam.scale.set(1 + Math.sin(D.t * 40) * 0.3, len, 1 + Math.sin(D.t * 40) * 0.3);
+    if (Math.random() < 0.4) burst(p, '#ff6a4a', 2, 12); }
+  if (D.t < 1.4) return false;
+  if (D.beam) levelGroup.remove(D.beam);
+  burst(p, '#ffd36a', 26, 46); burst(p, '#ff5a20', 18, 30); burst(p, '#c8c8d0', 10, 22); mawFlash(p, '#ffb060', 70, 0.9);
+  if (player.pos.distanceTo(p) < 900) SFX.boom();
+  if (fly) fly.shake = Math.max(fly.shake || 0, 0.25);
+  levelGroup.remove(A.o);
+  mawAt(1.0, () => mawComms(L[3], L[4], 3.4));
+  MAW.ev.push({ at: MAW.t + 4.8, fn: () => mawBurp(L[5], 6.5), burp: 1 });
+  return true;
 }
 // ---- the fight ----
 function mawDamage(n, byYou, at) {
   if (MAW.dead || !MAW.obj) return; MAW.hp -= n;
   const f = MAW.hp / MAW.max, ph = f > 0.66 ? 1 : f > 0.33 ? 2 : 3;
-  if (ph !== MAW.phase) { MAW.phase = ph; MAW.obj.userData.rage = ph - 1; SFX.boom(); if (fly) fly.shake = 0.6;
+  if (ph !== MAW.phase && !MAW.final) { MAW.phase = ph; MAW.obj.userData.rage = ph - 1; SFX.boom(); if (fly) fly.shake = 0.6;
     toast(ph === 2 ? 'IT SPAWNS' : 'IT\'S ENRAGED', ph === 2 ? 'The Maw tears off pieces of itself' : 'Every eye opens at once', 2.5); }
   if (!MAW.alliesIn && f < 0.86) mawAlliesCut();
+  if (MAW.alliesIn && MAW.intro && !CUT.on) { for (const L of MAW_LOSSES) if (f < L[0] && f > 0.03 && MAW.lost.indexOf(L[1]) < 0 && !MAW.allies.some(a => a.doom)) { mawDoom(L); break; } }
+  if (!MAW.final && f < 0.12 && f > 0 && MAW.intro) mawFinal();
+  if (MAW.final && !MAW.mega && MAW.hp < MAW.max * 0.09) MAW.hp = MAW.max * 0.09;
   if (MAW.hp <= 0) { MAW.hp = 0; mawDeath(); }
 }
 function mawSpawn() {
   const alive = fly.raiders.filter(r => !r.dead).length; if (alive >= 7) return;
   for (let k = 0; k < (MAW.phase === 3 ? 3 : 2); k++) {
     const obj = makeEyeWatcher(false); obj.scale.setScalar(4.5); obj.rotation.order = 'YXZ'; levelGroup.add(obj);
-    const p = MAW_C.clone().add(V(rand(-50, 50), rand(-30, 30), 60)); obj.position.copy(p);
+    const p = MAW_C.clone().addScaledVector(player.pos.clone().sub(MAW_C).normalize(), MAW_R + 10).add(V(rand(-30, 30), rand(-20, 20), rand(-30, 30))); obj.position.copy(p);
     const plate = labelSprite(512, 72); plate.scale.set(3.2, 0.45, 1); plate.position.y = 3.2; obj.add(plate);
-    const lv = 32, r = { obj, plate, home: p.clone(), lv, max: 900 + S.lvl * 30, hp: 0, cd: rand(1, 3), dead: 0, vel: V(0, 0, 0), wander: p.clone(), aggro: true, def: { name: 'Maw Spawn' }, maw: true };
+    // a soft red halo so they read against the dark
+    const halo = deadGlow('255,40,50', 7.5); halo.position.set(0, 1.7, 0); obj.add(halo);
+    const lv = 32, r = { obj, plate, halo, home: p.clone(), lv, max: 900 + S.lvl * 30, hp: 0, cd: rand(1.5, 3), dead: 0, vel: V(0, 0, 0), wander: p.clone(), aggro: false, def: { name: 'Maw Spawn' }, maw: true,
+      slot: { f: 0.35 + k * 0.1 + rand(0, 0.08), ox: rand(-1, 1), oy: rand(-1, 1), ph: rand(0, 6.28) } };
     r.hp = r.max; fly.raiders.push(r); drawPlate(plate, 'Maw Spawn', 'Lv ' + S.lvl, '#ff6a6a', null); burst(p, '#c86aff', 12, 20);
   }
 }
+// the Maw's shots: spinning purple rings of light, flying face-first
+let mawRingGeo = null, mawRingIn = null; const mawRingMats = {};
+function mawRingMat(col) { return mawRingMats[col] || (mawRingMats[col] = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false })); }
 function mawBolt(from, dmg, spread) {
-  const F = fly, m = new THREE.Mesh(boltGeo, glow(MAW.phase === 3 ? '#ff8a2a' : '#ff2a3a')); m.scale.setScalar(9); m.position.copy(from); levelGroup.add(m);
+  if (!mawRingGeo) { mawRingGeo = new THREE.TorusGeometry(1, 0.16, 5, 22); mawRingIn = new THREE.RingGeometry(0.55, 0.9, 20); }
+  const F = fly, m = new THREE.Group(), hot = MAW.phase === 3;
+  m.add(new THREE.Mesh(mawRingGeo, mawRingMat(hot ? '#ff4ae0' : '#b84aff')), new THREE.Mesh(mawRingIn, mawRingMat(hot ? '#7a1a8a' : '#4a1a8a')));
+  m.scale.setScalar(5); m.position.copy(from); levelGroup.add(m);
   const d = player.pos.distanceTo(from), lead = player.pos.clone().addScaledVector(F.vel, d / 170).add(V(rand(-spread, spread), rand(-spread, spread), rand(-spread, spread)));
-  F.bolts.push({ m, v: lead.sub(from).normalize().multiplyScalar(170), life: 5, dmg });
+  const v = lead.sub(from).normalize().multiplyScalar(170); m.quaternion.setFromUnitVectors(V(0, 0, 1), v.clone().normalize());
+  F.bolts.push({ m, v, life: 5, dmg, ring: Math.random() * 6.28 });
 }
 function mawStep(dt, t) {
   const F = fly; if (!F || !MAW.obj) return;
@@ -17005,15 +17161,31 @@ function mawStep(dt, t) {
   // don't fly into it
   const dm = player.pos.distanceTo(MAW_C); if (dm < MAW_R + 22) { const out = player.pos.clone().sub(MAW_C).normalize(); player.pos.copy(MAW_C).addScaledVector(out, MAW_R + 22); const vn = F.vel.dot(out); if (vn < 0) F.vel.addScaledVector(out, -vn * 1.8); if (!MAW.bumpT || t - MAW.bumpT > 1) { MAW.bumpT = t; hurt(25); F.shake = 0.5; log('It bites!', 'hurt'); } }
   if (player.pos.distanceTo(MAW_C) > 1500) { const out = player.pos.clone().sub(MAW_C).normalize(); player.pos.copy(MAW_C).addScaledVector(out, 1500); F.vel.multiplyScalar(0.2); }
+  // the rings spin and pulse as they fly
+  for (const b of F.bolts) if (b.ring != null) { b.ring += dt; b.m.children[0].rotation.z = b.ring * 5; b.m.scale.setScalar(5 + Math.sin(b.ring * 14) * 0.9); }
+  // the spawn hold the line between you and the Maw, drifting, and fire from there
+  { const toP = player.pos.clone().sub(MAW_C), dist = toP.length(), dir = toP.clone().normalize(), rt = V(0, 1, 0).cross(dir); if (rt.lengthSq() < 0.01) rt.set(1, 0, 0); rt.normalize(); const up = dir.clone().cross(rt).normalize();
+    for (const r of F.raiders) { if (!r.maw || r.dead || !r.slot) continue; const o = r.obj, S2 = r.slot; r.aggro = false;
+      const along = clamp(dist * S2.f, MAW_R + 35, Math.max(MAW_R + 35, dist - 60)), wob = t * 0.5 + S2.ph;
+      const goal = MAW_C.clone().addScaledVector(dir, along).addScaledVector(rt, S2.ox * 70 + Math.sin(wob) * 14).addScaledVector(up, S2.oy * 42 + Math.cos(wob * 1.3) * 10);
+      r.wander.copy(goal); r.vel.set(0, 0, 0); o.position.lerp(goal, Math.min(1, dt * 1.4)); o.lookAt(player.pos); o.visible = true;
+      if (r.halo) { r.halo.visible = true; r.halo.material.opacity = 0.75 + Math.sin(t * 3 + S2.ph) * 0.2; }
+      const d = o.position.distanceTo(player.pos);
+      if (MAW.intro && !MAW.dead && player.alive) { r.cd -= dt; if (r.cd <= 0 && d < 650) { r.cd = rand(1.6, 2.8); const m = new THREE.Mesh(boltGeo, glow('#ff2a3a')); m.scale.setScalar(5); m.position.copy(o.position); levelGroup.add(m);
+        const lead = player.pos.clone().addScaledVector(F.vel, d / 150); F.bolts.push({ m, v: lead.sub(o.position).normalize().multiplyScalar(150), life: 4, dmg: 6 + r.lv * 0.9 }); } } } }
   if (MAW.dead || !player.alive || !MAW.intro) return;
   MAW.t += dt; const ph = MAW.phase, eyeW = MAW.obj.userData.eye.getWorldPosition(V(0, 0, 0));
+  for (let i = MAW.ev.length - 1; i >= 0; i--) if (MAW.t >= MAW.ev[i].at) { const e = MAW.ev.splice(i, 1)[0]; try { e.fn(); } catch (err) { console.warn('maw beat', err); } }
   // turn to face you
   const want = Math.atan2(player.pos.x - MAW_C.x, player.pos.z - MAW_C.z); let dy = want - MAW.obj.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); MAW.obj.rotation.y += dy * Math.min(1, dt * 0.35);
   MAW.obj.rotation.x = clamp(-Math.atan2(player.pos.y - MAW_C.y, Math.hypot(player.pos.x - MAW_C.x, player.pos.z - MAW_C.z)) * 0.6, -0.4, 0.4);
   // volleys from the little eyes
   MAW.volT -= dt; if (MAW.volT <= 0) { MAW.volT = ph === 3 ? 1.6 : ph === 2 ? 2.3 : 3.0; const E = MAW.obj.userData.eyes.filter(e => e.visible); const n = ph === 3 ? 6 : ph === 2 ? 4 : 3;
     for (let k = 0; k < n; k++) { const e = E[(Math.random() * E.length) | 0]; if (!e) break; mawBolt(e.getWorldPosition(V(0, 0, 0)), 26 + ph * 4, 14); } if (dm < 700) SFX.zap(); }
+  // the last phase: mega guns, explosions and smoke
+  if (MAW.final >= 2) mawFinalStep(dt, t);
   // the eye beam: it locks on, then burns a line you have to dodge
+  if (MAW.final) MAW.beamT = Math.max(MAW.beamT, 3);
   MAW.beamT -= dt;
   if (!MAW.beam && MAW.beamT <= 0) { const dir = player.pos.clone().sub(eyeW).normalize();
     const tl = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 1, 6), new THREE.MeshBasicMaterial({ color: '#ff2a3a', transparent: true, opacity: 0.5, fog: false })); levelGroup.add(tl);
@@ -17032,7 +17204,8 @@ function mawStep(dt, t) {
   // allies arrive even if you're slow to hurt it
   if (!MAW.alliesIn && MAW.t > 40) mawAlliesCut();
   // a line of chatter now and then
-  if (MAW.alliesIn) { MAW.commsT -= dt; if (MAW.commsT <= 0) { MAW.commsT = 9 + Math.random() * 5; const [w, l] = MAW_CHATTER[MAW.said++ % MAW_CHATTER.length]; mawComms(w, l); } }
+  if (MAW.alliesIn) { MAW.commsT -= dt; if (MAW.commsT <= 0) { MAW.commsT = 9 + Math.random() * 5;
+    for (let n = 0; n < MAW_CHATTER.length; n++) { const [w, l] = MAW_CHATTER[MAW.said++ % MAW_CHATTER.length]; if (MAW.lost.some(x => x.toUpperCase() === w) || (MAW.nowSaid && w === 'B.U.R.P.')) continue; if (w === 'B.U.R.P.') mawBurp(l, 5); else mawComms(w, l); break; } } }
 }
 { const _ss = spaceStep; spaceStep = function (dt, t) {
   if (!LEVEL || LEVEL.id !== 'maw') return _ss(dt, t);
@@ -17054,16 +17227,75 @@ function mawStep(dt, t) {
 { const _kr = killRaider; killRaider = function (r) { const res = _kr(r); if (r && r.maw) { const F = fly, i = F.raiders.indexOf(r); if (i >= 0) F.raiders.splice(i, 1); levelGroup.remove(r.obj); } return res; }; }
 { const _mc = musContext; musContext = function (dt) { const r = _mc(dt); if (LEVEL && LEVEL.id === 'maw' && !MAW.dead) return 'eyeboss'; return r; }; }
 
+// ---- the last phase: it morphs, the squadron forms up on you, and B.U.R.P. offers fight mode ----
+const MAW_FM_ASK = 'Captain, want me to activate fight mode?', MAW_FM_ON = 'Fight mode, activated.';
+function mawFinal() {
+  if (MAW.final) return; MAW.final = 1; MAW.ev = MAW.ev.filter(e => !e.burp);
+  if (MAW.beam) { if (MAW.beam.fire) levelGroup.remove(MAW.beam.fire); if (MAW.beam.tl) levelGroup.remove(MAW.beam.tl); MAW.beam = null; }
+  fly.bolts.forEach(b => levelGroup.remove(b.m)); fly.bolts.length = 0;
+  if (!MAW.alliesIn) mawAlliesArrive(true);
+  const m = MAW.obj, U = m.userData, t0 = performance.now() / 1000, T = () => performance.now() / 1000 - t0;
+  MAW.allies.forEach(A => { if (A.doom) { if (A.doom.beam) levelGroup.remove(A.doom.beam); levelGroup.remove(A.o); } }); MAW.allies = MAW.allies.filter(A => !A.doom);
+  const go = () => { U.morph = 1; MAW.final = 2; MAW.phase = 4; U.rage = 3; U.iris.material = glow('#ff4ae0');
+    toast('IT CHANGES', 'Its last form. Everyone, on the Captain!', 2.5);
+    mawComms('CAPTAIN VEGA', 'Squadron, form up on the Captain! All guns, together!', 3.5);
+    mawAt(3.2, () => { mawBurp(MAW_FM_ASK, 5); mawFightPrompt(); }); };
+  if (CUT.on) { go(); return; }
+  runCutscene({ lock: 1.5, shots: [
+    { text: 'It splits open.', dur: 3.2, cam: (t, k) => { U.morph = Math.min(1, k * 1.2); mawAnim(m, T(), camera.position); m.position.copy(MAW_C).add(V(rand(-1, 1), rand(-1, 1), rand(-1, 1)).multiplyScalar(3)); if (k > 0.2 && !U.morphBoom) { U.morphBoom = 1; SFX.boom(); burst(MAW_C, '#ff4ae0', 30, 60); } camLook(player.pos.clone().lerp(MAW_C, 0.35).add(V(60, 40, 0)), MAW_C); } },
+    { text: 'And the squadron closes around you.', dur: 3, cam: (t, k) => { MAW.final = 2; mawAllyStep(1 / 60, T()); m.position.copy(MAW_C); const c = player.pos; _e.set(player.pitch, player.yaw, 0); _q.setFromEuler(_e); camLook(c.clone().add(V(0, 22, 70).applyQuaternion(_q)), c.clone().add(V(0, 0, -80).applyQuaternion(_q))); } },
+  ], onEnd: () => { m.position.copy(MAW_C); go(); } });
+}
+function mawFightPrompt() {
+  if (MAW.mega || $('mawFight')) return;
+  const d = document.createElement('div'); d.id = 'mawFight'; d.style.cssText = 'position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 40px);transform:translateX(-50%);z-index:7;display:flex;align-items:center;gap:10px;padding:5px 6px 5px 12px;background:rgba(20,6,30,.7);border:1px solid #ff4ae0;border-radius:8px;font:600 12px var(--hud,sans-serif);color:#f4d8ff;pointer-events:none';
+  d.innerHTML = '<span>B.U.R.P.: Fight mode?</span>';
+  const b = document.createElement('button'); b.textContent = 'ACTIVATE' + (TOUCH ? '' : ' [F]'); b.style.cssText = 'pointer-events:auto;font:800 14px var(--hud,sans-serif);letter-spacing:.12em;padding:8px 16px;border-radius:6px;border:0;background:linear-gradient(#ff6ae8,#b42ad0);color:#fff;box-shadow:0 0 14px #ff4ae0;cursor:pointer';
+  d.appendChild(b); document.body.appendChild(d);
+  const on = () => { if (MAW.mega) return; document.removeEventListener('keydown', key, true); d.remove(); mawFightMode(); };
+  const key = e => { if (e.code === 'KeyF' || e.code === 'Enter') { e.preventDefault(); e.stopPropagation(); on(); } };
+  b.addEventListener('click', on); b.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); on(); }, { passive: false }); document.addEventListener('keydown', key, true);
+  MAW.fmCancel = () => { document.removeEventListener('keydown', key, true); d.remove(); };
+  mawAt(5.5, on);
+}
+function mawFightMode() {
+  if (MAW.mega || MAW.dead) return; MAW.mega = true; MAW.megaT = 0; MAW.vegaT = 7;
+  mawBurp(MAW_FM_ON, 2.6); toast('FIGHT MODE', 'Mega guns online', 2.5); SFX.level(); if (fly) fly.shake = 0.4;
+  MAW.ev.push({ at: MAW.t + 2.8, fn: () => { MAW.nowSaid = true; mawBurp(MAW_NOW, 5); }, burp: 1 });
+  mawAt(8.5, () => mawComms('CAPTAIN VEGA', 'Keep firing! KEEP FIRING!', 3.5));
+}
+function mawFinalStep(dt, t) {
+  const F = fly;
+  // explosions and smoke boil off it, more of them once the mega guns are tearing in
+  MAW.blastT -= dt; if (MAW.blastT <= 0) { MAW.blastT = MAW.mega ? 0.28 + Math.random() * 0.25 : 0.9 + Math.random() * 0.6; mawBlast(MAW.mega && Math.random() < 0.4); }
+  if (MAW.mega) { MAW.vegaT -= dt; if (MAW.vegaT <= 0) { MAW.vegaT = 14; mawComms('CAPTAIN VEGA', ['Keep firing!', 'Don\'t let up! Keep firing!', 'It\'s breaking! Keep firing, Captain!'][(Math.random() * 3) | 0], 3); } }
+  if (!MAW.mega || !player.alive) return;
+  // mega guns: a storm of shots from every hardpoint while you fire (or while it's in your sights)
+  _e.set(player.pitch, player.yaw, 0); _q.setFromEuler(_e); shipFwd.set(0, 0, -1).applyQuaternion(_q); shipRight.set(1, 0, 0).applyQuaternion(_q); const up = V(0, 1, 0).applyQuaternion(_q);
+  const toM = MAW_C.clone().sub(player.pos).normalize(), inSight = toM.dot(shipFwd) > 0.9;
+  if (!(firing || inSight)) return;
+  MAW.megaCd -= dt; let shots = 0;
+  const dmg = SHIP_SYS.laser.lv[sysLv('laser')].dmg * (1 + (S.lvl - 1) * 0.03) * (typeof shipMod === 'function' ? shipMod('laser') : 1);
+  while (MAW.megaCd <= 0 && shots < 4) { MAW.megaCd += 0.035; shots++;
+    const side = (MAW.megaN = (MAW.megaN || 0) + 1) % 4, ox = [-5.5, 5.5, -2.5, 2.5][side], oy = side > 1 ? -1.5 : 0.8;
+    const from = player.pos.clone().addScaledVector(shipRight, ox).addScaledVector(up, oy).addScaledVector(shipFwd, 2);
+    const dir = shipFwd.clone().add(V(rand(-0.03, 0.03), rand(-0.03, 0.03), rand(-0.03, 0.03))).normalize(), tt = raySphere(from, dir, MAW_C, MAW_R * 0.92);
+    const col = side % 2 ? '#ff6ae8' : '#9aff6a';
+    if (tt > 0 && tt < 1600) { mawAllyShot(from, from.clone().addScaledVector(dir, tt), col, false, true); mawDamage(dmg * 0.55, true); }
+    else mawAllyShot(from, from.clone().addScaledVector(dir, 600), col, true, true); }
+  if (shots && (MAW.megaS = (MAW.megaS || 0) + 1) % 3 === 0) { try { SFX.zap(); } catch (_) {} }
+  if (MAW.megaCd < -0.2) MAW.megaCd = 0;
+}
 // ---- scenes ----
 const camLook = (p, at) => { camera.position.copy(p); camera.lookAt(at); };
 function mawIntro() {
-  const first = !(S.flags && S.flags.mawIntro), m = MAW.obj, U = m.userData, ship = fly.ship;
+  const first = !(S.flags && S.flags.mawIntro), m = MAW.obj, U = m.userData, ship = fly.ship; U.roared = 0;
   U.open = 0; const t0 = performance.now() / 1000, T = () => performance.now() / 1000 - t0;
   ship.position.set(0, 20, 740); ship.quaternion.identity();
   const done = () => { MAW.intro = true; U.open = 1; S.flags = S.flags || {}; S.flags.mawIntro = 1; markDirty(); player.pos.set(0, 0, 560); player.yaw = 0; player.pitch = 0;
-    if (!first) toast('THE GREATER MAW', 'Again. It remembers you.', 2.5); };
-  if (!first) { runCutscene({ lock: 1, shots: [{ text: 'THE GREATER MAW', dur: 3, cam: (t, k) => { U.open = k; mawAnim(m, T(), camera.position); camLook(V(0, 30, 260 - k * 60), MAW_C); } }], onEnd: done }); return; }
-  runCutscene({ music: 'eyeboss', lock: 4, shots: [
+    if (!first) toast('THE GREATER MAW', 'Again. It remembers you.', 2.5);
+    mawAt(2.5, () => mawBurp('No jokes this time, Captain. Just come back in one piece.', 5.5)); };
+  runCutscene({ music: 'eyeboss', lock: first ? 4 : 1.5, shots: [
     { text: 'You go through alone.', dur: 4.5, cam: (t, k) => { wormholeAnim(MAW.back, T()); ship.position.set(0, 20 - k * 20, 740 - k * 180); camLook(V(-30 + k * 10, 34, 690 - k * 150), ship.position.clone().add(V(0, 0, -40))); } },
     { text: 'No stars. No sound. Just the things it has eaten.', dur: 5.5, cam: (t, k) => { const a = 2.2 + k * 0.6; camLook(V(Math.cos(a) * 700, 160 - k * 60, Math.sin(a) * 700 - 150), V(0, 0, -150)); mawAnim(m, T(), null); } },
     { text: 'And waiting at the bottom of the dark...', dur: 5, cam: (t, k) => { mawAnim(m, T(), null); camLook(V(0, 30 - k * 10, 420 - k * 200), MAW_C.clone().add(V(0, 8, 0))); } },
@@ -17072,18 +17304,18 @@ function mawIntro() {
 }
 function mawAlliesCut() {
   if (MAW.alliesIn) return;
-  if (S.flags && S.flags.mawAllies) { mawAlliesArrive(true); return; }
+  const again = !!(S.flags && S.flags.mawAllies);
   mawAlliesArrive(false); const ships = MAW.allies, B = MAW.back.position, t0 = performance.now() / 1000;
   const fwd = (k) => ships.forEach((A, i) => { A.o.position.copy(B).add(V((i - 4.5) * 14, (i % 3) * 10 - 10, -k * (120 + (i % 4) * 30))); A.o.lookAt(MAW_C); A.o.rotateY(Math.PI); A.enter = 0; });
-  runCutscene({ lock: 3, shots: [
+  runCutscene({ lock: again ? 1.5 : 3, shots: [
     { text: 'Behind you, the wormhole flares.', dur: 3, cam: (t, k) => { wormholeAnim(MAW.back, performance.now() / 1000 - t0); MAW.back.scale.setScalar(1 + k * 0.4); fwd(0); camLook(player.pos.clone().add(V(20, 16, -40)), B); } },
     { text: 'VEGA: You really thought we\'d let you go in alone, rookie?', dur: 4, cam: (t, k) => { fwd(k); camLook(B.clone().add(V(60, 30, -260)), B.clone().add(V(0, 0, -k * 150))); } },
     { text: 'SKYE: Earth Defense Force, on your wing. ADA-9: Robot City sends its regards.', dur: 4, cam: (t, k) => { fwd(1 + k * 0.6); const c = ships[0].o.position; camLook(c.clone().add(V(-30, 12, 40)), c.clone().add(V(0, 0, -60))); } },
     { text: 'ELISMAS: Four Masters. Four arts. One eye. Let us close it.', dur: 4, cam: (t, k) => { fwd(1.6 + k * 0.5); const c = ships[6].o.position; camLook(c.clone().add(V(24, 10, 30)), MAW_C); } },
-  ], onEnd: () => { MAW.back.scale.setScalar(1); S.flags = S.flags || {}; S.flags.mawAllies = 1; markDirty(); mawComms('CAPTAIN VEGA', 'Squadron, on the rookie. Let\'s finish this.'); } });
+  ], onEnd: () => { MAW.back.scale.setScalar(1); S.flags = S.flags || {}; S.flags.mawAllies = 1; markDirty(); mawSquadIn(); } });
 }
 function mawDeath() {
-  if (MAW.dead) return; MAW.dead = true; const m = MAW.obj, U = m.userData, first = !(S.flags && S.flags.mawDead), t0 = performance.now() / 1000;
+  if (MAW.dead) return; MAW.dead = true; if (MAW.fmCancel) { MAW.fmCancel(); MAW.fmCancel = null; } const m = MAW.obj, U = m.userData, first = !(S.flags && S.flags.mawDead), t0 = performance.now() / 1000;
   if (MAW.beam) { if (MAW.beam.fire) levelGroup.remove(MAW.beam.fire); if (MAW.beam.tl) levelGroup.remove(MAW.beam.tl); MAW.beam = null; }
   fly.raiders.slice().forEach(r => { if (!r.dead) killRaider(r); }); fly.bolts.forEach(b => levelGroup.remove(b.m)); fly.bolts.length = 0;
   const bar = $('mawBar'); if (bar) bar.hidden = true;
@@ -18004,7 +18236,7 @@ function rangeHit(o, d) {
   return r; }; }
 
 // generated by tools/burpvo_ids.py: which B.U.R.P. lines have a recorded clip
-const BURP_VO = new Set('019d19f9 0255d943 0272ce6c 07ff4d15 08f68083 0a3f0e98 0b5aada5 0b5b9ad0 0c83301d 0ce14908 0f98b3a9 0f9d7604 0ffd248d 1040a9a1 11547848 12f689fb 130b7be1 14a56f61 169a1cc7 16c63d2e 17769fd6 1835dd59 186dd066 1884f842 18bde740 1a238512 1aac7874 1b0b7e2d 1b168626 1c684c6d 1d620c60 1e7e71fe 1ee52a4d 1f3dc10f 1f8fabb8 21276758 21361572 222043b4 228e75a3 22da18a5 22fe9834 23169ea9 24996c37 24e92d9e 261cb8cf 26756b04 26ed5cb1 27852aed 28dceb21 290ea7d4 29d1db4a 2c3fd6a9 2e1dc3fd 2e327e93 2f68f916 329faad2 33a34814 3409c1aa 3495f47f 361445ec 36503201 375372c3 3acf1777 3b6163c8 3bb3d5f8 3bc3edfd 3c9dc359 3ce3ba0b 3d1f3920 3f1f93b2 4239f99b 4245e2b8 4262ca97 428a1dc4 43b1f06c 44231a0f 4669d7e1 46dfff49 4844c9b4 48cabbb3 498deb51 4aeac610 4b882f2e 4c27c008 4d9f57a0 4e4404de 4f1e2408 4fb37c79 4fe7816d 5022a5ea 5035ef3b 507a7caf 517b6335 520d6549 5239f162 53b70b38 5426a2b1 54571b61 5bd3fc56 5ce95245 5dec733a 60735f21 607cf32d 60d55737 6239564c 6289c1b2 62b93e73 630d304b 633c2f0f 65155efe 66b6dd60 66be4e32 68be3d12 68ff0303 6a60a1a5 6a67f9a3 6b1edd7f 6b44fd90 6ba296f2 6e3b9360 6f38c58a 704cedb8 7175f12d 71f43a89 75c37b0d 75db8717 77848a3f 79b4dca7 7b2c8288 7bc06ab5 7cc3785e 7d010e55 7e05cca4 824eb1fb 82f43991 8428f81b 843e5c16 85f121bf 87ba333d 880722bf 898df94e 89f8b85b 8b01d880 8bbafad9 8beed01d 8bef3d7d 8cd8d5d7 8d717d12 8da0d8e5 8f4f0a07 8f504a40 90af9507 919e2cd5 91e7b0ed 9399c1da 93cda89d 9515c8d9 9a522975 9b10c514 9c6ed4ba 9c6ff8ee 9ce5101f 9d9e0bbf 9da6b676 9ffe0bf6 a0419699 a1a63a41 a21329cf a46ac4ab a5679e21 a577a6ab a6cbc662 a70ffc20 a8cf46f1 ac657fef addb9d41 aef75b0e b1b07d1f b1c6f9fe b1dd6580 b3313235 b3a15d17 b5083958 b5280fa7 b5796e10 b6829a2a b6981842 b73ea286 b8481534 b96d9eb7 bb876ff0 bc424774 bc8ea102 bd5988a3 bd7eeb7a bdf735a0 bf151b6f bfab3f26 c04a4cc5 c071787a c0e0125e c1633150 c16f5077 c3168789 c39e5ecf c41959f0 c57b4558 c6a3a56d c889b0fd c8ce0e51 c978dfd2 c9fc3394 ca12a505 cbf88ef6 cc9b4071 ce6b3377 cf58242e cf76d3f5 cfb78867 d1b6a80a d2773270 d38d3bcc d4c11e65 d5304665 d670f8ed d67716bc d6f9f475 d866bac5 d9114a98 da1c7eff dc0be44f dc1c2c42 dc2e6774 df6ed76e e2862c03 e3bd8605 e41cb0e5 e4610eff e6f2a7ad e80780d1 e9102419 ea68da11 ebd594d3 ec0eb3ed ec67f42e ec88c940 ecdf15ee ed2bca2a ee7a9ec4 eec7d9b6 f0599600 f147cf66 f16080c3 f260d871 f2c7fbf6 f44dbc69 f507a014 f6377eb0 f639e89a f6c703ba f7d2c3d9 fa17109a fc26a633 fcb3fb9b fcda019c fd85cb42 fe72c880 fe9211b5 fef443a7 ff0c92ca'.split(' ').filter(Boolean));
+const BURP_VO = new Set('0199a781 019d19f9 0255d943 0272ce6c 07ff4d15 08f68083 0a3f0e98 0b5aada5 0b5b9ad0 0c83301d 0ce14908 0f98b3a9 0f9d7604 0ffd248d 1040a9a1 11547848 12f689fb 130b7be1 14a56f61 15e2a0ec 169a1cc7 16c63d2e 17769fd6 1835dd59 186dd066 1884f842 18bde740 1a238512 1aac7874 1b0b7e2d 1b168626 1c684c6d 1d620c60 1e7e71fe 1ee52a4d 1f3dc10f 1f8fabb8 21276758 21361572 222043b4 228e75a3 22da18a5 22fe9834 23169ea9 24996c37 24e92d9e 261cb8cf 26756b04 26ed5cb1 27852aed 28dceb21 290ea7d4 29d1db4a 2c3fd6a9 2e1dc3fd 2e327e93 2f68f916 329faad2 33a34814 3409c1aa 3495f47f 361445ec 36503201 375372c3 3acf1777 3b6163c8 3bb3d5f8 3bc3edfd 3c9dc359 3ce3ba0b 3d1f3920 3f1f93b2 4239f99b 4245e2b8 4262ca97 428a1dc4 43b1f06c 44231a0f 4669d7e1 46dfff49 4844c9b4 48cabbb3 498deb51 4aeac610 4b882f2e 4c27c008 4d9f57a0 4dd86691 4e4404de 4f1e2408 4fb37c79 4fe7816d 5022a5ea 5035ef3b 507a7caf 517b6335 520d6549 5239f162 53b70b38 5426a2b1 54571b61 5bd3fc56 5ce95245 5dec733a 60735f21 607cf32d 60d55737 6239564c 6289c1b2 62b93e73 630d304b 633c2f0f 65155efe 66b6dd60 66be4e32 68be3d12 68ff0303 6a55255b 6a60a1a5 6a67f9a3 6b1edd7f 6b44fd90 6ba296f2 6e3b9360 6f38c58a 704cedb8 7175f12d 71f43a89 75c37b0d 75db8717 77848a3f 79b4dca7 7b2c8288 7bc06ab5 7cc3785e 7d010e55 7e05cca4 824eb1fb 82f43991 8428f81b 843e5c16 85f121bf 87ba333d 880722bf 8960ce93 898df94e 89f8b85b 8af45176 8b01d880 8bbafad9 8beed01d 8bef3d7d 8cd8d5d7 8d717d12 8da0d8e5 8f4f0a07 8f504a40 90af9507 919e2cd5 91e7b0ed 9399c1da 93cda89d 94fcde0d 9515c8d9 9a522975 9b10c514 9c6ed4ba 9c6ff8ee 9ce5101f 9d9e0bbf 9da6b676 9ffe0bf6 a0419699 a1a63a41 a21329cf a27b0e0b a46ac4ab a5679e21 a577a6ab a643dab8 a6cbc662 a70ffc20 a8cf46f1 ac657fef addb9d41 aef75b0e b1b07d1f b1c6f9fe b1dd6580 b3313235 b3a15d17 b5083958 b5280fa7 b5796e10 b6829a2a b6981842 b73ea286 b8481534 b96d9eb7 bb876ff0 bc424774 bc8ea102 bd5988a3 bd7eeb7a bdf735a0 bf151b6f bfab3f26 c04a4cc5 c071787a c0e0125e c1633150 c16f5077 c3168789 c39e5ecf c41959f0 c57b4558 c6a3a56d c889b0fd c8ce0e51 c978dfd2 c9fc3394 ca12a505 cbf88ef6 cc9b4071 ce6b3377 cf58242e cf76d3f5 cfb78867 d1b6a80a d2773270 d38d3bcc d4c11e65 d5304665 d670f8ed d67716bc d6f9f475 d866bac5 d9114a98 da1c7eff dc0be44f dc1c2c42 dc2e6774 df6ed76e e2862c03 e3bd8605 e41cb0e5 e4610eff e6f2a7ad e80780d1 e9102419 ea68da11 ebd594d3 ec0eb3ed ec67f42e ec88c940 ecdf15ee ed2bca2a ee7a9ec4 eec7d9b6 f0599600 f147cf66 f16080c3 f260d871 f2c7fbf6 f44dbc69 f507a014 f6377eb0 f639e89a f6c703ba f7d2c3d9 fa17109a fc26a633 fcb3fb9b fcda019c fd85cb42 fe72c880 fe9211b5 fef443a7 ff0c92ca'.split(' ').filter(Boolean));
 
 // =================== B.U.R.P.'s real voice ===================
 // Every B.U.R.P. line is a recorded clip (a British voice run through a robot filter), named by a hash of the line.

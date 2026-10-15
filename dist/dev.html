@@ -2123,6 +2123,7 @@ function renderModelIn3D(codeStr, fnName, displayName) {
     const runner = new Function(
       "THREE", "part", "B", "Cy", "SPH", "E", "seg", "chain", "eyes", "toon", "glow", "C", "V", "UP",
       `
+      ${(selectedModel && selectedModel.fn === fnName && selectedModel.deps) || ''}
       ${codeStr}
       if (typeof ${fnName} === "function") {
         if ("${fnName}" === "makeCivilian") {
@@ -2148,7 +2149,7 @@ function renderModelIn3D(codeStr, fnName, displayName) {
     }
 
     // Measure bounding box and auto-frame camera
-    const box = new THREE.Box3().setFromObject(modelObj);
+    const box = new THREE.Box3(); modelObj.updateMatrixWorld(true); modelObj.traverse(c => { if (c.isMesh && !c.isSprite) box.expandByObject(c); }); if (box.isEmpty()) box.setFromObject(modelObj);
     const size = new THREE.Vector3();
     const center = new THREE.Vector3();
     box.getSize(size);

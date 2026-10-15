@@ -350,6 +350,64 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    // ---- Script Studio: B.U.R.P. lines, cutscene captions, battle radio and voice packs (script.html) ----
+    if (pathname === '/api/script' || pathname.startsWith('/api/voice/')) {
+      const SS = require('./tools/script_scan.js'), SJ = path.join(SRC_DIR, 'script.json');
+      const readScript = () => { try { return JSON.parse(fs.readFileSync(SJ, 'utf8')); } catch (_) { return { burp: {}, say: {}, voice: { active: 'burp', packs: {} } }; } };
+      const send = (code, obj) => { res.statusCode = code; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(obj)); };
+      const body = () => new Promise((ok, bad) => { let b = ''; req.on('data', c => { b += c; if (b.length > 5e6) req.destroy(); }); req.on('end', () => { try { ok(JSON.parse(b || '{}')); } catch (e) { bad(e); } }); });
+      const packOk = id => /^[a-z0-9_-]{1,40}$/.test(id || '');
+      const clipsOf = id => { const d = path.join(DIST_DIR, 'voice', id); try { return fs.readdirSync(d).filter(f => f.endsWith('.mp3')).map(f => f.slice(0, -4)); } catch (_) { return []; } };
+      const VJ = global.__voiceJob || (global.__voiceJob = { running: false, pack: '', done: 0, total: 0, log: [], error: '' });
+      const py = process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
+      if (req.method === 'GET' && pathname === '/api/script') {
+        const inv = SS.scan(), script = readScript(), clips = {};
+        for (const id of Object.keys((script.voice && script.voice.packs) || {})) clips[id] = clipsOf(id);
+        return send(200, { inventory: inv, script, clips, spoken: SS.spoken(inv, script).map(([h]) => h) });
+      }
+      if (req.method === 'POST' && pathname === '/api/script') {
+        body().then(sc => {
+          if (!sc || typeof sc !== 'object' || typeof sc.burp !== 'object' || typeof sc.say !== 'object') return send(400, { error: 'bad script' });
+          for (const id of Object.keys((sc.voice && sc.voice.packs) || {})) if (!packOk(id)) return send(400, { error: 'bad pack name ' + id });
+          fs.writeFileSync(SJ, JSON.stringify(sc, null, 2) + '\n');
+          let msg = ''; try { execSync(py + ' tools/burpvo_ids.py', { cwd: ROOT_DIR }); msg = execSync(py + ' tools/build.py', { cwd: ROOT_DIR, encoding: 'utf8' }).trim(); } catch (e) { msg = 'build failed: ' + e.message; }
+          send(200, { ok: true, build: msg });
+        }).catch(e => send(400, { error: e.message }));
+        return;
+      }
+      if (req.method === 'GET' && pathname === '/api/voice/job') return send(200, VJ);
+      if (req.method === 'POST' && pathname === '/api/voice/setup') {
+        if (VJ.running) return send(409, { error: 'busy' });
+        Object.assign(VJ, { running: true, pack: '(setup)', done: 0, total: 1, log: ['Installing the voice tools (pip)...'], error: '' });
+        const { spawn } = require('child_process'); const p = spawn(py, ['-m', 'pip', 'install', '--user', 'kokoro-onnx', 'piper-tts', 'soundfile', 'lameenc', 'numpy'], { cwd: ROOT_DIR });
+        const eat = d => { VJ.log.push(...String(d).split('\n').filter(Boolean)); VJ.log = VJ.log.slice(-40); }; p.stdout.on('data', eat); p.stderr.on('data', eat);
+        p.on('close', c => { VJ.running = false; VJ.done = 1; if (c) VJ.error = 'pip exited with ' + c; else VJ.log.push('Voice tools installed. The voice models download the first time you generate.'); });
+        p.on('error', e => { VJ.running = false; VJ.error = 'Could not run ' + py + ': ' + e.message + ' (install Python 3, or set the PYTHON environment variable)'; });
+        return send(200, { ok: true });
+      }
+      if (req.method === 'POST' && pathname === '/api/voice/generate') {
+        body().then(J => {
+          if (VJ.running) return send(409, { error: 'A voice job is already running' });
+          const script = readScript(), id = J.pack, pack = J.settings || (script.voice && script.voice.packs && script.voice.packs[id]);
+          if (!packOk(id) || !pack) return send(400, { error: 'unknown pack' });
+          const inv = SS.scan(); let lines = SS.spoken(inv, script);
+          if (Array.isArray(J.texts)) lines = J.texts.filter(t => typeof t === 'string' && t.trim()).slice(0, 2000).map(t => [SS.hash(t), t]);
+          const out = J.preview ? path.join(DIST_DIR, 'voice', '_preview') : path.join(DIST_DIR, 'voice', id);
+          const jobFile = path.join(require('os').tmpdir(), 'aow_voicejob_' + Date.now() + '.json');
+          fs.writeFileSync(jobFile, JSON.stringify({ pack, out, lines, force: !!(J.force || J.preview) }));
+          Object.assign(VJ, { running: true, pack: id, done: 0, total: lines.length, log: [], error: '', preview: J.preview ? lines.map(l => l[0]) : null });
+          const { spawn } = require('child_process'); const p = spawn(py, [path.join('tools', 'voicegen.py'), jobFile], { cwd: ROOT_DIR });
+          const eat = d => { for (const l of String(d).split('\n').filter(Boolean)) { const m = /^PROGRESS (\d+) (\d+)/.exec(l); if (m) { VJ.done = +m[1]; VJ.total = +m[2]; } else VJ.log.push(l); } VJ.log = VJ.log.slice(-40); };
+          p.stdout.on('data', eat); p.stderr.on('data', eat);
+          p.on('close', c => { VJ.running = false; try { fs.unlinkSync(jobFile); } catch (_) {} if (c) VJ.error = VJ.error || ('The voice generator stopped (exit ' + c + '). ' + (VJ.log.slice(-3).join(' '))); else if (!J.preview) { try { execSync(py + ' tools/burpvo_ids.py', { cwd: ROOT_DIR }); execSync(py + ' tools/build.py', { cwd: ROOT_DIR }); VJ.log.push('Game rebuilt with the new clips.'); } catch (e) { VJ.error = 'rebuild failed: ' + e.message; } } });
+          p.on('error', e => { VJ.running = false; VJ.error = 'Could not run ' + py + ': ' + e.message + ' (install Python 3 first, then press Install voice tools)'; });
+          send(200, { ok: true, total: lines.length });
+        }).catch(e => send(400, { error: e.message }));
+        return;
+      }
+      return send(404, { error: 'not found' });
+    }
+
     // GET /api/files - List all JS files in src/
     if (req.method === 'GET' && pathname === '/api/files') {
       try {
@@ -643,6 +701,10 @@ const server = http.createServer((req, res) => {
     cleanUrl = '/dev.html';
   }
 
+  if (cleanUrl === '/script' || cleanUrl === '/script.html' || cleanUrl === '/studio') {
+    if (!isLocal) { res.statusCode = 403; res.setHeader('Content-Type', 'text/plain'); res.end('Access Forbidden: Script Studio is only accessible from the host PC'); return; }
+    cleanUrl = '/script.html';
+  }
   const safePath = path.normalize(cleanUrl).replace(/^(\.\.[\/\\])+/, '');
   let filePath;
   if (cleanUrl.startsWith('/src/')) {

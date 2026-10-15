@@ -85,7 +85,7 @@ function rollCredits(replay) {
     if (t > 21.5) { // logo, then the credit roll
       const la = Math.min(1, (t - 21.5) / 1.5) * Math.max(0, 1 - (t - 27) / 1.5); x.globalAlpha = la; x.textAlign = 'center'; x.fillStyle = '#ffe08a'; x.font = `bold ${Math.round(m * 0.12)}px "Pixelify Sans", monospace`; x.fillText('ART ⚔ WAR', w / 2, h * 0.42); x.fillStyle = '#fff'; x.font = `${Math.round(m * 0.045)}px "Pixelify Sans", monospace`; x.fillText('S E T T I N G   S U N', w / 2, h * 0.5); x.globalAlpha = 1;
     }
-    const si = scenes.reduce((a, s, i) => t >= s[0] ? i : a, -1); if (si !== capI) { capI = si; cap.style.opacity = 0; setTimeout(() => { if (scenes[si]) { cap.textContent = scenes[si][1]; cap.style.opacity = scenes[si][1] ? 1 : 0; } }, 250); }
+    const si = scenes.reduce((a, s, i) => t >= s[0] ? i : a, -1); if (si !== capI) { capI = si; cap.style.opacity = 0; setTimeout(() => { if (scenes[si]) { cap.textContent = typeof scr === 'function' ? scr(scenes[si][1]) : scenes[si][1]; cap.style.opacity = scenes[si][1] ? 1 : 0; } }, 250); }
     if (t > 28) { const y = (t - 28) * 46; roll.style.transform = `translateY(${-y}px)`; if (y > roll.offsetHeight + ov.clientHeight) return end(); }
     requestAnimationFrame(draw);
   };

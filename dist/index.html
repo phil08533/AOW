@@ -18220,6 +18220,255 @@ function cabinDraw(sp, K) {
   if ((CABIN.drawT = (CABIN.drawT || 0) - dt) <= 0) { CABIN.drawT = 0.1; cabinDraw(sp, K); }
 }; }
 
+// =================== RADIO: stations you tune in your ship and your Velocity car ===================
+// R (or the 📻 button) flips through the stations while you're flying or driving. Stations are built from the game's
+// music library; each one has a slot for a DJ who will talk between songs later (RADIO_DJ hooks below).
+const RADIO_TITLES = { risingsun: 'Art of War: Rising Sun', overture: 'Velocity Overture', eventhorizon: 'Event Horizon', tidal: 'Tidal', nebula: 'Nebula', neon: 'Neon', wakeup: 'Wake Up', dancing: 'Dancing', hymn: 'Hymn', mushroom: 'Mushroom', enchanted: 'Enchanted', iloveyou: 'I Love You', apocalyptic: 'Apocalyptic', low: 'Low', c4po: 'C4PO' };
+const RADIO_STATIONS = [
+  { id: 'sunfm', name: 'Setting Sun FM', tag: 'the big songs', tracks: ['risingsun', 'overture', 'eventhorizon', 'tidal'], dj: null },
+  { id: 'nebula', name: 'Nebula 88.8', tag: 'club all night', tracks: ['nebula', 'neon', 'wakeup', 'dancing'], dj: null },
+  { id: 'ghost', name: 'Ghost Signal', tag: 'late night, low lights', tracks: ['hymn', 'mushroom', 'enchanted', 'iloveyou'], dj: null },
+  { id: 'raider', name: 'Raider Radio', tag: 'loud and illegal', tracks: ['apocalyptic', 'low', 'c4po'], dj: null },
+];
+RADIO_STATIONS.forEach(s => { PLAYLISTS['radio_' + s.id] = s.tracks.filter(t => TRACKS[t]); });
+const RADIO = { st: -1, btn: null };
+const radioInVehicle = () => !!(LEVEL && state === 'play' && (LEVEL.fly || (typeof RC !== 'undefined' && RC.on && LEVEL.id === 'speedway')));
+function radioNow() { if (RADIO.st < 0) return null; const s = RADIO_STATIONS[RADIO.st], list = 'radio_' + s.id; const id = MUS.list === list ? PLAYLISTS[list][MUS.idx] : null; return { name: s.name, track: id ? (RADIO_TITLES[id] || id) : 'tuning…', station: s }; }
+function radioNext() {
+  if (!radioInVehicle()) return;
+  RADIO.st = RADIO.st + 1 >= RADIO_STATIONS.length ? -1 : RADIO.st + 1; S.radio = RADIO.st; markDirty();
+  if (RADIO.st >= 0) { const s = RADIO_STATIONS[RADIO.st], L = PLAYLISTS['radio_' + s.id]; for (let i = L.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [L[i], L[j]] = [L[j], L[i]]; }
+    if (PREFS.music !== 3) toast('📻 ' + s.name, 'Turn music to Soundtrack in Settings to hear the radio', 2.5); else toast('📻 ' + s.name, s.tag, 1.6); }
+  else toast('📻 Radio off', 'Back to the soundtrack', 1.2);
+  SFX.ui(); musUnlock(); musTick();
+}
+// while you're in a vehicle with the radio on, the station is what plays (cutscenes still win)
+{ const _mc = musContext; musContext = function (dt) { const r = _mc(dt); if (MUS.force) return r; if (RADIO.st >= 0 && radioInVehicle()) return 'radio_' + RADIO_STATIONS[RADIO.st].id; return r; }; }
+// a DJ hook for later: called when a new song starts on a station (quest-aware chatter goes here)
+const RADIO_DJ = { say: null };
+{ let lastKey = ''; setInterval(() => { const n = radioNow(); const k = n ? n.name + n.track : ''; if (k !== lastKey) { lastKey = k; if (n && n.track !== 'tuning…') { if (radioInVehicle()) toast('📻 ' + n.name, '♪ ' + n.track, 1.6); if (RADIO_DJ.say && n.station.dj) try { RADIO_DJ.say(n.station, n.track); } catch (_) {} } } }, 500); }
+window.addEventListener('keydown', e => { if (e.code !== 'KeyR' || e.repeat || !radioInVehicle() || dlgOpen || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return; e.stopImmediatePropagation(); e.preventDefault(); radioNext(); }, true);
+setInterval(() => { if (RADIO.st < 0 && S && typeof S.radio === 'number' && S.radio >= 0 && !RADIO.init) { RADIO.st = S.radio; } RADIO.init = true;
+  let b = RADIO.btn; if (!b) { b = RADIO.btn = document.createElement('button'); b.textContent = '📻'; b.title = 'Radio (R)'; b.style.cssText = 'position:fixed;right:calc(env(safe-area-inset-right,0px) + 14px);top:calc(env(safe-area-inset-top,0px) + 190px);z-index:22;width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:rgba(10,14,30,.7);font-size:20px;cursor:pointer'; b.addEventListener('click', e => { e.stopPropagation(); radioNext(); }); b.addEventListener('touchstart', e => { e.stopPropagation(); e.preventDefault(); radioNext(); }, { passive: false }); document.body.appendChild(b); }
+  b.hidden = !radioInVehicle() || dlgOpen; b.style.borderColor = RADIO.st >= 0 ? '#ffd36a' : 'rgba(255,255,255,.3)'; }, 300);
+
+// =================== SHIP AMMO: five ways to shoot in space ===================
+// 1 Lasers (the classic twin beams) · 2 Plasma (slow, heavy, purple) · 3 Flak (a spread that shreds swarms and rocks)
+// 4 Missiles (lock on and chase, 6 in the rack, they reload over time) · 5 EMP (a pulse that freezes raiders around you)
+const SHIP_AMMO = [
+  { id: 'laser', name: 'Lasers', key: '1', col: '#6fdc5a', cool: 0.16, mult: 1 },
+  { id: 'plasma', name: 'Plasma', key: '2', col: '#c86aff', cool: 0.42, mult: 2.6 },
+  { id: 'flak', name: 'Flak', key: '3', col: '#ffb03b', cool: 0.55, mult: 0.42, pellets: 5 },
+  { id: 'missile', name: 'Missiles', key: '4', col: '#ff5a3a', cool: 0.6, mult: 5 },
+  { id: 'emp', name: 'EMP', key: '5', col: '#4fd2ff', cool: 6, mult: 0.8 },
+];
+const SAMMO = { i: 0, rack: 6, rackT: 0, missiles: [], rings: [], hud: null };
+const sammoCur = () => SHIP_AMMO[SAMMO.i] || SHIP_AMMO[0];
+function sammoBaseDmg() { return SHIP_SYS.laser.lv[sysLv('laser')].dmg * (1 + (S.lvl - 1) * 0.03) * (typeof shipMod === 'function' ? shipMod('laser') : 1); }
+function sammoPick(i) { if (!LEVEL || !LEVEL.fly || i === SAMMO.i || !SHIP_AMMO[i]) return; SAMMO.i = i; S.shipAmmo = SHIP_AMMO[i].id; markDirty(); SFX.ui(); toast('AMMO', SHIP_AMMO[i].name, 0.7); sammoHud(); }
+function sammoHud() {
+  let h = SAMMO.hud; if (!h) { h = SAMMO.hud = document.createElement('div'); h.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 112px);transform:translateX(-50%);z-index:22;display:flex;gap:4px;pointer-events:auto;font:700 11px system-ui,sans-serif'; document.body.appendChild(h);
+    SHIP_AMMO.forEach((a, i) => { const b = document.createElement('button'); b.style.cssText = 'border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:4px 7px;background:rgba(10,14,30,.7);color:#cfe0ff;font:inherit;cursor:pointer'; b.addEventListener('click', e => { e.stopPropagation(); sammoPick(i); }); b.addEventListener('touchstart', e => { e.stopPropagation(); e.preventDefault(); sammoPick(i); }, { passive: false }); h.appendChild(b); }); }
+  const show = LEVEL && LEVEL.fly && state === 'play' && !dlgOpen; h.hidden = !show; if (!show) return;
+  [...h.children].forEach((b, i) => { const a = SHIP_AMMO[i], on = i === SAMMO.i; b.textContent = (TOUCH ? '' : a.key + ' ') + a.name + (a.id === 'missile' ? ` ${SAMMO.rack}` : a.id === 'emp' && SAMMO.empT > gameTime ? ` ${Math.ceil(SAMMO.empT - gameTime)}s` : '');
+    b.style.borderColor = on ? a.col : 'rgba(255,255,255,.2)'; b.style.color = on ? a.col : '#9fb0c8'; b.style.background = on ? 'rgba(20,28,60,.9)' : 'rgba(10,14,30,.6)'; });
+}
+addEventListener('keydown', e => { if (!LEVEL || !LEVEL.fly || state !== 'play' || dlgOpen || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return; const m = /^Digit([1-5])$/.exec(e.code); if (m) { sammoPick(+m[1] - 1); e.preventDefault(); } }, true);
+function sammoAim() { _e.set(player.pitch, player.yaw, 0); _q.setFromEuler(_e); shipFwd.set(0, 0, -1).applyQuaternion(_q); shipRight.set(1, 0, 0).applyQuaternion(_q); shipUp.set(0, 1, 0).applyQuaternion(_q); }
+function sammoTarget(maxA, maxD) { let best = null, bA = maxA; for (const r of fly.raiders) { if (r.dead) continue; const to = r.obj.position.clone().sub(player.pos), d = to.length(); if (d > maxD) continue; const a = to.normalize().angleTo(shipFwd); if (a < bA) { bA = a; best = r; } } return best; }
+function sammoHit(r, dmg, at, col) { if (!r || r.dead) return; r.hp -= dmg; r.aggro = true; burst(at || r.obj.position, col, 10, 16); hitmark(r.hp <= 0); if (r.hp <= 0) killRaider(r); else drawPlate(r.plate, (r.def && r.def.name) || 'Drome Raider', 'Lv ' + r.lv, hpColor(r.lv), r.hp / r.max); }
+{ const _sf = shipFire; shipFire = function () {
+  const A = sammoCur(), F = fly; if (!F) return _sf.apply(this, arguments);
+  if (A.id === 'laser') return _sf.apply(this, arguments);
+  const L = SHIP_SYS.laser.lv[sysLv('laser')], d0 = L.dmg;
+  if (A.id === 'plasma' || A.id === 'flak') {
+    const _tr = tracer; tracer = (a, b) => _tr(a, b, A.col); L.dmg = d0 * A.mult;
+    const y0 = player.yaw, p0 = player.pitch;
+    try { for (let k = 0; k < (A.pellets || 1); k++) { if (A.pellets) { player.yaw = y0 + rand(-0.07, 0.07); player.pitch = p0 + rand(-0.05, 0.05); } _sf.apply(this, arguments); } }
+    finally { L.dmg = d0; tracer = _tr; player.yaw = y0; player.pitch = p0; }
+    F.cool = A.cool; F.shake = Math.max(F.shake, A.id === 'plasma' ? 0.12 : 0.08); if (A.id === 'plasma') { SFX.boom && SFX.boom(); }
+    return;
+  }
+  sammoAim();
+  if (A.id === 'missile') {
+    if (SAMMO.rack <= 0) { F.cool = 0.4; SFX.dry && SFX.dry(); toast('MISSILES', 'Rack empty, reloading', 0.8); return; }
+    SAMMO.rack--; F.cool = A.cool; const tgt = sammoTarget(0.6, 900);
+    const m = new THREE.Group(); part(m, B(0.5, 0.5, 2.2), '#d8dce4', 0, 0, 0); part(m, B(0.6, 0.6, 0.4), glow('#ff5a3a'), 0, 0, 1.2); m.position.copy(player.pos).addScaledVector(shipUp, -1.6); levelGroup.add(m);
+    SAMMO.missiles.push({ m, v: shipFwd.clone().multiplyScalar(Math.max(90, F.vel.length() + 60)), tgt, life: 6, dmg: sammoBaseDmg() * A.mult });
+    SFX.zap && SFX.zap(); F.shake = Math.max(F.shake, 0.1); sammoHud(); return;
+  }
+  if (A.id === 'emp') {
+    if ((SAMMO.empT || 0) > gameTime) { F.cool = 0.3; return; }
+    SAMMO.empT = gameTime + A.cool; F.cool = 0.5; SFX.boom && SFX.boom(); F.shake = Math.max(F.shake, 0.4);
+    const ring = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), new THREE.MeshBasicMaterial({ color: '#4fd2ff', transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); ring.position.copy(player.pos); levelGroup.add(ring); SAMMO.rings.push({ m: ring, t: 0 });
+    let n = 0; for (const r of F.raiders) { if (r.dead || r.obj.position.distanceTo(player.pos) > 170) continue; r.stunT = gameTime + 3.5; r.stunAt = r.obj.position.clone(); n++; sammoHit(r, sammoBaseDmg() * A.mult, null, '#4fd2ff'); }
+    toast('EMP', n ? `${n} raider${n > 1 ? 's' : ''} frozen` : 'Nothing in range', 1); sammoHud(); return;
+  }
+}; }
+{ const _st = step; step = function (dt) { _st(dt);
+  if (!LEVEL || !LEVEL.fly || !fly) { if (SAMMO.hud) SAMMO.hud.hidden = true; if (SAMMO.missiles.length) { SAMMO.missiles.length = 0; } SAMMO.rings.length = 0; return; }
+  if (S.shipAmmo && sammoCur().id !== S.shipAmmo) { const i = SHIP_AMMO.findIndex(a => a.id === S.shipAmmo); if (i >= 0) SAMMO.i = i; }
+  if (SAMMO.rack < 6 && (SAMMO.rackT += dt) > 8) { SAMMO.rackT = 0; SAMMO.rack++; }
+  // missiles: turn toward the target, then hit it
+  for (let i = SAMMO.missiles.length - 1; i >= 0; i--) { const M = SAMMO.missiles[i]; M.life -= dt; let done = M.life <= 0;
+    if (M.tgt && !M.tgt.dead) { const want = M.tgt.obj.position.clone().sub(M.m.position), d = want.length(); want.normalize().multiplyScalar(Math.max(140, M.v.length())); M.v.lerp(want, Math.min(1, dt * 3)); if (d < 6) { sammoHit(M.tgt, M.dmg, M.m.position, '#ff9a3c'); burst(M.m.position, '#ffd36a', 20, 22); SFX.boom && SFX.boom(); done = true; } }
+    else M.v.multiplyScalar(1 + dt * 0.5);
+    M.m.position.addScaledVector(M.v, dt); M.m.lookAt(M.m.position.clone().sub(M.v)); if (Math.random() < 0.6) burst(M.m.position, '#ff9a3c', 1, 3);
+    if (done) { levelGroup.remove(M.m); SAMMO.missiles.splice(i, 1); } }
+  for (let i = SAMMO.rings.length - 1; i >= 0; i--) { const R = SAMMO.rings[i]; R.t += dt; R.m.position.copy(player.pos); R.m.scale.setScalar(5 + R.t * 340); R.m.material.opacity = Math.max(0, 0.5 - R.t); if (R.t > 0.5) { levelGroup.remove(R.m); SAMMO.rings.splice(i, 1); } }
+  // frozen raiders hang in place and can't shoot
+  for (const r of fly.raiders) if (r.stunT && r.stunT > gameTime && !r.dead) { r.obj.position.copy(r.stunAt); r.vel.set(0, 0, 0); r.cd = Math.max(r.cd, 0.5); if (Math.random() < dt * 6) burst(r.obj.position, '#4fd2ff', 2, 6); }
+  if ((SAMMO.hudT = (SAMMO.hudT || 0) - dt) <= 0) { SAMMO.hudT = 0.25; sammoHud(); }
+}; }
+
+// =================== BOBBLEHEADS: little figures on your dash that wobble when you drive and fly ===================
+// You earn them by doing things (see BOBBLES[].got). N swaps which one rides on the dash of your ship and your car.
+const BOBBLES = [
+  { id: 'burp', name: 'B.U.R.P.', how: 'Yours from the start', got: () => true },
+  { id: 'vega', name: 'Captain Vega', how: 'Finish your first job for Vega', got: () => qDone('q1') },
+  { id: 'dog', name: 'Wild Dog', how: 'Finish the dog hunt', got: () => qDone('q1') },
+  { id: 'gus', name: 'Gus the Tuner', how: 'Win any race on Velocity', got: () => { const R = S.racing; return !!(R && R.wins && Object.values(R.wins).some(v => v > 0)); } },
+  { id: 'hydran', name: 'Hydran', how: 'Ride the Halo Line', got: () => !!(S.halo && S.halo.runs > 0) },
+  { id: 'raider', name: 'Drome Raider', how: 'Shoot down a raider in space', got: () => !!(S.flags && S.flags.bobRaider) },
+  { id: 'drome', name: 'Drome', how: 'Defeat Drome', got: () => qDone('q5') },
+  { id: 'eye', name: 'The Watcher', how: 'Defeat the Watcher in the Maw', got: () => !!(S.flags && S.flags.watcherDied) },
+  { id: 'fish', name: 'Void Gulper', how: 'Catch a Void Gulper', got: () => !!(S.fishBest && S.fishBest.voidgulper) },
+];
+function bobbleMake(id) {
+  const g = new THREE.Group(), M = h => new THREE.MeshBasicMaterial({ color: new THREE.Color(h).convertSRGBToLinear(), fog: false }), Gl = h => new THREE.MeshBasicMaterial({ color: new THREE.Color(h), fog: false });
+  part(g, new THREE.CylinderGeometry(0.03, 0.034, 0.012, 14), M('#2a2e38'), 0, 0.006, 0);
+  const body = new THREE.Group(); body.position.y = 0.012; g.add(body);
+  const head = new THREE.Group(); head.position.y = 0.06; g.add(head);
+  part(body, new THREE.CylinderGeometry(0.003, 0.003, 0.05, 6), M('#8a909c'), 0, 0.03, 0); // the spring
+  const bod = (c, w = 0.03, h = 0.035) => part(body, B(w, h, 0.02), M(c), 0, h / 2, 0);
+  if (id === 'burp') { bod('#c9a43a'); part(head, B(0.045, 0.04, 0.035), M('#e0b840'), 0, 0.02, 0); part(head, B(0.032, 0.008, 0.002), Gl('#ff3a2a'), 0, 0.024, 0.018); part(head, B(0.003, 0.02, 0.003), M('#30333a'), 0, 0.05, 0); part(head, new THREE.SphereGeometry(0.004, 6, 4), Gl('#ff3a2a'), 0, 0.06, 0); }
+  else if (id === 'vega') { bod('#2a4a7a'); part(head, new THREE.SphereGeometry(0.024, 10, 8), M('#e8c09a'), 0, 0.022, 0); part(head, B(0.05, 0.012, 0.05), M('#1e2a40'), 0, 0.044, 0); part(head, B(0.03, 0.01, 0.03), M('#1e2a40'), 0, 0.052, 0); part(head, B(0.012, 0.006, 0.002), Gl('#ffd36a'), 0, 0.05, 0.026); }
+  else if (id === 'dog') { part(body, B(0.024, 0.02, 0.045), M('#3a2c2a'), 0, 0.014, 0); part(head, B(0.026, 0.026, 0.03), M('#4a3632'), 0, 0.016, 0.01); part(head, B(0.014, 0.012, 0.016), M('#4a3632'), 0, 0.01, 0.032); for (const s of [-1, 1]) { part(head, B(0.006, 0.014, 0.004), M('#2a1e1c'), s * 0.01, 0.034, 0.004); part(head, B(0.005, 0.005, 0.002), Gl('#ff2a2a'), s * 0.007, 0.02, 0.026); } }
+  else if (id === 'gus') { bod('#ff7a2a'); part(head, new THREE.SphereGeometry(0.023, 10, 8), M('#c89070'), 0, 0.022, 0); part(head, B(0.05, 0.008, 0.03), M('#ff3b2a'), 0, 0.04, 0.01); part(head, B(0.034, 0.016, 0.034), M('#ff3b2a'), 0, 0.044, 0); part(head, B(0.03, 0.006, 0.004), M('#222'), 0, 0.022, 0.022); }
+  else if (id === 'hydran') { const c = '#ff6af0'; part(head, new THREE.SphereGeometry(0.028, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.7, fog: false }), 0, 0.012, 0); part(head, new THREE.SphereGeometry(0.008, 8, 6), Gl('#ffffff'), 0, 0.018, 0); for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; part(head, B(0.003, 0.03, 0.003), Gl(c), Math.cos(a) * 0.018, -0.004, Math.sin(a) * 0.018); } }
+  else if (id === 'raider') { bod('#5a2a2a'); part(head, B(0.04, 0.034, 0.034), M('#3a3d44'), 0, 0.02, 0); part(head, B(0.03, 0.008, 0.002), Gl('#ff2a3a'), 0, 0.024, 0.018); for (const s of [-1, 1]) part(head, B(0.004, 0.02, 0.004), M('#2a2c32'), s * 0.016, 0.044, 0); }
+  else if (id === 'drome') { bod('#1e1c22', 0.034, 0.04); part(head, B(0.04, 0.04, 0.036), M('#2a2830'), 0, 0.022, 0); for (const s of [-1, 1]) { part(head, new THREE.ConeGeometry(0.006, 0.026, 6), M('#7a1a1a'), s * 0.016, 0.054, 0); part(head, B(0.008, 0.004, 0.002), Gl('#ff6a1a'), s * 0.009, 0.026, 0.019); } }
+  else if (id === 'eye') { part(head, new THREE.SphereGeometry(0.026, 14, 10), M('#e8e2d4'), 0, 0.02, 0); part(head, new THREE.CircleGeometry(0.014, 14), Gl('#ff3a1a'), 0, 0.02, 0.026); part(head, new THREE.CircleGeometry(0.006, 10), M('#08080a'), 0, 0.02, 0.0262); for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; part(body, B(0.003, 0.03, 0.003), M('#5a3a3a'), Math.cos(a) * 0.014, 0.02, Math.sin(a) * 0.014); } }
+  else if (id === 'fish') { part(head, B(0.05, 0.03, 0.024), M('#2a1e4a'), 0, 0.018, 0); part(head, B(0.02, 0.022, 0.004), M('#3a2a6a'), -0.032, 0.018, 0); part(head, B(0.024, 0.006, 0.026), Gl('#c86aff'), 0.016, 0.008, 0); part(head, B(0.004, 0.012, 0.004), M('#5a4a8a'), 0.014, 0.04, 0); part(head, new THREE.SphereGeometry(0.004, 6, 4), Gl('#ffd36a'), 0.014, 0.048, 0); }
+  g.traverse(o => { o.renderOrder = 6; });
+  g.userData = { head, ang: V(0, 0, 0), vel: V(0, 0, 0) }; return g;
+}
+const BOB = { mounts: new Map() };
+const bobbleOwned = () => BOBBLES.filter(b => { try { return b.got(); } catch (_) { return false; } });
+function bobbleCur() { const own = bobbleOwned(); const b = own.find(b => b.id === S.bobble) || own[0]; return b ? b.id : 'burp'; }
+// put the current bobblehead on a mount (a Group on a dash) and keep it up to date
+function bobbleMount(mount, scale) { if (!mount) return; const want = bobbleCur(); let m = BOB.mounts.get(mount); if (m && m.id === want) return m;
+  if (m) mount.remove(m.g); const g = bobbleMake(want); g.scale.setScalar(scale || 1); mount.add(g); m = { id: want, g }; BOB.mounts.set(mount, m); return m; }
+// spring physics: the head swings against how the vehicle turns and speeds up
+function bobbleStep(m, dt, side, fwd) { if (!m) return; const u = m.g.userData, k = 90, d = 5.5; u.vel.x += (-u.ang.x * k - u.vel.x * d + fwd * 30) * dt; u.vel.z += (-u.ang.z * k - u.vel.z * d - side * 30) * dt; u.ang.x += u.vel.x * dt; u.ang.z += u.vel.z * dt; u.ang.x = clamp(u.ang.x, -0.7, 0.7); u.ang.z = clamp(u.ang.z, -0.7, 0.7); u.head.rotation.set(u.ang.x, 0, u.ang.z); }
+function bobbleKick(m, s) { if (m) { const u = m.g.userData; u.vel.x += (Math.random() - 0.5) * s; u.vel.z += (Math.random() - 0.5) * s; } }
+function bobbleNext() { const own = bobbleOwned(); if (!own.length) return; const i = own.findIndex(b => b.id === bobbleCur()); const b = own[(i + 1) % own.length]; S.bobble = b.id; markDirty(); SFX.ui(); toast('BOBBLEHEAD', `${b.name} · ${own.length}/${BOBBLES.length} collected`, 1.4); }
+window.addEventListener('keydown', e => { if (e.code !== 'KeyN' || e.repeat || state !== 'play' || dlgOpen || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return; if (!(LEVEL.fly || (typeof RC !== 'undefined' && RC.on))) return; bobbleNext(); }, true);
+// tell the player when they earn a new one
+setInterval(() => { if (!S || state === 'menu') return; S.bobSeen = S.bobSeen || ['burp']; for (const b of bobbleOwned()) if (!S.bobSeen.includes(b.id)) { S.bobSeen.push(b.id); markDirty(); toast('NEW BOBBLEHEAD', `${b.name} · on your dash now (N to swap)`, 3); S.bobble = b.id; } }, 2000);
+// a raider kill counts for the raider bobblehead
+{ const _kr = killRaider; killRaider = function (r) { const x = _kr.apply(this, arguments); S.flags = S.flags || {}; if (!S.flags.bobRaider) { S.flags.bobRaider = 1; markDirty(); } return x; }; }
+// the car cabin's dash spot
+{ const _st = step; step = function (dt) { _st(dt); if (typeof CABIN === 'undefined' || !CABIN.bob || !VEL.cock || !VEL.cock.visible) return;
+  const m = bobbleMount(CABIN.bob, 1.6), sp = Math.hypot(RC.vx || 0, RC.vz || 0), st = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + (move.x || 0);
+  BOB.lastSp = BOB.lastSp == null ? sp : BOB.lastSp; const acc = (sp - BOB.lastSp) / Math.max(dt, 1e-3); BOB.lastSp = sp;
+  bobbleStep(m, dt, st * Math.min(1, sp / 15), clamp(acc / 20, -1.5, 1.5)); if (FX.shake > 0.2) bobbleKick(m, 3); }; }
+
+// =================== SHIP COCKPIT: fly your ship from the pilot's seat ===================
+// C in space (or the 🎥 button) swaps the chase camera for a full cockpit: canopy struts, a radar, hull and weapons
+// screens, a stick and throttle that move with you, switch panels, and your bobblehead on the dash.
+const SCOCK = { g: null, on: false };
+function scockTex(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return { c, x: c.getContext('2d'), t: new THREE.CanvasTexture(c) }; }
+function scockBuild() {
+  const g = new THREE.Group(), M = h => new THREE.MeshBasicMaterial({ color: new THREE.Color(h).convertSRGBToLinear(), fog: false }), L = h => new THREE.MeshBasicMaterial({ color: new THREE.Color(h), fog: false });
+  const hull = M('#2a2f3a'), dark = M('#14171d'), panel = M('#1d2129'), metal = M('#5a6070'), trim = M('#3a404c');
+  // canopy: a heavy frame with a center spine and angled struts
+  part(g, B(1.7, 0.06, 0.12), hull, 0, 0.44, -0.62);
+  for (const s of [-1, 1]) { const a = part(g, B(0.07, 0.9, 0.08), hull, s * 0.8, 0.05, -0.62); a.rotation.z = s * 0.5; a.rotation.x = -0.2; const b = part(g, B(0.04, 0.6, 0.05), trim, s * 0.42, 0.42, -0.9); b.rotation.z = s * 1.05; b.rotation.x = -0.5;
+    part(g, B(0.3, 0.5, 0.9), panel, s * 0.86, -0.32, -0.45); }
+  // the dash: a wide console, three screens and switch rows
+  const top = part(g, B(1.6, 0.04, 0.14), dark, 0, -0.205, -0.7); top.rotation.x = 0.15;
+  part(g, B(1.6, 0.3, 0.05), panel, 0, -0.36, -0.645);
+  part(g, B(1.6, 0.008, 0.008), L('#4fd2ff'), 0, -0.222, -0.618);
+  const scr = [];
+  for (const [sx, w, ry] of [[-0.42, 0.26, 0.28], [0, 0.22, 0], [0.42, 0.26, -0.28]]) { const T = scockTex(320, 220); const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 0.69), new THREE.MeshBasicMaterial({ map: T.t, fog: false, toneMapped: false })); m.position.set(sx, -0.315, -0.61 + Math.abs(sx) * 0.12); m.rotation.y = ry; m.rotation.x = -0.12; g.add(m); const fr = part(g, B(w + 0.02, w * 0.69 + 0.02, 0.01), M('#0a0b0e'), sx, -0.315, -0.616 + Math.abs(sx) * 0.12); fr.rotation.y = ry; fr.rotation.x = -0.12; scr.push(T); }
+  SCOCK.btn = []; for (const s of [-1, 1]) for (let r = 0; r < 3; r++) for (let k = 0; k < 5; k++) { const b = part(g, B(0.03, 0.012, 0.03), L(['#ff6a3a', '#6fdc5a', '#4fd2ff', '#ffd36a'][(r + k) % 4]), s * (0.78 - k * 0.045), -0.06 - r * 0.05 - 0.02, -0.38 - r * 0.02); b.rotation.x = 0.4; SCOCK.btn.push(b); }
+  // stick and throttle
+  const stick = new THREE.Group(); stick.position.set(0, -0.5, -0.42); g.add(stick); part(stick, new THREE.CylinderGeometry(0.012, 0.016, 0.16, 10), metal, 0, 0.08, 0); part(stick, B(0.04, 0.06, 0.04), M('#22262e'), 0, 0.18, 0); part(stick, B(0.012, 0.008, 0.012), L('#ff3a2a'), 0, 0.215, 0.012);
+  const thr = new THREE.Group(); thr.position.set(-0.36, -0.46, -0.44); g.add(thr); part(thr, B(0.012, 0.12, 0.012), metal, 0, 0.06, 0); part(thr, B(0.05, 0.03, 0.04), M('#22262e'), 0, 0.12, 0); part(g, B(0.08, 0.02, 0.14), dark, -0.36, -0.46, -0.44);
+  // a holographic aiming ring floating out in front
+  const holo = part(g, new THREE.RingGeometry(0.035, 0.04, 32), new THREE.MeshBasicMaterial({ color: '#6fdc5a', transparent: true, opacity: 0.55, fog: false, depthWrite: false }), 0, 0.0, -1.2);
+  // the bobblehead spot
+  const bob = new THREE.Group(); bob.position.set(0.36, -0.185, -0.7); g.add(bob);
+  g.traverse(o => { o.renderOrder = 5; }); g.scale.setScalar(2.2); g.visible = false; camera.add(g);
+  SCOCK.g = g; SCOCK.scr = scr; SCOCK.stick = stick; SCOCK.thr = thr; SCOCK.holo = holo; SCOCK.bob = bob;
+}
+function scockDraw() {
+  const F = fly; if (!F) return; const [A, R, W] = SCOCK.scr;
+  // left: hull, speed, cruise
+  { const x = A.x, w = A.c.width, h = A.c.height; x.fillStyle = '#05080e'; x.fillRect(0, 0, w, h); const hp = Math.max(0, player.hp / hullMax());
+    x.fillStyle = '#7f9ab8'; x.font = '600 16px system-ui,sans-serif'; x.fillText('HULL', 16, 30); x.fillStyle = '#162232'; x.fillRect(16, 40, 288, 22); x.fillStyle = hp > 0.5 ? '#6fdc5a' : hp > 0.25 ? '#ffd36a' : '#ff3a2a'; x.fillRect(16, 40, 288 * hp, 22);
+    x.fillStyle = '#fff'; x.font = '700 44px system-ui,sans-serif'; x.fillText(Math.round(F.vel.length()) + '', 16, 128); x.fillStyle = '#7f9ab8'; x.font = '600 15px system-ui,sans-serif'; x.fillText('m/s' + ((F.cruise || 1) > 1.2 ? `  ·  CRUISE ×${F.cruise.toFixed(1)}` : ''), 16, 150);
+    x.fillText(`${S.orbit ? 'NEAR ' + String((LEVELS[S.orbit] && LEVELS[S.orbit].name) || S.orbit).toUpperCase() : 'DEEP SPACE'}`, 16, 190); A.t.needsUpdate = true; }
+  // center: radar (raiders red, other pilots cyan)
+  { const x = R.x, w = R.c.width, h = R.c.height, cx = w / 2, cy = h / 2 + 6, rad = 96; x.fillStyle = '#04070c'; x.fillRect(0, 0, w, h); x.strokeStyle = '#163024'; x.lineWidth = 1.5; for (const r of [rad, rad * 0.66, rad * 0.33]) { x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.stroke(); }
+    x.beginPath(); x.moveTo(cx - rad, cy); x.lineTo(cx + rad, cy); x.moveTo(cx, cy - rad); x.lineTo(cx, cy + rad); x.stroke();
+    const sw = (performance.now() / 1000 * 2) % (Math.PI * 2); x.strokeStyle = 'rgba(111,220,90,.5)'; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.cos(sw) * rad, cy + Math.sin(sw) * rad); x.stroke();
+    const inv = _q.clone().invert(), dot = (p, col, s) => { const v = p.clone().sub(player.pos).applyQuaternion(inv), d = Math.hypot(v.x, v.z); if (d > 800) return; const k = rad / 800; x.fillStyle = col; x.fillRect(cx + v.x * k - s / 2, cy + v.z * k - s / 2, s, s); };
+    for (const r of F.raiders) if (!r.dead) dot(r.obj.position, r.stunT > gameTime ? '#4fd2ff' : '#ff3a2a', 5);
+    for (const r of remotes.values()) dot(r.obj.position, '#7fe8ff', 6);
+    x.fillStyle = '#6fdc5a'; x.beginPath(); x.moveTo(cx, cy - 6); x.lineTo(cx - 5, cy + 5); x.lineTo(cx + 5, cy + 5); x.fill();
+    x.fillStyle = '#6fdc5a'; x.font = '600 13px system-ui,sans-serif'; x.fillText('RADAR 800 m', 10, 20); R.t.needsUpdate = true; }
+  // right: weapons and radio
+  { const x = W.x, w = W.c.width, h = W.c.height; x.fillStyle = '#05080e'; x.fillRect(0, 0, w, h); const a = typeof sammoCur === 'function' ? sammoCur() : { name: 'Lasers', col: '#6fdc5a', id: 'laser' };
+    x.fillStyle = '#7f9ab8'; x.font = '600 16px system-ui,sans-serif'; x.fillText('WEAPONS', 16, 30); x.fillStyle = a.col; x.font = '800 36px system-ui,sans-serif'; x.fillText(a.name.toUpperCase(), 16, 74);
+    x.font = '600 15px system-ui,sans-serif'; x.fillStyle = '#9fb4cc'; if (typeof SAMMO !== 'undefined') x.fillText(`Missiles ${SAMMO.rack}/6 · EMP ${SAMMO.empT > gameTime ? Math.ceil(SAMMO.empT - gameTime) + 's' : 'ready'}`, 16, 102);
+    const st = typeof radioNow === 'function' ? radioNow() : null; x.fillStyle = '#4fd2ff'; x.font = '700 17px system-ui,sans-serif'; x.fillText(st ? '📻 ' + st.name : '📻 Radio off (R)', 16, 160); x.fillStyle = '#9fb4cc'; x.font = '500 14px system-ui,sans-serif'; x.fillText(st ? '♪ ' + st.track : '', 16, 184); W.t.needsUpdate = true; }
+}
+function scockToggle() { if (!LEVEL || !LEVEL.fly) return; S.shipCam = S.shipCam ? 0 : 1; markDirty(); SFX.ui(); toast('CAMERA', S.shipCam ? 'Cockpit' : 'Chase', 0.8); }
+window.addEventListener('keydown', e => { if (e.code !== 'KeyC' || e.repeat || !LEVEL || !LEVEL.fly || state !== 'play' || dlgOpen || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return; e.stopImmediatePropagation(); e.preventDefault(); scockToggle(); }, true);
+{ const _st = step; step = function (dt) { _st(dt);
+  const on = !!(LEVEL && LEVEL.fly && fly && fly.ship && S.shipCam && player.alive !== false);
+  if (!SCOCK.g && on) scockBuild(); if (SCOCK.g) SCOCK.g.visible = on;
+  if (SCOCK.vb) SCOCK.vb.hidden = !(LEVEL && LEVEL.fly && state === 'play' && !dlgOpen);
+  if (!on) { if (SCOCK.was && fly && fly.ship) fly.ship.visible = true; SCOCK.was = false; return; } SCOCK.was = true;
+  const F = fly; F.ship.visible = false;
+  _e.set(player.pitch, player.yaw, 0); _q.setFromEuler(_e); shipFwd.set(0, 0, -1).applyQuaternion(_q); shipUp.set(0, 1, 0).applyQuaternion(_q);
+  camera.position.copy(player.pos).addScaledVector(shipUp, 0.9).addScaledVector(shipFwd, 1.5); if (F.shake > 0) camera.position.add(V(rand(-0.08, 0.08), rand(-0.08, 0.08), rand(-0.08, 0.08)));
+  camera.quaternion.copy(_q); camera.rotateZ(clamp(F.roll, -0.8, 0.8) * 0.35);
+  const st = clamp((keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x, -1, 1), th = clamp((keys.KeyW ? 1 : 0) - (keys.KeyS ? 0.6 : 0) + move.y, -0.6, 1);
+  SCOCK.stick.rotation.z += (-st * 0.35 - SCOCK.stick.rotation.z) * Math.min(1, dt * 10); SCOCK.stick.rotation.x += (-(F.lastPitchV || 0) * 0.1 - SCOCK.stick.rotation.x) * Math.min(1, dt * 10);
+  SCOCK.thr.rotation.x += (-th * 0.5 - SCOCK.thr.rotation.x) * Math.min(1, dt * 8);
+  SCOCK.holo.material.color.set(typeof sammoCur === 'function' ? sammoCur().col : '#6fdc5a');
+  if ((SCOCK.blinkT = (SCOCK.blinkT || 0) - dt) <= 0) { SCOCK.blinkT = 0.4; for (const b of SCOCK.btn) b.visible = Math.random() > 0.12; }
+  if ((SCOCK.drawT = (SCOCK.drawT || 0) - dt) <= 0) { SCOCK.drawT = 0.1; scockDraw(); }
+  if (typeof bobbleMount === 'function') { const m = bobbleMount(SCOCK.bob, 0.75); const sp = F.vel.length(); SCOCK.lsp = SCOCK.lsp == null ? sp : SCOCK.lsp; const acc = (sp - SCOCK.lsp) / Math.max(dt, 1e-3); SCOCK.lsp = sp; bobbleStep(m, dt, st, clamp(acc / 30, -1.5, 1.5)); if (F.shake > 0.1) bobbleKick(m, 4); }
+}; }
+// a camera button for touch and mouse
+setInterval(() => { if (SCOCK.vb) return; const b = SCOCK.vb = document.createElement('button'); b.textContent = '🎥'; b.title = 'Cockpit / chase (C)'; b.hidden = true;
+  b.style.cssText = 'position:fixed;right:calc(env(safe-area-inset-right,0px) + 14px);top:calc(env(safe-area-inset-top,0px) + 236px);z-index:22;width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:rgba(10,14,30,.7);font-size:20px;cursor:pointer';
+  b.addEventListener('click', e => { e.stopPropagation(); scockToggle(); }); b.addEventListener('touchstart', e => { e.stopPropagation(); e.preventDefault(); scockToggle(); }, { passive: false }); document.body.appendChild(b); }, 1000);
+
+// =================== OTHER PILOTS IN SPACE: see each other's ships ===================
+// Other players already fly in the same space. This makes them easy to spot and read: their ships pitch and bank
+// the way they're really flying, carry an engine glow, and wear a name tag and beacon that stay readable from far away.
+const RSHIP = { tex: null };
+function rshipDot() { if (RSHIP.tex) return RSHIP.tex; const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.3, 'rgba(127,232,255,.8)'); g.addColorStop(1, 'rgba(127,232,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return RSHIP.tex = new THREE.CanvasTexture(c); }
+{ const _sp = syncPeers; syncPeers = function (peers) { const r0 = _sp.apply(this, arguments);
+  if (LEVEL && LEVEL.fly) for (const peer of peers || []) { const r = remotes.get(peer.peer), pr = peer.presence || {}; if (!r) continue; r.pt = typeof pr.pt === 'number' ? clamp(pr.pt, -1.5, 1.5) : 0;
+    if (!r.beacon) { r.beacon = new THREE.Sprite(new THREE.SpriteMaterial({ map: rshipDot(), color: '#7fe8ff', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); r.obj.add(r.beacon);
+      r.glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: rshipDot(), color: '#ffb03b', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); r.glow.scale.setScalar(4); r.glow.position.set(0, 0, -5.5); r.obj.add(r.glow);
+      if (!RSHIP.told) { RSHIP.told = true; toast('PILOTS NEARBY', 'Other players are flying here. Look for the blue beacons.', 3); } } }
+  return r0; }; }
+{ const _st = step; step = function (dt) { _st(dt); if (!LEVEL || !LEVEL.fly) return;
+  for (const r of remotes.values()) { const o = r.obj, d = o.position.distanceTo(camera.position);
+    o.rotation.order = 'YXZ'; o.rotation.x += (-(r.pt || 0) - o.rotation.x) * Math.min(1, dt * 8);
+    const yr = r.lastYaw == null ? 0 : Math.atan2(Math.sin(r.yaw - r.lastYaw), Math.cos(r.yaw - r.lastYaw)) / Math.max(dt, 1e-3); r.lastYaw = r.yaw; o.rotation.z += (clamp(yr * 0.35, -0.7, 0.7) - o.rotation.z) * Math.min(1, dt * 4);
+    const s = Math.max(1, d / 45); r.plate.scale.set(2.2 * s, 0.48 * s, 1); r.plate.position.y = 3 + s * 1.2;
+    if (r.beacon) { r.beacon.scale.setScalar(Math.max(3, d * 0.035)); r.beacon.material.opacity = clamp((d - 60) / 200, 0, 0.9); }
+    if (r.glow) r.glow.material.opacity = 0.6 + Math.sin(gameTime * 20) * 0.2;
+  } }; }
+
 
 // =================== STATE + SAVE ===================
 const COLORS = ['#6f7a3e', '#3b4f7a', '#8a3a2e', '#2f2c33', '#7a6a3a'];

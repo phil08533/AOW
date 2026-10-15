@@ -2,17 +2,19 @@
 // ---- each world's water takes its own colour ----
 const WATER_COLS = { earth: '#6fb7da', capitone: '#5ab8cc', mezar: '#6fc4a8', robot: '#b8706a', forestlife: '#4fa08a', ocean: '#2f9aa8', zarlich: '#a98ae8', moon: '#9aa8c0' };
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); try { WATER_MAT.color.set(WATER_COLS[id] || WATER_COLS.earth).convertSRGBToLinear(); if (typeof OCEAN_WATER_MAT !== 'undefined') OCEAN_WATER_MAT.color.set(WATER_COLS.ocean).convertSRGBToLinear(); } catch (_) {} return r; }; }
-// ---- type and colour: Orbitron for big numbers and titles, Oxanium for the HUD, Exo 2 for reading; light space blue replaces the orange accent ----
-{ const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Oxanium:wght@500;600;700&family=Exo+2:wght@400;500;600;700&display=swap'; document.head.appendChild(l);
+// ---- type and colour: Tektur bold for titles, Tektur semibold for headings and numbers, WDXL Lubrifont TC for reading and chat (2.17.1); light space blue replaces the orange accent ----
+{ const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Tektur:wght@500;600;700&family=WDXL+Lubrifont+TC&display=swap'; document.head.appendChild(l);
   const st = document.createElement('style'); st.textContent = `
-:root { --accent: #a8e4ff; --gold: #a8e4ff; --amber: #a8e4ff; --sun: #8fd8ff;
-  --ui: "Exo 2", "Oxanium", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif;
-  --hud: "Oxanium", "Exo 2", system-ui, sans-serif;
-  --mono: "Orbitron", "Oxanium", monospace;
-  --num: "Orbitron", "Oxanium", monospace; }
+html:root { --accent: #a8e4ff; --gold: #a8e4ff; --amber: #a8e4ff; --sun: #8fd8ff;
+  --ui: "WDXL Lubrifont TC", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif;
+  --hud: "WDXL Lubrifont TC", system-ui, sans-serif;
+  --mono: "Tektur", monospace;
+  --num: "Tektur", system-ui, sans-serif; }
 #ammo .n, #vitals .row b, #clock, #compass span { font-family: var(--num) !important; letter-spacing: .02em; }
 #ammo .n { font-size: 32px; } #ammo .n small { font-size: 15px; }
-#toast .big, #zone .n, .dlg h3, #quest .qt { font-family: "Orbitron", var(--hud) !important; letter-spacing: .04em; }
+#toast .big, #zone .n, .logo, h1 { font-family: "Tektur", var(--hud) !important; font-weight: 700 !important; letter-spacing: .04em; }
+.dlg h3, #quest .qt, h2, h3, .win h2, .win h3 { font-family: "Tektur", var(--hud) !important; font-weight: 600 !important; letter-spacing: .03em; }
+#chatLog, #chatBox, #chatBox input, #log { font-family: var(--ui) !important; }
 #zone .n { font-size: 24px; } .dlg h3 { font-size: 20px; } #quest .qt { font-size: 15px; }
 .tq .cnt { color: #04121e !important; }
 `; document.head.appendChild(st); }

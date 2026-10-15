@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Art of War">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Art of War</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=VT323&display=swap">
@@ -332,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.15</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.16</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -5961,7 +5968,7 @@ function makeZeltac() {
 // ---------------- the space level ----------------
 const SPACE_BODIES = {
   earth: { pos: V(0, -40, -700), r: 160, col: '#3a6cb8', clouds: true },
-  mezar: { pos: V(900, 60, -260), r: 180, col: "#d49a5a", ring: true, survey: "Arid canyon world with deep sandstone ravines, sand worms, and forgotten ruins.", note: "Arid canyon world with deep sandstone ravines, sand worms, and forgotten ruins." },
+  mezar: { pos: V(900, 60, -260), r: 180, col: "#d49a5a", ring: true, survey: "Mezar", note: "Arid canyon world with deep sandstone ravines, sand worms, and forgotten ruins." },
   capitone: { pos: V(-860, -60, -380), r: 170, col: '#9fe8ff', clouds: true },
   robot: { pos: V(160, -50, 900), r: 150, col: '#c8402f' },
   zeltac: { pos: V(260, 30, -220), r: 70, station: true },
@@ -7063,10 +7070,24 @@ const UW_COL = new THREE.Color('#0a3a5a');
 function underwaterEnv() {
   if (!LEVEL || !LEVEL.ocean || camera.position.y >= WATER_Y) return;
   const depth = clamp((WATER_Y - camera.position.y) / 18, 0, 1);
-  HORIZON.copy(UW_COL).multiplyScalar(1 - depth * 0.6); scene.fog.color.copy(HORIZON).convertSRGBToLinear(); scene.fog.near = 1; scene.fog.far = 42 - depth * 14;
+  HORIZON.copy(UW_COL).multiplyScalar(1 - depth * 0.6); scene.fog.color.copy(HORIZON);
+  // the retro low-res pass shows the fog colour as-is, so converting it to linear there turned the deep water near-black and
+  // left a black band at the horizon; the HD styles do need the linear colour
+  if (RSTYLE !== 'retro') scene.fog.color.convertSRGBToLinear();
+  scene.fog.near = 1; scene.fog.far = 42 - depth * 14;
   hemi.intensity = 0.7 - depth * 0.3; hemi.color.set('#8fe3ff'); rain.visible = false; fireflies.visible = false;
+  // below the surface there is no sky: no stars, clouds, sun or moon, and the sky dome takes the water's colour (it ignores fog)
+  stars.material.opacity = 0; clouds.visible = false; sunDisc.visible = false; moonDisc.visible = false; skyRing.visible = false;
+  skyMat.uniforms.hor.value.copy(HORIZON); skyMat.uniforms.mid.value.copy(HORIZON); skyMat.uniforms.top.value.copy(UW_TOP).multiplyScalar(1 - depth * 0.6);
 }
-WATER_MAT.side = THREE.DoubleSide;
+const UW_TOP = new THREE.Color('#1f6a8a');
+// The ocean gets its own water. It is seen from both sides (from below when you swim). It is more opaque, and it writes
+// depth: the shared water doesn't, so Bubble City's glass domes, jellyfish and other see-through things far below were
+// drawn on top of the surface whenever they sorted after it, and showed through it as pale shapes. It also skips the
+// retro affine/vertex-snap shader, which tore the big 4 m water quads into jagged dark triangles.
+// Other worlds keep the shared one-sided WATER_MAT.
+const OCEAN_WATER_MAT = new THREE.MeshLambertMaterial({ map: TEX.water, color: new THREE.Color('#5aa6cc').convertSRGBToLinear(), transparent: true, opacity: 0.9, depthWrite: true, side: THREE.DoubleSide });
+{ const _mw = makeWater; makeWater = function () { const g = _mw.apply(this, arguments); if (LEVEL && LEVEL.ocean) g.children.forEach(m => { if (m.material === WATER_MAT) m.material = OCEAN_WATER_MAT; }); return g; }; }
 SPACE_BODIES.ocean.survey = 'Ocean World';
 PLANET_ORDER.splice(PLANET_ORDER.indexOf('robot'), 0, 'ocean');
 // ---------------- quests: the Ocean World ----------------
@@ -10751,7 +10772,9 @@ function arcOpen(game) {
 { const _b = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _b.call(this); if (zTheme(ZF.floor) !== 'arcade') return;
     const felt = toon('#1f6a3a', 'cloth'), rail = toon('#5a2a1e', 'wood'), gold = toon('#ffd36a');
     // red carpet and a sign over the casino side
-    part(props, B(15, 0.03, 26), toonNS('#6a1a24', 'carpet'), -21, 0.02, 0); part(props, B(14.4, 0.035, 25.4), toonNS('#c9a43a', 'carpet'), -21, 0.021, 0); part(props, B(13.6, 0.04, 24.6), toonNS('#6a1a24', 'carpet'), -21, 0.022, 0);
+    { const c = document.createElement('canvas'); c.width = 300; c.height = 520; const x = c.getContext('2d'); x.fillStyle = '#5e1620'; x.fillRect(0, 0, 300, 520); x.fillStyle = '#c9a43a'; x.fillRect(8, 8, 284, 504); x.fillStyle = '#6a1a24'; x.fillRect(16, 16, 268, 488);
+      x.strokeStyle = 'rgba(201,164,58,.35)'; x.lineWidth = 2; for (let i = 0; i < 6; i++) for (let j = 0; j < 11; j++) { const cx = 38 + i * 45, cy = 38 + j * 44; x.beginPath(); x.moveTo(cx, cy - 12); x.lineTo(cx + 12, cy); x.lineTo(cx, cy + 12); x.lineTo(cx - 12, cy); x.closePath(); x.stroke(); }
+      const t = new THREE.CanvasTexture(c); t.anisotropy = 4; t.encoding = THREE.sRGBEncoding; const cp = new THREE.Mesh(new THREE.PlaneGeometry(15, 26), new THREE.MeshLambertMaterial({ map: t, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); cp.rotation.x = -Math.PI / 2; cp.position.set(-21, 0.04, 0); cp.receiveShadow = true; levelGroup.add(cp); }
     const sg = new THREE.Mesh(new THREE.PlaneGeometry(9, 1.5), new THREE.MeshBasicMaterial({ map: signTex('THE LUCKY ASTEROID', '#1a0a1e', '#ffd36a') })); sg.position.set(-13.4, 5.4, 0); sg.rotation.y = Math.PI / 2; props.add(sg);
     for (const z of [-12.6, 12.6]) { part(props, Cy(0.18, 0.18, 6.8, 8), toon('#c9a43a'), -13.6, 3.4, z); }
     // poker table: an oval of green felt, chip stacks and dealt cards
@@ -10760,7 +10783,11 @@ function arcOpen(game) {
       part(tb, B(0.6, 0.012, 0.3), toon('#ffd36a'), 0, 0.975, 0); tb.position.set(-20, 0, -2.4); props.add(tb); box(-20, -2.4, 2.5, 1.7);
       const lamp = new THREE.PointLight(0xffe2a0, 0.6, 7, 1.6); lamp.position.set(-20, 3.2, -2.4); levelGroup.add(lamp); part(props, Cy(0.5, 0.9, 0.5, 12, true), '#2a2c32', -20, 3.4, -2.4); part(props, Cy(0.02, 0.02, 3.3, 4), '#1e1c22', -20, 5.3, -2.4); }
     // high-low table: a half moon
-    { const tb = new THREE.Group(); part(tb, new THREE.CylinderGeometry(1.4, 1.4, 0.12, 20, 1, false, -Math.PI / 2, Math.PI), felt, 0, 0.9, 0); part(tb, B(2.8, 0.85, 0.2), rail, 0, 0.45, 0.05); for (let i = 0; i < 3; i++) part(tb, B(0.18, 0.01, 0.26), '#f4f8ff', -0.5 + i * 0.5, 0.975, -0.6);
+    { const tb = new THREE.Group(), half = (r, h, y, m) => part(tb, new THREE.CylinderGeometry(r, r, h, 24, 1, false, -Math.PI / 2, Math.PI), m, 0, y, 0);
+      half(1.3, 0.8, 0.4, rail); half(1.42, 0.1, 0.84, rail); half(1.36, 0.06, 0.9, felt); part(tb, new THREE.TorusGeometry(1.4, 0.07, 6, 24, Math.PI), toon('#2a1410', 'cloth'), 0, 0.93, 0, Math.PI / 2, 0, 0);
+      part(tb, B(2.84, 0.9, 0.14), rail, 0, 0.45, 0.05); part(tb, B(1.2, 0.08, 0.3), toon('#1e1c22'), 0, 0.95, -0.12); for (let i = 0; i < 5; i++) part(tb, Cy(0.07, 0.07, 0.06 + (i % 2) * 0.05, 10), toon(['#c8402f', '#e8e4dc', '#3b4f7a', '#ffd36a', '#1f6a3a'][i]), -0.44 + i * 0.22, 1.0, -0.12);
+      for (let i = 0; i < 3; i++) part(tb, B(0.18, 0.01, 0.26), '#f4f8ff', -0.5 + i * 0.5, 0.94, -0.75);
+      for (let i = 0; i < 3; i++) { const a = -Math.PI / 2 + (i + 0.5) * Math.PI / 3, x = Math.sin(a) * 1.85, z = -Math.cos(a) * 1.85; part(tb, Cy(0.25, 0.25, 0.08, 10), toon('#6a1a24', 'cloth'), x, 0.72, z); part(tb, Cy(0.04, 0.04, 0.7, 5), '#2b2a2c', x, 0.36, z); }
       tb.position.set(-20, 0, 4.3); tb.rotation.y = Math.PI; props.add(tb); box(-20, 4.3, 1.5, 0.8); }
     // six slot machines along the casino wall, lights chasing
     for (let i = 0; i < 6; i++) { const z = -11 + i * 4.3, m = new THREE.Group(); part(m, B(1.0, 2.0, 1.1), toon('#3a1a2a', 'hull'), 0, 1.0, 0); part(m, B(0.06, 0.7, 0.9), toon('#f4f8ff'), 0.53, 1.4, 0); for (let k = 0; k < 3; k++) part(m, B(0.07, 0.5, 0.22), toon(['#c8402f', '#ffd36a', '#4fd2ff'][(i + k) % 3]), 0.55, 1.4, -0.28 + k * 0.28);
@@ -14402,6 +14429,14 @@ function netThink() {
 const BC_DOMES = [[-21, -2, 6.5, '#ffd0a0', 'market'], [21, 0, 6.5, '#c8e0ff', 'homes'], [0, -17, 5.5, '#b8ffcf', 'garden']];
 const BC_TUBES = [[-7, -1, -14.6, -2], [7, -0.5, 14.6, 0], [0, -7, 0, -11.6]]; // from the main dome's edge to each new dome's edge
 const BC_TUBE_R = 1.5;
+// The terraced seabed stepped up and down by 1.4 m under the new domes, so their flat sand floors floated over dirt on one
+// side and sliced through stalls, houses and kelp beds on the other. Level the seabed under each dome and tunnel to the
+// city's own floor height, blending back to the natural seabed a few meters out.
+{ const oc = LEVELS.ocean.carve; LEVELS.ocean.carve = function (x, z, h) { if (oc) h = oc(x, z, h); const B = Z.bubble; if (!B) return h;
+  const lx = x - B.x, lz = z - B.z; let w = 0;
+  for (const [ox, oz, r] of BC_DOMES) w = Math.max(w, 1 - smooth(Math.hypot(lx - ox, lz - oz), r + 0.6, r + 4.5));
+  for (const [ax, az, cx, cz] of BC_TUBES) w = Math.max(w, 1 - smooth(segDist(lx, lz, [ax, az], [cx, cz]), BC_TUBE_R + 0.4, BC_TUBE_R + 3.5));
+  return w > 0 ? h * (1 - w) + B.h * w : h; }; }
 // you can breathe and walk in the tunnels and the new domes, same as the old ones
 { const _in = inDome; inDome = function (p) { if (_in(p)) return true; if (!LEVEL || !LEVEL.ocean || !Z.bubble) return false; p = p || player.pos;
   const bx = Z.bubble.x, bz = Z.bubble.z;
@@ -14414,13 +14449,16 @@ const BC_TUBE_R = 1.5;
   const glass = new THREE.MeshLambertMaterial({ color: '#bfefff', transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false });
   // domes and their floors
   for (const [ox, oz, r, col] of BC_DOMES) { const x = bx + ox, z = bz + oz, d = makeDome(r, col); at(d, x, z); levelAnims.push(t => { d.children[d.children.length - 1].rotation.y = t * 0.8; });
-    let fy = -99; for (let a = 0; a < 6.3; a += 0.8) fy = Math.max(fy, gy(x + Math.cos(a) * r * 0.6, z + Math.sin(a) * r * 0.6)); fy = Math.max(fy, gy(x, z));
+    const fy = gy(x, z); // the seabed is levelled under the dome (see carve above), so the floor sits right on it
     const f = new THREE.Mesh(new THREE.CircleGeometry(r - 0.2, 22).rotateX(-Math.PI / 2), toon('#d8c890', 'stone')); f.position.set(x, fy + 0.06, z); props.add(f); }
   // glass tunnels with ribs and a lit walkway
   for (const [ax, az, cx, cz] of BC_TUBES) { const x1 = bx + ax, z1 = bz + az, x2 = bx + cx, z2 = bz + cz, L = Math.hypot(x2 - x1, z2 - z1), mx = (x1 + x2) / 2, mz = (z1 + z2) / 2, ry = Math.atan2(x2 - x1, z2 - z1);
     const tube = new THREE.Group(); const y0 = Math.max(gy(x1, z1), gy(mx, mz), gy(x2, z2));
-    const shell = new THREE.Mesh(new THREE.CylinderGeometry(BC_TUBE_R, BC_TUBE_R, L, 14, 1, true), glass); shell.rotation.set(Math.PI / 2, 0, 0); shell.position.y = 0.2; tube.add(shell);
-    for (let k = 0; k <= Math.floor(L / 2.2); k++) { const rib = part(tube, new THREE.TorusGeometry(BC_TUBE_R, 0.07, 5, 14, Math.PI), '#5d636c', 0, 0.2, -L / 2 + k * (L / Math.floor(L / 2.2))); rib.rotation.y = 0; }
+    // the tube's axis sits 1 m above the walkway so its crown is 2.5 m up: at 0.2 m the glass and ribs passed right at eye
+    // height and blocked the view. Each rib arcs over from floor to floor.
+    const TY = 1.0, a0 = Math.asin(TY / BC_TUBE_R);
+    const shell = new THREE.Mesh(new THREE.CylinderGeometry(BC_TUBE_R, BC_TUBE_R, L, 14, 1, true), glass); shell.rotation.set(Math.PI / 2, 0, 0); shell.position.y = TY; tube.add(shell);
+    for (let k = 0; k <= Math.floor(L / 2.2); k++) { const rib = part(tube, new THREE.TorusGeometry(BC_TUBE_R, 0.07, 5, 16, Math.PI + 2 * a0), '#5d636c', 0, TY, -L / 2 + k * (L / Math.floor(L / 2.2))); rib.rotation.set(0, 0, -a0); }
     part(tube, B(1.6, 0.08, L), toon('#c8b880', 'stone'), 0, 0.04, 0);
     for (let k = 0; k < Math.floor(L / 3); k++) for (const s of [-1, 1]) part(tube, B(0.08, 0.05, 0.4), glow('#8fe3ff'), 0.75 * s, 0.1, -L / 2 + 1.5 + k * 3);
     tube.position.set(mx, y0, mz); tube.rotation.y = ry; props.add(tube); }
@@ -14451,7 +14489,8 @@ const BC_TUBE_R = 1.5;
   { const [ox, oz] = BC_DOMES[2], cx = bx + ox, cz = bz + oz, kelps = [];
     for (let r = -1; r <= 1; r++) { part(at(new THREE.Group(), cx + r * 1.6, cz, 0, 0.05), B(0.9, 0.25, 6), toon('#5a3e2a', 'wood'), 0, 0.12, 0);
       for (let k = 0; k < 5; k++) { const kp = makeKelp(1.6 + (k % 3) * 0.4); kp.position.set(cx + r * 1.6, gy(cx, cz) + 0.25, cz - 2.4 + k * 1.2); levelGroup.add(kp); kelps.push([kp, k + r * 5]); } }
-    for (const s of [-1, 1]) { const gl = new THREE.Group(); part(gl, Cy(0.05, 0.05, 3.2, 5), '#5d636c', 0, 1.6, 0); part(gl, B(4, 0.1, 0.3), glow('#d0a0ff'), 0, 3.2, 0); at(gl, cx + 2.8 * s, cz, Math.PI / 2); solid(cx + 2.8 * s, cz, 0.15); }
+    // grow lights: a post beside each outer row with a dark lamp housing and the lavender tube under it, all inside the glass
+    for (const s of [-1, 1]) { const gl = new THREE.Group(); part(gl, Cy(0.05, 0.05, 2.8, 5), '#5d636c', 0, 1.4, 0); part(gl, B(3.6, 0.12, 0.42), '#2e3238', 0, 2.86, 0); part(gl, B(3.4, 0.06, 0.26), glow('#d0a0ff'), 0, 2.78, 0); at(gl, cx + 2.4 * s, cz, Math.PI / 2); solid(cx + 2.4 * s, cz, 0.15); }
     levelAnims.push(t => { for (const [kp, i] of kelps) kp.userData.segs.forEach((sg, j) => { sg.rotation.z = Math.sin(t * 1.1 + i + j * 0.5) * 0.06; }); }); }
   // ---- outside: fish schools circling the city, a parked sub and buoy chains ----
   { const fishCols = ['#ffb347', '#4fffe0', '#ff6aa8', '#ffe9a0'];
@@ -15247,11 +15286,11 @@ function velBolt() {
 // Same save data as before: S.inv (item → count), S.guns / S.slots / S.melee / S.melees (weapons), S.look.a (armor), S.ord (ordnance).
 // New, optional save fields (old saves just start empty): S.invOrder (your grid layout), S.invT (when each item was picked up), S.quick (4 quick-slot references).
 const INV_CFG = { cap: 60, quick: 4, quickKeys: ['Digit4', 'Digit5', 'Digit6', 'Digit7'] };
-const INVUI = { open: false, el: null, cat: 'all', sub: null, sort: 'manual', q: '', sel: null, move: null, drag: null, busy: 0, tab: 'bag', raf: 0, full: 0 };
+const INVUI = { pick: null, open: false, el: null, cat: 'all', sub: null, sort: 'manual', q: '', sel: null, move: null, drag: null, busy: 0, tab: 'bag', raf: 0, full: 0 };
 const RARITY = { common: ['Common', '#8a9099'], uncommon: ['Uncommon', '#6f9a5a'], rare: ['Rare', '#4f8ad0'], epic: ['Epic', '#9a6ad0'], legendary: ['Legendary', '#d8a040'], quest: ['Quest', '#e08a2e'] };
 const RAR_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'quest'];
 const INV_CATS = [['all', 'All'], ['wpn', 'Weapons'], ['med', 'Medical & Consumables'], ['mat', 'Materials & Crafting'], ['quest', 'Quest Items'], ['val', 'Valuables & Contraband'], ['misc', 'Miscellaneous']];
-const INV_SUBS = { wpn: [['melee', 'Melee'], ['staff', 'Staffs'], ['pistol', 'Pistols'], ['rifle', 'Rifles'], ['heavy', 'Heavy'], ['ord', 'Ordnance']],
+const INV_SUBS = { wpn: [['gun', 'Guns'], ['staff', 'Staffs'], ['melee', 'Melee'], ['ord', 'Ordnance']],
   med: [['medkit', 'Medkits'], ['bandage', 'Bandages'], ['stim', 'Stimulants'], ['drug', 'Drugs'], ['food', 'Food & buffs']],
   mat: [['build', 'Building'], ['upgrade', 'Upgrade'], ['salvage', 'Salvage']],
   val: [['loot', 'High value'], ['restricted', 'Restricted'], ['faction', 'Faction goods']],
@@ -15272,6 +15311,7 @@ function itemIcon(id) { const k = id.toLowerCase(), I = ITEMS[id] || {};
   if (/heart|eye|sigil|seed|core|token/.test(k)) return 'relic'; if (/scrap|cog|ore|rock|magma|filter/.test(k)) return 'ore'; return 'box'; }
 function invMeta(key) {
   invMatSets(); const [t, id] = key.split(':');
+  if (t === 'w') return invGroupMeta(id);
   if (t === 'g') { const g = GUNS[id], kind = gunKind(id), tier = gunTier(id); return { kind: 'gun', id, name: g.name + (tier ? ' ' + '★'.repeat(tier) : ''), cat: 'wpn', sub: kind, rar: rarByLvl(g.req || 1), w: kind === 'heavy' ? 9 : kind === 'staff' ? 2.5 : kind === 'pistol' ? 1.4 : 4, v: g.price || 0, icon: kind === 'staff' ? 'staff' : kind, span: kind === 'pistol' ? 1 : 2, col: g.col || '#e08a2e', n: 1 }; }
   if (t === 'm') { const M = MELEE[id]; return { kind: 'melee', id, name: M.name, cat: 'wpn', sub: 'melee', rar: id === 'knife' ? 'common' : rarByLvl(M.req || 1), w: M.reach > 3 ? 4 : 1.6, v: M.price || 0, icon: /claw|nunchuck/.test(id) ? 'fang' : 'sword', span: M.reach > 3 ? 2 : 1, col: M.col || '#cfd4dc', n: 1 }; }
   if (t === 'o') { const O = ORD[id]; return { kind: 'ord', id, name: O.name, cat: 'wpn', sub: 'ord', rar: rarByLvl(O.lvl), w: 0.5, v: 0, icon: 'grenade', span: 1, col: O.col, n: 1 }; }
@@ -15325,7 +15365,7 @@ const invStack = id => id === 'medkit' ? 10 : 25; // how many fit in one slot
 const invSlotsOf = (id, n) => ITEMS[id] && !ITEMS[id].quest && n > 0 ? Math.ceil(n / invStack(id)) : 0;
 const invSlotsUsed = () => Object.keys(S.inv).reduce((a, k) => a + invSlotsOf(k, S.inv[k]), 0);
 const invRoomFor = id => { if (!ITEMS[id]) return 0; if (ITEMS[id].quest) return 1e9; const cur = S.inv[id] || 0, st = invStack(id), free = INV_CFG.cap - invSlotsUsed(); return Math.max(0, (cur ? st * Math.ceil(cur / st) - cur : 0) + Math.max(0, free) * st); };
-const invWeight = () => invKeys().reduce((a, k) => { const m = invMeta(k); return a + m.w * (m.kind === 'item' ? m.n : 1); }, 0);
+const invWeight = () => invKeys().reduce((a, k) => { if (k[0] !== 'i') return a; const m = invMeta(k); return a + m.w * m.n; }, 0); // weapons and ordnance weigh nothing in the bag
 function invAdd(id, n, quiet) { // the one safe way to put loot in the bag: stacks, respects the slot limit, never drops anything silently
   if (!ITEMS[id] || !(n > 0)) return false;
   if (invRoomFor(id) < n) { invFullNote(id); return false; }
@@ -15410,7 +15450,7 @@ openBag = function () {
   INVUI.el = el; INVUI.open = true; INVUI.move = null; el.hidden = false; el.className = 'tab-' + INVUI.tab; invRender(); requestAnimationFrame(() => el.classList.add('on')); SFX.ui();
   cancelAnimationFrame(INVUI.raf); const loop = () => { if (!INVUI.open) return; if (PREV.r && PREV.obj && PREV.wrap && PREV.wrap.isConnected) { PREV.spin += 0.012; PREV.obj.rotation.y = PREV.spin; PREV.r.render(PREV.scene, PREV.cam); } INVUI.raf = requestAnimationFrame(loop); }; loop();
 };
-function invHide() { if (!INVUI.open) return; INVUI.open = false; cancelAnimationFrame(INVUI.raf); const el = INVUI.el; if (el) { el.classList.remove('on'); setTimeout(() => { if (!INVUI.open) { el.hidden = true; el.textContent = ''; } }, 160); } }
+function invHide() { if (!INVUI.open) return; INVUI.open = false; INVUI.pick = null; cancelAnimationFrame(INVUI.raf); const el = INVUI.el; if (el) { el.classList.remove('on'); setTimeout(() => { if (!INVUI.open) { el.hidden = true; el.textContent = ''; } }, 160); } }
 { const _cd = closeDlg; closeDlg = function () { invHide(); return _cd(); }; }
 { const _od = openDlg; openDlg = function (...a) { if (INVUI.open) invHide(); return _od(...a); }; }
 const invClose = () => { if (INVUI.open) closeDlg(); };
@@ -15487,7 +15527,7 @@ function invRender() {
   // header
   const used = invSlotsUsed(), hd = mk('div', 'hd'); hd.appendChild(mk('h2', '', 'BACKPACK'));
   const tabs = mk('div', 'tabs'); for (const [k, l] of [['bag', 'Backpack'], ['eq', 'Equipment']]) { const b = mk('button', INVUI.tab === k ? 'on' : ''); b.textContent = l; b.addEventListener('click', () => { INVUI.tab = k; el.className = 'on tab-' + k; invRender(); }); tabs.appendChild(b); } hd.appendChild(tabs);
-  const s1 = mk('span', 'stat' + (used >= INV_CFG.cap ? ' full' : ''), `Slots <b>${used}/${INV_CFG.cap}</b>`); s1.title = 'Loot stacks of up to 25 (medkits 10). Weapons and quest items don\'t use slots.'; hd.appendChild(s1);
+  const s1 = mk('span', 'stat' + (used >= INV_CFG.cap ? ' full' : ''), `Slots <b>${used}/${INV_CFG.cap}</b>`); s1.title = 'Loot stacks of up to 25 (medkits 10). Weapons, ordnance and quest items don\'t use slots, and weapons and ordnance weigh nothing.'; hd.appendChild(s1);
   if (roomLvl('cargo')) { const sv = mk('button', 'cat' + (INVUI.view === 'stash' ? ' on' : '')); sv.textContent = INVUI.view === 'stash' ? '◂ Back to bag' : 'Ship storage ▸'; sv.addEventListener('click', () => { INVUI.view = INVUI.view === 'stash' ? 'bag' : 'stash'; INVUI.sel = null; INVUI.move = null; INVUI.tab = 'bag'; el.className = 'on tab-bag'; invRender(); }); hd.appendChild(sv); }
   hd.appendChild(mk('span', 'stat', `Weight <b>${invWeight().toFixed(1)} kg</b>`)); hd.appendChild(mk('span', 'stat', `<b>${S.cr.toLocaleString()}</b> cr`));
   const x = mk('button', 'x', '✕'); x.setAttribute('aria-label', 'Close inventory'); x.addEventListener('click', invClose); hd.appendChild(x); frame.appendChild(hd);
@@ -15498,6 +15538,7 @@ function invRender() {
   if (Object.keys(MELEE).some(k => MELEE[k].saber && (S.melees || []).includes(k))) link('Saber forge', () => openSaberForge()); link('Quests', () => openQuestLog());
   if (!TOUCH) ft.appendChild(mk('span', 'hint', 'Drag items onto slots · I or Esc closes')); frame.appendChild(ft);
   if (INVUI.sel) el.classList.add('showdet');
+  if (INVUI.pick) frame.appendChild(invPicker(INVUI.pick));
 }
 function invEquipPanel() {
   const P = document.createElement('div'); P.className = 'pan eq'; const sl = loadoutSlots(), L = myLook();
@@ -15505,7 +15546,7 @@ function invEquipPanel() {
   const slot = (slotId, title, key, name, sub, icon, col) => { const d = document.createElement('div'); d.className = 'slot' + (name ? '' : ' empty') + (INVUI.sel === key && key ? ' sel' : ''); d.dataset.slot = slotId;
     d.innerHTML = `<div class="ic">${name ? invIconHtml(icon, col) : ''}</div><div class="tx"><div class="t1"></div><div class="t2"></div><div class="t3"></div></div>`;
     d.querySelector('.t1').textContent = title; d.querySelector('.t2').textContent = name || 'Empty'; d.querySelector('.t3').textContent = sub || '';
-    d.addEventListener('click', () => { if (INVUI.move) { invDropOnSlot(INVUI.move, slotId); INVUI.move = null; return; } INVUI.sel = key || ('slot:' + slotId); invRender(); });
+    d.addEventListener('click', () => { if (INVUI.move) { invDropOnSlot(INVUI.move, slotId); INVUI.move = null; return; } if (INV_GROUPS[slotId]) { INVUI.pick = slotId; invRender(); return; } INVUI.sel = key || ('slot:' + slotId); invRender(); });
     invDropTarget(d, k => slotFor(k) === slotId, k => invDropOnSlot(k, slotId)); P.appendChild(d); };
   lbl('Equipped');
   const M = MELEE[S.melee || 'knife'] || MELEE.knife; slot('melee', 'Melee', 'm:' + (S.melee || 'knife'), M.name, `${M.dmg} dmg · ${M.reach} m reach`, invMeta('m:' + (S.melee || 'knife')).icon, M.col || '#cfd4dc');
@@ -15527,16 +15568,16 @@ function invDropTarget(el, ok, fn) { if (TOUCH) return;
   el.addEventListener('dragleave', () => el.classList.remove('ok', 'bad'));
   el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('ok', 'bad'); const k = INVUI.drag; INVUI.drag = null; if (k && ok(k)) fn(k); else if (k) SFX.hit(); }); }
 function invFiltered(order) {
-  let list = order.map(k => [k, invMetaSafe(k)]).filter(([, m]) => m);
+  let list = invCollapsed(order);
   if (INVUI.cat !== 'all') list = list.filter(([, m]) => m.cat === INVUI.cat); if (INVUI.sub) list = list.filter(([, m]) => m.sub === INVUI.sub);
-  const q = INVUI.q.trim().toLowerCase(); if (q) list = list.filter(([, m]) => m.name.toLowerCase().includes(q));
+  const q = INVUI.q.trim().toLowerCase(); if (q) list = list.filter(([, m]) => (m.find || m.name).toLowerCase().includes(q));
   const catI = c => INV_CATS.findIndex(x => x[0] === c), by = { type: (a, b) => catI(a[1].cat) - catI(b[1].cat) || String(a[1].sub).localeCompare(String(b[1].sub)) || a[1].name.localeCompare(b[1].name),
     rarity: (a, b) => RAR_ORDER.indexOf(b[1].rar) - RAR_ORDER.indexOf(a[1].rar), weight: (a, b) => b[1].w * (b[1].n || 1) - a[1].w * (a[1].n || 1), value: (a, b) => b[1].v * (b[1].n || 1) - a[1].v * (a[1].n || 1),
     recent: (a, b) => ((S.invT || {})[b[0]] || 0) - ((S.invT || {})[a[0]] || 0) };
-  if (by[INVUI.sort]) list = list.slice().sort(by[INVUI.sort]); return list;
+  if (by[INVUI.sort]) list = list.slice().sort(by[INVUI.sort]); return list.filter(([k]) => k[0] === 'w').concat(list.filter(([k]) => k[0] !== 'w'));
 }
 function invBagPanel(order) {
-  const P = document.createElement('div'); P.className = 'pan bag'; const all = order.map(k => invMetaSafe(k)).filter(Boolean);
+  const P = document.createElement('div'); P.className = 'pan bag'; const all = invCollapsed(order).map(([, m]) => m);
   const cats = document.createElement('div'); cats.className = 'cats'; P.appendChild(cats);
   for (const [k, l] of INV_CATS) { const n = k === 'all' ? all.length : all.filter(m => m.cat === k).length, b = document.createElement('button'); b.className = 'cat' + (INVUI.cat === k ? ' on' : ''); b.innerHTML = `${l}<small>${n}</small>`; b.addEventListener('click', () => { INVUI.cat = k; INVUI.sub = null; invRender(); }); cats.appendChild(b); }
   if (INV_SUBS[INVUI.cat] && INV_SUBS[INVUI.cat].length) { const subs = document.createElement('div'); subs.className = 'cats'; P.appendChild(subs);
@@ -15553,6 +15594,7 @@ function invGrid(order) {
   const G = document.createElement('div'); G.className = 'grid'; const list = invFiltered(order), sl = loadoutSlots();
   if (!list.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = INVUI.q ? 'Nothing matches that search.' : 'Nothing here yet. Defeat creatures in the wilds to collect loot.'; G.appendChild(e); return G; }
   for (const [key, m] of list) {
+    if (m.kind === 'group') { G.appendChild(invGroupTile(key, m)); continue; }
     const c = document.createElement('div'); c.className = 'cell' + (m.span > 1 ? ' w2' : '') + (INVUI.sel === key ? ' sel' : '') + (INVUI.move === key ? ' moving' : ''); c.dataset.key = key; c.tabIndex = 0; c.setAttribute('role', 'button');
     const eqd = (m.kind === 'gun' && (sl.gun === m.id || sl.staff === m.id)) || (m.kind === 'melee' && (S.melee || 'knife') === m.id) || (m.kind === 'ord' && ordSel() === m.id);
     c.innerHTML = `<span class="rb" style="background:${RARITY[m.rar][1]}"></span><span class="nm"></span>${invIconHtml(m.icon, m.col)}${m.kind === 'item' && m.n > 1 ? `<span class="n">${m.n}</span>` : ''}${eqd ? '<span class="eqd">E</span>' : ''}${m.illegal ? '<span class="tri" title="Illegal">▲</span>' : ''}`;
@@ -15581,7 +15623,7 @@ function invDetailPanel() {
   if ((m.kind === 'gun' || m.kind === 'melee') && prevInit()) { try { setPreview(m.kind === 'gun' ? gunPreview(m.id) : meleePreview(m.id), m.name); big.appendChild(PREV.wrap); } catch (_) { big.innerHTML = invIconHtml(m.icon, m.col); } } else big.innerHTML = invIconHtml(m.icon, m.col);
   const h = document.createElement('h3'); h.textContent = m.name; P.appendChild(h);
   const tags = document.createElement('div'); const tag = (t, col) => { const s = document.createElement('span'); s.className = 'tag'; s.textContent = t; s.style.color = col; s.style.borderColor = col; tags.appendChild(s); };
-  const catName = (INV_CATS.find(c => c[0] === m.cat) || [0, ''])[1], subName = ((INV_SUBS[m.cat] || []).find(s => s[0] === m.sub) || [0, ''])[1];
+  const catName = (INV_CATS.find(c => c[0] === m.cat) || [0, ''])[1], subName = m.kind === 'gun' ? ({ pistol: 'Pistol', rifle: 'Rifle', heavy: 'Heavy', staff: 'Staff' })[m.sub] : ((INV_SUBS[m.cat] || []).find(s => s[0] === m.sub) || [0, ''])[1];
   tag(RARITY[m.rar][0], RARITY[m.rar][1]); tag(subName || catName, '#9aa1aa'); if (m.illegal) tag('▲ Illegal', '#e0402a'); P.appendChild(tags);
   const rows = []; const row = (a, b, cls) => rows.push([a, b, cls]);
   const desc = document.createElement('p'); let dtext = '';
@@ -15660,6 +15702,108 @@ function invStashDetail(P, key) {
   return P;
 }
 { const st = document.createElement('style'); st.textContent = '#inv .stashTop{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #2f343b;border-left:3px solid #8f6ad0;border-radius:4px;background:#1a1820}#inv .stashTop b{font:700 12px system-ui;letter-spacing:.18em;color:#c8a8ff}#inv .stashTop span{font-size:12px;color:#9aa1aa}#inv .hd .cat{margin-left:4px}'; document.head.appendChild(st); }
+
+// ---- weapons in the bag: one tile per weapon class (guns, staffs, melee, ordnance) with a picture of the one you carry; tap it for a list of all of them ----
+// Weapons and ordnance never take bag slots or weight. Saves are untouched: this only changes how S.guns / S.melees / S.ord are shown and picked.
+const INV_GROUPS = { gun: ['Guns', 'Gun'], staff: ['Staffs', 'Staff'], melee: ['Melee', 'Melee weapon'], ord: ['Ordnance', 'Ordnance'] };
+const invGroupMembers = grp => invKeys().filter(k => slotFor(k) === grp);
+function invGroupCur(grp) { // the key of the one you carry in that slot (or null)
+  const sl = loadoutSlots(), want = grp === 'gun' ? 'g:' + sl.gun : grp === 'staff' ? 'g:' + sl.staff : grp === 'melee' ? 'm:' + (S.melee || 'knife') : 'o:' + ordSel();
+  return invGroupMembers(grp).includes(want) ? want : null; }
+function invGroupMeta(grp) {
+  const G = INV_GROUPS[grp] || ['Weapons'], ms = invGroupMembers(grp), cur = invGroupCur(grp), ck = cur || ms[0], cm = ck ? invMetaSafe(ck) : null;
+  return { kind: 'group', id: grp, name: G[0], cat: 'wpn', sub: grp, rar: cm ? cm.rar : 'common', w: 0, v: 0, icon: cm ? cm.icon : 'box', span: 2, col: cm ? cm.col : '#9aa1aa', n: ms.length, cur, show: ck || null, curName: cm ? cm.name : '',
+    find: [G[0], G[1], ...ms.map(k => (invMetaSafe(k) || {}).name || '')].join(' ') };
+}
+function invCollapsed(order) { // the bag as the grid shows it: weapon groups first, then loot
+  const out = [], seen = new Set();
+  for (const k of order) { const g = slotFor(k); if (g) { seen.add(g); continue; } const m = invMetaSafe(k); if (m) out.push([k, m]); }
+  return Object.keys(INV_GROUPS).filter(g => seen.has(g)).map(g => ['w:' + g, invGroupMeta(g)]).concat(out);
+}
+// still pictures of the real 3D models, drawn once with the preview renderer into its own little scene (the spinning detail preview is left alone)
+const INV_THUMB = {}; let INV_TS = null;
+function invThumb(key) {
+  const [t, id] = key.split(':'), kind = t === 'g' ? 'gun' : t === 'm' ? 'melee' : null; if (!kind) return null;
+  const ck = key + ':' + (kind === 'gun' ? gunTier(id) : 0); if (ck in INV_THUMB) return INV_THUMB[ck];
+  let url = null;
+  try { if (prevInit()) {
+    if (!INV_TS) { INV_TS = new THREE.Scene(); INV_TS.add(new THREE.HemisphereLight(0xdfe6ff, 0x4a3a2a, 1.15)); const d = new THREE.DirectionalLight(0xfff0d8, 0.95); d.position.set(2, 3, 2.5); INV_TS.add(d); }
+    const inner = (kind === 'gun' ? gunPreview(id) : meleePreview(id))(), rot = new THREE.Group(), outer = new THREE.Group();
+    if (kind === 'melee' && inner.children[0]) inner.children[0].rotation.z = -1.25;
+    rot.add(inner); rot.rotation.set(0.1, kind === 'gun' ? -0.32 : 0, 0); outer.add(rot); outer.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(rot), size = box.getSize(V(0, 0, 0)), ctr = box.getCenter(V(0, 0, 0)), s = Math.min(3.0 / Math.max(size.x, 0.01), 1.55 / Math.max(size.y, 0.01));
+    outer.scale.setScalar(s); outer.position.copy(ctr).multiplyScalar(-s); INV_TS.add(outer);
+    const r = PREV.r; r.setClearColor('#121417'); r.render(INV_TS, PREV.cam);
+    const c = document.createElement('canvas'); c.width = 260; c.height = 150; c.getContext('2d').drawImage(r.domElement, 0, 0, 260, 150); url = c.toDataURL('image/png');
+    r.setClearColor('#0b1240'); INV_TS.remove(outer); outer.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+  } } catch (_) { url = null; try { PREV.r && PREV.r.setClearColor('#0b1240'); } catch (__) {} }
+  INV_THUMB[ck] = url; return url;
+}
+const invPicHtml = (key, m) => { const u = invThumb(key); return u ? `<img class="pic" alt="" src="${u}">` : invIconHtml(m.icon, m.col); };
+function invGroupTile(key, m) {
+  const c = document.createElement('div'); c.className = 'cell w2 grp' + (INVUI.pick === m.id ? ' sel' : ''); c.dataset.key = key; c.dataset.grp = m.id; c.tabIndex = 0; c.setAttribute('role', 'button');
+  const sm = m.show ? invMetaSafe(m.show) : null;
+  c.innerHTML = `<span class="rb" style="background:${RARITY[m.rar][1]}"></span>${sm ? invPicHtml(m.show, sm) : invIconHtml(m.icon, m.col)}<span class="nm"></span><span class="gk"></span><span class="more">▾</span>`;
+  c.querySelector('.nm').textContent = m.curName || 'None equipped'; c.querySelector('.gk').textContent = `${m.name} · ${m.n}`;
+  c.title = `${m.name}: ${m.curName || 'none equipped'} · ${m.n} owned. ${TOUCH ? 'Tap' : 'Click'} to choose.`; c.setAttribute('aria-label', c.title);
+  const open = () => { if (INVUI.move) { INVUI.move = null; invRender(); return; } INVUI.pick = m.id; invRender(); };
+  c.addEventListener('click', open); c.addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); open(); } });
+  return c;
+}
+function invPickStats(key) {
+  const [t, id] = key.split(':');
+  if (t === 'g') { const g = GUNS[id], tr = gunTier(id), d = g.dmg * (1 + 0.08 * tr); return [`${Math.round(d)} dmg · ${(1 / g.rate).toFixed(1)}/s · ${Math.round(d / g.rate)} DPS · ${g.mag} ${g.mana ? 'mana' : 'mag'} · ${g.reload}s ${g.mana ? 'recharge' : 'reload'}`, `${g.mana ? 'Staff' : ({ pistol: 'Pistol', rifle: 'Rifle', heavy: 'Heavy' })[gunKind(id)]} · Lv ${g.req || 1}${tr ? ' · tier ' + tr : ''}`]; }
+  if (t === 'm') { const M = MELEE[id]; return [`${M.dmg} dmg · ${M.rate}s swing · ${M.reach} m reach`, `Melee · Lv ${M.req || 1}`]; }
+  if (t === 'o') { const O = ORD[id]; return [`${O.dmg} dmg · ${O.r} m blast · ${ORD_MAX} charges`, O.desc || 'Ordnance']; }
+  return ['', ''];
+}
+function invPickState(key) { const [t, id] = key.split(':'), sl = loadoutSlots(), mel = handMelee();
+  if (t === 'g') return S.gun === id && !mel ? 'In hand' : (sl.gun === id || sl.staff === id) ? 'Equipped' : '';
+  if (t === 'm') return (S.melee || 'knife') === id ? (mel ? 'In hand' : 'Equipped') : '';
+  if (t === 'o') return ordSel() === id ? 'Selected' : ''; return ''; }
+function invPicker(grp) {
+  const G = INV_GROUPS[grp], wrap = document.createElement('div'); wrap.className = 'pick'; wrap.addEventListener('click', e => { if (e.target === wrap) { INVUI.pick = null; invRender(); } });
+  const box = document.createElement('div'); box.className = 'pbox'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Choose ' + G[0]); wrap.appendChild(box);
+  const cur = invGroupCur(grp), ms = invGroupMembers(grp), list = cur ? [cur, ...ms.filter(k => k !== cur)] : ms;
+  const ph = document.createElement('div'); ph.className = 'ph'; ph.innerHTML = '<h3></h3><small></small>'; ph.querySelector('h3').textContent = G[0]; ph.querySelector('small').textContent = `${ms.length} owned · ${TOUCH ? 'tap' : 'click'} one to equip · no bag space`;
+  const x = document.createElement('button'); x.className = 'x'; x.textContent = '✕'; x.setAttribute('aria-label', 'Close list'); x.addEventListener('click', () => { INVUI.pick = null; invRender(); }); ph.appendChild(x); box.appendChild(ph);
+  const L = document.createElement('div'); L.className = 'plist'; box.appendChild(L);
+  if (!list.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = grp === 'staff' ? 'No staffs yet. Buy one from a mage.' : grp === 'gun' ? 'No guns yet. Buy one at a gunsmith.' : 'Nothing here yet.'; L.appendChild(e); }
+  for (const key of list) { const m = invMetaSafe(key); if (!m) continue; const st = invPickState(key), [s1, s2] = invPickStats(key);
+    const r = document.createElement('div'); r.className = 'prow' + (key === cur ? ' on' : ''); r.tabIndex = 0; r.setAttribute('role', 'button'); r.style.setProperty('--rc', RARITY[m.rar][1]); r.dataset.key = key;
+    r.innerHTML = `<div class="pp">${invPicHtml(key, m)}</div><div class="pt"><div class="pn"></div><div class="ps"></div><div class="pk"></div></div><span class="pe"></span><button class="pi" aria-label="Details">i</button>`;
+    r.querySelector('.pn').textContent = m.name; r.querySelector('.ps').textContent = s1; r.querySelector('.pk').textContent = s2;
+    r.querySelector('.pe').textContent = st || (key[0] === 'o' ? 'Select' : 'Equip'); if (!st) r.querySelector('.pe').classList.add('go');
+    const pickIt = () => { INVUI.pick = null; if (st === 'In hand' || st === 'Selected') { invRender(); return; } INVUI.busy = 0; invEquip(key); if (INVUI.open) invRender(); };
+    r.addEventListener('click', e => { if (e.target.closest('.pi')) return; pickIt(); }); r.addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); pickIt(); } });
+    r.querySelector('.pi').addEventListener('click', e => { e.stopPropagation(); INVUI.pick = null; INVUI.sel = key; invRender(); });
+    L.appendChild(r); }
+  setTimeout(() => { const on = L.querySelector('.prow.on') || L.querySelector('.prow'); if (on && !TOUCH && on.isConnected) on.focus({ preventScroll: true }); }, 0);
+  return wrap;
+}
+window.addEventListener('keydown', e => { if (!INVUI.open || !INVUI.pick || e.code !== 'Escape') return; e.preventDefault(); e.stopImmediatePropagation(); INVUI.pick = null; invRender(); }, true);
+{ const st = document.createElement('style'); st.textContent = `
+#inv .frame{position:relative}
+#inv .cell.grp{grid-row:span 2;background:linear-gradient(#24282e,#191b1f);border-color:#464b53;overflow:hidden}#inv .cell.grp:hover,#inv .cell.grp:focus-visible{border-color:#e0a040;outline:none}
+#inv .cell.grp .pic{position:absolute;left:6px;top:16px;width:calc(100% - 10px);height:calc(100% - 32px);object-fit:contain;pointer-events:none;border-radius:2px}
+#inv .cell.grp .ii{margin-top:0;width:54px;height:54px}#inv .cell.grp .nm{color:#e4e6e9;right:6px}
+#inv .cell.grp .gk{position:absolute;left:7px;bottom:2px;font:600 9px/1.3 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#e0a040;text-shadow:0 1px 2px #000}
+#inv .cell.grp .more{position:absolute;right:5px;bottom:1px;color:#e0a040;font-size:11px}
+#inv .pick{position:absolute;inset:0;z-index:5;background:rgba(6,7,9,.72);display:flex;align-items:center;justify-content:center;padding:14px}
+#inv .pbox{width:min(640px,100%);max-height:100%;display:flex;flex-direction:column;background:#17191c;border:1px solid #4a4f57;border-radius:6px;box-shadow:0 18px 50px rgba(0,0,0,.7);overflow:hidden}
+#inv .pbox .ph{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;border-bottom:1px solid #2c3036;background:linear-gradient(#22252a,#1a1c20)}
+#inv .pbox .ph h3{margin:0;font:700 13px/1 system-ui,sans-serif;letter-spacing:.2em;color:#e0a040;text-transform:uppercase}#inv .pbox .ph small{color:#7d838c;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#inv .plist{overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#inv .prow{display:flex;align-items:center;gap:10px;padding:5px 6px;background:#1d2024;border:1px solid #2f343b;border-left:3px solid var(--rc);border-radius:4px;cursor:pointer;min-height:66px;flex:none;transition:border-color .12s,background .12s}
+#inv .prow:hover,#inv .prow:focus-visible{border-color:#e0a040;border-left-color:var(--rc);outline:none}#inv .prow.on{background:#2a2318;border-color:#a8782c;border-left-color:var(--rc)}
+#inv .prow .pp{width:110px;height:56px;flex:none;display:grid;place-items:center;background:#121417;border:1px solid #2a2e34;border-radius:3px;overflow:hidden}#inv .prow .pp .pic{width:100%;height:100%;object-fit:contain}#inv .prow .pp .ii{width:36px;height:36px}
+#inv .prow .pt{flex:1;min-width:0}#inv .prow .pn{font-size:14px;color:#f0f1f3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#inv .prow .ps{font-size:12px;color:#c9ccd1;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#inv .prow .pk{font-size:11px;color:#7d838c;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#inv .prow .pe{flex:none;font:600 11px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:7px 9px;border-radius:3px;border:1px solid #a8782c;color:#ffe2a8;background:#2a2318}#inv .prow .pe.go{border-color:#3c4149;color:#c9ccd1;background:#24272c}
+#inv .prow .pi{flex:none;width:32px;height:32px;border-radius:50%;background:#24272c;border:1px solid #3c4149;color:#c9ccd1;font:italic 700 14px Georgia,serif;cursor:pointer;padding:0}#inv .prow .pi:hover{border-color:#e0a040;color:#fff}
+@media (max-width:899px),(max-height:560px){#inv .pick{padding:6px}#inv .pbox{height:100%}#inv .prow{min-height:58px;gap:8px}#inv .prow .pp{width:92px;height:48px}#inv .cell.grp .gk{font-size:8px}}
+@media (max-width:599px){#inv .prow .pp{width:70px;height:42px}#inv .prow .pe{display:none}#inv .prow.on .pe{display:block}}
+`; document.head.appendChild(st); }
 
 // =================== SHIP STORAGE + ROOM LEVELS ===================
 // Every room you build can be upgraded from level 1 to 5 at the Engineering terminal.
@@ -17002,6 +17146,7 @@ const UPDATES = [
   { id: 110, title: '2.14.3 · Vega narrates every cutscene, iPhone fix', items: ['iPhones and iPads: the game no longer crashes on load (Safari has no mouse lock, and one line assumed it did).', 'Vega, the voice from the opening film, now reads every cutscene and the prologue out loud. Shots wait for her to finish.', 'Opening film: the stray "And…" is gone, your wingmen fly in formation beside you, the enemy fleet is spread out and mixed, the battle has six kinds of robots, and dropped guns lie flat on the ground.', 'Prologue: the stars are smaller and calmer, and the odd ball of stars around one planet is gone.'] },
   { id: 111, title: '2.14.4 · A real hangar, a proper catch card', items: ['Hangar: the floor pad no longer flickers. Your selected war vehicle now turns on a lit turntable, with a gantry crane overhead, a tool wall, a red tool chest, tyre stacks, fuel drums, a fuel pump and guide lights to the launch door.', 'Fishing: the fish you caught now swims in front of its card, and the card waits for you to tap Continue (or press Enter or E).', 'Phones: the USE button can no longer land on top of the radar.', 'New drawn icons for the camera and repair buttons. The ship and the car share the same camera icon.'] },
   { id: 112, title: "2.14.5 · The Angler's Den, rooms that grow, Vega's film", items: ["New ship room: the Angler's Den. Mount your catches on 12 wall plaques, each showing the fish and your best length. Take one down any time to get the fish back. It also has a rod rack, an armchair and a big aquarium.", 'Upgraded ship rooms now look upgraded. Lv 2 and 3 each add a themed prop, Lv 4 hangs a banner and a second light, and Lv 5 adds gold trim and a crest at the door.', 'Ship corridor: the hull posts no longer stand in doorways, and the crane hook that was floating in the hall is back inside the hangar.', 'Fishing: the Bug Pond, Fern Pond and Coolant Canal are bigger, your cast always lands in water, and Coil in Robot City moved back from the dock.', 'Opening film: Captain Vega is the hero now (you are a fresh recruit), and the soldiers that were standing inside her are gone. Her ship flies the film\'s space battle.', 'Prologue: the ball of stars is gone, the stars are dimmer so the planets stand out, the thing behind Vector is now the Watcher rising out of the dark, and Drome\'s flagship wears a setting-sun sigil instead of a big red dot. With voice off, the prologue no longer stalls on its first line.'] },
+  { id: 114, title: '2.16 · Side hustles, a clearer ocean and Vega on the radio', items: ['Sell drugs to the President (he pays way too much) and to random people. Some refuse, and in lawful places someone might report you', 'Give your partner product to sell from their apartment or your ship quarters, then collect the earnings. Push it too hard and they get arrested; post bail with Marshal Rook', 'Your bag shows one tile each for guns, staffs, melee and ordnance with a picture of the weapon. Tap it to pick from the whole list. Weapons and ordnance no longer take bag space or weight', 'Ocean World cleaned up: no torn water, no domes showing through the surface, floors sit on the seabed, no sky underwater, taller glass tunnels', 'Every world\'s water matches its colors', 'Vega is the only voice in the cutscenes and does all the battle radio at the Greater Maw, fully voiced', 'New space fonts and a light space blue in place of the orange', 'Fullscreen works in more browsers. On iPhone, Add to Home Screen to play fullscreen', 'The casino carpet no longer flickers and the high-low table looks like a table', 'Mezar shows its name on the galaxy map'] },
   { id: 113, title: '2.15 · The Lucky Asteroid, the Undercroft dive and a bigger lounge', items: ['The Neon Arcade has a casino now: the Lucky Asteroid. Six slot machines, a high-low table and a space poker table with Rook and Nyx. Win real credits', 'Two playable arcade cabinets: SPACE SNAKE and SPACE ROCKS. Good scores pay out a few credits', 'The Undercroft is a proper hive of scum and villainy: the Rusty Rivet bar, a band, back-room poker with One-Eye Jax, a members-only back room, wanted posters, drunks and smoke', 'The Starlight Lounge got a second bar, VIP couches, plants, waiter bots and people mingling. The President has his own spot and the dancers no longer walk through him', 'When a person and a thing are both in reach (like your partner and your bed), the one you are looking at gets the button. Your roommate also stands away from the bunk now', 'Romance music only plays while you are talking to them', 'Q, Y and the weapon box all cycle gun, staff, melee. Staffs are their own magic slot again', 'The weapon box stays the same size for ammo, spells and the shield', 'New energy shield: a glowing kite shield with the setting-sun sigil', 'Muzzle flashes now come out of the end of each barrel', 'Earth no longer shrinks and vanishes when you look at it from the Moon'] },
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
@@ -17341,14 +17486,15 @@ function mawComms(who, line, dur) {
 const MAW_ALLIES = [['Captain Vega', '#3b4f7a'], ['Captain Skye', '#8fe3ff'], ['Ada-9', '#3f7d7a'], ['Harbor Master Rell', '#c9a43a'], ['General Hale', '#6f7a3e'], ['Lumen', '#e8e4dc'], ['Elismas', '#9aa1aa'], ['The Bug Master', '#c8a050'], ['Maxurge', '#4fa8ff'], ['Ramick', '#c8402f'], ['Lt. Vance', '#5a6e8a'], ['Ensign Park', '#7a8a9a'], ['Sgt. Okafor', '#6a7a5a']];
 // [hp fraction, ally, their last words (cut off), who answers, the answer, B.U.R.P.]
 const MAW_LOSSES = [
-  [0.64, 'Lt. Vance', 'It\'s on me, I can\'t shake it, I can\'t—', 'CAPTAIN VEGA', 'VANCE! ...Close it up, squadron. Close it up.', 'We lost Vance. Stay with me, Captain. Don\'t let it be for nothing.'],
-  [0.42, 'Ensign Park', 'Captain, the big eye is turning toward m—', 'CAPTAIN SKYE', 'Park\'s gone. She was nineteen.', 'Park is gone. I saved her last transmission. We will play it for her family. After we win.'],
-  [0.24, 'Sgt. Okafor', 'Rockets dry. Going in close. Tell my kids I—', 'GENERAL HALE', 'Okafor bought us that opening. Don\'t you dare waste it.', 'Okafor\'s signal just stopped. No jokes today, Captain. Please, be careful.'],
+  [0.64, 'Lt. Vance', 'Vance, it\'s on you! Break left, break left!', 'CAPTAIN VEGA', 'VANCE! ...Close it up, squadron. Close it up.', 'We lost Vance. Stay with me, Captain. Don\'t let it be for nothing.'],
+  [0.42, 'Ensign Park', 'Park, the big eye is turning on you! Pull out!', 'CAPTAIN VEGA', 'Park\'s gone. She was nineteen.', 'Park is gone. I saved her last transmission. We will play it for her family. After we win.'],
+  [0.24, 'Sgt. Okafor', 'Okafor, you\'re out of rockets! Don\'t go in close! Okafor!', 'CAPTAIN VEGA', 'Okafor bought us that opening. Don\'t you dare waste it.', 'Okafor\'s signal just stopped. No jokes today, Captain. Please, be careful.'],
 ];
 const MAW_NOW = 'It\'s now or never, Captain. Let\'s set this guy\'s sun.';
 function mawBurp(line, dur) { mawComms('B.U.R.P.', line, dur || 6); try { burpSay(line); } catch (_) {} try { log(line, 'ai', 'B.U.R.P.'); } catch (_) {} }
-const MAW_CHATTER = [['CAPTAIN VEGA', 'Hit the big eye, rookie! Everything else is just meat.'], ['LT. VANCE', 'Vance, Earth Defense Force. First time through a wormhole. Don\'t tell my mom.'], ['ENSIGN PARK', 'Park on your six, Captain. I\'ve got the little eyes.'], ['SGT. OKAFOR', 'Okafor here. Rockets hot. Point me at something ugly.'], ['ADA-9', 'Calculating weak points. Result: all of it is gross. Keep firing.'], ['GENERAL HALE', 'Fort Ironrock never misses a fight. Tanks don\'t fly, so I brought the next best thing.'], ['ELISMAS', 'A true gunner never wastes a shot. You are wasting several. Aim.'],
-  ['THE BUG MASTER', 'The hive remembers this thing. The hive does not forgive it.'], ['MAXURGE', 'One eye sees farther than two. Let us see how far it sees with none.'], ['RAMICK', 'I left my sword at home. I regret nothing. LASERS!'], ['CAPTAIN SKYE', 'Watch for the beam! When the big eye locks on, MOVE.'], ['HARBOR MASTER RELL', 'I logged every ship that ever flew. This one\'s going in the book as a win.'], ['LUMEN', 'Its light is failing. Keep pushing, trooper!'], ['B.U.R.P.', 'Hull integrity: worrying. Morale: surprisingly high. Snacks: none.']];
+// Vega does all the talking on the radio (she's the only one with a voice); the third field is who the line is about, so it goes quiet once they're lost
+const MAW_CHATTER = [['CAPTAIN VEGA', 'Hit the big eye, rookie! Everything else is just meat.'], ['CAPTAIN VEGA', 'Vance, first time through a wormhole? Stay on my wing and don\'t look down.', 'Lt. Vance'], ['CAPTAIN VEGA', 'Park, cover the rookie\'s six. You take the little eyes.', 'Ensign Park'], ['CAPTAIN VEGA', 'Okafor, rockets hot. Put them somewhere ugly.', 'Sgt. Okafor'], ['CAPTAIN VEGA', 'Ada-9 ran the numbers. The weak point is all of it. Keep firing.'], ['CAPTAIN VEGA', 'Hale brought half of Fort Ironrock. Tanks don\'t fly, so he brought gunships.'], ['CAPTAIN VEGA', 'Elismas says a true gunner never wastes a shot. You\'re wasting several. Aim.'],
+  ['CAPTAIN VEGA', 'The Bug Master\'s hive remembers this thing. They are not in a forgiving mood.'], ['CAPTAIN VEGA', 'Maxurge wants to see how far one eye sees with none. Let\'s show him.'], ['CAPTAIN VEGA', 'Ramick left his sword at home and he\'s never been happier. Look at those lasers!'], ['CAPTAIN VEGA', 'Skye\'s calling the beam! When the big eye locks on, MOVE.'], ['CAPTAIN VEGA', 'Rell is logging this one as a win. Don\'t make him a liar.'], ['CAPTAIN VEGA', 'Lumen says its light is failing. Keep pushing, rookie!'], ['B.U.R.P.', 'Hull integrity: worrying. Morale: surprisingly high. Snacks: none.']];
 function mawAlliesArrive(quick) {
   if (MAW.alliesIn) return; MAW.alliesIn = true;
   MAW_ALLIES.forEach(([name, col], i) => { let o;
@@ -17436,7 +17582,7 @@ function mawAllyStep(dt, t) {
 function mawDoom(L) {
   const A = MAW.allies.find(a => a.name === L[1]); if (!A || A.doom) return;
   A.doom = { t: 0, beam: null, L }; MAW.lost.push(L[1]);
-  mawComms(L[1].toUpperCase(), L[2], 2.2);
+  mawComms('CAPTAIN VEGA', L[2], 2.2);
 }
 function mawDoomStep(A, dt) {
   const D = A.doom, L = D.L; D.t += dt; const eyeW = MAW.obj.userData.eye.getWorldPosition(V(0, 0, 0)), p = A.o.position;
@@ -17545,7 +17691,7 @@ function mawStep(dt, t) {
   if (!MAW.alliesIn && MAW.t > 40) mawAlliesCut();
   // a line of chatter now and then
   if (MAW.alliesIn) { MAW.commsT -= dt; if (MAW.commsT <= 0) { MAW.commsT = 9 + Math.random() * 5;
-    for (let n = 0; n < MAW_CHATTER.length; n++) { const [w, l] = MAW_CHATTER[MAW.said++ % MAW_CHATTER.length]; if (MAW.lost.some(x => x.toUpperCase() === w) || (MAW.nowSaid && w === 'B.U.R.P.')) continue; if (w === 'B.U.R.P.') mawBurp(l, 5); else mawComms(w, l); break; } } }
+    for (let n = 0; n < MAW_CHATTER.length; n++) { const [w, l, about] = MAW_CHATTER[MAW.said++ % MAW_CHATTER.length]; if ((about && MAW.lost.includes(about)) || (MAW.nowSaid && w === 'B.U.R.P.')) continue; if (w === 'B.U.R.P.') mawBurp(l, 5); else mawComms(w, l); break; } } }
 }
 { const _ss = spaceStep; spaceStep = function (dt, t) {
   if (!LEVEL || LEVEL.id !== 'maw') return _ss(dt, t);
@@ -17653,8 +17799,8 @@ function mawAlliesCut() {
   runCutscene({ lock: again ? 1.5 : 3, shots: [
     { text: 'Behind you, the wormhole flares.', dur: 3, cam: (t, k) => { wormholeAnim(MAW.back, performance.now() / 1000 - t0); MAW.back.scale.setScalar(1 + k * 0.4); fwd(0); camLook(player.pos.clone().add(V(20, 16, -40)), B); } },
     { text: 'VEGA: You really thought we\'d let you go in alone, rookie?', dur: 4, cam: (t, k) => { fwd(k); camLook(B.clone().add(V(60, 30, -260)), B.clone().add(V(0, 0, -k * 150))); } },
-    { text: 'SKYE: Earth Defense Force, on your wing. ADA-9: Robot City sends its regards.', dur: 4, cam: (t, k) => { fwd(1 + k * 0.6); const c = ships[0].o.position; camLook(c.clone().add(V(-30, 12, 40)), c.clone().add(V(0, 0, -60))); } },
-    { text: 'ELISMAS: Four Masters. Four arts. One eye. Let us close it.', dur: 4, cam: (t, k) => { fwd(1.6 + k * 0.5); const c = ships[6].o.position; camLook(c.clone().add(V(24, 10, 30)), MAW_C); } },
+    { text: 'VEGA: Skye brought the Earth Defense Force. Ada-9 brought Robot City. Everybody came.', dur: 4, cam: (t, k) => { fwd(1 + k * 0.6); const c = ships[0].o.position; camLook(c.clone().add(V(-30, 12, 40)), c.clone().add(V(0, 0, -60))); } },
+    { text: 'VEGA: And Elismas brought the Four Masters. Four arts. One eye. Let\'s close it.', dur: 4, cam: (t, k) => { fwd(1.6 + k * 0.5); const c = ships[6].o.position; camLook(c.clone().add(V(24, 10, 30)), MAW_C); } },
   ], onEnd: () => { MAW.back.scale.setScalar(1); S.flags = S.flags || {}; S.flags.mawAllies = 1; markDirty(); mawSquadIn(); } });
 }
 function mawDeath() {
@@ -18722,7 +18868,7 @@ function roomUpDress(id, s, cx, cz, inner, props) {
 }
 
 // generated by tools/burpvo_ids.py: which B.U.R.P. lines have a recorded clip, per voice pack
-const BURP_VO_PACKS = {'burp': new Set('0199a781 019d19f9 0255d943 0272ce6c 07ff4d15 08f68083 0a3f0e98 0b5aada5 0b5b9ad0 0c83301d 0ce14908 0f98b3a9 0f9d7604 0ffd248d 1040a9a1 11547848 12f689fb 130b7be1 14a56f61 15e2a0ec 169a1cc7 16c63d2e 17769fd6 1835dd59 186dd066 1884f842 18bde740 1a238512 1aac7874 1b0b7e2d 1b168626 1c684c6d 1d620c60 1e7e71fe 1ee52a4d 1f3dc10f 1f8fabb8 21276758 21361572 222043b4 228e75a3 22da18a5 22fe9834 23169ea9 24996c37 24e92d9e 261cb8cf 26756b04 26ed5cb1 27852aed 28dceb21 290ea7d4 29d1db4a 2c3fd6a9 2e1dc3fd 2e327e93 2f68f916 314127fa 329faad2 3394cd97 33a34814 3409c1aa 3495f47f 361445ec 36503201 375372c3 3acf1777 3b6163c8 3bb3d5f8 3bc3edfd 3c9dc359 3ce3ba0b 3d1f3920 3f1f93b2 4239f99b 4245e2b8 4262ca97 428a1dc4 43b1f06c 44231a0f 460462b9 4669d7e1 46dfff49 4844c9b4 48cabbb3 498deb51 4aeac610 4b882f2e 4c27c008 4d9f57a0 4dd86691 4e4404de 4f1e2408 4fb37c79 4fe7816d 5022a5ea 5035ef3b 507a7caf 517b6335 520d6549 5239f162 53b70b38 5426a2b1 54571b61 5bd3fc56 5ce95245 5dec733a 60735f21 607cf32d 60d55737 6239564c 6289c1b2 62b93e73 630d304b 633c2f0f 65155efe 66b6dd60 66be4e32 68be3d12 68ff0303 6a55255b 6a60a1a5 6a67f9a3 6b1edd7f 6b44fd90 6ba296f2 6e3b9360 6f38c58a 704cedb8 7175f12d 71f43a89 72a328ae 75c37b0d 75db8717 77848a3f 79b4dca7 7b2c8288 7bc06ab5 7cc3785e 7d010e55 7e05cca4 824eb1fb 82f43991 8428f81b 843e5c16 85f121bf 87ba333d 880722bf 8960ce93 898df94e 89f8b85b 8af45176 8b01d880 8b669cf1 8bbafad9 8beed01d 8bef3d7d 8cd8d5d7 8d717d12 8da0d8e5 8f4f0a07 8f504a40 90af9507 919e2cd5 91e7b0ed 9399c1da 93cda89d 94fcde0d 9515c8d9 95e45a64 9a522975 9b10c514 9c6ed4ba 9c6ff8ee 9ce5101f 9d9e0bbf 9da6b676 9ffe0bf6 a0419699 a1a63a41 a21329cf a27b0e0b a46ac4ab a5679e21 a577a6ab a643dab8 a6cbc662 a70ffc20 a8cf46f1 ac657fef addb9d41 aef75b0e b1b07d1f b1c6f9fe b1dd6580 b3313235 b3a15d17 b5083958 b5280fa7 b5796e10 b6829a2a b6981842 b73ea286 b8481534 b96d9eb7 bb876ff0 bc424774 bc8ea102 bd5988a3 bd7eeb7a bdf735a0 bf151b6f bfab3f26 c04a4cc5 c071787a c0e0125e c1633150 c16f5077 c3168789 c39e5ecf c41959f0 c43a58aa c57b4558 c6a3a56d c889b0fd c8ce0e51 c978dfd2 c9fc3394 ca12a505 cbf88ef6 cc9b4071 ce6b3377 cf58242e cf76d3f5 cfb78867 d1b6a80a d2773270 d38d3bcc d4c11e65 d5304665 d670f8ed d67716bc d6f9f475 d866bac5 d9114a98 da1c7eff dc0be44f dc1c2c42 dc2e6774 df6ed76e e2862c03 e3bd8605 e41cb0e5 e4610eff e6f2a7ad e80780d1 e9102419 ea68da11 ebd594d3 ec0eb3ed ec67f42e ec88c940 ecdf15ee ed2bca2a ee7a9ec4 eec7d9b6 f0599600 f147cf66 f16080c3 f260d871 f2c7fbf6 f44dbc69 f507a014 f6377eb0 f639e89a f6c703ba f7d2c3d9 fa17109a fb81eeef fc26a633 fcb3fb9b fcda019c fd85cb42 fe72c880 fe9211b5 fef443a7 ff0c92ca'.split(' ').filter(Boolean)), 'narrator': new Set('03633958 09504935 0a827643 0d16eae7 0f12ae5d 107c677a 1a55038c 20cf9aee 288f0c11 2e518428 30dabd6f 332e1391 374b457c 46ab76de 59709bcf 5a83c8f6 5d2995ab 5f864ac7 619ae97d 648062c4 7590830c 78e504a5 7d277f26 8ffcb52e 9af586f5 9cf05b18 ae9422ca af73daf8 bd4ff930 bd973f31 bfd9d2c6 c081e7fa c3295abb ca9fee4b cea35653 d962c599 dcb97d15 ddee420d deb34f40 e68a8db0 efbd83b9 fd58e27f'.split(' ').filter(Boolean)), 'trailer': new Set('t1 t10 t11 t12 t2 t3 t4 t5 t6 t7 t8 t9'.split(' ').filter(Boolean))};
+const BURP_VO_PACKS = {'burp': new Set('0199a781 019d19f9 0255d943 0272ce6c 07ff4d15 08f68083 0a3f0e98 0b5aada5 0b5b9ad0 0c83301d 0ce14908 0f98b3a9 0f9d7604 0ffd248d 1040a9a1 11547848 12f689fb 130b7be1 14a56f61 15e2a0ec 169a1cc7 16c63d2e 17769fd6 1835dd59 186dd066 1884f842 18bde740 1a238512 1aac7874 1b0b7e2d 1b168626 1c684c6d 1d620c60 1e7e71fe 1ee52a4d 1f3dc10f 1f8fabb8 21276758 21361572 222043b4 228e75a3 22da18a5 22fe9834 23169ea9 24996c37 24e92d9e 261cb8cf 26756b04 26ed5cb1 27852aed 28dceb21 290ea7d4 29d1db4a 2c3fd6a9 2e1dc3fd 2e327e93 2f68f916 314127fa 329faad2 3394cd97 33a34814 3409c1aa 3495f47f 361445ec 36503201 375372c3 3acf1777 3b6163c8 3bb3d5f8 3bc3edfd 3c9dc359 3ce3ba0b 3d1f3920 3f1f93b2 4239f99b 4245e2b8 4262ca97 428a1dc4 43b1f06c 44231a0f 460462b9 4669d7e1 46dfff49 4844c9b4 48cabbb3 498deb51 4aeac610 4b882f2e 4c27c008 4d9f57a0 4dd86691 4e4404de 4f1e2408 4fb37c79 4fe7816d 5022a5ea 5035ef3b 507a7caf 517b6335 520d6549 5239f162 53b70b38 5426a2b1 54571b61 5bd3fc56 5ce95245 5dec733a 60735f21 607cf32d 60d55737 6239564c 6289c1b2 62b93e73 630d304b 633c2f0f 65155efe 66b6dd60 66be4e32 68be3d12 68ff0303 6a55255b 6a60a1a5 6a67f9a3 6b1edd7f 6b44fd90 6ba296f2 6e3b9360 6f38c58a 704cedb8 7175f12d 71f43a89 72a328ae 75c37b0d 75db8717 77848a3f 79b4dca7 7b2c8288 7bc06ab5 7cc3785e 7d010e55 7e05cca4 824eb1fb 82f43991 8428f81b 843e5c16 85f121bf 87ba333d 880722bf 8960ce93 898df94e 89f8b85b 8af45176 8b01d880 8b669cf1 8bbafad9 8beed01d 8bef3d7d 8cd8d5d7 8d717d12 8da0d8e5 8f4f0a07 8f504a40 90af9507 919e2cd5 91e7b0ed 9399c1da 93cda89d 94fcde0d 9515c8d9 95e45a64 9a522975 9b10c514 9c6ed4ba 9c6ff8ee 9ce5101f 9d9e0bbf 9da6b676 9ffe0bf6 a0419699 a1a63a41 a21329cf a27b0e0b a46ac4ab a5679e21 a577a6ab a643dab8 a6cbc662 a70ffc20 a8cf46f1 ac657fef addb9d41 aef75b0e b1b07d1f b1c6f9fe b1dd6580 b3313235 b3a15d17 b5083958 b5280fa7 b5796e10 b6829a2a b6981842 b73ea286 b8481534 b96d9eb7 bb876ff0 bc424774 bc8ea102 bd5988a3 bd7eeb7a bdf735a0 bf151b6f bfab3f26 c04a4cc5 c071787a c0e0125e c1633150 c16f5077 c3168789 c39e5ecf c41959f0 c43a58aa c57b4558 c6a3a56d c889b0fd c8ce0e51 c978dfd2 c9fc3394 ca12a505 cbf88ef6 cc9b4071 ce6b3377 cf58242e cf76d3f5 cfb78867 d1b6a80a d2773270 d38d3bcc d4c11e65 d5304665 d670f8ed d67716bc d6f9f475 d866bac5 d9114a98 da1c7eff dc0be44f dc1c2c42 dc2e6774 df6ed76e e2862c03 e3bd8605 e41cb0e5 e4610eff e6f2a7ad e80780d1 e9102419 ea68da11 ebd594d3 ec0eb3ed ec67f42e ec88c940 ecdf15ee ed2bca2a ee7a9ec4 eec7d9b6 f0599600 f147cf66 f16080c3 f260d871 f2c7fbf6 f44dbc69 f507a014 f6377eb0 f639e89a f6c703ba f7d2c3d9 fa17109a fb81eeef fc26a633 fcb3fb9b fcda019c fd85cb42 fe72c880 fe9211b5 fef443a7 ff0c92ca'.split(' ').filter(Boolean)), 'narrator': new Set('03633958 09504935 0a827643 0c942a2c 0d16eae7 0f12ae5d 107c677a 160d6cb7 1a55038c 20cf9aee 288f0c11 29b8de29 2e518428 30dabd6f 332e1391 374b457c 39e41837 42239517 46ab76de 48085761 48d6abfb 4b469cb5 59709bcf 5a83c8f6 5cd73408 5d2995ab 5f864ac7 619ae97d 648062c4 746e4137 7519c862 7590830c 78e504a5 7d277f26 84f90858 880b6775 8ffcb52e 919fe277 98fdcc9a 9af586f5 9cf05b18 aa151002 ae9422ca af73daf8 b4d32b65 b6921221 b9660bcb bb3c0fd5 bd4ff930 bd973f31 bfd9d2c6 c081e7fa c3295abb c840eecb c9c47c3d ca9fee4b cea35653 d962c599 dcad8285 dcb97d15 ddee420d deb34f40 e0710d68 e210d501 e68a8db0 efbd83b9 f315a08b fa9de67a fd58e27f'.split(' ').filter(Boolean)), 'trailer': new Set('t1 t10 t11 t12 t2 t3 t4 t5 t6 t7 t8 t9'.split(' ').filter(Boolean))};
 const BURP_VO = BURP_VO_PACKS.burp || new Set();
 
 // =================== B.U.R.P.'s real voice ===================
@@ -19913,6 +20059,289 @@ function gunMuzzle(g) { if (!g) return null; if (g.userData.muzzle) return g.use
 { const _mf = muzzleFlash; muzzleFlash = function () { const g = typeof vmGun !== 'undefined' ? vmGun : null, n = g ? g.children.length : 0; _mf(); const mz = gunMuzzle(g); if (g && mz) for (let i = n; i < g.children.length; i++) if (g.children[i].isSprite) g.children[i].position.copy(mz); }; }
 { const _gs = gunShotFx; gunShotFx = function () { const g = vmGun, n = g ? g.children.length : 0; _gs(); const mz = gunMuzzle(g); if (g && mz) for (let i = n; i < g.children.length; i++) g.children[i].position.copy(mz); }; }
 
+// =================== 2.16: water that matches each world, a space-age type and colour pass, fullscreen everywhere ===================
+// ---- each world's water takes its own colour ----
+const WATER_COLS = { earth: '#6fb7da', capitone: '#5ab8cc', mezar: '#6fc4a8', robot: '#b8706a', forestlife: '#4fa08a', ocean: '#2f9aa8', zarlich: '#a98ae8', moon: '#9aa8c0' };
+{ const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); try { WATER_MAT.color.set(WATER_COLS[id] || WATER_COLS.earth).convertSRGBToLinear(); if (typeof OCEAN_WATER_MAT !== 'undefined') OCEAN_WATER_MAT.color.set(WATER_COLS.ocean).convertSRGBToLinear(); } catch (_) {} return r; }; }
+// ---- type and colour: Orbitron for big numbers and titles, Oxanium for the HUD, Exo 2 for reading; light space blue replaces the orange accent ----
+{ const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Oxanium:wght@500;600;700&family=Exo+2:wght@400;500;600;700&display=swap'; document.head.appendChild(l);
+  const st = document.createElement('style'); st.textContent = `
+:root { --accent: #a8e4ff; --gold: #a8e4ff; --amber: #a8e4ff; --sun: #8fd8ff;
+  --ui: "Exo 2", "Oxanium", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif;
+  --hud: "Oxanium", "Exo 2", system-ui, sans-serif;
+  --mono: "Orbitron", "Oxanium", monospace;
+  --num: "Orbitron", "Oxanium", monospace; }
+#ammo .n, #vitals .row b, #clock, #compass span { font-family: var(--num) !important; letter-spacing: .02em; }
+#ammo .n { font-size: 32px; } #ammo .n small { font-size: 15px; }
+#toast .big, #zone .n, .dlg h3, #quest .qt { font-family: "Orbitron", var(--hud) !important; letter-spacing: .04em; }
+#zone .n { font-size: 24px; } .dlg h3 { font-size: 20px; } #quest .qt { font-size: 15px; }
+.tq .cnt { color: #04121e !important; }
+`; document.head.appendChild(st); }
+// the old orange/gold accents written straight into styles get swapped for the blue at load and whenever new UI appears
+{ const ORANGE = /#(ffb347|ffd36a|ffd75e|ff9a3c|ffc870)\b/gi, swapCss = s => s.replace(ORANGE, '#a8e4ff');
+  const fixStyle = el => { if (el && el.style && el.style.cssText && ORANGE.test(el.style.cssText)) { ORANGE.lastIndex = 0; el.style.cssText = swapCss(el.style.cssText); } ORANGE.lastIndex = 0; };
+  const fixSheet = n => { if (n.tagName === 'STYLE' && ORANGE.test(n.textContent)) { ORANGE.lastIndex = 0; n.textContent = swapCss(n.textContent); } ORANGE.lastIndex = 0; };
+  document.querySelectorAll('style').forEach(fixSheet); document.querySelectorAll('[style]').forEach(fixStyle);
+  new MutationObserver(ms => { for (const m of ms) { if (m.type === 'attributes') fixStyle(m.target); else for (const n of m.addedNodes) { if (n.nodeType !== 1) continue; fixSheet(n); fixStyle(n); if (n.querySelectorAll) n.querySelectorAll('[style]').forEach(fixStyle); } } })
+    .observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['style'] }); }
+// ---- fullscreen: real fullscreen where the browser allows it, and an install-to-home-screen guide on iPhone (Safari only allows it for home-screen apps) ----
+const isStandalone = () => !!(navigator.standalone || (window.matchMedia && (matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches)));
+const isIOS = () => /iPhone|iPod/.test(navigator.userAgent) || (/iPad|Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+goFullscreen = function () {
+  const el = document.documentElement, on = document.fullscreenElement || document.webkitFullscreenElement;
+  if (on) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+  if (isStandalone()) { toast('FULLSCREEN', "You're already playing fullscreen", 2); return; }
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  const guide = () => { openDlg('Fullscreen', 'Play it like an app');
+    $('dlgLine').innerHTML = isIOS() ? 'iPhone Safari only goes fullscreen for home-screen apps. Tap <b>Share</b> <span style="font-size:18px">⎋</span> at the bottom, then <b>Add to Home Screen</b>. Open Art of War from your home screen and it fills the whole screen, no browser bars.'
+      : 'This browser blocked fullscreen here. Open the game link in Chrome, Edge, Firefox or Safari directly, or use your browser menu: <b>Install app</b> / <b>Add to Home screen</b>.';
+    acts([['Got it', closeDlg, true]]); };
+  if (!req) { guide(); return; }
+  try { const p = req.call(el, { navigationUI: 'hide' }); const lock = () => { try { screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {}); } catch (_) {} };
+    if (p && p.then) p.then(lock).catch(guide); else lock(); } catch (_) { guide(); }
+};
+// home-screen app on a notched phone: keep the HUD clear of the notch
+{ const st = document.createElement('style'); st.textContent = '@media (display-mode: fullscreen), (display-mode: standalone) { body { padding: 0; } }'; document.head.appendChild(st); }
+// ---- Vega is the one voice on the Maw battle radio ----
+{ const _mc = mawComms; mawComms = function (who, line, dur) { const r = _mc.apply(this, arguments); if (who === 'CAPTAIN VEGA') try { narrSay(line); } catch (_) {} return r; }; }
+
+// =================== SIDE HUSTLE: selling party favors, a partner in crime, and bail ===================
+// Sell the drugs you carry (SUBS items) to the President and to ordinary NPCs from their talk menu ("Sell something…").
+// Hand product to your partner at their home (Residential Ring apartment or your ship's quarters); they sell it over
+// real play time, you collect the cash, every batch raises their heat, and sooner or later the Marshals pick them up.
+// Bail them out at Marshal Rook on the Zeltac Plaza. Mail from the Marshals lands in the Residential Ring mailbox.
+// Save field (optional, old saves start empty): S.deal = { rid, stash: {id: n}, cash, heat, sold, val, acc, arrested, arrT, bail, earned, busts, b: {npcId: [window, n]}, mail: [] }.
+function dealS() {
+  S.deal = S.deal || {}; const D = S.deal;
+  D.stash = D.stash || {}; D.b = D.b || {}; D.mail = D.mail || [];
+  for (const k of ['cash', 'heat', 'sold', 'val', 'acc', 'bail', 'earned', 'busts']) D[k] = D[k] || 0;
+  return D;
+}
+const DEAL_PICK = a => a[Math.floor(Math.random() * a.length)];
+const dealHash = s => { let h = 7; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) % 100003; return h; };
+const dealWin = () => Math.floor(Date.now() / (30 * 60000)); // a buyer's mood and appetite reset every 30 minutes
+const dealBase = k => { const D = SUBS[k]; return D ? (D.price || D.v * 2) : (ITEMS[k] ? ITEMS[k].v : 0); };
+const dealIllegal = k => !(SUBS[k] && SUBS[k].legal);
+const dealCarry = () => Object.keys(SUBS).filter(k => S.inv[k] > 0);
+const dealStashN = () => Object.values(dealS().stash).reduce((a, n) => a + n, 0);
+const dealFirst = rid => ROMANCE[rid] ? ROMANCE[rid].name.split(' ')[0] : 'Your partner';
+const dealJailed = rid => { const D = S.deal; return !!(D && D.arrested && D.rid === rid); };
+function dealLawless() {
+  const id = LEVEL && LEVEL.id; if (id === 'underworld' || id === 'boarding') return true;
+  return id === 'zfloor' && typeof ZF !== 'undefined' && ['under', 'aliens', 'engine'].includes(zTheme(ZF.floor));
+}
+const DEAL_LAW = /marshal|guard|secret service|police|enforcer|sheriff|warden|captain|sergeant|commander|general|lt\.|agent/i;
+const DEAL_SHADY = /black market|fence|smuggl|outlaw|dealer|wanderer|scaveng|drifter|mole|bookie|gambl|poker|dice/i;
+const dealQuesty = id => QORDER.some(q => QDEFS[q] && (QDEFS[q].giver === id || QDEFS[q].turnIn === id));
+function dealBuyer(n) {
+  if (!n || !n.id) return false; if (n.id === 'prez') return true;
+  if (n.romId || n.marshal || /^(roomie|host_|rom_)/.test(n.id)) return false;
+  if (DEAL_LAW.test(n.name + ' ' + (n.role || '')) || dealQuesty(n.id)) return false;
+  return true;
+}
+
+// ---- lines ----
+const DL = {
+  ok: ["\"Is this the good stuff? Don't answer. I don't want to know.\"", "\"My therapist said I need a hobby. This is a hobby now.\"", "They tuck it into a sock, then the other sock, then their hat. \"For safety.\"", "\"Pleasure doing business. We never met. Who are you? Exactly.\"", "\"Great. Now act natural.\" They start whistling at a wall.", "\"I'm buying this for a friend. The friend is me. I'm my own best friend.\""],
+  legal: ["\"A Focus Fizz? From a stranger? In THIS economy? Sold.\"", "You sold a perfectly legal product. You are, technically, a vending machine with legs.", "\"Ooh, the fizzy one. My boss says I lack focus. My boss is right. What were we talking about?\""],
+  shady: ["\"Wholesale price. Don't look at me like that, I've got overhead.\"", "\"Mm. Not cut with anything? Respect. Still paying you less.\"", "\"I'll move it. You didn't see me. I didn't see you. Nobody sees anything down here.\""],
+  no: ["\"No thank you. I'm high on life. And coffee. Mostly coffee.\"", "\"I'm on a cleanse. No toxins. Only juice. Sad, sad juice.\"", "\"Do I LOOK like I party? ...Don't answer that.\"", "\"Absolutely not. I'm telling my book club about you.\"", "\"Last time I bought something from a stranger it was a timeshare on an asteroid. Never again.\"", "\"My mom works for the Marshals. And so do I. Part time. Kidding! ...Unless?\""],
+  robot: ["\"I AM A ROBOT. I DO NOT HAVE A BLOODSTREAM. I HAVE A COOLANT LOOP. PLEASE DO NOT PUT DUST IN IT.\"", "\"ERROR: PARTY NOT FOUND. HAVE YOU TRIED TURNING YOURSELF OFF AND ON AGAIN.\""],
+  full: ["\"I'm good. Like, REALLY good. Come back in a while.\"", "\"Any more of that and I'll be able to see sounds. Later, friend.\"", "\"My wallet says no. My heart says yes. My wallet is in charge.\""],
+  empty: ["You pat your pockets. Lint, a receipt, and a single sad space mint. Nothing to sell.", "You open your coat like a sidewalk watch salesman. It's empty. You both stare at it."],
+  report: ["Someone behind you gasps loudly and starts typing very fast on a wrist-comm.", "A nosy passer-by yells \"DEALER!\" and points with both hands.", "A kid filmed the whole thing. It's already trending in four systems.", "A lady with a stroller says \"I'm calling the Marshals\" and then actually does."],
+  prez: ["\"Is this for ME? I LOVE gifts! I'm giving you a pardon. And money. Mostly money.\"", "\"Put it on the national debt! No, put it on MY debt! I'll pay triple! Quadruple! What comes after quadruple?\"", "\"Trooper, you are a national treasure. I'm declaring a holiday. Today. In your honor. Somebody tell the Senate.\"", "\"This is going straight into the Strategic Party Reserve.\"", "\"I'll take all of it. I'll take the bag. Is that your bag? I'll take the bag.\"", "\"Keep the change. Keep the wallet. That's a presidential wallet. It has my face on it. Twice.\""],
+  brooks: ["Agent Brooks closes his eyes and counts to ten.", "Agent Brooks writes 'resign' on a napkin, then sadly crosses it out.", "Somewhere behind you, Agent Brooks whispers \"why\" to no one.", "Agent Brooks pretends to adjust his earpiece so he can pretend he didn't see that."],
+  prezEmpty: "\"Empty-handed? That's fine, that's fine. Come back with party favors and I'll make you Secretary of Fun. It's a real job. I just made it real.\""
+};
+
+// ---- selling to an NPC ----
+function dealOffer(n, k) {
+  const h = dealHash(n.id + ':' + k + ':' + dealWin()), base = dealBase(k) * (dealIllegal(k) ? 1 : 0.6);
+  if (n.id === 'prez') return Math.round(base * (2.5 + (h % 150) / 100));
+  const shady = dealLawless() || DEAL_SHADY.test(n.name + ' ' + (n.role || ''));
+  return Math.max(5, Math.round(base * (shady ? 0.55 + (h % 20) / 100 : 0.85 + (h % 55) / 100)));
+}
+function dealMood(n) { // 'buy' | 'no' | 'robot'
+  if (n.id === 'prez') return 'buy';
+  if (['xr17', 'zr', 'overseer', 'drome'].includes(n.rig) && dealHash(n.id) % 3) return 'robot';
+  const shady = dealLawless() || DEAL_SHADY.test(n.name + ' ' + (n.role || ''));
+  return dealHash(n.id + ':' + dealWin()) % 100 < (shady ? 8 : 32) ? 'no' : 'buy';
+}
+function dealWant(n) { if (n.id === 'prez') return 999; const D = dealS(), w = dealWin(), r = D.b[n.id]; const cap = 1 + dealHash(n.id + 'w') % 4; return Math.max(0, cap - (r && r[0] === w ? r[1] : 0)); }
+function dealLawNear() {
+  for (const id in npcObjs) { const N = npcObjs[id], d = N.def; if (!N.obj.visible || id === 'vipguard') continue; if ((d.marshal || DEAL_LAW.test(d.name + ' ' + (d.role || ''))) && N.obj.position.distanceTo(player.pos) < 16) return d.name; }
+  return null;
+}
+function dealReport(chance, extra) {
+  if (dealLawless() || Math.random() >= chance) return false;
+  const cop = dealLawNear(); crime(extra, cop ? `${cop} saw you dealing` : 'Someone reported you for dealing');
+  toast('REPORTED', cop ? `${cop} was standing RIGHT there` : DEAL_PICK(['Snitches get... a reward, actually', 'The Marshals have been notified', 'Smile, you are on camera']), 3); SFX.hit();
+  return true;
+}
+function openDealSell(n) {
+  const prez = n.id === 'prez'; openDlg(prez ? 'Private sale · Commander in Chief' : `${n.role || 'Local'} · private sale`, n.name);
+  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const mood = dealMood(n);
+  if (!dealCarry().length) { $('dlgLine').textContent = prez ? DL.prezEmpty : DEAL_PICK(DL.empty); acts([['Back', () => talk(n.id), true], ['Bye', closeDlg]]); return; }
+  if (mood !== 'buy') {
+    $('dlgLine').textContent = DEAL_PICK(mood === 'robot' ? DL.robot : DL.no); SFX.talk && SFX.talk();
+    if (mood === 'no' && dealCarry().some(dealIllegal) && dealReport(0.25, 5)) $('dlgLine').textContent += ' ' + DEAL_PICK(DL.report);
+    acts([['Back', () => talk(n.id), true], ['Bye', closeDlg]]); return;
+  }
+  let line = prez ? "\"Whatcha got? Show me. Show the President. The PRESIDENT wants to see.\"" : DEAL_PICK(["\"Psst. Whatcha got?\" they whisper, very loudly.", "They glance left. Then right. Then left again, for luck. \"Okay. Show me.\"", "\"I don't usually do this. I do this a normal amount. Let's see it.\""]);
+  const render = () => {
+    const want = dealWant(n), have = dealCarry();
+    $('dlgLine').textContent = line + (want <= 0 ? '' : prez ? '' : ` (Wants up to ${want} more. You have ${S.cr.toLocaleString()} cr.)`);
+    if (!have.length) { rows.textContent = ''; const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'Sold out. Your pockets are clean. Suspiciously clean.'; rows.appendChild(e); return; }
+    itemRows(rows, have.map(k => [k, S.inv[k], `${dealOffer(n, k).toLocaleString()} cr each${dealIllegal(k) ? '' : ' · legal'}`, [['Sell 1', () => sell(k, 1), want <= 0], ['Sell all', () => sell(k, Math.min(S.inv[k], want)), want <= 0]]]));
+  };
+  const sell = (k, q) => {
+    const want = dealWant(n); q = Math.min(q, S.inv[k] || 0, want); if (q <= 0) { line = DEAL_PICK(DL.full); render(); return; }
+    const each = dealOffer(n, k), tot = each * q, D = dealS(), w = dealWin();
+    S.inv[k] -= q; if (!S.inv[k]) delete S.inv[k]; S.cr += tot;
+    if (!prez) { const r = D.b[n.id]; D.b[n.id] = [w, (r && r[0] === w ? r[1] : 0) + q]; for (const id in D.b) if (D.b[id][0] !== w) delete D.b[id]; }
+    D.earned += tot; markDirty(); SFX.coin(); log(`Sold ${q} ${SUBS[k].name} to ${n.name} for ${tot.toLocaleString()} cr.`, 'loot');
+    try { burst(npcObjs[n.id].obj.position.clone().add(V(0, 1.6, 0)), '#ffd36a', 10, 2); } catch (_) {}
+    if (prez) { line = DEAL_PICK(DL.prez) + ' ' + DEAL_PICK(DL.brooks); toast('PRESIDENTIAL PURCHASE', `+${tot.toLocaleString()} cr · he overpaid. A lot.`, 2.6); }
+    else {
+      const shady = dealLawless() || DEAL_SHADY.test(n.name + ' ' + (n.role || ''));
+      line = !dealIllegal(k) ? DEAL_PICK(DL.legal) : shady ? DEAL_PICK(DL.shady) : DEAL_PICK(DL.ok);
+      if (dealIllegal(k) && dealReport(0.12 + 0.03 * (q - 1) + (dealLawNear() ? 0.25 : 0), 4 + q * 2)) line += ' ' + DEAL_PICK(DL.report);
+    }
+    try { invQuickRender(); } catch (_) {}
+    render();
+  };
+  $('dlgActs').before(rows); acts([['Done', () => talk(n.id), true], ['Bye', closeDlg]]); render();
+}
+
+// ---- the talk menu gets a "Sell something…" button (and Marshal Rook a bail desk) ----
+{ const _mf = menuFor; menuFor = function (n) {
+  const r = _mf.apply(this, arguments);
+  try {
+    const extra = [];
+    if (dealBuyer(n) && (n.id === 'prez' || dealCarry().length)) extra.push([n.id === 'prez' ? '💸 Sell the President something…' : 'Sell something…', () => openDealSell(n)]);
+    if (n.id === 'rook' && dealS().arrested) extra.push([`⚖ Post bail for ${dealFirst(dealS().rid)}`, () => openBail()]);
+    if (extra.length) { const box = $('dlgActs'), bye = [...box.querySelectorAll('button')].pop(); extra.forEach(([label, fn]) => { const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = label; b.addEventListener('click', () => { SFX.ui(); fn(); }); box.insertBefore(b, bye); }); }
+  } catch (e) { console.warn('deal menu', e); }
+  return r;
+}; }
+
+// ---- your partner, the small-business owner ----
+const DEAL_HEAT = [[0, 'cool'], [20, 'warm'], [45, 'hot'], [70, 'on fire']];
+const dealHeatName = h => { let s = DEAL_HEAT[0][1]; for (const [v, n] of DEAL_HEAT) if (h >= v) s = n; return s; };
+const DP = {
+  give: ["\"Oh, we're doing this? We're doing this. I've always wanted a side hustle.\"", "\"Got it. I know a guy. I know several guys. One of them is a hat.\"", "\"I'll have this moved by dinner. Or by breakfast. Business hours are flexible.\"", "\"Leave it with me. I'll be discreet.\" They put it in a jar labeled DEFINITELY NOT DRUGS."],
+  hot: ["\"Uh, small thing: there's a Marshal who waves at me every morning now. Waves. With his whole arm.\"", "\"I'm seeing the same guy in a trench coat everywhere. In the market. In the elevator. In my dreams.\""],
+  collect: ["\"Here's your cut. I kept a little for 'business expenses.' The business is snacks.\"", "\"Sold one to a guy in a full mascot suit. He paid in quarters. Space quarters.\"", "\"Business is booming. One customer literally boomed. He's fine. Mostly fine.\"", "\"Your money. Counted twice. Smelled once. Don't ask why.\""],
+  none: ["\"Nothing yet, boss. The market's slow. The market is asleep. The market is one guy and he's broke.\"", "\"Patience! Commerce takes time. Also legs. I've been walking a LOT.\""],
+  chatter: ["just sold a {d} to a lady walking six robot dogs. Business!", "moved a {d} to a guy who asked if it came in decaf.", "sold a {d} to a mime. The mime paid in an invisible wallet. Real money though.", "sold a {d}. The buyer said 'you didn't see me' and then stood there for a full minute.", "sold a {d} to someone in the Market Deck. They tipped. Who tips?!"]
+};
+function dealGive(rid) {
+  const M = romOf(rid), name = dealFirst(rid), D = dealS();
+  openDlg(`${ROMANCE[rid].role} · your partner in crime`, ROMANCE[rid].name);
+  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  let line = D.rid && D.rid !== rid && dealStashN() ? `"Wait, ${dealFirst(D.rid)} is still holding your stuff? Awkward. I'll take it from here."` : `"What've you got for me?" ${name} cracks their knuckles. Business mode.`;
+  let given = 0;
+  const render = () => {
+    const have = dealCarry(), n = dealStashN();
+    $('dlgLine').textContent = `${line} (Holding ${n}/20 · heat ${dealHeatName(D.heat)})`;
+    if (!have.length) { rows.textContent = ''; const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'You have nothing to hand over. Buy party favors from Madame Vex in the underworld, or brew them in a Lab.'; rows.appendChild(e); return; }
+    itemRows(rows, have.map(k => [k, S.inv[k], dealIllegal(k) ? 'illegal' : 'legal', [['Give 1', () => give(k, 1), n >= 20], ['Give all', () => give(k, S.inv[k]), n >= 20]]]));
+  };
+  const give = (k, q) => {
+    q = Math.min(q, S.inv[k] || 0, 20 - dealStashN()); if (q <= 0) { line = `"My jar is full. My other jar is full. Sell some first."`; render(); return; }
+    if (D.arrested) { line = `"Not while ${dealFirst(D.rid)} is still in a cell. Bail them out first. That's just good business."`; render(); return; }
+    D.rid = rid; // a new partner takes over whatever the last one was holding
+    S.inv[k] -= q; if (!S.inv[k]) delete S.inv[k]; D.stash[k] = (D.stash[k] || 0) + q;
+    if (!given) D.heat = Math.min(100, D.heat + 6); // every batch handed over draws a little more attention
+    given += q; D.heat = Math.min(100, D.heat + q * (dealIllegal(k) ? 1 : 0.3));
+    line = D.heat >= 45 ? DEAL_PICK(DP.hot) : DEAL_PICK(DP.give); markDirty(); SFX.item ? SFX.item() : SFX.ui(); try { invQuickRender(); } catch (_) {} render();
+  };
+  $('dlgActs').before(rows); acts([['Done', () => openRomance(rid, true), true]]); render();
+}
+function dealCollect(rid) {
+  const D = dealS(), name = dealFirst(rid); openDlg(`${ROMANCE[rid].role} · your partner in crime`, ROMANCE[rid].name);
+  if (!D.cash) { $('dlgLine').textContent = DEAL_PICK(DP.none); acts([['Okay', () => openRomance(rid, true), true]]); return; }
+  const c = Math.round(D.cash); S.cr += c; D.cash = 0; markDirty(); SFX.coin(); toast('CASH COLLECTED', `+${c.toLocaleString()} cr from ${name}`, 2.6); log(`${name} handed over ${c.toLocaleString()} cr in very small bills.`, 'loot');
+  $('dlgLine').textContent = DEAL_PICK(DP.collect); acts([['Nice', () => openRomance(rid, true), true]]);
+}
+// home-only actions on the romance menu (apartment and ship quarters both pass home = true)
+{ const _or = openRomance; openRomance = function (id, home) {
+  const r = _or.apply(this, arguments);
+  try {
+    if (!home) return r; const M = romOf(id), D = dealS(); const extra = [];
+    if (M.partner) extra.push([`💸 Give them product to sell${dealStashN() && D.rid === id ? ` (${dealStashN()} held)` : ''}`, () => dealGive(id)]);
+    if (D.rid === id && (D.cash > 0 || M.partner)) extra.push([`💰 Collect earnings${D.cash ? ` (${Math.round(D.cash).toLocaleString()} cr)` : ''}`, () => dealCollect(id)]);
+    if (D.rid === id && (dealStashN() || D.heat >= 20)) $('dlgLine').textContent += ` [Side hustle: ${dealStashN()} left to sell · heat ${dealHeatName(D.heat)}]`;
+    if (extra.length) { const box = $('dlgActs'), bye = [...box.querySelectorAll('button')].pop(); extra.forEach(([label, fn]) => { const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = label; b.addEventListener('click', () => { SFX.ui(); fn(); }); box.insertBefore(b, bye); }); }
+  } catch (e) { console.warn('deal home', e); }
+  return r;
+}; }
+
+// ---- selling over real play time ----
+function dealSellOne() {
+  const D = dealS(), ks = Object.keys(D.stash).filter(k => D.stash[k] > 0); if (!ks.length) return;
+  const k = DEAL_PICK(ks), price = Math.round(dealBase(k) * (dealIllegal(k) ? 1 : 0.6) * (0.9 + Math.random() * 0.4) * 0.85); // they keep 15% for "business expenses"
+  D.stash[k]--; if (!D.stash[k]) delete D.stash[k];
+  D.cash += price; D.sold++; D.val += price; D.heat = Math.min(100, D.heat + (dealIllegal(k) ? 3 : 0.5)); markDirty();
+  if (Math.random() < 0.3 && ROMANCE[D.rid]) log(`${ROMANCE[D.rid].name}: "${DEAL_PICK(DP.chatter).replace('{d}', SUBS[k] ? SUBS[k].name : k)}"`, 'chat');
+  if (!dealStashN()) log(`${dealFirst(D.rid)} sold out. ${Math.round(D.cash).toLocaleString()} cr is waiting for you at their place.`, 'loot');
+  if (Math.random() < Math.max(0, Math.min(0.2, (D.heat - 25) / 500))) dealArrest();
+}
+function dealArrest() {
+  const D = dealS(), rid = D.rid; if (!rid || D.arrested || !ROMANCE[rid]) return;
+  const R = ROMANCE[rid], name = dealFirst(rid);
+  D.arrested = true; D.arrT = Date.now(); D.busts++; D.bail = Math.round((400 + D.val * 0.6 + D.sold * 40) * (1 + 0.25 * (D.busts - 1)) / 10) * 10;
+  const seized = dealStashN(); D.stash = {};
+  D.mail.push(`OFFICIAL NOTICE · Galactic Marshals: ${R.name} has been detained for "aggressive entrepreneurship" (${D.sold} sales${seized ? `, ${seized} more seized` : ''}). Bail: ${D.bail.toLocaleString()} cr, payable to Marshal Rook, Zeltac Plaza. Please stop sending them snacks.`);
+  markDirty(); SFX.hit(); toast(`${name.toUpperCase()} ARRESTED`, `Bail: ${D.bail.toLocaleString()} cr at Marshal Rook, Zeltac Plaza`, 5);
+  log(`The Marshals picked up ${R.name} for dealing. Bail is ${D.bail.toLocaleString()} cr at Marshal Rook on the Zeltac Plaza. (You've got space mail.)`, 'loot');
+}
+setInterval(() => { try {
+  if (state !== 'play' || !S.deal || document.hidden) return; const D = dealS(), now = Date.now();
+  if (D.arrested) return;
+  if (!dealStashN() || !D.rid || !romOf(D.rid).partner) { if (D.heat > 0 && now - (D.coolT || 0) > 180000) { D.coolT = now; D.heat = Math.max(0, D.heat - 1); markDirty(); } return; }
+  D.acc += 5; if (D.acc >= (D.next || 50)) { D.acc = 0; D.next = 40 + randi(0, 35); dealSellOne(); }
+} catch (e) { console.warn('deal tick', e); } }, 5000);
+
+// ---- behind bars: gone from home, the lounge, and your ship ----
+{ const _mn = makeNpc; makeNpc = function (n, base) {
+  if (n && n.romId && !n._dealHide) { n._dealHide = 1; const s0 = n.showIf; n.showIf = () => !dealJailed(n.romId) && (!s0 || s0()); }
+  return _mn.apply(this, arguments);
+}; }
+{ const _rd = resDoor; resDoor = function (i, rid) {
+  if (rid && dealJailed(rid)) { const D = dealS(); openDlg(`#${i + 1} · Sealed by the Marshals`, `${ROMANCE[rid].name}'s place`);
+    $('dlgLine').textContent = `Marshal tape across the door in a big yellow X. A notice: "OCCUPANT DETAINED. BAIL ${D.bail.toLocaleString()} CR, PAY MARSHAL ROOK, ZELTAC PLAZA." Someone has drawn a sad face on it. It might be ${dealFirst(rid)}'s handwriting.`;
+    acts([['Ugh. Fine.', closeDlg, true]]); SFX.ui(); return; }
+  return _rd.apply(this, arguments);
+}; }
+{ const _sr = spawnRoommate; spawnRoommate = function () {
+  const rid = Object.keys(romS()).find(id => romOf(id).ship);
+  if (rid && dealJailed(rid)) { setTimeout(() => log(`${dealFirst(rid)}'s bunk is empty. There's a note: "In the clink. Bring bail. And socks." Pay Marshal Rook on the Zeltac Plaza.`, 'loot'), 1500); return; }
+  return _sr.apply(this, arguments);
+}; }
+{ const _rm = resMail; resMail = function () {
+  const D = S.deal; if (D && D.mail && D.mail.length) { openDlg('Mailbox', 'Space Mail'); $('dlgLine').textContent = D.mail.shift(); markDirty(); SFX.ui(); acts([[D.mail.length ? 'Next letter' : 'Close', () => D.mail.length ? resMail() : closeDlg(), true]]); return; }
+  return _rm.apply(this, arguments);
+}; }
+
+// ---- bail at Marshal Rook ----
+function openBail() {
+  const D = dealS(), rid = D.rid, name = dealFirst(rid); openDlg('Galactic Marshals · booking desk', 'Marshal Rook');
+  if (!D.arrested) { $('dlgLine').textContent = "Nobody of yours in holding. Let's keep it that way."; acts([['Done', closeDlg, true]]); return; }
+  const wantedToo = isWanted();
+  $('dlgLine').textContent = `${name}? Caught moving ${D.sold} units to an off-duty mall cop. Bail is ${D.bail.toLocaleString()} cr. They've been singing in the cell. Badly. For hours. Please.${wantedToo ? " Also, you have a bounty yourself, so this is bold. I'll allow it. Today." : ''}`;
+  acts([[`Pay ${D.bail.toLocaleString()} cr`, () => {
+    if (S.cr < D.bail) { SFX.hit(); $('dlgLine').textContent = `"${D.bail.toLocaleString()} cr. You've got ${S.cr.toLocaleString()}. The cell has a nice view of a wall. They'll be fine."`; return; }
+    S.cr -= D.bail; const paid = D.bail; D.arrested = false; D.bail = 0; D.heat = 0; D.sold = 0; D.val = 0; D.acc = 0; D.mail = D.mail.filter(m => !/OFFICIAL NOTICE/.test(m));
+    const M = romOf(rid); M.aff = clamp((M.aff || 0) + 5, 0, 100); markDirty(); SFX.level();
+    toast('BAILED OUT', `${name} is back home. Heat reset.`, 4); log(`You paid ${paid.toLocaleString()} cr bail. ${name} is back home, and the Marshals have stopped watching. For now.`, 'loot');
+    $('dlgLine').textContent = `"Paperwork's done. ${name} walks. Tell them next time it's a real cell, not the one with the beanbag."`;
+    acts([['Thanks, Marshal', closeDlg, true]]);
+  }, true, S.cr < D.bail], ['Not now', closeDlg]]);
+}
+
 // =================== AMBIENCE (2.13.9): a sound bed for every place, built live on the game's audio engine ===================
 // Each place gets layers: a filtered-noise bed (wind, surf, rain, vents, crowd wash) that swells slowly, an optional low hum
 // (engines, machines, the Maw), and little one-shots on timers (birds, drips, creaks, beeps, distant thunder, crowd murmur).
@@ -20034,7 +20463,7 @@ function voicePack() { const P = voicePacks(), want = PREFS.vpack || (SCRIPT.voi
 
 // =================== NARRATOR (2.14.3): Vega reads every cutscene caption out loud ===================
 // Clips live in voice/narrator/<burpHash of the caption>.mp3 (made with tools/voicegen.py, the same voice as the opening film).
-// A caption with no clip just stays silent. Lines spoken by another character (SKYE:, ELISMAS: ...) are left to the subtitles.
+// A caption with no clip just stays silent. Vega is the only voice in the cutscenes and on the Maw battle radio.
 const NARR = { a: null };
 const narrIds = () => (typeof BURP_VO_PACKS !== 'undefined' && BURP_VO_PACKS.narrator) || new Set();
 function narrStop() { if (NARR.a) { try { NARR.a.pause(); } catch (_) {} NARR.a = null; } }

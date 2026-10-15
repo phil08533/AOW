@@ -221,7 +221,7 @@ function makeZeltac() {
 // ---------------- the space level ----------------
 const SPACE_BODIES = {
   earth: { pos: V(0, -40, -700), r: 160, col: '#3a6cb8', clouds: true },
-  mezar: { pos: V(900, 60, -260), r: 180, col: "#d49a5a", ring: true, survey: "Arid canyon world with deep sandstone ravines, sand worms, and forgotten ruins.", note: "Arid canyon world with deep sandstone ravines, sand worms, and forgotten ruins." },
+  mezar: { pos: V(900, 60, -260), r: 180, col: "#d49a5a", ring: true, survey: "Mezar", note: "Arid canyon world with deep sandstone ravines, sand worms, and forgotten ruins." },
   capitone: { pos: V(-860, -60, -380), r: 170, col: '#9fe8ff', clouds: true },
   robot: { pos: V(160, -50, 900), r: 150, col: '#c8402f' },
   zeltac: { pos: V(260, 30, -220), r: 70, station: true },

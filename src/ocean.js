@@ -148,10 +148,24 @@ const UW_COL = new THREE.Color('#0a3a5a');
 function underwaterEnv() {
   if (!LEVEL || !LEVEL.ocean || camera.position.y >= WATER_Y) return;
   const depth = clamp((WATER_Y - camera.position.y) / 18, 0, 1);
-  HORIZON.copy(UW_COL).multiplyScalar(1 - depth * 0.6); scene.fog.color.copy(HORIZON).convertSRGBToLinear(); scene.fog.near = 1; scene.fog.far = 42 - depth * 14;
+  HORIZON.copy(UW_COL).multiplyScalar(1 - depth * 0.6); scene.fog.color.copy(HORIZON);
+  // the retro low-res pass shows the fog colour as-is, so converting it to linear there turned the deep water near-black and
+  // left a black band at the horizon; the HD styles do need the linear colour
+  if (RSTYLE !== 'retro') scene.fog.color.convertSRGBToLinear();
+  scene.fog.near = 1; scene.fog.far = 42 - depth * 14;
   hemi.intensity = 0.7 - depth * 0.3; hemi.color.set('#8fe3ff'); rain.visible = false; fireflies.visible = false;
+  // below the surface there is no sky: no stars, clouds, sun or moon, and the sky dome takes the water's colour (it ignores fog)
+  stars.material.opacity = 0; clouds.visible = false; sunDisc.visible = false; moonDisc.visible = false; skyRing.visible = false;
+  skyMat.uniforms.hor.value.copy(HORIZON); skyMat.uniforms.mid.value.copy(HORIZON); skyMat.uniforms.top.value.copy(UW_TOP).multiplyScalar(1 - depth * 0.6);
 }
-WATER_MAT.side = THREE.DoubleSide;
+const UW_TOP = new THREE.Color('#1f6a8a');
+// The ocean gets its own water. It is seen from both sides (from below when you swim). It is more opaque, and it writes
+// depth: the shared water doesn't, so Bubble City's glass domes, jellyfish and other see-through things far below were
+// drawn on top of the surface whenever they sorted after it, and showed through it as pale shapes. It also skips the
+// retro affine/vertex-snap shader, which tore the big 4 m water quads into jagged dark triangles.
+// Other worlds keep the shared one-sided WATER_MAT.
+const OCEAN_WATER_MAT = new THREE.MeshLambertMaterial({ map: TEX.water, color: new THREE.Color('#5aa6cc').convertSRGBToLinear(), transparent: true, opacity: 0.9, depthWrite: true, side: THREE.DoubleSide });
+{ const _mw = makeWater; makeWater = function () { const g = _mw.apply(this, arguments); if (LEVEL && LEVEL.ocean) g.children.forEach(m => { if (m.material === WATER_MAT) m.material = OCEAN_WATER_MAT; }); return g; }; }
 SPACE_BODIES.ocean.survey = 'Ocean World';
 PLANET_ORDER.splice(PLANET_ORDER.indexOf('robot'), 0, 'ocean');
 // ---------------- quests: the Ocean World ----------------

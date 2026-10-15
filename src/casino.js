@@ -168,7 +168,9 @@ function arcOpen(game) {
 { const _b = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _b.call(this); if (zTheme(ZF.floor) !== 'arcade') return;
     const felt = toon('#1f6a3a', 'cloth'), rail = toon('#5a2a1e', 'wood'), gold = toon('#ffd36a');
     // red carpet and a sign over the casino side
-    part(props, B(15, 0.03, 26), toonNS('#6a1a24', 'carpet'), -21, 0.02, 0); part(props, B(14.4, 0.035, 25.4), toonNS('#c9a43a', 'carpet'), -21, 0.021, 0); part(props, B(13.6, 0.04, 24.6), toonNS('#6a1a24', 'carpet'), -21, 0.022, 0);
+    { const c = document.createElement('canvas'); c.width = 300; c.height = 520; const x = c.getContext('2d'); x.fillStyle = '#5e1620'; x.fillRect(0, 0, 300, 520); x.fillStyle = '#c9a43a'; x.fillRect(8, 8, 284, 504); x.fillStyle = '#6a1a24'; x.fillRect(16, 16, 268, 488);
+      x.strokeStyle = 'rgba(201,164,58,.35)'; x.lineWidth = 2; for (let i = 0; i < 6; i++) for (let j = 0; j < 11; j++) { const cx = 38 + i * 45, cy = 38 + j * 44; x.beginPath(); x.moveTo(cx, cy - 12); x.lineTo(cx + 12, cy); x.lineTo(cx, cy + 12); x.lineTo(cx - 12, cy); x.closePath(); x.stroke(); }
+      const t = new THREE.CanvasTexture(c); t.anisotropy = 4; t.encoding = THREE.sRGBEncoding; const cp = new THREE.Mesh(new THREE.PlaneGeometry(15, 26), new THREE.MeshLambertMaterial({ map: t, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); cp.rotation.x = -Math.PI / 2; cp.position.set(-21, 0.04, 0); cp.receiveShadow = true; levelGroup.add(cp); }
     const sg = new THREE.Mesh(new THREE.PlaneGeometry(9, 1.5), new THREE.MeshBasicMaterial({ map: signTex('THE LUCKY ASTEROID', '#1a0a1e', '#ffd36a') })); sg.position.set(-13.4, 5.4, 0); sg.rotation.y = Math.PI / 2; props.add(sg);
     for (const z of [-12.6, 12.6]) { part(props, Cy(0.18, 0.18, 6.8, 8), toon('#c9a43a'), -13.6, 3.4, z); }
     // poker table: an oval of green felt, chip stacks and dealt cards
@@ -177,7 +179,11 @@ function arcOpen(game) {
       part(tb, B(0.6, 0.012, 0.3), toon('#ffd36a'), 0, 0.975, 0); tb.position.set(-20, 0, -2.4); props.add(tb); box(-20, -2.4, 2.5, 1.7);
       const lamp = new THREE.PointLight(0xffe2a0, 0.6, 7, 1.6); lamp.position.set(-20, 3.2, -2.4); levelGroup.add(lamp); part(props, Cy(0.5, 0.9, 0.5, 12, true), '#2a2c32', -20, 3.4, -2.4); part(props, Cy(0.02, 0.02, 3.3, 4), '#1e1c22', -20, 5.3, -2.4); }
     // high-low table: a half moon
-    { const tb = new THREE.Group(); part(tb, new THREE.CylinderGeometry(1.4, 1.4, 0.12, 20, 1, false, -Math.PI / 2, Math.PI), felt, 0, 0.9, 0); part(tb, B(2.8, 0.85, 0.2), rail, 0, 0.45, 0.05); for (let i = 0; i < 3; i++) part(tb, B(0.18, 0.01, 0.26), '#f4f8ff', -0.5 + i * 0.5, 0.975, -0.6);
+    { const tb = new THREE.Group(), half = (r, h, y, m) => part(tb, new THREE.CylinderGeometry(r, r, h, 24, 1, false, -Math.PI / 2, Math.PI), m, 0, y, 0);
+      half(1.3, 0.8, 0.4, rail); half(1.42, 0.1, 0.84, rail); half(1.36, 0.06, 0.9, felt); part(tb, new THREE.TorusGeometry(1.4, 0.07, 6, 24, Math.PI), toon('#2a1410', 'cloth'), 0, 0.93, 0, Math.PI / 2, 0, 0);
+      part(tb, B(2.84, 0.9, 0.14), rail, 0, 0.45, 0.05); part(tb, B(1.2, 0.08, 0.3), toon('#1e1c22'), 0, 0.95, -0.12); for (let i = 0; i < 5; i++) part(tb, Cy(0.07, 0.07, 0.06 + (i % 2) * 0.05, 10), toon(['#c8402f', '#e8e4dc', '#3b4f7a', '#ffd36a', '#1f6a3a'][i]), -0.44 + i * 0.22, 1.0, -0.12);
+      for (let i = 0; i < 3; i++) part(tb, B(0.18, 0.01, 0.26), '#f4f8ff', -0.5 + i * 0.5, 0.94, -0.75);
+      for (let i = 0; i < 3; i++) { const a = -Math.PI / 2 + (i + 0.5) * Math.PI / 3, x = Math.sin(a) * 1.85, z = -Math.cos(a) * 1.85; part(tb, Cy(0.25, 0.25, 0.08, 10), toon('#6a1a24', 'cloth'), x, 0.72, z); part(tb, Cy(0.04, 0.04, 0.7, 5), '#2b2a2c', x, 0.36, z); }
       tb.position.set(-20, 0, 4.3); tb.rotation.y = Math.PI; props.add(tb); box(-20, 4.3, 1.5, 0.8); }
     // six slot machines along the casino wall, lights chasing
     for (let i = 0; i < 6; i++) { const z = -11 + i * 4.3, m = new THREE.Group(); part(m, B(1.0, 2.0, 1.1), toon('#3a1a2a', 'hull'), 0, 1.0, 0); part(m, B(0.06, 0.7, 0.9), toon('#f4f8ff'), 0.53, 1.4, 0); for (let k = 0; k < 3; k++) part(m, B(0.07, 0.5, 0.22), toon(['#c8402f', '#ffd36a', '#4fd2ff'][(i + k) % 3]), 0.55, 1.4, -0.28 + k * 0.28);

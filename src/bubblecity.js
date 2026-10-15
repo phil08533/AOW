@@ -3,6 +3,14 @@
 const BC_DOMES = [[-21, -2, 6.5, '#ffd0a0', 'market'], [21, 0, 6.5, '#c8e0ff', 'homes'], [0, -17, 5.5, '#b8ffcf', 'garden']];
 const BC_TUBES = [[-7, -1, -14.6, -2], [7, -0.5, 14.6, 0], [0, -7, 0, -11.6]]; // from the main dome's edge to each new dome's edge
 const BC_TUBE_R = 1.5;
+// The terraced seabed stepped up and down by 1.4 m under the new domes, so their flat sand floors floated over dirt on one
+// side and sliced through stalls, houses and kelp beds on the other. Level the seabed under each dome and tunnel to the
+// city's own floor height, blending back to the natural seabed a few meters out.
+{ const oc = LEVELS.ocean.carve; LEVELS.ocean.carve = function (x, z, h) { if (oc) h = oc(x, z, h); const B = Z.bubble; if (!B) return h;
+  const lx = x - B.x, lz = z - B.z; let w = 0;
+  for (const [ox, oz, r] of BC_DOMES) w = Math.max(w, 1 - smooth(Math.hypot(lx - ox, lz - oz), r + 0.6, r + 4.5));
+  for (const [ax, az, cx, cz] of BC_TUBES) w = Math.max(w, 1 - smooth(segDist(lx, lz, [ax, az], [cx, cz]), BC_TUBE_R + 0.4, BC_TUBE_R + 3.5));
+  return w > 0 ? h * (1 - w) + B.h * w : h; }; }
 // you can breathe and walk in the tunnels and the new domes, same as the old ones
 { const _in = inDome; inDome = function (p) { if (_in(p)) return true; if (!LEVEL || !LEVEL.ocean || !Z.bubble) return false; p = p || player.pos;
   const bx = Z.bubble.x, bz = Z.bubble.z;
@@ -15,13 +23,16 @@ const BC_TUBE_R = 1.5;
   const glass = new THREE.MeshLambertMaterial({ color: '#bfefff', transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false });
   // domes and their floors
   for (const [ox, oz, r, col] of BC_DOMES) { const x = bx + ox, z = bz + oz, d = makeDome(r, col); at(d, x, z); levelAnims.push(t => { d.children[d.children.length - 1].rotation.y = t * 0.8; });
-    let fy = -99; for (let a = 0; a < 6.3; a += 0.8) fy = Math.max(fy, gy(x + Math.cos(a) * r * 0.6, z + Math.sin(a) * r * 0.6)); fy = Math.max(fy, gy(x, z));
+    const fy = gy(x, z); // the seabed is levelled under the dome (see carve above), so the floor sits right on it
     const f = new THREE.Mesh(new THREE.CircleGeometry(r - 0.2, 22).rotateX(-Math.PI / 2), toon('#d8c890', 'stone')); f.position.set(x, fy + 0.06, z); props.add(f); }
   // glass tunnels with ribs and a lit walkway
   for (const [ax, az, cx, cz] of BC_TUBES) { const x1 = bx + ax, z1 = bz + az, x2 = bx + cx, z2 = bz + cz, L = Math.hypot(x2 - x1, z2 - z1), mx = (x1 + x2) / 2, mz = (z1 + z2) / 2, ry = Math.atan2(x2 - x1, z2 - z1);
     const tube = new THREE.Group(); const y0 = Math.max(gy(x1, z1), gy(mx, mz), gy(x2, z2));
-    const shell = new THREE.Mesh(new THREE.CylinderGeometry(BC_TUBE_R, BC_TUBE_R, L, 14, 1, true), glass); shell.rotation.set(Math.PI / 2, 0, 0); shell.position.y = 0.2; tube.add(shell);
-    for (let k = 0; k <= Math.floor(L / 2.2); k++) { const rib = part(tube, new THREE.TorusGeometry(BC_TUBE_R, 0.07, 5, 14, Math.PI), '#5d636c', 0, 0.2, -L / 2 + k * (L / Math.floor(L / 2.2))); rib.rotation.y = 0; }
+    // the tube's axis sits 1 m above the walkway so its crown is 2.5 m up: at 0.2 m the glass and ribs passed right at eye
+    // height and blocked the view. Each rib arcs over from floor to floor.
+    const TY = 1.0, a0 = Math.asin(TY / BC_TUBE_R);
+    const shell = new THREE.Mesh(new THREE.CylinderGeometry(BC_TUBE_R, BC_TUBE_R, L, 14, 1, true), glass); shell.rotation.set(Math.PI / 2, 0, 0); shell.position.y = TY; tube.add(shell);
+    for (let k = 0; k <= Math.floor(L / 2.2); k++) { const rib = part(tube, new THREE.TorusGeometry(BC_TUBE_R, 0.07, 5, 16, Math.PI + 2 * a0), '#5d636c', 0, TY, -L / 2 + k * (L / Math.floor(L / 2.2))); rib.rotation.set(0, 0, -a0); }
     part(tube, B(1.6, 0.08, L), toon('#c8b880', 'stone'), 0, 0.04, 0);
     for (let k = 0; k < Math.floor(L / 3); k++) for (const s of [-1, 1]) part(tube, B(0.08, 0.05, 0.4), glow('#8fe3ff'), 0.75 * s, 0.1, -L / 2 + 1.5 + k * 3);
     tube.position.set(mx, y0, mz); tube.rotation.y = ry; props.add(tube); }
@@ -52,7 +63,8 @@ const BC_TUBE_R = 1.5;
   { const [ox, oz] = BC_DOMES[2], cx = bx + ox, cz = bz + oz, kelps = [];
     for (let r = -1; r <= 1; r++) { part(at(new THREE.Group(), cx + r * 1.6, cz, 0, 0.05), B(0.9, 0.25, 6), toon('#5a3e2a', 'wood'), 0, 0.12, 0);
       for (let k = 0; k < 5; k++) { const kp = makeKelp(1.6 + (k % 3) * 0.4); kp.position.set(cx + r * 1.6, gy(cx, cz) + 0.25, cz - 2.4 + k * 1.2); levelGroup.add(kp); kelps.push([kp, k + r * 5]); } }
-    for (const s of [-1, 1]) { const gl = new THREE.Group(); part(gl, Cy(0.05, 0.05, 3.2, 5), '#5d636c', 0, 1.6, 0); part(gl, B(4, 0.1, 0.3), glow('#d0a0ff'), 0, 3.2, 0); at(gl, cx + 2.8 * s, cz, Math.PI / 2); solid(cx + 2.8 * s, cz, 0.15); }
+    // grow lights: a post beside each outer row with a dark lamp housing and the lavender tube under it, all inside the glass
+    for (const s of [-1, 1]) { const gl = new THREE.Group(); part(gl, Cy(0.05, 0.05, 2.8, 5), '#5d636c', 0, 1.4, 0); part(gl, B(3.6, 0.12, 0.42), '#2e3238', 0, 2.86, 0); part(gl, B(3.4, 0.06, 0.26), glow('#d0a0ff'), 0, 2.78, 0); at(gl, cx + 2.4 * s, cz, Math.PI / 2); solid(cx + 2.4 * s, cz, 0.15); }
     levelAnims.push(t => { for (const [kp, i] of kelps) kp.userData.segs.forEach((sg, j) => { sg.rotation.z = Math.sin(t * 1.1 + i + j * 0.5) * 0.06; }); }); }
   // ---- outside: fish schools circling the city, a parked sub and buoy chains ----
   { const fishCols = ['#ffb347', '#4fffe0', '#ff6aa8', '#ffe9a0'];

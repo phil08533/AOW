@@ -2,11 +2,11 @@
 // Same save data as before: S.inv (item → count), S.guns / S.slots / S.melee / S.melees (weapons), S.look.a (armor), S.ord (ordnance).
 // New, optional save fields (old saves just start empty): S.invOrder (your grid layout), S.invT (when each item was picked up), S.quick (4 quick-slot references).
 const INV_CFG = { cap: 60, quick: 4, quickKeys: ['Digit4', 'Digit5', 'Digit6', 'Digit7'] };
-const INVUI = { open: false, el: null, cat: 'all', sub: null, sort: 'manual', q: '', sel: null, move: null, drag: null, busy: 0, tab: 'bag', raf: 0, full: 0 };
+const INVUI = { pick: null, open: false, el: null, cat: 'all', sub: null, sort: 'manual', q: '', sel: null, move: null, drag: null, busy: 0, tab: 'bag', raf: 0, full: 0 };
 const RARITY = { common: ['Common', '#8a9099'], uncommon: ['Uncommon', '#6f9a5a'], rare: ['Rare', '#4f8ad0'], epic: ['Epic', '#9a6ad0'], legendary: ['Legendary', '#d8a040'], quest: ['Quest', '#e08a2e'] };
 const RAR_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'quest'];
 const INV_CATS = [['all', 'All'], ['wpn', 'Weapons'], ['med', 'Medical & Consumables'], ['mat', 'Materials & Crafting'], ['quest', 'Quest Items'], ['val', 'Valuables & Contraband'], ['misc', 'Miscellaneous']];
-const INV_SUBS = { wpn: [['melee', 'Melee'], ['staff', 'Staffs'], ['pistol', 'Pistols'], ['rifle', 'Rifles'], ['heavy', 'Heavy'], ['ord', 'Ordnance']],
+const INV_SUBS = { wpn: [['gun', 'Guns'], ['staff', 'Staffs'], ['melee', 'Melee'], ['ord', 'Ordnance']],
   med: [['medkit', 'Medkits'], ['bandage', 'Bandages'], ['stim', 'Stimulants'], ['drug', 'Drugs'], ['food', 'Food & buffs']],
   mat: [['build', 'Building'], ['upgrade', 'Upgrade'], ['salvage', 'Salvage']],
   val: [['loot', 'High value'], ['restricted', 'Restricted'], ['faction', 'Faction goods']],
@@ -27,6 +27,7 @@ function itemIcon(id) { const k = id.toLowerCase(), I = ITEMS[id] || {};
   if (/heart|eye|sigil|seed|core|token/.test(k)) return 'relic'; if (/scrap|cog|ore|rock|magma|filter/.test(k)) return 'ore'; return 'box'; }
 function invMeta(key) {
   invMatSets(); const [t, id] = key.split(':');
+  if (t === 'w') return invGroupMeta(id);
   if (t === 'g') { const g = GUNS[id], kind = gunKind(id), tier = gunTier(id); return { kind: 'gun', id, name: g.name + (tier ? ' ' + '★'.repeat(tier) : ''), cat: 'wpn', sub: kind, rar: rarByLvl(g.req || 1), w: kind === 'heavy' ? 9 : kind === 'staff' ? 2.5 : kind === 'pistol' ? 1.4 : 4, v: g.price || 0, icon: kind === 'staff' ? 'staff' : kind, span: kind === 'pistol' ? 1 : 2, col: g.col || '#e08a2e', n: 1 }; }
   if (t === 'm') { const M = MELEE[id]; return { kind: 'melee', id, name: M.name, cat: 'wpn', sub: 'melee', rar: id === 'knife' ? 'common' : rarByLvl(M.req || 1), w: M.reach > 3 ? 4 : 1.6, v: M.price || 0, icon: /claw|nunchuck/.test(id) ? 'fang' : 'sword', span: M.reach > 3 ? 2 : 1, col: M.col || '#cfd4dc', n: 1 }; }
   if (t === 'o') { const O = ORD[id]; return { kind: 'ord', id, name: O.name, cat: 'wpn', sub: 'ord', rar: rarByLvl(O.lvl), w: 0.5, v: 0, icon: 'grenade', span: 1, col: O.col, n: 1 }; }
@@ -80,7 +81,7 @@ const invStack = id => id === 'medkit' ? 10 : 25; // how many fit in one slot
 const invSlotsOf = (id, n) => ITEMS[id] && !ITEMS[id].quest && n > 0 ? Math.ceil(n / invStack(id)) : 0;
 const invSlotsUsed = () => Object.keys(S.inv).reduce((a, k) => a + invSlotsOf(k, S.inv[k]), 0);
 const invRoomFor = id => { if (!ITEMS[id]) return 0; if (ITEMS[id].quest) return 1e9; const cur = S.inv[id] || 0, st = invStack(id), free = INV_CFG.cap - invSlotsUsed(); return Math.max(0, (cur ? st * Math.ceil(cur / st) - cur : 0) + Math.max(0, free) * st); };
-const invWeight = () => invKeys().reduce((a, k) => { const m = invMeta(k); return a + m.w * (m.kind === 'item' ? m.n : 1); }, 0);
+const invWeight = () => invKeys().reduce((a, k) => { if (k[0] !== 'i') return a; const m = invMeta(k); return a + m.w * m.n; }, 0); // weapons and ordnance weigh nothing in the bag
 function invAdd(id, n, quiet) { // the one safe way to put loot in the bag: stacks, respects the slot limit, never drops anything silently
   if (!ITEMS[id] || !(n > 0)) return false;
   if (invRoomFor(id) < n) { invFullNote(id); return false; }
@@ -165,7 +166,7 @@ openBag = function () {
   INVUI.el = el; INVUI.open = true; INVUI.move = null; el.hidden = false; el.className = 'tab-' + INVUI.tab; invRender(); requestAnimationFrame(() => el.classList.add('on')); SFX.ui();
   cancelAnimationFrame(INVUI.raf); const loop = () => { if (!INVUI.open) return; if (PREV.r && PREV.obj && PREV.wrap && PREV.wrap.isConnected) { PREV.spin += 0.012; PREV.obj.rotation.y = PREV.spin; PREV.r.render(PREV.scene, PREV.cam); } INVUI.raf = requestAnimationFrame(loop); }; loop();
 };
-function invHide() { if (!INVUI.open) return; INVUI.open = false; cancelAnimationFrame(INVUI.raf); const el = INVUI.el; if (el) { el.classList.remove('on'); setTimeout(() => { if (!INVUI.open) { el.hidden = true; el.textContent = ''; } }, 160); } }
+function invHide() { if (!INVUI.open) return; INVUI.open = false; INVUI.pick = null; cancelAnimationFrame(INVUI.raf); const el = INVUI.el; if (el) { el.classList.remove('on'); setTimeout(() => { if (!INVUI.open) { el.hidden = true; el.textContent = ''; } }, 160); } }
 { const _cd = closeDlg; closeDlg = function () { invHide(); return _cd(); }; }
 { const _od = openDlg; openDlg = function (...a) { if (INVUI.open) invHide(); return _od(...a); }; }
 const invClose = () => { if (INVUI.open) closeDlg(); };
@@ -242,7 +243,7 @@ function invRender() {
   // header
   const used = invSlotsUsed(), hd = mk('div', 'hd'); hd.appendChild(mk('h2', '', 'BACKPACK'));
   const tabs = mk('div', 'tabs'); for (const [k, l] of [['bag', 'Backpack'], ['eq', 'Equipment']]) { const b = mk('button', INVUI.tab === k ? 'on' : ''); b.textContent = l; b.addEventListener('click', () => { INVUI.tab = k; el.className = 'on tab-' + k; invRender(); }); tabs.appendChild(b); } hd.appendChild(tabs);
-  const s1 = mk('span', 'stat' + (used >= INV_CFG.cap ? ' full' : ''), `Slots <b>${used}/${INV_CFG.cap}</b>`); s1.title = 'Loot stacks of up to 25 (medkits 10). Weapons and quest items don\'t use slots.'; hd.appendChild(s1);
+  const s1 = mk('span', 'stat' + (used >= INV_CFG.cap ? ' full' : ''), `Slots <b>${used}/${INV_CFG.cap}</b>`); s1.title = 'Loot stacks of up to 25 (medkits 10). Weapons, ordnance and quest items don\'t use slots, and weapons and ordnance weigh nothing.'; hd.appendChild(s1);
   if (roomLvl('cargo')) { const sv = mk('button', 'cat' + (INVUI.view === 'stash' ? ' on' : '')); sv.textContent = INVUI.view === 'stash' ? '◂ Back to bag' : 'Ship storage ▸'; sv.addEventListener('click', () => { INVUI.view = INVUI.view === 'stash' ? 'bag' : 'stash'; INVUI.sel = null; INVUI.move = null; INVUI.tab = 'bag'; el.className = 'on tab-bag'; invRender(); }); hd.appendChild(sv); }
   hd.appendChild(mk('span', 'stat', `Weight <b>${invWeight().toFixed(1)} kg</b>`)); hd.appendChild(mk('span', 'stat', `<b>${S.cr.toLocaleString()}</b> cr`));
   const x = mk('button', 'x', '✕'); x.setAttribute('aria-label', 'Close inventory'); x.addEventListener('click', invClose); hd.appendChild(x); frame.appendChild(hd);
@@ -253,6 +254,7 @@ function invRender() {
   if (Object.keys(MELEE).some(k => MELEE[k].saber && (S.melees || []).includes(k))) link('Saber forge', () => openSaberForge()); link('Quests', () => openQuestLog());
   if (!TOUCH) ft.appendChild(mk('span', 'hint', 'Drag items onto slots · I or Esc closes')); frame.appendChild(ft);
   if (INVUI.sel) el.classList.add('showdet');
+  if (INVUI.pick) frame.appendChild(invPicker(INVUI.pick));
 }
 function invEquipPanel() {
   const P = document.createElement('div'); P.className = 'pan eq'; const sl = loadoutSlots(), L = myLook();
@@ -260,7 +262,7 @@ function invEquipPanel() {
   const slot = (slotId, title, key, name, sub, icon, col) => { const d = document.createElement('div'); d.className = 'slot' + (name ? '' : ' empty') + (INVUI.sel === key && key ? ' sel' : ''); d.dataset.slot = slotId;
     d.innerHTML = `<div class="ic">${name ? invIconHtml(icon, col) : ''}</div><div class="tx"><div class="t1"></div><div class="t2"></div><div class="t3"></div></div>`;
     d.querySelector('.t1').textContent = title; d.querySelector('.t2').textContent = name || 'Empty'; d.querySelector('.t3').textContent = sub || '';
-    d.addEventListener('click', () => { if (INVUI.move) { invDropOnSlot(INVUI.move, slotId); INVUI.move = null; return; } INVUI.sel = key || ('slot:' + slotId); invRender(); });
+    d.addEventListener('click', () => { if (INVUI.move) { invDropOnSlot(INVUI.move, slotId); INVUI.move = null; return; } if (INV_GROUPS[slotId]) { INVUI.pick = slotId; invRender(); return; } INVUI.sel = key || ('slot:' + slotId); invRender(); });
     invDropTarget(d, k => slotFor(k) === slotId, k => invDropOnSlot(k, slotId)); P.appendChild(d); };
   lbl('Equipped');
   const M = MELEE[S.melee || 'knife'] || MELEE.knife; slot('melee', 'Melee', 'm:' + (S.melee || 'knife'), M.name, `${M.dmg} dmg · ${M.reach} m reach`, invMeta('m:' + (S.melee || 'knife')).icon, M.col || '#cfd4dc');
@@ -282,16 +284,16 @@ function invDropTarget(el, ok, fn) { if (TOUCH) return;
   el.addEventListener('dragleave', () => el.classList.remove('ok', 'bad'));
   el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('ok', 'bad'); const k = INVUI.drag; INVUI.drag = null; if (k && ok(k)) fn(k); else if (k) SFX.hit(); }); }
 function invFiltered(order) {
-  let list = order.map(k => [k, invMetaSafe(k)]).filter(([, m]) => m);
+  let list = invCollapsed(order);
   if (INVUI.cat !== 'all') list = list.filter(([, m]) => m.cat === INVUI.cat); if (INVUI.sub) list = list.filter(([, m]) => m.sub === INVUI.sub);
-  const q = INVUI.q.trim().toLowerCase(); if (q) list = list.filter(([, m]) => m.name.toLowerCase().includes(q));
+  const q = INVUI.q.trim().toLowerCase(); if (q) list = list.filter(([, m]) => (m.find || m.name).toLowerCase().includes(q));
   const catI = c => INV_CATS.findIndex(x => x[0] === c), by = { type: (a, b) => catI(a[1].cat) - catI(b[1].cat) || String(a[1].sub).localeCompare(String(b[1].sub)) || a[1].name.localeCompare(b[1].name),
     rarity: (a, b) => RAR_ORDER.indexOf(b[1].rar) - RAR_ORDER.indexOf(a[1].rar), weight: (a, b) => b[1].w * (b[1].n || 1) - a[1].w * (a[1].n || 1), value: (a, b) => b[1].v * (b[1].n || 1) - a[1].v * (a[1].n || 1),
     recent: (a, b) => ((S.invT || {})[b[0]] || 0) - ((S.invT || {})[a[0]] || 0) };
-  if (by[INVUI.sort]) list = list.slice().sort(by[INVUI.sort]); return list;
+  if (by[INVUI.sort]) list = list.slice().sort(by[INVUI.sort]); return list.filter(([k]) => k[0] === 'w').concat(list.filter(([k]) => k[0] !== 'w'));
 }
 function invBagPanel(order) {
-  const P = document.createElement('div'); P.className = 'pan bag'; const all = order.map(k => invMetaSafe(k)).filter(Boolean);
+  const P = document.createElement('div'); P.className = 'pan bag'; const all = invCollapsed(order).map(([, m]) => m);
   const cats = document.createElement('div'); cats.className = 'cats'; P.appendChild(cats);
   for (const [k, l] of INV_CATS) { const n = k === 'all' ? all.length : all.filter(m => m.cat === k).length, b = document.createElement('button'); b.className = 'cat' + (INVUI.cat === k ? ' on' : ''); b.innerHTML = `${l}<small>${n}</small>`; b.addEventListener('click', () => { INVUI.cat = k; INVUI.sub = null; invRender(); }); cats.appendChild(b); }
   if (INV_SUBS[INVUI.cat] && INV_SUBS[INVUI.cat].length) { const subs = document.createElement('div'); subs.className = 'cats'; P.appendChild(subs);
@@ -308,6 +310,7 @@ function invGrid(order) {
   const G = document.createElement('div'); G.className = 'grid'; const list = invFiltered(order), sl = loadoutSlots();
   if (!list.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = INVUI.q ? 'Nothing matches that search.' : 'Nothing here yet. Defeat creatures in the wilds to collect loot.'; G.appendChild(e); return G; }
   for (const [key, m] of list) {
+    if (m.kind === 'group') { G.appendChild(invGroupTile(key, m)); continue; }
     const c = document.createElement('div'); c.className = 'cell' + (m.span > 1 ? ' w2' : '') + (INVUI.sel === key ? ' sel' : '') + (INVUI.move === key ? ' moving' : ''); c.dataset.key = key; c.tabIndex = 0; c.setAttribute('role', 'button');
     const eqd = (m.kind === 'gun' && (sl.gun === m.id || sl.staff === m.id)) || (m.kind === 'melee' && (S.melee || 'knife') === m.id) || (m.kind === 'ord' && ordSel() === m.id);
     c.innerHTML = `<span class="rb" style="background:${RARITY[m.rar][1]}"></span><span class="nm"></span>${invIconHtml(m.icon, m.col)}${m.kind === 'item' && m.n > 1 ? `<span class="n">${m.n}</span>` : ''}${eqd ? '<span class="eqd">E</span>' : ''}${m.illegal ? '<span class="tri" title="Illegal">▲</span>' : ''}`;
@@ -336,7 +339,7 @@ function invDetailPanel() {
   if ((m.kind === 'gun' || m.kind === 'melee') && prevInit()) { try { setPreview(m.kind === 'gun' ? gunPreview(m.id) : meleePreview(m.id), m.name); big.appendChild(PREV.wrap); } catch (_) { big.innerHTML = invIconHtml(m.icon, m.col); } } else big.innerHTML = invIconHtml(m.icon, m.col);
   const h = document.createElement('h3'); h.textContent = m.name; P.appendChild(h);
   const tags = document.createElement('div'); const tag = (t, col) => { const s = document.createElement('span'); s.className = 'tag'; s.textContent = t; s.style.color = col; s.style.borderColor = col; tags.appendChild(s); };
-  const catName = (INV_CATS.find(c => c[0] === m.cat) || [0, ''])[1], subName = ((INV_SUBS[m.cat] || []).find(s => s[0] === m.sub) || [0, ''])[1];
+  const catName = (INV_CATS.find(c => c[0] === m.cat) || [0, ''])[1], subName = m.kind === 'gun' ? ({ pistol: 'Pistol', rifle: 'Rifle', heavy: 'Heavy', staff: 'Staff' })[m.sub] : ((INV_SUBS[m.cat] || []).find(s => s[0] === m.sub) || [0, ''])[1];
   tag(RARITY[m.rar][0], RARITY[m.rar][1]); tag(subName || catName, '#9aa1aa'); if (m.illegal) tag('▲ Illegal', '#e0402a'); P.appendChild(tags);
   const rows = []; const row = (a, b, cls) => rows.push([a, b, cls]);
   const desc = document.createElement('p'); let dtext = '';
@@ -415,3 +418,105 @@ function invStashDetail(P, key) {
   return P;
 }
 { const st = document.createElement('style'); st.textContent = '#inv .stashTop{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #2f343b;border-left:3px solid #8f6ad0;border-radius:4px;background:#1a1820}#inv .stashTop b{font:700 12px system-ui;letter-spacing:.18em;color:#c8a8ff}#inv .stashTop span{font-size:12px;color:#9aa1aa}#inv .hd .cat{margin-left:4px}'; document.head.appendChild(st); }
+
+// ---- weapons in the bag: one tile per weapon class (guns, staffs, melee, ordnance) with a picture of the one you carry; tap it for a list of all of them ----
+// Weapons and ordnance never take bag slots or weight. Saves are untouched: this only changes how S.guns / S.melees / S.ord are shown and picked.
+const INV_GROUPS = { gun: ['Guns', 'Gun'], staff: ['Staffs', 'Staff'], melee: ['Melee', 'Melee weapon'], ord: ['Ordnance', 'Ordnance'] };
+const invGroupMembers = grp => invKeys().filter(k => slotFor(k) === grp);
+function invGroupCur(grp) { // the key of the one you carry in that slot (or null)
+  const sl = loadoutSlots(), want = grp === 'gun' ? 'g:' + sl.gun : grp === 'staff' ? 'g:' + sl.staff : grp === 'melee' ? 'm:' + (S.melee || 'knife') : 'o:' + ordSel();
+  return invGroupMembers(grp).includes(want) ? want : null; }
+function invGroupMeta(grp) {
+  const G = INV_GROUPS[grp] || ['Weapons'], ms = invGroupMembers(grp), cur = invGroupCur(grp), ck = cur || ms[0], cm = ck ? invMetaSafe(ck) : null;
+  return { kind: 'group', id: grp, name: G[0], cat: 'wpn', sub: grp, rar: cm ? cm.rar : 'common', w: 0, v: 0, icon: cm ? cm.icon : 'box', span: 2, col: cm ? cm.col : '#9aa1aa', n: ms.length, cur, show: ck || null, curName: cm ? cm.name : '',
+    find: [G[0], G[1], ...ms.map(k => (invMetaSafe(k) || {}).name || '')].join(' ') };
+}
+function invCollapsed(order) { // the bag as the grid shows it: weapon groups first, then loot
+  const out = [], seen = new Set();
+  for (const k of order) { const g = slotFor(k); if (g) { seen.add(g); continue; } const m = invMetaSafe(k); if (m) out.push([k, m]); }
+  return Object.keys(INV_GROUPS).filter(g => seen.has(g)).map(g => ['w:' + g, invGroupMeta(g)]).concat(out);
+}
+// still pictures of the real 3D models, drawn once with the preview renderer into its own little scene (the spinning detail preview is left alone)
+const INV_THUMB = {}; let INV_TS = null;
+function invThumb(key) {
+  const [t, id] = key.split(':'), kind = t === 'g' ? 'gun' : t === 'm' ? 'melee' : null; if (!kind) return null;
+  const ck = key + ':' + (kind === 'gun' ? gunTier(id) : 0); if (ck in INV_THUMB) return INV_THUMB[ck];
+  let url = null;
+  try { if (prevInit()) {
+    if (!INV_TS) { INV_TS = new THREE.Scene(); INV_TS.add(new THREE.HemisphereLight(0xdfe6ff, 0x4a3a2a, 1.15)); const d = new THREE.DirectionalLight(0xfff0d8, 0.95); d.position.set(2, 3, 2.5); INV_TS.add(d); }
+    const inner = (kind === 'gun' ? gunPreview(id) : meleePreview(id))(), rot = new THREE.Group(), outer = new THREE.Group();
+    if (kind === 'melee' && inner.children[0]) inner.children[0].rotation.z = -1.25;
+    rot.add(inner); rot.rotation.set(0.1, kind === 'gun' ? -0.32 : 0, 0); outer.add(rot); outer.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(rot), size = box.getSize(V(0, 0, 0)), ctr = box.getCenter(V(0, 0, 0)), s = Math.min(3.0 / Math.max(size.x, 0.01), 1.55 / Math.max(size.y, 0.01));
+    outer.scale.setScalar(s); outer.position.copy(ctr).multiplyScalar(-s); INV_TS.add(outer);
+    const r = PREV.r; r.setClearColor('#121417'); r.render(INV_TS, PREV.cam);
+    const c = document.createElement('canvas'); c.width = 260; c.height = 150; c.getContext('2d').drawImage(r.domElement, 0, 0, 260, 150); url = c.toDataURL('image/png');
+    r.setClearColor('#0b1240'); INV_TS.remove(outer); outer.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+  } } catch (_) { url = null; try { PREV.r && PREV.r.setClearColor('#0b1240'); } catch (__) {} }
+  INV_THUMB[ck] = url; return url;
+}
+const invPicHtml = (key, m) => { const u = invThumb(key); return u ? `<img class="pic" alt="" src="${u}">` : invIconHtml(m.icon, m.col); };
+function invGroupTile(key, m) {
+  const c = document.createElement('div'); c.className = 'cell w2 grp' + (INVUI.pick === m.id ? ' sel' : ''); c.dataset.key = key; c.dataset.grp = m.id; c.tabIndex = 0; c.setAttribute('role', 'button');
+  const sm = m.show ? invMetaSafe(m.show) : null;
+  c.innerHTML = `<span class="rb" style="background:${RARITY[m.rar][1]}"></span>${sm ? invPicHtml(m.show, sm) : invIconHtml(m.icon, m.col)}<span class="nm"></span><span class="gk"></span><span class="more">▾</span>`;
+  c.querySelector('.nm').textContent = m.curName || 'None equipped'; c.querySelector('.gk').textContent = `${m.name} · ${m.n}`;
+  c.title = `${m.name}: ${m.curName || 'none equipped'} · ${m.n} owned. ${TOUCH ? 'Tap' : 'Click'} to choose.`; c.setAttribute('aria-label', c.title);
+  const open = () => { if (INVUI.move) { INVUI.move = null; invRender(); return; } INVUI.pick = m.id; invRender(); };
+  c.addEventListener('click', open); c.addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); open(); } });
+  return c;
+}
+function invPickStats(key) {
+  const [t, id] = key.split(':');
+  if (t === 'g') { const g = GUNS[id], tr = gunTier(id), d = g.dmg * (1 + 0.08 * tr); return [`${Math.round(d)} dmg · ${(1 / g.rate).toFixed(1)}/s · ${Math.round(d / g.rate)} DPS · ${g.mag} ${g.mana ? 'mana' : 'mag'} · ${g.reload}s ${g.mana ? 'recharge' : 'reload'}`, `${g.mana ? 'Staff' : ({ pistol: 'Pistol', rifle: 'Rifle', heavy: 'Heavy' })[gunKind(id)]} · Lv ${g.req || 1}${tr ? ' · tier ' + tr : ''}`]; }
+  if (t === 'm') { const M = MELEE[id]; return [`${M.dmg} dmg · ${M.rate}s swing · ${M.reach} m reach`, `Melee · Lv ${M.req || 1}`]; }
+  if (t === 'o') { const O = ORD[id]; return [`${O.dmg} dmg · ${O.r} m blast · ${ORD_MAX} charges`, O.desc || 'Ordnance']; }
+  return ['', ''];
+}
+function invPickState(key) { const [t, id] = key.split(':'), sl = loadoutSlots(), mel = handMelee();
+  if (t === 'g') return S.gun === id && !mel ? 'In hand' : (sl.gun === id || sl.staff === id) ? 'Equipped' : '';
+  if (t === 'm') return (S.melee || 'knife') === id ? (mel ? 'In hand' : 'Equipped') : '';
+  if (t === 'o') return ordSel() === id ? 'Selected' : ''; return ''; }
+function invPicker(grp) {
+  const G = INV_GROUPS[grp], wrap = document.createElement('div'); wrap.className = 'pick'; wrap.addEventListener('click', e => { if (e.target === wrap) { INVUI.pick = null; invRender(); } });
+  const box = document.createElement('div'); box.className = 'pbox'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Choose ' + G[0]); wrap.appendChild(box);
+  const cur = invGroupCur(grp), ms = invGroupMembers(grp), list = cur ? [cur, ...ms.filter(k => k !== cur)] : ms;
+  const ph = document.createElement('div'); ph.className = 'ph'; ph.innerHTML = '<h3></h3><small></small>'; ph.querySelector('h3').textContent = G[0]; ph.querySelector('small').textContent = `${ms.length} owned · ${TOUCH ? 'tap' : 'click'} one to equip · no bag space`;
+  const x = document.createElement('button'); x.className = 'x'; x.textContent = '✕'; x.setAttribute('aria-label', 'Close list'); x.addEventListener('click', () => { INVUI.pick = null; invRender(); }); ph.appendChild(x); box.appendChild(ph);
+  const L = document.createElement('div'); L.className = 'plist'; box.appendChild(L);
+  if (!list.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = grp === 'staff' ? 'No staffs yet. Buy one from a mage.' : grp === 'gun' ? 'No guns yet. Buy one at a gunsmith.' : 'Nothing here yet.'; L.appendChild(e); }
+  for (const key of list) { const m = invMetaSafe(key); if (!m) continue; const st = invPickState(key), [s1, s2] = invPickStats(key);
+    const r = document.createElement('div'); r.className = 'prow' + (key === cur ? ' on' : ''); r.tabIndex = 0; r.setAttribute('role', 'button'); r.style.setProperty('--rc', RARITY[m.rar][1]); r.dataset.key = key;
+    r.innerHTML = `<div class="pp">${invPicHtml(key, m)}</div><div class="pt"><div class="pn"></div><div class="ps"></div><div class="pk"></div></div><span class="pe"></span><button class="pi" aria-label="Details">i</button>`;
+    r.querySelector('.pn').textContent = m.name; r.querySelector('.ps').textContent = s1; r.querySelector('.pk').textContent = s2;
+    r.querySelector('.pe').textContent = st || (key[0] === 'o' ? 'Select' : 'Equip'); if (!st) r.querySelector('.pe').classList.add('go');
+    const pickIt = () => { INVUI.pick = null; if (st === 'In hand' || st === 'Selected') { invRender(); return; } INVUI.busy = 0; invEquip(key); if (INVUI.open) invRender(); };
+    r.addEventListener('click', e => { if (e.target.closest('.pi')) return; pickIt(); }); r.addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); pickIt(); } });
+    r.querySelector('.pi').addEventListener('click', e => { e.stopPropagation(); INVUI.pick = null; INVUI.sel = key; invRender(); });
+    L.appendChild(r); }
+  setTimeout(() => { const on = L.querySelector('.prow.on') || L.querySelector('.prow'); if (on && !TOUCH && on.isConnected) on.focus({ preventScroll: true }); }, 0);
+  return wrap;
+}
+window.addEventListener('keydown', e => { if (!INVUI.open || !INVUI.pick || e.code !== 'Escape') return; e.preventDefault(); e.stopImmediatePropagation(); INVUI.pick = null; invRender(); }, true);
+{ const st = document.createElement('style'); st.textContent = `
+#inv .frame{position:relative}
+#inv .cell.grp{grid-row:span 2;background:linear-gradient(#24282e,#191b1f);border-color:#464b53;overflow:hidden}#inv .cell.grp:hover,#inv .cell.grp:focus-visible{border-color:#e0a040;outline:none}
+#inv .cell.grp .pic{position:absolute;left:6px;top:16px;width:calc(100% - 10px);height:calc(100% - 32px);object-fit:contain;pointer-events:none;border-radius:2px}
+#inv .cell.grp .ii{margin-top:0;width:54px;height:54px}#inv .cell.grp .nm{color:#e4e6e9;right:6px}
+#inv .cell.grp .gk{position:absolute;left:7px;bottom:2px;font:600 9px/1.3 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#e0a040;text-shadow:0 1px 2px #000}
+#inv .cell.grp .more{position:absolute;right:5px;bottom:1px;color:#e0a040;font-size:11px}
+#inv .pick{position:absolute;inset:0;z-index:5;background:rgba(6,7,9,.72);display:flex;align-items:center;justify-content:center;padding:14px}
+#inv .pbox{width:min(640px,100%);max-height:100%;display:flex;flex-direction:column;background:#17191c;border:1px solid #4a4f57;border-radius:6px;box-shadow:0 18px 50px rgba(0,0,0,.7);overflow:hidden}
+#inv .pbox .ph{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;border-bottom:1px solid #2c3036;background:linear-gradient(#22252a,#1a1c20)}
+#inv .pbox .ph h3{margin:0;font:700 13px/1 system-ui,sans-serif;letter-spacing:.2em;color:#e0a040;text-transform:uppercase}#inv .pbox .ph small{color:#7d838c;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#inv .plist{overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#inv .prow{display:flex;align-items:center;gap:10px;padding:5px 6px;background:#1d2024;border:1px solid #2f343b;border-left:3px solid var(--rc);border-radius:4px;cursor:pointer;min-height:66px;flex:none;transition:border-color .12s,background .12s}
+#inv .prow:hover,#inv .prow:focus-visible{border-color:#e0a040;border-left-color:var(--rc);outline:none}#inv .prow.on{background:#2a2318;border-color:#a8782c;border-left-color:var(--rc)}
+#inv .prow .pp{width:110px;height:56px;flex:none;display:grid;place-items:center;background:#121417;border:1px solid #2a2e34;border-radius:3px;overflow:hidden}#inv .prow .pp .pic{width:100%;height:100%;object-fit:contain}#inv .prow .pp .ii{width:36px;height:36px}
+#inv .prow .pt{flex:1;min-width:0}#inv .prow .pn{font-size:14px;color:#f0f1f3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#inv .prow .ps{font-size:12px;color:#c9ccd1;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#inv .prow .pk{font-size:11px;color:#7d838c;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#inv .prow .pe{flex:none;font:600 11px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:7px 9px;border-radius:3px;border:1px solid #a8782c;color:#ffe2a8;background:#2a2318}#inv .prow .pe.go{border-color:#3c4149;color:#c9ccd1;background:#24272c}
+#inv .prow .pi{flex:none;width:32px;height:32px;border-radius:50%;background:#24272c;border:1px solid #3c4149;color:#c9ccd1;font:italic 700 14px Georgia,serif;cursor:pointer;padding:0}#inv .prow .pi:hover{border-color:#e0a040;color:#fff}
+@media (max-width:899px),(max-height:560px){#inv .pick{padding:6px}#inv .pbox{height:100%}#inv .prow{min-height:58px;gap:8px}#inv .prow .pp{width:92px;height:48px}#inv .cell.grp .gk{font-size:8px}}
+@media (max-width:599px){#inv .prow .pp{width:70px;height:42px}#inv .prow .pe{display:none}#inv .prow.on .pe{display:block}}
+`; document.head.appendChild(st); }

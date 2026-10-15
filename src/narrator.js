@@ -1,6 +1,6 @@
 // =================== NARRATOR (2.14.3): Vega reads every cutscene caption out loud ===================
 // Clips live in voice/narrator/<burpHash of the caption>.mp3 (made with tools/voicegen.py, the same voice as the opening film).
-// A caption with no clip just stays silent. Lines spoken by another character (SKYE:, ELISMAS: ...) are left to the subtitles.
+// A caption with no clip just stays silent. Vega is the only voice in the cutscenes and on the Maw battle radio.
 const NARR = { a: null };
 const narrIds = () => (typeof BURP_VO_PACKS !== 'undefined' && BURP_VO_PACKS.narrator) || new Set();
 function narrStop() { if (NARR.a) { try { NARR.a.pause(); } catch (_) {} NARR.a = null; } }

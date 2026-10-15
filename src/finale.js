@@ -235,14 +235,15 @@ function mawComms(who, line, dur) {
 const MAW_ALLIES = [['Captain Vega', '#3b4f7a'], ['Captain Skye', '#8fe3ff'], ['Ada-9', '#3f7d7a'], ['Harbor Master Rell', '#c9a43a'], ['General Hale', '#6f7a3e'], ['Lumen', '#e8e4dc'], ['Elismas', '#9aa1aa'], ['The Bug Master', '#c8a050'], ['Maxurge', '#4fa8ff'], ['Ramick', '#c8402f'], ['Lt. Vance', '#5a6e8a'], ['Ensign Park', '#7a8a9a'], ['Sgt. Okafor', '#6a7a5a']];
 // [hp fraction, ally, their last words (cut off), who answers, the answer, B.U.R.P.]
 const MAW_LOSSES = [
-  [0.64, 'Lt. Vance', 'It\'s on me, I can\'t shake it, I can\'t—', 'CAPTAIN VEGA', 'VANCE! ...Close it up, squadron. Close it up.', 'We lost Vance. Stay with me, Captain. Don\'t let it be for nothing.'],
-  [0.42, 'Ensign Park', 'Captain, the big eye is turning toward m—', 'CAPTAIN SKYE', 'Park\'s gone. She was nineteen.', 'Park is gone. I saved her last transmission. We will play it for her family. After we win.'],
-  [0.24, 'Sgt. Okafor', 'Rockets dry. Going in close. Tell my kids I—', 'GENERAL HALE', 'Okafor bought us that opening. Don\'t you dare waste it.', 'Okafor\'s signal just stopped. No jokes today, Captain. Please, be careful.'],
+  [0.64, 'Lt. Vance', 'Vance, it\'s on you! Break left, break left!', 'CAPTAIN VEGA', 'VANCE! ...Close it up, squadron. Close it up.', 'We lost Vance. Stay with me, Captain. Don\'t let it be for nothing.'],
+  [0.42, 'Ensign Park', 'Park, the big eye is turning on you! Pull out!', 'CAPTAIN VEGA', 'Park\'s gone. She was nineteen.', 'Park is gone. I saved her last transmission. We will play it for her family. After we win.'],
+  [0.24, 'Sgt. Okafor', 'Okafor, you\'re out of rockets! Don\'t go in close! Okafor!', 'CAPTAIN VEGA', 'Okafor bought us that opening. Don\'t you dare waste it.', 'Okafor\'s signal just stopped. No jokes today, Captain. Please, be careful.'],
 ];
 const MAW_NOW = 'It\'s now or never, Captain. Let\'s set this guy\'s sun.';
 function mawBurp(line, dur) { mawComms('B.U.R.P.', line, dur || 6); try { burpSay(line); } catch (_) {} try { log(line, 'ai', 'B.U.R.P.'); } catch (_) {} }
-const MAW_CHATTER = [['CAPTAIN VEGA', 'Hit the big eye, rookie! Everything else is just meat.'], ['LT. VANCE', 'Vance, Earth Defense Force. First time through a wormhole. Don\'t tell my mom.'], ['ENSIGN PARK', 'Park on your six, Captain. I\'ve got the little eyes.'], ['SGT. OKAFOR', 'Okafor here. Rockets hot. Point me at something ugly.'], ['ADA-9', 'Calculating weak points. Result: all of it is gross. Keep firing.'], ['GENERAL HALE', 'Fort Ironrock never misses a fight. Tanks don\'t fly, so I brought the next best thing.'], ['ELISMAS', 'A true gunner never wastes a shot. You are wasting several. Aim.'],
-  ['THE BUG MASTER', 'The hive remembers this thing. The hive does not forgive it.'], ['MAXURGE', 'One eye sees farther than two. Let us see how far it sees with none.'], ['RAMICK', 'I left my sword at home. I regret nothing. LASERS!'], ['CAPTAIN SKYE', 'Watch for the beam! When the big eye locks on, MOVE.'], ['HARBOR MASTER RELL', 'I logged every ship that ever flew. This one\'s going in the book as a win.'], ['LUMEN', 'Its light is failing. Keep pushing, trooper!'], ['B.U.R.P.', 'Hull integrity: worrying. Morale: surprisingly high. Snacks: none.']];
+// Vega does all the talking on the radio (she's the only one with a voice); the third field is who the line is about, so it goes quiet once they're lost
+const MAW_CHATTER = [['CAPTAIN VEGA', 'Hit the big eye, rookie! Everything else is just meat.'], ['CAPTAIN VEGA', 'Vance, first time through a wormhole? Stay on my wing and don\'t look down.', 'Lt. Vance'], ['CAPTAIN VEGA', 'Park, cover the rookie\'s six. You take the little eyes.', 'Ensign Park'], ['CAPTAIN VEGA', 'Okafor, rockets hot. Put them somewhere ugly.', 'Sgt. Okafor'], ['CAPTAIN VEGA', 'Ada-9 ran the numbers. The weak point is all of it. Keep firing.'], ['CAPTAIN VEGA', 'Hale brought half of Fort Ironrock. Tanks don\'t fly, so he brought gunships.'], ['CAPTAIN VEGA', 'Elismas says a true gunner never wastes a shot. You\'re wasting several. Aim.'],
+  ['CAPTAIN VEGA', 'The Bug Master\'s hive remembers this thing. They are not in a forgiving mood.'], ['CAPTAIN VEGA', 'Maxurge wants to see how far one eye sees with none. Let\'s show him.'], ['CAPTAIN VEGA', 'Ramick left his sword at home and he\'s never been happier. Look at those lasers!'], ['CAPTAIN VEGA', 'Skye\'s calling the beam! When the big eye locks on, MOVE.'], ['CAPTAIN VEGA', 'Rell is logging this one as a win. Don\'t make him a liar.'], ['CAPTAIN VEGA', 'Lumen says its light is failing. Keep pushing, rookie!'], ['B.U.R.P.', 'Hull integrity: worrying. Morale: surprisingly high. Snacks: none.']];
 function mawAlliesArrive(quick) {
   if (MAW.alliesIn) return; MAW.alliesIn = true;
   MAW_ALLIES.forEach(([name, col], i) => { let o;
@@ -330,7 +331,7 @@ function mawAllyStep(dt, t) {
 function mawDoom(L) {
   const A = MAW.allies.find(a => a.name === L[1]); if (!A || A.doom) return;
   A.doom = { t: 0, beam: null, L }; MAW.lost.push(L[1]);
-  mawComms(L[1].toUpperCase(), L[2], 2.2);
+  mawComms('CAPTAIN VEGA', L[2], 2.2);
 }
 function mawDoomStep(A, dt) {
   const D = A.doom, L = D.L; D.t += dt; const eyeW = MAW.obj.userData.eye.getWorldPosition(V(0, 0, 0)), p = A.o.position;
@@ -439,7 +440,7 @@ function mawStep(dt, t) {
   if (!MAW.alliesIn && MAW.t > 40) mawAlliesCut();
   // a line of chatter now and then
   if (MAW.alliesIn) { MAW.commsT -= dt; if (MAW.commsT <= 0) { MAW.commsT = 9 + Math.random() * 5;
-    for (let n = 0; n < MAW_CHATTER.length; n++) { const [w, l] = MAW_CHATTER[MAW.said++ % MAW_CHATTER.length]; if (MAW.lost.some(x => x.toUpperCase() === w) || (MAW.nowSaid && w === 'B.U.R.P.')) continue; if (w === 'B.U.R.P.') mawBurp(l, 5); else mawComms(w, l); break; } } }
+    for (let n = 0; n < MAW_CHATTER.length; n++) { const [w, l, about] = MAW_CHATTER[MAW.said++ % MAW_CHATTER.length]; if ((about && MAW.lost.includes(about)) || (MAW.nowSaid && w === 'B.U.R.P.')) continue; if (w === 'B.U.R.P.') mawBurp(l, 5); else mawComms(w, l); break; } } }
 }
 { const _ss = spaceStep; spaceStep = function (dt, t) {
   if (!LEVEL || LEVEL.id !== 'maw') return _ss(dt, t);
@@ -547,8 +548,8 @@ function mawAlliesCut() {
   runCutscene({ lock: again ? 1.5 : 3, shots: [
     { text: 'Behind you, the wormhole flares.', dur: 3, cam: (t, k) => { wormholeAnim(MAW.back, performance.now() / 1000 - t0); MAW.back.scale.setScalar(1 + k * 0.4); fwd(0); camLook(player.pos.clone().add(V(20, 16, -40)), B); } },
     { text: 'VEGA: You really thought we\'d let you go in alone, rookie?', dur: 4, cam: (t, k) => { fwd(k); camLook(B.clone().add(V(60, 30, -260)), B.clone().add(V(0, 0, -k * 150))); } },
-    { text: 'SKYE: Earth Defense Force, on your wing. ADA-9: Robot City sends its regards.', dur: 4, cam: (t, k) => { fwd(1 + k * 0.6); const c = ships[0].o.position; camLook(c.clone().add(V(-30, 12, 40)), c.clone().add(V(0, 0, -60))); } },
-    { text: 'ELISMAS: Four Masters. Four arts. One eye. Let us close it.', dur: 4, cam: (t, k) => { fwd(1.6 + k * 0.5); const c = ships[6].o.position; camLook(c.clone().add(V(24, 10, 30)), MAW_C); } },
+    { text: 'VEGA: Skye brought the Earth Defense Force. Ada-9 brought Robot City. Everybody came.', dur: 4, cam: (t, k) => { fwd(1 + k * 0.6); const c = ships[0].o.position; camLook(c.clone().add(V(-30, 12, 40)), c.clone().add(V(0, 0, -60))); } },
+    { text: 'VEGA: And Elismas brought the Four Masters. Four arts. One eye. Let\'s close it.', dur: 4, cam: (t, k) => { fwd(1.6 + k * 0.5); const c = ships[6].o.position; camLook(c.clone().add(V(24, 10, 30)), MAW_C); } },
   ], onEnd: () => { MAW.back.scale.setScalar(1); S.flags = S.flags || {}; S.flags.mawAllies = 1; markDirty(); mawSquadIn(); } });
 }
 function mawDeath() {

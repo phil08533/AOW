@@ -136,6 +136,7 @@ addEventListener('keyup', e => { if (e.code === 'KeyH') holdEnd(); }, true);
 }; }
 
 // ---- dialogs: no more pages. The header, the picture and the buttons stay put; only the list scrolls ----
+const PG2 = { key: '', two: false };
 pageRows = function () {
   const rows = $('shopRows'), old = $('pgBar'); if (old) old.remove();
   if (!rows || $('dlg').hidden) { if ($('fltBar')) $('fltBar').remove(); return; }
@@ -143,8 +144,13 @@ pageRows = function () {
   rowFilter(rows, all);
   rows.classList.remove('paged'); all.forEach(c => c.classList.remove('pgOff'));
   const kids = all.filter(c => !c.classList.contains('fltOff'));
-  const wordy = kids.some(c => (c.textContent || '').length > 64), two = kids.length > 3 && innerHeight < 520 && innerWidth > 640 && !wordy && !rows.querySelector('canvas') && getComputedStyle(rows).display !== 'grid';
-  rows.classList.toggle('cols2s', two);
+  // decide one or two columns once per dialog (and per screen size), so tapping a row never flips the layout back and forth;
+  // the grid check looks at the list without our own two-column class, which used to make it alternate on every redraw
+  const had = rows.classList.contains('cols2s'); rows.classList.remove('cols2s');
+  const key = $('dlgName').textContent + '|' + $('dlgRole').textContent + '|' + innerWidth + 'x' + innerHeight;
+  let two; if (PG2.key === key && kids.length > 3) two = PG2.two;
+  else { const wordy = kids.some(c => (c.textContent || '').length > 64); two = kids.length > 3 && innerHeight < 520 && innerWidth > 640 && !wordy && !rows.querySelector('canvas') && getComputedStyle(rows).display !== 'grid'; if (kids.length > 3) { PG2.key = key; PG2.two = two; } }
+  rows.classList.toggle('cols2s', two); void had;
   rows.style.maxHeight = ''; const dlg = $('dlg'), rest = dlg.scrollHeight - rows.offsetHeight, mh = parseFloat(getComputedStyle(dlg).maxHeight) || innerHeight;
   const room = Math.max(110, Math.min(innerHeight * 0.94 - rest - 24, mh - rest - 12));
   if (rows.scrollHeight > room + 2) { rows.style.maxHeight = room + 'px'; rows.classList.add('scrollList'); } else rows.classList.remove('scrollList');

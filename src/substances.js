@@ -1,7 +1,7 @@
 // =================== PHASE 6: SUBSTANCES AND THE LAB ===================
 // Optional (Settings → Game → Substances, off by default). Timed boosts with screen effects; illegal ones can bring a bad trip.
 // The Lab is a ship room that brews the illegal ones; owning it keeps you Wanted until you tear it down.
-// Save fields: PREFS.subs, S.buffs['sub_<id>'] (end time), S.buffs.trip, S.lastSub, S.lab ({ r, t, n }).
+// Save fields: PREFS.subs, S.buffs['sub_<id>'] (end time), S.buffs.trip, S.lastSub, S.lab ({ st: [{ r, t, n }], shelf }).
 if (PREFS.subs == null) PREFS.subs = false;
 const subsOn = () => !!PREFS.subs;
 const SUBS = {
@@ -151,35 +151,60 @@ ROOMS.lab = { name: 'Lab', cost: { cr: 2500, crystal: 8 }, desc: 'Brews illegal 
 const LAB_RECIPES = { voidspice: { scrap: 2 }, neondust: { crystal: 1 }, glimmer: { circuit: 1, crystal: 1 }, redhaze: { shell: 2 }, blackout: { core: 1, crystal: 1 } };
 const labEvery = () => (12 - 2 * lvUp('lab')) * 60000, labMax = () => 3 + 2 * lvUp('lab');
 { const _ut = roomUpText; roomUpText = function (id, L) { if (id === 'lab') return `Brews a dose every ${12 - 2 * (L - 1)} min, holds ${3 + 2 * (L - 1)}`; return _ut(id, L); }; }
-function labS() { S.lab = S.lab || { r: 'voidspice', t: Date.now(), n: 0 }; return S.lab; }
-function labTick() { // brew what the time and materials allow; no materials means the batch waits
-  if (!roomLvl('lab')) return; const L = labS(), now = Date.now(), ev = labEvery(), need = LAB_RECIPES[L.r] || {};
-  while (now - L.t >= ev && L.n < labMax()) { if (!costOk(need)) { L.t = now; break; } costPay(need); L.n++; L.t += ev; }
-  if (L.n >= labMax()) L.t = now;
+// 2.13.10: the lab has stations (1 to 3), each brewing its own recipe, and a shelf that keeps finished doses per recipe.
+// Switching a station's recipe moves its finished doses to the shelf, so nothing is ever lost; Collect empties shelf + stations into your bag.
+const LAB_STATION_COST = [null, { cr: 5000, circuit: 4 }, { cr: 12000, circuit: 8, crystal: 4 }];
+function labS() { let L = S.lab;
+  if (!L) L = S.lab = { st: [{ r: 'voidspice', t: Date.now(), n: 0 }], shelf: {} };
+  if (!L.st) { L = S.lab = { st: [{ r: L.r || 'voidspice', t: L.t || Date.now(), n: L.n || 0 }], shelf: {} }; }
+  L.shelf = L.shelf || {}; return L; }
+function labTick() { // each station brews what the time and materials allow; no materials means that batch waits
+  if (!roomLvl('lab')) return; const L = labS(), now = Date.now(), ev = labEvery();
+  for (const T of L.st) { const need = LAB_RECIPES[T.r] || {};
+    while (now - T.t >= ev && T.n < labMax()) { if (!costOk(need)) { T.t = now; break; } costPay(need); T.n++; T.t += ev; }
+    if (T.n >= labMax()) T.t = now; }
 }
 setInterval(() => { try { const O = outS(), had = !!O.lab; O.lab = roomLvl('lab') > 0; labTick();
   if (O.lab && !O.bounty) { O.bounty = 300 + O.rep * 10; O.growT = O.obT = Date.now(); O.huntT = Date.now() + 90000; if (!had) log('The Marshals heard about your Lab. You stay Wanted while it runs.', 'loot'); try { outPush(); } catch (_) {} }
   if (had && !O.lab && O.bounty && outTier() < 3) { O.bounty = 0; O.obT = 0; try { outPush(); } catch (_) {} } } catch (_) {} }, 5000);
 // where the batch is at: ready, waiting on materials, full, or counting down to the next dose
-function labState() { const L = labS(), need = LAB_RECIPES[L.r] || {}, ev = labEvery(), mm = ms => { const t = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
-  if (L.n >= labMax()) return { text: `Full: ${L.n} doses waiting. Collect to keep brewing.`, k: 1, short: 'FULL · collect' };
-  if (!costOk(need)) return { text: `Stopped: needs ${costLabel(need)} for the next dose.`, k: 0, short: 'Needs ' + costLabel(need) };
-  const left = ev - (Date.now() - L.t); return { text: `Next dose in ${mm(left)}${L.n ? ` · ${L.n} ready` : ''}`, k: clamp(1 - left / ev, 0, 1), short: `${mm(left)}${L.n ? ' · ' + L.n + ' ready' : ''}` }; }
+const labMm = ms => { const t = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+function labStation(T) { const need = LAB_RECIPES[T.r] || {}, ev = labEvery();
+  if (T.n >= labMax()) return { text: `Full: ${T.n} ready`, k: 1, short: 'FULL' };
+  if (!costOk(need)) return { text: `Stopped: needs ${costLabel(need)}`, k: 0, short: 'needs ' + costLabel(need) };
+  const left = ev - (Date.now() - T.t); return { text: `Next in ${labMm(left)}${T.n ? ` · ${T.n} ready` : ''}`, k: clamp(1 - left / ev, 0, 1), short: `${labMm(left)}${T.n ? ' · ' + T.n : ''}` }; }
+function labReady() { const L = labS(); let n = 0; for (const k in L.shelf) n += L.shelf[k]; for (const T of L.st) n += T.n; return n; }
+function labState() { const L = labS(), r = labReady(), s0 = labStation(L.st[0]); return { text: s0.text, k: s0.k, short: (r ? r + ' ready · ' : '') + (L.st.length > 1 ? L.st.length + ' stations' : s0.short) }; }
+function labCollect() { const L = labS(); let got = 0, full = false;
+  const take = (id, n) => { const k = Math.min(n, invRoomFor(id)); if (k < n) full = true; if (k > 0) { S.inv[id] = (S.inv[id] || 0) + k; got += k; } return k; };
+  for (const id in L.shelf) { L.shelf[id] -= take(id, L.shelf[id]); if (!L.shelf[id]) delete L.shelf[id]; }
+  for (const T of L.st) { if (!T.n) continue; const had = T.n >= labMax(); T.n -= take(T.r, T.n); if (had) T.t = Date.now(); }
+  if (full) invFullNote(Object.keys(L.shelf)[0] || L.st[0].r); if (got) { SFX.coin(); log(`Collected ${got} dose${got > 1 ? 's' : ''} from the Lab`, 'loot'); } markDirty(); }
 function openLab() {
-  labTick(); const L = labS(); openDlg('Lab', `Level ${roomLvl('lab')}`); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
-  // a live timer: the next dose counts down while the console is open
-  const timer = document.createElement('div'); timer.style.cssText = 'margin:6px 0 2px;font:600 14px var(--mono,monospace);color:#c8a8ff';
-  const bar = document.createElement('div'); bar.style.cssText = 'height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:4px'; const fill = document.createElement('i'); fill.style.cssText = 'display:block;height:100%;width:0;background:linear-gradient(90deg,#8f6ad0,#ff6aa8)'; bar.appendChild(fill);
-  const tick = () => { if (!timer.isConnected) { clearInterval(iv); return; } labTick(); const st = labState(); timer.firstChild.textContent = st.text; fill.style.width = Math.round(st.k * 100) + '%'; const c = [...$('dlgActs').children].find(b => /^Collect/.test(b.textContent)); if (c) { c.textContent = 'Collect ' + L.n; c.disabled = !L.n; } };
-  timer.appendChild(document.createElement('span')); timer.appendChild(bar);
-  const render = () => { labTick(); rows.textContent = ''; const need = LAB_RECIPES[L.r];
-    $('dlgLine').textContent = `Brewing ${SUBS[L.r].name}: ${L.n} of ${labMax()} doses ready. One every ${Math.round(labEvery() / 60000)} min, using ${costLabel(need)} each.`;
-    $('dlgLine').appendChild(timer);
-    // switching recipes keeps your finished doses: they go into your bag first
-    itemRows(rows, Object.keys(LAB_RECIPES).map(id => [id, S.inv[id] || 0, `${costLabel(LAB_RECIPES[id])} a dose`, [[L.r === id ? 'Brewing' : 'Brew this', () => { if (L.r !== id) { if (L.n) { const n = Math.min(L.n, invRoomFor(L.r)); if (n < L.n) { invFullNote(L.r); return; } S.inv[L.r] = (S.inv[L.r] || 0) + n; log(`+${n} ${SUBS[L.r].name}`, 'loot'); } L.r = id; L.n = 0; L.t = Date.now(); markDirty(); SFX.ui(); openLab(); } }, L.r === id]]])); tick(); };
+  labTick(); const L = labS(); openDlg('Lab', `Level ${roomLvl('lab')} · ${L.st.length} station${L.st.length > 1 ? 's' : ''}`); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const bars = [];
+  const tick = () => { if (!rows.isConnected) { clearInterval(iv); return; } labTick(); bars.forEach(([T, txt, fill]) => { const st = labStation(T); txt.textContent = st.text; fill.style.width = Math.round(st.k * 100) + '%'; });
+    const c = [...$('dlgActs').children].find(b => /^Collect/.test(b.textContent)); if (c) { const n = labReady(); c.textContent = 'Collect ' + n; c.disabled = !n; } };
+  const render = () => { labTick(); rows.textContent = ''; bars.length = 0;
+    const shelf = Object.entries(L.shelf).filter(([, n]) => n > 0).map(([id, n]) => `${n} ${SUBS[id].name}`).join(', ');
+    $('dlgLine').textContent = `Each station brews one dose every ${Math.round(labEvery() / 60000)} min and holds ${labMax()}. Switching a recipe keeps what's done on the shelf.` + (shelf ? ` Shelf: ${shelf}.` : '');
+    L.st.forEach((T, si) => {
+      const hd = document.createElement('div'); hd.style.cssText = 'margin:8px 2px 2px;font-weight:700;color:#c8a8ff;display:flex;flex-direction:column;gap:3px';
+      const top = document.createElement('span'); top.textContent = `STATION ${si + 1} · ${SUBS[T.r].name}`; const txt = document.createElement('span'); txt.style.cssText = 'font:600 13px var(--mono,monospace);color:#d8c8ff';
+      const bar = document.createElement('div'); bar.style.cssText = 'height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden'; const fill = document.createElement('i'); fill.style.cssText = 'display:block;height:100%;width:0;background:linear-gradient(90deg,#8f6ad0,#ff6aa8)'; bar.appendChild(fill);
+      hd.append(top, txt, bar); rows.appendChild(hd); bars.push([T, txt, fill]);
+      const r = document.createElement('div'); r.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px';
+      for (const id of Object.keys(LAB_RECIPES)) { const b = document.createElement('button'); b.className = 'pbtn' + (T.r === id ? ' go' : ''); b.style.padding = '5px 9px'; b.textContent = SUBS[id].name; b.title = costLabel(LAB_RECIPES[id]) + ' a dose';
+        b.addEventListener('click', () => { if (T.r === id) return; if (T.n) { L.shelf[T.r] = (L.shelf[T.r] || 0) + T.n; log(`${T.n} ${SUBS[T.r].name} moved to the lab shelf`, 'loot'); } T.r = id; T.n = 0; T.t = Date.now(); markDirty(); SFX.ui(); render(); });
+        r.appendChild(b); }
+      rows.appendChild(r); });
+    const nx = LAB_STATION_COST[L.st.length];
+    if (nx) { const r = document.createElement('div'); r.className = 'rowi'; const nm = document.createElement('span'); nm.textContent = `Add station ${L.st.length + 1}: brews a second recipe side by side`; const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = costLabel(nx);
+      const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = 'Build'; b.disabled = !costOk(nx); b.addEventListener('click', () => { costPay(nx); L.st.push({ r: 'voidspice', t: Date.now(), n: 0 }); SFX.level(); log('New lab station built.', 'loot'); markDirty(); openLab(); }); r.append(nm, mt, b); rows.appendChild(r); }
+    tick(); };
   const iv = setInterval(tick, 1000);
   $('dlgActs').before(rows);
-  acts([['Collect ' + L.n, () => { if (!L.n) return; const n = Math.min(L.n, invRoomFor(L.r)); if (n < 1) { invFullNote(L.r); return; } S.inv[L.r] = (S.inv[L.r] || 0) + n; L.n -= n; L.t = Date.now(); SFX.coin(); log(`+${n} ${SUBS[L.r].name}`, 'loot'); markDirty(); openLab(); }, true, !L.n],
+  acts([['Collect ' + labReady(), () => { labCollect(); render(); }, true, !labReady()],
     ['Tear down the Lab', () => labTearDown()], ['Close', closeDlg]]); render();
 }
 function labTearDown() {
@@ -196,7 +221,7 @@ function labRoom(s, cx, cz, far, outer, faceIn, term, props) {
   vat.position.set(cx - s.side * 0.4, 0, cz + 2.6); props.add(vat); solid(vat.position.x, vat.position.z, 0.9);
   const pl = new THREE.PointLight(0xa070ff, 0.8, 8); pl.position.set(cx, 1.6, cz + 2.4); props.add(pl);
   { const sg = labelSprite(768, 72); sg.scale.set(3.6, 0.34, 1); sg.position.set(vat.position.x, 2.2, vat.position.z); props.add(sg); let last = '', nt = 0;
-    levelAnims.push(t => { if (t < nt) return; nt = t + 1; labTick(); const v = labState().short; if (v !== last) { last = v; drawPlate(sg, SUBS[labS().r].name, v, '#c8a8ff', null); } }); }
+    levelAnims.push(t => { if (t < nt) return; nt = t + 1; labTick(); const v = labState().short; if (v !== last) { last = v; drawPlate(sg, labS().st.length > 1 ? 'LAB' : SUBS[labS().st[0].r].name, v, '#c8a8ff', null); } }); }
   levelAnims.push(t => { liq.position.y = 1.1 + Math.sin(t * 3) * 0.02; flasks.forEach((f, i) => { f.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.08); }); pl.intensity = 0.7 + Math.sin(t * 4) * 0.15; });
   term(cx + s.side * 0.5, s.z0 + 0.6, '#c8a8ff', 'Lab console (brew, collect)', openLab, 0);
 }

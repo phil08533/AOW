@@ -425,8 +425,10 @@ LEVELS.ship = {
       if (id === 'range' && typeof rangeRoom === 'function') rangeRoom(s, cx, cz, outer, term, props);
       if (id === 'hangar') {
         part(props, B(0.2, 2.8, 6), toon('#c9a43a', 'hazard'), outer - s.side * 0.12, 1.4, cz);
-        part(props, B(5, 0.012, 5), toon('#ffd36a', 'hazard'), cx, 0.014, cz); part(props, B(4.4, 0.013, 4.4), toonNS('#6a6a6a', 'grate'), cx, 0.016, cz);
-        if (typeof bikeOwned === 'function' && bikeOwned()) { const bike = new THREE.Group(); part(bike, B(0.6, 0.4, 2), '#8a3a2e', 0, 0.7, 0); part(bike, Cy(0.35, 0.35, 0.2, 10), C.dark, 0, 0.35, 0.8, 0, 0, Math.PI / 2); part(bike, Cy(0.35, 0.35, 0.2, 10), C.dark, 0, 0.35, -0.8, 0, 0, Math.PI / 2); part(bike, B(0.5, 0.3, 0.6), '#3a3d44', 0, 1.0, -0.4); bike.position.set(cx - s.side * 1.2, 0, cz); props.add(bike); box(cx - s.side * 1.2, cz, 0.4, 1.1); }
+        // the pad sits clearly above the deck so the stripes never flicker into the floor (2.14.4)
+        part(props, B(5, 0.04, 5), toon('#ffd36a', 'hazard'), cx, 0.02, cz); part(props, B(4.4, 0.04, 4.4), toonNS('#4a4e56', 'tread'), cx, 0.05, cz);
+        if (typeof hangarDress === 'function') hangarDress(s, cx, cz, outer, props);
+        if (typeof bikeOwned === 'function' && bikeOwned()) { const bike = new THREE.Group(); part(bike, B(0.6, 0.4, 2), '#8a3a2e', 0, 0.7, 0); part(bike, Cy(0.35, 0.35, 0.2, 10), C.dark, 0, 0.35, 0.8, 0, 0, Math.PI / 2); part(bike, Cy(0.35, 0.35, 0.2, 10), C.dark, 0, 0.35, -0.8, 0, 0, Math.PI / 2); part(bike, B(0.5, 0.3, 0.6), '#3a3d44', 0, 1.0, -0.4); bike.position.set(cx - s.side * 3.6, 0, cz - 3.3); props.add(bike); box(cx - s.side * 3.6, cz - 3.3, 0.4, 1.1); }
         term(cx, s.z0 + 0.6, '#4fd2ff', 'Vehicle bay', () => openVehicleBay(), 0);
         term(cx, s.z1 - 0.6, '#ffd36a', 'Launch from the hangar', () => enterSpace(S.orbit || 'earth'), Math.PI);
       }

@@ -101,3 +101,29 @@ fshCatchShow = function (F) {
 #catchCard .cbox { display: inline-block; min-width: 230px; padding: 10px 16px 12px; background: rgba(10,14,24,.86); border: 2px solid #cfd6e0; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.5); }
 #catchCard .crows { margin-top: 8px; display: grid; gap: 3px; text-align: left; }
 #catchCard .crow { display: flex; justify-content: space-between; gap: 18px; font-size: 14px; } #catchCard .ck { color: #8fa0b8; text-transform: uppercase; letter-spacing: .1em; font-size: 11px; font-weight: 700; align-self: center; } #catchCard .cv { color: #fff; font-weight: 600; }`; document.head.appendChild(st); }
+// ---- 2.14.4: the caught fish swims in FRONT of its card (its own little picture on top of the box) and the card waits for Continue ----
+const FCV = { r: null, sc: null, cam: null, cv: null };
+function fcvInit() {
+  if (FCV.r) return true;
+  try { FCV.r = new THREE.WebGLRenderer({ alpha: true, antialias: true }); } catch (_) { return false; }
+  FCV.r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); FCV.r.setSize(240, 150, false); FCV.r.setClearColor(0x000000, 0); FCV.r.outputEncoding = THREE.sRGBEncoding;
+  FCV.sc = new THREE.Scene(); FCV.sc.add(new THREE.AmbientLight(0xffffff, 0.8)); const sun = new THREE.DirectionalLight(0xffffff, 0.9); sun.position.set(1, 2, 2); FCV.sc.add(sun);
+  FCV.cam = new THREE.PerspectiveCamera(34, 240 / 150, 0.01, 20); FCV.cv = FCV.r.domElement; FCV.cv.className = 'cfish'; return true;
+}
+{ const _show = fshCatchShow; fshCatchShow = function (F) {
+  const r = _show.apply(this, arguments); const C = FSH.catch, card = $('catchCard'); if (!C || !card) return r;
+  if (fcvInit()) { camera.remove(C.holder); FCV.sc.add(C.holder); C.mini = true; card.insertBefore(FCV.cv, card.firstChild); }
+  const box = card.querySelector('.cbox'); if (box) { const b = document.createElement('button'); b.className = 'pbtn win ccont'; b.textContent = 'Continue'; b.addEventListener('click', e => { e.stopPropagation(); fshCatchHide(); }); box.appendChild(b); }
+  document.body.classList.add('fshcard'); return r; }; }
+{ const _hide = fshCatchHide; fshCatchHide = function () { const C = FSH.catch; if (C && C.mini) { FCV.sc.remove(C.holder); camera.add(C.holder); } document.body.classList.remove('fshcard'); return _hide.apply(this, arguments); }; }
+{ const _cs = fshCatchStep; fshCatchStep = function (dt) { _cs(dt); const C = FSH.catch; if (!C || !C.mini || !FCV.r) return;
+    // the fish fills the picture: fit the camera to its size once
+    if (!C.fit) { const b = new THREE.Box3().setFromObject(C.m), s = b.getSize(new THREE.Vector3()); C.fit = Math.max(s.x, s.z, s.y * 1.6, 0.05); }
+    FCV.cam.position.set(0, C.holder.position.y + 0.04, C.holder.position.z + C.fit * 1.8); FCV.cam.lookAt(0, C.holder.position.y, C.holder.position.z); FCV.r.render(FCV.sc, FCV.cam); }; }
+addEventListener('keydown', e => { if (FSH.catch && document.body.classList.contains('fshcard') && ['Enter', 'Space', 'KeyE', 'Escape'].includes(e.code)) { e.preventDefault(); e.stopPropagation(); fshCatchHide(); } }, true);
+{ const st = document.createElement('style'); st.textContent = `
+#catchCard .cfish { display: block; width: 240px; height: 150px; margin: 0 auto -46px; position: relative; z-index: 2; filter: drop-shadow(0 6px 10px rgba(0,0,0,.6)); }
+#catchCard .cbox { position: relative; z-index: 1; padding-top: 40px; }
+#catchCard .ccont { pointer-events: auto; display: block; margin: 10px auto 0; min-width: 140px; }
+body.fshcard #dlg.fishing { visibility: hidden; }
+@media (max-height: 520px) { #catchCard { top: calc(env(safe-area-inset-top, 0px) + 6px) !important; } #catchCard .cfish { width: 180px; height: 112px; margin-bottom: -38px; } #catchCard .cbox { padding-top: 32px; } #catchCard .crows { gap: 1px; margin-top: 4px; } #catchCard .crow { font-size: 12px; } #catchCard .ccont { margin-top: 6px; padding: 4px 12px; } }`; document.head.appendChild(st); }

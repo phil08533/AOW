@@ -332,7 +332,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.14.3</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.14.4</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -4141,8 +4141,10 @@ LEVELS.ship = {
       if (id === 'range' && typeof rangeRoom === 'function') rangeRoom(s, cx, cz, outer, term, props);
       if (id === 'hangar') {
         part(props, B(0.2, 2.8, 6), toon('#c9a43a', 'hazard'), outer - s.side * 0.12, 1.4, cz);
-        part(props, B(5, 0.012, 5), toon('#ffd36a', 'hazard'), cx, 0.014, cz); part(props, B(4.4, 0.013, 4.4), toonNS('#6a6a6a', 'grate'), cx, 0.016, cz);
-        if (typeof bikeOwned === 'function' && bikeOwned()) { const bike = new THREE.Group(); part(bike, B(0.6, 0.4, 2), '#8a3a2e', 0, 0.7, 0); part(bike, Cy(0.35, 0.35, 0.2, 10), C.dark, 0, 0.35, 0.8, 0, 0, Math.PI / 2); part(bike, Cy(0.35, 0.35, 0.2, 10), C.dark, 0, 0.35, -0.8, 0, 0, Math.PI / 2); part(bike, B(0.5, 0.3, 0.6), '#3a3d44', 0, 1.0, -0.4); bike.position.set(cx - s.side * 1.2, 0, cz); props.add(bike); box(cx - s.side * 1.2, cz, 0.4, 1.1); }
+        // the pad sits clearly above the deck so the stripes never flicker into the floor (2.14.4)
+        part(props, B(5, 0.04, 5), toon('#ffd36a', 'hazard'), cx, 0.02, cz); part(props, B(4.4, 0.04, 4.4), toonNS('#4a4e56', 'tread'), cx, 0.05, cz);
+        if (typeof hangarDress === 'function') hangarDress(s, cx, cz, outer, props);
+        if (typeof bikeOwned === 'function' && bikeOwned()) { const bike = new THREE.Group(); part(bike, B(0.6, 0.4, 2), '#8a3a2e', 0, 0.7, 0); part(bike, Cy(0.35, 0.35, 0.2, 10), C.dark, 0, 0.35, 0.8, 0, 0, Math.PI / 2); part(bike, Cy(0.35, 0.35, 0.2, 10), C.dark, 0, 0.35, -0.8, 0, 0, Math.PI / 2); part(bike, B(0.5, 0.3, 0.6), '#3a3d44', 0, 1.0, -0.4); bike.position.set(cx - s.side * 3.6, 0, cz - 3.3); props.add(bike); box(cx - s.side * 3.6, cz - 3.3, 0.4, 1.1); }
         term(cx, s.z0 + 0.6, '#4fd2ff', 'Vehicle bay', () => openVehicleBay(), 0);
         term(cx, s.z1 - 0.6, '#ffd36a', 'Launch from the hangar', () => enterSpace(S.orbit || 'earth'), Math.PI);
       }
@@ -16379,7 +16381,7 @@ function fshCatchStep(dt) {
   const C = FSH.catch; if (!C) return; C.t += dt; const k = Math.min(1, C.t / 0.45), e = 1 - Math.pow(1 - k, 3);
   C.holder.position.y = -0.6 + e * 0.62; C.m.rotation.y = C.t * 1.4; C.m.rotation.z = Math.sin(C.t * 6) * 0.12 * Math.max(0, 1 - C.t / 1.5); if (C.m.userData.tail) C.m.userData.tail.rotation.y = Math.sin(C.t * 14) * 0.4;
   C.holder.children.forEach(o => { if (o.userData.v) { o.position.addScaledVector(o.userData.v, dt); o.userData.v.multiplyScalar(0.96); o.rotation.x += dt * 5; } });
-  if (C.t > 3.4 || !dlgOpen || (fishing && fishing.st !== 'done')) fshCatchHide();
+  if (!dlgOpen || (fishing && fishing.st !== 'done')) fshCatchHide(); // stays up until you tap Continue (2.14.4)
 }
 function fshCatchHide() { const C = FSH.catch; if (C) { camera.remove(C.holder); disposeTree(C.holder); FSH.catch = null; } const c = $('catchCard'); if (c) c.className = ''; }
 { const st = document.createElement('style'); st.textContent = `
@@ -16782,6 +16784,7 @@ const UPDATES = [
   { id: 108, title: '2.14.1 · Moon quest fix', items: ['Breathing Room on the Moon can be finished again: moon mites keep dropping O2 Filters until you have all four. Before, they stopped after the first one.', 'The same fix lets Sky City droid chips keep dropping until you have the five the quest asks for.'] },
   { id: 109, title: '2.14.2 · One weapon button, model icons everywhere', items: ['Phones: tap the weapon box to cycle gun → staff → melee. The separate SWAP button is gone and Reload takes its spot.', 'The weapon box stays the same size and in the same place whichever weapon you hold.', 'Every button inside the menu tablet (Ship, Vehicles, Journal, Social, Settings) now has a little icon made from the game\'s own models.', 'If something breaks on a phone, the red error box now lists every error in order, first one on top, so testers can screenshot the real cause.'] },
   { id: 110, title: '2.14.3 · Vega narrates every cutscene, iPhone fix', items: ['iPhones and iPads: the game no longer crashes on load (Safari has no mouse lock, and one line assumed it did).', 'Vega, the voice from the opening film, now reads every cutscene and the prologue out loud. Shots wait for her to finish.', 'Opening film: the stray "And…" is gone, your wingmen fly in formation beside you, the enemy fleet is spread out and mixed, the battle has six kinds of robots, and dropped guns lie flat on the ground.', 'Prologue: the stars are smaller and calmer, and the odd ball of stars around one planet is gone.'] },
+  { id: 111, title: '2.14.4 · A real hangar, a proper catch card', items: ['Hangar: the floor pad no longer flickers. Your selected war vehicle now turns on a lit turntable, with a gantry crane overhead, a tool wall, a red tool chest, tyre stacks, fuel drums, a fuel pump and guide lights to the launch door.', 'Fishing: the fish you caught now swims in front of its card, and the card waits for you to tap Continue (or press Enter or E).', 'Phones: the USE button can no longer land on top of the radar.', 'New drawn icons for the camera and repair buttons. The ship and the car share the same camera icon.'] },
 ];
 const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
 function updateRows(list) {
@@ -18192,6 +18195,32 @@ fshCatchShow = function (F) {
 #catchCard .cbox { display: inline-block; min-width: 230px; padding: 10px 16px 12px; background: rgba(10,14,24,.86); border: 2px solid #cfd6e0; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.5); }
 #catchCard .crows { margin-top: 8px; display: grid; gap: 3px; text-align: left; }
 #catchCard .crow { display: flex; justify-content: space-between; gap: 18px; font-size: 14px; } #catchCard .ck { color: #8fa0b8; text-transform: uppercase; letter-spacing: .1em; font-size: 11px; font-weight: 700; align-self: center; } #catchCard .cv { color: #fff; font-weight: 600; }`; document.head.appendChild(st); }
+// ---- 2.14.4: the caught fish swims in FRONT of its card (its own little picture on top of the box) and the card waits for Continue ----
+const FCV = { r: null, sc: null, cam: null, cv: null };
+function fcvInit() {
+  if (FCV.r) return true;
+  try { FCV.r = new THREE.WebGLRenderer({ alpha: true, antialias: true }); } catch (_) { return false; }
+  FCV.r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); FCV.r.setSize(240, 150, false); FCV.r.setClearColor(0x000000, 0); FCV.r.outputEncoding = THREE.sRGBEncoding;
+  FCV.sc = new THREE.Scene(); FCV.sc.add(new THREE.AmbientLight(0xffffff, 0.8)); const sun = new THREE.DirectionalLight(0xffffff, 0.9); sun.position.set(1, 2, 2); FCV.sc.add(sun);
+  FCV.cam = new THREE.PerspectiveCamera(34, 240 / 150, 0.01, 20); FCV.cv = FCV.r.domElement; FCV.cv.className = 'cfish'; return true;
+}
+{ const _show = fshCatchShow; fshCatchShow = function (F) {
+  const r = _show.apply(this, arguments); const C = FSH.catch, card = $('catchCard'); if (!C || !card) return r;
+  if (fcvInit()) { camera.remove(C.holder); FCV.sc.add(C.holder); C.mini = true; card.insertBefore(FCV.cv, card.firstChild); }
+  const box = card.querySelector('.cbox'); if (box) { const b = document.createElement('button'); b.className = 'pbtn win ccont'; b.textContent = 'Continue'; b.addEventListener('click', e => { e.stopPropagation(); fshCatchHide(); }); box.appendChild(b); }
+  document.body.classList.add('fshcard'); return r; }; }
+{ const _hide = fshCatchHide; fshCatchHide = function () { const C = FSH.catch; if (C && C.mini) { FCV.sc.remove(C.holder); camera.add(C.holder); } document.body.classList.remove('fshcard'); return _hide.apply(this, arguments); }; }
+{ const _cs = fshCatchStep; fshCatchStep = function (dt) { _cs(dt); const C = FSH.catch; if (!C || !C.mini || !FCV.r) return;
+    // the fish fills the picture: fit the camera to its size once
+    if (!C.fit) { const b = new THREE.Box3().setFromObject(C.m), s = b.getSize(new THREE.Vector3()); C.fit = Math.max(s.x, s.z, s.y * 1.6, 0.05); }
+    FCV.cam.position.set(0, C.holder.position.y + 0.04, C.holder.position.z + C.fit * 1.8); FCV.cam.lookAt(0, C.holder.position.y, C.holder.position.z); FCV.r.render(FCV.sc, FCV.cam); }; }
+addEventListener('keydown', e => { if (FSH.catch && document.body.classList.contains('fshcard') && ['Enter', 'Space', 'KeyE', 'Escape'].includes(e.code)) { e.preventDefault(); e.stopPropagation(); fshCatchHide(); } }, true);
+{ const st = document.createElement('style'); st.textContent = `
+#catchCard .cfish { display: block; width: 240px; height: 150px; margin: 0 auto -46px; position: relative; z-index: 2; filter: drop-shadow(0 6px 10px rgba(0,0,0,.6)); }
+#catchCard .cbox { position: relative; z-index: 1; padding-top: 40px; }
+#catchCard .ccont { pointer-events: auto; display: block; margin: 10px auto 0; min-width: 140px; }
+body.fshcard #dlg.fishing { visibility: hidden; }
+@media (max-height: 520px) { #catchCard { top: calc(env(safe-area-inset-top, 0px) + 6px) !important; } #catchCard .cfish { width: 180px; height: 112px; margin-bottom: -38px; } #catchCard .cbox { padding-top: 32px; } #catchCard .crows { gap: 1px; margin-top: 4px; } #catchCard .crow { font-size: 12px; } #catchCard .ccont { margin-top: 6px; padding: 4px 12px; } }`; document.head.appendChild(st); }
 
 // =================== GUNS 2: cooler models, firing animation, alien glow, and other players see it all ===================
 // Every gun gets sights, a muzzle brake, a moving slide and a side light strip in its accent color.
@@ -18839,6 +18868,41 @@ setInterval(() => { if (SCOCK.vb) return; const b = SCOCK.vb = document.createEl
   b.style.cssText = 'position:fixed;right:calc(env(safe-area-inset-right,0px) + 14px);top:calc(env(safe-area-inset-top,0px) + 236px);z-index:22;width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:rgba(10,14,30,.7);font-size:20px;cursor:pointer';
   b.addEventListener('click', e => { e.stopPropagation(); scockToggle(); }); b.addEventListener('touchstart', e => { e.stopPropagation(); e.preventDefault(); scockToggle(); }, { passive: false }); document.body.appendChild(b); }, 1000);
 
+// =================== HANGAR (2.14.4): a working vehicle bay instead of an empty room ===================
+// A turntable shows off your selected war vehicle, with a gantry crane overhead, a tool wall, tyre stacks, fuel drums and guide lights to the launch door.
+function hangarDress(s, cx, cz, outer, props) {
+  const sd = s.side, H = 3.2, wall = outer - sd * 0.2;
+  // turntable with a glowing rim and your vehicle on it
+  const tt = new THREE.Group(); tt.position.set(cx, 0.07, cz); props.add(tt);
+  part(tt, Cy(1.75, 1.8, 0.1, 40), toonNS('#2a2c32', 'deck'), 0, 0.05, 0); const rim = part(tt, new THREE.TorusGeometry(1.78, 0.04, 6, 48), glow('#4fd2ff'), 0, 0.1, 0, Math.PI / 2);
+  for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; part(tt, B(0.5, 0.012, 0.08), glow('#ffd36a'), Math.cos(a) * 1.45, 0.105, Math.sin(a) * 1.45, 0, -a); }
+  const V0 = typeof vehS === 'function' ? vehS() : null, vid = V0 && (V0.sel && V0.owned.includes(V0.sel) ? V0.sel : V0.owned[0]);
+  const spin = new THREE.Group(); spin.position.y = 0.1; tt.add(spin);
+  if (vid && typeof VEH !== 'undefined' && VEH[vid]) { try { const m = VEH[vid].make(); m.traverse(o => { if (o.isSprite || o.isPoints) o.visible = false; });
+      const b = new THREE.Box3().setFromObject(m), sz = b.getSize(new THREE.Vector3()), k = 2.9 / Math.max(sz.x, sz.z, 0.1), kk = Math.min(k, 2.4 / Math.max(sz.y, 0.1)); m.scale.multiplyScalar(kk); m.position.y = -b.min.y * kk; spin.add(m); } catch (e) { console.warn('hangar vehicle', e); } }
+  else { const holo = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.6), new THREE.MeshBasicMaterial({ map: signTex('BAY EMPTY', '#06202a', '#4fd2ff'), transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false })); holo.position.y = 1.2; spin.add(holo); }
+  levelAnims.push(t => { spin.rotation.y = t * 0.25; rim.material.opacity = 0.75 + Math.sin(t * 3) * 0.25; });
+  solid(cx, cz, 1.6);
+  // gantry crane across the ceiling with a hook over the pad
+  for (const dz of [-2.3, 2.3]) part(props, B(9.6, 0.22, 0.22), toon('#c9a43a', 'hazard'), (s.x0 + s.x1) / 2, H - 0.2, cz + dz);
+  const trolley = new THREE.Group(); props.add(trolley); part(trolley, B(0.6, 0.25, 5), '#3a3d44', 0, H - 0.42, cz); part(trolley, Cy(0.02, 0.02, 0.9, 4), '#1e1c22', 0, H - 1.0, cz); part(trolley, new THREE.TorusGeometry(0.12, 0.035, 6, 12, Math.PI * 1.4), '#8a8e96', 0, H - 1.5, cz);
+  levelAnims.push(t => { trolley.position.x = cx + Math.sin(t * 0.18) * 1.8; });
+  // tool wall: pegboard, tools, a rolling red tool chest
+  const tw = wall - sd * 0.02; part(props, B(0.05, 1.4, 3.2), toonNS('#3a3d44', 'deck'), tw, 1.5, cz + 0.2);
+  [['#8a8e96', 0.08, 0.5], ['#c9a43a', 0.06, 0.35], ['#8a8e96', 0.1, 0.25], ['#d23a2a', 0.07, 0.45], ['#8a8e96', 0.05, 0.6]].forEach(([c, w, h], i) => { part(props, B(0.05, h, w), c, tw - sd * 0.05, 1.6 + (i % 2) * 0.35, cz - 1.0 + i * 0.55); part(props, B(0.05, 0.04, w * 3), '#c9a43a', tw - sd * 0.05, 1.6 + (i % 2) * 0.35 + h / 2, cz - 1.0 + i * 0.55); });
+  const chest = new THREE.Group(); part(chest, B(0.6, 0.9, 1.2), toon('#b8322a', 'hull'), 0, 0.5, 0); for (let i = 0; i < 4; i++) part(chest, B(0.02, 0.03, 1.0), '#cfd6e0', sd * -0.31, 0.25 + i * 0.18, 0); for (const z of [-0.5, 0.5]) part(chest, Cy(0.06, 0.06, 0.05, 8), C.dark, 0, 0.06, z, 0, 0, Math.PI / 2);
+  chest.position.set(wall - sd * 0.45, 0, cz + 0.2); props.add(chest); box(wall - sd * 0.45, cz + 0.2, 0.35, 0.65);
+  // tyre stacks and fuel drums in the corners
+  for (const [z, n] of [[s.z0 + 0.9, 4], [s.z0 + 1.9, 3]]) { for (let i = 0; i < n; i++) part(props, new THREE.TorusGeometry(0.3, 0.13, 6, 14), '#1e1c22', wall - sd * 0.5, 0.13 + i * 0.25, z, Math.PI / 2); solid(wall - sd * 0.5, z, 0.45); }
+  for (let i = 0; i < 3; i++) { const z = s.z1 - 0.8 - i * 0.75; part(props, Cy(0.3, 0.3, 0.9, 12), toon(i === 1 ? '#3a6a3a' : '#c8402f', 'hull'), wall - sd * 0.45, 0.45, z); part(props, Cy(0.31, 0.31, 0.06, 12), '#ffd36a', wall - sd * 0.45, 0.6, z); solid(wall - sd * 0.45, z, 0.35); }
+  // fuel pump by the launch door
+  { const pm = new THREE.Group(); part(pm, B(0.5, 1.3, 0.4), toon('#e8e4dc', 'hull'), 0, 0.65, 0); part(pm, B(0.4, 0.25, 0.02), glow('#6fdc5a'), 0, 1.05, 0.21); part(pm, Cy(0.03, 0.03, 0.8, 5), C.dark, 0.2, 0.5, 0.25, 0.4); pm.position.set(cx + sd * 2.6, 0, s.z1 - 0.7); pm.rotation.y = Math.PI; props.add(pm); solid(cx + sd * 2.6, s.z1 - 0.7, 0.35); }
+  // guide lights from the pad to the launch door, and hanging work lights
+  const dots = []; for (let i = 0; i < 4; i++) { dots.push(part(props, B(0.5, 0.02, 0.18), glow('#4fd2ff'), cx, 0.03, cz + 2.8 + i * 0.5)); }
+  levelAnims.push(t => dots.forEach((d, i) => { d.material.opacity = 0.35 + 0.65 * Math.max(0, Math.sin(t * 4 - i * 0.9)); d.material.transparent = true; }));
+  for (const dz of [-3.3, 3.3]) { part(props, Cy(0.015, 0.015, 0.6, 4), '#1e1c22', cx - sd * 2.5, H - 0.3, cz + dz); part(props, Cy(0.18, 0.28, 0.2, 10, true), '#3a3d44', cx - sd * 2.5, H - 0.68, cz + dz); part(props, Cy(0.17, 0.17, 0.02, 10), glow('#fff2d0'), cx - sd * 2.5, H - 0.78, cz + dz); }
+}
+
 // =================== OTHER PILOTS IN SPACE: see each other's ships ===================
 // Other players already fly in the same space. This makes them easy to spot and read: their ships pitch and bank
 // the way they're really flying, carry an engine glow, and wear a name tag and beacon that stay readable from far away.
@@ -19178,7 +19242,10 @@ function hudStack() {
       sub.style.setProperty('left', 'auto', 'important'); sub.style.setProperty('bottom', 'auto', 'important');
       const cr = parseFloat(sub.style.right) || 0, ct = parseFloat(sub.style.top) || 0; sub.style.setProperty('right', cr + 'px', 'important'); sub.style.setProperty('top', ct + 'px', 'important');
       const r = sub.getBoundingClientRect(), k = r.width / (sub.offsetWidth || 1) || 1, mp = $('map'), mb = mp && mp.offsetParent ? mp.getBoundingClientRect().bottom + 20 : 0, side = top.top - gap < mb, dx = (top.left + top.width / 2 - (side ? gap : 0)) - (r.left + r.width / 2), dy = (side ? top.top : top.top - gap) - r.top;
-      if (Math.abs(dx) > 1) sub.style.setProperty('right', Math.round(cr - dx / k) + 'px', 'important'); if (Math.abs(dy) > 1) sub.style.setProperty('top', Math.round(ct + dy / k) + 'px', 'important'); }
+      if (Math.abs(dx) > 1) sub.style.setProperty('right', Math.round(cr - dx / k) + 'px', 'important'); if (Math.abs(dy) > 1) sub.style.setProperty('top', Math.round(ct + dy / k) + 'px', 'important');
+      // never sit on the radar: if it still lands there, park it just left of the radar instead
+      const r2 = sub.getBoundingClientRect(), mr = mp && mp.offsetParent ? mp.getBoundingClientRect() : null;
+      if (mr && r2.top < mr.bottom + 6 && r2.right > mr.left - 6) { const ex = (mr.left - 10 - r2.width) - r2.left, ey = (mr.top + 4) - r2.top; sub.style.setProperty('right', Math.round((parseFloat(sub.style.right) || 0) - ex / k) + 'px', 'important'); sub.style.setProperty('top', Math.round((parseFloat(sub.style.top) || 0) + ey / k) + 'px', 'important'); } }
     else ['right', 'left', 'top', 'bottom'].forEach(k => sub.style.removeProperty(k)); }
   if (am && vit) { const v = vit.getBoundingClientRect(), menu = $('pullTab'), lim = menu && menu.offsetParent ? menu.getBoundingClientRect().left - 8 : innerWidth * 0.5, ks = am.getBoundingClientRect().width / (am.offsetWidth || 1) || 1, avail = lim - v.right - 10;
     // one fixed width for every weapon (gun numbers, staff name and mana bar, melee), so the box never jumps when you switch
@@ -19253,6 +19320,28 @@ document.addEventListener('click', e => { if (!e.target.closest || !e.target.clo
 { const st = document.createElement('style'); st.textContent = 'body.touch #tMelee { display: none !important; }'; document.head.appendChild(st);
   const fix = () => { const m = $('tMelee'), r = $('tReload'); if (!m || !r) return; if (!TOUCH) return; r.style.removeProperty('bottom'); r.style.removeProperty('right'); const cm = getComputedStyle(m); r.style.setProperty('bottom', cm.bottom, 'important'); r.style.setProperty('right', cm.right, 'important'); };
   if (TOUCH) document.body.classList.add('touch'); addEventListener('resize', () => setTimeout(fix, 50)); setTimeout(fix, 300); }
+
+// =================== HUD ICONS (2.14.4): our own drawn icons for the camera and repair buttons ===================
+// The ship's cockpit/chase camera and the car's camera share one icon, so the same job always looks the same.
+const ICON_CAM = `<svg viewBox="0 0 48 48" width="70%" height="70%" aria-hidden="true"><g stroke="#0b0f1c" stroke-width="2" stroke-linejoin="round">
+<circle cx="15" cy="12" r="7" fill="#c9a43a"/><circle cx="15" cy="12" r="2.4" fill="#0b0f1c"/><circle cx="29" cy="11" r="6" fill="#c9a43a"/><circle cx="29" cy="11" r="2" fill="#0b0f1c"/>
+<rect x="5" y="19" width="28" height="20" rx="3" fill="#3a4250"/><rect x="8" y="22" width="9" height="5" rx="1" fill="#ffd36a" stroke-width="1.5"/>
+<path d="M33 25 L44 19 V39 L33 33 Z" fill="#2a2f3a"/><circle cx="24" cy="31" r="4.5" fill="#4fd2ff"/></g><circle cx="22.6" cy="29.6" r="1.4" fill="#e8fbff"/></svg>`;
+const ICON_REPAIR = `<svg viewBox="0 0 48 48" width="62%" height="62%" aria-hidden="true"><g stroke="#0b0f1c" stroke-width="2" stroke-linejoin="round">
+<path d="M30 6 a10 10 0 0 0 -9.4 13.4 L7 33 a4 4 0 0 0 0 5.6 l2.4 2.4 a4 4 0 0 0 5.6 0 L28.6 27.4 A10 10 0 0 0 42 18 l-6 2 -6 -6 2 -6 z" fill="#cfd6e0"/>
+<circle cx="11" cy="37" r="2" fill="#0b0f1c" stroke="none"/></g><path d="M34 30 l4 0 2 3.5 -2 3.5 -4 0 -2 -3.5z" fill="#ffd36a" stroke="#0b0f1c" stroke-width="1.6"/></svg>`;
+function hudIconsApply() {
+  const cam = [typeof SCOCK !== 'undefined' ? SCOCK.vb : null, document.getElementById('tCam')];
+  cam.forEach(b => { if (b && !b.dataset.ico) { b.dataset.ico = 1; b.innerHTML = ICON_CAM + '<small>CAM</small>'; b.classList.add('icoBtn'); } });
+  const r = document.getElementById('tRepair'); if (r && !r.dataset.ico) { r.dataset.ico = 1; r.innerHTML = ICON_REPAIR + '<small>REPAIR</small>'; r.classList.add('icoBtn'); }
+}
+setInterval(() => { try { hudIconsApply(); } catch (_) {} }, 1000);
+document.head.insertAdjacentHTML('beforeend', `<style>
+.icoBtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 0 !important; line-height: 1; }
+body.driving #tCam.icoBtn { display: flex !important; }
+.icoBtn svg { flex: none; max-width: 34px; max-height: 34px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+.icoBtn small { font: 700 8px var(--hud, sans-serif); letter-spacing: .05em; color: #fff; opacity: .9; margin-top: 1px; }
+</style>`);
 
 // =================== AMBIENCE (2.13.9): a sound bed for every place, built live on the game's audio engine ===================
 // Each place gets layers: a filtered-noise bed (wind, surf, rain, vents, crowd wash) that swells slowly, an optional low hum

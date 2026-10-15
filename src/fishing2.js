@@ -113,7 +113,7 @@ function fshCatchStep(dt) {
   const C = FSH.catch; if (!C) return; C.t += dt; const k = Math.min(1, C.t / 0.45), e = 1 - Math.pow(1 - k, 3);
   C.holder.position.y = -0.6 + e * 0.62; C.m.rotation.y = C.t * 1.4; C.m.rotation.z = Math.sin(C.t * 6) * 0.12 * Math.max(0, 1 - C.t / 1.5); if (C.m.userData.tail) C.m.userData.tail.rotation.y = Math.sin(C.t * 14) * 0.4;
   C.holder.children.forEach(o => { if (o.userData.v) { o.position.addScaledVector(o.userData.v, dt); o.userData.v.multiplyScalar(0.96); o.rotation.x += dt * 5; } });
-  if (C.t > 3.4 || !dlgOpen || (fishing && fishing.st !== 'done')) fshCatchHide();
+  if (!dlgOpen || (fishing && fishing.st !== 'done')) fshCatchHide(); // stays up until you tap Continue (2.14.4)
 }
 function fshCatchHide() { const C = FSH.catch; if (C) { camera.remove(C.holder); disposeTree(C.holder); FSH.catch = null; } const c = $('catchCard'); if (c) c.className = ''; }
 { const st = document.createElement('style'); st.textContent = `

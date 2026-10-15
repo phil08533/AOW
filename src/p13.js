@@ -185,7 +185,10 @@ function hudStack() {
       sub.style.setProperty('left', 'auto', 'important'); sub.style.setProperty('bottom', 'auto', 'important');
       const cr = parseFloat(sub.style.right) || 0, ct = parseFloat(sub.style.top) || 0; sub.style.setProperty('right', cr + 'px', 'important'); sub.style.setProperty('top', ct + 'px', 'important');
       const r = sub.getBoundingClientRect(), k = r.width / (sub.offsetWidth || 1) || 1, mp = $('map'), mb = mp && mp.offsetParent ? mp.getBoundingClientRect().bottom + 20 : 0, side = top.top - gap < mb, dx = (top.left + top.width / 2 - (side ? gap : 0)) - (r.left + r.width / 2), dy = (side ? top.top : top.top - gap) - r.top;
-      if (Math.abs(dx) > 1) sub.style.setProperty('right', Math.round(cr - dx / k) + 'px', 'important'); if (Math.abs(dy) > 1) sub.style.setProperty('top', Math.round(ct + dy / k) + 'px', 'important'); }
+      if (Math.abs(dx) > 1) sub.style.setProperty('right', Math.round(cr - dx / k) + 'px', 'important'); if (Math.abs(dy) > 1) sub.style.setProperty('top', Math.round(ct + dy / k) + 'px', 'important');
+      // never sit on the radar: if it still lands there, park it just left of the radar instead
+      const r2 = sub.getBoundingClientRect(), mr = mp && mp.offsetParent ? mp.getBoundingClientRect() : null;
+      if (mr && r2.top < mr.bottom + 6 && r2.right > mr.left - 6) { const ex = (mr.left - 10 - r2.width) - r2.left, ey = (mr.top + 4) - r2.top; sub.style.setProperty('right', Math.round((parseFloat(sub.style.right) || 0) - ex / k) + 'px', 'important'); sub.style.setProperty('top', Math.round((parseFloat(sub.style.top) || 0) + ey / k) + 'px', 'important'); } }
     else ['right', 'left', 'top', 'bottom'].forEach(k => sub.style.removeProperty(k)); }
   if (am && vit) { const v = vit.getBoundingClientRect(), menu = $('pullTab'), lim = menu && menu.offsetParent ? menu.getBoundingClientRect().left - 8 : innerWidth * 0.5, ks = am.getBoundingClientRect().width / (am.offsetWidth || 1) || 1, avail = lim - v.right - 10;
     // one fixed width for every weapon (gun numbers, staff name and mana bar, melee), so the box never jumps when you switch

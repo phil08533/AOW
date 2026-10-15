@@ -72,15 +72,21 @@ function wallRing(cx, cz, R, gate, half, mat, mat2, hgt, n) {
 function bridgeOn(path) {
   const a = path[0], b = path[1], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L;
   let best = 0, bd = 1e9; for (let t = 0; t <= 1; t += 0.005) { const d = polyDist(a[0] + dx * t, a[1] + dz * t, RIVER); if (d < bd) { bd = d; best = t; } }
-  const cx = a[0] + dx * best, cz = a[1] + dz * best, y = Math.max(groundH(cx - ux * 5.2, cz - uz * 5.2), groundH(cx + ux * 5.2, cz + uz * 5.2), WATER_Y + 0.6) + 0.12;
-  // stretch the deck until it reaches dry ground on both banks, so the bridge always connects (a wider river made a short one fall short)
-  const reach = s => { for (let d = 3; d < 34; d += 0.5) if (groundH(cx + ux * d * s, cz + uz * d * s) >= y - 0.25) return d + 0.6; return 34; };
-  const hl = Math.max(5.2, reach(1), reach(-1)), n = Math.ceil(hl * 2 / 0.75);
-  const g = new THREE.Group(); g.position.set(cx, y, cz); g.rotation.y = Math.atan2(ux, uz);
-  for (let i = 0; i < n; i++) part(g, B(2.8, 0.14, 0.7), toon(i % 2 ? '#9a7650' : '#8a6a44', 'wood'), 0, -0.07, -hl + 0.37 + i * 0.75);
-  for (const s of [-1, 1]) { part(g, B(0.14, 0.14, hl * 2), toon('#6a4f34', 'wood'), 1.35 * s, 0.75, 0); for (let k = 0; k <= Math.floor((hl * 2 - 0.6) / 2.05); k++) part(g, B(0.14, 0.8, 0.14), toon('#6a4f34', 'wood'), 1.35 * s, 0.35, -hl + 0.3 + k * 2.05);
-    for (let k = -Math.floor(hl / 5); k <= Math.floor(hl / 5); k++) part(g, B(0.3, 2.6, 0.3), toon('#6a4f34', 'wood'), 1.35 * s, -1.3, k * 5); }
-  props.add(g); SURFACES.push({ x: cx, z: cz, ux, uz, hl, hw: 1.4, y });
+  const cx = a[0] + dx * best, cz = a[1] + dz * best, W = WATER_Y > -50 ? WATER_Y : -1, dry = W + 0.35;
+  // walk out from the river along the path to the first dry ground on each bank; the deck runs bank to bank and slopes to meet both,
+  // so it never floats in the air or sinks into a hill (one high bank used to leave a 34 m deck hanging metres over the other side)
+  const bank = s => { for (let d = 1; d < 30; d += 0.5) if (groundH(cx + ux * d * s, cz + uz * d * s) >= dry) return d; return 30; };
+  const dA = Math.max(4.6, bank(1) + 1.4), dB = Math.max(4.6, bank(-1) + 1.4);
+  const yA = Math.max(groundH(cx + ux * dA, cz + uz * dA), W + 0.5) + 0.1, yB = Math.max(groundH(cx - ux * dB, cz - uz * dB), W + 0.5) + 0.1;
+  const span = dA + dB, hl = span / 2, mid = (dA - dB) / 2, mx = cx + ux * mid, mz = cz + uz * mid, ym = (yA + yB) / 2, slope = (yA - yB) / span;
+  const outer = new THREE.Group(); outer.position.set(mx, ym, mz); outer.rotation.y = Math.atan2(ux, uz);
+  const g = new THREE.Group(); g.rotation.x = -Math.atan(slope); outer.add(g); const hd = hl / Math.cos(Math.atan(slope)), n = Math.ceil(hd * 2 / 0.75);
+  for (let i = 0; i < n; i++) part(g, B(2.8, 0.14, 0.7), toon(i % 2 ? '#9a7650' : '#8a6a44', 'wood'), 0, -0.07, -hd + 0.37 + i * 0.75);
+  for (const s of [-1, 1]) { part(g, B(0.14, 0.14, hd * 2), toon('#6a4f34', 'wood'), 1.35 * s, 0.75, 0); for (let k = 0; k <= Math.floor((hd * 2 - 0.6) / 2.05); k++) part(g, B(0.14, 0.8, 0.14), toon('#6a4f34', 'wood'), 1.35 * s, 0.35, -hd + 0.3 + k * 2.05); }
+  // posts straight down into the riverbed
+  for (let k = -Math.floor(hl / 4); k <= Math.floor(hl / 4); k++) { const d = k * 4, px = mx + ux * d, pz = mz + uz * d, top = ym + d * slope, bot = Math.min(groundH(px, pz), W) - 0.6, h = top - bot; if (h < 0.3) continue;
+    for (const s of [-1, 1]) part(outer, B(0.3, h, 0.3), toon('#6a4f34', 'wood'), 1.35 * s, d * slope - 0.1 - h / 2, d); }
+  props.add(outer); SURFACES.push({ x: mx, z: mz, ux, uz, hl, hw: 1.4, y: ym, slope });
 }
 function dropshipPad(x, z, ry, label) {
   const pad = new THREE.Group();

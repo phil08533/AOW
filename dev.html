@@ -537,6 +537,29 @@ header {
   z-index: 999;
 }
 #toast.show { opacity: 1; }
+
+/* AI prompt templates (armor / helmet fit rules) */
+.ai-row { display: flex; gap: 6px; margin-top: 6px; }
+.ai-row .btn { flex: 1; padding: 5px 6px; font-size: 10px; justify-content: center; }
+details.ai-quick { margin-top: 8px; font-size: 10px; color: var(--dim); }
+details.ai-quick summary { cursor: pointer; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+table.ai-fit { width: 100%; border-collapse: collapse; font-size: 10px; line-height: 1.35; margin-top: 6px; }
+table.ai-fit th { text-align: left; color: var(--accent); padding: 4px; border-bottom: 1px solid var(--panel-border); }
+table.ai-fit td { padding: 3px 4px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; color: var(--text); }
+table.ai-fit td:first-child { color: var(--accent-blue); white-space: nowrap; width: 1%; }
+table.ai-fit code { color: var(--accent-green); }
+#aiModal { position: fixed; inset: 0; z-index: 900; background: rgba(2,4,12,0.78); display: none; align-items: center; justify-content: center; padding: 16px; }
+#aiModal .ai-box { width: min(980px, 100%); max-height: 100%; overflow-y: auto; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+#aiModal .ai-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#aiModal .ai-head b { color: var(--accent); font-size: 14px; flex: 1; min-width: 200px; }
+#aiModal select, #aiModal textarea { background: #131826; border: 1px solid var(--panel-border); color: #fff; border-radius: 4px; font-family: var(--font-mono); font-size: 11px; }
+#aiModal select { padding: 4px 6px; }
+#aiModal textarea { width: 100%; padding: 8px; resize: vertical; box-sizing: border-box; }
+#aiIdea { min-height: 64px; }
+#aiPromptText { min-height: 320px; line-height: 1.4; }
+#aiModal .ai-howto { font-size: 11px; color: var(--dim); line-height: 1.5; }
+#aiModal label { font-size: 11px; font-weight: 700; color: var(--accent-blue); }
+#aiModal details summary { cursor: pointer; font-size: 11px; font-weight: 700; color: var(--accent); }
 </style>
 </head>
 <body>
@@ -676,6 +699,15 @@ header {
         </div>
         <div class="char-item-list" id="helmList"></div>
         <button class="char-add-btn" id="btnAddHelmet">➕ Add New Helmet</button>
+        <div class="char-row" id="helmLvlRow" style="display:none;margin-top:8px">
+          <span>Req. Level:</span>
+          <input type="number" id="inpHelmLvl" min="1" max="100" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:3px 6px;font-size:11px;width:60px">
+        </div>
+        <div class="ai-row">
+          <button class="btn gold" id="btnAiHelmet" title="Open the helmet prompt template with the fit rules">🤖 Helmet AI Prompt</button>
+          <button class="btn" id="btnAiHelmetCopy" title="Copy the default helmet prompt (with the [DESCRIBE YOUR HELMET HERE] placeholder)">📋 Copy</button>
+        </div>
+        <details class="ai-quick"><summary>📏 Helmet fit rules</summary><div id="fitHelmetQuick"></div></details>
       </div>
 
       <!-- Armor Sets List -->
@@ -685,6 +717,11 @@ header {
         </div>
         <div class="char-item-list" id="armorList"></div>
         <button class="char-add-btn" id="btnAddArmor">➕ Add New Armor Set</button>
+        <div class="ai-row">
+          <button class="btn gold" id="btnAiArmor" title="Open the armor prompt template with the fit rules">🤖 Armor AI Prompt</button>
+          <button class="btn" id="btnAiArmorCopy" title="Copy the default armor prompt (with the [DESCRIBE YOUR ARMOR HERE] placeholder)">📋 Copy</button>
+        </div>
+        <details class="ai-quick"><summary>📏 Armor fit rules</summary><div id="fitArmorQuick"></div></details>
 
         <!-- Selected Armor Settings & Exclusivity -->
         <div id="armorPropsCard" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)">
@@ -704,6 +741,18 @@ header {
           <div class="char-row">
             <span>Def Bonus:</span>
             <input type="number" id="inpArmorDef" min="0" max="1" step="0.01" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:3px 6px;font-size:11px;width:60px">
+          </div>
+          <div class="char-row" title="A.trim: main plate colour">
+            <span>Trim (A.trim):</span>
+            <input type="text" id="inpArmorTrim" placeholder="#hex" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:3px 6px;font-size:11px;width:80px">
+          </div>
+          <div class="char-row" title="A.visor: glow / visor colour">
+            <span>Visor (A.visor):</span>
+            <input type="text" id="inpArmorVisor" placeholder="#hex" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:3px 6px;font-size:11px;width:80px">
+          </div>
+          <div class="char-row" title="A.body: undersuit colour. Leave empty to keep the player's own colour">
+            <span>Undersuit (A.body):</span>
+            <input type="text" id="inpArmorBody" placeholder="empty = player's" style="background:#131826;border:1px solid var(--border);color:#fff;border-radius:4px;padding:3px 6px;font-size:11px;width:80px">
           </div>
           <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;margin-top:8px">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px;font-weight:600;color:var(--fg)">
@@ -918,6 +967,29 @@ header {
 </div>
 
 <div id="toast">Saved</div>
+
+<!-- AI prompt templates for armor / helmets -->
+<div id="aiModal" role="dialog" aria-label="AI prompt templates">
+  <div class="ai-box">
+    <div class="ai-head">
+      <b>🤖 AI Prompt Template</b>
+      <select id="aiKind" title="Template">
+        <option value="armor">🛡️ Armor set</option>
+        <option value="helmet">🪖 Helmet</option>
+      </select>
+      <button class="btn" id="aiResetBtn" title="Throw away your edits to the template">↺ Reset</button>
+      <button class="btn" id="aiCloseBtn">✕ Close</button>
+    </div>
+    <div class="ai-howto" id="aiHowto"></div>
+    <label for="aiIdea">Your idea (goes where the [DESCRIBE ...] placeholder is)</label>
+    <textarea id="aiIdea" spellcheck="true"></textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn gold" id="aiCopyBtn">📋 Copy prompt</button>
+    </div>
+    <details open><summary>📏 Fit rules (from the game code)</summary><div id="aiFit"></div></details>
+    <details><summary>📝 Full prompt text (editable)</summary><textarea id="aiPromptText" spellcheck="false"></textarea></details>
+  </div>
+</div>
 
 <script>
 // --- Core 3D Helpers (Identical to Game Engine) ---
@@ -1283,6 +1355,11 @@ const inpArmorLvl = document.getElementById("inpArmorLvl");
 const inpArmorCost = document.getElementById("inpArmorCost");
 const inpArmorDef = document.getElementById("inpArmorDef");
 const chkArmorShop = document.getElementById("chkArmorShop");
+const inpArmorTrim = document.getElementById("inpArmorTrim");
+const inpArmorVisor = document.getElementById("inpArmorVisor");
+const inpArmorBody = document.getElementById("inpArmorBody");
+const helmLvlRow = document.getElementById("helmLvlRow");
+const inpHelmLvl = document.getElementById("inpHelmLvl");
 
 // Planet Studio DOM Elements
 const planetList = document.getElementById("planetList");
@@ -1719,6 +1796,7 @@ function selectHelmet(helm) {
   selectedPlanet = null;
   charLook.h = helm.id;
   if (armorPropsCard) armorPropsCard.style.display = "none";
+  if (helmLvlRow) { const fixed = helm.id === "visor" || helm.id === "face"; helmLvlRow.style.display = fixed ? "none" : "flex"; inpHelmLvl.value = helm.lvl || 1; }
 
   currentTitle.textContent = `Helmet: ${helm.name} [${helm.id}]`;
   statPath.textContent = `src/${helm.file || "face.js"}`;
@@ -1787,6 +1865,9 @@ function selectArmor(armor) {
     inpArmorCost.value = armor.cost || 0;
     inpArmorDef.value = armor.def || 0;
     chkArmorShop.checked = (armor.shop !== false);
+    inpArmorTrim.value = armor.trim || "";
+    inpArmorVisor.value = armor.visor || "";
+    inpArmorBody.value = armor.body || "";
   }
 
   if (charBaseArmor === "auto") {
@@ -1867,6 +1948,35 @@ if (chkArmorShop) {
   });
 }
 
+// Armor colours (A.trim / A.visor / A.body) and helmet level
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+[[inpArmorTrim, "trim"], [inpArmorVisor, "visor"], [inpArmorBody, "body"]].forEach(([inp, key]) => {
+  if (!inp) return;
+  inp.addEventListener("input", () => {
+    if (!selectedCharPart || selectedCharPart.type !== "armor") return;
+    const v = inp.value.trim();
+    if (v && !HEX_RE.test(v)) { inp.style.borderColor = "var(--accent-red)"; return; }
+    inp.style.borderColor = "";
+    if (!v && key !== "body") return;
+    selectedCharPart.meta[key] = v;
+    const a = charData.armors.find(x => x.id === selectedCharPart.id);
+    if (a) a[key] = v;
+    if (ARMORS[selectedCharPart.id]) ARMORS[selectedCharPart.id][key] = v;
+    renderCharIn3D();
+    if (!isDirty) { isDirty = true; dirtyDot.classList.add("visible"); }
+  });
+});
+if (inpHelmLvl) {
+  inpHelmLvl.addEventListener("input", () => {
+    if (!selectedCharPart || selectedCharPart.type !== "helmet") return;
+    selectedCharPart.meta.lvl = parseInt(inpHelmLvl.value) || 1;
+    const h = charData.helmets.find(x => x.id === selectedCharPart.id);
+    if (h) h.lvl = selectedCharPart.meta.lvl;
+    renderHelmList();
+    if (!isDirty) { isDirty = true; dirtyDot.classList.add("visible"); }
+  });
+}
+
 // Add New Helmet
 btnAddHelmet.onclick = () => {
   const id = prompt("Enter new helmet ID (e.g. cyber_helm):");
@@ -1916,7 +2026,7 @@ btnAddArmor.onclick = () => {
     note: "",
     shop: inShop,
     file: "armor.js",
-    code: `function (g, A) {\n  // Armor: ${name.trim()} (${cleanId})\n  // Shoulder pauldrons\n  for (const s of [-1, 1]) {\n    part(g, B(0.32, 0.18, 0.34), A.trim, 0.38 * s, 1.64, 0, 0, 0, 0.25 * s);\n    part(g, Cy(0.04, 0.04, 0.12, 6), glow(A.visor), 0.42 * s, 1.72, 0);\n  }\n  // Chest plate\n  part(g, B(0.52, 0.36, 0.12), A.trim, 0, 1.38, 0.18);\n  part(g, new THREE.CircleGeometry(0.08, 6), glow(A.visor), 0, 1.4, 0.25);\n}`
+    code: `function (g, A) {\n  // Armor: ${name.trim()} (${cleanId})\n  // Shoulder pauldrons\n  for (const s of [-1, 1]) {\n    part(g, B(0.28, 0.12, 0.32), A.trim, 0.37 * s, 1.56, 0, 0, 0, -0.3 * s);\n    part(g, Cy(0.04, 0.04, 0.12, 6), glow(A.visor), 0.42 * s, 1.6, 0);\n  }\n  // Chest plate (torso front is z = 0.15)\n  part(g, B(0.46, 0.34, 0.08), A.trim, 0, 1.38, 0.17);\n  part(g, new THREE.CircleGeometry(0.08, 6), glow(A.visor), 0, 1.4, 0.215);\n  // See 🤖 Armor AI Prompt for the full fit rules\n}`
   };
   charData.armors.push(newArmor);
   armorCount.textContent = charData.armors.length;
@@ -3208,6 +3318,310 @@ animate();
 
 window.addEventListener("resize", resizeCanvas);
 init();
+
+// --- AI prompt templates: fit rules for armor and helmets (numbers taken from makeTrooper in src/assets.js and the trooper rig in src/rig.js) ---
+const AI_PLACEHOLDER = { armor: "[DESCRIBE YOUR ARMOR HERE]", helmet: "[DESCRIBE YOUR HELMET HERE]" };
+const AI_TEMPLATES = {
+armor: `You are writing a new ARMOR SET for my browser game "Art of War: Setting Sun" (three.js r128, chunky low-poly PS1/toon style).
+An armor set is code: ONE JavaScript function that adds simple meshes onto a ready-made trooper body. Follow every rule below exactly, or the armor will float, clip into the body, fall off when the character walks, or break the save.
+
+MY ARMOR IDEA:
+[DESCRIBE YOUR ARMOR HERE]
+
+=== 1. OUTPUT FORMAT (strict) ===
+- Reply with ONE code block that contains ONLY this function:
+function (g, A) {
+  ...
+}
+- First line exactly "function (g, A) {". Last line a lone "}" at column 0. No arrow function, no function name, no trailing ";", nothing outside the function. Indent everything inside by 2 spaces (no line inside may start with "}" at column 0).
+- Put colour constants at the top of the function. Plain JavaScript, no imports, no async, no DOM, no Math.random() or Date (other players rebuild your look from its id, so it must come out identical every time).
+- After the code block write one line:
+  META: name="...", trim="#hex", visor="#hex", body="#hex or none", lvl=N, cost=N, def=N
+
+=== 2. COORDINATES ===
+- Units are metres. Origin (0,0,0) is the ground between the feet. +Y is up.
+- +Z is FORWARD (face, chest, gun side). -Z is the back. +X is the character's LEFT, -X its right.
+- The body is mirror-symmetric: build left/right pairs with  for (const s of [-1, 1]) { ... 0.37 * s ... }  and mirror Y/Z rotations with s (e.g. rz = -0.3 * s).
+- Every position is the CENTRE of the piece. B(w, h, d): w along X, h along Y, d along Z. Rotations in radians.
+
+=== 3. THE BODY YOU ARE DRESSING (bare undersuit; all values are centres) ===
+Total height 1.93 (top of head). Armor sets draw on the BARE undersuit: the default tan plates, backpack, pouches and shoulder balls are removed.
+- head sphere: (0, 1.76, 0) radius 0.17   (NOT yours: helmets are a separate slot)
+- neck: (0, 1.60, 0) cylinder r 0.09, y 1.56-1.64
+- torso: (0, 1.32, 0) size 0.50 x 0.48 x 0.30 -> front face z=+0.15, back face z=-0.15, sides x=+-0.25, top y=1.56, bottom y=1.08
+- belt / pelvis: (0, 1.00, 0) size 0.44 x 0.16 x 0.26 -> front z=+0.13, y 0.92-1.08
+- shoulder joint: (+-0.33, 1.52, 0), top of the shoulder about y 1.58
+- upper arm: (+-0.37, 1.30, 0) size 0.14 x 0.28 x 0.15 -> x 0.30-0.44, y 1.16-1.44
+- forearms reach FORWARD to hold the gun: +X forearm (0.31, 1.13, 0.13), hand (0.24, 1.10, 0.29); -X forearm (-0.25, 1.17, 0.20), hand (-0.12, 1.16, 0.36)
+- gun: (0.13, 1.20, 0.36), about 0.08 wide, from z 0.10 to 0.65
+- thigh: (+-0.13, 0.80, 0) size 0.20 x 0.38 x 0.22 -> front z=+0.11, y 0.61-0.99
+- knee: (+-0.13, 0.60, 0.07)
+- shin: (+-0.13, 0.42, 0) size 0.17 x 0.38 x 0.19 -> front z=+0.095, y 0.23-0.61
+- boot: (+-0.13, 0.08, 0.04) size 0.20 x 0.16 x 0.34 -> y 0-0.16, toe at z=+0.21
+
+Placement rule: a plate of depth d on a face at z=F goes at z = F + d/2 - 0.01 (front) or z = -(F + d/2 - 0.01) (back). Its outer face must stick out at least 0.02 past the body or it vanishes inside it, and not more than about 0.12 unless it is a deliberate big piece (backpack, tank, spikes).
+
+Tested anchor positions (start from these, then change shapes/sizes a little):
+- chest plate:       B(0.46, 0.34, 0.08) at (0, 1.38, 0.17)
+- abdomen bands:     B(0.40, 0.07, 0.06) at (0, 1.17, 0.15) and (0, 1.09, 0.15)
+- back plate:        B(0.44, 0.40, 0.08) at (0, 1.36, -0.17)
+- backpack:          B(0.40, 0.44, 0.20) at (0, 1.36, -0.25)
+- collar / gorget:   Cy(0.13, 0.17, 0.08, 10) at (0, 1.58, 0)   (centre must stay at y <= 1.60)
+- belt:              B(0.48, 0.08, 0.30) at (0, 1.04, 0); buckle at (0, 1.04, 0.155)
+- pauldron (pair):   B(0.28, 0.12, 0.32) at (0.37 * s, 1.56, 0), rz = -0.3 * s  (slopes down and out; +0.3 * s flares up)
+- pauldron rim:      B(0.26, 0.05, 0.30) at (0.42 * s, 1.47, 0), rz = -0.45 * s
+- arm bracer (pair): B(0.19, 0.12, 0.19) at (0.37 * s, 1.24, 0)
+- thigh plate:       B(0.20, 0.22, 0.06) at (0.13 * s, 0.82, 0.12)
+- knee cap:          B(0.18, 0.12, 0.08) at (0.13 * s, 0.60, 0.11)
+- shin greave:       B(0.19, 0.30, 0.06) at (0.13 * s, 0.40, 0.10)
+- boot toe cap:      B(0.22, 0.08, 0.12) at (0.13 * s, 0.07, 0.17); whole boot cover B(0.24, 0.14, 0.38) at (0.13 * s, 0.08, 0.05)
+- back tails / short tabard: thin boxes at z -0.22 to -0.30 hanging from y 1.0 (capes are a separate slot, so no full-length cape)
+
+=== 4. HOW PIECES ATTACH TO THE ANIMATION RIG (the most important rule) ===
+There are no bones to pick. After your function runs, the game moves every mesh into a limb by the CENTRE of its bounding box, then animates the limbs:
+  1) centre y > 1.62                    -> HEAD (turns with the head)
+  2) else |x| > 0.21 and y > 1.03       -> ARM on that side (pivot at (+-0.30, 1.50, 0))
+  3) else y < 0.98 and |x| > 0.03       -> LEG on that side (pivot at the hip (+-0.13, 0.98, 0); swings about 35 degrees each way when walking)
+  4) everything else                    -> TORSO
+So:
+- Build leg armor per leg at x = +-0.13. Never one box spanning both legs, never one box spanning hip and knee: split it so each piece sits on one limb.
+- Skirts, coats, tassets below the belt: one panel per leg at x = +-0.13 (they swing with the legs), or a single piece centred exactly at x = 0 (stays with the torso; legs will poke through when walking).
+- Shoulder pads: centre y <= 1.60 and |x| > 0.21 so they move with the arm.
+- Nothing of the armor may be centred above y 1.62. Anything centred above y 1.65 near the head (|x| < 0.26, |z| < 0.3) is deleted when the player chooses "No helmet".
+- Female body is handled automatically (shoulder/arm pieces pulled in to 86%, centred chest/waist pieces narrowed, hips 6% wider), so keep pairs built with s and centre pieces at x = 0.
+
+=== 5. HELPERS (already in scope; use only these) ===
+- part(g, geometry, material, x, y, z, rx, ry, rz)  adds one mesh to g and returns it. material can be a '#hex' string.
+- B(w, h, d)  box
+- Cy(rTop, rBottom, h, segments)  cylinder along Y (rx = Math.PI / 2 points it along Z, rz = Math.PI / 2 along X); 6-12 segments
+- CONE(r, h, segments)  cone pointing +Y, default 4 sides (spikes, horns)
+- E(g, material, x, y, z, radiusX, radiusY, radiusZ, rx, ry, rz)  ellipsoid (round pads, domes, orbs)
+- chain(g, [[x, y, z], [x, y, z], ...], rStart, material, rEnd)  tapered tube through the points (cables, curved horns, straps)
+- new THREE.TorusGeometry(r, tube, 6, 12), new THREE.CircleGeometry(r, segments) (faces +Z), new THREE.OctahedronGeometry(r, 0), new THREE.IcosahedronGeometry(r, 0), new THREE.SphereGeometry(r, 10, 8)
+- C palette: C.dark '#2b2a2c', C.steel '#9aa1aa', C.steelDk '#5d636c', C.gunBody '#3a3d44', C.red '#c8402f', C.bone '#e9e0c8', C.tan '#c9b27c'
+
+=== 6. MATERIALS ===
+- '#hex' string = matte toon material; the game picks a texture itself (grey/low saturation looks like metal panels, saturated colours look painted).
+- toon('#hex', 'cloth' | 'fur' | 'leaves' | 'panel' | 'grime' | 'stone' | 'wood') forces a texture (robes, scarves, fur collars, camo).
+- glow('#hex') = unlit and bright, for lights, visors, runes, energy lines. Keep glow to small accents (about 15% of the pieces at most).
+- Glass only like this: const m = part(g, geo, new THREE.MeshBasicMaterial({ color: '#9fe8ff', transparent: true, opacity: 0.35, depthWrite: false }), x, y, z); m.castShadow = false;
+- A.trim = the set's main plate colour, A.visor = its glow colour (also recolours the helmet visor), A.body = undersuit colour (optional). Using A.trim and glow(A.visor) for the main plates and lights lets me recolour the set later without code.
+- Never use other material types, textures, images, canvases or loaders. Never change a material after creating it (materials are shared and cached).
+- Style: chunky low-poly, flat colours, 2-4 main colours plus 1 glow colour. Game palette: gold '#c9a43a', brass '#ffd36a', blood red '#b3262c', ice '#9fe8ff', cyan '#4fd2ff', orange '#ff8a2a', toxic green '#7fff6a', purple '#c86aff', near-black '#1e1c22', steel '#5d636c'.
+
+=== 7. BUDGET AND SIZE ===
+- 20-70 meshes in total (count each loop iteration). At most 8 different colours (each colour is one draw call per limb after merging).
+- Everything inside x -0.60..0.60, y 0..1.62, z -0.55..0.45. Nothing below the ground (y < 0).
+
+=== 8. DO NOT ===
+- Do not build a head, helmet, hood, mask, face or hair, or anything centred above y 1.62. Helmets are their own slot.
+- Do not build guns, swords or hands, and keep the gun zone clear: x 0..0.30, y 1.05..1.30, z > 0.22.
+- Do not scale, move, hide, remove or recolour g or its existing children (no g.scale, g.children, g.remove, traverse).
+- Do not nest THREE.Group objects; add every mesh straight to g with part() / E() / chain().
+- Do not animate (no onBeforeRender, no userData.anim, no timers): meshes are merged per material after building.
+- Do not leave pieces floating away from the body, unless they are deliberate floating orbs or sparkles kept within 0.12 of the body.
+
+=== 9. STATS (for the META line) ===
+lvl 3 / 400 cr / def 0.03 - lvl 8 / 1400 / 0.07 - lvl 12 / 2200 / 0.10 - lvl 18 / 3500 / 0.14 - lvl 24 / 4500 / 0.17 - lvl 27 / 6500 / 0.24 - lvl 34 / 9000 / 0.27 - lvl 40 / 15000 / 0.30 (maximum). def is the fraction of damage removed.
+
+=== 10. WORKED EXAMPLE (tested in the game: fits the body and walks correctly; copy its structure) ===
+function (g, A) {
+  const plate = A.trim, dark = '#2b2a2c', lite = glow(A.visor);
+  // torso (front face z=+0.15, back z=-0.15)
+  part(g, B(0.46, 0.34, 0.08), plate, 0, 1.38, 0.17);              // chest plate
+  part(g, B(0.30, 0.035, 0.02), lite, 0, 1.46, 0.215);             // chest light
+  for (let i = 0; i < 2; i++) part(g, B(0.40 - i * 0.04, 0.07, 0.06), dark, 0, 1.17 - i * 0.08, 0.15); // abdomen bands
+  part(g, B(0.44, 0.40, 0.08), plate, 0, 1.36, -0.17);             // back plate
+  part(g, Cy(0.13, 0.17, 0.08, 10), dark, 0, 1.58, 0);             // collar (centre y <= 1.60)
+  part(g, B(0.48, 0.08, 0.30), dark, 0, 1.04, 0);                  // belt
+  part(g, B(0.08, 0.06, 0.02), lite, 0, 1.04, 0.155);              // buckle
+  for (const s of [-1, 1]) {
+    // arms: |x| > 0.21, y > 1.03
+    part(g, B(0.28, 0.12, 0.32), plate, 0.37 * s, 1.56, 0, 0, 0, -0.3 * s);  // pauldron
+    part(g, B(0.26, 0.05, 0.30), dark, 0.42 * s, 1.47, 0, 0, 0, -0.45 * s);  // pauldron rim
+    part(g, B(0.19, 0.12, 0.19), plate, 0.37 * s, 1.24, 0);                  // arm bracer
+    // legs: one piece per leg at x = 0.13 * s, y < 0.98
+    part(g, B(0.20, 0.22, 0.06), plate, 0.13 * s, 0.82, 0.12);   // thigh plate
+    part(g, B(0.18, 0.12, 0.08), dark, 0.13 * s, 0.60, 0.11);    // knee
+    part(g, B(0.19, 0.30, 0.06), plate, 0.13 * s, 0.40, 0.10);   // shin greave
+    part(g, B(0.22, 0.08, 0.12), plate, 0.13 * s, 0.07, 0.17);   // boot toe cap
+  }
+}
+META: name="Vanguard Plate", trim="#8a96a8", visor="#ffb347", body="#2a3140", lvl=12, cost=2200, def=0.10
+
+More real sets to learn from are in src/armor.js (heavy, tank, eva, drome).
+
+Now write the armor for MY ARMOR IDEA above. Keep the anchor positions, follow the rig rule, and reply with the single function plus the META line.`,
+
+helmet: `You are writing a new HELMET for my browser game "Art of War: Setting Sun" (three.js r128, chunky low-poly PS1/toon style).
+A helmet is code: ONE JavaScript function that adds simple meshes around the trooper's existing head. Follow every rule below exactly, or the helmet will float, hide the face, stay behind when the head turns, or crash the character.
+
+MY HELMET IDEA:
+[DESCRIBE YOUR HELMET HERE]
+
+=== 1. OUTPUT FORMAT (strict) ===
+- Reply with ONE code block that contains ONLY this function:
+function (g, look, A) {
+  ...
+}
+- First line exactly "function (g, look, A) {". Last line a lone "}" at column 0. No arrow function, no function name, no trailing ";", nothing outside the function. Indent everything inside by 2 spaces.
+- look = the player's look settings (ignore it). A = the armor set being worn; it can be missing, so only ever use it as (A && A.visor) || '#4fd2ff'.
+- Put colour constants at the top. Plain JavaScript, no imports, no DOM, no Math.random() or Date (other players rebuild your look, so it must come out identical every time).
+- After the code block write one line:  META: name="...", lvl=N
+
+=== 2. COORDINATES ===
+- Units are metres. Origin is the ground between the feet. +Y up. +Z is FORWARD (the face). -Z is the back of the head. +X is the character's LEFT.
+- Build left/right pairs with  for (const s of [-1, 1]) { ... 0.12 * s ... }  and mirror Y/Z rotations with s.
+- Every position is the CENTRE of the piece. B(w, h, d): w along X, h along Y, d along Z. Rotations in radians.
+
+=== 3. THE HEAD UNDER YOUR HELMET (always there, you build on top of it) ===
+- head sphere: centre (0, 1.76, 0), radius 0.17 -> x -0.17..0.17, y 1.59..1.93, z -0.17..0.17
+- built-in glowing visor strip: B(0.30, 0.07, 0.08) at (0, 1.79, 0.13) -> front face z = 0.17, y 1.755..1.825
+- chin block: B(0.12, 0.06, 0.06) at (0, 1.68, 0.14) -> front z = 0.17
+- ear disc: cylinder r 0.06 at (+0.17, 1.77, 0), +X side only
+- neck: cylinder r 0.09, y 1.56..1.64 (the body's collar starts below y 1.60)
+- female characters get a ponytail out of the back: from (0, 1.75, -0.16) down to about (0, 1.48, -0.25). Leave the lower back of the head open, or accept it poking through.
+Points on the head surface (radius 0.17 around (0, 1.76, 0)):
+  top (0, 1.93, 0) - front (0, 1.79, 0.17) - back (0, 1.76, -0.17) - sides (+-0.17, 1.76, 0)
+  upper sides (+-0.12, 1.88, 0) - upper front (0, 1.88, 0.12) - upper back (0, 1.88, -0.12) - temples (+-0.12, 1.80, 0.11)
+
+=== 4. TWO KINDS OF HELMET ===
+A) ADD-ON (horns, crest, crown, antennae, ears, halo, goggles on the forehead): pieces sit on the dome. Sink each base 0.01-0.03 into the r 0.17 sphere so it doesn't float. The built-in visor stays visible.
+   Tested examples:  horns  chain(g, [[0.14 * s, 1.85, 0], [0.26 * s, 1.95, 0.02], [0.30 * s, 2.12, 0.08]], 0.04, '#efe7d6', 0.012)
+                     crest  for k = 0..6: B(0.04, 0.16, 0.06) at (0, 1.95 + Math.sin(k / 6 * Math.PI) * 0.06, -0.18 + k * 0.06)
+                     crown  Cy(0.15, 0.15, 0.05, 10) at (0, 1.90, 0) plus 6 small cones around radius 0.13 at y 1.98
+B) FULL SHELL: an ellipsoid E(g, shell, 0, 1.78, -0.01, R, R - 0.01, R) with R = 0.19..0.23 (smaller and the head pokes through; much bigger looks like a bobblehead).
+   The shell COVERS the built-in visor and chin, so you MUST give it a face in front of the shell: your own visor strip B(0.30, 0.06, 0.04) with glow(...) at (0, 1.79, R - 0.01), or eye slits, a mask, a grille, a T-visor... placed at z = R - 0.02 .. R + 0.02. Never leave a blank ball.
+   Glass dome instead: part(g, new THREE.SphereGeometry(0.26, 12, 8), new THREE.MeshBasicMaterial({ color: '#cfe6ff', transparent: true, opacity: 0.3, depthWrite: false }), 0, 1.76, 0) and set .castShadow = false on it (the face shows through).
+
+=== 5. RIG RULE (helmet must turn with the head) ===
+The game moves each mesh to a limb by the CENTRE of its bounding box. Only meshes centred ABOVE y = 1.62 go to the head. Keep every helmet piece's centre at y >= 1.64.
+Neck guard / back flap: centre y 1.64-1.68, e.g. B(0.32, 0.08, 0.10) at (0, 1.66, -0.15). Cheek guards: B(0.06, 0.14, 0.14) at (0.17 * s, 1.70, 0.08).
+
+=== 6. HELPERS (already in scope; use only these) ===
+- part(g, geometry, material, x, y, z, rx, ry, rz)  adds one mesh to g and returns it. material can be a '#hex' string.
+- B(w, h, d) box - Cy(rTop, rBottom, h, segments) cylinder along Y (rx = Math.PI / 2 points it along Z) - CONE(r, h, segments) cone pointing +Y
+- E(g, material, x, y, z, radiusX, radiusY, radiusZ, rx, ry, rz) ellipsoid
+- chain(g, [[x, y, z], ...], rStart, material, rEnd) tapered tube through points (horns, antennae, tubes)
+- new THREE.TorusGeometry(r, tube, 6, 12) (halo: rx = Math.PI / 2), new THREE.CircleGeometry(r, segments) (faces +Z), new THREE.SphereGeometry(r, 10, 8)
+- C palette: C.dark '#2b2a2c', C.steel '#9aa1aa', C.steelDk '#5d636c', C.red '#c8402f', C.bone '#e9e0c8'
+
+=== 7. MATERIALS ===
+- '#hex' string = matte toon material (grey looks like metal panels, saturated looks painted).
+- toon('#hex', 'cloth' | 'fur' | 'panel' | 'grime' | 'stone' | 'wood') forces a texture (hoods, fur hats).
+- glow('#hex') = unlit and bright: visors, eyes, lights. Visor colours used in the game: cyan '#4fd2ff', amber '#ffb347', red '#ff2a3a', gold '#ffd36a', green '#7fff6a', purple '#c86aff', ice '#9fe8ff'.
+- Glass only as in 4B. No other material types, textures, images or loaders. Never change a material after creating it.
+
+=== 8. BUDGET AND SIZE ===
+- 3-30 meshes, at most 5 colours.
+- Everything inside x -0.32..0.32, y 1.58..2.30, z -0.30..0.28 (big horns may reach x +-0.35, y 2.25).
+
+=== 9. DO NOT ===
+- Do not build shoulders, collars, capes or anything centred below y 1.64.
+- Do not remove, hide, scale or recolour the head or any existing child of g (no g.remove, g.children, traverse, g.scale). Only the built-in "No helmet" option may remove the head.
+- Do not cover the face with a solid shell without your own visor, eyes or mask on the front.
+- Do not read A without the guard (A && A.visor). Do not use Math.random().
+- Do not nest THREE.Group objects or animate anything; add every mesh straight to g.
+
+=== 10. WORKED EXAMPLE (tested in the game on male and female troopers, turns with the head) ===
+function (g, look, A) {
+  const shell = '#5d636c', dark = '#2b2a2c', vis = glow((A && A.visor) || '#4fd2ff');
+  E(g, shell, 0, 1.78, -0.01, 0.2, 0.19, 0.2);                       // full shell, R = 0.20
+  part(g, B(0.30, 0.06, 0.04), vis, 0, 1.79, 0.19);                  // own visor in front of the shell
+  part(g, B(0.34, 0.035, 0.06), dark, 0, 1.835, 0.17);               // brow ridge
+  for (const s of [-1, 1]) part(g, B(0.06, 0.14, 0.14), shell, 0.17 * s, 1.70, 0.08); // cheek guards
+  for (let k = 0; k < 5; k++) part(g, B(0.03, 0.06, 0.06), '#c8402f', 0, 1.97 + Math.sin(k / 4 * Math.PI) * 0.03, -0.12 + k * 0.06); // crest
+  part(g, B(0.32, 0.08, 0.10), shell, 0, 1.66, -0.15);               // neck guard (centre y 1.66 > 1.62)
+}
+META: name="Warden Helm", lvl=6
+
+More real helmets to learn from are in src/moon.js (horns, skull, bubble, crest, antenna, goggles).
+
+Now write the helmet for MY HELMET IDEA above. Follow the head numbers and the rig rule, and reply with the single function plus the META line.`
+};
+
+const AI_FIT_RULES = {
+armor: `<table class="ai-fit">
+<tr><th colspan="2">Armor fit rules (trooper, metres, +Z = forward, +X = character's left)</th></tr>
+<tr><td>Signature</td><td><code>function (g, A) {</code> … lone <code>}</code> at column 0</td></tr>
+<tr><td>Torso surface</td><td>0.50×0.48×0.30 at y 1.32 → front z +0.15, back z −0.15, sides x ±0.25, y 1.08–1.56</td></tr>
+<tr><td>Chest plate</td><td>B(0.46, 0.34, 0.08) at (0, 1.38, 0.17)</td></tr>
+<tr><td>Back plate</td><td>B(0.44, 0.40, 0.08) at (0, 1.36, −0.17)</td></tr>
+<tr><td>Belt</td><td>B(0.48, 0.08, 0.30) at (0, 1.04, 0)</td></tr>
+<tr><td>Collar</td><td>centre y ≤ 1.60, e.g. Cy(0.13, 0.17, 0.08) at y 1.58</td></tr>
+<tr><td>Pauldron</td><td>B(0.28, 0.12, 0.32) at (0.37·s, 1.56, 0), rz −0.3·s</td></tr>
+<tr><td>Upper arm</td><td>x 0.30–0.44, y 1.16–1.44; bracer at (0.37·s, 1.24, 0)</td></tr>
+<tr><td>Thigh / knee / shin</td><td>x ±0.13; thigh front z 0.11 (y 0.61–0.99), knee y 0.60, shin front z 0.095 (y 0.23–0.61)</td></tr>
+<tr><td>Boot</td><td>y 0–0.16, toe z +0.21; toe cap B(0.22, 0.08, 0.12) at (0.13·s, 0.07, 0.17)</td></tr>
+<tr><td>Rig (by piece centre)</td><td>y &gt; 1.62 head · |x| &gt; 0.21 &amp; y &gt; 1.03 arm · y &lt; 0.98 &amp; |x| &gt; 0.03 leg · else torso</td></tr>
+<tr><td>Keep clear</td><td>gun zone x 0..0.30, y 1.05–1.30, z &gt; 0.22 · nothing above y 1.62</td></tr>
+<tr><td>Budget</td><td>20–70 meshes, ≤ 8 colours, within x ±0.60, z −0.55..0.45</td></tr>
+<tr><td>Materials</td><td>'#hex' (toon), toon(hex,'cloth'|'fur'|…), glow(hex), A.trim / A.visor / A.body</td></tr>
+</table>`,
+helmet: `<table class="ai-fit">
+<tr><th colspan="2">Helmet fit rules (trooper head, metres, +Z = forward)</th></tr>
+<tr><td>Signature</td><td><code>function (g, look, A) {</code> … lone <code>}</code>; use A only as <code>(A &amp;&amp; A.visor)</code></td></tr>
+<tr><td>Head</td><td>sphere r 0.17 at (0, 1.76, 0) → y 1.59–1.93, always present under the helmet</td></tr>
+<tr><td>Built-in visor</td><td>B(0.30, 0.07, 0.08) at (0, 1.79, 0.13), front z 0.17</td></tr>
+<tr><td>Add-on</td><td>sink bases 0.01–0.03 into the r 0.17 dome; top point (0, 1.93, 0)</td></tr>
+<tr><td>Full shell</td><td>E(g, col, 0, 1.78, −0.01, R, R−0.01, R), R 0.19–0.23 → must add own visor at z R−0.01</td></tr>
+<tr><td>Rig</td><td>every piece centre y ≥ 1.64 or it won't turn with the head</td></tr>
+<tr><td>Neck guard</td><td>B(0.32, 0.08, 0.10) at (0, 1.66, −0.15)</td></tr>
+<tr><td>Female</td><td>ponytail exits the back from (0, 1.75, −0.16)</td></tr>
+<tr><td>Budget</td><td>3–30 meshes, ≤ 5 colours, within x ±0.32, y 1.58–2.30, z −0.30..0.28</td></tr>
+<tr><td>Do not</td><td>remove/scale the head, blank face shells, Math.random, unguarded A</td></tr>
+</table>`
+};
+
+const AI_HOWTO = {
+armor: "1. Type your idea and press Copy prompt. 2. Paste it into Claude / ChatGPT. 3. Here: ➕ Add New Armor Set, then replace the code with the function it gives you. 4. ▶ Live Preview (Ctrl+Enter), try Body Type ♀ and Base Armor Undersuit. 5. Fill Name / Level / Cost / Def / colours from its META line, then 💾 Save & Rebuild (Ctrl+S).",
+helmet: "1. Type your idea and press Copy prompt. 2. Paste it into Claude / ChatGPT. 3. Here: ➕ Add New Helmet, then replace the code with the function it gives you. 4. ▶ Live Preview (Ctrl+Enter), check Face focus and Body Type ♀. 5. 💾 Save & Rebuild (Ctrl+S). Level is set from the META line in src/face.js (HELMS.id = { name, lvl })."
+};
+
+const aiModal = document.getElementById("aiModal");
+const aiKind = document.getElementById("aiKind");
+const aiIdea = document.getElementById("aiIdea");
+const aiPromptText = document.getElementById("aiPromptText");
+const aiFit = document.getElementById("aiFit");
+const aiHowto = document.getElementById("aiHowto");
+const aiEdited = { armor: null, helmet: null };
+
+function aiPromptFor(kind) {
+  const base = aiEdited[kind] != null ? aiEdited[kind] : AI_TEMPLATES[kind];
+  const idea = (aiIdea.value || "").trim();
+  return idea ? base.split(AI_PLACEHOLDER[kind]).join(idea) : base;
+}
+function aiShow(kind) {
+  aiKind.value = kind;
+  aiPromptText.value = aiEdited[kind] != null ? aiEdited[kind] : AI_TEMPLATES[kind];
+  aiFit.innerHTML = AI_FIT_RULES[kind];
+  aiHowto.textContent = AI_HOWTO[kind];
+  aiIdea.placeholder = kind === "armor" ? "e.g. samurai armor: lacquered red plates, layered shoulder guards, gold trim, cloth tassets" : "e.g. samurai kabuto with crescent crest, face mask with glowing eyes";
+}
+function aiOpen(kind) { aiShow(kind); aiModal.style.display = "flex"; aiIdea.focus(); }
+function aiCopy(text, what) {
+  const done = () => showToast(`Copied ${what}. Paste it into Claude / ChatGPT.`);
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done).catch(() => aiCopyFallback(text, done));
+  else aiCopyFallback(text, done);
+}
+function aiCopyFallback(text, done) {
+  const t = document.createElement("textarea"); t.value = text; t.style.cssText = "position:fixed;left:-9999px"; document.body.appendChild(t); t.select();
+  try { document.execCommand("copy"); done(); } catch (e) { showToast("Copy failed: select the text and press Ctrl+C", true); }
+  t.remove();
+}
+aiKind.onchange = () => aiShow(aiKind.value);
+aiPromptText.addEventListener("input", () => { aiEdited[aiKind.value] = aiPromptText.value; });
+document.getElementById("aiCopyBtn").onclick = () => aiCopy(aiPromptFor(aiKind.value), `${aiKind.value} prompt`);
+document.getElementById("aiResetBtn").onclick = () => { aiEdited[aiKind.value] = null; aiShow(aiKind.value); showToast("Template reset to default"); };
+document.getElementById("aiCloseBtn").onclick = () => { aiModal.style.display = "none"; };
+aiModal.addEventListener("click", e => { if (e.target === aiModal) aiModal.style.display = "none"; });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && aiModal.style.display === "flex") aiModal.style.display = "none"; });
+document.getElementById("btnAiArmor").onclick = () => aiOpen("armor");
+document.getElementById("btnAiHelmet").onclick = () => aiOpen("helmet");
+document.getElementById("btnAiArmorCopy").onclick = () => aiCopy(AI_TEMPLATES.armor, "armor prompt");
+document.getElementById("btnAiHelmetCopy").onclick = () => aiCopy(AI_TEMPLATES.helmet, "helmet prompt");
+document.getElementById("fitArmorQuick").innerHTML = AI_FIT_RULES.armor;
+document.getElementById("fitHelmetQuick").innerHTML = AI_FIT_RULES.helmet;
 </script>
 </body>
 </html>

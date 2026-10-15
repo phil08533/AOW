@@ -15,21 +15,18 @@ function anglerRoom(s, cx, cz, outer, term, props) {
   // wood panelling under the plaques
   part(props, B(0.05, 1.0, 9.6), toonNS('#5a3e2a', 'wood'), outer - sd * 0.27, 0.5, cz); part(props, B(0.07, 0.06, 9.6), toon('#c9a43a'), outer - sd * 0.28, 1.02, cz);
   part(props, B(9.6, 1.0, 0.05), toonNS('#5a3e2a', 'wood'), cx, 0.5, s.z1 - 0.27);
-  // rug, armchair and a side table with a lamp
+  // rug; the couch, side table and TV are added by tvden.js (2.17)
   part(props, B(4.2, 0.03, 3.0), toonNS('#2f5a6a', 'carpet'), cx, 0.02, cz); part(props, B(3.8, 0.035, 2.6), toonNS('#c9a43a', 'carpet'), cx, 0.021, cz); part(props, B(3.6, 0.04, 2.4), toonNS('#2f5a6a', 'carpet'), cx, 0.022, cz);
-  { const ch = new THREE.Group(), lea = toon('#7a3a22', 'cloth'); part(ch, B(1.0, 0.45, 0.9), lea, 0, 0.3, 0); part(ch, B(1.0, 0.8, 0.22), lea, 0, 0.75, -0.38); for (const x of [-0.45, 0.45]) part(ch, B(0.18, 0.6, 0.9), lea, x, 0.45, 0);
-    ch.position.set(cx - sd * 1.6, 0, cz + 1.4); ch.rotation.y = sd > 0 ? Math.PI * 0.75 : -Math.PI * 0.75; props.add(ch); solid(cx - sd * 1.6, cz + 1.4, 0.6);
-    part(props, Cy(0.3, 0.3, 0.6, 12), toon('#5a3e2a', 'wood'), cx - sd * 0.5, 0.3, cz + 2.2); part(props, Cy(0.03, 0.03, 0.4, 5), '#2a2c32', cx - sd * 0.5, 0.8, cz + 2.2); part(props, Cy(0.12, 0.2, 0.22, 10), glow('#ffd8a0'), cx - sd * 0.5, 1.08, cz + 2.2); solid(cx - sd * 0.5, cz + 2.2, 0.35); }
   // a big aquarium on the inner side, with a few fish swimming laps
   { const ax = (sd > 0 ? s.x0 : s.x1) + sd * 0.7, az = cz - 3.2, tk = new THREE.Group(); tk.position.set(ax, 0, az); levelGroup.add(tk);
     part(tk, B(1.0, 0.7, 2.6), toon('#2a2c32'), 0, 0.35, 0); part(tk, B(0.9, 1.0, 2.5), new THREE.MeshBasicMaterial({ color: '#4fa8ff', transparent: true, opacity: 0.3, depthWrite: false }), 0, 1.2, 0); part(tk, B(1.0, 0.08, 2.6), toon('#2a2c32'), 0, 1.74, 0); part(tk, B(0.86, 0.12, 2.46), toon('#d8c8a0', 'grime'), 0, 0.76, 0);
     const fs = []; ['#ff9a3c', '#ffd36a', '#4fd2ff', '#ff6aa8'].forEach((c, i) => { const f = new THREE.Group(); part(f, B(0.16, 0.08, 0.04), glow(c), 0, 0, 0); part(f, B(0.05, 0.08, 0.02), glow(c), -0.1, 0, 0); f.rotation.y = Math.PI / 2; tk.add(f); fs.push(f); });
     levelAnims.push(t => fs.forEach((f, i) => { const a = t * (0.4 + i * 0.1) + i * 1.6; f.position.set(Math.sin(a * 1.3) * 0.25, 1.0 + i * 0.15 + Math.sin(a * 2) * 0.05, Math.sin(a) * 1.0); f.rotation.y = Math.cos(a) >= 0 ? Math.PI / 2 : -Math.PI / 2; }));
     box(ax, az, 0.55, 1.35); }
-  // rod rack: every rod tier on display
-  { const rk = new THREE.Group(); part(rk, B(0.2, 0.1, 1.6), toon('#5a3e2a', 'wood'), 0, 0.1, 0); part(rk, B(0.12, 0.1, 1.6), toon('#5a3e2a', 'wood'), 0, 1.6, 0);
-    for (let i = 0; i < 4; i++) { try { const r = makeRodModel(Math.min(i + 1, 4)); r.scale.setScalar(1.5); r.rotation.x = -Math.PI / 2 + 0.06; r.position.set(0, 0.15, -0.6 + i * 0.4); rk.add(r); } catch (_) {} }
-    rk.position.set(cx + sd * 2.0, 0, s.z0 + 0.35); rk.rotation.y = Math.PI / 2; props.add(rk); box(cx + sd * 2.0, s.z0 + 0.35, 0.9, 0.2); }
+  // rod rack: every rod tier standing up against the front wall (2.17: they used to lie on the floor)
+  { const rk = new THREE.Group(), wd = toon('#5a3e2a', 'wood'); part(rk, B(1.5, 0.14, 0.34), wd, 0, 0.07, 0); part(rk, B(1.5, 0.08, 0.1), wd, 0, 1.3, -0.1); for (const x of [-0.72, 0.72]) part(rk, B(0.08, 1.34, 0.08), wd, x, 0.67, -0.12);
+    for (let i = 0; i < 4; i++) { part(rk, Cy(0.05, 0.05, 0.03, 8), '#2a2c32', -0.48 + i * 0.32, 0.15, 0); try { const r = makeRodModel(Math.min(i + 1, 4)); r.position.set(-0.48 + i * 0.32, 0.12, 0); r.rotation.x = -0.07; rk.add(r); } catch (_) {} }
+    rk.position.set(cx + sd * 3.4, 0, s.z0 + 0.3); props.add(rk); box(cx + sd * 3.4, s.z0 + 0.3, 0.8, 0.22); }
   ANG.g = new THREE.Group(); levelGroup.add(ANG.g); anglerPlaques(); // not in props: props get merged into one mesh, and the plaques change
   term(cx - sd * 1.5, s.z0 + 0.6, '#4fd2ff', 'Mount a catch', openAngler, 0);
 }

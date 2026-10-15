@@ -4,7 +4,7 @@ let SHIP_SPK = [];
 { const ob = LEVELS.ship.build; LEVELS.ship.build = function () { ob.call(this); SHIP_SPK = [];
   const spk = (x, z, y, ry) => { const g = new THREE.Group(); part(g, B(0.5, 0.7, 0.18), '#1e1c22', 0, 0, 0); part(g, Cy(0.17, 0.17, 0.03, 14), '#3a3d44', 0, 0.1, 0.1, Math.PI / 2); part(g, Cy(0.08, 0.08, 0.03, 10), '#3a3d44', 0, -0.2, 0.1, Math.PI / 2); part(g, B(0.04, 0.04, 0.02), glow('#4fd2ff'), 0.18, 0.28, 0.1); g.position.set(x, y, z); g.rotation.y = ry; props.add(g); SHIP_SPK.push([x, z]); };
   spk(-6.6, -14.2, 2.4, Math.PI / 4); spk(6.6, -14.2, 2.4, -Math.PI / 4); spk(-6.75, -3, 2.4, Math.PI / 2); spk(6.75, -3, 2.4, -Math.PI / 2);
-  for (const r of SHIP_ROOMS) { const outer = r.side > 0 ? r.x1 : r.x0; spk(outer - r.side * 0.25, r.zc + 3.6, 2.5, r.side > 0 ? -Math.PI / 2 : Math.PI / 2); }
+  for (const r of SHIP_ROOMS) { if (r.id === 'angler') continue; /* 2.17: it overlapped a trophy plaque; the TV is the sound in there now */ const outer = r.side > 0 ? r.x1 : r.x0; spk(outer - r.side * 0.25, r.zc + 3.6, 2.5, r.side > 0 ? -Math.PI / 2 : Math.PI / 2); }
   for (let z = 6; z < 4 + Math.max(1, Math.ceil(SHIP_ROOMS.length / 2)) * 11; z += 11) SHIP_SPK.push([0, z]);
 }; }
 { const _sp = musSpace; musSpace = function () { if (!MUS.ac) return _sp();

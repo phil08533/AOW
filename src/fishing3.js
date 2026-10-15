@@ -53,7 +53,7 @@ const FISH_WATER = { lake: 'Freshwater · Earth', pond: 'Freshwater · Earth', r
       const bell = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), new THREE.MeshBasicMaterial({ color: new THREE.Color(col).convertSRGBToLinear(), transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false })); bell.rotation.z = -Math.PI / 2; g.add(bell); g.userData.bell = bell;
       part(g, new THREE.SphereGeometry(0.05, 10, 8), gl(id === 'starjelly' ? '#ffd36a' : '#4fffe0'), 0.04, 0, 0);
       if (id === 'starjelly') for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; part(g, new THREE.ConeGeometry(0.02, 0.07, 4), gl('#ffd36a'), 0.06, Math.cos(a) * 0.08, Math.sin(a) * 0.08, a, 0, Math.PI / 2); }
-      const th = new THREE.Group(); th.rotation.z = Math.PI / 2; th.position.x = 0.02; g.add(th);
+      const th = new THREE.Group(); th.rotation.z = -Math.PI / 2; th.position.x = 0.02; g.add(th); // threads trail behind the bell (2.17: they used to stick out the front)
       for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; part(th, Cy(0.004, 0.002, 0.3, 4), gl(i % 2 ? col : '#ff6aa8'), Math.cos(a) * 0.08, -0.17, Math.sin(a) * 0.08); }
       g.userData.thr = th; break; }
     case 'bug': { // a fish with a beetle's shell, three eyes and buzzing wing-fins

@@ -166,7 +166,8 @@ function makePlayerChar(look, col, opts) {
   if (ARMOR_KITS[look.a]) ARMOR_KITS[look.a](g, A);
   const Cp = CAPES[look.c];
   if (Cp && Cp.col) { const cape = part(g, B(0.52, 1.05, 0.03), toon(Cp.col, 'cloth'), 0, 1.0, -0.3, 0.12, 0, 0); cape.castShadow = false; if (Cp.trim) part(g, B(0.54, 0.06, 0.04), Cp.trim, 0, 0.5, -0.24, 0.12); if (Cp.trim) part(g, new THREE.CircleGeometry(0.09, 8), glow(Cp.trim), 0, 1.15, -0.33, 0, Math.PI, 0); }
-  if (HELM_KITS[look.h]) HELM_KITS[look.h](g, look, A);
+  // built once here; the flags stop the later makePlayerChar wrappers (moon.js, face.js, wizard.js) building the same helmet a second time without A
+  if (HELM_KITS[look.h]) { HELM_KITS[look.h](g, look, A); g.userData._helmCustom = g.userData._face = g.userData._wizHat = true; }
   else if (look.h === 'spike') for (let k = -1; k <= 1; k++) part(g, new THREE.ConeGeometry(0.04, 0.2, 4), '#b3262c', k * 0.08, 1.95, -0.02);
   else if (look.h === 'bug') { for (const s of [-1, 1]) { chain(g, [[0.06 * s, 1.9, 0.05], [0.14 * s, 2.1, 0.12], [0.2 * s, 2.15, 0.2]], 0.012, '#3a2c1c', 0.008); E(g, glow('#ffd23a'), 0.07 * s, 1.83, 0.15, 0.03, 0.03, 0.02); } }
   else if (look.h === 'crown') { part(g, Cy(0.15, 0.15, 0.05, 10), toon('#c9a43a'), 0, 1.9, 0); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; part(g, new THREE.ConeGeometry(0.03, 0.14, 4), glow('#9fe8ff'), Math.cos(a) * 0.13, 1.98, Math.sin(a) * 0.13); } }

@@ -432,6 +432,9 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.wav': 'audio/wav',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.webmanifest': 'application/manifest+json',
 };
 
 // 1. HTTP Server for static game files & Developer API
@@ -970,7 +973,16 @@ const server = http.createServer((req, res) => {
     res.setHeader('Content-Type', contentType);
     res.setHeader('Cache-Control', ext === '.html' ? 'no-cache, no-store, must-revalidate' : 'public, max-age=3600');
 
-    const stream = fs.createReadStream(filePath);
+    // byte ranges, so the den TV can seek inside the film (browsers need this to jump to where you left off)
+    const size = stats && stats.isFile() && filePath !== path.join(DIST_DIR, 'index.html') ? stats.size : 0, rg = size && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+    if (size) res.setHeader('Accept-Ranges', 'bytes');
+    let opts;
+    if (rg && (rg[1] || rg[2])) {
+      let a = rg[1] ? +rg[1] : size - +rg[2], b = rg[1] && rg[2] ? Math.min(+rg[2], size - 1) : size - 1; if (a < 0) a = 0;
+      if (a >= size || a > b) { res.statusCode = 416; res.setHeader('Content-Range', `bytes */${size}`); res.end(); return; }
+      res.statusCode = 206; res.setHeader('Content-Range', `bytes ${a}-${b}/${size}`); res.setHeader('Content-Length', b - a + 1); opts = { start: a, end: b };
+    } else if (size) res.setHeader('Content-Length', size);
+    const stream = fs.createReadStream(filePath, opts);
     stream.on('error', () => {
       res.statusCode = 500;
       res.end('Server Error');

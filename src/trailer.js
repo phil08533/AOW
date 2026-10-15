@@ -20,10 +20,11 @@ function musRelease(list) { if (list && MUS.force !== list) return; MUS.force = 
 // the big eye gets its own song
 { const _mc = musContext; musContext = function (dt) { const r = _mc(dt); if (r === 'boss' && enemies.some(e => !e.dead && e.aggro && e.sp && e.sp.type === 'watcher' && e.obj.position.distanceTo(player.pos) < 60)) return 'eyeboss'; return r; }; }
 function trlVoice() { if (!window.speechSynthesis) return null; const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); if (!vs.length) return null;
-  return vs.find(v => /daniel|george|arthur|male|david|fred|ralph|guy|james|oliver/i.test(v.name) && !/female/i.test(v.name)) || vs.find(v => /UK/i.test(v.name)) || vs[0]; }
+  // the narrator is Captain Vega: a woman's voice, low and steady
+  return vs.find(v => /female|samantha|victoria|karen|moira|tessa|fiona|serena|zira|susan|hazel|libby|sonia|aria|jenny/i.test(v.name)) || vs.find(v => /UK/i.test(v.name)) || vs[0]; }
 function trlSay(text) {
   if (!(PREFS.voice !== false && PREFS.sfx && window.speechSynthesis && window.SpeechSynthesisUtterance)) return;
-  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.replace(/…/g, '...')); const v = trlVoice(); if (v) u.voice = v; u.pitch = 0.45; u.rate = 0.78; u.volume = 1;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.replace(/…/g, '...')); const v = trlVoice(); if (v) u.voice = v; u.pitch = 0.8; u.rate = 0.82; u.volume = 1;
     if (MUS.cur) { const v0 = MUS.cur.volume; musFade(MUS.cur, v0 * 0.55, 0.4); u.onend = () => { if (MUS.cur && TRL.on && !TRL.hush) musFade(MUS.cur, musVol(), 0.8); }; } speechSynthesis.speak(u); } catch (_) {}
 }
 // ---- little helpers ----

@@ -122,6 +122,31 @@ function buildMcK(x, z, face) {
   levelAnims.push(t => { bun.rotation.y = t * 0.9; });
   for (const s of [-1, 1]) { const tb = new THREE.Group(); tb.position.set(s * 2.0, 0, 3.4); g.add(tb); part(tb, Cy(0.6, 0.6, 0.06, 10), toon('#ffffff'), 0, 0.75, 0); part(tb, Cy(0.06, 0.06, 0.75, 6), toon('#5d636c'), 0, 0.37, 0); }
   const pl = new THREE.PointLight(0xffd36a, 0.8, 10); pl.position.set(0, 2, 2); g.add(pl);
+  // the order bot: a big smiling robot face on a screen in the wall (2.13)
+  part(g, B(1.7, 1.35, 0.16), toon('#5d636c'), 0, 1.72, 0.96); part(g, B(0.5, 0.18, 0.1), toon('#3a3d44'), 0, 0.98, 1.0);
+  const fc = document.createElement('canvas'); fc.width = 256; fc.height = 200; const ft = new THREE.CanvasTexture(fc); ft.encoding = THREE.sRGBEncoding;
+  const fm = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.17), new THREE.MeshBasicMaterial({ map: ft })); fm.position.set(0, 1.72, 1.05); g.add(fm);
+  const F = { talk: 0, blink: 0, look: 0, last: -1 };
+  const drawFace = (t) => { const x = fc.getContext('2d'); x.fillStyle = '#1e1c22'; x.fillRect(0, 0, 256, 200);
+    const gr = x.createRadialGradient(128, 96, 10, 128, 100, 110); gr.addColorStop(0, '#fff3b0'); gr.addColorStop(1, '#ffc93a'); x.fillStyle = gr; x.beginPath(); x.ellipse(128, 100, 104, 90, 0, 0, Math.PI * 2); x.fill();
+    x.lineWidth = 6; x.strokeStyle = '#c8402f'; x.stroke();
+    const bl = F.blink > 0, lx = F.look * 6; x.fillStyle = '#1e1c22';
+    for (const ex of [88, 168]) { if (bl) { x.fillRect(ex - 16, 70, 32, 6); } else { x.beginPath(); x.ellipse(ex, 72, 17, 21, 0, 0, Math.PI * 2); x.fill(); x.fillStyle = '#ffffff'; x.beginPath(); x.arc(ex - 5 + lx, 64, 6, 0, Math.PI * 2); x.fill(); x.fillStyle = '#1e1c22'; } }
+    x.lineWidth = 7; x.lineCap = 'round'; x.beginPath(); x.moveTo(66, 46); x.lineTo(104, 38 - (F.talk > 0 ? 6 : 0)); x.moveTo(152, 38 - (F.talk > 0 ? 6 : 0)); x.lineTo(190, 46); x.stroke();
+    // the grin: huge, toothy, and very, very happy to take your order
+    const open = F.talk > 0 ? 10 + Math.abs(Math.sin(t * 14)) * 22 : 6;
+    x.fillStyle = '#5a1e2a'; x.beginPath(); x.moveTo(52, 112); x.quadraticCurveTo(128, 150 + open, 204, 112); x.quadraticCurveTo(128, 128 + open * 0.3, 52, 112); x.fill();
+    x.fillStyle = '#ffffff'; for (let i = 0; i < 8; i++) { const tx = 66 + i * 17.5, ty = 114 + Math.sin((i + 0.5) / 8 * Math.PI) * 10; x.fillRect(tx, ty, 14, 9); }
+    x.strokeStyle = '#1e1c22'; x.lineWidth = 5; x.beginPath(); x.moveTo(52, 112); x.quadraticCurveTo(128, 150 + open, 204, 112); x.stroke(); x.beginPath(); x.arc(48, 110, 7, 0, Math.PI * 2); x.arc(208, 110, 7, 0, Math.PI * 2); x.stroke();
+    x.fillStyle = '#ff8a7a'; x.globalAlpha = 0.5; x.beginPath(); x.arc(58, 92, 13, 0, Math.PI * 2); x.arc(198, 92, 13, 0, Math.PI * 2); x.fill(); x.globalAlpha = 1;
+    ft.needsUpdate = true; };
+  drawFace(0); let say = 0;
+  levelAnims.push(t => { if (!fm.parent) return; const wp = fm.getWorldPosition(new THREE.Vector3()), d = wp.distanceTo(player.pos); if (d > 30) return;
+    if (d < 5 && !say) { say = 1; F.talk = 2.2; SFX.ui(); log(['ORDER-BOT: WELCOME TO McKLUNKIES! HOME OF THE KLUNK! WOULD YOU LIKE TO KLUNK IT UP?', 'ORDER-BOT: HELLO, VALUED CUSTOMER! I AM SMILING! I AM ALWAYS SMILING!', 'ORDER-BOT: EVERYTHING IS MADE FRESH. FRESH FROM WHERE IS A TRADE SECRET.'][Math.floor(Math.random() * 3)]); }
+    if (d > 9) say = 0;
+    const dt = F.last < 0 ? 0 : Math.min(0.1, t - F.last); F.last = t; F.talk -= dt; F.blink -= dt; if (Math.random() < dt * 0.4) F.blink = 0.14;
+    F.look = Math.max(-1, Math.min(1, (player.pos.x - wp.x) * 0.15));
+    if (((t * 12) | 0) !== F.fr) { F.fr = (t * 12) | 0; drawFace(t); } });
   const c = Math.cos(face), s = Math.sin(face), wx = (lx, lz) => x + lx * c + lz * s, wz = (lx, lz) => z - lx * s + lz * c;
   box(wx(0, -0.2), wz(0, -0.2), 2.4, 1.6); for (const k of [-1, 1]) solid(wx(k * 2, 3.4), wz(k * 2, 3.4), 0.6);
   return { x: wx(0, 2.3), z: wz(0, 2.3) };
@@ -134,8 +159,7 @@ function outlawWorldDressing(id) {
     const tx = h.x + 3.2, tz = h.z - 1.5; makeNpc({ id: 'scav_' + id, name: 'Scavenger Pike', role: 'Wanderer · trades anything', rig: 'civ', make: () => makeCivilian('#6a5a3a', '#3a3430', '#c58a64', '#8a8f99', '#c9a43a'), x: tx, z: tz, face: -1.2, shop: 'store',
       idle: ["Don't mind me. Just a humble scavenger. Humbly scavenging.", "The hatch? Never seen it. What hatch. Go on down if you want, tell 'em Pike sent you.", "I buy, I sell, I don't ask where it came from."] }, [0, 0]); }
   const m = fx ? fx.m : outSpot(sd + 41, 0.5, 0.82); if (m) { OUTB.taken.push(m); const face = Math.atan2(WORLD_C.x - m.x, WORLD_C.z - m.z); const at = buildMcK(m.x, m.z, face);
-    makeNpc({ id: 'mck_' + id, name: 'McKlunkies Clerk', role: 'McKlunkies · open 25 hours', rig: 'civ', make: () => makeCivilian(MCK.col, '#2b2a2c', '#e0b892', '#3a2a20', MCK.yel), x: at.x - Math.sin(face) * 1.2, z: at.z - Math.cos(face) * 1.2, face: face, custom: [['🍔 Order food', () => openMcK()], ['Back counter', () => openMcKBack()]],
-      idle: ["Welcome to McKlunkies, home of the Klunk. Would you like to Klunk it up?", "We're hidden out here because of zoning. Totally normal zoning reasons.", "Everything's made fresh. Fresh from where is a trade secret."] }, [0, 0]); }
+    INTERACTS.push({ x: at.x, z: at.z, r: 2.6, label: '🍔 Order at McKlunkies', fn: () => openMcK() }); }
   spawnWanderers(sd);
 }
 for (const id of OUT_WORLDS) { const L = LEVELS[id]; if (!L) continue; const orig = L.build; L.build = function () { orig.call(this); try { outlawWorldDressing(id); } catch (err) { console.warn('outlaw dressing', id, err); } }; }
@@ -143,16 +167,16 @@ for (const id of OUT_WORLDS) { const L = LEVELS[id]; if (!L) continue; const ori
 // ---- McKlunkies counters ----
 const MCK_MENU = [['klunkfries', 12], ['klunkburger', 25], ['megaklunk', 120]];
 function openMcK() {
-  openDlg('McKlunkies', 'Order up'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
-  const render = () => { $('dlgLine').textContent = `What'll it be? You have ${S.cr.toLocaleString()} cr. Food goes in your bag: eat it from there, or put it in a quick slot.`;
+  openDlg('McKlunkies', 'Order-Bot'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const render = () => { $('dlgLine').textContent = `ORDER-BOT: WHAT WILL IT BE, FRIEND? :) You have ${S.cr.toLocaleString()} cr. Food goes in your bag: eat it from there, or put it in a quick slot.`;
     itemRows(rows, MCK_MENU.map(([k, p]) => [k, null, `${p} cr · ${ITEMS[k].heal >= 9999 ? 'full heal' : '+' + ITEMS[k].heal + ' health'}`, [['Buy', () => buy(k, p, 1)], ['Buy 5', () => buy(k, p, 5)]]])); };
   const buy = (k, p, n) => { if (S.cr < p * n) { SFX.hit(); log("Not enough credits."); return; } if (invRoomFor(k) < n) { invFullNote(k); return; } S.cr -= p * n; S.inv[k] = (S.inv[k] || 0) + n; S.invT = S.invT || {}; S.invT['i:' + k] = Date.now(); SFX.coin(); log(`+${n} ${ITEMS[k].name}`, 'loot'); markDirty(); render(); };
   $('dlgActs').before(rows); acts([['Back counter', () => openMcKBack()], ['Done', closeDlg, true]]); render();
 }
 function openMcKBack() {
   openDlg('McKlunkies', 'The back counter');
-  if (outTier() < 1) { $('dlgLine').textContent = "Back counter? There's no back counter. This is a family restaurant. (Come back when you've got a bit of a reputation.)"; acts([['Order food', () => openMcK()], ['Done', closeDlg, true]]); return; }
-  openFence('McKlunkies', 'The back counter', subsOn() ? "Psst. We buy what the shops won't. And we sell a little something too." : "Psst. We buy what the shops won't.", 1.0);
+  if (outTier() < 1) { $('dlgLine').textContent = "ORDER-BOT: BACK COUNTER? THERE IS NO BACK COUNTER. THIS IS A FAMILY RESTAURANT. :) (Come back when you've got a bit of a reputation.)"; acts([['Order food', () => openMcK()], ['Done', closeDlg, true]]); return; }
+  openFence('McKlunkies', 'The back counter', subsOn() ? "ORDER-BOT (whispering, still smiling): WE BUY WHAT THE SHOPS WON'T. AND WE SELL A LITTLE SOMETHING TOO." : "ORDER-BOT (whispering, still smiling): WE BUY WHAT THE SHOPS WON'T.", 1.0);
   if (subsOn()) acts([['Buy substances', () => openSubShop('McKlunkies', 'The back counter', MCK_SUBS)], ['Done', closeDlg, true]]);
 }
 // ---- the Fence: buys contraband (and regular loot for 20% more) ----

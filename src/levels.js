@@ -541,7 +541,7 @@ function loadLevel(id, opts) {
 const resumeWhere = () => S.where && planetOpen(S.where) ? S.where : shipUnlocked() ? 'ship' : 'earth';
 function travel(id, opts) {
   SFX.warp();
-  const fade = $('fade'); fade.hidden = false; fade.style.opacity = 1; $('fadeTxt').textContent = id === 'ship' ? 'Boarding the Setting Sun…' : id === 'space' ? 'Taking the helm…' : id === 'zeltac' ? 'Docking at the Zeltac Ship…' : `Landing on ${LEVELS[id].name}…`;
+  const fade = $('fade'); fade.hidden = false; fade.style.opacity = 1; $('fadeTxt').textContent = id === 'ship' ? 'Boarding the Setting Sun…' : id === 'space' ? 'Taking the helm…' : id === 'zeltac' ? 'Docking at the Zeltac Ship…' : id === 'maw' ? 'Entering the wormhole…' : `Landing on ${LEVELS[id].name}…`;
   SFX.ui();
   setTimeout(() => { loadLevel(id, opts); markDirty(); setTimeout(() => { fade.style.opacity = 0; setTimeout(() => { fade.hidden = true; }, 400); toast(LEVELS[id].name.toUpperCase(), LEVELS[id].tag, 3); burp(id === 'ship' ? 'ship' : id === 'space' ? 'space' : 'land'); }, 150); }, 450);
 }

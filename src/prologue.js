@@ -2,7 +2,7 @@
 // Lines are subtitles until Phil's recordings arrive; each recording is voice/<id>.mp3 and listed in VOICE_READY.
 const VOICE_READY = [];
 const PROLOGUE = [
-  { id: 'p1', shot: 'galaxy', text: 'Long before you were born, the galaxy was a quiet place. Seventeen worlds, turning in the light of one old sun.' },
+  { id: 'p1', shot: 'galaxy', text: 'Long before you were born, the galaxy was a quiet place. A dozen worlds, turning in the light of one old sun.' },
   { id: 'p2', shot: 'earth', text: 'Earth was the heart of it. Humans and aliens, traders and troopers, all living under the same sky.' },
   { id: 'p3', shot: 'worlds', text: 'Out past the Moon, the worlds grew strange. The bug hives of Mezar. The frozen forests of Capitone. The endless streets of Robot City.' },
   { id: 'p4', shot: 'zeltac', text: 'And between them all sailed the Zeltac, a city that flies, carrying anyone brave enough to leave home.' },

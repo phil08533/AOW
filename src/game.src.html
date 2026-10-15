@@ -329,7 +329,7 @@ body.flying #tBoost { display: grid; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.12.4</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.13</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -368,6 +368,22 @@ body.flying #tBoost { display: grid; }
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
 <script>
+// Phones (iPhone most of all) hide the dev console, so the first real error shows on screen where a tester can screenshot it.
+(function () {
+  let shown = 0;
+  function show(msg) {
+    if (shown++ > 2 || !document.body) return;
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;left:8px;right:8px;top:8px;z-index:99999;background:#3a0b12;color:#ffd6d6;border:1px solid #ff5a6a;border-radius:8px;padding:10px 12px;font:12px/1.4 monospace;white-space:pre-wrap;word-break:break-word';
+    d.textContent = 'Something broke (tap to hide). Send a screenshot of this to the devs:\n' + msg + '\n' + navigator.userAgent;
+    d.onclick = () => d.remove(); document.body.appendChild(d);
+  }
+  window.addEventListener('error', e => { if (!e || !e.message) { if (e && e.target && e.target.tagName === 'SCRIPT') show('Could not load ' + e.target.src + ' (blocked or offline?)'); return; } show(e.message + ' @' + (e.lineno || '?') + ':' + (e.colno || '?')); }, true);
+  window.addEventListener('unhandledrejection', e => { const r = e && e.reason; if (r && r.name === 'NotAllowedError') return; show('Promise: ' + (r && (r.stack || r.message) || r)); });
+  window.addEventListener('load', () => { if (typeof THREE === 'undefined') show('The 3D engine (three.js) did not load. A content blocker or a weak connection can cause this; try turning off blockers and reloading.'); });
+})();
+</script>
+<script>
 (function () {
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -383,6 +399,7 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.autoClear = false;
 if (RSTYLE !== 'retro') { renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.physicallyCorrectLights = false; }
 stage.appendChild(renderer.domElement);
+renderer.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); const d = document.createElement('div'); d.style.cssText = 'position:fixed;inset:0;z-index:99998;display:flex;align-items:center;justify-content:center;background:rgba(5,8,20,.92);color:#fff;font:16px/1.5 sans-serif;text-align:center;padding:24px'; d.innerHTML = '<div>The phone ran out of graphics memory.<br>Your progress is saved.<br><br><b>Tap to reload</b><br><small>Tip: Menu → Settings → Look → PS1 Classic uses the least memory.</small></div>'; d.onclick = () => location.reload(); document.body.appendChild(d); try { writeLocal(); } catch (_) {} }, false);
 const scene = new THREE.Scene();
 const HORIZON = new THREE.Color('#f0a15e');
 scene.fog = new THREE.Fog(HORIZON, 20, 74);

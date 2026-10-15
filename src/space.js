@@ -396,7 +396,7 @@ function shipFire() {
     for (const r of F.raiders) { if (r.dead) continue; const tt = raySphere(from, dir, r.obj.position, 5); if (tt > 0 && tt < ht) { ht = tt; hit = r; rock = -1; } }
     F.rockData.forEach((R, i) => { if (R.dead) return; const tt = raySphere(from, dir, R.p, R.s); if (tt > 0 && tt < ht) { ht = tt; hit = null; rock = i; } });
     const end = from.clone().addScaledVector(dir, ht); tracer(from, end, '#6fdc5a');
-    if (hit) { hit.hp -= dmg / 2; hit.aggro = true; burst(end, '#ffd36a', 6, 12); hitmark(false); if (hit.hp <= 0) killRaider(hit); else drawPlate(hit.plate, 'Drome Raider', 'Lv ' + hit.lv, hpColor(hit.lv), hit.hp / hit.max); }
+    if (hit) { hit.hp -= dmg / 2; hit.aggro = true; burst(end, '#ffd36a', 6, 12); hitmark(false); if (hit.hp <= 0) killRaider(hit); else drawPlate(hit.plate, (hit.def && hit.def.name) || 'Drome Raider', 'Lv ' + hit.lv, hpColor(hit.lv), hit.hp / hit.max); }
     else if (rock >= 0) { const R = F.rockData[rock]; R.hp -= dmg / 2; burst(end, '#b8a07a', 4, 10);
       if (R.hp <= 0) { R.dead = 0.001; F.dm.position.copy(R.p); F.dm.scale.setScalar(0.0001); F.dm.updateMatrix(); F.rocks.setMatrixAt(rock, F.dm.matrix); F.rocks.instanceMatrix.needsUpdate = true; burst(R.p, '#b8a07a', 24, 30); SFX.crack();
         const n = Math.max(1, Math.round(R.s / 4)); for (let k = 0; k < n; k++) spaceDrop(R.p, 'item', 'ore', 1); if (R.crystal || Math.random() < 0.1) spaceDrop(R.p, 'item', 'starcrystal', 1); questProgressKill('asteroid'); } }
@@ -497,7 +497,7 @@ function openShipSystems(who) {
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   const render = () => { rows.textContent = ''; $('dlgLine').textContent = `Upgrade the Setting Sun for space. ${S.cr} cr · ${S.inv.ore || 0} ore · ${S.inv.starcrystal || 0} star crystals.`;
     for (const k in SHIP_SYS) { const sys = SHIP_SYS[k], l = sysLv(k), nx = sys.lv[l + 1], r = document.createElement('div'); r.className = 'rowi';
-      const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = ['#9aa1aa', '#6fdc5a', '#4fa8ff', '#c86aff'][l];
+      const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = ['#9aa1aa', '#6fdc5a', '#4fa8ff', '#c86aff', '#ffd36a'][l] || '#ffd36a';
       const cur = sys.lv[l], nm = document.createElement('span'); nm.textContent = `${sys.name} ${'★'.repeat(l)} · ${cur.dmg ? cur.dmg + ' dmg' : cur.hp ? cur.hp + ' hull' : cur.sp + ' speed'}`;
       const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = nx ? costLabel(nx.cost) : 'Maxed';
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = 'Upgrade'; b.disabled = !nx || !costOk(nx.cost);

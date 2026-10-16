@@ -34,7 +34,7 @@ setInterval(() => { try {
 let outChip = null;
 function outHud() {
   if (!outChip) { outChip = document.createElement('span'); outChip.className = 'vchip'; outChip.style.cursor = 'pointer'; outChip.hidden = true; outChip.addEventListener('click', () => openOutlawCard()); const host = document.getElementById('vchips'); if (host) host.appendChild(outChip); else return; }
-  const O = outS(), t = outTier(), hitOnMe = (OUTB.board || []).some(h => h.kind === 'hit' && h.to === uid);
+  const O = outS(), t = outTier(), hitOnMe = (OUTB.board || []).some(h => h.kind === 'hit' && h.to === LBU());
   outChip.hidden = !O.rep && !hitOnMe && !O.hunt; if (outChip.hidden) return;
   outChip.style.color = OUT_TIERS[t][2]; outChip.style.borderColor = OUT_TIERS[t][2];
   outChip.textContent = (isWanted() && O.bounty ? `⚠ WANTED ${O.bounty.toLocaleString()} cr` : `☠ ${OUT_TIERS[t][1]} ${O.rep}`) + (hitOnMe ? ' · HIT ON YOU' : '') + (O.hunt ? ` · hunting ${O.hunt.nick}` : '');

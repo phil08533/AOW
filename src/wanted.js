@@ -8,9 +8,9 @@
 let outPushT = 0;
 function outPush() { clearTimeout(outPushT); outPushT = setTimeout(() => { try { lbPush(true); } catch (_) {} }, 2500); }
 async function outFetch(force) {
-  if (!db) return OUTB.board; if (!force && Date.now() - OUTB.boardT < 45000) return OUTB.board;
+  if (!LBD()) return OUTB.board; if (!force && Date.now() - OUTB.boardT < 45000) return OUTB.board;
   OUTB.boardT = Date.now();
-  try { const snap = await db.collection('leaders').limit(500).get(); const docs = snap.docs.map(s => Object.assign({ id: s.id }, s.data())), now = Date.now();
+  try { const snap = await LBD().collection('leaders').limit(500).get(); const docs = snap.docs.map(s => Object.assign({ id: s.id }, s.data())), now = Date.now();
     const claimed = new Set(); for (const d of docs) for (const c of (Array.isArray(d.oc) ? d.oc : [])) claimed.add(String(c));
     const nickOf = {}; for (const d of docs) nickOf[d.id] = String(d.nick || 'Trooper').slice(0, 16);
     const list = [];
@@ -23,7 +23,7 @@ async function outFetch(force) {
   } catch (err) { console.warn('board', err); }
   outHud(); return OUTB.board;
 }
-setInterval(() => { if (state === 'play' && db) outFetch(false); }, 60000);
+setInterval(() => { if (state === 'play' && LBD()) outFetch(false); }, 60000);
 const whereName = w => (LEVELS[w] && LEVELS[w].name) || 'somewhere';
 function contractRows(rows, list, canTake, empty) {
   rows.textContent = ''; const O = outS();
@@ -31,7 +31,7 @@ function contractRows(rows, list, canTake, empty) {
   for (const c of list) { const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = c.kind === 'hit' ? '#ff3b2a' : '#ffd36a';
     const nm = document.createElement('span'); nm.textContent = `${c.kind === 'hit' ? 'HIT' : 'BOUNTY'} · ${c.nick} (Lv ${c.lvl})${c.by ? ' · posted by ' + c.by : ''} · last seen on ${whereName(c.where)}`;
     const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = c.amt.toLocaleString() + ' cr';
-    const mine = O.hunt && O.hunt.id === c.id, self = c.to === uid, b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px';
+    const mine = O.hunt && O.hunt.id === c.id, self = c.to === LBU(), b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px';
     b.textContent = self ? 'You' : mine ? 'Taken' : 'Take'; b.disabled = self || mine || !!O.hunt || !canTake;
     b.addEventListener('click', () => { O.hunt = { kind: c.kind, id: c.id, to: c.to, nick: c.nick, amt: c.amt }; markDirty(); outPush(); outHud(); SFX.quest(); toast('CONTRACT TAKEN', `${c.nick} · ${c.amt.toLocaleString()} cr`, 3); log(`You took the ${c.kind} on ${c.nick}. Find them (last seen on ${whereName(c.where)}). You can only fight each other while you hold it, and they can fight back.`, 'loot'); closeDlg(); });
     r.append(dot, nm, mt, b); rows.appendChild(r); }
@@ -39,8 +39,8 @@ function contractRows(rows, list, canTake, empty) {
 // Marshal terminals: bounties on players, for clean hunters
 async function openPlayerBounties(who) {
   openDlg('Galactic Marshals', who || 'Wanted players'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; $('dlgActs').before(rows);
-  $('dlgLine').textContent = db ? 'Checking the wire…' : 'The player board needs you signed in to the game page.';
-  acts([['NPC contracts', () => openBountyBoard(who)], ['Done', closeDlg, true]]); if (!db) return;
+  $('dlgLine').textContent = LBD() ? 'Checking the wire…' : 'The player board needs you signed in to the game page.';
+  acts([['NPC contracts', () => openBountyBoard(who)], ['Done', closeDlg, true]]); if (!LBD()) return;
   await outFetch(true); if (!$('shopRows')) return; const can = !isOutlaw();
   $('dlgLine').textContent = can ? 'Players with a Marshal bounty. Take one, find them, beat them. While you hold it, you two can fight anywhere outside a city; they can fight back.' : "The Marshals don't hire outlaws. Lower your rep below 40 to take player bounties.";
   contractRows(rows, OUTB.board.filter(c => c.kind === 'bounty'), can, 'No player is Wanted right now.');
@@ -50,8 +50,8 @@ async function openPlayerBounties(who) {
 const HIT_AMTS = [500, 1000, 2500, 5000];
 async function openHitBoard() {
   openDlg('Underworld', 'Hit board'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; $('dlgActs').before(rows);
-  $('dlgLine').textContent = db ? 'Reading the board…' : 'The Hit board needs you signed in to the game page.';
-  acts([['Done', closeDlg, true]]); if (!db) return;
+  $('dlgLine').textContent = LBD() ? 'Reading the board…' : 'The Hit board needs you signed in to the game page.';
+  acts([['Done', closeDlg, true]]); if (!LBD()) return;
   await outFetch(true); if (!$('shopRows')) return; const can = isOutlaw();
   $('dlgLine').textContent = can ? 'Contracts on players, paid by outlaws. Take one and hunt them down, or post your own.' : 'Outlaws only. Get your rep to 40 (Outlaw) to post or take hits.';
   contractRows(rows, OUTB.board.filter(c => c.kind === 'hit'), can, 'No open hits. Post one?');
@@ -59,13 +59,13 @@ async function openHitBoard() {
 }
 function openPostHit() {
   openDlg('Underworld', 'Post a hit'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; $('dlgActs').before(rows);
-  const people = (OUTB.people || []).filter(p => p.id !== uid).sort((a, b) => b.lvl - a.lvl).slice(0, 30); let amt = HIT_AMTS[0];
+  const people = (OUTB.people || []).filter(p => p.id !== LBU()).sort((a, b) => b.lvl - a.lvl).slice(0, 30); let amt = HIT_AMTS[0];
   const render = () => { rows.textContent = ''; $('dlgLine').textContent = `Pick a target. The ${amt.toLocaleString()} cr is paid now and goes to whoever collects. You have ${S.cr.toLocaleString()} cr.`;
     const pick = document.createElement('div'); pick.className = 'rowi nodot'; for (const a of HIT_AMTS) { const b = document.createElement('button'); b.className = 'pbtn' + (a === amt ? ' go' : ''); b.style.padding = '4px 8px'; b.textContent = a.toLocaleString() + ' cr'; b.addEventListener('click', () => { amt = a; render(); }); pick.appendChild(b); } rows.appendChild(pick);
     if (!people.length) { const e = document.createElement('div'); e.className = 'rowi nodot'; e.textContent = 'No other players on record yet.'; rows.appendChild(e); }
     for (const p of people) { const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = '#ff3b2a'; const nm = document.createElement('span'); nm.textContent = `${p.nick} · Lv ${p.lvl} · ${whereName(p.where)}`;
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = 'Post'; b.disabled = S.cr < amt;
-      b.addEventListener('click', () => { if (S.cr < amt) return; const O = outS(); S.cr -= amt; O.oh.push({ id: (uid || 'me').slice(-6) + Date.now().toString(36), to: p.id, amt, t: Date.now() }); crime(5, `Put a hit on ${p.nick}`); SFX.coin(); toast('HIT POSTED', `${p.nick} · ${amt.toLocaleString()} cr`, 3); OUTB.boardT = 0; markDirty(); outPush(); closeDlg(); });
+      b.addEventListener('click', () => { if (S.cr < amt) return; const O = outS(); S.cr -= amt; O.oh.push({ id: (LBU() || 'me').slice(-6) + Date.now().toString(36), to: p.id, amt, t: Date.now() }); crime(5, `Put a hit on ${p.nick}`); SFX.coin(); toast('HIT POSTED', `${p.nick} · ${amt.toLocaleString()} cr`, 3); OUTB.boardT = 0; markDirty(); outPush(); closeDlg(); });
       r.append(dot, nm, b); rows.appendChild(r); } };
   acts([['Back', () => openHitBoard()], ['Done', closeDlg, true]]); render();
 }
@@ -73,13 +73,13 @@ function openPostHit() {
 // ---- fights between contract holders and their targets ----
 const outSafe = p => SAFES.some(s => s.r < 100 && Math.hypot(p.x - s.x, p.z - s.z) < s.r);
 function canFight(r) { const O = outS(); if (!r || !r.wu || LEVEL.id === 'arena' || LEVEL.fly) return false; if (outSafe(player.pos) || outSafe(r.obj.position)) return false;
-  return (O.hunt && r.wu === O.hunt.to) || (r.hn && r.hn === uid); }
+  return (O.hunt && r.wu === O.hunt.to) || (r.hn && r.hn === LBU()); }
 { const _ps = pvpShoot; pvpShoot = function (o, dir, dmg, maxT) {
   if (LEVEL && LEVEL.id === 'arena') return _ps(o, dir, dmg, maxT);
   let best = null, bt = maxT; for (const r of remotes.values()) { if (!r.peerId || !canFight(r)) continue; const b = r.obj.position; for (const f of [0.6, 1.2, 1.7]) { const t = raySphere(o, dir, tmp.set(b.x, b.y + f, b.z), 0.45); if (t > 0 && t < bt) { bt = t; best = r; } } }
   if (best) { pvpOut.push([best.peerId, Math.round(dmg * 0.5), ++pvpSeq]); while (pvpOut.length > 8) pvpOut.shift(); burst(best.obj.position.clone().add(V(0, 1.3, 0)), '#ff3b2a', 8, 4); hitmark(false); SFX.hit(); sendPresence(true); }
   return best ? bt : null; }; }
-{ const _pw = pvpWrite; pvpWrite = function (p) { _pw(p); const O = outS(); if (uid) p.wu = uid; if (isWanted() && O.bounty) p.wb = O.bounty; if (O.hunt) p.hn = O.hunt.to;
+{ const _pw = pvpWrite; pvpWrite = function (p) { _pw(p); const O = outS(); if (LBU()) p.wu = LBU(); if (isWanted() && O.bounty) p.wb = O.bounty; if (O.hunt) p.hn = O.hunt.to;
   if (LEVEL && LEVEL.id !== 'arena') { if (pvpOut.length) p.hx = pvpOut.slice(); if (koOut.length) p.ko = koOut.slice(); } }; }
 { const _pr = pvpRead; pvpRead = function (peerId, pr, r) {
   r.wu = typeof pr.wu === 'string' ? pr.wu : null; r.hn = typeof pr.hn === 'string' ? pr.hn : null; r.wb = Number(pr.wb) || 0;
@@ -88,7 +88,7 @@ function canFight(r) { const O = outS(); if (!r || !r.wu || LEVEL.id === 'arena'
   if (Array.isArray(pr.hx)) for (const h of pr.hx) { if (!Array.isArray(h) || h[0] !== myPeer || !(h[2] > seen.hit)) continue; seen.hit = h[2]; if (!canFight(r)) continue; const d = clamp(Number(h[1]) || 0, 0, 200); if (player.alive) { player.pvpBy = r.nick; player.pvpPeer = peerId; player.pvpT = gameTime; hurt(d); } }
   if (Array.isArray(pr.ko)) for (const k of pr.ko) { if (!Array.isArray(k) || k[0] !== myPeer || !(k[1] > seen.ko)) continue; seen.ko = k[1];
     if (O.hunt && r.wu === O.hunt.to) { const c = O.hunt; S.cr += c.amt; O.oc.push(c.id); O.hunt = null; toast('CONTRACT COLLECTED', `${c.nick} · +${c.amt.toLocaleString()} cr`, 4); SFX.level(); log(`You collected the ${c.kind} on ${c.nick}: +${c.amt.toLocaleString()} cr.`, 'loot'); if (c.kind === 'bounty') goodDeed(10); else crime(10, 'Collected a hit'); gainXp(300 + S.lvl * 15); markDirty(); outPush(); outHud(); }
-    else if (r.hn === uid) { toast('HUNTER BEATEN', `You fought off ${r.nick}`, 3); SFX.quest(); gainXp(200 + S.lvl * 10); } }
+    else if (r.hn === LBU()) { toast('HUNTER BEATEN', `You fought off ${r.nick}`, 3); SFX.quest(); gainXp(200 + S.lvl * 10); } }
   pvpSeen.set(peerId, seen); }; }
 function outlawOnDeath() {
   const O = outS();
@@ -98,7 +98,7 @@ function outlawOnDeath() {
   player.pvpBy = null; player.pvpPeer = null; outHud();
 }
 // show WANTED and TARGET on other players' name plates
-{ const _sp = syncPeers; syncPeers = function (peers) { _sp(peers); const O = outS(); for (const r of remotes.values()) { const tgt = O.hunt && r.wu === O.hunt.to, hunter = r.hn && r.hn === uid, key = `${r.nick}|${r.lvl}|${r.wb}|${tgt}|${hunter}`; if (r._outKey === key || !r.nick) continue; r._outKey = key;
+{ const _sp = syncPeers; syncPeers = function (peers) { _sp(peers); const O = outS(); for (const r of remotes.values()) { const tgt = O.hunt && r.wu === O.hunt.to, hunter = r.hn && r.hn === LBU(), key = `${r.nick}|${r.lvl}|${r.wb}|${tgt}|${hunter}`; if (r._outKey === key || !r.nick) continue; r._outKey = key;
   if (tgt || hunter || r.wb) drawPlate(r.plate, r.nick, tgt ? `TARGET · ${O.hunt.amt.toLocaleString()} cr` : hunter ? 'HUNTING YOU' : `WANTED · ${r.wb.toLocaleString()} cr`, tgt || hunter ? '#ff6a5a' : '#ffd36a', null); else drawPlate(r.plate, r.nick, 'Lv ' + r.lvl, '#7fd6ff', null); } }; }
 // the compass points at your target
 { const _qt = questTarget; questTarget = function () { const O = outS(); if (O.hunt) { for (const r of remotes.values()) if (r.wu === O.hunt.to) return { p: r.obj.position, label: `Hunt ${O.hunt.nick}` }; } return _qt(); }; }

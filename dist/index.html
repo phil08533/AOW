@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.18.2</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.18.3</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -11910,6 +11910,19 @@ setInterval(() => { try {
   if (state !== 'play' || dlgOpen || PHOTO.on) return; S.tips = S.tips || {};
   for (const [id, cond, text] of TIPS) if (!S.tips[id] && cond()) { S.tips[id] = 1; markDirty(); log('TIP: ' + text(), 'loot'); toast('TIP', text().split(/[.!]/)[0], 3); break; }
 } catch (_) {} }, 3000);
+// Shared boards (leaderboards, Marshal and Hit boards) live in claude.ai's database on the game page. Anywhere else the game
+// falls back to the /pub/leaders store on whatever server.js is serving it (your own PC through the tunnel).
+const PUB = { on: false, id: null, key: null, rows: null };
+(async () => { if (!/^https?:$/.test(location.protocol)) return; try { const r = await fetch('pub/leaders', { cache: 'no-store' }); if (!r.ok) return; await r.json(); } catch (_) { return; }
+  try { PUB.id = localStorage.getItem('aow-pub-id'); PUB.key = localStorage.getItem('aow-pub-key'); } catch (_) {}
+  const rnd = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => b.toString(16).padStart(2, '0')).join('');
+  if (!PUB.id || !PUB.key) { PUB.id = 'p' + rnd(8); PUB.key = rnd(16); try { localStorage.setItem('aow-pub-id', PUB.id); localStorage.setItem('aow-pub-key', PUB.key); } catch (_) {} }
+  PUB.on = true; })();
+const PUB_DB = {
+  doc: p => ({ set: d => fetch('pub/leaders/' + encodeURIComponent(p.split('/')[1]), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Aow-Key': PUB.key }, body: JSON.stringify(d) }) }),
+  collection: () => ({ limit: () => ({ get: async () => { const r = await fetch('pub/leaders', { cache: 'no-store' }); const j = await r.json(); return { docs: (j.rows || []).map(x => ({ id: x.id, data: () => x.d })) }; } }) }),
+};
+const LBD = () => db || (PUB.on ? PUB_DB : null), LBU = () => (db ? uid : PUB.on ? PUB.id : null);
 // =================== LEADERBOARDS: everyone's records in one shared collection (leaders/<player id>) ===================
 const LB = { last: '', lastT: 0, cache: null, cacheT: 0 };
 function lbRow() {
@@ -11918,10 +11931,10 @@ function lbRow() {
   return d;
 }
 async function lbPush(force) {
-  if (!db || !uid || state === 'menu') return; const d = lbRow(), j = JSON.stringify(d);
+  if (!LBD() || !LBU() || state === 'menu') return; const d = lbRow(), j = JSON.stringify(d);
   if (!force && (j === LB.last || Date.now() - LB.lastT < 60000)) return;
   LB.last = j; LB.lastT = Date.now(); d.t = Date.now();
-  try { await db.doc('leaders/' + uid).set(d); } catch (_) {}
+  try { await LBD().doc('leaders/' + LBU()).set(d); } catch (_) {}
 }
 setInterval(() => lbPush(false), 20000);
 const LB_BOARDS = [
@@ -11930,20 +11943,20 @@ const LB_BOARDS = [
 ];
 async function openLeaders(bi) {
   bi = bi || 0; const B = LB_BOARDS[bi]; openDlg('Codex', 'Leaderboards');
-  $('dlgLine').textContent = db ? 'Loading…' : 'Leaderboards need you signed in to the game page.';
+  $('dlgLine').textContent = LBD() ? 'Loading…' : 'Leaderboards need the game page signed in, or a game server.';
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.maxHeight = '46vh'; rows.style.overflowY = 'auto'; $('dlgActs').before(rows);
   const pick = document.createElement('select'); pick.className = 'pbtn'; pick.style.cssText = 'margin:4px 0;max-width:100%'; LB_BOARDS.forEach((b, i) => { const o = document.createElement('option'); o.value = i; o.textContent = b[1]; o.selected = i === bi; pick.appendChild(o); }); pick.addEventListener('change', () => +pick.value < 0 ? openOnline() : openLeaders(+pick.value)); { const o = document.createElement('option'); o.value = -1; o.textContent = '● Who\'s online now'; pick.insertBefore(o, pick.firstChild); } const pw = document.createElement('div'); pw.className = 'prevWrap'; pw.appendChild(pick); rows.before(pw);
   acts([['Who\'s online', () => openOnline(), true], ['Back to Codex', () => openCodex('ach')], ['Close', closeDlg]]);
-  if (!db) return;
+  if (!LBD()) return;
   await lbPush(true);
   try {
-    if (!LB.cache || Date.now() - LB.cacheT > 15000) { const snap = await db.collection('leaders').limit(500).get(); LB.cache = snap.docs.map(s => Object.assign({ id: s.id }, s.data())); LB.cacheT = Date.now(); }
+    if (!LB.cache || Date.now() - LB.cacheT > 15000) { const snap = await LBD().collection('leaders').limit(500).get(); LB.cache = snap.docs.map(s => Object.assign({ id: s.id }, s.data())); LB.cacheT = Date.now(); }
     if (!$('shopRows') || $('dlgName').textContent !== 'Leaderboards') return;
     const [f, , dir, fmt] = B, list = LB.cache.filter(r => typeof r[f] === 'number' && r[f] > 0).sort((a, b) => dir === 'asc' ? a[f] - b[f] : b[f] - a[f]);
     $('dlgLine').textContent = `${B[1]} · ${list.length} trooper${list.length === 1 ? '' : 's'} ranked`;
     if (!list.length) { const r = document.createElement('div'); r.className = 'rowi nodot'; r.textContent = 'No one has a record here yet. Be the first!'; rows.appendChild(r); }
     list.slice(0, 50).forEach((p, i) => {
-      const r = document.createElement('div'); r.className = 'rowi nodot'; const me = p.id === uid;
+      const r = document.createElement('div'); r.className = 'rowi nodot'; const me = p.id === LBU();
       const a = document.createElement('span'); a.innerHTML = `<b style="color:${i === 0 ? '#ffd36a' : i === 1 ? '#d8dde8' : i === 2 ? '#d89a5a' : 'inherit'}">${i + 1}.</b> `; const nm = document.createElement('span'); nm.textContent = String(p.nick || 'Trooper').slice(0, 16) + (me ? ' (you)' : '') + (p.asc ? ' ✦' + p.asc : ''); if (me) nm.style.color = '#6fdc5a'; a.appendChild(nm);
       const b = document.createElement('span'); b.className = 'meta'; b.style.fontSize = '14px'; b.textContent = 'Lv ' + (p.lvl || 1) + (p.where && LEVELS[lbWorld(p.where)] ? ' · ' + LEVELS[lbWorld(p.where)].name : ''); const c = document.createElement('span'); c.textContent = fmt(p[f]); r.append(a, b, c); rows.appendChild(r);
     });
@@ -15932,7 +15945,7 @@ setInterval(() => { try {
 let outChip = null;
 function outHud() {
   if (!outChip) { outChip = document.createElement('span'); outChip.className = 'vchip'; outChip.style.cursor = 'pointer'; outChip.hidden = true; outChip.addEventListener('click', () => openOutlawCard()); const host = document.getElementById('vchips'); if (host) host.appendChild(outChip); else return; }
-  const O = outS(), t = outTier(), hitOnMe = (OUTB.board || []).some(h => h.kind === 'hit' && h.to === uid);
+  const O = outS(), t = outTier(), hitOnMe = (OUTB.board || []).some(h => h.kind === 'hit' && h.to === LBU());
   outChip.hidden = !O.rep && !hitOnMe && !O.hunt; if (outChip.hidden) return;
   outChip.style.color = OUT_TIERS[t][2]; outChip.style.borderColor = OUT_TIERS[t][2];
   outChip.textContent = (isWanted() && O.bounty ? `⚠ WANTED ${O.bounty.toLocaleString()} cr` : `☠ ${OUT_TIERS[t][1]} ${O.rep}`) + (hitOnMe ? ' · HIT ON YOU' : '') + (O.hunt ? ` · hunting ${O.hunt.nick}` : '');
@@ -16199,9 +16212,9 @@ const payoffCost = () => Math.round(outS().bounty * 1.5);
 let outPushT = 0;
 function outPush() { clearTimeout(outPushT); outPushT = setTimeout(() => { try { lbPush(true); } catch (_) {} }, 2500); }
 async function outFetch(force) {
-  if (!db) return OUTB.board; if (!force && Date.now() - OUTB.boardT < 45000) return OUTB.board;
+  if (!LBD()) return OUTB.board; if (!force && Date.now() - OUTB.boardT < 45000) return OUTB.board;
   OUTB.boardT = Date.now();
-  try { const snap = await db.collection('leaders').limit(500).get(); const docs = snap.docs.map(s => Object.assign({ id: s.id }, s.data())), now = Date.now();
+  try { const snap = await LBD().collection('leaders').limit(500).get(); const docs = snap.docs.map(s => Object.assign({ id: s.id }, s.data())), now = Date.now();
     const claimed = new Set(); for (const d of docs) for (const c of (Array.isArray(d.oc) ? d.oc : [])) claimed.add(String(c));
     const nickOf = {}; for (const d of docs) nickOf[d.id] = String(d.nick || 'Trooper').slice(0, 16);
     const list = [];
@@ -16214,7 +16227,7 @@ async function outFetch(force) {
   } catch (err) { console.warn('board', err); }
   outHud(); return OUTB.board;
 }
-setInterval(() => { if (state === 'play' && db) outFetch(false); }, 60000);
+setInterval(() => { if (state === 'play' && LBD()) outFetch(false); }, 60000);
 const whereName = w => (LEVELS[w] && LEVELS[w].name) || 'somewhere';
 function contractRows(rows, list, canTake, empty) {
   rows.textContent = ''; const O = outS();
@@ -16222,7 +16235,7 @@ function contractRows(rows, list, canTake, empty) {
   for (const c of list) { const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = c.kind === 'hit' ? '#ff3b2a' : '#ffd36a';
     const nm = document.createElement('span'); nm.textContent = `${c.kind === 'hit' ? 'HIT' : 'BOUNTY'} · ${c.nick} (Lv ${c.lvl})${c.by ? ' · posted by ' + c.by : ''} · last seen on ${whereName(c.where)}`;
     const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = c.amt.toLocaleString() + ' cr';
-    const mine = O.hunt && O.hunt.id === c.id, self = c.to === uid, b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px';
+    const mine = O.hunt && O.hunt.id === c.id, self = c.to === LBU(), b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px';
     b.textContent = self ? 'You' : mine ? 'Taken' : 'Take'; b.disabled = self || mine || !!O.hunt || !canTake;
     b.addEventListener('click', () => { O.hunt = { kind: c.kind, id: c.id, to: c.to, nick: c.nick, amt: c.amt }; markDirty(); outPush(); outHud(); SFX.quest(); toast('CONTRACT TAKEN', `${c.nick} · ${c.amt.toLocaleString()} cr`, 3); log(`You took the ${c.kind} on ${c.nick}. Find them (last seen on ${whereName(c.where)}). You can only fight each other while you hold it, and they can fight back.`, 'loot'); closeDlg(); });
     r.append(dot, nm, mt, b); rows.appendChild(r); }
@@ -16230,8 +16243,8 @@ function contractRows(rows, list, canTake, empty) {
 // Marshal terminals: bounties on players, for clean hunters
 async function openPlayerBounties(who) {
   openDlg('Galactic Marshals', who || 'Wanted players'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; $('dlgActs').before(rows);
-  $('dlgLine').textContent = db ? 'Checking the wire…' : 'The player board needs you signed in to the game page.';
-  acts([['NPC contracts', () => openBountyBoard(who)], ['Done', closeDlg, true]]); if (!db) return;
+  $('dlgLine').textContent = LBD() ? 'Checking the wire…' : 'The player board needs you signed in to the game page.';
+  acts([['NPC contracts', () => openBountyBoard(who)], ['Done', closeDlg, true]]); if (!LBD()) return;
   await outFetch(true); if (!$('shopRows')) return; const can = !isOutlaw();
   $('dlgLine').textContent = can ? 'Players with a Marshal bounty. Take one, find them, beat them. While you hold it, you two can fight anywhere outside a city; they can fight back.' : "The Marshals don't hire outlaws. Lower your rep below 40 to take player bounties.";
   contractRows(rows, OUTB.board.filter(c => c.kind === 'bounty'), can, 'No player is Wanted right now.');
@@ -16241,8 +16254,8 @@ async function openPlayerBounties(who) {
 const HIT_AMTS = [500, 1000, 2500, 5000];
 async function openHitBoard() {
   openDlg('Underworld', 'Hit board'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; $('dlgActs').before(rows);
-  $('dlgLine').textContent = db ? 'Reading the board…' : 'The Hit board needs you signed in to the game page.';
-  acts([['Done', closeDlg, true]]); if (!db) return;
+  $('dlgLine').textContent = LBD() ? 'Reading the board…' : 'The Hit board needs you signed in to the game page.';
+  acts([['Done', closeDlg, true]]); if (!LBD()) return;
   await outFetch(true); if (!$('shopRows')) return; const can = isOutlaw();
   $('dlgLine').textContent = can ? 'Contracts on players, paid by outlaws. Take one and hunt them down, or post your own.' : 'Outlaws only. Get your rep to 40 (Outlaw) to post or take hits.';
   contractRows(rows, OUTB.board.filter(c => c.kind === 'hit'), can, 'No open hits. Post one?');
@@ -16250,13 +16263,13 @@ async function openHitBoard() {
 }
 function openPostHit() {
   openDlg('Underworld', 'Post a hit'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; $('dlgActs').before(rows);
-  const people = (OUTB.people || []).filter(p => p.id !== uid).sort((a, b) => b.lvl - a.lvl).slice(0, 30); let amt = HIT_AMTS[0];
+  const people = (OUTB.people || []).filter(p => p.id !== LBU()).sort((a, b) => b.lvl - a.lvl).slice(0, 30); let amt = HIT_AMTS[0];
   const render = () => { rows.textContent = ''; $('dlgLine').textContent = `Pick a target. The ${amt.toLocaleString()} cr is paid now and goes to whoever collects. You have ${S.cr.toLocaleString()} cr.`;
     const pick = document.createElement('div'); pick.className = 'rowi nodot'; for (const a of HIT_AMTS) { const b = document.createElement('button'); b.className = 'pbtn' + (a === amt ? ' go' : ''); b.style.padding = '4px 8px'; b.textContent = a.toLocaleString() + ' cr'; b.addEventListener('click', () => { amt = a; render(); }); pick.appendChild(b); } rows.appendChild(pick);
     if (!people.length) { const e = document.createElement('div'); e.className = 'rowi nodot'; e.textContent = 'No other players on record yet.'; rows.appendChild(e); }
     for (const p of people) { const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = '#ff3b2a'; const nm = document.createElement('span'); nm.textContent = `${p.nick} · Lv ${p.lvl} · ${whereName(p.where)}`;
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = 'Post'; b.disabled = S.cr < amt;
-      b.addEventListener('click', () => { if (S.cr < amt) return; const O = outS(); S.cr -= amt; O.oh.push({ id: (uid || 'me').slice(-6) + Date.now().toString(36), to: p.id, amt, t: Date.now() }); crime(5, `Put a hit on ${p.nick}`); SFX.coin(); toast('HIT POSTED', `${p.nick} · ${amt.toLocaleString()} cr`, 3); OUTB.boardT = 0; markDirty(); outPush(); closeDlg(); });
+      b.addEventListener('click', () => { if (S.cr < amt) return; const O = outS(); S.cr -= amt; O.oh.push({ id: (LBU() || 'me').slice(-6) + Date.now().toString(36), to: p.id, amt, t: Date.now() }); crime(5, `Put a hit on ${p.nick}`); SFX.coin(); toast('HIT POSTED', `${p.nick} · ${amt.toLocaleString()} cr`, 3); OUTB.boardT = 0; markDirty(); outPush(); closeDlg(); });
       r.append(dot, nm, b); rows.appendChild(r); } };
   acts([['Back', () => openHitBoard()], ['Done', closeDlg, true]]); render();
 }
@@ -16264,13 +16277,13 @@ function openPostHit() {
 // ---- fights between contract holders and their targets ----
 const outSafe = p => SAFES.some(s => s.r < 100 && Math.hypot(p.x - s.x, p.z - s.z) < s.r);
 function canFight(r) { const O = outS(); if (!r || !r.wu || LEVEL.id === 'arena' || LEVEL.fly) return false; if (outSafe(player.pos) || outSafe(r.obj.position)) return false;
-  return (O.hunt && r.wu === O.hunt.to) || (r.hn && r.hn === uid); }
+  return (O.hunt && r.wu === O.hunt.to) || (r.hn && r.hn === LBU()); }
 { const _ps = pvpShoot; pvpShoot = function (o, dir, dmg, maxT) {
   if (LEVEL && LEVEL.id === 'arena') return _ps(o, dir, dmg, maxT);
   let best = null, bt = maxT; for (const r of remotes.values()) { if (!r.peerId || !canFight(r)) continue; const b = r.obj.position; for (const f of [0.6, 1.2, 1.7]) { const t = raySphere(o, dir, tmp.set(b.x, b.y + f, b.z), 0.45); if (t > 0 && t < bt) { bt = t; best = r; } } }
   if (best) { pvpOut.push([best.peerId, Math.round(dmg * 0.5), ++pvpSeq]); while (pvpOut.length > 8) pvpOut.shift(); burst(best.obj.position.clone().add(V(0, 1.3, 0)), '#ff3b2a', 8, 4); hitmark(false); SFX.hit(); sendPresence(true); }
   return best ? bt : null; }; }
-{ const _pw = pvpWrite; pvpWrite = function (p) { _pw(p); const O = outS(); if (uid) p.wu = uid; if (isWanted() && O.bounty) p.wb = O.bounty; if (O.hunt) p.hn = O.hunt.to;
+{ const _pw = pvpWrite; pvpWrite = function (p) { _pw(p); const O = outS(); if (LBU()) p.wu = LBU(); if (isWanted() && O.bounty) p.wb = O.bounty; if (O.hunt) p.hn = O.hunt.to;
   if (LEVEL && LEVEL.id !== 'arena') { if (pvpOut.length) p.hx = pvpOut.slice(); if (koOut.length) p.ko = koOut.slice(); } }; }
 { const _pr = pvpRead; pvpRead = function (peerId, pr, r) {
   r.wu = typeof pr.wu === 'string' ? pr.wu : null; r.hn = typeof pr.hn === 'string' ? pr.hn : null; r.wb = Number(pr.wb) || 0;
@@ -16279,7 +16292,7 @@ function canFight(r) { const O = outS(); if (!r || !r.wu || LEVEL.id === 'arena'
   if (Array.isArray(pr.hx)) for (const h of pr.hx) { if (!Array.isArray(h) || h[0] !== myPeer || !(h[2] > seen.hit)) continue; seen.hit = h[2]; if (!canFight(r)) continue; const d = clamp(Number(h[1]) || 0, 0, 200); if (player.alive) { player.pvpBy = r.nick; player.pvpPeer = peerId; player.pvpT = gameTime; hurt(d); } }
   if (Array.isArray(pr.ko)) for (const k of pr.ko) { if (!Array.isArray(k) || k[0] !== myPeer || !(k[1] > seen.ko)) continue; seen.ko = k[1];
     if (O.hunt && r.wu === O.hunt.to) { const c = O.hunt; S.cr += c.amt; O.oc.push(c.id); O.hunt = null; toast('CONTRACT COLLECTED', `${c.nick} · +${c.amt.toLocaleString()} cr`, 4); SFX.level(); log(`You collected the ${c.kind} on ${c.nick}: +${c.amt.toLocaleString()} cr.`, 'loot'); if (c.kind === 'bounty') goodDeed(10); else crime(10, 'Collected a hit'); gainXp(300 + S.lvl * 15); markDirty(); outPush(); outHud(); }
-    else if (r.hn === uid) { toast('HUNTER BEATEN', `You fought off ${r.nick}`, 3); SFX.quest(); gainXp(200 + S.lvl * 10); } }
+    else if (r.hn === LBU()) { toast('HUNTER BEATEN', `You fought off ${r.nick}`, 3); SFX.quest(); gainXp(200 + S.lvl * 10); } }
   pvpSeen.set(peerId, seen); }; }
 function outlawOnDeath() {
   const O = outS();
@@ -16289,7 +16302,7 @@ function outlawOnDeath() {
   player.pvpBy = null; player.pvpPeer = null; outHud();
 }
 // show WANTED and TARGET on other players' name plates
-{ const _sp = syncPeers; syncPeers = function (peers) { _sp(peers); const O = outS(); for (const r of remotes.values()) { const tgt = O.hunt && r.wu === O.hunt.to, hunter = r.hn && r.hn === uid, key = `${r.nick}|${r.lvl}|${r.wb}|${tgt}|${hunter}`; if (r._outKey === key || !r.nick) continue; r._outKey = key;
+{ const _sp = syncPeers; syncPeers = function (peers) { _sp(peers); const O = outS(); for (const r of remotes.values()) { const tgt = O.hunt && r.wu === O.hunt.to, hunter = r.hn && r.hn === LBU(), key = `${r.nick}|${r.lvl}|${r.wb}|${tgt}|${hunter}`; if (r._outKey === key || !r.nick) continue; r._outKey = key;
   if (tgt || hunter || r.wb) drawPlate(r.plate, r.nick, tgt ? `TARGET · ${O.hunt.amt.toLocaleString()} cr` : hunter ? 'HUNTING YOU' : `WANTED · ${r.wb.toLocaleString()} cr`, tgt || hunter ? '#ff6a5a' : '#ffd36a', null); else drawPlate(r.plate, r.nick, 'Lv ' + r.lvl, '#7fd6ff', null); } }; }
 // the compass points at your target
 { const _qt = questTarget; questTarget = function () { const O = outS(); if (O.hunt) { for (const r of remotes.values()) if (r.wu === O.hunt.to) return { p: r.obj.position, label: `Hunt ${O.hunt.nick}` }; } return _qt(); }; }
@@ -17147,6 +17160,7 @@ const UPDATES = [
   { id: 110, title: '2.14.3 · Vega narrates every cutscene, iPhone fix', items: ['iPhones and iPads: the game no longer crashes on load (Safari has no mouse lock, and one line assumed it did).', 'Vega, the voice from the opening film, now reads every cutscene and the prologue out loud. Shots wait for her to finish.', 'Opening film: the stray "And…" is gone, your wingmen fly in formation beside you, the enemy fleet is spread out and mixed, the battle has six kinds of robots, and dropped guns lie flat on the ground.', 'Prologue: the stars are smaller and calmer, and the odd ball of stars around one planet is gone.'] },
   { id: 111, title: '2.14.4 · A real hangar, a proper catch card', items: ['Hangar: the floor pad no longer flickers. Your selected war vehicle now turns on a lit turntable, with a gantry crane overhead, a tool wall, a red tool chest, tyre stacks, fuel drums, a fuel pump and guide lights to the launch door.', 'Fishing: the fish you caught now swims in front of its card, and the card waits for you to tap Continue (or press Enter or E).', 'Phones: the USE button can no longer land on top of the radar.', 'New drawn icons for the camera and repair buttons. The ship and the car share the same camera icon.'] },
   { id: 112, title: "2.14.5 · The Angler's Den, rooms that grow, Vega's film", items: ["New ship room: the Angler's Den. Mount your catches on 12 wall plaques, each showing the fish and your best length. Take one down any time to get the fish back. It also has a rod rack, an armchair and a big aquarium.", 'Upgraded ship rooms now look upgraded. Lv 2 and 3 each add a themed prop, Lv 4 hangs a banner and a second light, and Lv 5 adds gold trim and a crest at the door.', 'Ship corridor: the hull posts no longer stand in doorways, and the crane hook that was floating in the hall is back inside the hangar.', 'Fishing: the Bug Pond, Fern Pond and Coolant Canal are bigger, your cast always lands in water, and Coil in Robot City moved back from the dock.', 'Opening film: Captain Vega is the hero now (you are a fresh recruit), and the soldiers that were standing inside her are gone. Her ship flies the film\'s space battle.', 'Prologue: the ball of stars is gone, the stars are dimmer so the planets stand out, the thing behind Vector is now the Watcher rising out of the dark, and Drome\'s flagship wears a setting-sun sigil instead of a big red dot. With voice off, the prologue no longer stalls on its first line.'] },
+  { id: 121, title: '2.18.3 · Leaderboards on your own server', items: ['Leaderboards, the Marshal board and the Hit board now work when the game is played from server.js (like through your tunnel), not only on the claude.ai page'] },
   { id: 120, title: '2.18.2 · New den wallpaper', items: ['New fish wallpaper in the Angler\'s Den, drawn by Phil'] },
   { id: 119, title: '2.18.1 · Worm Hole line', items: ['At the Worm Hole the fishing line now comes from the tip of your rod'] },
   { id: 118, title: '2.18 · Codex items', items: ['New Items tab in the Codex: every item in the game, with who drops it, who sells it and which quest gives it', 'Items fill in as you find them; locked ones show ??? but still tell you where to look', 'Search by item, enemy or world, and filter by category with found counts'] },

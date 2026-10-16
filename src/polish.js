@@ -124,6 +124,19 @@ setInterval(() => { try {
   if (state !== 'play' || dlgOpen || PHOTO.on) return; S.tips = S.tips || {};
   for (const [id, cond, text] of TIPS) if (!S.tips[id] && cond()) { S.tips[id] = 1; markDirty(); log('TIP: ' + text(), 'loot'); toast('TIP', text().split(/[.!]/)[0], 3); break; }
 } catch (_) {} }, 3000);
+// Shared boards (leaderboards, Marshal and Hit boards) live in claude.ai's database on the game page. Anywhere else the game
+// falls back to the /pub/leaders store on whatever server.js is serving it (your own PC through the tunnel).
+const PUB = { on: false, id: null, key: null, rows: null };
+(async () => { if (!/^https?:$/.test(location.protocol)) return; try { const r = await fetch('pub/leaders', { cache: 'no-store' }); if (!r.ok) return; await r.json(); } catch (_) { return; }
+  try { PUB.id = localStorage.getItem('aow-pub-id'); PUB.key = localStorage.getItem('aow-pub-key'); } catch (_) {}
+  const rnd = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => b.toString(16).padStart(2, '0')).join('');
+  if (!PUB.id || !PUB.key) { PUB.id = 'p' + rnd(8); PUB.key = rnd(16); try { localStorage.setItem('aow-pub-id', PUB.id); localStorage.setItem('aow-pub-key', PUB.key); } catch (_) {} }
+  PUB.on = true; })();
+const PUB_DB = {
+  doc: p => ({ set: d => fetch('pub/leaders/' + encodeURIComponent(p.split('/')[1]), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Aow-Key': PUB.key }, body: JSON.stringify(d) }) }),
+  collection: () => ({ limit: () => ({ get: async () => { const r = await fetch('pub/leaders', { cache: 'no-store' }); const j = await r.json(); return { docs: (j.rows || []).map(x => ({ id: x.id, data: () => x.d })) }; } }) }),
+};
+const LBD = () => db || (PUB.on ? PUB_DB : null), LBU = () => (db ? uid : PUB.on ? PUB.id : null);
 // =================== LEADERBOARDS: everyone's records in one shared collection (leaders/<player id>) ===================
 const LB = { last: '', lastT: 0, cache: null, cacheT: 0 };
 function lbRow() {
@@ -132,10 +145,10 @@ function lbRow() {
   return d;
 }
 async function lbPush(force) {
-  if (!db || !uid || state === 'menu') return; const d = lbRow(), j = JSON.stringify(d);
+  if (!LBD() || !LBU() || state === 'menu') return; const d = lbRow(), j = JSON.stringify(d);
   if (!force && (j === LB.last || Date.now() - LB.lastT < 60000)) return;
   LB.last = j; LB.lastT = Date.now(); d.t = Date.now();
-  try { await db.doc('leaders/' + uid).set(d); } catch (_) {}
+  try { await LBD().doc('leaders/' + LBU()).set(d); } catch (_) {}
 }
 setInterval(() => lbPush(false), 20000);
 const LB_BOARDS = [
@@ -144,20 +157,20 @@ const LB_BOARDS = [
 ];
 async function openLeaders(bi) {
   bi = bi || 0; const B = LB_BOARDS[bi]; openDlg('Codex', 'Leaderboards');
-  $('dlgLine').textContent = db ? 'Loading…' : 'Leaderboards need you signed in to the game page.';
+  $('dlgLine').textContent = LBD() ? 'Loading…' : 'Leaderboards need the game page signed in, or a game server.';
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.maxHeight = '46vh'; rows.style.overflowY = 'auto'; $('dlgActs').before(rows);
   const pick = document.createElement('select'); pick.className = 'pbtn'; pick.style.cssText = 'margin:4px 0;max-width:100%'; LB_BOARDS.forEach((b, i) => { const o = document.createElement('option'); o.value = i; o.textContent = b[1]; o.selected = i === bi; pick.appendChild(o); }); pick.addEventListener('change', () => +pick.value < 0 ? openOnline() : openLeaders(+pick.value)); { const o = document.createElement('option'); o.value = -1; o.textContent = '● Who\'s online now'; pick.insertBefore(o, pick.firstChild); } const pw = document.createElement('div'); pw.className = 'prevWrap'; pw.appendChild(pick); rows.before(pw);
   acts([['Who\'s online', () => openOnline(), true], ['Back to Codex', () => openCodex('ach')], ['Close', closeDlg]]);
-  if (!db) return;
+  if (!LBD()) return;
   await lbPush(true);
   try {
-    if (!LB.cache || Date.now() - LB.cacheT > 15000) { const snap = await db.collection('leaders').limit(500).get(); LB.cache = snap.docs.map(s => Object.assign({ id: s.id }, s.data())); LB.cacheT = Date.now(); }
+    if (!LB.cache || Date.now() - LB.cacheT > 15000) { const snap = await LBD().collection('leaders').limit(500).get(); LB.cache = snap.docs.map(s => Object.assign({ id: s.id }, s.data())); LB.cacheT = Date.now(); }
     if (!$('shopRows') || $('dlgName').textContent !== 'Leaderboards') return;
     const [f, , dir, fmt] = B, list = LB.cache.filter(r => typeof r[f] === 'number' && r[f] > 0).sort((a, b) => dir === 'asc' ? a[f] - b[f] : b[f] - a[f]);
     $('dlgLine').textContent = `${B[1]} · ${list.length} trooper${list.length === 1 ? '' : 's'} ranked`;
     if (!list.length) { const r = document.createElement('div'); r.className = 'rowi nodot'; r.textContent = 'No one has a record here yet. Be the first!'; rows.appendChild(r); }
     list.slice(0, 50).forEach((p, i) => {
-      const r = document.createElement('div'); r.className = 'rowi nodot'; const me = p.id === uid;
+      const r = document.createElement('div'); r.className = 'rowi nodot'; const me = p.id === LBU();
       const a = document.createElement('span'); a.innerHTML = `<b style="color:${i === 0 ? '#ffd36a' : i === 1 ? '#d8dde8' : i === 2 ? '#d89a5a' : 'inherit'}">${i + 1}.</b> `; const nm = document.createElement('span'); nm.textContent = String(p.nick || 'Trooper').slice(0, 16) + (me ? ' (you)' : '') + (p.asc ? ' ✦' + p.asc : ''); if (me) nm.style.color = '#6fdc5a'; a.appendChild(nm);
       const b = document.createElement('span'); b.className = 'meta'; b.style.fontSize = '14px'; b.textContent = 'Lv ' + (p.lvl || 1) + (p.where && LEVELS[lbWorld(p.where)] ? ' · ' + LEVELS[lbWorld(p.where)].name : ''); const c = document.createElement('span'); c.textContent = fmt(p[f]); r.append(a, b, c); rows.appendChild(r);
     });

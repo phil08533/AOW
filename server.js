@@ -438,6 +438,30 @@ const MIME_TYPES = {
 };
 
 // 1. HTTP Server for static game files & Developer API
+const PUB_FILE = path.join(__dirname, 'pub-leaders.json');
+let PUB_DATA = null, pubSaveT = null; const pubHits = new Map();
+function pubLoad() { if (PUB_DATA) return PUB_DATA; try { PUB_DATA = JSON.parse(fs.readFileSync(PUB_FILE, 'utf8')); } catch (_) { PUB_DATA = {}; } return PUB_DATA; }
+function pubSave() { clearTimeout(pubSaveT); pubSaveT = setTimeout(() => { try { fs.writeFileSync(PUB_FILE + '.tmp', JSON.stringify(PUB_DATA)); fs.renameSync(PUB_FILE + '.tmp', PUB_FILE); } catch (e) { console.warn('pub-leaders save', e.message); } }, 1000); }
+function pubLeaders(req, res, pathname, ip, cfIp) {
+  const send = (code, obj) => { res.statusCode = code; res.setHeader('Content-Type', 'application/json'); res.setHeader('Cache-Control', 'no-store'); res.end(JSON.stringify(obj)); };
+  const D = pubLoad();
+  if (req.method === 'GET' && pathname === '/pub/leaders') return send(200, { rows: Object.entries(D).map(([id, r]) => ({ id, d: r.d })) });
+  if (req.method !== 'POST') return send(405, { error: 'method' });
+  const id = decodeURIComponent(pathname.slice('/pub/leaders/'.length)), key = String(req.headers['x-aow-key'] || '');
+  if (!/^p[0-9a-f]{16}$/.test(id) || !/^[0-9a-f]{32}$/.test(key)) return send(400, { error: 'bad id or key' });
+  const who = String(cfIp || ip), now = Date.now(), h = pubHits.get(who) || []; while (h.length && now - h[0] > 60000) h.shift();
+  if (h.length >= 30) return send(429, { error: 'slow down' }); h.push(now); pubHits.set(who, h);
+  let body = ''; req.on('data', c => { body += c; if (body.length > 8192) req.destroy(); });
+  req.on('end', () => {
+    let d; try { d = JSON.parse(body); } catch (_) { return send(400, { error: 'bad json' }); }
+    if (!d || typeof d !== 'object' || Array.isArray(d)) return send(400, { error: 'bad record' });
+    const hash = require('crypto').createHash('sha256').update(key).digest('hex'), cur = D[id];
+    if (cur && cur.k !== hash) return send(403, { error: 'not your record' });
+    if (!cur && Object.keys(D).length >= 5000) return send(507, { error: 'board full' });
+    d.nick = String(d.nick || 'Trooper').slice(0, 24); d.t = now; D[id] = { k: hash, d }; pubSave(); send(200, { ok: true });
+  });
+}
+
 const server = http.createServer((req, res) => {
   const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = urlObj.pathname;
@@ -926,6 +950,11 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ error: 'API endpoint not found' }));
     return;
   }
+
+  // --- PUBLIC LEADERBOARD (open to players through the tunnel) ---
+  // GET /pub/leaders lists every player's record; POST /pub/leaders/<id> saves your own. Each id is locked to the secret key
+  // its first save came with, so nobody can overwrite another player's record. Stored in pub-leaders.json next to this file.
+  if (pathname === '/pub/leaders' || pathname.startsWith('/pub/leaders/')) { pubLeaders(req, res, pathname, clientIp, req.headers['cf-connecting-ip']); return; }
 
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.statusCode = 405;

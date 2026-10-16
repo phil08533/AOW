@@ -3,6 +3,10 @@
 // The film is public domain (George A. Romero, 1968). It plays from local parts (video/notld/parts.json + mp4 parts, made by
 // tools/fetch_movie.py) when they're there, and otherwise streams it from the Internet Archive.
 // Angler's Den Lv 5 adds the Worm Hole: an ice-fishing hole that can bite with any fish in the game. You can fish it from the couch.
+// tan wallpaper with little fish for the den (2.17.2)
+TEX.fishpaper = canvasTex(64, (x, s) => { x.fillStyle = '#c4a274'; x.fillRect(0, 0, s, s); x.fillStyle = '#b59366'; for (let i = 0; i < s; i += 16) x.fillRect(i, 0, 1, s);
+  const fish = (cx, cy, c, d) => { x.fillStyle = c; x.fillRect(cx - 4 * d, cy - 2, 7, 4); x.fillRect(cx - 3 * d, cy - 3, 4, 1); x.fillRect(cx - 3 * d, cy + 2, 4, 1); const tx = cx + (d > 0 ? -6 : 3); x.fillRect(tx, cy - 3, 2, 2); x.fillRect(tx, cy + 1, 2, 2); x.fillRect(tx + (d > 0 ? 1 : 0), cy - 1, 2, 2); x.fillStyle = '#2a2420'; x.fillRect(cx + (d > 0 ? 1 : -2), cy - 1, 1, 1); };
+  fish(16, 14, '#4f8a96', 1); fish(48, 30, '#c8763a', -1); fish(20, 46, '#c8763a', 1); fish(50, 58, '#4f8a96', -1); x.fillStyle = '#a8c8d0'; for (const [a, b] of [[34, 10], [8, 30], [40, 48], [60, 18]]) x.fillRect(a, b, 1, 1); });
 const TV_REMOTE = ['https://archive.org/download/night_of_the_living_dead_dvd/Night.mp4'];
 const TVD = { room: null, scr: null, led: null, vid: null, tex: null, idle: null, on: false, parts: null, part: 0, cand: 0, sinceSave: 0, musDown: false, hole: null };
 const SEAT = { on: false, x: 0, z: 0, yaw: 0, out: null, y: 0.62 };
@@ -48,7 +52,9 @@ function tvOff(quiet) {
   if (!TVD.on) return; TVD.on = false; const v = TVD.vid; if (v) { if (TVD.played) { tvSave().t = tvNow(); markDirty(); } v.pause(); }
   if (TVD.scr) { TVD.scr.material.map = TVD.idle; TVD.scr.material.needsUpdate = true; } tvDrawIdle('off'); if (!quiet) SFX.ui && SFX.ui(); tvMusic(false);
 }
-function tvMusic(down) { if (down === TVD.musDown && (!down || MUS.cur === TVD.musCur)) return; TVD.musDown = down; TVD.musCur = MUS.cur; try { if (MUS.cur) musFade(MUS.cur, down ? 0 : musVol(), down ? 0.6 : 1.2); } catch (_) {} }
+function tvMusic(down) { if (down === TVD.musDown) return; TVD.musDown = down; try { musTick(); } catch (_) {} }
+// the music system asks what should play; while the film is on in the den, the answer is nothing (it comes back when the TV goes off or you leave)
+{ const _mc = musContext; musContext = function (dt) { if (TVD.on && TVD.musDown && tvInRoom()) return null; return _mc.apply(this, arguments); }; }
 const tvInRoom = () => { const r = TVD.room; return !!r && LEVEL.id === 'ship' && player.pos.x > r.x0 && player.pos.x < r.x1 && player.pos.z > r.z0 && player.pos.z < r.z1; };
 // ---- the den: couch, side table, TV, and at Lv 5 the Worm Hole ----
 function tvDen(s, cx, cz, props) {
@@ -69,7 +75,7 @@ function tvDen(s, cx, cz, props) {
     const led = new THREE.Mesh(new THREE.CircleGeometry(0.018, 8), new THREE.MeshBasicMaterial({ color: '#ff3a2a' })); led.position.set(W / 2 - 0.05, -H / 2 - 0.045, 0.056); g.add(led); TVD.led = led;
     const sp = new THREE.PointLight(0x9fb4d8, 0, 6, 2); sp.position.set(0, 0, 1.2); g.add(sp); TVD.glow = sp;
     g.position.set(mx, 1.85, s.z0 + 0.12); levelGroup.add(g); TVD.g = g; }
-  INTERACTS.push({ x: mx, z: s.z0 + 2.0, r: 7.0, label: 'Turn on the TV', tv: true, fn: () => (TVD.on ? tvOff() : tvOn()) });
+  INTERACTS.push({ x: mx, z: s.z0 + 1.1, r: 2.0, label: 'Turn on the TV', tv: true, /* only right by the TV, so the prompt stays out of the way while you watch */ fn: () => (TVD.on ? tvOff() : tvOn()) });
   INTERACTS.push({ x: mx, z: cz + 1.2, r: 1.7, label: 'Sit on the couch', seat: true, fn: () => seatDown(mx, cz + 1.05, Math.PI * 0) });
   // ---- the Worm Hole (Lv 5) ----
   TVD.hole = null;
@@ -103,7 +109,7 @@ function seatUp(quiet) { if (!SEAT.on) return; SEAT.on = false; const r = TVD.ro
   for (const a of INTERACTS) if (a.seat) a.label = SEAT.on ? 'Get up' : 'Sit on the couch';
   if (TVD.on) { const v = TVD.vid, inR = tvInRoom();
     if (!inR) { tvOff(true); log('TV paused. It will pick up where you left off.'); }
-    else if (v) { const d = Math.hypot(player.pos.x - TVD.g.position.x, player.pos.z - TVD.g.position.z); v.volume = Math.max(0, Math.min(1, (PREFS.sfx === false ? 0 : 1) * (1.15 - d / 11))); tvMusic(!v.paused);
+    else if (v) { const d = Math.hypot(player.pos.x - TVD.g.position.x, player.pos.z - TVD.g.position.z); v.volume = Math.max(0, Math.min(1, (PREFS.sfx === false ? 0 : 1) * (1.15 - d / 11))); tvMusic(true);
       TVD.sinceSave += dt; if (TVD.sinceSave > 10 && !v.paused && TVD.played) { TVD.sinceSave = 0; tvSave().t = tvNow(); markDirty(); }
       if (TVD.err || (v.readyState < 2 && v.paused)) { TVD.errT = (TVD.errT || 0) + dt; if (TVD.err || TVD.errT > 12) { tvDrawIdle('static'); TVD.scr.material.map = TVD.idle; } else tvDrawIdle('load', gameTime); } else TVD.errT = 0;
       if (TVD.glow) TVD.glow.intensity = v.paused ? 0 : 0.5 + Math.random() * 0.15; } }
@@ -114,7 +120,7 @@ function seatUp(quiet) { if (!SEAT.on) return; SEAT.on = false; const r = TVD.ro
 { const _sd = seatDown; seatDown = function () { if (SEAT.on) { seatUp(); return; } return _sd.apply(this, arguments); }; }
 document.addEventListener('visibilitychange', () => { if (document.hidden && TVD.on && TVD.vid && TVD.played) { tvSave().t = tvNow(); markDirty(); } });
 // ---- ice-fishing look for holes: a short jigging rod held low over the hole ----
-{ const _fs = fshStart; fshStart = function (F) { _fs(F); const s = FSH.spot; if (s && s.worm) { const dx = s.x - player.pos.x, dz = s.z - player.pos.z, d = Math.hypot(dx, dz) || 1, eye = SEAT.on ? 1.05 : 1.6; player.yaw = Math.atan2(-dx, -dz); player.pitch = -Math.atan2(eye - 0.1, d); } }; }
+{ const _fs = fshStart; fshStart = function (F) { _fs(F); const s = FSH.spot; if (s && s.worm) { const dx = s.x - player.pos.x, dz = s.z - player.pos.z, d = Math.hypot(dx, dz) || 1, eye = SEAT.on ? 1.05 : 1.6; player.yaw = Math.atan2(-dx, -dz); player.pitch = -Math.atan2(eye - 0.1, d) * 0.5; /* tilted up so the top of the TV stays in view */ } }; }
 { const _fst = fshStep; fshStep = function (dt) { _fst(dt); const F = fishing, H = FSH.holder, s = FSH.spot; if (!F || !H || !FSH.rod) return;
   const ice = !!(s && s.ice); FSH.rod.scale.set(1, ice ? 0.42 : 1, 1); if (!ice) { H.position.set(0.24, -0.27, -0.5); return; }
   const t = FSH.t; let jig = 0; if (F.st === 'wait') jig = Math.max(0, Math.sin(t * 2.6)) * 0.16 * (Math.sin(t * 0.7) > -0.2 ? 1 : 0.2); else if (F.st === 'bite') jig = 0.18 + Math.sin(t * 24) * 0.05 + (FSH.pull > 0 ? 0.15 : 0); else if (F.st === 'done') jig = 0.35;

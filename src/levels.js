@@ -368,7 +368,7 @@ LEVELS.ship = {
       trophy: { floor: toonNS('#d8d2c8', 'marble'), wall: toonNS('#6a1e24', 'woodwall'), ceil: toonNS('#3a1e22', 'ceil'), light: '#ffd36a' },
       garden: { floor: toonNS('#4a6a3a', 'grass'), wall: toonNS('#8ab8a0', 'tile'), ceil: toonNS('#cfe8d8', 'ceil'), light: '#e8ffd8' },
       hangar: { floor: toonNS('#6a6a6a', 'grate'), wall: toonNS('#7a7e86', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ffffff' },
-      angler: { floor: toonNS('#6a4a34', 'wood'), wall: toonNS('#3e5258', 'hull'), ceil: toonNS('#2a2c32', 'ceil'), light: '#ffe2b8' },
+      angler: { floor: toonNS('#6a4a34', 'wood'), wall: toonNS('#ffffff', typeof TEX.fishpaper !== 'undefined' ? 'fishpaper' : 'hull'), ceil: toonNS('#2a2c32', 'ceil'), light: '#ffe2b8' },
       range: { floor: toonNS('#4a4e56', 'tread'), wall: toonNS('#3a3438', 'hull'), ceil: toonNS('#2a2c32', 'ceil'), light: '#ffe8c8' }
     };
     rooms.forEach((id, k) => {

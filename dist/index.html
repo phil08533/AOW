@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.17.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.17.2</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -4091,7 +4091,7 @@ LEVELS.ship = {
       trophy: { floor: toonNS('#d8d2c8', 'marble'), wall: toonNS('#6a1e24', 'woodwall'), ceil: toonNS('#3a1e22', 'ceil'), light: '#ffd36a' },
       garden: { floor: toonNS('#4a6a3a', 'grass'), wall: toonNS('#8ab8a0', 'tile'), ceil: toonNS('#cfe8d8', 'ceil'), light: '#e8ffd8' },
       hangar: { floor: toonNS('#6a6a6a', 'grate'), wall: toonNS('#7a7e86', 'hull'), ceil: toonNS('#3a3d44', 'ceil'), light: '#ffffff' },
-      angler: { floor: toonNS('#6a4a34', 'wood'), wall: toonNS('#3e5258', 'hull'), ceil: toonNS('#2a2c32', 'ceil'), light: '#ffe2b8' },
+      angler: { floor: toonNS('#6a4a34', 'wood'), wall: toonNS('#ffffff', typeof TEX.fishpaper !== 'undefined' ? 'fishpaper' : 'hull'), ceil: toonNS('#2a2c32', 'ceil'), light: '#ffe2b8' },
       range: { floor: toonNS('#4a4e56', 'tread'), wall: toonNS('#3a3438', 'hull'), ceil: toonNS('#2a2c32', 'ceil'), light: '#ffe8c8' }
     };
     rooms.forEach((id, k) => {
@@ -17147,6 +17147,7 @@ const UPDATES = [
   { id: 110, title: '2.14.3 · Vega narrates every cutscene, iPhone fix', items: ['iPhones and iPads: the game no longer crashes on load (Safari has no mouse lock, and one line assumed it did).', 'Vega, the voice from the opening film, now reads every cutscene and the prologue out loud. Shots wait for her to finish.', 'Opening film: the stray "And…" is gone, your wingmen fly in formation beside you, the enemy fleet is spread out and mixed, the battle has six kinds of robots, and dropped guns lie flat on the ground.', 'Prologue: the stars are smaller and calmer, and the odd ball of stars around one planet is gone.'] },
   { id: 111, title: '2.14.4 · A real hangar, a proper catch card', items: ['Hangar: the floor pad no longer flickers. Your selected war vehicle now turns on a lit turntable, with a gantry crane overhead, a tool wall, a red tool chest, tyre stacks, fuel drums, a fuel pump and guide lights to the launch door.', 'Fishing: the fish you caught now swims in front of its card, and the card waits for you to tap Continue (or press Enter or E).', 'Phones: the USE button can no longer land on top of the radar.', 'New drawn icons for the camera and repair buttons. The ship and the car share the same camera icon.'] },
   { id: 112, title: "2.14.5 · The Angler's Den, rooms that grow, Vega's film", items: ["New ship room: the Angler's Den. Mount your catches on 12 wall plaques, each showing the fish and your best length. Take one down any time to get the fish back. It also has a rod rack, an armchair and a big aquarium.", 'Upgraded ship rooms now look upgraded. Lv 2 and 3 each add a themed prop, Lv 4 hangs a banner and a second light, and Lv 5 adds gold trim and a crest at the door.', 'Ship corridor: the hull posts no longer stand in doorways, and the crane hook that was floating in the hall is back inside the hangar.', 'Fishing: the Bug Pond, Fern Pond and Coolant Canal are bigger, your cast always lands in water, and Coil in Robot City moved back from the dock.', 'Opening film: Captain Vega is the hero now (you are a fresh recruit), and the soldiers that were standing inside her are gone. Her ship flies the film\'s space battle.', 'Prologue: the ball of stars is gone, the stars are dimmer so the planets stand out, the thing behind Vector is now the Watcher rising out of the dark, and Drome\'s flagship wears a setting-sun sigil instead of a big red dot. With voice off, the prologue no longer stalls on its first line.'] },
+  { id: 117, title: '2.17.2 · Den comforts', items: ['The TV switch only shows up when you stand right at the TV, so you can watch from the couch', 'Ship music pauses while the den TV is on and comes back when you turn it off or leave', 'Tan wallpaper with little fish in the Angler\'s Den', 'The Worm Hole camera tilts up so you can see the whole TV while you fish'] },
   { id: 116, title: '2.17.1 · New type and the movie', items: ['New fonts: Tektur for titles and headings, WDXL Lubrifont TC for reading text and chat', 'Night of the Living Dead now plays on the Angler\'s Den TV', 'The high-low table\'s cards and chips sit on the felt, and the stools are on the players\' side'] },
   { id: 115, title: '2.17 · Movie night in the Angler\'s Den', items: ['The Angler\'s Den has a TV playing Night of the Living Dead (1968). It remembers where you stopped, pauses when you leave the room and turns the ship music off while it plays', 'A couch you can sit on. Move to get up', 'Angler\'s Den Lv 5 adds the rainbow Worm Hole: an ice-fishing hole that can bite with any fish in the game. You can fish it from the couch while the movie plays', 'Ice holes use a short jigging rod held low over the hole', 'The rod rack stands the rods up instead of leaving them on the floor, and the speaker no longer covers a trophy plaque', 'The Jellopod\'s tentacles trail behind it now', 'Every helmet is built once per trooper, fixing helmets that crashed in game but previewed fine'] },
   { id: 114, title: '2.16 · Side hustles, a clearer ocean and Vega on the radio', items: ['Sell drugs to the President (he pays way too much) and to random people. Some refuse, and in lawful places someone might report you', 'Give your partner product to sell from their apartment or your ship quarters, then collect the earnings. Push it too hard and they get arrested; post bail with Marshal Rook', 'Your bag shows one tile each for guns, staffs, melee and ordnance with a picture of the weapon. Tap it to pick from the whole list. Weapons and ordnance no longer take bag space or weight', 'Ocean World cleaned up: no torn water, no domes showing through the surface, floors sit on the seabed, no sky underwater, taller glass tunnels', 'Every world\'s water matches its colors', 'Vega is the only voice in the cutscenes and does all the battle radio at the Greater Maw, fully voiced', 'New space fonts and a light space blue in place of the orange', 'Fullscreen works in more browsers. On iPhone, Add to Home Screen to play fullscreen', 'The casino carpet no longer flickers and the high-low table looks like a table', 'Mezar shows its name on the galaxy map'] },
@@ -20112,6 +20113,10 @@ goFullscreen = function () {
 // The film is public domain (George A. Romero, 1968). It plays from local parts (video/notld/parts.json + mp4 parts, made by
 // tools/fetch_movie.py) when they're there, and otherwise streams it from the Internet Archive.
 // Angler's Den Lv 5 adds the Worm Hole: an ice-fishing hole that can bite with any fish in the game. You can fish it from the couch.
+// tan wallpaper with little fish for the den (2.17.2)
+TEX.fishpaper = canvasTex(64, (x, s) => { x.fillStyle = '#c4a274'; x.fillRect(0, 0, s, s); x.fillStyle = '#b59366'; for (let i = 0; i < s; i += 16) x.fillRect(i, 0, 1, s);
+  const fish = (cx, cy, c, d) => { x.fillStyle = c; x.fillRect(cx - 4 * d, cy - 2, 7, 4); x.fillRect(cx - 3 * d, cy - 3, 4, 1); x.fillRect(cx - 3 * d, cy + 2, 4, 1); const tx = cx + (d > 0 ? -6 : 3); x.fillRect(tx, cy - 3, 2, 2); x.fillRect(tx, cy + 1, 2, 2); x.fillRect(tx + (d > 0 ? 1 : 0), cy - 1, 2, 2); x.fillStyle = '#2a2420'; x.fillRect(cx + (d > 0 ? 1 : -2), cy - 1, 1, 1); };
+  fish(16, 14, '#4f8a96', 1); fish(48, 30, '#c8763a', -1); fish(20, 46, '#c8763a', 1); fish(50, 58, '#4f8a96', -1); x.fillStyle = '#a8c8d0'; for (const [a, b] of [[34, 10], [8, 30], [40, 48], [60, 18]]) x.fillRect(a, b, 1, 1); });
 const TV_REMOTE = ['https://archive.org/download/night_of_the_living_dead_dvd/Night.mp4'];
 const TVD = { room: null, scr: null, led: null, vid: null, tex: null, idle: null, on: false, parts: null, part: 0, cand: 0, sinceSave: 0, musDown: false, hole: null };
 const SEAT = { on: false, x: 0, z: 0, yaw: 0, out: null, y: 0.62 };
@@ -20157,7 +20162,9 @@ function tvOff(quiet) {
   if (!TVD.on) return; TVD.on = false; const v = TVD.vid; if (v) { if (TVD.played) { tvSave().t = tvNow(); markDirty(); } v.pause(); }
   if (TVD.scr) { TVD.scr.material.map = TVD.idle; TVD.scr.material.needsUpdate = true; } tvDrawIdle('off'); if (!quiet) SFX.ui && SFX.ui(); tvMusic(false);
 }
-function tvMusic(down) { if (down === TVD.musDown && (!down || MUS.cur === TVD.musCur)) return; TVD.musDown = down; TVD.musCur = MUS.cur; try { if (MUS.cur) musFade(MUS.cur, down ? 0 : musVol(), down ? 0.6 : 1.2); } catch (_) {} }
+function tvMusic(down) { if (down === TVD.musDown) return; TVD.musDown = down; try { musTick(); } catch (_) {} }
+// the music system asks what should play; while the film is on in the den, the answer is nothing (it comes back when the TV goes off or you leave)
+{ const _mc = musContext; musContext = function (dt) { if (TVD.on && TVD.musDown && tvInRoom()) return null; return _mc.apply(this, arguments); }; }
 const tvInRoom = () => { const r = TVD.room; return !!r && LEVEL.id === 'ship' && player.pos.x > r.x0 && player.pos.x < r.x1 && player.pos.z > r.z0 && player.pos.z < r.z1; };
 // ---- the den: couch, side table, TV, and at Lv 5 the Worm Hole ----
 function tvDen(s, cx, cz, props) {
@@ -20178,7 +20185,7 @@ function tvDen(s, cx, cz, props) {
     const led = new THREE.Mesh(new THREE.CircleGeometry(0.018, 8), new THREE.MeshBasicMaterial({ color: '#ff3a2a' })); led.position.set(W / 2 - 0.05, -H / 2 - 0.045, 0.056); g.add(led); TVD.led = led;
     const sp = new THREE.PointLight(0x9fb4d8, 0, 6, 2); sp.position.set(0, 0, 1.2); g.add(sp); TVD.glow = sp;
     g.position.set(mx, 1.85, s.z0 + 0.12); levelGroup.add(g); TVD.g = g; }
-  INTERACTS.push({ x: mx, z: s.z0 + 2.0, r: 7.0, label: 'Turn on the TV', tv: true, fn: () => (TVD.on ? tvOff() : tvOn()) });
+  INTERACTS.push({ x: mx, z: s.z0 + 1.1, r: 2.0, label: 'Turn on the TV', tv: true, /* only right by the TV, so the prompt stays out of the way while you watch */ fn: () => (TVD.on ? tvOff() : tvOn()) });
   INTERACTS.push({ x: mx, z: cz + 1.2, r: 1.7, label: 'Sit on the couch', seat: true, fn: () => seatDown(mx, cz + 1.05, Math.PI * 0) });
   // ---- the Worm Hole (Lv 5) ----
   TVD.hole = null;
@@ -20212,7 +20219,7 @@ function seatUp(quiet) { if (!SEAT.on) return; SEAT.on = false; const r = TVD.ro
   for (const a of INTERACTS) if (a.seat) a.label = SEAT.on ? 'Get up' : 'Sit on the couch';
   if (TVD.on) { const v = TVD.vid, inR = tvInRoom();
     if (!inR) { tvOff(true); log('TV paused. It will pick up where you left off.'); }
-    else if (v) { const d = Math.hypot(player.pos.x - TVD.g.position.x, player.pos.z - TVD.g.position.z); v.volume = Math.max(0, Math.min(1, (PREFS.sfx === false ? 0 : 1) * (1.15 - d / 11))); tvMusic(!v.paused);
+    else if (v) { const d = Math.hypot(player.pos.x - TVD.g.position.x, player.pos.z - TVD.g.position.z); v.volume = Math.max(0, Math.min(1, (PREFS.sfx === false ? 0 : 1) * (1.15 - d / 11))); tvMusic(true);
       TVD.sinceSave += dt; if (TVD.sinceSave > 10 && !v.paused && TVD.played) { TVD.sinceSave = 0; tvSave().t = tvNow(); markDirty(); }
       if (TVD.err || (v.readyState < 2 && v.paused)) { TVD.errT = (TVD.errT || 0) + dt; if (TVD.err || TVD.errT > 12) { tvDrawIdle('static'); TVD.scr.material.map = TVD.idle; } else tvDrawIdle('load', gameTime); } else TVD.errT = 0;
       if (TVD.glow) TVD.glow.intensity = v.paused ? 0 : 0.5 + Math.random() * 0.15; } }
@@ -20223,7 +20230,7 @@ function seatUp(quiet) { if (!SEAT.on) return; SEAT.on = false; const r = TVD.ro
 { const _sd = seatDown; seatDown = function () { if (SEAT.on) { seatUp(); return; } return _sd.apply(this, arguments); }; }
 document.addEventListener('visibilitychange', () => { if (document.hidden && TVD.on && TVD.vid && TVD.played) { tvSave().t = tvNow(); markDirty(); } });
 // ---- ice-fishing look for holes: a short jigging rod held low over the hole ----
-{ const _fs = fshStart; fshStart = function (F) { _fs(F); const s = FSH.spot; if (s && s.worm) { const dx = s.x - player.pos.x, dz = s.z - player.pos.z, d = Math.hypot(dx, dz) || 1, eye = SEAT.on ? 1.05 : 1.6; player.yaw = Math.atan2(-dx, -dz); player.pitch = -Math.atan2(eye - 0.1, d); } }; }
+{ const _fs = fshStart; fshStart = function (F) { _fs(F); const s = FSH.spot; if (s && s.worm) { const dx = s.x - player.pos.x, dz = s.z - player.pos.z, d = Math.hypot(dx, dz) || 1, eye = SEAT.on ? 1.05 : 1.6; player.yaw = Math.atan2(-dx, -dz); player.pitch = -Math.atan2(eye - 0.1, d) * 0.5; /* tilted up so the top of the TV stays in view */ } }; }
 { const _fst = fshStep; fshStep = function (dt) { _fst(dt); const F = fishing, H = FSH.holder, s = FSH.spot; if (!F || !H || !FSH.rod) return;
   const ice = !!(s && s.ice); FSH.rod.scale.set(1, ice ? 0.42 : 1, 1); if (!ice) { H.position.set(0.24, -0.27, -0.5); return; }
   const t = FSH.t; let jig = 0; if (F.st === 'wait') jig = Math.max(0, Math.sin(t * 2.6)) * 0.16 * (Math.sin(t * 0.7) > -0.2 ? 1 : 0.2); else if (F.st === 'bite') jig = 0.18 + Math.sin(t * 24) * 0.05 + (FSH.pull > 0 ? 0.15 : 0); else if (F.st === 'done') jig = 0.35;

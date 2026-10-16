@@ -342,6 +342,16 @@ LEVELS.ship = {
     const holo = new THREE.Mesh(new THREE.IcosahedronGeometry(0.45, 1), glow('#8fe3ff')); holo.position.set(0, 1.6, -11); levelGroup.add(holo);
     levelAnims.push(t => { holo.rotation.y = t * 0.6; holo.position.y = 1.6 + Math.sin(t * 1.5) * 0.06; });
     INTERACTS.push({ x: 0, z: -11, r: 2.4, label: 'Galaxy map', fn: openGalaxy });
+    // bridge polish (2.18.7): stars past the window, glowing floor trim, ceiling ribs and wall light bars
+    { const sc = document.createElement('canvas'); sc.width = sc.height = 256; const sx = sc.getContext('2d'); const gr = sx.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#05061a'); gr.addColorStop(1, '#1a0f3a'); sx.fillStyle = gr; sx.fillRect(0, 0, 256, 256);
+      for (let i = 0; i < 220; i++) { sx.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.7})`; const r = Math.random() < 0.08 ? 2 : 1; sx.fillRect(Math.random() * 256, Math.random() * 256, r, r); }
+      sx.fillStyle = 'rgba(160,90,255,0.18)'; sx.beginPath(); sx.arc(180, 90, 60, 0, 7); sx.fill(); const st = new THREE.CanvasTexture(sc);
+      const sky = new THREE.Mesh(new THREE.PlaneGeometry(14, 7), new THREE.MeshBasicMaterial({ map: st })); sky.position.set(0, H / 2, -15.6); levelGroup.add(sky);
+      levelAnims.push(t => { st.offset.x = (t * 0.004) % 1; }); st.wrapS = THREE.RepeatWrapping; }
+    for (const x of [-6.85, 6.85]) { part(props, B(0.05, 0.04, 12.6), glow('#4fd2ff'), x, 0.06, -8.5); for (let z = -13; z <= -4; z += 3) part(props, B(0.05, 1.4, 0.12), glow('#2a6aa8'), x, 1.7, z); }
+    for (let z = -14; z <= -3; z += 2.2) part(props, B(13.6, 0.18, 0.22), '#2a2c32', 0, H - 0.2, z);
+    part(props, B(0.04, 0.04, 12.6), glow('#8fd0ff'), 0, 0.03, -8.5);
+
     part(props, B(1.4, 1.1, 0.6), '#2a2c32', -5, 0.55, -7); part(props, B(1.2, 0.6, 0.05), glow('#6fdc5a'), -5, 1.3, -6.68, -0.3); box(-5, -7, 0.7, 0.3);
     INTERACTS.push({ x: -5, z: -6.4, r: 2, label: 'Ship upgrades', fn: openShipTerminal });
     INTERACTS.push({ x: 0, z: -6.6, r: 1.6, label: 'Take the helm (fly)', fn: () => enterSpace(S.orbit || 'earth') });

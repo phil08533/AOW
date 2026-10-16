@@ -47,7 +47,7 @@ function makeGreaterMaw() {
   blob(mouth, '#1a0a12', 0, 0, 0, 22, 12, 8); blob(mouth, glow('#ff5a20'), 0, 0, -3, 9, 5, 3);
   const jawT = new THREE.Group(), jawB = new THREE.Group(); mouth.add(jawT, jawB);
   for (let i = 0; i < 26; i++) { const a = (i / 26) * Math.PI * 2, top = Math.sin(a) > 0, t = new THREE.Mesh(new THREE.ConeGeometry(1.6, 6 + (i % 3) * 2.5, 5), toon('#e8dcc0'));
-    t.position.set(Math.cos(a) * 21, Math.sin(a) * 11, 4); t.rotation.z = a + Math.PI / 2; (top ? jawT : jawB).add(t); }
+    t.position.set(Math.cos(a) * 21, Math.sin(a) * 11, 4); t.rotation.z = a - Math.PI / 2; /* flipped (2.18.6): points out of the gums */ (top ? jawT : jawB).add(t); }
   // little eyes everywhere, every one of them watching
   const eyes = [];
   for (let i = 0; i < 64; i++) { const u = rnd() * 6.28, v = 0.35 + rnd() * 2.4, d = 43 + rnd() * 3, e = new THREE.Group();
@@ -75,7 +75,7 @@ function makeGreaterMaw() {
   for (let i = 0; i < 22; i++) { const a = (i / 22) * Math.PI * 2, tt = new THREE.Mesh(new THREE.ConeGeometry(2, 9 + (i % 2) * 5, 5), spikeM); tt.position.set(Math.cos(a) * 29, Math.sin(a) * 29, 6); tt.rotation.set(0, 0, a - Math.PI / 2); tt.rotateX(0.5); eyeTeeth.add(tt); }
   const socket = new THREE.Mesh(new THREE.TorusGeometry(28, 3.2, 6, 28), toon('#2a1420')); socket.position.z = 4; eye.add(socket);
   // the outer jaw: a second, bigger ring of fangs
-  for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, f = new THREE.Mesh(new THREE.ConeGeometry(2.6, 11 + (i % 4) * 3, 6), spikeM); f.position.set(Math.cos(a) * 26, Math.sin(a) * 15, 2); f.rotation.z = a + Math.PI / 2; f.rotateX(-0.35); (Math.sin(a) > 0 ? jawT : jawB).add(f); }
+  for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, f = new THREE.Mesh(new THREE.ConeGeometry(2.6, 11 + (i % 4) * 3, 6), spikeM); f.position.set(Math.cos(a) * 26, Math.sin(a) * 15, 2); f.rotation.z = a - Math.PI / 2; f.rotateX(-0.35); (Math.sin(a) > 0 ? jawT : jawB).add(f); }
   const throat = deadGlow('255,110,40', 30); throat.position.set(0, 0, 2); mouth.add(throat);
   // glowing cracks where the flesh has split, pulsing with its heartbeat
   const crackM = new THREE.MeshBasicMaterial({ color: '#ff5a20', fog: false }), crackG = [];
@@ -205,7 +205,7 @@ LEVELS.maw = {
     const hemi2 = new THREE.HemisphereLight(0x8a5aa8, 0x200810, 0.7); levelGroup.add(hemi2);
     // the Greater Maw
     const m = makeGreaterMaw(); m.position.copy(MAW_C); m.scale.setScalar(MAW_S); levelGroup.add(m);
-    const asc = S.asc || 0, max = Math.round(180000 * (1 + 0.35 * asc));
+    const asc = S.asc || 0, max = Math.round(360000 * (1 + 0.35 * asc)); /* doubled in 2.18.6: a maxed ship beat it in 30 s */
     Object.assign(MAW, { obj: m, hp: max, max, t: 0, phase: 1, beam: null, beamT: 9, volT: 3, spawnT: 20, allies: [], alliesIn: false, dead: false, hurtAcc: 0, commsT: 6, said: 0, intro: false, ev: [], lost: [], nowSaid: false, shots: [], flashes: [], smoke: [], fxPool: null, final: 0, mega: false, megaCd: 0, blastT: 0, vegaT: 0 });
     fly.ship = makeStarship(S.col); levelGroup.add(fly.ship);
     fly.trail = []; for (let i = 0; i < 18; i++) { const tm = new THREE.Mesh(sparkGeo, glow('#ff9a3c')); tm.scale.setScalar(6); levelGroup.add(tm); fly.trail.push(tm); }

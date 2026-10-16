@@ -124,4 +124,9 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && TVD
 { const _fst = fshStep; fshStep = function (dt) { _fst(dt); const F = fishing, H = FSH.holder, s = FSH.spot; if (!F || !H || !FSH.rod) return;
   const ice = !!(s && s.ice); FSH.rod.scale.set(1, ice ? 0.42 : 1, 1); if (!ice) { H.position.set(0.24, -0.27, -0.5); return; }
   const t = FSH.t; let jig = 0; if (F.st === 'wait') jig = Math.max(0, Math.sin(t * 2.6)) * 0.16 * (Math.sin(t * 0.7) > -0.2 ? 1 : 0.2); else if (F.st === 'bite') jig = 0.18 + Math.sin(t * 24) * 0.05 + (FSH.pull > 0 ? 0.15 : 0); else if (F.st === 'done') jig = 0.35;
-  H.position.set(0.12, -0.26, -0.4); H.rotation.set(-1.05 + jig, 0, -0.2); FSH.rod.rotation.x = -jig * 0.4; }; }
+  H.position.set(0.12, -0.26, -0.4); H.rotation.set(-1.05 + jig, 0, -0.2); FSH.rod.rotation.x = -jig * 0.4;
+  FSH.iceLine = true; }; }
+// the camera moves again after the fishing step, so a line drawn there trails behind the short rod: redraw it from the real tip right before each render
+{ const _br = scene.onBeforeRender; scene.onBeforeRender = function () { if (_br) _br.apply(this, arguments); const F = fishing; if (!F || !FSH.F || !FSH.iceLine || !(FSH.spot && FSH.spot.ice) || !fshLine.visible) return;
+  camera.updateMatrixWorld(true); const a = fshTip(), b = fshBobber.visible ? FSH.pos : a, P = fshLine.geometry.attributes.position, sag = F.st === 'bite' || FSH.pull > 0 ? 0.02 : 0.12;
+    for (let i = 0; i < 16; i++) { const k = i / 15; P.setXYZ(i, a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k - Math.sin(k * Math.PI) * sag * Math.min(1, a.distanceTo(b) / 4), a.z + (b.z - a.z) * k); } P.needsUpdate = true; }; }

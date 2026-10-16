@@ -346,27 +346,27 @@ LEVELS.ship = {
       for (const sx of [-1, 1]) part(g, B(0.05, 0.05, 0.05), glow(col), sx * (w / 2 + 0.01), tall - 0.15, 0.2);
       at(g, x, z, yaw); }; window.bridgeConsole = bridgeConsole;
     for (let i = -3; i <= 3; i++) { const a = i * 0.17, x = Math.sin(a) * 7.2, z = -6.4 - Math.cos(a) * 7.2; bridgeConsole(x, z, -a, i % 2 ? '#4fd2ff' : '#6fdc5a', 1.05); } box(0, -13.4, 4.2, 0.4);
-    part(props, Cy(0.9, 1.1, 0.9, 8), '#2a2c32', 0, 0.45, -11); part(props, Cy(0.95, 0.95, 0.05, 16), glow('#2a6aa8'), 0, 0.92, -11); solid(0, -11, 1.1);
-    const holo = new THREE.Mesh(new THREE.IcosahedronGeometry(0.45, 1), glow('#8fe3ff')); holo.position.set(0, 1.6, -11); levelGroup.add(holo);
+    part(props, Cy(0.9, 1.1, 0.9, 8), '#2a2c32', 0, 0.45, -10.5); part(props, Cy(0.95, 0.95, 0.05, 16), glow('#2a6aa8'), 0, 0.92, -10.5); solid(0, -10.5, 1.1);
+    const holo = new THREE.Mesh(new THREE.IcosahedronGeometry(0.45, 1), glow('#8fe3ff')); holo.position.set(0, 1.6, -10.5); levelGroup.add(holo);
     levelAnims.push(t => { holo.rotation.y = t * 0.6; holo.position.y = 1.6 + Math.sin(t * 1.5) * 0.06; });
-    INTERACTS.push({ x: 0, z: -11, r: 2.4, label: 'Galaxy map', fn: openGalaxy });
+    INTERACTS.push({ x: 0, z: -10.5, r: 2.4, label: 'Galaxy map', fn: openGalaxy });
     // bridge polish (2.18.7): glowing floor trim, ceiling ribs and wall light bars
     for (const x of [-6.85, 6.85]) part(props, B(0.05, 0.04, 12.6), glow('#4fd2ff'), x, 0.06, -8.5);
     // ceiling: a raised center dome over the map with a glowing ring, cable runs and recessed light panels
-    part(props, Cy(2.4, 2.4, 0.12, 24), '#22252c', 0, H - 0.08, -11); part(props, Cy(2.15, 2.15, 0.04, 24), '#0e1118', 0, H - 0.15, -11);
-    { const ring = new THREE.Mesh(new THREE.TorusGeometry(2.25, 0.04, 6, 40), glow('#4fd2ff')); ring.rotation.x = Math.PI / 2; ring.position.set(0, H - 0.17, -11); props.add(ring); }
-    for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; part(props, B(0.08, 0.06, 1.0), '#3a3f4a', Math.cos(a) * 1.6, H - 0.2, -11 + Math.sin(a) * 1.6, 0, -a, 0); }
+    part(props, Cy(2.4, 2.4, 0.12, 24), '#22252c', 0, H - 0.08, -10.5); part(props, Cy(2.15, 2.15, 0.04, 24), '#0e1118', 0, H - 0.15, -10.5);
+    { const ring = new THREE.Mesh(new THREE.TorusGeometry(2.25, 0.04, 6, 40), glow('#4fd2ff')); ring.rotation.x = Math.PI / 2; ring.position.set(0, H - 0.17, -10.5); props.add(ring); }
+    for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; part(props, B(0.08, 0.06, 1.0), '#3a3f4a', Math.cos(a) * 1.6, H - 0.2, -10.5 + Math.sin(a) * 1.6, 0, -a, 0); }
     for (const x of [-4.6, 4.6]) { part(props, B(0.12, 0.1, 12.4), '#1a1c22', x, H - 0.3, -8.5); part(props, B(0.05, 0.05, 12.4), '#c9733a', x + 0.12, H - 0.32, -8.5); }
     for (const [x, z] of [[-4.6, -5], [4.6, -5], [-4.6, -13], [4.6, -13]]) { part(props, B(1.6, 0.04, 1.1), '#1a1c22', x, H - 0.06, z); part(props, B(1.4, 0.02, 0.9), glow('#dff2ff'), x, H - 0.09, z); }
     // map area: a stepped platform, a rail ring, projector emitters and a layered hologram of planets
-    part(props, Cy(1.9, 2.0, 0.1, 24), '#2a2c32', 0, 0.05, -11); part(props, Cy(1.95, 1.95, 0.02, 24), glow('#2a6aa8'), 0, 0.11, -11);
-    for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; if (Math.abs(Math.sin(a)) > 0.95 && Math.cos(a) > -0.3 && Math.sin(a) > 0) continue; part(props, Cy(0.03, 0.03, 0.9, 6), '#5a606c', Math.cos(a) * 1.85, 0.55, -11 + Math.sin(a) * 1.85); }
-    { const rr = new THREE.Mesh(new THREE.TorusGeometry(1.85, 0.035, 6, 40), toon('#5a606c')); rr.rotation.x = Math.PI / 2; rr.position.set(0, 1.0, -11); props.add(rr); }
-    for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2; part(props, Cy(0.06, 0.1, 0.15, 8), glow('#8fe3ff'), Math.cos(a) * 0.75, 0.98, -11 + Math.sin(a) * 0.75); }
-    { const hg = new THREE.Group(); hg.position.set(0, 1.6, -11); levelGroup.add(hg); const orb = []; const cols = ['#ffd36a', '#6fdc5a', '#c86aff', '#ff8a5a'];
+    part(props, Cy(1.9, 2.0, 0.1, 24), '#2a2c32', 0, 0.05, -10.5); part(props, Cy(1.95, 1.95, 0.02, 24), glow('#2a6aa8'), 0, 0.11, -10.5);
+    for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; if (Math.abs(Math.sin(a)) > 0.95 && Math.cos(a) > -0.3 && Math.sin(a) > 0) continue; part(props, Cy(0.03, 0.03, 0.9, 6), '#5a606c', Math.cos(a) * 1.85, 0.55, -10.5 + Math.sin(a) * 1.85); }
+    { const rr = new THREE.Mesh(new THREE.TorusGeometry(1.85, 0.035, 6, 40), toon('#5a606c')); rr.rotation.x = Math.PI / 2; rr.position.set(0, 1.0, -10.5); props.add(rr); }
+    for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2; part(props, Cy(0.06, 0.1, 0.15, 8), glow('#8fe3ff'), Math.cos(a) * 0.75, 0.98, -10.5 + Math.sin(a) * 0.75); }
+    { const hg = new THREE.Group(); hg.position.set(0, 1.6, -10.5); levelGroup.add(hg); const orb = []; const cols = ['#ffd36a', '#6fdc5a', '#c86aff', '#ff8a5a'];
       for (let k = 0; k < 4; k++) { const r = 0.45 + k * 0.17, o = new THREE.Mesh(new THREE.TorusGeometry(r, 0.006, 4, 48), new THREE.MeshBasicMaterial({ color: '#8fe3ff', transparent: true, opacity: 0.35 })); o.rotation.x = Math.PI / 2; hg.add(o);
         const p = new THREE.Mesh(new THREE.SphereGeometry(0.05 + k * 0.012, 10, 8), glow(cols[k])); hg.add(p); orb.push([p, r, 0.9 / (k + 1), k * 1.7]); }
-      const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.15, 0.6, 20, 1, true), new THREE.MeshBasicMaterial({ color: '#4fd2ff', transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false })); cone.position.set(0, 1.28, -11); levelGroup.add(cone);
+      const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.15, 0.6, 20, 1, true), new THREE.MeshBasicMaterial({ color: '#4fd2ff', transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false })); cone.position.set(0, 1.28, -10.5); levelGroup.add(cone);
       levelAnims.push(t => { for (const [p, r, sp, ph] of orb) p.position.set(Math.cos(t * sp + ph) * r, 0, Math.sin(t * sp + ph) * r); hg.rotation.y = t * 0.05; }); }
     // walls: framed panels with small status lights in place of the blue strips
     for (const x of [-6.82, 6.82]) for (let z = -13; z <= -4; z += 3) { part(props, B(0.06, 1.2, 1.6), '#2a2e36', x, 1.5, z); part(props, B(0.07, 1.0, 1.4), '#1a1d24', x, 1.5, z); for (let q = 0; q < 3; q++) part(props, B(0.08, 0.06, 0.06), glow(['#6fdc5a', '#ffd36a', '#4fd2ff'][(q + z) & 1 ? q : 2 - q]), x, 1.85 - q * 0.12, z + 0.55); part(props, B(0.075, 0.5, 0.9), glow('#123a5a'), x, 1.45, z - 0.15); }
@@ -382,7 +382,7 @@ LEVELS.ship = {
       part(ch, B(0.74, 1.05, 0.12), dk, 0, 1.12, 0.36, -0.1); part(ch, B(0.64, 0.92, 0.06), red, 0, 1.12, 0.3, -0.1); part(ch, B(0.44, 0.24, 0.12), red, 0, 1.75, 0.42, -0.1);
       for (let k = 0; k < 3; k++) part(ch, B(0.66, 0.02, 0.07), '#5a1c1a', 0, 0.85 + k * 0.25, 0.27, -0.1);
       for (const sx of [-1, 1]) { part(ch, B(0.12, 0.08, 0.62), dk, sx * 0.44, 0.82, 0.02); part(ch, B(0.08, 0.26, 0.08), dk, sx * 0.44, 0.67, 0.24); part(ch, B(0.1, 0.02, 0.2), glow(sx < 0 ? '#6fdc5a' : '#ffd36a'), sx * 0.44, 0.87, -0.14); part(ch, B(0.03, 0.03, 0.03), glow('#ff5a4a'), sx * 0.44, 0.88, -0.22); }
-      ch.position.set(0, 0, -7.5); props.add(ch); solid(0, -7.5, 0.5); }
+      ch.position.set(0, 0, -6.9); props.add(ch); solid(0, -6.9, 0.5); }
     // ---- the corridor: plated deck with a yellow guide line, ribbed hull walls ----
     floorQuad(-2, 2, -2, Lz, toonNS('#8a8e96', 'deck'));
     part(props, B(0.12, 0.01, Lz + 1.8), glow('#c9a43a'), 0, 0.012, (Lz - 2) / 2);

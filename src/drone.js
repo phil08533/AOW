@@ -94,7 +94,6 @@ function openDroneStatus() { const D = droneS(); if (!D.own) { toast('DRONE', 'B
   part(st, new THREE.TorusGeometry(0.62, 0.035, 6, 24), '#5a606a', 0, 1.72, 0, Math.PI / 2, 0, 0);
   const dr = new THREE.Group(); part(dr, new THREE.SphereGeometry(0.22, 12, 8), '#d8dde4', 0, 0, 0); part(dr, B(0.6, 0.05, 0.12), '#5a606a', 0, 0, 0); part(dr, new THREE.SphereGeometry(0.07, 8, 6), glow('#ff5a4a'), 0, 0, 0.2); dr.position.set(X, 1.3, Z); levelGroup.add(dr);
   const hl = part(st, Cy(0.45, 0.45, 0.8, 16, 1, true), glow('#4fd2ff'), 0, 1.3, 0); hl.material = hl.material.clone(); hl.material.transparent = true; hl.material.opacity = 0.12; hl.material.side = THREE.DoubleSide;
-  part(st, B(0.6, 0.4, 0.05), '#2a2c32', 0.95, 1.1, 0.2, 0, -0.5, 0); part(st, B(0.52, 0.32, 0.02), glow('#6fdc5a'), 0.96, 1.1, 0.23, 0, -0.5, 0);
   at(st, X, Z, 0.3); solid(X, Z, 0.95); window.__droneDr = dr; if (!window.__droneHov) { window.__droneHov = 1; const ob2 = scene.onBeforeRender; scene.onBeforeRender = function () { const d = window.__droneDr; if (d && d.parent) { const t = performance.now() / 1000; d.position.y = 1.3 + Math.sin(t * 1.6) * 0.06; d.rotation.y = t * 0.8; } return ob2 && ob2.apply(this, arguments); }; }
   INTERACTS.push({ x: X + 0.4, z: Z + 1.3, r: 1.6, label: 'Drone bay', fn: openDroneBay }); }; }
 for (const [lv, nid] of [['fort', 'brix'], ['zeltac', 'brakka']]) { const n = (LEVELS[lv].npcs || []).find(n => n.id === nid); if (n) n.custom = [...(n.custom || []), ['Drone bay', () => openDroneBay()]]; }

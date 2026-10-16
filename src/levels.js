@@ -337,22 +337,25 @@ LEVELS.ship = {
     wall(-7, -15, -7, -2); wall(7, -15, 7, -2); wall(-7, -15, -4, -15); wall(4, -15, 7, -15); wall(-7, -2, -2, -2); wall(2, -2, 7, -2);
     const glass = new THREE.Mesh(new THREE.PlaneGeometry(8, H), new THREE.MeshBasicMaterial({ color: '#8fd0ff', transparent: true, opacity: 0.12, depthWrite: false })); glass.position.set(0, H / 2, -15); levelGroup.add(glass); box(0, -15, 4, 0.2);
     part(props, B(8.2, 0.3, 0.5), '#2a2c32', 0, 0.15, -15); part(props, B(8.2, 0.3, 0.5), '#2a2c32', 0, H - 0.15, -15);
-    for (let i = -3; i <= 3; i++) { const x = i * 1.15, z = -13.6 + Math.abs(i) * 0.25; part(props, B(1.05, 0.9, 0.6), '#2a2c32', x, 0.45, z, 0, -i * 0.12, 0); part(props, B(0.95, 0.04, 0.45), glow(i % 2 ? '#4fd2ff' : '#6fdc5a'), x, 0.93, z + 0.02, -0.35, -i * 0.12, 0); } box(0, -13.4, 4.2, 0.4);
+    // a tidy bridge console (2.18.7): a body, a sloped desk with a bezel and inset screen, button rows, side lamps and a light strip at its foot
+    const bridgeConsole = (x, z, yaw, col, w = 1.0, tall = 0.85) => { const g = new THREE.Group(), d = new THREE.Group();
+      part(g, B(w, tall, 0.55), '#2a2c32', 0, tall / 2, 0); part(g, B(w + 0.04, 0.05, 0.6), '#3a3f4a', 0, tall, 0); part(g, B(w * 0.9, 0.03, 0.03), glow(col), 0, 0.05, 0.29);
+      d.position.set(0, tall + 0.02, 0.02); d.rotation.x = 0.55; g.add(d);
+      part(d, B(w, 0.06, 0.5), '#3a3f4a', 0, 0, 0); part(d, B(w * 0.78, 0.02, 0.3), '#0a0d14', 0, 0.035, -0.04); part(d, B(w * 0.72, 0.012, 0.25), glow(col), 0, 0.048, -0.04);
+      for (let k = 0; k < 5; k++) part(d, B(0.06, 0.03, 0.05), glow(['#ff5a4a', '#ffd36a', '#6fdc5a', '#4fd2ff', '#ff6aa8'][(k + Math.round(x * 3)) % 5]), (k - 2) * w * 0.17, 0.04, 0.19);
+      for (const sx of [-1, 1]) part(g, B(0.05, 0.05, 0.05), glow(col), sx * (w / 2 + 0.01), tall - 0.15, 0.2);
+      at(g, x, z, yaw); }; window.bridgeConsole = bridgeConsole;
+    for (let i = -3; i <= 3; i++) { const a = i * 0.17, x = Math.sin(a) * 7.2, z = -6.4 - Math.cos(a) * 7.2; bridgeConsole(x, z, -a, i % 2 ? '#4fd2ff' : '#6fdc5a', 1.05); } box(0, -13.4, 4.2, 0.4);
     part(props, Cy(0.9, 1.1, 0.9, 8), '#2a2c32', 0, 0.45, -11); part(props, Cy(0.95, 0.95, 0.05, 16), glow('#2a6aa8'), 0, 0.92, -11); solid(0, -11, 1.1);
     const holo = new THREE.Mesh(new THREE.IcosahedronGeometry(0.45, 1), glow('#8fe3ff')); holo.position.set(0, 1.6, -11); levelGroup.add(holo);
     levelAnims.push(t => { holo.rotation.y = t * 0.6; holo.position.y = 1.6 + Math.sin(t * 1.5) * 0.06; });
     INTERACTS.push({ x: 0, z: -11, r: 2.4, label: 'Galaxy map', fn: openGalaxy });
-    // bridge polish (2.18.7): stars past the window, glowing floor trim, ceiling ribs and wall light bars
-    { const sc = document.createElement('canvas'); sc.width = sc.height = 256; const sx = sc.getContext('2d'); const gr = sx.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#05061a'); gr.addColorStop(1, '#1a0f3a'); sx.fillStyle = gr; sx.fillRect(0, 0, 256, 256);
-      for (let i = 0; i < 220; i++) { sx.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.7})`; const r = Math.random() < 0.08 ? 2 : 1; sx.fillRect(Math.random() * 256, Math.random() * 256, r, r); }
-      sx.fillStyle = 'rgba(160,90,255,0.18)'; sx.beginPath(); sx.arc(180, 90, 60, 0, 7); sx.fill(); const st = new THREE.CanvasTexture(sc);
-      const sky = new THREE.Mesh(new THREE.PlaneGeometry(14, 7), new THREE.MeshBasicMaterial({ map: st })); sky.position.set(0, H / 2, -15.6); levelGroup.add(sky);
-      levelAnims.push(t => { st.offset.x = (t * 0.004) % 1; }); st.wrapS = THREE.RepeatWrapping; }
+    // bridge polish (2.18.7): glowing floor trim, ceiling ribs and wall light bars
     for (const x of [-6.85, 6.85]) { part(props, B(0.05, 0.04, 12.6), glow('#4fd2ff'), x, 0.06, -8.5); for (let z = -13; z <= -4; z += 3) part(props, B(0.05, 1.4, 0.12), glow('#2a6aa8'), x, 1.7, z); }
     for (let z = -14; z <= -3; z += 2.2) part(props, B(13.6, 0.18, 0.22), '#2a2c32', 0, H - 0.2, z);
     part(props, B(0.04, 0.04, 12.6), glow('#8fd0ff'), 0, 0.03, -8.5);
 
-    part(props, B(1.4, 1.1, 0.6), '#2a2c32', -5, 0.55, -7); part(props, B(1.2, 0.6, 0.05), glow('#6fdc5a'), -5, 1.3, -6.68, -0.3); box(-5, -7, 0.7, 0.3);
+    bridgeConsole(-5, -7, 0, '#6fdc5a', 1.3, 0.95); bridgeConsole(-3.7, -7.6, 0.35, '#4fd2ff', 0.9, 0.8); box(-5, -7, 0.7, 0.3);
     INTERACTS.push({ x: -5, z: -6.4, r: 2, label: 'Ship upgrades', fn: openShipTerminal });
     INTERACTS.push({ x: 0, z: -6.6, r: 1.6, label: 'Take the helm (fly)', fn: () => enterSpace(S.orbit || 'earth') });
     { const ch = new THREE.Group(); part(ch, B(0.8, 0.5, 0.8), '#2a2c32', 0, 0.25, 0); part(ch, B(0.8, 1.0, 0.15), toon('#8a3a2e', 'cloth'), 0, 1.0, 0.36); part(ch, B(0.8, 0.12, 0.8), toon('#8a3a2e', 'cloth'), 0, 0.55, 0); for (const s of [-1, 1]) part(ch, B(0.1, 0.25, 0.7), '#2a2c32', 0.42 * s, 0.75, 0); ch.position.set(0, 0, -7.5); props.add(ch); solid(0, -7.5, 0.5); }

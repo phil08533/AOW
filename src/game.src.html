@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.18.3</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.18.4</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1257,7 +1257,7 @@ let state = 'menu', firing = false, locked = false;
 const move = { x: 0, y: 0 };
 function chatOpen() { return !$('chatBox').hidden; }
 window.addEventListener('keydown', e => {
-  if (chatOpen()) { if (e.code === 'Escape') { $('chatBox').hidden = true; } return; }
+  if (chatOpen()) { if (e.code === 'Escape' || (e.code === 'Enter' && document.activeElement !== $('chatIn'))) { $('chatBox').hidden = true; e.preventDefault(); } return; }
   if (state !== 'play') return;
   if (dlgOpen) { if (e.repeat) return; const go = $('dlgActs').querySelector('.go:not(:disabled)');
     if (e.code === 'Escape') { closeDlg(); e.stopImmediatePropagation(); } else if ((e.code === 'KeyE' || e.code === 'Space') && go) { go.click(); e.preventDefault(); } else if (e.code === 'KeyE') closeDlg(); return; }
@@ -1279,7 +1279,7 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => { keys[e.code] = false; });
 function openChat() { $('chatBox').hidden = false; firing = false; for (const k in keys) keys[k] = false; if (document.pointerLockElement) document.exitPointerLock(); setTimeout(() => $('chatIn').focus(), 0); }
-$('chatIn').addEventListener('keydown', e => { if (e.code === 'Enter' || e.key === 'Enter') { sendChat($('chatIn').value); $('chatIn').value = ''; $('chatBox').hidden = true; e.preventDefault(); } });
+$('chatIn').addEventListener('keydown', e => { if (e.code === 'Enter' || e.key === 'Enter') { sendChat($('chatIn').value); $('chatIn').value = ''; $('chatBox').hidden = true; e.preventDefault(); e.stopPropagation(); } else if (e.code === 'Escape') { $('chatBox').hidden = true; e.preventDefault(); e.stopPropagation(); } });
 $('chatSend').addEventListener('click', () => { sendChat($('chatIn').value); $('chatIn').value = ''; $('chatBox').hidden = true; });
 $('chatBtn').addEventListener('click', openChat);
 $('bikeBtn').addEventListener('click', () => toggleBike());

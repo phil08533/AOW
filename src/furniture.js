@@ -177,3 +177,17 @@ body.decor #quest, body.decor #log, body.decor #zone, body.decor #raidBar, body.
 for (const [id, nm, pr] of [['hanglamp', 'Hanging lamp', 150], ['chainlight', 'Chain light', 300], ['hangplant', 'Hanging plant', 120], ['hangbanner', 'Hanging banner', 200]]) {
   FURN[id] = [nm, 'Decor', pr, [0.8, 0.3, 0.8], 1, 0]; PIECES[id] = { name: nm, cost: {}, price: pr, cat: 'Decor', layer: 1, dim: [0.8, 0.3, 0.8], solid: 0, hang: true }; }
 { const _pm = pieceModel; pieceModel = function (type, col) { if (!HANG_MODELS[type]) return _pm(type, col); const g = new THREE.Group(), h = new THREE.Group(); HANG_MODELS[type](h); h.position.y = 3.18; g.add(h); return g; }; }
+// ---- removing on PC (2.18.4): while decorating, look at a piece and press E (or click in Remove mode) ----
+// The old Remove only hit the exact grid cell 3.6 m ahead, which is hard to line up; this picks the piece you're looking at.
+const DECOR_RM = { x: 0, z: 0, r: 0, label: '', decorRm: true, piece: null, fn: () => { const p = DECOR_RM.piece, B = myBase(), i = p ? B.indexOf(p) : -1; if (i < 0) return; B.splice(i, 1); SFX.ui(); log(`Removed ${(PIECES[p[0]] || {}).name || 'piece'}. It stays yours to place again.`); afterBaseChange(); } };
+function decorAimPiece() {
+  const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw); let best = null, bs = 1e9;
+  for (const p of myBase()) { const def = PIECES[p[0]]; if (!def) continue; const x = p[1] * CELL, z = p[2] * CELL, dx = x - player.pos.x, dz = z - player.pos.z, d = Math.hypot(dx, dz);
+    if (d > 5) continue; const l = d || 1, dot = (dx * fx + dz * fz) / l; if (d > 0.9 && dot < 0.8) continue; const s = (1 - dot) * 6 + d * 0.2 + (def.layer === 1 ? -0.05 : 0); if (s < bs) { bs = s; best = p; } }
+  return best;
+}
+{ const _ubw = updateBaseWorld; updateBaseWorld = function () { _ubw.apply(this, arguments); const i = INTERACTS.indexOf(DECOR_RM), on = baseState.on && onShip();
+  const p = on ? decorAimPiece() : null; DECOR_RM.piece = p;
+  if (p) { DECOR_RM.x = p[1] * CELL; DECOR_RM.z = p[2] * CELL; DECOR_RM.r = 6; DECOR_RM.label = 'Remove ' + ((PIECES[p[0]] || {}).name || 'piece'); if (i < 0) INTERACTS.push(DECOR_RM); }
+  else if (i >= 0) INTERACTS.splice(i, 1); }; }
+{ const _pp = placePiece; placePiece = function () { if (baseState.remove && onShip()) { if (DECOR_RM.piece) DECOR_RM.fn(); else { SFX.hurt(); log('Look at the piece you want to remove'); } return; } return _pp.apply(this, arguments); }; }

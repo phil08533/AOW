@@ -101,7 +101,11 @@ function bountyOnLoad() { bountyEnemy = null; if (LEVEL && LEVEL.id === (bhState
 // bridge terminal + saber mod station on your ship
 { const orig = LEVELS.ship.build;
   LEVELS.ship.build = function () { orig.call(this);
-    part(props, B(1.3, 1.1, 0.6), '#3a3d44', 5, 0.55, -10); part(props, B(1.1, 0.6, 0.05), glow('#ffd36a'), 5, 1.3, -9.68, -0.3); box(5, -10, 0.65, 0.3);
+    if (window.bridgeConsole) bridgeConsole(5, -10, 0, '#ffd36a', 1.3, 0.95);
+    { const g = new THREE.Group(); part(g, B(1.3, 1.2, 0.1), '#2a2e36', 0, 1.75, -0.32); part(g, B(1.15, 1.0, 0.04), '#0a0d14', 0, 1.75, -0.26); part(g, B(1.05, 0.06, 0.03), glow('#ffd36a'), 0, 2.2, -0.24);
+      const star = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.03, 5), glow('#ffd36a')); star.rotation.x = Math.PI / 2; star.position.set(0, 1.78, -0.23); g.add(star);
+      for (let k = 0; k < 4; k++) part(g, B(0.3, 0.05, 0.02), glow(k === 0 ? '#ff5a4a' : '#8a7a4a'), 0.38, 1.5 - k * 0.09, -0.23); for (let k = 0; k < 4; k++) part(g, B(0.3, 0.05, 0.02), glow('#8a7a4a'), -0.38, 1.5 - k * 0.09, -0.23);
+      at(g, 5, -10, 0); } box(5, -10, 0.65, 0.3);
     INTERACTS.push({ x: 5, z: -9.2, r: 2, label: 'Bounty terminal (Galactic Marshals)', fn: () => openBountyBoard('Ship terminal') });
     const st = new THREE.Group(); part(st, Cy(0.5, 0.6, 0.9, 8), '#3a3d44', 0, 0.45, 0); part(st, Cy(0.55, 0.55, 0.04, 16), glow('#4fa8ff'), 0, 0.92, 0);
     const holo = makeSaberModel(saberCfg()); holo.scale.setScalar(1.4); holo.position.set(0, 1.6, 0); holo.rotation.z = 0.3; st.add(holo); st.position.set(5, 0, -4.5); levelGroup.add(st); solid(5, -4.5, 0.6);

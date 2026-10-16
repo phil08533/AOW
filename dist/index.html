@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.18.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.18.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -4099,7 +4099,13 @@ LEVELS.ship = {
     bridgeConsole(-5, -7, 0, '#6fdc5a', 1.3, 0.95); bridgeConsole(-3.7, -7.6, 0.35, '#4fd2ff', 0.9, 0.8); box(-5, -7, 0.7, 0.3);
     INTERACTS.push({ x: -5, z: -6.4, r: 2, label: 'Ship upgrades', fn: openShipTerminal });
     INTERACTS.push({ x: 0, z: -6.6, r: 1.6, label: 'Take the helm (fly)', fn: () => enterSpace(S.orbit || 'earth') });
-    { const ch = new THREE.Group(); part(ch, B(0.8, 0.5, 0.8), '#2a2c32', 0, 0.25, 0); part(ch, B(0.8, 1.0, 0.15), toon('#8a3a2e', 'cloth'), 0, 1.0, 0.36); part(ch, B(0.8, 0.12, 0.8), toon('#8a3a2e', 'cloth'), 0, 0.55, 0); for (const s of [-1, 1]) part(ch, B(0.1, 0.25, 0.7), '#2a2c32', 0.42 * s, 0.75, 0); ch.position.set(0, 0, -7.5); props.add(ch); solid(0, -7.5, 0.5); }
+    { const ch = new THREE.Group(), red = toon('#8a2e2a', 'cloth'), dk = '#22252c';
+      part(ch, Cy(0.35, 0.45, 0.06, 16), dk, 0, 0.03, 0); part(ch, Cy(0.08, 0.1, 0.4, 10), '#5a606c', 0, 0.26, 0); part(ch, Cy(0.38, 0.38, 0.03, 20), glow('#4fd2ff'), 0, 0.07, 0);
+      part(ch, B(0.78, 0.14, 0.72), dk, 0, 0.5, 0); part(ch, B(0.7, 0.1, 0.66), red, 0, 0.6, 0);
+      part(ch, B(0.74, 1.05, 0.12), dk, 0, 1.12, 0.36, -0.1); part(ch, B(0.64, 0.92, 0.06), red, 0, 1.12, 0.3, -0.1); part(ch, B(0.44, 0.24, 0.12), red, 0, 1.75, 0.42, -0.1);
+      for (let k = 0; k < 3; k++) part(ch, B(0.66, 0.02, 0.07), '#5a1c1a', 0, 0.85 + k * 0.25, 0.27, -0.1);
+      for (const sx of [-1, 1]) { part(ch, B(0.12, 0.08, 0.62), dk, sx * 0.44, 0.82, 0.02); part(ch, B(0.08, 0.26, 0.08), dk, sx * 0.44, 0.67, 0.24); part(ch, B(0.1, 0.02, 0.2), glow(sx < 0 ? '#6fdc5a' : '#ffd36a'), sx * 0.44, 0.87, -0.14); part(ch, B(0.03, 0.03, 0.03), glow('#ff5a4a'), sx * 0.44, 0.88, -0.22); }
+      ch.position.set(0, 0, -7.5); props.add(ch); solid(0, -7.5, 0.5); }
     // ---- the corridor: plated deck with a yellow guide line, ribbed hull walls ----
     floorQuad(-2, 2, -2, Lz, toonNS('#8a8e96', 'deck'));
     part(props, B(0.12, 0.01, Lz + 1.8), glow('#c9a43a'), 0, 0.012, (Lz - 2) / 2);
@@ -8203,7 +8209,11 @@ function bountyOnLoad() { bountyEnemy = null; if (LEVEL && LEVEL.id === (bhState
 // bridge terminal + saber mod station on your ship
 { const orig = LEVELS.ship.build;
   LEVELS.ship.build = function () { orig.call(this);
-    part(props, B(1.3, 1.1, 0.6), '#3a3d44', 5, 0.55, -10); part(props, B(1.1, 0.6, 0.05), glow('#ffd36a'), 5, 1.3, -9.68, -0.3); box(5, -10, 0.65, 0.3);
+    if (window.bridgeConsole) bridgeConsole(5, -10, 0, '#ffd36a', 1.3, 0.95);
+    { const g = new THREE.Group(); part(g, B(1.3, 1.2, 0.1), '#2a2e36', 0, 1.75, -0.32); part(g, B(1.15, 1.0, 0.04), '#0a0d14', 0, 1.75, -0.26); part(g, B(1.05, 0.06, 0.03), glow('#ffd36a'), 0, 2.2, -0.24);
+      const star = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.03, 5), glow('#ffd36a')); star.rotation.x = Math.PI / 2; star.position.set(0, 1.78, -0.23); g.add(star);
+      for (let k = 0; k < 4; k++) part(g, B(0.3, 0.05, 0.02), glow(k === 0 ? '#ff5a4a' : '#8a7a4a'), 0.38, 1.5 - k * 0.09, -0.23); for (let k = 0; k < 4; k++) part(g, B(0.3, 0.05, 0.02), glow('#8a7a4a'), -0.38, 1.5 - k * 0.09, -0.23);
+      at(g, 5, -10, 0); } box(5, -10, 0.65, 0.3);
     INTERACTS.push({ x: 5, z: -9.2, r: 2, label: 'Bounty terminal (Galactic Marshals)', fn: () => openBountyBoard('Ship terminal') });
     const st = new THREE.Group(); part(st, Cy(0.5, 0.6, 0.9, 8), '#3a3d44', 0, 0.45, 0); part(st, Cy(0.55, 0.55, 0.04, 16), glow('#4fa8ff'), 0, 0.92, 0);
     const holo = makeSaberModel(saberCfg()); holo.scale.setScalar(1.4); holo.position.set(0, 1.6, 0); holo.rotation.z = 0.3; st.add(holo); st.position.set(5, 0, -4.5); levelGroup.add(st); solid(5, -4.5, 0.6);
@@ -17191,6 +17201,7 @@ const UPDATES = [
   { id: 110, title: '2.14.3 · Vega narrates every cutscene, iPhone fix', items: ['iPhones and iPads: the game no longer crashes on load (Safari has no mouse lock, and one line assumed it did).', 'Vega, the voice from the opening film, now reads every cutscene and the prologue out loud. Shots wait for her to finish.', 'Opening film: the stray "And…" is gone, your wingmen fly in formation beside you, the enemy fleet is spread out and mixed, the battle has six kinds of robots, and dropped guns lie flat on the ground.', 'Prologue: the stars are smaller and calmer, and the odd ball of stars around one planet is gone.'] },
   { id: 111, title: '2.14.4 · A real hangar, a proper catch card', items: ['Hangar: the floor pad no longer flickers. Your selected war vehicle now turns on a lit turntable, with a gantry crane overhead, a tool wall, a red tool chest, tyre stacks, fuel drums, a fuel pump and guide lights to the launch door.', 'Fishing: the fish you caught now swims in front of its card, and the card waits for you to tap Continue (or press Enter or E).', 'Phones: the USE button can no longer land on top of the radar.', 'New drawn icons for the camera and repair buttons. The ship and the car share the same camera icon.'] },
   { id: 112, title: "2.14.5 · The Angler's Den, rooms that grow, Vega's film", items: ["New ship room: the Angler's Den. Mount your catches on 12 wall plaques, each showing the fish and your best length. Take one down any time to get the fish back. It also has a rod rack, an armchair and a big aquarium.", 'Upgraded ship rooms now look upgraded. Lv 2 and 3 each add a themed prop, Lv 4 hangs a banner and a second light, and Lv 5 adds gold trim and a crest at the door.', 'Ship corridor: the hull posts no longer stand in doorways, and the crane hook that was floating in the hall is back inside the hangar.', 'Fishing: the Bug Pond, Fern Pond and Coolant Canal are bigger, your cast always lands in water, and Coil in Robot City moved back from the dock.', 'Opening film: Captain Vega is the hero now (you are a fresh recruit), and the soldiers that were standing inside her are gone. Her ship flies the film\'s space battle.', 'Prologue: the ball of stars is gone, the stars are dimmer so the planets stand out, the thing behind Vector is now the Watcher rising out of the dark, and Drome\'s flagship wears a setting-sun sigil instead of a big red dot. With voice off, the prologue no longer stalls on its first line.'] },
+  { id: 127, title: '2.18.9 · Captain\'s chair and the Marshal terminal', items: ['A proper captain\'s chair on a swivel base with armrest controls', 'The Bounty terminal is a real console with a Marshal star screen'] },
   { id: 126, title: '2.18.8 · Bridge, finished', items: ['A ceiling dome with a glowing ring over the map, cable runs and light panels', 'The galaxy map sits on a railed platform with a planet hologram', 'Framed wall panels with status lights replace the blue strips'] },
   { id: 125, title: '2.18.7 · A nicer bridge', items: ['The ship bridge has neat new consoles with screens and buttons, glowing floor trim, wall light bars and ceiling ribs'] },
   { id: 124, title: '2.18.6 · A tougher Maw', items: ['The Greater Maw has twice the health, last phase included', 'Its teeth point the right way'] },

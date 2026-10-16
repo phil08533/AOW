@@ -376,7 +376,13 @@ LEVELS.ship = {
     bridgeConsole(-5, -7, 0, '#6fdc5a', 1.3, 0.95); bridgeConsole(-3.7, -7.6, 0.35, '#4fd2ff', 0.9, 0.8); box(-5, -7, 0.7, 0.3);
     INTERACTS.push({ x: -5, z: -6.4, r: 2, label: 'Ship upgrades', fn: openShipTerminal });
     INTERACTS.push({ x: 0, z: -6.6, r: 1.6, label: 'Take the helm (fly)', fn: () => enterSpace(S.orbit || 'earth') });
-    { const ch = new THREE.Group(); part(ch, B(0.8, 0.5, 0.8), '#2a2c32', 0, 0.25, 0); part(ch, B(0.8, 1.0, 0.15), toon('#8a3a2e', 'cloth'), 0, 1.0, 0.36); part(ch, B(0.8, 0.12, 0.8), toon('#8a3a2e', 'cloth'), 0, 0.55, 0); for (const s of [-1, 1]) part(ch, B(0.1, 0.25, 0.7), '#2a2c32', 0.42 * s, 0.75, 0); ch.position.set(0, 0, -7.5); props.add(ch); solid(0, -7.5, 0.5); }
+    { const ch = new THREE.Group(), red = toon('#8a2e2a', 'cloth'), dk = '#22252c';
+      part(ch, Cy(0.35, 0.45, 0.06, 16), dk, 0, 0.03, 0); part(ch, Cy(0.08, 0.1, 0.4, 10), '#5a606c', 0, 0.26, 0); part(ch, Cy(0.38, 0.38, 0.03, 20), glow('#4fd2ff'), 0, 0.07, 0);
+      part(ch, B(0.78, 0.14, 0.72), dk, 0, 0.5, 0); part(ch, B(0.7, 0.1, 0.66), red, 0, 0.6, 0);
+      part(ch, B(0.74, 1.05, 0.12), dk, 0, 1.12, 0.36, -0.1); part(ch, B(0.64, 0.92, 0.06), red, 0, 1.12, 0.3, -0.1); part(ch, B(0.44, 0.24, 0.12), red, 0, 1.75, 0.42, -0.1);
+      for (let k = 0; k < 3; k++) part(ch, B(0.66, 0.02, 0.07), '#5a1c1a', 0, 0.85 + k * 0.25, 0.27, -0.1);
+      for (const sx of [-1, 1]) { part(ch, B(0.12, 0.08, 0.62), dk, sx * 0.44, 0.82, 0.02); part(ch, B(0.08, 0.26, 0.08), dk, sx * 0.44, 0.67, 0.24); part(ch, B(0.1, 0.02, 0.2), glow(sx < 0 ? '#6fdc5a' : '#ffd36a'), sx * 0.44, 0.87, -0.14); part(ch, B(0.03, 0.03, 0.03), glow('#ff5a4a'), sx * 0.44, 0.88, -0.22); }
+      ch.position.set(0, 0, -7.5); props.add(ch); solid(0, -7.5, 0.5); }
     // ---- the corridor: plated deck with a yellow guide line, ribbed hull walls ----
     floorQuad(-2, 2, -2, Lz, toonNS('#8a8e96', 'deck'));
     part(props, B(0.12, 0.01, Lz + 1.8), glow('#c9a43a'), 0, 0.012, (Lz - 2) / 2);

@@ -15,7 +15,8 @@ const UI_THEMES = {
   Steel: { body: '#1c1e22', lite: '#4a5058', dark: '#0c0d10', btn: '#30343a', btnLite: '#585e68', hiLite: '#767e8a', screen: '#101114', accent: '#e8e8e8', who: '#b0b8c4' },
   Crimson: { body: '#22101a', lite: '#5e2a3e', dark: '#10060a', btn: '#40182a', btnLite: '#743050', hiLite: '#964268', screen: '#16080e', accent: '#ff7aa8', who: '#e090b0' }
 };
-if (!UI_THEMES[PREFS.uiTheme]) PREFS.uiTheme = 'Plum';
+if (!PREFS.uiThemeV) { PREFS.uiThemeV = 1; PREFS.uiTheme = 'Steel'; try { savePrefs(); } catch (_) {} }
+if (!UI_THEMES[PREFS.uiTheme]) PREFS.uiTheme = 'Steel';
 function uiThemeCss(T) {
   const PANEL = hmFrame(T.body, T.lite, T.dark, '#b8862e');
   const BTN = hmFrame(T.btn, T.btnLite, T.dark), BTN_HI = hmFrame(T.btnLite, T.hiLite, T.dark), BTN_DN = hmFrame(T.dark, T.dark, T.btnLite);
@@ -39,6 +40,10 @@ body { text-shadow: 2px 2px 0 #07060a !important; }
 .pbtn:disabled { opacity: .45 !important; filter: grayscale(.6); }
 .pbtn kbd, .pbtn .k { border: 0 !important; background: rgba(0,0,0,.35) !important; color: inherit !important; border-radius: 0 !important; }
 .rowi { border-bottom: 2px dashed ${T.lite} !important; }
+#tabWrap { z-index: 60 !important; } body.menuopen #map { visibility: hidden; }
+#map { border-image: none !important; border: 4px solid ${T.lite} !important; border-radius: 50% !important; background: ${T.screen} !important; box-shadow: 0 0 0 2px #07060a, inset 0 0 0 2px ${T.dark}, 4px 4px 0 rgba(0,0,0,.55) !important; overflow: hidden !important; }
+#map canvas { border-radius: 50% !important; }
+#map::before, #map::after { content: none !important; }
 body #tabWrap #menuDrop { border: 0 !important; border-image: none !important; border-radius: 0 !important; background: ${T.screen} !important; box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,.6) !important; }
 body #tabWrap #menuDrop::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
 #menuDrop .tabTop { border-bottom: 2px solid ${T.lite} !important; color: ${T.accent} !important; background: rgba(0,0,0,.25); }
@@ -48,7 +53,7 @@ input[type=range] { -webkit-appearance: none; appearance: none; height: 8px; bac
 input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 18px; background: #f2c46a; border: 2px solid #07060a; border-radius: 0; box-shadow: inset -2px -2px 0 #b8862e; }
 input[type=range]::-moz-range-thumb { width: 14px; height: 18px; background: #f2c46a; border: 2px solid #07060a; border-radius: 0; }
 `; }
-function applyUiTheme() { const T = UI_THEMES[PREFS.uiTheme] || UI_THEMES.Plum; let st = document.getElementById('handmadeCss'); if (!st) { st = document.createElement('style'); st.id = 'handmadeCss'; document.head.appendChild(st); } st.textContent = uiThemeCss(T); }
+function applyUiTheme() { const T = UI_THEMES[PREFS.uiTheme] || UI_THEMES.Steel; let st = document.getElementById('handmadeCss'); if (!st) { st = document.createElement('style'); st.id = 'handmadeCss'; document.head.appendChild(st); } st.textContent = uiThemeCss(T); }
 applyUiTheme();
 // emoji in buttons, titles and menus read as machine-made; strip them as UI appears (keeps game symbols like stars and hearts)
 { const EMO = /(?![★☆♥♦♠♣✓✔✕✖·•→←↑↓⚔])[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}][\u{FE0F}\u{200D}\p{Extended_Pictographic}]*\s?/gu;

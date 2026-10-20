@@ -1,6 +1,6 @@
 // =================== CITY LIFE: every hub gets street furniture, market clutter, signs, lights, vehicles and a crowd ===================
 const CITY = {
-  earth: { zone: 'town', style: 'earth', n: 120, walkers: 18 },
+  earth: { zone: 'town', style: 'earth', n: 0, walkers: 18 }, // New Jamestown lays out its own street furniture (jamestown.js),
   mezar: { zone: 'hive', style: 'mezar', n: 34, walkers: 8 },
   capitone: { zone: 'tree', style: 'capitone', n: 34, walkers: 7 },
   robot: { zone: 'store', style: 'robot', n: 36, walkers: 9 },

@@ -73,6 +73,7 @@ function detailLevel(L, id) {
   for (let i = 0; i < K.n * 3 && placed < K.n; i++) {
     const a = rnd() * 6.283, d = Math.sqrt(rnd()) * (WORLD_R - 6), x = WORLD_C.x + Math.cos(a) * d, z = WORLD_C.z + Math.sin(a) * d;
     if (roadDist(x, z) < 2.2 || groundH(x, z) < WATER_Y + 0.15) continue;
+    if (id === 'earth' && typeof JT_R !== 'undefined' && Math.hypot(x - TOWN.x, z - TOWN.z) < JT_R + 1) continue; // New Jamestown is paved: no bushes or rocks in its streets
     if (CIRCLES.some(([cx, cz, cr]) => Math.abs(x - cx) < cr + 1.2 && Math.abs(z - cz) < cr + 1.2)) continue;
     if (BOXES.some(([bx, bz, hx, hz]) => Math.abs(x - bx) < hx + 1 && Math.abs(z - bz) < hz + 1)) continue;
     if (propBlocked(x, z, 0.8)) continue;

@@ -3,6 +3,7 @@
 
   python3 tools/fetch_movie.py                 # download from the Internet Archive, then encode
   python3 tools/fetch_movie.py some/file.mp4   # encode a copy you already have
+  python3 tools/fetch_movie.py --id santamartians   # the second film
 
 Writes dist/video/notld/pNN.mp4 (H.264 + AAC, 480x360, keyframe every 2 s, about 5 minutes each so every
 part stays under the 15 MB per-file limit for published artifacts) and dist/video/notld/parts.json, which the
@@ -11,10 +12,15 @@ game reads (src/tvden.js). Needs ffmpeg and ffprobe.
 import json, os, subprocess, sys, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, 'dist', 'video', 'notld')
-SOURCES = [
-    'https://archive.org/download/night_of_the_living_dead_dvd/Night.mp4',
-]
+MOVIES = {
+    'notld': ('Night of the Living Dead (1968)', ['https://archive.org/download/night_of_the_living_dead_dvd/Night.mp4']),
+    'santamartians': ('Santa Claus Conquers the Martians (1964)', ['https://archive.org/download/santa_claus_conquers_the_martians/santa_claus_conquers_the_martians.mp4']),
+}
+# pick a film with --id <key> (default notld)
+MID = sys.argv[sys.argv.index('--id') + 1] if '--id' in sys.argv else 'notld'
+ARGS = [a for i, a in enumerate(sys.argv[1:], 1) if a != '--id' and sys.argv[i - 1] != '--id']
+TITLE, SOURCES = MOVIES[MID]
+OUT = os.path.join(ROOT, 'dist', 'video', MID)
 PART_SECONDS = 300
 
 
@@ -23,7 +29,7 @@ def download(dst):
         try:
             print('downloading', url)
             urllib.request.urlretrieve(url, dst)
-            if os.path.getsize(dst) > 50_000_000:
+            if os.path.getsize(dst) > 30_000_000:
                 return dst
         except Exception as e:
             print('  failed:', e)
@@ -32,7 +38,7 @@ def download(dst):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    src = sys.argv[1] if len(sys.argv) > 1 else download(os.path.join(OUT, 'source.mp4'))
+    src = ARGS[0] if ARGS else download(os.path.join(OUT, 'source.mp4'))
     for f in os.listdir(OUT):
         if f.startswith('p') and f.endswith('.mp4'):
             os.remove(os.path.join(OUT, f))
@@ -51,7 +57,7 @@ def main():
         parts.append({'f': f, 'd': round(float(d), 3)})
         print(f, parts[-1]['d'], 's', os.path.getsize(os.path.join(OUT, f)) // 1024, 'KB')
     with open(os.path.join(OUT, 'parts.json'), 'w') as fh:
-        json.dump({'title': 'Night of the Living Dead (1968)', 'parts': parts}, fh)
+        json.dump({'title': TITLE, 'parts': parts}, fh)
     if src.endswith('source.mp4'):
         os.remove(src)
     print('wrote', len(parts), 'parts to', OUT)

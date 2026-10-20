@@ -6,3 +6,4 @@ dist/voice/_preview/
 pub-leaders.json
 dist/video/notld/source.mp4
 
+dist/video/*/source.mp4

@@ -94,7 +94,7 @@ function openComicReader(startPage = 1) {
 
   const wrap = document.createElement('div');
   wrap.id = 'comicModal';
-  wrap.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(8,10,16,0.92);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;user-select:none;backdrop-filter:blur(6px);';
+  wrap.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(8,10,16,0.92);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--ui);user-select:none;';
 
   const bar = document.createElement('div');
   bar.style.cssText = 'width:90%;max-width:920px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:#ffd36a;';
@@ -105,18 +105,18 @@ function openComicReader(startPage = 1) {
 
   const closeBtn = document.createElement('button');
   closeBtn.textContent = '✕ Close (Esc)';
-  closeBtn.style.cssText = 'background:#241d2c;border:1px solid #ff6aa8;color:#fff;padding:6px 14px;border-radius:4px;cursor:pointer;font-weight:bold;';
+  closeBtn.style.cssText = 'background:#10142a;border:2px solid var(--ally);color:#fff;padding:6px 14px;cursor:pointer;font-weight:bold;';
 
   bar.appendChild(title);
   bar.appendChild(closeBtn);
   wrap.appendChild(bar);
 
   const imgContainer = document.createElement('div');
-  imgContainer.style.cssText = 'position:relative;width:90%;max-width:920px;height:74vh;display:flex;align-items:center;justify-content:center;background:#0b0e14;border:2px solid #ff9a2a;border-radius:8px;box-shadow:0 0 30px rgba(255,154,42,0.35);overflow:hidden;';
+  imgContainer.style.cssText = 'position:relative;width:90%;max-width:920px;height:74vh;display:flex;align-items:center;justify-content:center;background:#0b0e14;border:3px solid var(--edge);box-shadow:0 0 0 3px #10142a,0 0 0 5px var(--ally);box-shadow:0 0 30px rgba(255,154,42,0.35);overflow:hidden;';
 
   const img = document.createElement('img');
   img.id = 'comicImg';
-  img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;';
+  img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;';
   imgContainer.appendChild(img);
   wrap.appendChild(imgContainer);
 
@@ -125,18 +125,18 @@ function openComicReader(startPage = 1) {
 
   const prevBtn = document.createElement('button');
   prevBtn.textContent = '◀ Previous (←)';
-  prevBtn.style.cssText = 'background:#152238;border:1px solid #4fd2ff;color:#fff;padding:8px 20px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:14px;';
+  prevBtn.style.cssText = 'background:#10142a;border:2px solid var(--ally);color:#fff;padding:8px 20px;cursor:pointer;font-weight:bold;font-size:14px;';
 
   const nextBtn = document.createElement('button');
   nextBtn.textContent = 'Next ▶ (→)';
-  nextBtn.style.cssText = 'background:#152238;border:1px solid #4fd2ff;color:#fff;padding:8px 20px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:14px;';
+  nextBtn.style.cssText = 'background:#10142a;border:2px solid var(--ally);color:#fff;padding:8px 20px;cursor:pointer;font-weight:bold;font-size:14px;';
 
   nav.appendChild(prevBtn);
   nav.appendChild(nextBtn);
   wrap.appendChild(nav);
 
   function update() {
-    img.src = `/shots/aranus%20man/${page}.png`;
+    img.src = `shots/aranus%20man/${page}.jpg`;
     const numEl = document.getElementById('comicPageNum');
     if (numEl) numEl.textContent = `Page ${page} of 10`;
     prevBtn.disabled = (page <= 1);
@@ -706,11 +706,11 @@ const JT_POS = {
   banjo: [-7, 7, 2.4],
   elismas: [-7.5, -7.5, 0.8],
   merla: [7.5, 7.5, -2.4],
-  arthur: [-28, 0, PI2],
-  bobby: [-21, 34, -0.6],
+  arthur: [-36, -7.4, 0],
+  bobby: [-16.6, 35.4, -0.6],
   barnaby: [-18, 6, 0.4],
-  slick: [-23, -18, PI2],
-  viper: [-23, 18, PI2],
+  slick: [-20.5, -13, 0],
+  viper: [-20.3, 13, Math.PI],
   pete: [-27.0, -7.2, 0.2]
 };
 
@@ -1194,33 +1194,29 @@ function buildJamestown() {
   // 6. Arthur Vance's Aranus Man Book Signing Pavilion
   {
     const booth = makeBookSigningBooth();
-    at(booth, tx - 28, tz + 0, PI2);
-    solid(tx - 28, tz + 0, 1.8);
+    at(booth, tx - 36, tz - 9.6, 0);
+    solid(tx - 36, tz - 9.6, 1.8);
   }
 
   // 7. Backyard BBQ Patio & Bobby the Grillmaster
   {
     const grill = makeBBQGrill();
-    at(grill, tx - 22, tz + 33.5);
-    solid(tx - 22, tz + 33.5, 0.8);
+    at(grill, tx - 18, tz + 33.6);
+    solid(tx - 18, tz + 33.6, 0.8);
 
     // Picnic Table with benches & condiments
-    part(props, B(2.4, 0.1, 1.2), toon('#8a5a3a', 'wood'), tx - 24, G(-24, 34) + 0.85, tz + 34);
-    for (const s of [-1, 1]) part(props, B(0.12, 0.8, 0.9), '#3a2a1e', tx - 24 + 0.9 * s, G(-24, 34) + 0.4, tz + 34);
-    for (const s of [-1, 1]) part(props, B(2.4, 0.08, 0.45), toon('#8a5a3a', 'wood'), tx - 24, G(-24, 34) + 0.45, tz + 34 + 0.85 * s);
-    part(props, Cy(0.04, 0.05, 0.22, 6), toon('#c82218'), tx - 24.2, G(-24, 34) + 0.98, tz + 34.1);
-    part(props, Cy(0.04, 0.05, 0.22, 6), toon('#e8b820'), tx - 23.9, G(-24, 34) + 0.98, tz + 34.1);
-    solid(tx - 24, tz + 34, 1.2);
+    part(props, B(2.4, 0.1, 1.2), toon('#8a5a3a', 'wood'), tx - 20.6, G(-20.6, 34.8) + 0.85, tz + 34.8);
+    for (const s of [-1, 1]) part(props, B(0.12, 0.8, 0.9), '#3a2a1e', tx - 20.6 + 0.9 * s, G(-20.6, 34.8) + 0.4, tz + 34.8);
+    for (const s of [-1, 1]) part(props, B(2.4, 0.08, 0.45), toon('#8a5a3a', 'wood'), tx - 20.6, G(-20.6, 34.8) + 0.45, tz + 34.8 + 0.85 * s);
+    part(props, Cy(0.04, 0.05, 0.22, 6), toon('#c82218'), tx - 20.8, G(-20.6, 34.8) + 0.98, tz + 34.9);
+    part(props, Cy(0.04, 0.05, 0.22, 6), toon('#e8b820'), tx - 20.5, G(-20.6, 34.8) + 0.98, tz + 34.9);
+    solid(tx - 20.6, tz + 34.8, 1.2);
   }
 
-  // 8. Back Alley Details (Smuggler's Cut)
-  {
-    part(props, B(1.2, 1.2, 1.2), toon('#6a4a2e', 'wood'), tx - 23.5, G(-23.5, -19.5) + 0.6, tz - 19.5);
-    part(props, B(1.0, 1.0, 1.0), toon('#7a5a3c', 'wood'), tx - 23.2, G(-23.2, -19.5) + 1.7, tz - 19.5);
-    part(props, Cy(0.4, 0.4, 1.1, 8), toon('#4a5a6a', 'panel'), tx - 22.4, G(-22.4, 19.5) + 0.55, tz + 19.5);
-    part(props, Cy(0.4, 0.4, 1.1, 8), toon('#4a5a6a', 'panel'), tx - 23.2, G(-23.2, 19.5) + 0.55, tz + 19.5);
-    solid(tx - 23.5, tz - 19.5, 0.9);
-    solid(tx - 22.8, tz + 19.5, 0.9);
+  // 8. Back Alleys (Smuggler's Cut): the two gaps west of Main Street where the runners work, crates and one dim lamp each
+  for (const [ax, az, s] of [[-20.6, -16.5, -1], [-20.4, 17, 1]]) {
+    cityProp('crates', tx + ax - 0.6, tz + az, 0.3, 'earth'); cityProp('barrel', tx + ax + 0.9, tz + az + 0.6 * s, 0, 'earth'); cityProp('trash', tx + ax + 1.2, tz + az - 1.2 * s, 0, 'earth');
+    const dl = new THREE.PointLight(0xff9a5a, 0.5, 6, 1.8); dl.position.set(tx + ax, G(ax, az) + 3, tz + az - 2 * s); levelGroup.add(dl);
   }
 
   // 9. Street Lamps, Planters, and Park Benches
@@ -1284,13 +1280,13 @@ function buildJamestown() {
   // 11. Parked Hover Cars
   if (typeof makeHoverCar === 'function') {
     for (const [x, z, ry, c, st] of [
-      [-20, 4.6, 0, '#c8402f', 'muscle'],
-      [20, -4.6, Math.PI, '#4fd2ff', 'wedge'],
-      [24, 4.6, 0, '#ffd36a', 'bubble'],
-      [-32, -4.6, Math.PI, '#6fdc5a', 'jet'],
+      [-20, 2.6, 0, '#c8402f', 'muscle'],
+      [20, -2.6, Math.PI, '#4fd2ff', 'wedge'],
+      [26, 2.6, 0, '#ffd36a', 'bubble'],
+      [-32, -2.6, Math.PI, '#6fdc5a', 'jet'],
       [3.4, 24, Math.PI / 2, '#ff6aa8', 'manta'],
       [-3.4, -22, -Math.PI / 2, '#e8e4dc', 'phantom'],
-      [34, 4.6, 0, '#8a6fc4', 'buggy']
+      [36, 2.6, 0, '#8a6fc4', 'buggy']
     ]) {
       const car = makeHoverCar(c, st);
       at(car, tx + x, tz + z, ry + Math.PI / 2, 0.3);
@@ -1366,11 +1362,11 @@ function buildJamestown() {
   // 15. Municipal Notice Board in Civic Plaza at [0, -20]
   {
     const nb = makeNoticeBoard();
-    at(nb, tx + 0, tz - 20, 0);
-    solid(tx + 0, tz - 20, 0.8);
+    at(nb, tx + 8.6, tz - 21, -PI2);
+    solid(tx + 8.6, tz - 21, 0.8);
     INTERACTS.push({
-      x: tx + 0,
-      z: tz - 18.8,
+      x: tx + 7.2,
+      z: tz - 21,
       r: 2.6,
       label: 'Read Jamestown Notice Board [E]',
       fn: openNoticeBoard
@@ -1384,6 +1380,18 @@ function buildJamestown() {
       at(pt, tx - 8.6, tz + pz, 0);
       solid(tx - 8.6, tz + pz, 0.9);
     }
+  }
+
+  // 17. Market Row: one tidy line of stalls behind the south sidewalk of East Avenue, between the street lamps
+  for (const x of [19, 22, 28, 31]) cityProp('stall', tx + x, tz + 7.6, Math.PI, 'earth');
+  cityProp('crates', tx + 37.5, tz + 7.6, 0, 'earth');
+
+  // 18. Corner furniture: a bench, a bin and a hydrant where each street leaves the plaza, nothing in the roads
+  for (const s of [-1, 1]) {
+    cityProp('bench', tx + 14.5 * s, tz + 5.7, Math.PI, 'earth'); cityProp('trash', tx + 13.1 * s, tz + 5.7, 0, 'earth');
+    cityProp('bench', tx + 14.5 * s, tz - 5.7, 0, 'earth'); cityProp('hydrant', tx + 13.1 * s, tz - 5.7, 0, 'earth');
+    cityProp('bench', tx + 6.7 * s, tz + 14.5, -PI2 * s, 'earth'); cityProp('trash', tx + 6.7 * s, tz + 13.1, 0, 'earth');
+    cityProp('bench', tx + 6.7 * s, tz - 14.5, -PI2 * s, 'earth'); cityProp('flowerbox', tx + 6.7 * s, tz - 13.1, PI2, 'earth');
   }
 }
 

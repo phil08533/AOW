@@ -11,7 +11,7 @@ function grafTex(text, hue) {
   x.restore(); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
 }
 function placeWallArt() {
-  if (!LEVEL || LEVEL.fly || LEVEL.id === 'space' || !levelGroup) return;
+  if (!LEVEL || LEVEL.id !== 'earth' || !levelGroup) return;
   let sd = 0; for (const ch of LEVEL.id) sd = (sd * 31 + ch.charCodeAt(0)) >>> 0; const rnd = () => ((sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296);
   const rc = new THREE.Raycaster(), targets = [], spots = [], keys = Object.keys(POSTER_IMG);
   levelGroup.traverse(o => { if (o.isMesh && o.visible && !o.userData.rig && !(o.material && o.material.transparent)) targets.push(o); });
@@ -22,7 +22,7 @@ function placeWallArt() {
       nrm.copy(h.face.normal).transformDirection(h.object.matrixWorld); if (Math.abs(nrm.y) > 0.15 || nrm.dot(d) > -0.9) continue;
       if (spots.some(s => s.p.distanceTo(h.point) < 4.5)) continue; spots.push({ p: h.point.clone(), n: nrm.clone() }); } }
   for (let i = spots.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [spots[i], spots[j]] = [spots[j], spots[i]]; }
-  spots.slice(0, 18).forEach((s, i) => {
+  spots.slice(0, 10).forEach((s, i) => {
     const graf = i % 3 === 2, m = new THREE.Mesh(new THREE.PlaneGeometry(graf ? 2.4 : 0.9, graf ? 0.9 : 1.2),
       new THREE.MeshBasicMaterial({ map: graf ? grafTex(GRAF_TAGS[Math.floor(rnd() * GRAF_TAGS.length)], Math.floor(rnd() * 360)) : posterTex(keys[i % keys.length]), transparent: graf, alphaTest: graf ? 0.1 : 0, polygonOffset: true, polygonOffsetFactor: -2 }));
     m.position.copy(s.p).addScaledVector(s.n, 0.03); if (graf) m.position.y -= 0.5 + rnd() * 0.3; m.lookAt(m.position.clone().add(s.n)); m.rotation.z += (rnd() - 0.5) * 0.06;

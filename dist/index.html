@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.19.12</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.19.13</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -4146,6 +4146,7 @@ LEVELS.ship = {
     // map area: a stepped platform, a rail ring, projector emitters and a layered hologram of planets
     part(props, Cy(1.9, 2.0, 0.1, 24), '#2a2c32', 0, 0.05, -10.5); part(props, Cy(1.95, 1.95, 0.02, 24), glow('#2a6aa8'), 0, 0.11, -10.5);
     for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; if (Math.abs(Math.sin(a)) > 0.95 && Math.cos(a) > -0.3 && Math.sin(a) > 0) continue; part(props, Cy(0.03, 0.03, 0.9, 6), '#5a606c', Math.cos(a) * 1.85, 0.55, -10.5 + Math.sin(a) * 1.85); }
+    for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2; if (Math.sin(a) > 0.9) continue; solid(Math.cos(a) * 1.85, -10.5 + Math.sin(a) * 1.85, 0.28); }
     { const rr = new THREE.Mesh(new THREE.TorusGeometry(1.85, 0.035, 6, 40), toon('#5a606c')); rr.rotation.x = Math.PI / 2; rr.position.set(0, 1.0, -10.5); props.add(rr); }
     for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2; part(props, Cy(0.06, 0.1, 0.15, 8), glow('#8fe3ff'), Math.cos(a) * 0.75, 0.98, -10.5 + Math.sin(a) * 0.75); }
     { const hg = new THREE.Group(); hg.position.set(0, 1.6, -10.5); levelGroup.add(hg); const orb = []; const cols = ['#ffd36a', '#6fdc5a', '#c86aff', '#ff8a5a'];
@@ -18554,7 +18555,7 @@ function dressHall() {
   const pick = HALL_CREW.slice(0, Lz > 20 ? 3 : 2);
   pick.forEach((c, i) => {
     const o = buildChar(() => recolor(makeTrooper(), { '#6f7a3e': c.col }), 'trooper'); blob(o, 0.4); const lane = i % 2 ? -0.75 : 0.75;
-    const f = { o, st: {}, a: 0.5 + i * 2.5, b: Lz - 1.6 - i * 1.5, tgt: null, wait: 1 + i * 1.7, sp: 1.0 + i * 0.12, talkT: 0 };
+    const f = { o, st: {}, a: 4 + i * 2.5, b: Lz - 1.6 - i * 1.5, tgt: null, wait: 1 + i * 1.7, sp: 1.0 + i * 0.12, talkT: 0 };
     o.position.set(lane, 0, f.a + (f.b - f.a) * (i / 3)); levelGroup.add(o); MOVERS.push([o, 0.4]); f.lane = lane;
     INTERACTS.push({ get x() { return o.position.x; }, get z() { return o.position.z; }, r: 1.6, label: 'Talk to ' + c.name, fn: () => { f.talkT = 6; const want = Math.atan2(player.pos.x - o.position.x, player.pos.z - o.position.z); o.rotation.y = want;
       openDlg(c.role, c.name); $('dlgLine').textContent = c.lines[Math.floor(Math.random() * c.lines.length)]; acts([['Carry on', closeDlg, true]]); } });
@@ -18747,6 +18748,7 @@ const UPDATES = [
   { id: 141, title: "2.19.10 · Load fix", items: ["Fixed a crash on load for saves that tracked a quest which no longer exists"] },
   { id: 142, title: "2.19.11 · Posters & graffiti", items: ["Eight poster designs now hang on walls across the universe: bars, the underground, ship halls and town buildings", "Spray-paint graffiti tags turn up on walls too"] },
   { id: 143, title: "2.19.12 · Grub's Bar", items: ["The Undercroft bar is now Grub's Bar, with a cyan neon sign", "Hanging chain lamps, a back wall of glowing bottles, beer taps and mugs on the counter", "Tables with red stools, arcade cabinets and junk on the floor"] },
+  { id: 144, title: "2.19.13 · Ship fixes", items: ["The galaxy map railing on the bridge is solid now, with the opening at the front", "Crew no longer walk through the front of the hall by the bridge"] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -21204,7 +21206,7 @@ const CREWQ_LINES = ["Off shift, Captain. Don't tell Ruiz I was napping.", "Bunk
       if (C.talk > 0) { C.talk -= dt; animRig(o, C.st, dt, t); return; }
       const walk = (tx, tz, sp) => { const dx = tx - o.position.x, dz = tz - o.position.z, d = Math.hypot(dx, dz); if (d < 0.08) return true; const k = Math.min(d, sp * dt); o.position.x += dx / d * k; o.position.z += dz / d * k; o.rotation.y = Math.atan2(dx, dz); animRig(o, C.st, dt, t); return false; };
       if (C.mode === 'in') { if ((C.t -= dt) <= 0) { C.mode = 'out1'; C.t = 0.6; o.position.set(x + 0.15, 0, z); o.visible = true; } return; }
-      if (C.mode === 'out1') { if ((C.t -= dt) > 0) return; if (walk(home.x, home.z, 1.1)) { C.mode = 'stroll'; C.tgt = 1 + Math.random() * Math.max(1, Lz - 5); } return; }
+      if (C.mode === 'out1') { if ((C.t -= dt) > 0) return; if (walk(home.x, home.z, 1.1)) { C.mode = 'stroll'; C.tgt = 4 + Math.random() * Math.max(1, Lz - 8); } return; }
       if (C.mode === 'stroll') { if (walk(-0.75, C.tgt, 1.1)) { C.mode = 'idle'; C.t = 3 + Math.random() * 6; } return; }
       if (C.mode === 'idle') { animRig(o, C.st, dt, t); if ((C.t -= dt) <= 0) C.mode = 'back'; return; }
       if (C.mode === 'back') { if (walk(home.x, home.z, 1.1)) C.mode = 'in1'; return; }

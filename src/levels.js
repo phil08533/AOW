@@ -362,6 +362,7 @@ LEVELS.ship = {
     // map area: a stepped platform, a rail ring, projector emitters and a layered hologram of planets
     part(props, Cy(1.9, 2.0, 0.1, 24), '#2a2c32', 0, 0.05, -10.5); part(props, Cy(1.95, 1.95, 0.02, 24), glow('#2a6aa8'), 0, 0.11, -10.5);
     for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; if (Math.abs(Math.sin(a)) > 0.95 && Math.cos(a) > -0.3 && Math.sin(a) > 0) continue; part(props, Cy(0.03, 0.03, 0.9, 6), '#5a606c', Math.cos(a) * 1.85, 0.55, -10.5 + Math.sin(a) * 1.85); }
+    for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2; if (Math.sin(a) > 0.9) continue; solid(Math.cos(a) * 1.85, -10.5 + Math.sin(a) * 1.85, 0.28); }
     { const rr = new THREE.Mesh(new THREE.TorusGeometry(1.85, 0.035, 6, 40), toon('#5a606c')); rr.rotation.x = Math.PI / 2; rr.position.set(0, 1.0, -10.5); props.add(rr); }
     for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2; part(props, Cy(0.06, 0.1, 0.15, 8), glow('#8fe3ff'), Math.cos(a) * 0.75, 0.98, -10.5 + Math.sin(a) * 0.75); }
     { const hg = new THREE.Group(); hg.position.set(0, 1.6, -10.5); levelGroup.add(hg); const orb = []; const cols = ['#ffd36a', '#6fdc5a', '#c86aff', '#ff8a5a'];

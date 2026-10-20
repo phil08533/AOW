@@ -68,7 +68,7 @@ function dressHall() {
   const pick = HALL_CREW.slice(0, Lz > 20 ? 3 : 2);
   pick.forEach((c, i) => {
     const o = buildChar(() => recolor(makeTrooper(), { '#6f7a3e': c.col }), 'trooper'); blob(o, 0.4); const lane = i % 2 ? -0.75 : 0.75;
-    const f = { o, st: {}, a: 0.5 + i * 2.5, b: Lz - 1.6 - i * 1.5, tgt: null, wait: 1 + i * 1.7, sp: 1.0 + i * 0.12, talkT: 0 };
+    const f = { o, st: {}, a: 4 + i * 2.5, b: Lz - 1.6 - i * 1.5, tgt: null, wait: 1 + i * 1.7, sp: 1.0 + i * 0.12, talkT: 0 };
     o.position.set(lane, 0, f.a + (f.b - f.a) * (i / 3)); levelGroup.add(o); MOVERS.push([o, 0.4]); f.lane = lane;
     INTERACTS.push({ get x() { return o.position.x; }, get z() { return o.position.z; }, r: 1.6, label: 'Talk to ' + c.name, fn: () => { f.talkT = 6; const want = Math.atan2(player.pos.x - o.position.x, player.pos.z - o.position.z); o.rotation.y = want;
       openDlg(c.role, c.name); $('dlgLine').textContent = c.lines[Math.floor(Math.random() * c.lines.length)]; acts([['Carry on', closeDlg, true]]); } });

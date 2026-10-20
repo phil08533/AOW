@@ -1,6 +1,6 @@
 // =================== SOUNDTRACK: real music per place and moment, with clean crossfades ===================
-const TRACKS = { hymn: 'music/hymn.mp3', mushroom: 'music/mushroom.mp3', nebula: 'music/nebula.mp3', neon: 'music/neon.mp3', wakeup: 'music/wakeup.mp3', dancing: 'music/dancing.mp3', apocalyptic: 'music/apocalyptic.mp3', enchanted: 'music/enchanted.mp3', low: 'music/low.mp3', overture: 'music/overture.mp3', tidal: 'music/tidal.mp3', iloveyou: 'music/iloveyou.mp3', c4po: 'music/c4po.mp3' };
-const PLAYLISTS = { cutscene: ['hymn'], romance: ['iloveyou'], boss: ['apocalyptic'], battle: ['low'], lounge: ['nebula', 'neon', 'wakeup', 'dancing'], ship: ['mushroom', 'hymn'], earth: ['enchanted'], speedway: ['overture'], fort: ['tidal'], other: ['c4po'] };
+const TRACKS = { hymn: 'music/hymn.mp3', mushroom: 'music/mushroom.mp3', nebula: 'music/nebula.mp3', neon: 'music/neon.mp3', wakeup: 'music/wakeup.mp3', dancing: 'music/dancing.mp3', apocalyptic: 'music/apocalyptic.mp3', enchanted: 'music/enchanted.mp3', low: 'music/low.mp3', overture: 'music/overture.mp3', tidal: 'music/tidal.mp3', iloveyou: 'music/iloveyou.mp3', c4po: 'music/c4po.mp3', glinky: 'music/glinky.mp3', clarinet: 'music/clarinet.mp3' };
+const PLAYLISTS = { cutscene: ['hymn'], romance: ['iloveyou'], boss: ['apocalyptic'], battle: ['low'], lounge: ['nebula', 'neon', 'wakeup', 'dancing'], ship: ['mushroom', 'hymn'], earth: ['enchanted'], speedway: ['overture'], fort: ['tidal'], other: ['c4po'], cantina: ['glinky', 'clarinet'] };
 MUSIC_NAMES[3] = 'Soundtrack';
 if (!PREFS.musicV2) { PREFS.musicV2 = 1; PREFS.music = 3; if (PREFS.musicVol == null) PREFS.musicVol = 0.7; try { savePrefs(); } catch (_) {} }
 if (PREFS.musicVol == null) PREFS.musicVol = 0.7;
@@ -47,6 +47,7 @@ function musContext(dt) {
   } else if (LEVEL.fly && fly && fly.raiders && fly.raiders.some(r => !r.dead && r.obj.position.distanceTo(player.pos) < 160)) return 'battle';
   const id = LEVEL.id;
   if (id === 'zfloor' && typeof ZF !== 'undefined' && zTheme(ZF.floor) === 'bar') return 'lounge';
+  if (id === 'underworld') return 'cantina';
   if (id === 'ship') return 'ship';
   if (id === 'earth') return 'earth';
   if (id === 'speedway') return 'speedway';

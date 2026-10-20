@@ -78,6 +78,20 @@ function uwDress() {
     sit(regs[2], 'civ', -5.8, 0.45, 9.85, look(-5.8, 8.9, -5.8, 9.85), 8); sit(regs[0], 'bughybrid', -4.2, 0.45, 9.85, look(-4.2, 8.9, -4.2, 9.85), 9);
     part(props, B(0.5, 0.36, 0.14), toon('#2a2420'), -5, 0.97, 8.85); part(props, B(0.3, 0.05, 0.2), glow('#7fff6a'), -4.4, 0.81, 8.7); for (let k = 0; k < 4; k++) part(props, B(0.16, 0.03, 0.08), toon('#6fdc5a'), -5.6 + k * 0.05, 0.8 + k * 0.03, 8.75);
     for (const [x, z, tx, tz, k] of [[-9.6, -1.2, -8.6, -1.2, 2], [-8.6, -1.2, -9.6, -1.2, 3]]) ucStand(regs[k], 'civ', x, z, look(tx, tz, x, z));
+    // the cantina band on a little stage in the south-west corner: keytar, theremin and glowing drum pods
+    { const sx = -9.6, sz = 7.4; part(props, B(3.4, 0.3, 2.6), toon('#2a1e1a', 'wood'), sx, 0.15, sz); part(props, B(3.4, 0.05, 0.06), glow('#c86aff'), sx, 0.31, sz + 1.3); box(sx, sz, 1.7, 1.3);
+      const sl = new THREE.PointLight(0xc86aff, 0.9, 6, 1.8); sl.position.set(sx + 0.5, 2.6, sz); levelGroup.add(sl);
+      const ry = Math.PI / 2 + 0.5, band = [];
+      const play = (mk, rig, x, z, fn) => { const o = buildChar(mk, rig); o.position.set(x, 0.3, z); o.rotation.y = ry; levelGroup.add(o); band.push([o, fn]); return o; };
+      const kt = play(() => recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a8a', '#3e5e26': '#2a3a6a' }), 'bughybrid', sx - 0.6, sz - 0.8, (o, R, t) => { R.armL.rotation.x = -1.0 + Math.sin(t * 9) * 0.25; R.armR.rotation.x = -1.0 - Math.sin(t * 9) * 0.25; });
+      part(kt, B(0.9, 0.08, 0.25), toon('#1a1a2a'), 0, 1.15, 0.35, 0, 0, 0.25); part(kt, B(0.6, 0.02, 0.12), glow('#4fe0ff'), 0.05, 1.2, 0.38, 0, 0, 0.25);
+      play(() => makeCivilian('#5a2a6a', '#1e1c22', '#8fae6a', '#cfcac0', '#c86aff'), 'civ', sx + 0.2, sz + 0.6, (o, R, t) => { R.armR.rotation.x = -1.2 + Math.sin(t * 2.3) * 0.4; R.armL.rotation.x = -0.6 + Math.sin(t * 3.1) * 0.3; });
+      part(props, Cy(0.03, 0.05, 1.1, 6), '#5a606c', sx + 0.8, 0.85, sz + 0.9); part(props, Cy(0.008, 0.008, 0.9, 4), '#cfd3d8', sx + 0.8, 1.85, sz + 0.9); const orb = part(props, new THREE.SphereGeometry(0.09, 10, 8), glow('#7fff6a'), sx + 0.8, 2.32, sz + 0.9);
+      const dr = play(() => recolor(makeSpearman(), { '#7fae63': '#8a4a6a', '#4f7a3c': '#5a2a4a' }), 'spearman', sx - 1.0, sz + 0.5, (o, R, t) => { R.armL.rotation.x = -0.9 - Math.abs(Math.sin(t * 6)) * 0.6; R.armR.rotation.x = -0.9 - Math.abs(Math.cos(t * 6)) * 0.6; });
+      const pods = [[-0.45, 0.55, '#ff4fd8'], [0.45, 0.55, '#4fe0ff'], [0, 0.85, '#ffd36a']].map(([dx, dz, c]) => part(props, Cy(0.22, 0.22, 0.5, 12), glow(c), sx - 1.0 + dx * Math.cos(ry) + dz * Math.sin(ry), 0.55, sz + 0.5 - dx * Math.sin(ry) + dz * Math.cos(ry)));
+      levelAnims.push(t => { band.forEach(([o, fn], i) => { if (!o.parent) return; const R = o.userData.rig; o.position.y = 0.3 + Math.abs(Math.sin(t * 4 + i)) * 0.05; o.rotation.z = Math.sin(t * 2 + i) * 0.05; if (R && R.armL) fn(o, R, t); });
+        orb.scale.setScalar(1 + Math.sin(t * 5) * 0.25); pods.forEach((p, i) => p.scale.y = 1 + Math.abs(Math.sin(t * 6 + i * 1.3)) * 0.15); sl.intensity = 0.7 + Math.sin(t * 3) * 0.25; });
+      const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.5), new THREE.MeshBasicMaterial({ map: signTex('THE GLONK TRIO', '#140818', '#c86aff') })); sg.position.set(-11.6, 2.4, sz + 1.6); sg.rotation.y = Math.PI / 2; levelGroup.add(sg); }
     // junk on the floor
     for (let i = 0; i < 18; i++) { const x = -10 + ((i * 37) % 20), z = -6 + ((i * 23) % 15); if (Math.abs(x) < 3 && z > 0 && z < 4) continue;
       part(props, i % 3 ? Cy(0.04, 0.04, 0.12, 6) : B(0.28, 0.03, 0.2), toon(['#8a8f96', '#c8402f', '#d9c79a', '#3a6a8a'][i % 4]), x, 0.03, z, i % 3 ? Math.PI / 2 : 0, i, 0); }

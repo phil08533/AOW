@@ -231,7 +231,7 @@ LEVELS.underworld = {
     part(props, B(8, 1.1, 1.2), toon('#3a2a20'), 0, 0.55, -8.6); part(props, B(8.2, 0.08, 1.4), toon('#5a4a3a'), 0, 1.14, -8.6); box(0, -8.6, 4, 0.6);
     for (let i = 0; i < 7; i++) part(props, Cy(0.08, 0.1, 0.4, 6), glow(['#c86aff', '#6fdc5a', '#ffd36a', '#ff6aa8'][i % 4]), -3 + i, 1.4, -10.4);
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(6, 1), new THREE.MeshBasicMaterial({ map: signTex('THE UNDERWORLD', '#1a0a20', '#c86aff') })); sign.position.set(0, 2.6, -10.7); props.add(sign);
-    for (const [x, z, s] of [[-10, 6, 1], [-9, 8, 0.8], [10, 7, 1.1], [9.6, 4.6, 0.7], [-10.4, -2, 0.9]]) { part(props, B(s, s, s), toon('#5a4a3a'), x, s / 2, z, 0, x); box(x, z, s / 2, s / 2); }
+    for (const [x, z, s] of [[10, 7, 1.1], [9.6, 4.6, 0.7], [-10.4, -2, 0.9]]) { part(props, B(s, s, s), toon('#5a4a3a'), x, s / 2, z, 0, x); box(x, z, s / 2, s / 2); }
     part(props, B(3, 0.8, 1.6), toon('#1e4a2a'), 0, 0.4, 2); part(props, B(3.2, 0.1, 1.8), toon('#3a2a20'), 0, 0.82, 2); box(0, 2, 1.6, 0.9);
     // the Hit board
     part(props, B(3, 1.8, 0.1), toon('#1e1c22'), -11.7 + 0.1, 1.6, -2, 0, Math.PI / 2); const hb = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.6), new THREE.MeshBasicMaterial({ map: signTex('HIT BOARD', '#3a0a0a', '#ff3b2a') })); hb.position.set(-11.6, 2.3, -2); hb.rotation.y = Math.PI / 2; props.add(hb);

@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.19.16</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.19.17</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -14279,8 +14279,8 @@ window.addEventListener('mousedown', e => { if (e.button === 0 && inLounge() && 
   if (DANCE.on) { DANCE.t += dt; const b = Math.abs(Math.sin(DANCE.t * 4.2)); camera.position.y += b * 0.12 - 0.04; camera.rotation.z += Math.sin(DANCE.t * 2.1) * 0.06; player.yaw += Math.sin(DANCE.t * 1.05) * dt * 0.6; } }; }
 
 // =================== SOUNDTRACK: real music per place and moment, with clean crossfades ===================
-const TRACKS = { hymn: 'music/hymn.mp3', mushroom: 'music/mushroom.mp3', nebula: 'music/nebula.mp3', neon: 'music/neon.mp3', wakeup: 'music/wakeup.mp3', dancing: 'music/dancing.mp3', apocalyptic: 'music/apocalyptic.mp3', enchanted: 'music/enchanted.mp3', low: 'music/low.mp3', overture: 'music/overture.mp3', tidal: 'music/tidal.mp3', iloveyou: 'music/iloveyou.mp3', c4po: 'music/c4po.mp3' };
-const PLAYLISTS = { cutscene: ['hymn'], romance: ['iloveyou'], boss: ['apocalyptic'], battle: ['low'], lounge: ['nebula', 'neon', 'wakeup', 'dancing'], ship: ['mushroom', 'hymn'], earth: ['enchanted'], speedway: ['overture'], fort: ['tidal'], other: ['c4po'] };
+const TRACKS = { hymn: 'music/hymn.mp3', mushroom: 'music/mushroom.mp3', nebula: 'music/nebula.mp3', neon: 'music/neon.mp3', wakeup: 'music/wakeup.mp3', dancing: 'music/dancing.mp3', apocalyptic: 'music/apocalyptic.mp3', enchanted: 'music/enchanted.mp3', low: 'music/low.mp3', overture: 'music/overture.mp3', tidal: 'music/tidal.mp3', iloveyou: 'music/iloveyou.mp3', c4po: 'music/c4po.mp3', glinky: 'music/glinky.mp3', clarinet: 'music/clarinet.mp3' };
+const PLAYLISTS = { cutscene: ['hymn'], romance: ['iloveyou'], boss: ['apocalyptic'], battle: ['low'], lounge: ['nebula', 'neon', 'wakeup', 'dancing'], ship: ['mushroom', 'hymn'], earth: ['enchanted'], speedway: ['overture'], fort: ['tidal'], other: ['c4po'], cantina: ['glinky', 'clarinet'] };
 MUSIC_NAMES[3] = 'Soundtrack';
 if (!PREFS.musicV2) { PREFS.musicV2 = 1; PREFS.music = 3; if (PREFS.musicVol == null) PREFS.musicVol = 0.7; try { savePrefs(); } catch (_) {} }
 if (PREFS.musicVol == null) PREFS.musicVol = 0.7;
@@ -14327,6 +14327,7 @@ function musContext(dt) {
   } else if (LEVEL.fly && fly && fly.raiders && fly.raiders.some(r => !r.dead && r.obj.position.distanceTo(player.pos) < 160)) return 'battle';
   const id = LEVEL.id;
   if (id === 'zfloor' && typeof ZF !== 'undefined' && zTheme(ZF.floor) === 'bar') return 'lounge';
+  if (id === 'underworld') return 'cantina';
   if (id === 'ship') return 'ship';
   if (id === 'earth') return 'earth';
   if (id === 'speedway') return 'speedway';
@@ -17610,7 +17611,7 @@ LEVELS.underworld = {
     part(props, B(8, 1.1, 1.2), toon('#3a2a20'), 0, 0.55, -8.6); part(props, B(8.2, 0.08, 1.4), toon('#5a4a3a'), 0, 1.14, -8.6); box(0, -8.6, 4, 0.6);
     for (let i = 0; i < 7; i++) part(props, Cy(0.08, 0.1, 0.4, 6), glow(['#c86aff', '#6fdc5a', '#ffd36a', '#ff6aa8'][i % 4]), -3 + i, 1.4, -10.4);
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(6, 1), new THREE.MeshBasicMaterial({ map: signTex('THE UNDERWORLD', '#1a0a20', '#c86aff') })); sign.position.set(0, 2.6, -10.7); props.add(sign);
-    for (const [x, z, s] of [[-10, 6, 1], [-9, 8, 0.8], [10, 7, 1.1], [9.6, 4.6, 0.7], [-10.4, -2, 0.9]]) { part(props, B(s, s, s), toon('#5a4a3a'), x, s / 2, z, 0, x); box(x, z, s / 2, s / 2); }
+    for (const [x, z, s] of [[10, 7, 1.1], [9.6, 4.6, 0.7], [-10.4, -2, 0.9]]) { part(props, B(s, s, s), toon('#5a4a3a'), x, s / 2, z, 0, x); box(x, z, s / 2, s / 2); }
     part(props, B(3, 0.8, 1.6), toon('#1e4a2a'), 0, 0.4, 2); part(props, B(3.2, 0.1, 1.8), toon('#3a2a20'), 0, 0.82, 2); box(0, 2, 1.6, 0.9);
     // the Hit board
     part(props, B(3, 1.8, 0.1), toon('#1e1c22'), -11.7 + 0.1, 1.6, -2, 0, Math.PI / 2); const hb = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.6), new THREE.MeshBasicMaterial({ map: signTex('HIT BOARD', '#3a0a0a', '#ff3b2a') })); hb.position.set(-11.6, 2.3, -2); hb.rotation.y = Math.PI / 2; props.add(hb);
@@ -18686,6 +18687,20 @@ function uwDress() {
     sit(regs[2], 'civ', -5.8, 0.45, 9.85, look(-5.8, 8.9, -5.8, 9.85), 8); sit(regs[0], 'bughybrid', -4.2, 0.45, 9.85, look(-4.2, 8.9, -4.2, 9.85), 9);
     part(props, B(0.5, 0.36, 0.14), toon('#2a2420'), -5, 0.97, 8.85); part(props, B(0.3, 0.05, 0.2), glow('#7fff6a'), -4.4, 0.81, 8.7); for (let k = 0; k < 4; k++) part(props, B(0.16, 0.03, 0.08), toon('#6fdc5a'), -5.6 + k * 0.05, 0.8 + k * 0.03, 8.75);
     for (const [x, z, tx, tz, k] of [[-9.6, -1.2, -8.6, -1.2, 2], [-8.6, -1.2, -9.6, -1.2, 3]]) ucStand(regs[k], 'civ', x, z, look(tx, tz, x, z));
+    // the cantina band on a little stage in the south-west corner: keytar, theremin and glowing drum pods
+    { const sx = -9.6, sz = 7.4; part(props, B(3.4, 0.3, 2.6), toon('#2a1e1a', 'wood'), sx, 0.15, sz); part(props, B(3.4, 0.05, 0.06), glow('#c86aff'), sx, 0.31, sz + 1.3); box(sx, sz, 1.7, 1.3);
+      const sl = new THREE.PointLight(0xc86aff, 0.9, 6, 1.8); sl.position.set(sx + 0.5, 2.6, sz); levelGroup.add(sl);
+      const ry = Math.PI / 2 + 0.5, band = [];
+      const play = (mk, rig, x, z, fn) => { const o = buildChar(mk, rig); o.position.set(x, 0.3, z); o.rotation.y = ry; levelGroup.add(o); band.push([o, fn]); return o; };
+      const kt = play(() => recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a8a', '#3e5e26': '#2a3a6a' }), 'bughybrid', sx - 0.6, sz - 0.8, (o, R, t) => { R.armL.rotation.x = -1.0 + Math.sin(t * 9) * 0.25; R.armR.rotation.x = -1.0 - Math.sin(t * 9) * 0.25; });
+      part(kt, B(0.9, 0.08, 0.25), toon('#1a1a2a'), 0, 1.15, 0.35, 0, 0, 0.25); part(kt, B(0.6, 0.02, 0.12), glow('#4fe0ff'), 0.05, 1.2, 0.38, 0, 0, 0.25);
+      play(() => makeCivilian('#5a2a6a', '#1e1c22', '#8fae6a', '#cfcac0', '#c86aff'), 'civ', sx + 0.2, sz + 0.6, (o, R, t) => { R.armR.rotation.x = -1.2 + Math.sin(t * 2.3) * 0.4; R.armL.rotation.x = -0.6 + Math.sin(t * 3.1) * 0.3; });
+      part(props, Cy(0.03, 0.05, 1.1, 6), '#5a606c', sx + 0.8, 0.85, sz + 0.9); part(props, Cy(0.008, 0.008, 0.9, 4), '#cfd3d8', sx + 0.8, 1.85, sz + 0.9); const orb = part(props, new THREE.SphereGeometry(0.09, 10, 8), glow('#7fff6a'), sx + 0.8, 2.32, sz + 0.9);
+      const dr = play(() => recolor(makeSpearman(), { '#7fae63': '#8a4a6a', '#4f7a3c': '#5a2a4a' }), 'spearman', sx - 1.0, sz + 0.5, (o, R, t) => { R.armL.rotation.x = -0.9 - Math.abs(Math.sin(t * 6)) * 0.6; R.armR.rotation.x = -0.9 - Math.abs(Math.cos(t * 6)) * 0.6; });
+      const pods = [[-0.45, 0.55, '#ff4fd8'], [0.45, 0.55, '#4fe0ff'], [0, 0.85, '#ffd36a']].map(([dx, dz, c]) => part(props, Cy(0.22, 0.22, 0.5, 12), glow(c), sx - 1.0 + dx * Math.cos(ry) + dz * Math.sin(ry), 0.55, sz + 0.5 - dx * Math.sin(ry) + dz * Math.cos(ry)));
+      levelAnims.push(t => { band.forEach(([o, fn], i) => { if (!o.parent) return; const R = o.userData.rig; o.position.y = 0.3 + Math.abs(Math.sin(t * 4 + i)) * 0.05; o.rotation.z = Math.sin(t * 2 + i) * 0.05; if (R && R.armL) fn(o, R, t); });
+        orb.scale.setScalar(1 + Math.sin(t * 5) * 0.25); pods.forEach((p, i) => p.scale.y = 1 + Math.abs(Math.sin(t * 6 + i * 1.3)) * 0.15); sl.intensity = 0.7 + Math.sin(t * 3) * 0.25; });
+      const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.5), new THREE.MeshBasicMaterial({ map: signTex('THE GLONK TRIO', '#140818', '#c86aff') })); sg.position.set(-11.6, 2.4, sz + 1.6); sg.rotation.y = Math.PI / 2; levelGroup.add(sg); }
     // junk on the floor
     for (let i = 0; i < 18; i++) { const x = -10 + ((i * 37) % 20), z = -6 + ((i * 23) % 15); if (Math.abs(x) < 3 && z > 0 && z < 4) continue;
       part(props, i % 3 ? Cy(0.04, 0.04, 0.12, 6) : B(0.28, 0.03, 0.2), toon(['#8a8f96', '#c8402f', '#d9c79a', '#3a6a8a'][i % 4]), x, 0.03, z, i % 3 ? Math.PI / 2 : 0, i, 0); }
@@ -18803,6 +18818,7 @@ const UPDATES = [
   { id: 145, title: "2.19.14 · Fewer posters", items: ["Posters and graffiti now only appear on Earth, and fewer of them"] },
   { id: 146, title: "2.19.15 · Grub's Bar in the Underworld", items: ["Grub's bar in the Underworld gets a cyan neon sign, glowing neon bottles, bulb chandeliers on chains, beer taps and mugs", "Regulars sit at the bar and at two new tables; dark floor with junk scattered about"] },
   { id: 147, title: "2.19.16 · Crew for hire", items: ["Seated people in the theatre and the bar now sit properly, with their knees bent at 90°", "More regulars in the Underworld: a couple eating in a booth, a deal going down in a new booth, two talking business", "Hire crew from Grub: a Runner fetches Lab materials, a Cook brews extra doses, a Dealer sells your product for credits", "One crew slot to start, two at level 15, three at level 30. Crew can get killed on the job, so check back at the bar for replacements", "Manage your crew from the Lab terminal on your ship"] },
+  { id: 148, title: "2.19.17 · The Glonk Trio", items: ["A cantina band plays on a little stage in the Underworld: a keytar, a theremin and glowing drum pods", "The Underworld now plays Glinky Glonky and Crooked Clarinet"] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },

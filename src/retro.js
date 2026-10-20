@@ -115,6 +115,35 @@ TEX.marble = canvasTex(64, (x, s) => { x.fillStyle = g8(236); x.fillRect(0, 0, s
 TEX.hazard = canvasTex(32, (x, s) => { x.fillStyle = '#ffd23a'; x.fillRect(0, 0, s, s); x.fillStyle = '#1e1c22'; for (let k = -s; k < s * 2; k += 16) { x.beginPath(); x.moveTo(k, 0); x.lineTo(k + 8, 0); x.lineTo(k + 8 - s, s); x.lineTo(k - s, s); x.closePath(); x.fill(); } });
 const FORT_WALL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEEElEQVR4Aezav4pUTRAF8GGTL/gSA0EzU0EwUHwBBcHAxEAxVQx9BSPBBzAUzY0NBEFfQDQQBFMzBQMTAyPld6GhHab6dt8dt2RmFw5dt7tOVffpvn+2mIPbN2/8evjgUQrkhsz8Bz9/fFhFfx8/vV1BNN7Tjw89vrUPDtR9ozY+tHgH0SDiiZOnV5dv3VsswtIYePLKz47m2OrHwxfn/bunoWsoQGG8f/2imIvbl8/uD3O3kffr51crcf77/3yYPxTg3NlLq+/fvkxghxEaA3himAC74frHEF88YP8x2HmBJy8R2BHtgFM0iAjReE8/PvT41j44UPeN2vgXLt5t0sIT0GTt0GCqAK030FFoLH+qAG4/kziKxUY5UgUwKSJos5AuQNbC5SV+ugB7fQtYvF2wG1lIPQEWT4SsxcubKoAJZMH/B8TfOwGK4L4QncBUAexAmVBWmyqARdsFbRbSBchaeMmbKkD27hOhWRLjsOtongBlJa+Lw4iAL85oDBwY5dX+PblDASRXU7t25/FKoDpwry3GqTNXh+uK8qnlyS9Gb77aT4ye3KEAJZiaWrGXtqMxPBtwlLOW5hQDVxxthEkAaq07KCepyYGPhvXxnmsxLEIMdg+HD18ci2DrGwWeGMCO+H+9Jki81gSiieFANN7Tjw8t3+kEtBx2fWwSwC7t+kKj9U0CRIP70H8swMgub3pbjPDXff03COv9m663nbvkmE6Ajw2QRBsBiU9B5Nfb7zUn5py/fPy0MOdfj7f8xZwEYOwrJgG8K8HbQBuBSHwKIr/e/nL85/zlq3PP+dfjuPV1bYs5CcDogWA9fr0+bgHo8d927pJzSIBC2qX2WAC76Ump3Uccn4DyJP5bu/+vn67pBMw9YQ+ziLnYLeEPk7cVtx6bBKg7art8UdV9o/aSGBaO1/uK3DSnEkOcTeOlLxQAUU3OLbJ0ImLgq++xS9K5Vj4c+Ud4dVwxenKHApRgCovFXtLiz9XlNsVdwlmP05M7LIn5ZFRPA/Z68J5rPHxg93D48MUBtr5R4OEDO+I3TwAiROSefnzY5OuIburXhwPspcCHFr8pQIu4K2PpArROwRKRRzmpAnhSj0542/6pAmx7MSPxfCc4fXsrgC9UJzBVADtgEiM7t23fVAEsngjbXtRIvFQBTJQI2iykC5C1cHmdvnQBTMJkspAqgMXv9S2QvXj5U09A1rGv8zZ/JqcYATVh1MaHo+LVeeT1xVf3rdvhCUBWkQH2OrHnGg/fvc7u4fDhiwdsfaPAk1dRhB3xQwEK4cKV68Vc3Pqp3Sh5G3ktXhxCRPlDARQSVFPePH+yYkcBWv14S2LgyYvLbuWIxvDwxfHdH/mFJTEEQYC9FPgwyseBOV5rHB9aPr8BAAD//2HWoUAAAAAGSURBVAMAdTf4f9d4z80AAAAASUVORK5CYII=';
 TEX.ironwall = imgTex(FORT_WALL_PNG, '#847e87');
+// ---- hand-painted town and plant set (grayscale, tinted by the material colour; every texture tiles seamlessly) ----
+const wpx = (x, s, a, b, w, h, v) => { x.fillStyle = typeof v === 'number' ? g8(v) : v; for (const ox of [0, -s, s]) for (const oy of [0, -s, s]) x.fillRect(a + ox, b + oy, w, h); };
+TEX.brick = canvasTex(32, (x, s) => { x.fillStyle = g8(120); x.fillRect(0, 0, s, s);                 // mortar
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 2; c++) { const bx = c * 16 + (r % 2) * 8, by = r * 8, v = 200 + Math.floor(trnd() * 45);
+    wpx(x, s, bx + 1, by + 1, 15, 6, v); wpx(x, s, bx + 1, by + 1, 15, 1, Math.min(255, v + 22)); wpx(x, s, bx + 1, by + 6, 15, 1, v - 34);  // face, lit top, shaded bottom
+    for (let k = 0; k < 6; k++) wpx(x, s, bx + 2 + Math.floor(trnd() * 13), by + 2 + Math.floor(trnd() * 4), 1, 1, v - 20 - Math.floor(trnd() * 25)); } });
+TEX.stucco = canvasTex(32, (x, s) => { x.fillStyle = g8(222); x.fillRect(0, 0, s, s); speckle(x, 0.45, s, 200, 245);
+  for (let i = 0; i < 6; i++) wpx(x, s, Math.floor(trnd() * s), Math.floor(trnd() * s), 3 + Math.floor(trnd() * 6), 2 + Math.floor(trnd() * 4), 'rgba(0,0,0,.06)');
+  for (let i = 0; i < 2; i++) { let a = Math.floor(trnd() * s), b = Math.floor(trnd() * s); for (let k = 0; k < 6; k++) { wpx(x, s, a, b, 1, 1, 170); a += trnd() < 0.5 ? 1 : 0; b += 1; } } });  // hairline cracks
+TEX.shingle = canvasTex(32, (x, s) => { x.fillStyle = g8(110); x.fillRect(0, 0, s, s);
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) { const bx = c * 8 + (r % 2) * 4, by = r * 8, v = 180 + Math.floor(trnd() * 50);
+    wpx(x, s, bx, by, 7, 7, v); wpx(x, s, bx, by + 6, 7, 1, v - 55); wpx(x, s, bx + 6, by, 1, 7, v - 30); wpx(x, s, bx, by, 7, 1, Math.min(255, v + 20)); } });
+TEX.bark = canvasTex(32, (x, s) => { x.fillStyle = g8(175); x.fillRect(0, 0, s, s);
+  for (let c = 0; c < s; c += 2) { const v = 150 + Math.floor(trnd() * 70); wpx(x, s, c, 0, 2, s, v); }
+  for (let i = 0; i < 14; i++) { const a = Math.floor(trnd() * s), b = Math.floor(trnd() * s), L = 4 + Math.floor(trnd() * 9); wpx(x, s, a, b, 1, L, 105); wpx(x, s, a + 1, b, 1, L, 210); }  // furrows with a lit edge
+  for (let i = 0; i < 3; i++) { const a = Math.floor(trnd() * s), b = Math.floor(trnd() * s); wpx(x, s, a, b, 3, 2, 120); wpx(x, s, a + 1, b, 1, 1, 90); } });  // knots
+TEX.leaves = canvasTex(32, (x, s) => { x.fillStyle = g8(120); x.fillRect(0, 0, s, s);
+  for (let i = 0; i < 70; i++) { const a = Math.floor(trnd() * s), b = Math.floor(trnd() * s), v = 165 + Math.floor(trnd() * 75), big = trnd() < 0.5;
+    wpx(x, s, a + 1, b + 1, big ? 3 : 2, 2, v - 70); wpx(x, s, a, b, big ? 3 : 2, 2, v); wpx(x, s, a, b, 1, 1, Math.min(255, v + 35)); } });  // small leaf clumps: shadow, body, highlight
+TEX.grass = canvasTex(64, (x, s) => { x.fillStyle = g8(205); x.fillRect(0, 0, s, s); speckle(x, 0.35, s, 185, 235);
+  for (let i = 0; i < 9; i++) wpx(x, s, Math.floor(trnd() * s), Math.floor(trnd() * s), 7 + Math.floor(trnd() * 9), 5 + Math.floor(trnd() * 7), 'rgba(0,0,0,.07)');
+  for (let i = 0; i < 110; i++) { const a = Math.floor(trnd() * s), b = Math.floor(trnd() * s), h = 2 + Math.floor(trnd() * 3);  // tufts: three blades, dark root, light tip
+    wpx(x, s, a, b + h - 1, 3, 1, 160); wpx(x, s, a, b, 1, h, 240); wpx(x, s, a + 1, b + 1, 1, h - 1, 220); wpx(x, s, a + 2, b, 1, h, 232); } });
+// box UVs in world units, so a texture tiles once every `m` metres instead of stretching over a whole wall
+function tileBox(geo, m = 1.6) {
+  const p = geo.parameters, uv = geo.attributes.uv, dims = [[p.depth, p.height], [p.depth, p.height], [p.width, p.depth], [p.width, p.depth], [p.width, p.height], [p.width, p.height]];
+  for (let f = 0; f < 6; f++) for (let k = 0; k < 4; k++) { const i = f * 4 + k; uv.setXY(i, uv.getX(i) * dims[f][0] / m, uv.getY(i) * dims[f][1] / m); }
+  uv.needsUpdate = true; return geo;
+}
 TEX.blob.minFilter = THREE.LinearFilter; TEX.cloud.minFilter = THREE.NearestFilter;
 const matCache = {};
 const TOON_RAMP = (() => { const d = new Uint8Array([90, 90, 90, 160, 160, 160, 225, 225, 225, 255, 255, 255]); const t = new THREE.DataTexture(d, 4, 1, THREE.RGBFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();

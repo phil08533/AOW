@@ -7,7 +7,7 @@ function box(x, z, hx, hz) { BOXES.push([x, z, hx, hz]); }
 function rock(x, z, s, col) { const r = at(new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), toon(col || '#a39a88', 'stone')), x, z, x * 7, s * 0.25); r.scale.y = 0.65; r.rotation.x = z; solid(x, z, s * 0.9); }
 function tree(x, z, s, leaf) {
   const g = new THREE.Group();
-  part(g, Cy(0.13 * s, 0.2 * s, 1.8 * s, 6), '#6b4f36', 0, 0.9 * s, 0);
+  part(g, Cy(0.13 * s, 0.2 * s, 1.8 * s, 6), toon('#6b4f36', 'bark'), 0, 0.9 * s, 0);
   part(g, new THREE.IcosahedronGeometry(1.1 * s, 0), toon(leaf || '#6f9a3e', 'leaves'), 0, 2.3 * s, 0);
   part(g, new THREE.IcosahedronGeometry(0.75 * s, 0), toon(leaf ? leaf : '#86ad4a', 'leaves'), 0.3 * s, 3.0 * s, 0.1 * s);
   at(g, x, z, x); solid(x, z, 0.3 * s);

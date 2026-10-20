@@ -578,15 +578,15 @@ function makeJTBuilding(w, h, d, col, trim, sign, awn, bStyle = 'commercial') {
   const g = new THREE.Group();
 
   // Resolve authentic retro materials
-  const wallMat = toon(col || '#9a9088', 'stone');
+  const wallMat = toon(col || '#9a9088', bStyle === 'commercial' || bStyle === 'industrial' ? 'brick' : 'stucco');
   const trimMat = toon(trim || '#4a3f35', 'wood');
-  const roofMat = toon(trim || '#3a343c', 'wood');
+  const roofMat = toon(trim || '#3a343c', 'shingle');
 
   // 1. Stone foundation plinth
   part(g, B(w + 0.3, 0.5, d + 0.3), toon('#4e4a46', 'stone'), 0, 0.25, 0);
 
   // 2. Main Wall Body
-  part(g, B(w, h, d), wallMat, 0, h / 2, 0);
+  part(g, tileBox(B(w, h, d), bStyle === 'commercial' || bStyle === 'industrial' ? 1.4 : 2.2), wallMat, 0, h / 2, 0);
 
   // 3. Ground floor display windows & entrance
   if (bStyle === 'civic') {
@@ -632,7 +632,7 @@ function makeJTBuilding(w, h, d, col, trim, sign, awn, bStyle = 'commercial') {
   // 6. Roof Cornice & Mansard Slate Roof
   part(g, B(w + 0.35, 0.35, d + 0.35), trimMat, 0, h + 0.17, 0);
   const roofH = bStyle === 'civic' ? 2.8 : 2.0;
-  part(g, B(w - 0.3, roofH, d - 0.3), roofMat, 0, h + roofH / 2 + 0.35, 0);
+  part(g, tileBox(B(w - 0.3, roofH, d - 0.3), 1.2), roofMat, 0, h + roofH / 2 + 0.35, 0);
   part(g, B(w - 1.2, 0.25, d - 1.2), trimMat, 0, h + roofH + 0.45, 0);
 
   // Dormer windows on the slate roof
@@ -1241,7 +1241,7 @@ function buildJamestown() {
   for (let z = -24; z <= 36; z += 12) {
     if (Math.abs(z) > 14) for (const s of [-1, 1]) {
       const x = 6.5 * s;
-      part(props, Cy(0.16, 0.22, 2.8, 6), toon('#5a3a22', 'wood'), tx + x, G(x, z) + 1.4, tz + z);
+      part(props, Cy(0.16, 0.22, 2.8, 6), toon('#5a3a22', 'bark'), tx + x, G(x, z) + 1.4, tz + z);
       E(props, toon('#4f8a3a', 'leaves'), tx + x, G(x, z) + 3.2, tz + z, 1.2, 1.3, 1.2);
       solid(tx + x, tz + z, 0.35);
     }
@@ -1258,7 +1258,7 @@ function buildJamestown() {
 
     for (let i = 0; i < 10; i++) {
       const a = i * 0.63, x = px + Math.cos(a) * 7.2, z = pz + Math.sin(a) * 5.6;
-      part(props, Cy(0.25, 0.35, 3.4, 6), toon('#5a3a22', 'wood'), tx + x, G(x, z) + 1.7, tz + z);
+      part(props, Cy(0.25, 0.35, 3.4, 6), toon('#5a3a22', 'bark'), tx + x, G(x, z) + 1.7, tz + z);
       E(props, toon(i % 2 ? '#3f8a2f' : '#5aa04a', 'leaves'), tx + x, G(x, z) + 4.0, tz + z, 1.9, 1.6, 1.9);
       solid(tx + x, tz + z, 0.45);
     }

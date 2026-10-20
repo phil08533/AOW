@@ -1111,12 +1111,12 @@ function buildJamestown() {
     }
     // Illuminated neon main sign: "★ THE ROXY · CINEMA ★"
     const mSign = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 1.1), psx(new THREE.MeshBasicMaterial({ map: signTex('★ THE ROXY · CINEMA ★', '#180810', '#ffd36a'), side: THREE.DoubleSide })));
-    mSign.position.set(0, 3.4, 7.25);
+    mSign.position.set(0, 3.5, 7.42);
     mq.add(mSign);
 
     // Reader-board under canopy: "NOW SHOWING: 1. NIGHT OF THE LIVING DEAD · 2. SANTA CLAUS CONQUERS THE MARTIANS"
     const rSign = new THREE.Mesh(new THREE.PlaneGeometry(8.0, 0.5), psx(new THREE.MeshBasicMaterial({ map: signTex('1. NIGHT OF THE LIVING DEAD · 2. SANTA CLAUS', '#0c0e14', '#4fe0d0'), side: THREE.DoubleSide })));
-    rSign.position.set(0, 2.9, 7.25);
+    rSign.position.set(0, 2.55, 7.4);
     mq.add(rSign);
 
     // Glowing border chaser lights
@@ -1134,7 +1134,7 @@ function buildJamestown() {
     mq.add(p2);
 
     // Red carpet runner extending from the double doors out onto the sidewalk
-    part(mq, B(2.8, 0.05, 4.2), toon('#8a1524', 'cloth'), 0, 0.03, 6.2);
+    part(mq, B(2.8, 0.05, 4.2), toon('#8a1524', 'cloth'), 0, 0.08, 6.2);
 
     // Grand entrance double doors (glass & brass)
     part(mq, B(2.4, 2.8, 0.12), toon('#1a1218'), 0, 1.4, 4.02);

@@ -25,7 +25,7 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
 { const _zn = zNpcs; zNpcs = function (n, th) { const L = _zn(n, th); if (th !== 'under') return L;
   const mole = L.find(d => d.id === 'mole'); if (mole) Object.assign(mole, { x: -24.6, z: -4, face: Math.PI / 2, role: 'Informant · corner booth' });
   const fence = L.find(d => d.id === 'fence2'); if (fence) Object.assign(fence, { x: -23, z: 21, face: Math.PI / 2, role: 'The Fence · back room' });
-  L.push({ id: 'grubb', name: 'Grubb', role: 'Bartender · the Rusty Rivet', rig: 'chunk', make: () => makeChunkMonster('#5a6a3a', '#3e4a28', '#8a9a5a', '#3a2a1e', false), x: 0, z: -22.4, face: 0, heal: true,
+  L.push({ id: 'grubb', name: 'Grubb', role: 'Bartender · Grub\'s Bar', rig: 'chunk', make: () => makeChunkMonster('#5a6a3a', '#3e4a28', '#8a9a5a', '#3a2a1e', false), x: 0, z: -22.4, face: 0, heal: true,
     custom: [['Rotgut (25 cr)', () => { if (S.cr < 25) { toast('NO CREDIT', 'Grubb does not do tabs. Grubb does do kneecaps.', 2.5); return; } S.cr -= 25; player.hp = Math.min(player.maxHp || player.hp, player.hp + 40); markDirty(); closeDlg(); toast('ROTGUT', 'It burns. It keeps burning. +40 HP', 2.5); SFX.coin && SFX.coin(); }],
       ['Buy the bar a round (300 cr)', () => { if (S.cr < 300) { toast('NO CREDIT', 'Not enough credits to make friends.', 2); return; } S.cr -= 300; S.buffs = S.buffs || {}; S.buffs.rest = Math.max(S.buffs.rest || 0, Date.now()) + 5 * 60000; markDirty(); closeDlg(); toast('A ROUND ON YOU', 'The whole dive cheers. Nobody stabs you tonight. Rested buff.', 3); SFX.quest && SFX.quest(); }]],
     idle: ["WHAT. You drink or you leave. Leaving is extra.", "No blasters at the bar. Knives are fine. Knives are tradition.", "Last guy asked for water. We buried him in it.", "You're not Marshal, are you? Marshals pay double. And then they pay again."] });
@@ -60,7 +60,7 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
   part(props, B(16, 1.1, 1.3), wood, 0, 0.55, -20); part(props, B(16.4, 0.1, 1.6), rust, 0, 1.15, -20); part(props, B(16, 0.14, 0.12), glow('#c8402f'), 0, 0.12, -19.32); box(0, -20, 8, 0.7);
   part(props, B(18, 4.2, 0.4), dark, 0, 2.1, -D + 0.6);
   for (let r = 0; r < 3; r++) { part(props, B(16, 0.08, 0.5), rust, 0, 1.6 + r * 0.9, -D + 0.9); for (let i = 0; i < 16; i++) part(props, Cy(0.08, 0.08, 0.42 + (i % 3) * 0.08, 6), glow(['#5a8a3a', '#8a5a2a', '#6a2a1e', '#c8a03a'][(i * 3 + r) % 4]), -7.4 + i * 0.95, 1.86 + r * 0.9, -D + 0.9); }
-  const rv = new THREE.Mesh(new THREE.PlaneGeometry(6, 0.9), new THREE.MeshBasicMaterial({ map: signTex('THE RUSTY RIVET', '#140806', '#ff5a2a') })); rv.position.set(0, 3.2, -19.2); rv.rotation.x = 0; levelGroup.add(rv); part(props, B(0.05, 1.4, 0.05), metal, -2.6, 4.3, -19.2); part(props, B(0.05, 1.4, 0.05), metal, 2.6, 4.3, -19.2);
+  const rv = new THREE.Mesh(new THREE.PlaneGeometry(6, 0.9), new THREE.MeshBasicMaterial({ map: signTex("GRUB'S BAR", '#06121a', '#7fe8ff') })); rv.position.set(0, 3.2, -19.2); rv.rotation.x = 0; levelGroup.add(rv); part(props, B(0.05, 1.4, 0.05), metal, -2.6, 4.3, -19.2); part(props, B(0.05, 1.4, 0.05), metal, 2.6, 4.3, -19.2);
   levelAnims.push(t => { rv.visible = !(Math.sin(t * 13) > 0.93 && Math.sin(t * 1.7) > 0.4); });
   const nb = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.6), new THREE.MeshBasicMaterial({ map: signTex('NO BLASTERS', '#1e1410', '#d9c79a') })); nb.position.set(7.4, 2.6, -D + 0.85); props.add(nb);
   for (let i = 0; i < 7; i++) { const x = -6 + i * 2; part(props, Cy(0.26, 0.26, 0.08, 8), toon('#4a2a1e', 'cloth'), x, 0.78, -18.4); part(props, Cy(0.04, 0.04, 0.75, 5), metal, x, 0.39, -18.4); }
@@ -124,6 +124,31 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
   // and one who is still walking, badly
   { const o = buildChar(() => makeCivilian('#4a3a5a', '#1e1c22', '#8fae6a', '#cfcac0', '#c86aff'), 'civ'); blob(o, 0.45); levelGroup.add(o); MOVERS.push([o, 0.45]); const st = {};
     levelAnims.push(t => { if (!o.parent) return; const a = t * 0.18, x = 2 + Math.cos(a) * 6 + Math.sin(t * 1.3) * 0.6, z = 2 + Math.sin(a) * 4; o.rotation.y = Math.atan2(-Math.sin(a) * 6, Math.cos(a) * 4) + Math.sin(t * 2.1) * 0.4; o.position.set(x, 0, z); o.rotation.z = Math.sin(t * 1.7) * 0.14; animRig(o, st, 1 / 60, t); }); }
+
+  // ---- GRUB'S BAR look: hanging chain lamps, a wall of glowing bottles, taps, tables and junk on the floor ----
+  { const chain = toon('#2a2c30', 'panel'), bulbM = glow('#ffe2a8'), lamps = [[-6, -17], [0, -17], [6, -17], [-14, -8], [-14, 4], [16, -6], [-4, 14]];
+    lamps.forEach(([x, z], i) => { const top = H - 0.1, len = 1.6 + (i % 2) * 0.5; for (let k = 0; k < 6; k++) part(props, new THREE.TorusGeometry(0.06, 0.018, 4, 8), chain, x, top - k * (len / 6), z, 0, k % 2 ? Math.PI / 2 : 0, 0);
+      part(props, Cy(0.5, 0.5, 0.06, 10), chain, x, top - len, z); for (let b = 0; b < 4; b++) { const a = b * Math.PI / 2 + 0.4; part(props, new THREE.SphereGeometry(0.11, 8, 6), bulbM, x + Math.cos(a) * 0.38, top - len - 0.14, z + Math.sin(a) * 0.38); }
+      if (i % 2 === 0) { const l = new THREE.PointLight(0xffc98a, 0.9, 10, 1.8); l.position.set(x, top - len - 0.4, z); levelGroup.add(l); } });
+    // a back-bar wall of bright bottles in neon colours
+    const bc = ['#ff4fd8', '#4fe0ff', '#7fff6a', '#ffd36a', '#ff7a3a', '#a86aff'];
+    for (let r = 0; r < 3; r++) for (let i = 0; i < 14; i++) part(props, Cy(0.09, 0.1, 0.36 + (i % 2) * 0.12, 6), glow(bc[(i + r * 2) % 6]), -6.6 + i * 1.02 + 0.45, 2.3 + r * 0.9, -D + 1.15);
+    const bl = new THREE.PointLight(0xff6ad8, 0.8, 9, 1.8); bl.position.set(0, 3, -D + 2.5); levelGroup.add(bl);
+    // beer taps along the counter
+    for (let i = 0; i < 6; i++) { const x = 2.5 + i * 0.7; part(props, Cy(0.05, 0.05, 0.5, 6), toon('#c9a43a'), x, 1.45, -20.4); part(props, B(0.08, 0.22, 0.08), glow(bc[i]), x, 1.78, -20.4); }
+    // mugs of amber beer on the bar
+    for (let i = 0; i < 6; i++) part(props, Cy(0.09, 0.09, 0.2, 8), glow(i % 2 ? '#ffb347' : '#ffd36a'), -5.2 + i * 2.1, 1.3, -19.5);
+    // tables with drinks and stools in the main room
+    [[-14, -8], [-14, 4], [16, -6], [-4, 14]].forEach(([x, z], i) => { part(props, B(2.6, 0.12, 1.4), wood, x, 0.9, z); part(props, B(0.2, 0.85, 0.2), dark, x, 0.43, z); box(x, z, 1.3, 0.7);
+      for (const [sx, sz] of [[-1.7, 0], [1.7, 0], [0, 1.2]]) { part(props, Cy(0.28, 0.28, 0.1, 10), toon('#8a1e24', 'cloth'), x + sx, 0.62, z + sz); part(props, Cy(0.05, 0.05, 0.6, 5), metal, x + sx, 0.3, z + sz); }
+      for (let k = 0; k < 3; k++) part(props, Cy(0.06, 0.07, 0.28, 6), glow(bc[(i + k) % 6]), x - 0.8 + k * 0.7, 1.1, z + (k % 2) * 0.3 - 0.15); });
+    // junk on the floor: crates, cans and scraps
+    for (let i = 0; i < 26; i++) { const x = -26 + ((i * 41) % 52), z = -16 + ((i * 29) % 40); if (Math.abs(x - 2) < 8 && Math.abs(z - 2) < 6) continue;
+      if (i % 5 === 0) { part(props, B(0.8, 0.6, 0.8), wood, x, 0.3, z, 0, i * 0.7, 0); box(x, z, 0.45, 0.45); }
+      else part(props, i % 2 ? Cy(0.05, 0.05, 0.14, 6) : B(0.3, 0.04, 0.22), toon(['#8a8f96', '#c8402f', '#d9c79a', '#3a6a8a'][i % 4]), x, 0.04, z, i % 2 ? Math.PI / 2 : 0, i, 0); }
+    // a pair of arcade cabinets glowing on the left wall
+    for (const z of [-10, -6.5]) { part(props, B(1.1, 2.0, 0.9), toon('#1a1a2a'), -W + 0.9, 1.0, z); part(props, B(0.05, 0.7, 0.7), glow('#4fe0ff'), -W + 1.47, 1.45, z); part(props, B(0.05, 0.25, 0.8), glow('#ff4fd8'), -W + 1.47, 1.95, z); box(-W + 0.9, z, 0.6, 0.5); }
+  }
   // dim, dirty light and a haze of smoke
   for (const [x, z, c, i] of [[0, -16, 0xff5a2a, 1.0], [8, 4, 0x8a3a2a, 0.7], [-8, 2, 0x5a8a4a, 0.5], [14, 16, 0x8a3a2a, 0.6]]) { const l = new THREE.PointLight(c, i, 20, 1.6); l.position.set(x, 4.6, z); levelGroup.add(l); }
   { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 2, 32, 32, 32); g.addColorStop(0, 'rgba(160,150,140,0.5)'); g.addColorStop(1, 'rgba(160,150,140,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64);

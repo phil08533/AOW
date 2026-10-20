@@ -371,7 +371,7 @@ LEVELS.ship = {
       const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.15, 0.6, 20, 1, true), new THREE.MeshBasicMaterial({ color: '#4fd2ff', transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false })); cone.position.set(0, 1.28, -10.5); levelGroup.add(cone);
       levelAnims.push(t => { for (const [p, r, sp, ph] of orb) p.position.set(Math.cos(t * sp + ph) * r, 0, Math.sin(t * sp + ph) * r); hg.rotation.y = t * 0.05; }); }
     // walls: framed panels with small status lights in place of the blue strips
-    for (const x of [-6.82, 6.82]) for (let z = -13; z <= -4; z += 3) { part(props, B(0.06, 1.2, 1.6), '#2a2e36', x, 1.5, z); part(props, B(0.07, 1.0, 1.4), '#1a1d24', x, 1.5, z); for (let q = 0; q < 3; q++) part(props, B(0.08, 0.06, 0.06), glow(['#6fdc5a', '#ffd36a', '#4fd2ff'][(q + z) & 1 ? q : 2 - q]), x, 1.85 - q * 0.12, z + 0.55); part(props, B(0.075, 0.5, 0.9), glow('#123a5a'), x, 1.45, z - 0.15); }
+    if (0) for (const x of [-6.82, 6.82]) for (let z = -13; z <= -4; z += 3) { part(props, B(0.06, 1.2, 1.6), '#2a2e36', x, 1.5, z); part(props, B(0.07, 1.0, 1.4), '#1a1d24', x, 1.5, z); for (let q = 0; q < 3; q++) part(props, B(0.08, 0.06, 0.06), glow(['#6fdc5a', '#ffd36a', '#4fd2ff'][(q + z) & 1 ? q : 2 - q]), x, 1.85 - q * 0.12, z + 0.55); part(props, B(0.075, 0.5, 0.9), glow('#123a5a'), x, 1.45, z - 0.15); }
     for (let z = -14; z <= -3; z += 2.2) part(props, B(13.6, 0.18, 0.22), '#2a2c32', 0, H - 0.2, z);
     part(props, B(0.04, 0.04, 12.6), glow('#8fd0ff'), 0, 0.03, -8.5);
 

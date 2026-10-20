@@ -379,15 +379,22 @@ function tvDen(s, cx, cz, props) {
   TVD.hole = null;
   if (typeof roomLvl === 'function' && roomLvl('angler') >= 5) {
     FISH_TABLES.wormhole = wormTable(); const hx = mx, hz = cz - 1.5, g = new THREE.Group(); g.position.set(hx, 0, hz); levelGroup.add(g);
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.09, 8, 36), new THREE.MeshBasicMaterial({ vertexColors: true })); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.08;
-    { const p = ring.geometry.attributes.position, cl = new Float32Array(p.count * 3), c = new THREE.Color(); for (let i = 0; i < p.count; i++) { c.setHSL((Math.atan2(p.getY(i), p.getX(i)) / (Math.PI * 2) + 1) % 1, 0.95, 0.6); cl.set([c.r, c.g, c.b], i * 3); } ring.geometry.setAttribute('color', new THREE.BufferAttribute(cl, 3)); } g.add(ring);
+    // a containment collar of dark alloy with six emitters, a hovering lens ring, and a swirling event horizon full of stars
+    const alloy = toon('#2a2e36', 'panel'), trim = toon('#5a606c');
+    part(g, new THREE.CylinderGeometry(0.86, 0.92, 0.1, 6), alloy, 0, 0.05, 0); part(g, new THREE.TorusGeometry(0.66, 0.06, 6, 36), trim, 0, 0.1, 0, -Math.PI / 2);
+    const nodes = []; for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2 + Math.PI / 6; part(g, B(0.16, 0.14, 0.16), alloy, Math.cos(a) * 0.8, 0.14, Math.sin(a) * 0.8, 0, -a, 0); nodes.push(part(g, B(0.08, 0.05, 0.08), glow('#8fe3ff'), Math.cos(a) * 0.8, 0.23, Math.sin(a) * 0.8, 0, -a, 0)); }
+    const lens = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.012, 4, 48), new THREE.MeshBasicMaterial({ color: '#c8a8ff', transparent: true, opacity: 0.7 })); lens.rotation.x = -Math.PI / 2; lens.position.y = 0.55; g.add(lens);
+    const motes = []; for (let k = 0; k < 14; k++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.025, 0.025), glow(k % 2 ? '#c8a8ff' : '#8fe3ff')); g.add(m); motes.push([m, Math.random() * 6.3, 0.15 + Math.random() * 0.4, Math.random()]); }
     const wc = document.createElement('canvas'); wc.width = wc.height = 128; const wx = wc.getContext('2d'), wt = new THREE.CanvasTexture(wc); wt.encoding = THREE.sRGBEncoding;
-    const water = new THREE.Mesh(new THREE.CircleGeometry(0.58, 32), new THREE.MeshBasicMaterial({ map: wt })); water.rotation.x = -Math.PI / 2; water.position.y = 0.06; g.add(water);
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.24), new THREE.MeshBasicMaterial({ map: signTex('WORM HOLE', '#14081e', '#ff6aff') })); sign.position.set(1.05, 0.36, 0.1); g.add(sign); part(g, Cy(0.03, 0.03, 0.3, 5), '#2a2c32', 1.05, 0.12, 0.1); // off to the side so it never blocks the TV from the couch
-    const L = new THREE.PointLight(0xff6aff, 0.6, 4, 2); L.position.y = 0.5; g.add(L);
-    let lastDraw = 0; levelAnims.push(t => { if (!g.parent) return; ring.rotation.z = t * 0.6; L.color.setHSL((t * 0.08) % 1, 0.9, 0.6);
-      if (t - lastDraw > 0.05) { lastDraw = t; const gr = wx.createRadialGradient(64, 64, 4, 64, 64, 64); for (let k = 0; k <= 6; k++) gr.addColorStop(k / 6, `hsl(${(t * 60 + k * 55) % 360},90%,${k === 0 ? 85 : 55 - k * 4}%)`); wx.fillStyle = gr; wx.fillRect(0, 0, 128, 128);
-        wx.strokeStyle = 'rgba(255,255,255,.35)'; wx.lineWidth = 3; for (let k = 0; k < 3; k++) { wx.beginPath(); for (let a = 0; a < 7; a += 0.2) { const r = 6 + a * 7.5, q = a + t * 1.6 + k * 2.09; wx.lineTo(64 + Math.cos(q) * r, 64 + Math.sin(q) * r); } wx.stroke(); } wt.needsUpdate = true; } });
+    const water = new THREE.Mesh(new THREE.CircleGeometry(0.62, 40), new THREE.MeshBasicMaterial({ map: wt })); water.rotation.x = -Math.PI / 2; water.position.y = 0.106; g.add(water);
+    const stars = Array.from({ length: 40 }, () => [Math.random() * 6.3, 8 + Math.random() * 54, Math.random()]);
+    const L = new THREE.PointLight(0x9a7aff, 0.7, 4, 2); L.position.y = 0.5; g.add(L);
+    let lastDraw = 0; levelAnims.push(t => { if (!g.parent) return; lens.position.y = 0.55 + Math.sin(t * 1.3) * 0.05; lens.rotation.z = t * 0.4; L.intensity = 0.6 + Math.sin(t * 2) * 0.15;
+      nodes.forEach((n, k) => n.material.color.setHSL(0.55 + Math.sin(t * 2 + k) * 0.08, 0.9, 0.6 + Math.sin(t * 4 + k) * 0.15));
+      motes.forEach(([m, a, r, ph]) => { const q = (t * 0.25 + ph) % 1, ang = a + t * 1.2 * (1 - q); m.position.set(Math.cos(ang) * r * (1 - q), 0.1 + q * 0.9, Math.sin(ang) * r * (1 - q)); m.scale.setScalar(1 - q); });
+      if (t - lastDraw > 0.05) { lastDraw = t; const gr = wx.createRadialGradient(64, 64, 2, 64, 64, 64); gr.addColorStop(0, '#000'); gr.addColorStop(0.18, '#05010c'); gr.addColorStop(0.45, '#1a0a3a'); gr.addColorStop(0.75, '#3a1a6a'); gr.addColorStop(0.92, '#8a5ad8'); gr.addColorStop(1, '#d8c0ff'); wx.fillStyle = gr; wx.fillRect(0, 0, 128, 128);
+        for (const [a, r, b] of stars) { const q = a + t * (2.4 - r / 40), rr = r * (1 - ((t * 0.05 + b) % 1) * 0.3); wx.fillStyle = `rgba(230,220,255,${0.4 + b * 0.6})`; wx.fillRect(64 + Math.cos(q) * rr, 64 + Math.sin(q) * rr, 2, 2); }
+        wx.strokeStyle = 'rgba(200,170,255,.28)'; wx.lineWidth = 2; for (let k = 0; k < 4; k++) { wx.beginPath(); for (let a = 0; a < 7; a += 0.15) { const r = 10 + a * 7.5, q = a + t * 1.4 + k * 1.57; wx.lineTo(64 + Math.cos(q) * r, 64 + Math.sin(q) * r); } wx.stroke(); } wt.needsUpdate = true; } });
     box(hx, hz, 0.6, 0.6);
     TVD.hole = { x: hx, z: hz, y: 0.06, ry: 0, ice: true, worm: true };
     INTERACTS.push({ x: hx, z: hz, r: 3.4, label: 'Fish: Worm Hole', fn: () => startFishing('Worm Hole', 'wormhole') });

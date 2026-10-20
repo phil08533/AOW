@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.19.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.19.10</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -5137,7 +5137,8 @@ function talk(id) {
   menuFor(n);
 }
 function trackedQuest() {
-  if (S.track && S.qst[S.track] && S.qst[S.track].st !== 'done') return S.track;
+  for (const k in S.qst) if (!QDEFS[k]) delete S.qst[k];
+  if (S.track && QDEFS[S.track] && S.qst[S.track] && S.qst[S.track].st !== 'done') return S.track;
   for (const qid of QORDER) { const s = S.qst[qid]; if (s && s.st === 'ready') return qid; }
   for (const qid of QORDER) { const s = S.qst[qid]; if (s && s.st === 'active' && QDEFS[qid].main) return qid; }
   for (const qid of QORDER) { const s = S.qst[qid]; if (s && s.st === 'active') return qid; }
@@ -18743,6 +18744,7 @@ const UPDATES = [
   { id: 112, title: "2.14.5 · The Angler's Den, rooms that grow, Vega's film", items: ["New ship room: the Angler's Den. Mount your catches on 12 wall plaques, each showing the fish and your best length. Take one down any time to get the fish back. It also has a rod rack, an armchair and a big aquarium.", 'Upgraded ship rooms now look upgraded. Lv 2 and 3 each add a themed prop, Lv 4 hangs a banner and a second light, and Lv 5 adds gold trim and a crest at the door.', 'Ship corridor: the hull posts no longer stand in doorways, and the crane hook that was floating in the hall is back inside the hangar.', 'Fishing: the Bug Pond, Fern Pond and Coolant Canal are bigger, your cast always lands in water, and Coil in Robot City moved back from the dock.', 'Opening film: Captain Vega is the hero now (you are a fresh recruit), and the soldiers that were standing inside her are gone. Her ship flies the film\'s space battle.', 'Prologue: the ball of stars is gone, the stars are dimmer so the planets stand out, the thing behind Vector is now the Watcher rising out of the dark, and Drome\'s flagship wears a setting-sun sigil instead of a big red dot. With voice off, the prologue no longer stalls on its first line.'] },
   { id: 139, title: "2.19.8 · Inside the Roxy", items: ["Cinema seats face the screen, and moviegoers sit in about ten of them", "You walk on the tiered floor instead of sinking through it, and the seats sit on their tiers", "The Roxy has just its marquee out front: the old building sign behind it is gone, and the street lamp no longer stands in the doorway"] },
   { id: 140, title: "2.19.9 · Roxy touch-ups", items: ["The Roxy marquee and reader board no longer overlap or flicker", "The red carpet sits above the sidewalk instead of flickering through it", "Moviegoers sit with their legs angled down instead of poking through the seats"] },
+  { id: 141, title: "2.19.10 · Load fix", items: ["Fixed a crash on load for saves that tracked a quest which no longer exists"] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },

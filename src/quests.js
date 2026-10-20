@@ -222,7 +222,8 @@ function talk(id) {
   menuFor(n);
 }
 function trackedQuest() {
-  if (S.track && S.qst[S.track] && S.qst[S.track].st !== 'done') return S.track;
+  for (const k in S.qst) if (!QDEFS[k]) delete S.qst[k];
+  if (S.track && QDEFS[S.track] && S.qst[S.track] && S.qst[S.track].st !== 'done') return S.track;
   for (const qid of QORDER) { const s = S.qst[qid]; if (s && s.st === 'ready') return qid; }
   for (const qid of QORDER) { const s = S.qst[qid]; if (s && s.st === 'active' && QDEFS[qid].main) return qid; }
   for (const qid of QORDER) { const s = S.qst[qid]; if (s && s.st === 'active') return qid; }

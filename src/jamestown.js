@@ -679,7 +679,7 @@ const JT_BUILDINGS = [
   ['CINEMA', -28, 12, 11, 8, 9, Math.PI, '#8a2a3a', '#ffd36a', '#c8402f', 'entertainment'],
   ['GARAGE', 28, 12, 11, 7, 6, Math.PI, '#5d636c', '#ff8a2a', '#ff8a2a', 'industrial'],
   ['APARTMENTS', 28.5, 22.5, 9, 9, 15, Math.PI, '#b8a088', '#5a3a22', null, 'residential'],
-  ['APARTMENTS', -30.5, -20.5, 9, 9, 14, 0, '#a8b0b8', '#3a4a5a', null, 'residential'],
+  ['APARTMENTS', -30.5, -21, 9, 9, 14, PI2, '#a8b0b8', '#3a4a5a', null, 'residential'],
   [null, -37.5, 10.5, 7, 6, 7, PI2, '#d8c098', '#5a3a22', null, 'residential'],
   [null, 38, -8, 7, 6, 7.5, -PI2, '#b8b8c8', '#3b4f7a', null, 'residential'],
   [null, -24, -36, 8, 7, 8, 0.3, '#c8b0d8', '#5d3a8a', null, 'residential']
@@ -835,7 +835,7 @@ function makeArcadeCabinet(title, screenCol, marqueeCol) {
   // Colored side art stripes
   for (const s of [-1, 1]) {
     part(g, B(0.04, 1.6, 0.65), toon(marqueeCol), 0.395 * s, 0.95, 0);
-    part(g, B(0.02, 1.4, 0.5), toon(screenCol), 0.405 * s, 0.95, 0);
+    part(g, B(0.02, 1.4, 0.5), toon(screenCol), 0.425 * s, 0.95, 0); // sits proud of the stripe so the faces never fight
   }
   // Slanted screen recess
   part(g, B(0.66, 0.55, 0.1), '#0a0c10', 0, 1.15, 0.34, -0.3, 0, 0);
@@ -1103,25 +1103,25 @@ function buildJamestown() {
     const cx = tx - 28, cz = tz + 12;
     const mq = new THREE.Group();
     // Canopy roof
-    part(mq, B(8.8, 0.45, 3.2), toon('#2a1218'), 0, 3.4, 1.6);
-    part(mq, B(9.2, 0.15, 3.4), toon('#ffd36a'), 0, 3.65, 1.6);
+    part(mq, B(8.8, 0.45, 3.2), toon('#2a1218'), 0, 3.4, 5.6);
+    part(mq, B(9.2, 0.15, 3.4), toon('#ffd36a'), 0, 3.65, 5.6);
     // Support rods
     for (const s of [-1, 1]) {
-      part(mq, Cy(0.04, 0.04, 2.2, 6), '#cfd3d8', 3.8 * s, 4.4, 1.6, 0.45, 0, 0);
+      part(mq, Cy(0.04, 0.04, 2.2, 6), '#cfd3d8', 3.8 * s, 4.4, 4.9, -0.6, 0, 0);
     }
     // Illuminated neon main sign: "★ THE ROXY · CINEMA ★"
     const mSign = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 1.1), psx(new THREE.MeshBasicMaterial({ map: signTex('★ THE ROXY · CINEMA ★', '#180810', '#ffd36a'), side: THREE.DoubleSide })));
-    mSign.position.set(0, 3.4, 3.25);
+    mSign.position.set(0, 3.4, 7.25);
     mq.add(mSign);
 
     // Reader-board under canopy: "NOW SHOWING: 1. NIGHT OF THE LIVING DEAD · 2. SANTA CLAUS CONQUERS THE MARTIANS"
     const rSign = new THREE.Mesh(new THREE.PlaneGeometry(8.0, 0.5), psx(new THREE.MeshBasicMaterial({ map: signTex('1. NIGHT OF THE LIVING DEAD · 2. SANTA CLAUS', '#0c0e14', '#4fe0d0'), side: THREE.DoubleSide })));
-    rSign.position.set(0, 2.9, 3.25);
+    rSign.position.set(0, 2.9, 7.25);
     mq.add(rSign);
 
     // Glowing border chaser lights
     const chaserL = new THREE.PointLight(0xffb84a, 0.8, 8);
-    chaserL.position.set(0, 2.8, 2.2);
+    chaserL.position.set(0, 2.8, 6.2);
     mq.add(chaserL);
 
     // Two movie poster display lightboxes flanking the entrance doors
@@ -1134,7 +1134,7 @@ function buildJamestown() {
     mq.add(p2);
 
     // Red carpet runner extending from the double doors out onto the sidewalk
-    part(mq, B(2.8, 0.05, 4.2), toon('#8a1524', 'cloth'), 0, 0.03, 3.2);
+    part(mq, B(2.8, 0.05, 4.2), toon('#8a1524', 'cloth'), 0, 0.03, 6.2);
 
     // Grand entrance double doors (glass & brass)
     part(mq, B(2.4, 2.8, 0.12), toon('#1a1218'), 0, 1.4, 4.02);
@@ -1142,15 +1142,15 @@ function buildJamestown() {
     part(mq, B(1.0, 2.2, 0.08), glow('#ffd890'), 0.55, 1.4, 4.08);
     part(mq, B(2.6, 0.15, 0.2), toon('#ffd36a'), 0, 2.85, 4.08);
 
-    at(mq, cx, cz - 4.0, Math.PI);
+    at(mq, cx, cz - 0.15, Math.PI); // doors (local z 4) sit on the facade, canopy and carpet reach out over the sidewalk
 
     // Interaction trigger to enter the Roxy Cinema
     INTERACTS.push({
       x: cx,
-      z: cz - 6.2,
+      z: cz - 6.4,
       r: 2.8,
       label: 'Enter The Roxy Cinema',
-      fn: () => enterCinema(cx, cz - 6.2)
+      fn: () => enterCinema(cx, cz - 6.4)
     });
   }
 

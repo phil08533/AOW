@@ -676,7 +676,7 @@ const JT_BUILDINGS = [
   ['HOTEL', 14, 27, 10, 8, 12, -PI2, '#9a8a9a', '#3b4f7a', '#3b4f7a', 'commercial'],
   ['FISH MARKET', 28, -12, 10, 7, 6, 0, '#a8b8c8', '#2a5a7a', '#4fa8ff', 'commercial'],
   ['ARCADE', -28, -12, 10, 7, 7, 0, '#5a2a6a', '#ff6aa8', '#ff6aa8', 'entertainment'],
-  ['CINEMA', -28, 12, 11, 8, 9, Math.PI, '#8a2a3a', '#ffd36a', '#c8402f', 'entertainment'],
+  [null, -28, 12, 11, 8, 9, Math.PI, '#8a2a3a', '#ffd36a', '#c8402f', 'entertainment'],
   ['GARAGE', 28, 12, 11, 7, 6, Math.PI, '#5d636c', '#ff8a2a', '#ff8a2a', 'industrial'],
   ['APARTMENTS', 28.5, 22.5, 9, 9, 15, Math.PI, '#b8a088', '#5a3a22', null, 'residential'],
   ['APARTMENTS', -30.5, -21, 9, 9, 14, PI2, '#a8b0b8', '#3a4a5a', null, 'residential'],
@@ -1225,7 +1225,7 @@ function buildJamestown() {
     solid(tx + x, tz + z, 0.2);
   };
   for (let z = -26; z <= 38; z += 9) if (Math.abs(z) > 12) for (const s of [-1, 1]) lampAt(7.6 * s, z);
-  for (let x = -38; x <= 38; x += 9) if (Math.abs(x) > 12) for (const s of [-1, 1]) lampAt(x, 6.5 * s);
+  for (let x = -38; x <= 38; x += 9) if (Math.abs(x) > 12) for (const s of [-1, 1]) if (!(x === -29 && s > 0)) lampAt(x, 6.5 * s); // no lamp in front of the Roxy doors
 
   // Plaza Benches
   for (let i = 0; i < 8; i++) {

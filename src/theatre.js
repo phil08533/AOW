@@ -55,7 +55,8 @@ function buildTheatreLevel() {
   part(props, B(18, 0.9, 5), woodMat, 0, 0.45, -12);
   part(props, B(18.4, 0.12, 5.2), trimMat, 0, 0.92, -12);
 
-  // Sloped stadium seating tiers
+  // Sloped stadium seating tiers (each one is also a walkable floor)
+  for (const [z, top, d] of [[-12, 0.98, 2.5], [-5, 0.4, 2.25], [0, 0.8, 2.25], [5, 1.1, 2.25], [10.5, 1.4, 2.5]]) SURFACES.push({ x: 0, z, ux: 1, uz: 0, hl: 9.8, hw: d, y: top, slope: 0 });
   part(props, B(19.6, 0.4, 4.5), carpetMat, 0, 0.2, -5);     // Tier 1 (front)
   part(props, B(19.6, 0.6, 4.5), carpetMat, 0, 0.5, 0);      // Tier 2 (center)
   part(props, B(19.6, 0.6, 4.5), carpetMat, 0, 0.8, 5);      // Tier 3 (back)
@@ -171,20 +172,22 @@ function buildTheatreLevel() {
     }
     props.add(sg);
     box(x, z, 0.38, 0.38);
+    SEATS.push([x, y, z]);
   };
+  const SEATS = [];
 
   // Build 3 rows of seats on left and right sides of central aisle
   const rows = [
     { z: -5, y: 0.4, label: 'Front Row' },
-    { z: 0,  y: 0.7, label: 'Center Row (Best View)' },
-    { z: 5,  y: 1.0, label: 'Back Row' }
+    { z: 0,  y: 0.8, label: 'Center Row (Best View)' },
+    { z: 5,  y: 1.1, label: 'Back Row' }
   ];
 
   rows.forEach((r, rowIdx) => {
     // Left side (x = -5.6 to -2.0)
-    for (let x = -5.6; x <= -2.0; x += 0.9) makeSeat(x, r.y, r.z, 0);
+    for (let x = -5.6; x <= -2.0; x += 0.9) makeSeat(x, r.y, r.z, Math.PI);
     // Right side (x = 2.0 to 5.6)
-    for (let x = 2.0; x <= 5.6; x += 0.9) makeSeat(x, r.y, r.z, 0);
+    for (let x = 2.0; x <= 5.6; x += 0.9) makeSeat(x, r.y, r.z, Math.PI);
 
     // Row sitting interactions (Center aisle seats)
     INTERACTS.push({
@@ -266,6 +269,15 @@ function buildTheatreLevel() {
       fn: exitCinema
     });
   }
+
+  // Moviegoers: a scattering of townsfolk sitting in the seats, legs bent forward
+  { const cols = [['#c8402f', '#e0b892'], ['#3b4f7a', '#8a5a3a'], ['#5a6a3a', '#c58a64'], ['#8a6fc4', '#e0b892'], ['#c9a43a', '#5a3a24'], ['#2a5a7a', '#d9a77a'], ['#e8e4dc', '#8a5a3a'], ['#ff9a3c', '#c58a64']];
+    SEATS.filter((_, i) => (i * 7) % 3 === 0).slice(0, 10).forEach(([x, y, z], i) => {
+      const [sh, sk] = cols[i % cols.length], o = buildChar(() => makeCivilian(sh, '#2c2a28', sk, ['#1e1a18', '#5a3a22', '#c9a43a', '#cfcac0'][i % 4]), 'civ'), R = o.userData.rig;
+      if (R && R.legL) { R.legL.rotation.x = R.legR.rotation.x = -Math.PI / 2; }
+      o.position.set(x, y + 0.5 - 0.95, z + 0.05); o.rotation.y = Math.PI; levelGroup.add(o);
+      if (R && R.head) levelAnims.push(t => { R.head.rotation.y = Math.sin(t * 0.3 + i * 2) * 0.12; });
+    }); }
 
   // Dynamic animation loop for projector light & house light dimming
   levelAnims.push((t) => {

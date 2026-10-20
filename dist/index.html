@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.19.7</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.19.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -5964,7 +5964,7 @@ const JT_BUILDINGS = [
   ['HOTEL', 14, 27, 10, 8, 12, -PI2, '#9a8a9a', '#3b4f7a', '#3b4f7a', 'commercial'],
   ['FISH MARKET', 28, -12, 10, 7, 6, 0, '#a8b8c8', '#2a5a7a', '#4fa8ff', 'commercial'],
   ['ARCADE', -28, -12, 10, 7, 7, 0, '#5a2a6a', '#ff6aa8', '#ff6aa8', 'entertainment'],
-  ['CINEMA', -28, 12, 11, 8, 9, Math.PI, '#8a2a3a', '#ffd36a', '#c8402f', 'entertainment'],
+  [null, -28, 12, 11, 8, 9, Math.PI, '#8a2a3a', '#ffd36a', '#c8402f', 'entertainment'],
   ['GARAGE', 28, 12, 11, 7, 6, Math.PI, '#5d636c', '#ff8a2a', '#ff8a2a', 'industrial'],
   ['APARTMENTS', 28.5, 22.5, 9, 9, 15, Math.PI, '#b8a088', '#5a3a22', null, 'residential'],
   ['APARTMENTS', -30.5, -21, 9, 9, 14, PI2, '#a8b0b8', '#3a4a5a', null, 'residential'],
@@ -6513,7 +6513,7 @@ function buildJamestown() {
     solid(tx + x, tz + z, 0.2);
   };
   for (let z = -26; z <= 38; z += 9) if (Math.abs(z) > 12) for (const s of [-1, 1]) lampAt(7.6 * s, z);
-  for (let x = -38; x <= 38; x += 9) if (Math.abs(x) > 12) for (const s of [-1, 1]) lampAt(x, 6.5 * s);
+  for (let x = -38; x <= 38; x += 9) if (Math.abs(x) > 12) for (const s of [-1, 1]) if (!(x === -29 && s > 0)) lampAt(x, 6.5 * s); // no lamp in front of the Roxy doors
 
   // Plaza Benches
   for (let i = 0; i < 8; i++) {
@@ -18741,6 +18741,7 @@ const UPDATES = [
   { id: 110, title: '2.14.3 · Vega narrates every cutscene, iPhone fix', items: ['iPhones and iPads: the game no longer crashes on load (Safari has no mouse lock, and one line assumed it did).', 'Vega, the voice from the opening film, now reads every cutscene and the prologue out loud. Shots wait for her to finish.', 'Opening film: the stray "And…" is gone, your wingmen fly in formation beside you, the enemy fleet is spread out and mixed, the battle has six kinds of robots, and dropped guns lie flat on the ground.', 'Prologue: the stars are smaller and calmer, and the odd ball of stars around one planet is gone.'] },
   { id: 111, title: '2.14.4 · A real hangar, a proper catch card', items: ['Hangar: the floor pad no longer flickers. Your selected war vehicle now turns on a lit turntable, with a gantry crane overhead, a tool wall, a red tool chest, tyre stacks, fuel drums, a fuel pump and guide lights to the launch door.', 'Fishing: the fish you caught now swims in front of its card, and the card waits for you to tap Continue (or press Enter or E).', 'Phones: the USE button can no longer land on top of the radar.', 'New drawn icons for the camera and repair buttons. The ship and the car share the same camera icon.'] },
   { id: 112, title: "2.14.5 · The Angler's Den, rooms that grow, Vega's film", items: ["New ship room: the Angler's Den. Mount your catches on 12 wall plaques, each showing the fish and your best length. Take one down any time to get the fish back. It also has a rod rack, an armchair and a big aquarium.", 'Upgraded ship rooms now look upgraded. Lv 2 and 3 each add a themed prop, Lv 4 hangs a banner and a second light, and Lv 5 adds gold trim and a crest at the door.', 'Ship corridor: the hull posts no longer stand in doorways, and the crane hook that was floating in the hall is back inside the hangar.', 'Fishing: the Bug Pond, Fern Pond and Coolant Canal are bigger, your cast always lands in water, and Coil in Robot City moved back from the dock.', 'Opening film: Captain Vega is the hero now (you are a fresh recruit), and the soldiers that were standing inside her are gone. Her ship flies the film\'s space battle.', 'Prologue: the ball of stars is gone, the stars are dimmer so the planets stand out, the thing behind Vector is now the Watcher rising out of the dark, and Drome\'s flagship wears a setting-sun sigil instead of a big red dot. With voice off, the prologue no longer stalls on its first line.'] },
+  { id: 139, title: "2.19.8 · Inside the Roxy", items: ["Cinema seats face the screen, and moviegoers sit in about ten of them", "You walk on the tiered floor instead of sinking through it, and the seats sit on their tiers", "The Roxy has just its marquee out front: the old building sign behind it is gone, and the street lamp no longer stands in the doorway"] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -22289,7 +22290,8 @@ function buildTheatreLevel() {
   part(props, B(18, 0.9, 5), woodMat, 0, 0.45, -12);
   part(props, B(18.4, 0.12, 5.2), trimMat, 0, 0.92, -12);
 
-  // Sloped stadium seating tiers
+  // Sloped stadium seating tiers (each one is also a walkable floor)
+  for (const [z, top, d] of [[-12, 0.98, 2.5], [-5, 0.4, 2.25], [0, 0.8, 2.25], [5, 1.1, 2.25], [10.5, 1.4, 2.5]]) SURFACES.push({ x: 0, z, ux: 1, uz: 0, hl: 9.8, hw: d, y: top, slope: 0 });
   part(props, B(19.6, 0.4, 4.5), carpetMat, 0, 0.2, -5);     // Tier 1 (front)
   part(props, B(19.6, 0.6, 4.5), carpetMat, 0, 0.5, 0);      // Tier 2 (center)
   part(props, B(19.6, 0.6, 4.5), carpetMat, 0, 0.8, 5);      // Tier 3 (back)
@@ -22405,20 +22407,22 @@ function buildTheatreLevel() {
     }
     props.add(sg);
     box(x, z, 0.38, 0.38);
+    SEATS.push([x, y, z]);
   };
+  const SEATS = [];
 
   // Build 3 rows of seats on left and right sides of central aisle
   const rows = [
     { z: -5, y: 0.4, label: 'Front Row' },
-    { z: 0,  y: 0.7, label: 'Center Row (Best View)' },
-    { z: 5,  y: 1.0, label: 'Back Row' }
+    { z: 0,  y: 0.8, label: 'Center Row (Best View)' },
+    { z: 5,  y: 1.1, label: 'Back Row' }
   ];
 
   rows.forEach((r, rowIdx) => {
     // Left side (x = -5.6 to -2.0)
-    for (let x = -5.6; x <= -2.0; x += 0.9) makeSeat(x, r.y, r.z, 0);
+    for (let x = -5.6; x <= -2.0; x += 0.9) makeSeat(x, r.y, r.z, Math.PI);
     // Right side (x = 2.0 to 5.6)
-    for (let x = 2.0; x <= 5.6; x += 0.9) makeSeat(x, r.y, r.z, 0);
+    for (let x = 2.0; x <= 5.6; x += 0.9) makeSeat(x, r.y, r.z, Math.PI);
 
     // Row sitting interactions (Center aisle seats)
     INTERACTS.push({
@@ -22500,6 +22504,15 @@ function buildTheatreLevel() {
       fn: exitCinema
     });
   }
+
+  // Moviegoers: a scattering of townsfolk sitting in the seats, legs bent forward
+  { const cols = [['#c8402f', '#e0b892'], ['#3b4f7a', '#8a5a3a'], ['#5a6a3a', '#c58a64'], ['#8a6fc4', '#e0b892'], ['#c9a43a', '#5a3a24'], ['#2a5a7a', '#d9a77a'], ['#e8e4dc', '#8a5a3a'], ['#ff9a3c', '#c58a64']];
+    SEATS.filter((_, i) => (i * 7) % 3 === 0).slice(0, 10).forEach(([x, y, z], i) => {
+      const [sh, sk] = cols[i % cols.length], o = buildChar(() => makeCivilian(sh, '#2c2a28', sk, ['#1e1a18', '#5a3a22', '#c9a43a', '#cfcac0'][i % 4]), 'civ'), R = o.userData.rig;
+      if (R && R.legL) { R.legL.rotation.x = R.legR.rotation.x = -Math.PI / 2; }
+      o.position.set(x, y + 0.5 - 0.95, z + 0.05); o.rotation.y = Math.PI; levelGroup.add(o);
+      if (R && R.head) levelAnims.push(t => { R.head.rotation.y = Math.sin(t * 0.3 + i * 2) * 0.12; });
+    }); }
 
   // Dynamic animation loop for projector light & house light dimming
   levelAnims.push((t) => {

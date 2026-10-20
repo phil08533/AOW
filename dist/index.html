@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.19.17</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.20.0</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18819,6 +18819,7 @@ const UPDATES = [
   { id: 146, title: "2.19.15 · Grub's Bar in the Underworld", items: ["Grub's bar in the Underworld gets a cyan neon sign, glowing neon bottles, bulb chandeliers on chains, beer taps and mugs", "Regulars sit at the bar and at two new tables; dark floor with junk scattered about"] },
   { id: 147, title: "2.19.16 · Crew for hire", items: ["Seated people in the theatre and the bar now sit properly, with their knees bent at 90°", "More regulars in the Underworld: a couple eating in a booth, a deal going down in a new booth, two talking business", "Hire crew from Grub: a Runner fetches Lab materials, a Cook brews extra doses, a Dealer sells your product for credits", "One crew slot to start, two at level 15, three at level 30. Crew can get killed on the job, so check back at the bar for replacements", "Manage your crew from the Lab terminal on your ship"] },
   { id: 148, title: "2.19.17 · The Glonk Trio", items: ["A cantina band plays on a little stage in the Underworld: a keytar, a theremin and glowing drum pods", "The Underworld now plays Glinky Glonky and Crooked Clarinet"] },
+  { id: 149, title: "2.20 · Hand-made UI", items: ["New hand-drawn pixel windows and buttons: framed panels with brass rivets, chunky bevelled buttons that press down", "Every menu uses the game's pixel font", "No more see-through glass panels or emoji in menus"] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -23352,6 +23353,49 @@ function narrSay(text, onDur) {
 { const _rc = rollCredits; rollCredits = function () { const r = _rc.apply(this, arguments); const ov = document.getElementById('ending'); if (!ov) return r;
   let last = ''; const iv = setInterval(() => { const e = document.getElementById('ending'); if (!e) { clearInterval(iv); narrStop(); return; } const c = e.querySelector('.cap, #endCap') || null; const txt = c ? c.textContent : ''; if (txt && txt !== last && +getComputedStyle(c).opacity > 0.2) { last = txt; narrSay(txt); } }, 200);
   return r; }; }
+
+// =================== HAND-MADE UI (2.20): our own pixel panels and buttons, our pixel font everywhere, no glass, no glow, no emoji ===================
+// The 9-slice art is drawn here on canvas at 2px per pixel and fed to border-image, so every window and button shares one hand-drawn kit.
+{ const P = 2, art = (n, draw) => { const c = document.createElement('canvas'); c.width = c.height = n * P; const x = c.getContext('2d'); const px = (a, b, col, w = 1, h = 1) => { x.fillStyle = col; x.fillRect(a * P, b * P, w * P, h * P); }; draw(px, n); return c.toDataURL(); };
+  // a framed panel: black outline, light bevel top-left, dark bevel bottom-right, brass rivets in the corners
+  const frame = (body, lite, dark, rivet) => art(12, (px, n) => { px(0, 0, body, n, n);
+    px(0, 0, '#07060a', n, 1); px(0, n - 1, '#07060a', n, 1); px(0, 0, '#07060a', 1, n); px(n - 1, 0, '#07060a', 1, n);
+    px(1, 1, lite, n - 2, 1); px(1, 1, lite, 1, n - 2); px(1, n - 2, dark, n - 2, 1); px(n - 2, 1, dark, 1, n - 2);
+    if (rivet) for (const [a, b] of [[2, 2], [n - 4, 2], [2, n - 4], [n - 4, n - 4]]) { px(a, b, rivet, 2, 2); px(a, b, '#fff3c8'); } });
+  const PANEL = frame('#1d1828', '#4a3f5e', '#0e0b14', '#b8862e');
+  const BTN = frame('#352d48', '#5e5378', '#17121f'), BTN_HI = frame('#463b60', '#7a6d9a', '#1e1828'), BTN_DN = frame('#241e32', '#17121f', '#4a4060');
+  const GO = frame('#d08a2a', '#ffd27a', '#7a4a10'), GO_HI = frame('#e8a03a', '#ffe6a8', '#8a5414');
+  const TAB_ON = frame('#d08a2a', '#ffd27a', '#7a4a10');
+  const bi = u => `border-style: solid !important; border-width: 8px !important; border-image: url(${u}) 8 fill stretch !important; border-radius: 0 !important; background: none !important;`;
+  const st = document.createElement('style'); st.id = 'handmadeCss'; st.textContent = `
+html:root { --ui: "Pixelify Sans", "Courier New", monospace; --hud: "Pixelify Sans", "Courier New", monospace; --mono: "Pixelify Sans", "Courier New", monospace; --num: "Pixelify Sans", "Courier New", monospace;
+  --hl: #e8a33a; --hl2: #6a5a80; --accent: #f2c46a; --gold: #f2c46a; --amber: #f2c46a; --text: #f2e8d0; }
+body, button, input, select, textarea, .dlg, .win, #hud, #pause, #dead, h1, h2, h3, .logo, #toast .big, #zone .n, #quest .qt, .dlg h3, .win h2, .win h3 { font-family: "Pixelify Sans", "Courier New", monospace !important; }
+body { text-shadow: 2px 2px 0 #07060a !important; }
+.win, .dlg, #menuDrop, #catchCard { ${bi(PANEL)} box-shadow: 4px 4px 0 rgba(0,0,0,.55) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.win::before, .win::after, .dlg::before, .dlg::after { content: none !important; }
+.dlg .who, .win .who { color: #b8a0d8 !important; letter-spacing: .12em; }
+.dlg h3, .win h2, .win h3 { color: #f2c46a !important; font-weight: 700 !important; letter-spacing: .02em !important; }
+.pbtn, .tbtn, #menuDrop button { ${bi(BTN)} color: #f2e8d0 !important; font-weight: 600 !important; letter-spacing: .04em !important; text-shadow: 2px 2px 0 #07060a !important; padding: 2px 8px !important; box-shadow: none !important; transition: none !important; }
+.pbtn:hover:not(:disabled), .tbtn:hover, #menuDrop button:hover { border-image: url(${BTN_HI}) 8 fill stretch !important; color: #fff !important; }
+.pbtn:active:not(:disabled), .tbtn:active, #menuDrop button:active { border-image: url(${BTN_DN}) 8 fill stretch !important; transform: translateY(2px); }
+.pbtn.go, .pbtn.on, .pbtn.sel { border-image: url(${GO}) 8 fill stretch !important; color: #1a0f04 !important; text-shadow: 1px 1px 0 #ffe6a8 !important; }
+.pbtn.go:hover:not(:disabled) { border-image: url(${GO_HI}) 8 fill stretch !important; color: #000 !important; }
+.pbtn:disabled { opacity: .45 !important; filter: grayscale(.6); }
+.pbtn kbd, .pbtn .k { border: 0 !important; background: rgba(0,0,0,.35) !important; color: inherit !important; border-radius: 0 !important; }
+.rowi { border-bottom: 2px dashed #3a3150 !important; }
+input[type=range] { -webkit-appearance: none; appearance: none; height: 8px; background: #0e0b14; border: 2px solid #4a3f5e; border-radius: 0; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 18px; background: #f2c46a; border: 2px solid #07060a; border-radius: 0; box-shadow: inset -2px -2px 0 #b8862e; }
+input[type=range]::-moz-range-thumb { width: 14px; height: 18px; background: #f2c46a; border: 2px solid #07060a; border-radius: 0; }
+`; document.head.appendChild(st); }
+// emoji in buttons, titles and menus read as machine-made; strip them as UI appears (keeps game symbols like stars and hearts)
+{ const EMO = /(?![★☆♥♦♠♣✓✔✕✖·•→←↑↓⚔])[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}][\u{FE0F}\u{200D}\p{Extended_Pictographic}]*\s?/gu;
+  const scrub = root => { if (!root || root.nodeType !== 1) return; if (root.closest && root.closest('#chatLog,#chatBox,input,textarea')) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { const t = n.nodeValue; if (EMO.test(t)) { EMO.lastIndex = 0; n.nodeValue = t.replace(EMO, '').replace(/^\s+/, ''); } EMO.lastIndex = 0; } };
+  const roots = () => ['dlg', 'pause', 'menuDrop', 'tablet'].map(id => document.getElementById(id)).filter(Boolean);
+  roots().forEach(scrub);
+  new MutationObserver(ms => { for (const m of ms) { const t = m.target.nodeType === 1 ? m.target : m.target.parentElement; if (t && roots().some(r => r.contains(t))) scrub(t); } })
+    .observe(document.body, { subtree: true, childList: true, characterData: true }); }
 
 
 // =================== STATE + SAVE ===================

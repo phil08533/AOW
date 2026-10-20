@@ -978,7 +978,9 @@ const server = http.createServer((req, res) => {
     if (!isLocal) { res.statusCode = 403; res.setHeader('Content-Type', 'text/plain'); res.end('Access Forbidden: Script Studio is only accessible from the host PC'); return; }
     cleanUrl = '/script.html';
   }
-  const safePath = path.normalize(cleanUrl).replace(/^(\.\.[\/\\])+/, '');
+  let decodedUrl = cleanUrl;
+  try { decodedUrl = decodeURIComponent(cleanUrl); } catch (_) {}
+  const safePath = path.normalize(decodedUrl).replace(/^(\.\.[\/\\])+/, '');
   let filePath;
   if (cleanUrl.startsWith('/src/')) {
     if (!isLocal) {

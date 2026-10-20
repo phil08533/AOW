@@ -105,6 +105,20 @@ TEX.tile = canvasTex(32, (x, s) => { x.fillStyle = g8(240); x.fillRect(0, 0, s, 
 TEX.marble = canvasTex(64, (x, s) => { x.fillStyle = g8(236); x.fillRect(0, 0, s, s); speckle(x, 0.2, s, 220, 250); x.fillStyle = g8(170); for (let v = 0; v < 5; v++) { let a = Math.floor(trnd() * s), b = 0; while (b < s) { x.fillRect(a, b, 1, 2); a = (a + (trnd() < 0.5 ? -1 : 1) + s) % s; b += 2; } }
   x.fillStyle = g8(150); x.fillRect(0, 31, s, 1); x.fillRect(31, 0, 1, s); x.fillRect(0, 63, s, 1); x.fillRect(63, 0, 1, s); });
 TEX.hazard = canvasTex(32, (x, s) => { x.fillStyle = '#ffd23a'; x.fillRect(0, 0, s, s); x.fillStyle = '#1e1c22'; for (let k = -s; k < s * 2; k += 16) { x.beginPath(); x.moveTo(k, 0); x.lineTo(k + 8, 0); x.lineTo(k + 8 - s, s); x.lineTo(k - s, s); x.closePath(); x.fill(); } });
+const FORT_WALL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEEElEQVR4Aezav4pUTRAF8GGTL/gSA0EzU0EwUHwBBcHAxEAxVQx9BSPBBzAUzY0NBEFfQDQQBFMzBQMTAyPld6GhHab6dt8dt2RmFw5dt7tOVffpvn+2mIPbN2/8evjgUQrkhsz8Bz9/fFhFfx8/vV1BNN7Tjw89vrUPDtR9ozY+tHgH0SDiiZOnV5dv3VsswtIYePLKz47m2OrHwxfn/bunoWsoQGG8f/2imIvbl8/uD3O3kffr51crcf77/3yYPxTg3NlLq+/fvkxghxEaA3himAC74frHEF88YP8x2HmBJy8R2BHtgFM0iAjReE8/PvT41j44UPeN2vgXLt5t0sIT0GTt0GCqAK030FFoLH+qAG4/kziKxUY5UgUwKSJos5AuQNbC5SV+ugB7fQtYvF2wG1lIPQEWT4SsxcubKoAJZMH/B8TfOwGK4L4QncBUAexAmVBWmyqARdsFbRbSBchaeMmbKkD27hOhWRLjsOtongBlJa+Lw4iAL85oDBwY5dX+PblDASRXU7t25/FKoDpwry3GqTNXh+uK8qnlyS9Gb77aT4ye3KEAJZiaWrGXtqMxPBtwlLOW5hQDVxxthEkAaq07KCepyYGPhvXxnmsxLEIMdg+HD18ci2DrGwWeGMCO+H+9Jki81gSiieFANN7Tjw8t3+kEtBx2fWwSwC7t+kKj9U0CRIP70H8swMgub3pbjPDXff03COv9m663nbvkmE6Ajw2QRBsBiU9B5Nfb7zUn5py/fPy0MOdfj7f8xZwEYOwrJgG8K8HbQBuBSHwKIr/e/nL85/zlq3PP+dfjuPV1bYs5CcDogWA9fr0+bgHo8d927pJzSIBC2qX2WAC76Ump3Uccn4DyJP5bu/+vn67pBMw9YQ+ziLnYLeEPk7cVtx6bBKg7art8UdV9o/aSGBaO1/uK3DSnEkOcTeOlLxQAUU3OLbJ0ImLgq++xS9K5Vj4c+Ud4dVwxenKHApRgCovFXtLiz9XlNsVdwlmP05M7LIn5ZFRPA/Z68J5rPHxg93D48MUBtr5R4OEDO+I3TwAiROSefnzY5OuIburXhwPspcCHFr8pQIu4K2PpArROwRKRRzmpAnhSj0542/6pAmx7MSPxfCc4fXsrgC9UJzBVADtgEiM7t23fVAEsngjbXtRIvFQBTJQI2iykC5C1cHmdvnQBTMJkspAqgMXv9S2QvXj5U09A1rGv8zZ/JqcYATVh1MaHo+LVeeT1xVf3rdvhCUBWkQH2OrHnGg/fvc7u4fDhiwdsfaPAk1dRhB3xQwEK4cKV68Vc3Pqp3Sh5G3ktXhxCRPlDARQSVFPePH+yYkcBWv14S2LgyYvLbuWIxvDwxfHdH/mFJTEEQYC9FPgwyseBOV5rHB9aPr8BAAD//2HWoUAAAAAGSURBVAMAdTf4f9d4z80AAAAASUVORK5CYII=';
+TEX.ironwall = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = '#847e87'; ctx.fillRect(0, 0, 64, 64);
+  const t = new THREE.CanvasTexture(c);
+  t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestMipmapNearestFilter;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding;
+  const img = new Image();
+  img.onload = () => { ctx.drawImage(img, 0, 0, 64, 64); t.needsUpdate = true; };
+  img.src = FORT_WALL_PNG;
+  if (img.complete) { ctx.drawImage(img, 0, 0, 64, 64); t.needsUpdate = true; }
+  return t;
+})();
 TEX.blob.minFilter = THREE.LinearFilter; TEX.cloud.minFilter = THREE.NearestFilter;
 const matCache = {};
 const TOON_RAMP = (() => { const d = new Uint8Array([90, 90, 90, 160, 160, 160, 225, 225, 225, 255, 255, 255]); const t = new THREE.DataTexture(d, 4, 1, THREE.RGBFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
@@ -119,7 +133,7 @@ function toon(hex, tex) {
   const key = hex + tex;
   if (!matCache[key]) {
     const col = new THREE.Color(hex).convertSRGBToLinear();
-    if (RSTYLE === 'real') { const R = { panel: [0.45, 0.45], stone: [0.92, 0], wood: [0.75, 0], cloth: [0.95, 0], leaves: [0.85, 0], skin: [0.65, 0], fur: [1, 0], grime: [0.7, 0.2] }[tex] || [0.8, 0.05]; matCache[key] = new THREE.MeshStandardMaterial({ color: col, map: TEX[tex], bumpMap: TEX[tex], bumpScale: tex === 'stone' ? 0.06 : 0.025, roughness: R[0], metalness: R[1] }); }
+    if (RSTYLE === 'real') { const R = { panel: [0.45, 0.45], stone: [0.92, 0], wood: [0.75, 0], cloth: [0.95, 0], leaves: [0.85, 0], skin: [0.65, 0], fur: [1, 0], grime: [0.7, 0.2], ironwall: [0.6, 0.35] }[tex] || [0.8, 0.05]; matCache[key] = new THREE.MeshStandardMaterial({ color: col, map: TEX[tex], bumpMap: TEX[tex], bumpScale: tex === 'stone' ? 0.06 : 0.025, roughness: R[0], metalness: R[1] }); }
     else if (RSTYLE === 'stylized') matCache[key] = new THREE.MeshToonMaterial({ color: col, map: TEX[tex], gradientMap: TOON_RAMP });
     else matCache[key] = psx(new THREE.MeshLambertMaterial({ color: col, map: TEX[tex] }));
   }

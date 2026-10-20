@@ -193,6 +193,7 @@ function arcOpen(game) {
     // the two playable cabinets get proper marquees
     [['snake', 'SPACE SNAKE', '#9fff6a', -3.6], ['rocks', 'SPACE ROCKS', '#8fe3ff', 3.2]].forEach(([g, nm, col, x]) => { const mq = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.36), new THREE.MeshBasicMaterial({ map: signTex(nm, '#05060f', col) })); mq.position.set(x, 2.55, -19.45); props.add(mq);
       INTERACTS.push({ x, z: -18.4, r: 1.6, label: `Play ${nm}${S.arcade && S.arcade[g] ? ` (best ${S.arcade[g]})` : ''}`, fn: () => arcOpen(g) }); }); }; }
+window.arcOpen = window.openArcade = arcOpen;
 document.head.insertAdjacentHTML('beforeend', `<style>
 .cscard { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 46px; height: 64px; margin: 2px; border-radius: 7px; background: #f4f1e8; border: 2px solid #1e1c22; font: 700 20px var(--mono, monospace); line-height: 1; box-shadow: 0 2px 4px rgba(0,0,0,.4); cursor: pointer; text-shadow: 0 1px 0 rgba(0,0,0,.35); }
 .cscard b { color: #1e1c22; font-size: 18px; text-shadow: none; } .cscard.back { background: repeating-linear-gradient(45deg,#3b4f7a 0 6px,#2a3756 6px 12px); color: #ffd36a; }

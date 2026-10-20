@@ -2,7 +2,7 @@
 // Optional (Settings → Game → Substances, off by default). Timed boosts with screen effects; illegal ones can bring a bad trip.
 // The Lab is a ship room that brews the illegal ones; owning it keeps you Wanted until you tear it down.
 // Save fields: PREFS.subs, S.buffs['sub_<id>'] (end time), S.buffs.trip, S.lastSub, S.lab ({ st: [{ r, t, n }], shelf }).
-if (PREFS.subs == null) PREFS.subs = false;
+if (PREFS.subs == null) PREFS.subs = true;
 const subsOn = () => !!PREFS.subs;
 const SUBS = {
   focusfizz: { name: 'Focus Fizz', legal: true, price: 60, v: 20, col: '#7fe0ff', sec: 600, xp: 0.15, fx: { sat: 0.15 }, trip: 0, desc: 'A fizzy focus drink. +15% XP for 10 minutes.' },
@@ -25,16 +25,146 @@ const tripOn = () => subsOn() && (buffs().trip || 0) > Date.now();
 { const _g = gainXp; gainXp = function (n) { const m = 1 + subSum('xp'); return _g(m > 1 ? Math.round(n * m) : n); }; }
 { const _h = hurt; hurt = function (dmg, src) { const d = subSum('def'), t = subSum('take'); return _h(d || t ? dmg * (1 - d) * (1 + t) : dmg, src); }; }
 
+// ---- First-Person Inhaler Animation ----
+// Raises a high-tech canister inhaler to your mouth. The top dome is clear glass,
+// housing a glowing substance core whose color and light change dynamically based on the drug.
+let curInhaler = null, curInhalerIv = null;
+function playInhalerAnim(id) {
+  if (curInhaler) { camera.remove(curInhaler); curInhaler = null; }
+  if (curInhalerIv) { clearInterval(curInhalerIv); curInhalerIv = null; }
+  if (typeof camera === 'undefined') return;
+
+  const D = SUBS[id] || { col: '#c86aff', name: id };
+  const col = D.col || '#c86aff';
+
+  const g = new THREE.Group();
+  // 1. Sleek sci-fi inhaler body (dark matte casing)
+  part(g, Cy(0.018, 0.019, 0.09, 12), '#25272c', 0, 0, 0);
+  for (let r = 0; r < 3; r++) {
+    part(g, Cy(0.0195, 0.0195, 0.008, 12), '#18191d', 0, -0.02 + r * 0.016, 0);
+  }
+  // Mouthpiece nozzle angled forward
+  const nozzle = part(g, Cy(0.013, 0.014, 0.045, 10), '#32353c', 0, -0.018, 0.035, Math.PI / 3, 0, 0);
+  part(g, Cy(0.011, 0.011, 0.01, 10), '#111215', 0, -0.004, 0.052, Math.PI / 3, 0, 0);
+
+  // 2. Clear glass canister chamber at the top
+  const glassMat = psx(new THREE.MeshBasicMaterial({ color: '#d8f4ff', transparent: true, opacity: 0.45, depthWrite: false }));
+  const glass = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.056, 14), glassMat);
+  glass.position.set(0, 0.072, 0);
+  g.add(glass);
+
+  // Metal cap / actuator on top of the glass
+  const cap = part(g, Cy(0.023, 0.023, 0.016, 12), '#454850', 0, 0.104, 0);
+  part(g, Cy(0.015, 0.015, 0.005, 10), col, 0, 0.113, 0);
+
+  // 3. Glowing substance inside the clear glass
+  const drugCore = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.046, 12), glow(col));
+  drugCore.position.set(0, 0.072, 0);
+  g.add(drugCore);
+
+  const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.009, 0), glow('#ffffff'));
+  orb.position.set(0, 0.072, 0);
+  g.add(orb);
+
+  // Local glow pointlight
+  const pl = new THREE.PointLight(new THREE.Color(col), 1.2, 2.0);
+  pl.position.set(0, 0.075, 0.03);
+  g.add(pl);
+
+  // Hand / thumb & fingers supporting the inhaler
+  const skinCol = (typeof FACE !== 'undefined' && FACE.skin && typeof charLook !== 'undefined' && charLook && FACE.skin[typeof getFaceParts === 'function' ? getFaceParts().s : 0]) || '#e0b892';
+  part(g, B(0.07, 0.05, 0.06), toon(skinCol, 'skin'), -0.042, -0.01, -0.005, 0.2, 0.1, -0.15);
+  part(g, B(0.025, 0.035, 0.022), toon(skinCol, 'skin'), 0.02, 0.095, -0.01, -0.3, 0, 0.2);
+
+  g.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.renderOrder = 4; } });
+  g.scale.setScalar(1.5);
+  const oldVmVis = typeof vm !== 'undefined' ? vm.visible : true;
+  if (typeof vm !== 'undefined') vm.visible = false;
+  camera.add(g);
+  curInhaler = g;
+
+  const startTime = performance.now();
+  const dur = 1300;
+  let puffed = false;
+
+  curInhalerIv = setInterval(() => {
+    if (window._inhalerFreeze) {
+      g.position.set(0.05, -0.10, -0.28);
+      g.rotation.set(0.12, -0.08, 0.1);
+      drugCore.scale.set(1.08, 1, 1.08);
+      return;
+    }
+
+    const elapsed = performance.now() - startTime;
+    const progress = Math.min(1, elapsed / dur);
+
+    let pX, pY, pZ, rotX, rotY;
+    if (progress < 0.32) {
+      const k = progress / 0.32, ease = 1 - Math.pow(1 - k, 3);
+      pX = 0.20 + (0.05 - 0.20) * ease;
+      pY = -0.34 + (-0.10 - -0.34) * ease;
+      pZ = -0.38 + (-0.28 - -0.38) * ease;
+      rotX = 0.45 * (1 - ease) + 0.12 * ease;
+      rotY = -0.35 * (1 - ease) - 0.08 * ease;
+    } else if (progress < 0.68) {
+      pX = 0.05 + Math.sin((progress - 0.32) * 20) * 0.002;
+      pY = -0.10 + Math.cos((progress - 0.32) * 20) * 0.002;
+      pZ = -0.28;
+      rotX = 0.12;
+      rotY = -0.08;
+      cap.position.y = 0.104 - 0.008;
+
+      if (!puffed) {
+        puffed = true;
+        try {
+          const wp = nozzle.getWorldPosition(new THREE.Vector3());
+          burst(wp.add(new THREE.Vector3(0, 0.01, 0.02)), col, 12, 1.4);
+        } catch (_) {}
+        try { if (SFX.laser) SFX.laser(); else if (SFX.item) SFX.item(); } catch (_) {}
+      }
+
+      drugCore.scale.set(1 + Math.sin(elapsed * 0.02) * 0.14, 1, 1 + Math.cos(elapsed * 0.02) * 0.14);
+      orb.position.y = 0.072 + Math.sin(elapsed * 0.015) * 0.014;
+    } else {
+      const k = (progress - 0.68) / 0.32, ease = k * k;
+      pX = 0.05 + (0.20 - 0.05) * ease;
+      pY = -0.10 + (-0.38 - -0.10) * ease;
+      pZ = -0.28 + (-0.38 - -0.28) * ease;
+      rotX = 0.12 + (0.45 - 0.12) * ease;
+      rotY = -0.08 + (-0.35 - -0.08) * ease;
+      cap.position.y = 0.104;
+    }
+
+    g.position.set(pX, pY, pZ);
+    g.rotation.set(rotX, rotY, 0.1);
+
+    if (progress >= 1) {
+      clearInterval(curInhalerIv);
+      curInhalerIv = null;
+      if (curInhaler === g) {
+        camera.remove(g);
+        curInhaler = null;
+      }
+      if (typeof vm !== 'undefined') vm.visible = oldVmVis;
+    }
+  }, 16);
+}
+
 // ---- taking one ----
 function useSub(id) {
   const D = SUBS[id]; if (!D || !(S.inv[id] > 0)) return false;
   if (!subsOn()) { log('Substances are switched off. Turn them on in Settings → Game.'); SFX.hit(); return true; }
   S.inv[id]--; if (!S.inv[id]) delete S.inv[id]; buffs()['sub_' + id] = Date.now() + D.sec * 1000; S.lastSub = id; markDirty();
+  playInhalerAnim(id);
   try { burst(player.pos.clone().add(V(0, 1.3, 0)), D.col, 16, 2.5); } catch (_) {} SFX.quest();
   toast(D.name.toUpperCase(), D.desc.split('. ').slice(1).join('. ').replace(/\.$/, '') || D.desc, 2.4);
   if (D.trip && Math.random() < D.trip) setTimeout(() => startTrip(40 + Math.random() * 50), 2500 + Math.random() * 4000);
   subChip(); invQuickRender(); return true;
 }
+window.playInhalerAnim = playInhalerAnim;
+window.getCurInhaler = () => curInhaler;
+window.useSub = useSub;
+window.SUBS = SUBS;
 { const _ou = outUseItem; outUseItem = function (id) { if (SUBS[id]) return useSub(id); return _ou(id); }; }
 // hide them from the bag while the system is off (they stay saved)
 { const _ik = invKeys; invKeys = function () { const ks = _ik(); return subsOn() ? ks : ks.filter(k => !SUBS[k.slice(2)]); }; }

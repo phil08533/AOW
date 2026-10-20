@@ -1,0 +1,42 @@
+{
+  "name": "Jamestown Revamp Texture Pack",
+  "version": "1.0.0",
+  "author": "Phil",
+  "textures": {
+    "brick_red": {
+      "file": "brick_red.png",
+      "width": 64,
+      "height": 64,
+      "category": "walls",
+      "texKey": "jtBrick"
+    },
+    "brick_weathered": {
+      "file": "brick_weathered.png",
+      "width": 64,
+      "height": 64,
+      "category": "walls",
+      "texKey": "jtBrickDark"
+    },
+    "roof_slate_grey": {
+      "file": "roof_slate_grey.png",
+      "width": 64,
+      "height": 64,
+      "category": "roofs",
+      "texKey": "jtSlateRoof"
+    },
+    "stucco_sand": {
+      "file": "stucco_sand.png",
+      "width": 64,
+      "height": 64,
+      "category": "plaster",
+      "texKey": "jtStucco"
+    },
+    "stucco_flecked": {
+      "file": "stucco_flecked.png",
+      "width": 64,
+      "height": 64,
+      "category": "plaster",
+      "texKey": "jtTerrazzo"
+    }
+  }
+}

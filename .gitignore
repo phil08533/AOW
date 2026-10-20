@@ -4,3 +4,5 @@ node_modules/
 tools/voice_models/
 dist/voice/_preview/
 pub-leaders.json
+dist/video/notld/source.mp4
+

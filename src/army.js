@@ -231,7 +231,17 @@ LEVELS.fort = {
   build() {
     const [fx, fz] = FORT;
     // compound wall with a gate to the north
-    for (let i = 0; i < 40; i++) { const a = i / 40 * Math.PI * 2; if (Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))) < 0.2) continue; const x = fx + Math.cos(a) * 23.5, z = fz + Math.sin(a) * 23.5; part(props, B(3.8, 3, 0.8), '#5d636c', x, groundH(x, z) + 1.5, z, 0, -a + Math.PI / 2, 0); if (i % 5 === 0) { part(props, B(1.4, 5, 1.4), '#3a3d44', x, groundH(x, z) + 2.5, z); part(props, B(0.6, 0.3, 0.6), glow('#ff8a2a'), x, groundH(x, z) + 5.2, z); } }
+    for (let i = 0; i < 40; i++) {
+      const a = i / 40 * Math.PI * 2;
+      if (Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))) < 0.2) continue;
+      const x = fx + Math.cos(a) * 23.5, z = fz + Math.sin(a) * 23.5;
+      part(props, B(3.8, 3, 0.8), toon('#ffffff', 'ironwall'), x, groundH(x, z) + 1.5, z, 0, -a + Math.PI / 2, 0);
+      part(props, B(3.85, 0.12, 0.9), '#3a3d44', x, groundH(x, z) + 3.06, z, 0, -a + Math.PI / 2, 0);
+      if (i % 5 === 0) {
+        part(props, B(1.4, 5, 1.4), '#3a3d44', x, groundH(x, z) + 2.5, z);
+        part(props, B(0.6, 0.3, 0.6), glow('#ff8a2a'), x, groundH(x, z) + 5.2, z);
+      }
+    }
     RINGS.push({ x: fx, z: fz, r: 23.5, gate: Math.PI / 2, half: 3, safe: true });
     // hangar with the three vehicles on display
     const hg = new THREE.Group(); part(hg, B(18, 0.3, 9), '#3a3d44', 0, 0.15, 0); part(hg, new THREE.CylinderGeometry(4.6, 4.6, 18, 12, 1, true, 0, Math.PI), toon('#6a6a70', 'panel'), 0, 0.2, 0, 0, 0, Math.PI / 2); hg.children[1].material.side = THREE.DoubleSide;

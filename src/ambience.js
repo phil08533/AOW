@@ -27,6 +27,7 @@ const AMB_PROFILES = {
   boarding: { bed: [['lowpass', 380, 0.7, 0.04, 0.05, 0.4]], hum: [[52, 0.04]], ev: [['beep', 2.5, 6, 0.6], ['clank', 6, 14, 0.6]] },
   speedway: { bed: [['bandpass', 700, 0.6, 0.035, 0.06, 0.5]], ev: [['murmur', 1.5, 4, 0.6], ['cheer', 16, 30, 0.5]] },
   jamestown: { bed: [['lowpass', 600, 0.6, 0.04, 0.1, 0.8]], ev: [['chirp', 3, 9, 0.6], ['creak', 10, 20, 0.4]] },
+  theatre: { bed: [['lowpass', 240, 0.7, 0.03, 0.04, 0.3]], hum: [[60, 0.012]], ev: [['creak', 10, 24, 0.4], ['murmur', 6, 16, 0.4]] },
   indoor: { bed: [['lowpass', 300, 0.7, 0.025, 0.04, 0.4]], hum: [[60, 0.01]], ev: [['creak', 12, 26, 0.4]] },
   outdoor: { bed: [['lowpass', 650, 0.6, 0.045, 0.1, 0.8]], ev: [['chirp', 4, 11, 0.5]] }
 };

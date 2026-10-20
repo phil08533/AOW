@@ -529,6 +529,20 @@ TEX.tile = canvasTex(32, (x, s) => { x.fillStyle = g8(240); x.fillRect(0, 0, s, 
 TEX.marble = canvasTex(64, (x, s) => { x.fillStyle = g8(236); x.fillRect(0, 0, s, s); speckle(x, 0.2, s, 220, 250); x.fillStyle = g8(170); for (let v = 0; v < 5; v++) { let a = Math.floor(trnd() * s), b = 0; while (b < s) { x.fillRect(a, b, 1, 2); a = (a + (trnd() < 0.5 ? -1 : 1) + s) % s; b += 2; } }
   x.fillStyle = g8(150); x.fillRect(0, 31, s, 1); x.fillRect(31, 0, 1, s); x.fillRect(0, 63, s, 1); x.fillRect(63, 0, 1, s); });
 TEX.hazard = canvasTex(32, (x, s) => { x.fillStyle = '#ffd23a'; x.fillRect(0, 0, s, s); x.fillStyle = '#1e1c22'; for (let k = -s; k < s * 2; k += 16) { x.beginPath(); x.moveTo(k, 0); x.lineTo(k + 8, 0); x.lineTo(k + 8 - s, s); x.lineTo(k - s, s); x.closePath(); x.fill(); } });
+const FORT_WALL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEEElEQVR4Aezav4pUTRAF8GGTL/gSA0EzU0EwUHwBBcHAxEAxVQx9BSPBBzAUzY0NBEFfQDQQBFMzBQMTAyPld6GhHab6dt8dt2RmFw5dt7tOVffpvn+2mIPbN2/8evjgUQrkhsz8Bz9/fFhFfx8/vV1BNN7Tjw89vrUPDtR9ozY+tHgH0SDiiZOnV5dv3VsswtIYePLKz47m2OrHwxfn/bunoWsoQGG8f/2imIvbl8/uD3O3kffr51crcf77/3yYPxTg3NlLq+/fvkxghxEaA3himAC74frHEF88YP8x2HmBJy8R2BHtgFM0iAjReE8/PvT41j44UPeN2vgXLt5t0sIT0GTt0GCqAK030FFoLH+qAG4/kziKxUY5UgUwKSJos5AuQNbC5SV+ugB7fQtYvF2wG1lIPQEWT4SsxcubKoAJZMH/B8TfOwGK4L4QncBUAexAmVBWmyqARdsFbRbSBchaeMmbKkD27hOhWRLjsOtongBlJa+Lw4iAL85oDBwY5dX+PblDASRXU7t25/FKoDpwry3GqTNXh+uK8qnlyS9Gb77aT4ye3KEAJZiaWrGXtqMxPBtwlLOW5hQDVxxthEkAaq07KCepyYGPhvXxnmsxLEIMdg+HD18ci2DrGwWeGMCO+H+9Jki81gSiieFANN7Tjw8t3+kEtBx2fWwSwC7t+kKj9U0CRIP70H8swMgub3pbjPDXff03COv9m663nbvkmE6Ajw2QRBsBiU9B5Nfb7zUn5py/fPy0MOdfj7f8xZwEYOwrJgG8K8HbQBuBSHwKIr/e/nL85/zlq3PP+dfjuPV1bYs5CcDogWA9fr0+bgHo8d927pJzSIBC2qX2WAC76Ump3Uccn4DyJP5bu/+vn67pBMw9YQ+ziLnYLeEPk7cVtx6bBKg7art8UdV9o/aSGBaO1/uK3DSnEkOcTeOlLxQAUU3OLbJ0ImLgq++xS9K5Vj4c+Ud4dVwxenKHApRgCovFXtLiz9XlNsVdwlmP05M7LIn5ZFRPA/Z68J5rPHxg93D48MUBtr5R4OEDO+I3TwAiROSefnzY5OuIburXhwPspcCHFr8pQIu4K2PpArROwRKRRzmpAnhSj0542/6pAmx7MSPxfCc4fXsrgC9UJzBVADtgEiM7t23fVAEsngjbXtRIvFQBTJQI2iykC5C1cHmdvnQBTMJkspAqgMXv9S2QvXj5U09A1rGv8zZ/JqcYATVh1MaHo+LVeeT1xVf3rdvhCUBWkQH2OrHnGg/fvc7u4fDhiwdsfaPAk1dRhB3xQwEK4cKV68Vc3Pqp3Sh5G3ktXhxCRPlDARQSVFPePH+yYkcBWv14S2LgyYvLbuWIxvDwxfHdH/mFJTEEQYC9FPgwyseBOV5rHB9aPr8BAAD//2HWoUAAAAAGSURBVAMAdTf4f9d4z80AAAAASUVORK5CYII=';
+TEX.ironwall = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = '#847e87'; ctx.fillRect(0, 0, 64, 64);
+  const t = new THREE.CanvasTexture(c);
+  t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestMipmapNearestFilter;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding;
+  const img = new Image();
+  img.onload = () => { ctx.drawImage(img, 0, 0, 64, 64); t.needsUpdate = true; };
+  img.src = FORT_WALL_PNG;
+  if (img.complete) { ctx.drawImage(img, 0, 0, 64, 64); t.needsUpdate = true; }
+  return t;
+})();
 TEX.blob.minFilter = THREE.LinearFilter; TEX.cloud.minFilter = THREE.NearestFilter;
 const matCache = {};
 const TOON_RAMP = (() => { const d = new Uint8Array([90, 90, 90, 160, 160, 160, 225, 225, 225, 255, 255, 255]); const t = new THREE.DataTexture(d, 4, 1, THREE.RGBFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
@@ -543,7 +557,7 @@ function toon(hex, tex) {
   const key = hex + tex;
   if (!matCache[key]) {
     const col = new THREE.Color(hex).convertSRGBToLinear();
-    if (RSTYLE === 'real') { const R = { panel: [0.45, 0.45], stone: [0.92, 0], wood: [0.75, 0], cloth: [0.95, 0], leaves: [0.85, 0], skin: [0.65, 0], fur: [1, 0], grime: [0.7, 0.2] }[tex] || [0.8, 0.05]; matCache[key] = new THREE.MeshStandardMaterial({ color: col, map: TEX[tex], bumpMap: TEX[tex], bumpScale: tex === 'stone' ? 0.06 : 0.025, roughness: R[0], metalness: R[1] }); }
+    if (RSTYLE === 'real') { const R = { panel: [0.45, 0.45], stone: [0.92, 0], wood: [0.75, 0], cloth: [0.95, 0], leaves: [0.85, 0], skin: [0.65, 0], fur: [1, 0], grime: [0.7, 0.2], ironwall: [0.6, 0.35] }[tex] || [0.8, 0.05]; matCache[key] = new THREE.MeshStandardMaterial({ color: col, map: TEX[tex], bumpMap: TEX[tex], bumpScale: tex === 'stone' ? 0.06 : 0.025, roughness: R[0], metalness: R[1] }); }
     else if (RSTYLE === 'stylized') matCache[key] = new THREE.MeshToonMaterial({ color: col, map: TEX[tex], gradientMap: TOON_RAMP });
     else matCache[key] = psx(new THREE.MeshLambertMaterial({ color: col, map: TEX[tex] }));
   }
@@ -5224,108 +5238,1427 @@ if (RSTYLE !== 'retro') {
   setTimeout(() => { try { resize(); } catch (_) {} }, 0); window.addEventListener('resize', () => HD.resize(stage.clientWidth, stage.clientHeight));
 }
 
-// =================== NEW JAMESTOWN: Earth's capital city (replaces the old walled safe zone) ===================
+// =================== NEW JAMESTOWN: Earth's capital city (Revamped) ===================
 const JT_R = 44, JT_K = 1.9; // city radius, and how far the rest of Earth is pushed out to make room
 const ET = (x, z) => [TOWN.x + (x - TOWN.x) * JT_K, TOWN.z + (z - TOWN.z) * JT_K];
-function makeJTBuilding(w, h, d, col, trim, sign, awn) {
+const PI2 = Math.PI / 2;
+
+
+
+// Late registration helper for features defined in subsequent files (CAPES, ARMORS, QDEFS, invUse)
+function initJamestownLate() {
+  if (typeof ITEMS !== 'undefined') {
+    ITEMS.aranus_comic = { name: 'Aranus Man #1', v: 50, col: '#ff9a2a', use: true, comic: true, note: 'The Astonishing Aranus Man #1 by Arthur Vance. Use to read.' };
+    ITEMS.aranus_gold = { name: 'Signed Aranus Man #1', v: 250, col: '#ffd700', use: true, comic: true, note: 'Gold-embossed author-signed collector copy. Use to read.' };
+    ITEMS.bbq_burger = { name: 'Bobby Burger', v: 15, col: '#d86822', heal: 9999, food: true, use: true, note: 'Fresh off Bobby\'s kettle grill. Restores full health.' };
+    ITEMS.diner_meatloaf = { name: 'Space Meatloaf', v: 25, col: '#8a402f', heal: 9999, food: true, note: 'Savory meatloaf with mystery gravy. Full heal + 10% damage.' };
+    ITEMS.diner_coffee = { name: 'Diner Coffee', v: 15, col: '#4a2a1a', heal: 50, food: true, note: 'Piping hot black coffee. +50 HP & +15% move speed.' };
+    ITEMS.diner_pie = { name: 'Cherry Pie', v: 20, col: '#c8223a', heal: 9999, food: true, note: 'Flaky crust with sweet cherry filling. Full heal.' };
+  }
+  if (typeof CAPES !== 'undefined') {
+    CAPES.aranus = { name: 'Aranus Man Cape', lvl: 1, flag: 'aranusCape', col: '#1a7a82', trim: '#ff9a2a' };
+  }
+  if (typeof ARMORS !== 'undefined') {
+    ARMORS.aranuscape = { name: 'Aranus Suit', lvl: 1, flag: 'aranusCape', def: 0.12, trim: '#ff9a2a', visor: '#4fe0d0', note: 'Heroic suburban vigilante outfit with cape' };
+  }
+  if (typeof invUse === 'function' && !window._aranusInvHooked) {
+    window._aranusInvHooked = true;
+    const _origInvUse = invUse;
+    invUse = function (key) {
+      const [t, id] = String(key).split(':');
+      if (t === 'i' && (id === 'aranus_comic' || id === 'aranus_gold')) {
+        openComicReader();
+        return;
+      }
+      return _origInvUse.apply(this, arguments);
+    };
+  }
+  if (typeof subSpeed === 'function' && !window._dinerSpeedHooked) {
+    window._dinerSpeedHooked = true;
+    const _origSubSpeed = subSpeed;
+    subSpeed = function () {
+      const d = (typeof S !== 'undefined' && S.buffs && S.buffs.diner_spd > Date.now()) ? 0.15 : 0;
+      const c = (typeof S !== 'undefined' && S.buffs && S.buffs.cat_spd > Date.now()) ? 0.15 : 0;
+      return _origSubSpeed() + d + c;
+    };
+    const _origSubDmg = subDmg;
+    subDmg = function () {
+      const d = (typeof S !== 'undefined' && S.buffs && S.buffs.diner_dmg > Date.now()) ? 0.10 : 0;
+      return _origSubDmg() + d;
+    };
+  }
+  if (typeof defQuest === 'function' && typeof QDEFS !== 'undefined' && !QDEFS.aranus_fix) {
+    defQuest('aranus_fix', {
+      ch: 'Earth · Chapter 1',
+      title: 'The Fixed Fight',
+      giver: 'arthur',
+      turnIn: 'arthur',
+      req: ['q1'],
+      intro: [
+        "Psst, trooper! Over here! You look like someone who knows how to handle a blaster... and a delicate situation.",
+        "I'm Arthur Vance, author of The Astonishing Aranus Man! Only comic I ever wrote, but the kids and diner folks love it. Problem is, Issue #2 is stalled and I made a reckless wager at the Arena to fund the print run.",
+        "A rogue syndicate is rigging the exhibition bouts. Go out to the Scrapyard and destroy 4 rogue XR-17 patrol bots to gather their combat telemetry for me. With that data, my fighter wins the match clean!",
+        "Help me out, and I'll reward you with 1,000 credits, an author-signed gold collector edition of Aranus Man #1, and the exclusive Aranus Cape!"
+      ],
+      obj: [{ kind: 'kill', t: 'xr17', n: 4, text: 'Destroy 4 XR-17s in the Scrapyard for telemetry', zone: 'scrap' }],
+      outro: [
+        "You got the telemetry! Glorious! The bookie paid out every single credit, and Issue #2 is officially funded!",
+        "Here is your cut: 1,000 credits, a signed collector edition of Aranus Man, and my personal Aranus Cape. Wear it with pride, trooper—suburban justice never sleeps!"
+      ],
+      reward: { cr: 1000, xp: 450, grant: 'c:aranus' }
+    });
+  }
+  if (typeof completeQuest === 'function' && !window._aranusQuestHooked) {
+    window._aranusQuestHooked = true;
+    const _origCompleteQuest = completeQuest;
+    completeQuest = function (id) {
+      const res = _origCompleteQuest.apply(this, arguments);
+      if (id === 'aranus_fix') {
+        S.flags = S.flags || {};
+        S.flags.aranusCape = 1;
+        S.inv = S.inv || {};
+        S.inv.aranus_gold = (S.inv.aranus_gold || 0) + 1;
+        markDirty();
+      }
+      return res;
+    };
+  }
+}
+setTimeout(initJamestownLate, 0);
+
+// ---- Comic Reader Modal ----
+function openComicReader(startPage = 1) {
+  let page = startPage;
+  const old = document.getElementById('comicModal');
+  if (old) old.remove();
+
+  const wrap = document.createElement('div');
+  wrap.id = 'comicModal';
+  wrap.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(8,10,16,0.92);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;user-select:none;backdrop-filter:blur(6px);';
+
+  const bar = document.createElement('div');
+  bar.style.cssText = 'width:90%;max-width:920px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:#ffd36a;';
+
+  const title = document.createElement('div');
+  title.style.cssText = 'font-weight:bold;font-size:17px;letter-spacing:1px;display:flex;align-items:center;gap:12px;';
+  title.innerHTML = '<span style="color:#ff9a2a">⚡ THE ASTONISHING ARANUS MAN #1</span> <span id="comicPageNum" style="color:#a0b8d0;font-size:14px;font-weight:normal;">Page 1 of 10</span>';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕ Close (Esc)';
+  closeBtn.style.cssText = 'background:#241d2c;border:1px solid #ff6aa8;color:#fff;padding:6px 14px;border-radius:4px;cursor:pointer;font-weight:bold;';
+
+  bar.appendChild(title);
+  bar.appendChild(closeBtn);
+  wrap.appendChild(bar);
+
+  const imgContainer = document.createElement('div');
+  imgContainer.style.cssText = 'position:relative;width:90%;max-width:920px;height:74vh;display:flex;align-items:center;justify-content:center;background:#0b0e14;border:2px solid #ff9a2a;border-radius:8px;box-shadow:0 0 30px rgba(255,154,42,0.35);overflow:hidden;';
+
+  const img = document.createElement('img');
+  img.id = 'comicImg';
+  img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;';
+  imgContainer.appendChild(img);
+  wrap.appendChild(imgContainer);
+
+  const nav = document.createElement('div');
+  nav.style.cssText = 'display:flex;gap:18px;margin-top:12px;align-items:center;';
+
+  const prevBtn = document.createElement('button');
+  prevBtn.textContent = '◀ Previous (←)';
+  prevBtn.style.cssText = 'background:#152238;border:1px solid #4fd2ff;color:#fff;padding:8px 20px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:14px;';
+
+  const nextBtn = document.createElement('button');
+  nextBtn.textContent = 'Next ▶ (→)';
+  nextBtn.style.cssText = 'background:#152238;border:1px solid #4fd2ff;color:#fff;padding:8px 20px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:14px;';
+
+  nav.appendChild(prevBtn);
+  nav.appendChild(nextBtn);
+  wrap.appendChild(nav);
+
+  function update() {
+    img.src = `/shots/aranus%20man/${page}.png`;
+    const numEl = document.getElementById('comicPageNum');
+    if (numEl) numEl.textContent = `Page ${page} of 10`;
+    prevBtn.disabled = (page <= 1);
+    prevBtn.style.opacity = page <= 1 ? '0.4' : '1';
+    nextBtn.disabled = (page >= 10);
+    nextBtn.style.opacity = page >= 10 ? '0.4' : '1';
+  }
+
+  function goPrev() { if (page > 1) { page--; update(); if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui(); } }
+  function goNext() { if (page < 10) { page++; update(); if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui(); } }
+  function close() {
+    window.removeEventListener('keydown', keyHandler);
+    wrap.remove();
+    if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui();
+  }
+
+  prevBtn.onclick = goPrev;
+  nextBtn.onclick = goNext;
+  closeBtn.onclick = close;
+
+  function keyHandler(e) {
+    if (e.key === 'ArrowLeft') goPrev();
+    else if (e.key === 'ArrowRight' || e.key === ' ') goNext();
+    else if (e.key === 'Escape') close();
+  }
+  window.addEventListener('keydown', keyHandler);
+
+  document.body.appendChild(wrap);
+  update();
+}
+
+// ---- Street Runner Network (Outlaw Rep) ----
+function talkRunner(id) {
+  const runnerNames = { slick: 'Slick Eddie', viper: 'Viper' };
+  const name = runnerNames[id] || 'Street Runner';
+  const R = (S.runners = S.runners || {});
+  R[id] = R[id] || { stash: {}, cash: 0, sold: 0 };
+  const data = R[id];
+  const tier = typeof outTier === 'function' ? outTier() : 0;
+
+  if (tier < 1) {
+    openDlg('Shady Runner', name);
+    $('dlgLine').textContent = `They eye your shiny armor with contempt. "Beat it, citizen. You smell like city watch and clean laundry. I only talk business with folks who have a reputation in the streets." (Requires Outlaw Rep 10+ / Shady)`;
+    acts([['Understood', closeDlg, true]]);
+    return;
+  }
+
+  openDlg('Street Runner Network', name);
+  const stashCount = Object.values(data.stash || {}).reduce((a, b) => a + b, 0);
+  $('dlgLine').textContent = `"What's the word, boss? My runners are working the dark corners of New Jamestown. You supply the product, we take a 20% cut, and you collect the profits."\n[Holding: ${stashCount}/25 units · Earned: ${Math.round(data.cash || 0).toLocaleString()} cr waiting · Total sold: ${data.sold || 0}]`;
+
+  acts([
+    ['📦 Supply Product', () => openRunnerSupply(id)],
+    [`💰 Collect Earnings${data.cash > 0 ? ` (${Math.round(data.cash).toLocaleString()} cr)` : ''}`, () => collectRunnerEarnings(id), data.cash <= 0],
+    ['Done', closeDlg, true]
+  ]);
+}
+
+function openRunnerSupply(id) {
+  const runnerNames = { slick: 'Slick Eddie', viper: 'Viper' };
+  const name = runnerNames[id] || 'Street Runner';
+  const R = (S.runners = S.runners || {});
+  const data = (R[id] = R[id] || { stash: {}, cash: 0, sold: 0 });
+  const stashCount = Object.values(data.stash || {}).reduce((a, b) => a + b, 0);
+
+  openDlg('Supply Street Runner', name);
+  const rows = document.createElement('div');
+  rows.className = 'rows'; rows.id = 'shopRows';
+
+  const eligible = Object.keys(S.inv || {}).filter(k => (S.inv[k] > 0) && ((typeof SUBS !== 'undefined' && SUBS[k]) || (ITEMS[k] && ITEMS[k].illegal)));
+
+  if (!eligible.length) {
+    $('dlgLine').textContent = `"You don't have any product on you, boss. Bring back some substances or contraband from the underworld, and we'll push it."`;
+    acts([['Back', () => talkRunner(id), true], ['Done', closeDlg]]);
+    return;
+  }
+
+  const render = () => {
+    const curN = Object.values(data.stash || {}).reduce((a, b) => a + b, 0);
+    const have = Object.keys(S.inv || {}).filter(k => (S.inv[k] > 0) && ((typeof SUBS !== 'undefined' && SUBS[k]) || (ITEMS[k] && ITEMS[k].illegal)));
+    $('dlgLine').textContent = `"Drop off the goods and we'll move them through the alleys." (Holding ${curN}/25 units)`;
+    if (!have.length) {
+      rows.textContent = '';
+      const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'No more product in your pockets.';
+      rows.appendChild(e);
+      return;
+    }
+    itemRows(rows, have.map(k => {
+      const itemDef = (typeof SUBS !== 'undefined' && SUBS[k]) || ITEMS[k];
+      const itemName = itemDef ? itemDef.name : k;
+      return [k, S.inv[k], `${itemName}`, [
+        ['Give 1', () => give(k, 1), curN >= 25],
+        ['Give all', () => give(k, Math.min(S.inv[k], 25 - curN)), curN >= 25]
+      ]];
+    }));
+  };
+
+  const give = (k, q) => {
+    const curN = Object.values(data.stash || {}).reduce((a, b) => a + b, 0);
+    q = Math.min(q, S.inv[k] || 0, 25 - curN);
+    if (q <= 0) { toast('RUNNER FULL', 'Runner cannot carry more product', 2); return; }
+    S.inv[k] -= q;
+    if (!S.inv[k]) delete S.inv[k];
+    data.stash[k] = (data.stash[k] || 0) + q;
+    markDirty();
+    if (typeof SFX !== 'undefined' && SFX.item) SFX.item();
+    try { invQuickRender(); } catch (_) {}
+    render();
+  };
+
+  $('dlgActs').before(rows);
+  acts([['Back', () => talkRunner(id), true], ['Done', closeDlg]]);
+  render();
+}
+
+function collectRunnerEarnings(id) {
+  const runnerNames = { slick: 'Slick Eddie', viper: 'Viper' };
+  const name = runnerNames[id] || 'Street Runner';
+  const data = S.runners && S.runners[id];
+  if (!data || !data.cash) {
+    toast('NO EARNINGS', 'No cash waiting to be collected', 2);
+    return;
+  }
+  const amt = Math.round(data.cash);
+  data.cash = 0;
+  S.cr += amt;
+  const repGain = Math.max(1, Math.floor(amt / 200));
+  if (typeof crime === 'function') crime(repGain, 'Street runner kickback');
+  markDirty();
+  if (typeof SFX !== 'undefined' && SFX.coin) SFX.coin();
+  toast('CASH COLLECTED', `+${amt.toLocaleString()} cr from ${name} (+${repGain} rep)`, 3);
+  log(`Collected ${amt.toLocaleString()} cr from ${name}'s street sales in New Jamestown. (+${repGain} outlaw rep)`, 'loot');
+  talkRunner(id);
+}
+
+setInterval(() => {
+  try {
+    if (typeof state === 'undefined' || state !== 'play' || !S.runners || document.hidden) return;
+    for (const [rid, data] of Object.entries(S.runners)) {
+      if (!data || !data.stash) continue;
+      const ks = Object.keys(data.stash).filter(k => data.stash[k] > 0);
+      if (!ks.length) continue;
+      if (Math.random() < 0.45) {
+        const k = ks[Math.floor(Math.random() * ks.length)];
+        data.stash[k]--;
+        if (!data.stash[k]) delete data.stash[k];
+        let baseVal = 40;
+        if (typeof SUBS !== 'undefined' && SUBS[k]) baseVal = SUBS[k].price || SUBS[k].v * 2 || 50;
+        else if (ITEMS[k]) baseVal = ITEMS[k].v || 50;
+        const payout = Math.round(baseVal * 0.80 * (0.9 + Math.random() * 0.3));
+        data.cash = (data.cash || 0) + payout;
+        data.sold = (data.sold || 0) + 1;
+        markDirty();
+        if (Math.random() < 0.22) {
+          const runnerName = rid === 'slick' ? 'Slick Eddie' : 'Viper';
+          const subName = (typeof SUBS !== 'undefined' && SUBS[k] && SUBS[k].name) || (ITEMS[k] && ITEMS[k].name) || k;
+          log(`${runnerName}: "Just pushed 1 ${subName} in the alley. +${payout} cr in your stash."`, 'chat');
+        }
+      }
+    }
+  } catch (err) { console.warn('runner tick error', err); }
+}, 10000);
+
+// ---- Actions for Arthur, Bobby, and Barnaby ----
+function buyComic() {
+  if (S.cr < 50) {
+    toast('NOT ENOUGH CREDITS', 'Need 50 cr to buy Aranus Man #1', 2.5);
+    if (typeof SFX !== 'undefined' && SFX.hit) SFX.hit();
+    return;
+  }
+  S.cr -= 50;
+  S.inv = S.inv || {};
+  S.inv.aranus_comic = (S.inv.aranus_comic || 0) + 1;
+  markDirty();
+  if (typeof SFX !== 'undefined' && SFX.coin) SFX.coin();
+  toast('COMIC PURCHASED', 'Aranus Man #1 added to bag! Read it anytime.', 3);
+  log('Bought "The Astonishing Aranus Man #1" from Arthur Vance for 50 cr. Open your bag to read!', 'loot');
+  closeDlg();
+}
+
+function grabBurger() {
+  player.hp = maxHp();
+  S.inv = S.inv || {};
+  S.inv.bbq_burger = (S.inv.bbq_burger || 0) + 1;
+  markDirty();
+  if (typeof SFX !== 'undefined' && SFX.item) SFX.item();
+  toast('HOT OFF THE GRILL', 'Bobby handed you a sizzling burger! (Full Heal)', 3);
+  log('Bobby the Grillmaster handed you a fresh, sizzling space burger. Health fully restored!', 'loot');
+  closeDlg();
+}
+
+function petBarnaby() {
+  const catObj = npcObjs && npcObjs['barnaby'] && npcObjs['barnaby'].obj;
+  const pos = catObj ? catObj.position.clone().add(V(0, 0.4, 0)) : player.pos.clone().add(V(0, 0.5, 0));
+  burst(pos, '#ff6aa8', 16, 2.5);
+  player.hp = Math.min(maxHp(), player.hp + 30);
+  if (typeof playTone === 'function') {
+    playTone(392, 0.25, 'sine');
+    setTimeout(() => playTone(523.25, 0.35, 'sine'), 120);
+  } else if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui();
+  toast('PURRRRRR...', 'Barnaby purrs contentedly and rubs against your boot. (+30 HP)', 3.5);
+  log('You pet Barnaby the cat. He arches his back, purrs happily, and gives you warm fuzzies.', 'loot');
+  closeDlg();
+}
+
+// Arthur Vance Stimulant Dealing
+function openArthurDealing() {
+  openDlg('Arthur Vance · Writing Stimulants', 'Arthur Vance');
+  const rows = document.createElement('div');
+  rows.className = 'rows';
+  rows.id = 'shopRows';
+
+  const prices = {
+    focusfizz: { p: 120, rep: 0, quote: '"Focus Fizz! The holy grail of prose! Page 4 is officially written!"' },
+    stimpatch: { p: 135, rep: 0, quote: '"A stim patch right on the carotid! My typing fingers are a blur!"' },
+    irongum:   { p: 170, rep: 0, quote: '"Tough prose. Gritty action. Aranus Man is crushing jawbones."' },
+    voidspice: { p: 220, rep: 1, quote: '"Void Spice... oh wow. I see galaxies inside my typewriter. (+1 Outlaw Rep)"' },
+    neondust:  { p: 240, rep: 1, quote: '"Glowing rainbow inspiration! Issue #2 will have foil embossing! (+1 Outlaw Rep)"' },
+    glimmer:   { p: 310, rep: 1, quote: '"Liquid gold for the mind! The bookie will never catch me now! (+1 Outlaw Rep)"' },
+    redhaze:   { p: 360, rep: 1, quote: '"PURE SUBURBAN WRATH! Aranus Man is wielding dual weed-whackers! (+1 Outlaw Rep)"' },
+    blackout:  { p: 480, rep: 2, quote: '"I have ascended beyond comprehension. Issue #2 is already published in the future! (+2 Outlaw Rep)"' }
+  };
+
+  const sell = (k, q) => {
+    q = Math.min(q, (S.inv && S.inv[k]) || 0);
+    if (q <= 0) return;
+    const info = prices[k] || { p: 50, rep: 0, quote: '"Thanks, trooper! Inspiration is flowing!"' };
+    const tot = info.p * q;
+    S.inv[k] -= q;
+    if (!S.inv[k]) delete S.inv[k];
+    S.cr += tot;
+    markDirty();
+    if (typeof SFX !== 'undefined' && SFX.coin) SFX.coin();
+    if (info.rep > 0 && typeof crime === 'function') {
+      crime(info.rep * q, 'Supplied writing stimulants to Arthur Vance');
+    }
+    const aPos = npcObjs && npcObjs['arthur'] && npcObjs['arthur'].obj;
+    if (aPos) {
+      try { burst(aPos.position.clone().add(V(0, 1.6, 0)), '#ffd36a', 14, 2.5); } catch (_) {}
+    }
+    const subName = (typeof SUBS !== 'undefined' && SUBS[k] && SUBS[k].name) || (ITEMS[k] && ITEMS[k].name) || k;
+    toast('STIMULANTS SOLD', `Sold ${q}x ${subName} to Arthur for ${tot} cr!`, 3.5);
+    log(`Sold ${q}x ${subName} to Arthur Vance for ${tot.toLocaleString()} cr.${info.rep ? ` (+${info.rep * q} Outlaw Rep)` : ''}`, 'loot');
+    $('dlgLine').textContent = info.quote;
+    setTimeout(() => { if (dlgOpen) render(); }, 1200);
+  };
+
+  const render = () => {
+    const inv = S.inv || {};
+    const have = (typeof SUBS !== 'undefined' ? Object.keys(SUBS) : []).filter(k => (inv[k] || 0) > 0);
+    if (!have.length) {
+      $('dlgLine').textContent = '"You holding any Focus Fizz or brain-boosters? I\'ve been staring at a blank page 4 for three months! Bring me anything from a Fizz to Void Spice and I\'ll pay double!"';
+      itemRows(rows, []);
+      return;
+    }
+    $('dlgLine').textContent = `Arthur Vance. "Show me what you've got! Focus Fizz pays DOUBLE (120 cr)!" You have ${S.cr.toLocaleString()} cr.`;
+    itemRows(rows, have.map(k => {
+      const info = prices[k] || { p: 50, rep: 0 };
+      const subName = SUBS[k].name;
+      const note = `${info.p} cr each${k === 'focusfizz' ? ' · 2× BONUS' : ''}${info.rep ? ' · contraband (+rep)' : ' · legal'}`;
+      return [
+        k,
+        inv[k],
+        note,
+        [
+          ['Sell 1', () => sell(k, 1)],
+          ['Sell all', () => sell(k, inv[k])]
+        ]
+      ];
+    }));
+  };
+
+  $('dlgActs').before(rows);
+  acts([
+    ['Back', () => talk('arthur'), true],
+    ['Leave', closeDlg]
+  ]);
+  render();
+}
+
+// Feed Barnaby Fresh Fish
+function feedBarnabyFish() {
+  const inv = S.inv || {};
+  const fishKey = Object.keys(inv).find(k => (inv[k] || 0) > 0 && ((ITEMS[k] && ITEMS[k].fish) || k.startsWith('fish')));
+
+  if (!fishKey) {
+    toast('NO FISH IN BAG', 'Barnaby sniffs your boots expectantly, but detects no fish. Visit Gil\'s fish market!', 3.5);
+    if (typeof playTone === 'function') playTone(240, 0.2, 'sine');
+    $('dlgLine').textContent = 'Barnaby looks up at you with large, pleading eyes, sniff-testing your pockets. Alas, you have no fresh fish.';
+    return;
+  }
+
+  inv[fishKey] -= 1;
+  if (!inv[fishKey]) delete inv[fishKey];
+  player.hp = maxHp();
+  if (typeof gainXp === 'function') gainXp(50);
+  S.buffs = S.buffs || {};
+  S.buffs['cat_spd'] = Date.now() + 600000;
+  markDirty();
+
+  const catObj = npcObjs && npcObjs['barnaby'] && npcObjs['barnaby'].obj;
+  const pos = catObj ? catObj.position.clone().add(V(0, 0.4, 0)) : player.pos.clone().add(V(0, 0.5, 0));
+  burst(pos, '#4fa8ff', 16, 2.5);
+  burst(pos, '#ff6aa8', 14, 2.0);
+
+  if (typeof playTone === 'function') {
+    playTone(440, 0.15, 'triangle');
+    setTimeout(() => playTone(587.33, 0.22, 'triangle'), 100);
+    setTimeout(() => playTone(880, 0.35, 'sine'), 220);
+  } else if (typeof SFX !== 'undefined' && SFX.coin) SFX.coin();
+
+  const fishName = (ITEMS[fishKey] && ITEMS[fishKey].name) || fishKey;
+  toast('PURRRRR!', `Barnaby devoured the ${fishName}! Full Heal + 50 XP + Feline Agility (+15% Spd for 10m)!`, 4.5);
+  log(`You fed Barnaby a fresh ${fishName}. He devours it happily, purrs at top volume, and blesses you with Cat's Grace!`, 'loot');
+  $('dlgLine').textContent = 'Barnaby chomps down the fish with ferocious enthusiasm, licks his whiskers clean, and rubs warmly against your leg. Purrrrrrr!';
+}
+
+// Cookie's Diner Specials Menu
+function openDinerMenu() {
+  openDlg('Cookie\'s Diner · Menu Specials', 'Cookie');
+  const rows = document.createElement('div');
+  rows.className = 'rows';
+  rows.id = 'shopRows';
+
+  const specials = [
+    {
+      id: 'diner_meatloaf',
+      name: 'Space Meatloaf Platter',
+      cost: 25,
+      desc: 'Savory meatloaf with mystery gravy. Full heal + 10% damage boost.',
+      fn: () => {
+        if (S.cr < 25) { toast('NOT ENOUGH CREDITS', 'Need 25 cr', 2); return; }
+        S.cr -= 25;
+        player.hp = maxHp();
+        S.buffs = S.buffs || {};
+        S.buffs['diner_dmg'] = Date.now() + 300000;
+        markDirty();
+        if (typeof SFX !== 'undefined' && SFX.coin) SFX.coin();
+        toast('DELICIOUS!', 'A hearty slice of space meatloaf. Full HP + 10% damage for 5m!', 3.5);
+        log('Ate Cookie\'s famous Space Meatloaf. Fully restored and feeling strong!', 'loot');
+        render();
+      }
+    },
+    {
+      id: 'diner_coffee',
+      name: 'Black Diner Coffee',
+      cost: 15,
+      desc: 'Steaming black brew. +50 HP & +15% movement speed for 5m.',
+      fn: () => {
+        if (S.cr < 15) { toast('NOT ENOUGH CREDITS', 'Need 15 cr', 2); return; }
+        S.cr -= 15;
+        player.hp = Math.min(maxHp(), player.hp + 50);
+        S.buffs = S.buffs || {};
+        S.buffs['diner_spd'] = Date.now() + 300000;
+        markDirty();
+        if (typeof SFX !== 'undefined' && SFX.coin) SFX.coin();
+        toast('CAFFEINATED!', 'Strong, bitter diner coffee. +50 HP & +15% move speed!', 3.5);
+        log('Drank a cup of piping hot diner coffee. You feel energized!', 'loot');
+        render();
+      }
+    },
+    {
+      id: 'diner_pie',
+      name: 'Slice of Cherry Pie',
+      cost: 20,
+      desc: 'Flaky golden crust with sweet cherry filling. Full heal.',
+      fn: () => {
+        if (S.cr < 20) { toast('NOT ENOUGH CREDITS', 'Need 20 cr', 2); return; }
+        S.cr -= 20;
+        player.hp = maxHp();
+        markDirty();
+        if (typeof SFX !== 'undefined' && SFX.coin) SFX.coin();
+        toast('SWEET PERFECTION', 'Warm cherry pie. Full health restored!', 3.5);
+        log('Enjoyed a warm slice of cherry pie at Cookie\'s Diner. Full heal!', 'loot');
+        render();
+      }
+    }
+  ];
+
+  const render = () => {
+    $('dlgLine').textContent = `Cookie's Specials. You have ${S.cr.toLocaleString()} cr.`;
+    itemRows(rows, specials.map(s => [
+      s.id,
+      null,
+      `${s.cost} cr · ${s.desc}`,
+      [['Order', s.fn, S.cr < s.cost]]
+    ]));
+  };
+
+  $('dlgActs').before(rows);
+  acts([
+    ['Heal (Free)', () => { player.hp = maxHp(); toast('HEALED', 'Cookie patched you up', 2); render(); }],
+    ['Back', () => talk('cookie'), true],
+    ['Leave', closeDlg]
+  ]);
+  render();
+}
+
+// Municipal Notice Board Dialog
+function openNoticeBoard() {
+  openDlg('New Jamestown Gazette · Municipal Notice Board', 'Town Bulletin');
+  const rep = typeof outS === 'function' ? outS().rep : 0;
+  const tier = typeof outTierName === 'function' ? outTierName() : 'Clean';
+  const bounty = typeof outS === 'function' && outS().bounty ? outS().bounty : 0;
+
+  $('dlgLine').innerHTML = `
+    <div style="font-family:sans-serif;line-height:1.5;color:#d8e2ec;">
+      <div style="text-align:center;font-weight:bold;font-size:16px;color:#ffd36a;border-bottom:1px solid #4a3a2a;padding-bottom:6px;margin-bottom:8px;">
+        📜 NEW JAMESTOWN GAZETTE · MUNICIPAL BULLETIN
+      </div>
+      <div style="margin-bottom:8px;">
+        <b style="color:#ffd36a;">★ THE ROXY CINEMA IS OPEN:</b> Catch classic cinema on the giant silver screen! Free buttered popcorn at the concession stand. Now showing: <i>1. Night of the Living Dead</i> and <i>2. Santa Claus Conquers the Martians</i>. Press <b>[C]</b> to change channels.
+      </div>
+      <div style="margin-bottom:8px;">
+        <b style="color:#ff9a2a;">★ ARANUS MAN SIGNING & BOUNTY:</b> Arthur Vance is signing collector copies of <i>The Astonishing Aranus Man #1</i> at the West Pavilion. Arthur is also paying double for writing stimulants (especially Focus Fizz) to break his writer's block on Issue #2!
+      </div>
+      <div style="margin-bottom:8px;">
+        <b style="color:#d86822;">★ BOBBY'S BACKYARD BBQ:</b> Sizzling space burgers hot off the grill behind the West residential block. Fresh heals for all weary travelers!
+      </div>
+      <div style="margin-bottom:8px;">
+        <b style="color:#6fdc5a;">★ LOST & FOUND:</b> Barnaby the ginger cat is loose on the West Boulevard. Friendly, purrs on petting, and goes wild for fresh fish from Gil's fish market.
+      </div>
+      <div style="margin-bottom:8px;">
+        <b style="color:#4fe0d0;">★ ARCADE HIGHSCORES:</b> Retro cabinets for <i>Space Snake</i> and <i>Space Rocks</i> are operational outside the Neon Arcade on West Street!
+      </div>
+      <div style="border-top:1px solid #4a3a2a;padding-top:6px;color:#a0b8d0;font-size:13px;">
+        <b>⚖️ WATCH STATUS:</b> Your Outlaw Standing: <span style="color:#ffd36a;">${tier} (${rep} rep)</span>${bounty ? ` · <span style="color:#ff4a3a;">WANTED BOUNTY: ${bounty.toLocaleString()} cr</span>` : ' · No active warrants'}.
+      </div>
+    </div>
+  `;
+  acts([
+    ['Town News', () => { if (typeof openUpdates === 'function') openUpdates(false); else closeDlg(); }],
+    ['Leave', closeDlg, true]
+  ]);
+}
+
+// ---- Custom Architectural Building Builder ----
+function makeJTBuilding(w, h, d, col, trim, sign, awn, bStyle = 'commercial') {
   const g = new THREE.Group();
-  part(g, B(w, h, d), toon(col, 'stone'), 0, h / 2, 0); part(g, B(w + 0.3, 0.35, d + 0.3), trim, 0, h + 0.17, 0);
-  for (let y = 1.9; y < h - 0.6; y += 1.6) for (let x = -w / 2 + 0.9; x < w / 2 - 0.5; x += 1.3) { const lit = Math.sin(x * 7 + y * 3 + w) > -0.2; part(g, B(0.7, 0.8, 0.06), lit ? glow('#ffe0a0') : '#2a3a4a', x, y + 0.4, d / 2 + 0.02); }
-  part(g, B(1.2, 2.0, 0.08), '#3a2a1e', 0, 1.0, d / 2 + 0.03); part(g, B(1.5, 0.15, 0.1), trim, 0, 2.1, d / 2 + 0.05);
-  if (awn) { part(g, B(w * 0.8, 0.08, 1.4), toon(awn, 'cloth'), 0, 2.5, d / 2 + 0.6, 0.25); }
-  if (sign) { const sg = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(w - 0.4, 5), 0.8), new THREE.MeshBasicMaterial({ map: signTex(sign, '#1e1c22', '#ffd36a') })); sg.position.set(0, 3.0, d / 2 + 0.08); g.add(sg); }
+
+  // Resolve authentic retro materials
+  const wallMat = toon(col || '#9a9088', 'stone');
+  const trimMat = toon(trim || '#4a3f35', 'wood');
+  const roofMat = toon(trim || '#3a343c', 'wood');
+
+  // 1. Stone foundation plinth
+  part(g, B(w + 0.3, 0.5, d + 0.3), toon('#4e4a46', 'stone'), 0, 0.25, 0);
+
+  // 2. Main Wall Body
+  part(g, B(w, h, d), wallMat, 0, h / 2, 0);
+
+  // 3. Ground floor display windows & entrance
+  if (bStyle === 'civic') {
+    // Neoclassical portico / Town Hall steps
+    part(g, B(w * 0.9, 0.3, 3.0), toon('#9a9088', 'stone'), 0, 0.15, d / 2 + 1.5);
+    part(g, B(w * 0.8, 0.3, 2.0), toon('#b8a888', 'stone'), 0, 0.45, d / 2 + 1.0);
+    // Double door
+    part(g, B(2.4, 3.2, 0.1), '#2c1e14', 0, 1.8, d / 2 + 0.05);
+    part(g, B(2.8, 0.3, 0.2), trimMat, 0, 3.45, d / 2 + 0.08);
+  } else {
+    // Commercial / Residential entrance stoop
+    part(g, B(1.6, 0.16, 0.8), toon('#6e665e', 'stone'), 0, 0.08, d / 2 + 0.4);
+    part(g, B(1.2, 2.2, 0.08), '#2c1e14', 0, 1.15, d / 2 + 0.03);
+    part(g, B(1.5, 0.2, 0.12), trimMat, 0, 2.3, d / 2 + 0.05);
+
+    // Warm storefront display windows
+    if (w >= 7) {
+      const winW = (w - 2.8) / 2;
+      part(g, B(winW, 1.8, 0.06), glow('#ffe494'), -w / 4 - 0.2, 1.6, d / 2 + 0.03);
+      part(g, B(winW, 1.8, 0.06), glow('#ffe494'), w / 4 + 0.2, 1.6, d / 2 + 0.03);
+      // Window frame trims
+      part(g, B(winW + 0.1, 0.1, 0.1), trimMat, -w / 4 - 0.2, 0.65, d / 2 + 0.05);
+      part(g, B(winW + 0.1, 0.1, 0.1), trimMat, w / 4 + 0.2, 0.65, d / 2 + 0.05);
+      part(g, B(winW + 0.1, 0.1, 0.1), trimMat, -w / 4 - 0.2, 2.55, d / 2 + 0.05);
+      part(g, B(winW + 0.1, 0.1, 0.1), trimMat, w / 4 + 0.2, 2.55, d / 2 + 0.05);
+    }
+  }
+
+  // 4. Middle belt cornice separating ground floor
+  part(g, B(w + 0.25, 0.22, d + 0.25), trimMat, 0, 3.1, 0);
+
+  // 5. Upper floor sash windows with stone sills
+  for (let y = 4.4; y < h - 0.8; y += 1.8) {
+    for (let x = -w / 2 + 1.2; x < w / 2 - 0.8; x += 1.6) {
+      const lit = Math.sin(x * 6 + y * 4 + w) > -0.25;
+      part(g, B(0.85, 1.1, 0.06), lit ? glow('#ffe0a0') : '#202a36', x, y + 0.5, d / 2 + 0.02);
+      // Sill and lintel
+      part(g, B(1.05, 0.1, 0.14), trimMat, x, y - 0.08, d / 2 + 0.05);
+      part(g, B(1.05, 0.12, 0.1), trimMat, x, y + 1.08, d / 2 + 0.05);
+    }
+  }
+
+  // 6. Roof Cornice & Mansard Slate Roof
+  part(g, B(w + 0.35, 0.35, d + 0.35), trimMat, 0, h + 0.17, 0);
+  const roofH = bStyle === 'civic' ? 2.8 : 2.0;
+  part(g, B(w - 0.3, roofH, d - 0.3), roofMat, 0, h + roofH / 2 + 0.35, 0);
+  part(g, B(w - 1.2, 0.25, d - 1.2), trimMat, 0, h + roofH + 0.45, 0);
+
+  // Dormer windows on the slate roof
+  if (w >= 8) {
+    for (const sx of [-w * 0.25, w * 0.25]) {
+      part(g, B(1.1, 1.1, 0.5), roofMat, sx, h + 1.1, d / 2 - 0.1);
+      part(g, B(0.65, 0.75, 0.05), glow('#ffd080'), sx, h + 1.1, d / 2 + 0.16);
+      part(g, new THREE.ConeGeometry(0.7, 0.5, 4), trimMat, sx, h + 1.8, d / 2 - 0.1, 0, Math.PI / 4, 0);
+    }
+  }
+
+  // 7. Brick Chimneys with stone caps
+  if (w >= 7) {
+    part(g, B(0.8, 1.6, 0.8), toon('#7a4030', 'stone'), w / 3, h + roofH + 0.6, d / 4);
+    part(g, B(1.0, 0.2, 1.0), toon('#3a3530', 'stone'), w / 3, h + roofH + 1.45, d / 4);
+  }
+
+  // 8. Awning & Sign
+  if (awn) {
+    part(g, B(w * 0.82, 0.08, 1.5), toon(awn, 'cloth'), 0, 2.7, d / 2 + 0.7, 0.22);
+  }
+  if (sign) {
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(w - 0.6, 5.4), 0.85), psx(new THREE.MeshBasicMaterial({ map: signTex(sign, '#181a20', '#ffd36a') })));
+    sg.position.set(0, 3.25, d / 2 + 0.09);
+    g.add(sg);
+  }
+
   return g;
 }
-// [label, x, z, w, d, h, facing ry, wall colour, trim, awning]
-const PI2 = Math.PI / 2;
+
+// [label, x, z, w, d, h, facing ry, wall colour, trim, awning, bStyle]
 const JT_BUILDINGS = [
-  ['TOWN HALL', 0, -36, 16, 7, 10, 0, '#d8c8a8', '#8a6a44', null],
-  ['BANK', -14, -14, 9, 7, 8, PI2, '#c9c0b0', '#c9a43a', null], ['CLINIC', 14, -14, 9, 7, 7, -PI2, '#e8e4dc', '#c8402f', '#c8402f'],
-  ['GUN SHOP', -14, 14, 9, 7, 7, PI2, '#8a6a4a', '#3a2a1e', '#5a6a3a'], ['GENERAL STORE', 14, 14, 9, 7, 7, -PI2, '#a88a6a', '#5d4a8a', '#8a6fc4'],
-  ['TAILOR', -14, -27, 8, 6, 6, PI2, '#b8a8c8', '#5d3a8a', '#c86aff'], ['PET SHOP', 14, -27, 8, 6, 6, -PI2, '#c8b890', '#6fdc5a', '#6fdc5a'],
-  ['DINER', -14, 27, 8, 6, 5.5, PI2, '#d8a878', '#c8402f', '#ffd36a'], ['HOTEL', 14, 27, 8, 6, 11, -PI2, '#9a8a9a', '#3b4f7a', '#3b4f7a'],
-  ['FISH MARKET', 28, -12, 9, 6, 5.5, 0, '#a8b8c8', '#2a5a7a', '#4fa8ff'], ['ARCADE', -28, -12, 9, 6, 6, 0, '#5a2a6a', '#ff6aa8', '#ff6aa8'],
-  ['CINEMA', -28, 12, 10, 6, 8, Math.PI, '#8a2a3a', '#ffd36a', '#c8402f'], ['GARAGE', 28, 12, 10, 6, 5.5, Math.PI, '#5d636c', '#ff8a2a', '#ff8a2a'],
-  ['APARTMENTS', 36, 28, 8, 8, 14, Math.PI, '#b8a088', '#5a3a22', null], ['APARTMENTS', -38, -24, 8, 8, 13, 0, '#a8b0b8', '#3a4a5a', null],
-  [null, -26, 34, 7, 6, 6, Math.PI, '#c8a888', '#5a3a22', null], [null, 26, 36, 7, 6, 7, Math.PI, '#a8c8a8', '#3a4a3a', null], [null, -40, 10, 6, 7, 6, PI2, '#d8c098', '#5a3a22', null],
-  [null, 40, -8, 6, 7, 7, -PI2, '#b8b8c8', '#3b4f7a', null], [null, -24, -36, 7, 6, 8, 0.3, '#c8b0d8', '#5d3a8a', null]
+  ['TOWN HALL', 0, -36, 18, 9, 11, 0, '#d8c8a8', '#8a6a44', null, 'civic'],
+  ['BANK', -14, -14, 10, 8, 8.5, PI2, '#c9c0b0', '#c9a43a', null, 'commercial'],
+  ['CLINIC', 14, -14, 10, 8, 8, -PI2, '#e8e4dc', '#c8402f', '#c8402f', 'commercial'],
+  ['GUN SHOP', -14, 14, 10, 8, 8, PI2, '#8a6a4a', '#3a2a1e', '#5a6a3a', 'commercial'],
+  ['GENERAL STORE', 14, 14, 10, 8, 8, -PI2, '#a88a6a', '#5d4a8a', '#8a6fc4', 'commercial'],
+  ['TAILOR', -14, -27, 9, 7, 7, PI2, '#b8a8c8', '#5d3a8a', '#c86aff', 'commercial'],
+  ['PET SHOP', 14, -27, 9, 7, 7, -PI2, '#c8b890', '#6fdc5a', '#6fdc5a', 'commercial'],
+  ['DINER', -14, 27, 9, 7, 6, PI2, '#d8a878', '#c8402f', '#ffd36a', 'commercial'],
+  ['HOTEL', 14, 27, 10, 8, 12, -PI2, '#9a8a9a', '#3b4f7a', '#3b4f7a', 'commercial'],
+  ['FISH MARKET', 28, -12, 10, 7, 6, 0, '#a8b8c8', '#2a5a7a', '#4fa8ff', 'commercial'],
+  ['ARCADE', -28, -12, 10, 7, 7, 0, '#5a2a6a', '#ff6aa8', '#ff6aa8', 'entertainment'],
+  ['CINEMA', -28, 12, 11, 8, 9, Math.PI, '#8a2a3a', '#ffd36a', '#c8402f', 'entertainment'],
+  ['GARAGE', 28, 12, 11, 7, 6, Math.PI, '#5d636c', '#ff8a2a', '#ff8a2a', 'industrial'],
+  ['APARTMENTS', 36, 28, 9, 9, 15, Math.PI, '#b8a088', '#5a3a22', null, 'residential'],
+  ['APARTMENTS', -38, -24, 9, 9, 14, 0, '#a8b0b8', '#3a4a5a', null, 'residential'],
+  [null, -26, 36, 8, 7, 7, Math.PI, '#c8a888', '#5a3a22', null, 'residential'],
+  [null, 26, 36, 8, 7, 7.5, Math.PI, '#a8c8a8', '#3a4a3a', null, 'residential'],
+  [null, -40, 10, 7, 8, 7, PI2, '#d8c098', '#5a3a22', null, 'residential'],
+  [null, 40, -8, 7, 8, 7.5, -PI2, '#b8b8c8', '#3b4f7a', null, 'residential'],
+  [null, -24, -36, 8, 7, 8, 0.3, '#c8b0d8', '#5d3a8a', null, 'residential']
 ];
-// where each townsperson stands: [x, z, face] (shopkeepers stand outside their shop door)
-const JT_POS = { mayor: [0, -30.5, 0], nash: [-8.6, -14, PI2], mira: [8.6, -14, -PI2], tully: [-8.6, 14, PI2], zib: [8.6, 14, -PI2], ada: [-9.2, -27, PI2], paws: [9.2, -27, -PI2], cookie: [-9.2, 27, PI2], hank: [9.2, 27, -PI2], gil: [28, -7.5, 0],
-  vega: [3.5, 40, 0], dent: [-3.5, 40, 0], scoop: [7, -7, -0.8], banjo: [-7, 7, 2.4], elismas: [-7.5, -7.5, 0.8] };
+
+// NPC Positions: [x, z, face]
+const JT_POS = {
+  mayor: [0, -30.5, 0],
+  nash: [-8.6, -14, PI2],
+  mira: [8.6, -14, -PI2],
+  tully: [-8.6, 14, PI2],
+  zib: [8.6, 14, -PI2],
+  ada: [-9.2, -27, PI2],
+  tailor: [-9.2, -27, PI2],
+  paws: [9.2, -27, -PI2],
+  cookie: [-9.2, 27, PI2],
+  hank: [9.2, 27, -PI2],
+  gil: [28, -7.5, 0],
+  vega: [3.5, 40, 0],
+  dent: [-3.5, 40, 0],
+  scoop: [7, -7, -0.8],
+  banjo: [-7, 7, 2.4],
+  elismas: [-7.5, -7.5, 0.8],
+  merla: [7.5, 7.5, -2.4],
+  arthur: [-28, 0, PI2],
+  bobby: [-21, 34, -0.6],
+  barnaby: [-18, 6, 0.4],
+  slick: [-23, -18, PI2],
+  viper: [-23, 18, PI2],
+  pete: [-27.0, -7.2, 0.2]
+};
+
+// 3D Model: Barnaby the Cat
+function makeCat() {
+  const g = new THREE.Group();
+  part(g, B(0.36, 0.26, 0.54), toon('#d8782a', 'fur'), 0, 0.22, 0);
+  part(g, B(0.26, 0.14, 0.44), toon('#f4efe8', 'fur'), 0, 0.14, 0.02);
+  const head = new THREE.Group();
+  part(head, B(0.28, 0.24, 0.26), toon('#d8782a', 'fur'), 0, 0, 0);
+  part(head, B(0.16, 0.1, 0.08), toon('#f4efe8', 'fur'), 0, -0.05, 0.14);
+  part(head, B(0.04, 0.04, 0.02), toon('#ff9aa8'), 0, -0.02, 0.185);
+  for (const s of [-1, 1]) {
+    part(head, B(0.05, 0.06, 0.02), glow('#50ff60'), 0.08 * s, 0.04, 0.132);
+    part(head, new THREE.ConeGeometry(0.06, 0.12, 4), toon('#d8782a', 'fur'), 0.1 * s, 0.16, 0.02, 0, Math.PI / 4, 0.2 * s);
+    part(head, new THREE.ConeGeometry(0.04, 0.09, 4), toon('#ffb0c0'), 0.1 * s, 0.15, 0.03, 0, Math.PI / 4, 0.2 * s);
+  }
+  head.position.set(0, 0.36, 0.28);
+  g.add(head);
+
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) {
+      part(g, Cy(0.05, 0.05, 0.2, 6), toon('#d8782a', 'fur'), 0.12 * sx, 0.1, 0.18 * sz);
+      part(g, B(0.1, 0.05, 0.12), toon('#f4efe8', 'fur'), 0.12 * sx, 0.025, 0.18 * sz + 0.02);
+    }
+  }
+
+  const tail = new THREE.Group();
+  part(tail, Cy(0.035, 0.04, 0.38, 6), toon('#d8782a', 'fur'), 0, 0.18, 0, -0.6, 0, 0);
+  part(tail, Cy(0.03, 0.035, 0.18, 6), toon('#f4efe8', 'fur'), 0, 0.38, -0.14, -1.1, 0, 0);
+  tail.position.set(0, 0.22, -0.26);
+  g.add(tail);
+
+  levelAnims.push(t => {
+    tail.rotation.z = Math.sin(t * 3.5) * 0.28;
+    head.rotation.y = Math.sin(t * 1.2) * 0.15;
+  });
+
+  return g;
+}
+
+// 3D Model: Sizzling BBQ Kettle Grill
+function makeBBQGrill() {
+  const g = new THREE.Group();
+  part(g, Cy(0.65, 0.2, 0.55, 12), toon('#222226', 'panel'), 0, 0.9, 0);
+  part(g, new THREE.TorusGeometry(0.66, 0.04, 6, 16), toon('#44444a', 'panel'), 0, 1.18, 0, Math.PI / 2);
+  for (let i = 0; i < 3; i++) {
+    const a = i * (Math.PI * 2 / 3);
+    part(g, Cy(0.03, 0.03, 0.95, 6), '#333338', Math.cos(a) * 0.35, 0.45, Math.sin(a) * 0.35, 0.25 * Math.sin(a), 0, -0.25 * Math.cos(a));
+  }
+  part(g, Cy(0.35, 0.35, 0.04, 6), '#222226', 0, 0.3, 0);
+  part(g, Cy(0.6, 0.6, 0.1, 10), glow('#ff3a08'), 0, 1.0, 0);
+
+  for (let i = -4; i <= 4; i++) {
+    const x = i * 0.12;
+    const len = Math.sqrt(Math.max(0.05, 0.62 * 0.62 - x * x)) * 2;
+    part(g, B(0.02, 0.02, len), '#55555c', x, 1.12, 0);
+  }
+  for (const [bx, bz] of [[-0.2, -0.15], [0.2, -0.1], [0.0, 0.2], [-0.25, 0.2], [0.22, 0.22]]) {
+    part(g, Cy(0.12, 0.12, 0.04, 8), toon('#4a2212', 'wood'), bx, 1.15, bz);
+    part(g, B(0.08, 0.02, 0.08), toon('#ffcc00'), bx, 1.17, bz);
+  }
+
+  const smokePuffs = [];
+  for (let i = 0; i < 5; i++) {
+    const sp = new THREE.Mesh(new THREE.SphereGeometry(0.12 + i * 0.05, 6, 6), psx(new THREE.MeshBasicMaterial({ color: '#cccccc', transparent: true, opacity: 0.35 })));
+    g.add(sp);
+    smokePuffs.push(sp);
+  }
+  levelAnims.push(t => {
+    smokePuffs.forEach((sp, i) => {
+      const phase = (t * 0.8 + i * 0.6) % 3.0;
+      sp.position.set(Math.sin(t * 1.5 + i) * 0.15, 1.25 + phase * 0.8, Math.cos(t * 1.5 + i) * 0.15);
+      const sc = 0.8 + phase * 1.2;
+      sp.scale.set(sc, sc, sc);
+      sp.material.opacity = Math.max(0, 0.45 * (1.0 - phase / 3.0));
+    });
+  });
+  return g;
+}
+
+// 3D Model: Arthur Vance's Book Signing Pavilion
+function makeBookSigningBooth() {
+  const g = new THREE.Group();
+  part(g, B(3.6, 0.1, 2.6), toon('#1a6b7c', 'cloth'), 0, 2.8, 0);
+  part(g, B(3.8, 0.35, 0.08), toon('#ffd36a', 'cloth'), 0, 2.7, 1.3);
+  part(g, B(3.8, 0.35, 0.08), toon('#ffd36a', 'cloth'), 0, 2.7, -1.3);
+  for (const s of [-1, 1]) {
+    part(g, Cy(0.04, 0.04, 2.8, 6), '#cfd3d8', 1.7 * s, 1.4, 1.2);
+    part(g, Cy(0.04, 0.04, 2.8, 6), '#cfd3d8', 1.7 * s, 1.4, -1.2);
+  }
+  const sg = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.65), psx(new THREE.MeshBasicMaterial({ map: signTex('ARANUS MAN · BOOK SIGNING', '#102830', '#ff9a2a'), side: THREE.DoubleSide })));
+  sg.position.set(0, 2.75, 1.35);
+  g.add(sg);
+
+  part(g, B(2.6, 0.1, 1.0), toon('#8a6a44', 'wood'), 0, 0.9, 0.3);
+  for (const s of [-1, 1]) part(g, B(0.08, 0.9, 0.8), '#2b2a2c', 1.1 * s, 0.45, 0.3);
+
+  for (const [cx, cz, rot] of [[-0.8, 0.3, 0.1], [-0.4, 0.35, -0.05], [0.4, 0.28, 0.2], [0.8, 0.32, -0.15]]) {
+    for (let k = 0; k < 6; k++) {
+      part(g, B(0.35, 0.025, 0.48), (k === 5 ? toon('#ff9a2a') : '#eeeeee'), cx, 0.96 + k * 0.025, cz, 0, rot);
+    }
+  }
+
+  const easel = new THREE.Group();
+  part(easel, Cy(0.03, 0.03, 1.9, 5), toon('#6a4a2e', 'wood'), -0.4, 0.95, -0.2, 0.15, 0, -0.2);
+  part(easel, Cy(0.03, 0.03, 1.9, 5), toon('#6a4a2e', 'wood'), 0.4, 0.95, -0.2, 0.15, 0, 0.2);
+  part(easel, Cy(0.03, 0.03, 1.7, 5), toon('#6a4a2e', 'wood'), 0, 0.85, -0.6, -0.4, 0, 0);
+  const poster = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.3), psx(new THREE.MeshBasicMaterial({ map: signTex('ISSUE #1 · MEET ARANUS MAN', '#1e1c22', '#ff9a2a'), side: THREE.DoubleSide })));
+  poster.position.set(0, 1.25, -0.15);
+  poster.rotation.x = -0.15;
+  easel.add(poster);
+  easel.position.set(1.9, 0, 0.2);
+  g.add(easel);
+
+  return g;
+}
+
+// 3D Model: Retro Arcade Cabinet
+function makeArcadeCabinet(title, screenCol, marqueeCol) {
+  const g = new THREE.Group();
+  // Main cabinet body
+  part(g, B(0.78, 1.85, 0.76), toon('#181a24'), 0, 0.925, 0);
+  // Colored side art stripes
+  for (const s of [-1, 1]) {
+    part(g, B(0.04, 1.6, 0.65), toon(marqueeCol), 0.395 * s, 0.95, 0);
+    part(g, B(0.02, 1.4, 0.5), toon(screenCol), 0.405 * s, 0.95, 0);
+  }
+  // Slanted screen recess
+  part(g, B(0.66, 0.55, 0.1), '#0a0c10', 0, 1.15, 0.34, -0.3, 0, 0);
+  part(g, B(0.58, 0.45, 0.04), glow(screenCol), 0, 1.15, 0.36, -0.3, 0, 0);
+  // Control panel shelf angled forward
+  part(g, B(0.72, 0.12, 0.36), toon('#252732'), 0, 0.82, 0.45, 0.22, 0, 0);
+  // Joystick
+  part(g, Cy(0.015, 0.015, 0.1, 6), '#cfd3d8', -0.16, 0.91, 0.45);
+  part(g, new THREE.SphereGeometry(0.035, 6, 6), toon('#ff2233'), -0.16, 0.97, 0.45);
+  // Buttons
+  for (let i = 0; i < 3; i++) {
+    part(g, Cy(0.025, 0.025, 0.02, 8), toon(['#4fe0d0', '#ffd36a', '#ff4a3a'][i]), 0.08 + i * 0.08, 0.88, 0.45);
+  }
+  // Lower coin door
+  part(g, B(0.45, 0.5, 0.04), toon('#111318'), 0, 0.35, 0.39);
+  for (const s of [-1, 1]) {
+    part(g, B(0.08, 0.12, 0.02), toon('#ff3a2a'), 0.12 * s, 0.42, 0.41);
+    part(g, B(0.04, 0.01, 0.03), '#101010', 0.12 * s, 0.44, 0.42);
+  }
+  // Top backlit marquee banner
+  const mq = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.26), psx(new THREE.MeshBasicMaterial({ map: signTex(title, '#0a0d14', screenCol), side: THREE.DoubleSide })));
+  mq.position.set(0, 1.68, 0.38);
+  g.add(mq);
+  part(g, B(0.76, 0.05, 0.2), toon('#3a3d4a'), 0, 1.83, 0.32);
+
+  return g;
+}
+
+// 3D Model: Municipal Notice Board
+function makeNoticeBoard() {
+  const g = new THREE.Group();
+  // Timber posts
+  for (const s of [-1, 1]) {
+    part(g, B(0.2, 2.7, 0.2), toon('#4a3522', 'wood'), 1.35 * s, 1.35, 0);
+    part(g, B(0.32, 0.3, 0.32), toon('#6a6258', 'stone'), 1.35 * s, 0.15, 0);
+  }
+  // Bulletin cork board
+  part(g, B(2.8, 1.6, 0.1), toon('#b88c58', 'wood'), 0, 1.6, 0);
+  part(g, B(2.9, 0.1, 0.14), toon('#5a3a22', 'wood'), 0, 2.45, 0);
+  part(g, B(2.9, 0.1, 0.14), toon('#5a3a22', 'wood'), 0, 0.75, 0);
+
+  // Overhanging pitched roof canopy
+  part(g, B(3.2, 0.12, 0.8), toon('#4a3522', 'wood'), 0, 2.75, 0.15, 0.25, 0, 0);
+  part(g, B(3.3, 0.15, 0.15), toon('#4a3522', 'wood'), 0, 2.85, 0.15);
+
+  // Hanging brass lantern
+  part(g, Cy(0.02, 0.02, 0.35, 6), '#222222', 0, 2.55, 0.45);
+  part(g, Cy(0.12, 0.14, 0.28, 6), toon('#c9a43a'), 0, 2.35, 0.45);
+  part(g, new THREE.OctahedronGeometry(0.08, 0), glow('#ffe0a0'), 0, 2.35, 0.45);
+
+  // Header plaque: "NEW JAMESTOWN GAZETTE"
+  const hd = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.32), psx(new THREE.MeshBasicMaterial({ map: signTex('NEW JAMESTOWN GAZETTE', '#241a10', '#ffd36a'), side: THREE.DoubleSide })));
+  hd.position.set(0, 2.22, 0.06);
+  g.add(hd);
+
+  // Pinned flyers & notices
+  const f1 = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.55), psx(new THREE.MeshBasicMaterial({ map: signTex('★ THE ROXY ★\nNOW SHOWING', '#180810', '#ffd36a'), side: THREE.DoubleSide })));
+  f1.position.set(-0.8, 1.62, 0.06);
+  f1.rotation.z = 0.05;
+  g.add(f1);
+
+  const f2 = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.55), psx(new THREE.MeshBasicMaterial({ map: signTex('ARANUS MAN\nBOOK SIGNING', '#102830', '#ff9a2a'), side: THREE.DoubleSide })));
+  f2.position.set(0.05, 1.64, 0.06);
+  f2.rotation.z = -0.04;
+  g.add(f2);
+
+  const f3 = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 0.5), psx(new THREE.MeshBasicMaterial({ map: signTex('WANTED\nOUTLAWS', '#2a0a0a', '#ff4a3a'), side: THREE.DoubleSide })));
+  f3.position.set(0.85, 1.60, 0.06);
+  f3.rotation.z = 0.03;
+  g.add(f3);
+
+  const f4 = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.45), psx(new THREE.MeshBasicMaterial({ map: signTex('BOBBY\'S BBQ · FRESH BURGERS', '#2a1a10', '#ffd36a'), side: THREE.DoubleSide })));
+  f4.position.set(-0.4, 1.05, 0.06);
+  g.add(f4);
+
+  const f5 = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.45), psx(new THREE.MeshBasicMaterial({ map: signTex('PETS & FISH\nCAT SIGHTING', '#102010', '#6fdc5a'), side: THREE.DoubleSide })));
+  f5.position.set(0.55, 1.06, 0.06);
+  g.add(f5);
+
+  return g;
+}
+
+// 3D Model: Diner Outdoor Cafe Table & Chairs
+function makeDinerTable() {
+  const g = new THREE.Group();
+  // Chrome base and pedestal
+  part(g, Cy(0.4, 0.4, 0.04, 16), '#cfd3d8', 0, 0.02, 0);
+  part(g, Cy(0.05, 0.05, 0.75, 8), '#d8dcde', 0, 0.4, 0);
+  // Round tabletop with red checkered cloth
+  part(g, Cy(0.75, 0.75, 0.06, 20), toon('#c83232', 'cloth'), 0, 0.78, 0);
+  part(g, Cy(0.72, 0.72, 0.02, 20), toon('#ffffff', 'cloth'), 0, 0.815, 0);
+  // Condiments
+  part(g, Cy(0.035, 0.04, 0.16, 6), toon('#c82222'), -0.08, 0.9, 0.02);
+  part(g, Cy(0.035, 0.04, 0.16, 6), toon('#e8b820'), 0.08, 0.9, 0.02);
+  part(g, Cy(0.025, 0.03, 0.12, 6), '#e8e8e8', 0, 0.88, -0.08);
+
+  // Two red retro diner chairs
+  for (const s of [-1, 1]) {
+    const ch = new THREE.Group();
+    // 4 chrome legs
+    for (const lx of [-0.18, 0.18]) {
+      for (const lz of [-0.18, 0.18]) {
+        part(ch, Cy(0.02, 0.02, 0.46, 6), '#cfd3d8', lx, 0.23, lz);
+      }
+    }
+    // Round red vinyl seat
+    part(ch, Cy(0.24, 0.24, 0.08, 14), toon('#c82a2a'), 0, 0.48, 0);
+    // Chrome backrest frame and red pad
+    for (const bx of [-0.16, 0.16]) part(ch, Cy(0.018, 0.018, 0.45, 6), '#cfd3d8', bx, 0.7, -0.18);
+    part(ch, B(0.36, 0.2, 0.05), toon('#c82a2a'), 0, 0.8, -0.18);
+
+    ch.position.set(0, 0, 1.1 * s);
+    ch.rotation.y = s > 0 ? Math.PI : 0;
+    g.add(ch);
+  }
+
+  return g;
+}
+
+// ---- All NPCs in New Jamestown ----
 const JT_NPCS = [
-  { id: 'vega', name: 'Captain Vega', role: 'City watch', rig: 'trooper', make: () => recolor(makeTrooper(), { '#6f7a3e': '#3b4f7a', '#4a5229': '#2a3756', '#c9b27c': '#d9c48a' }), x: 2.6, z: 16.5, face: 0, idle: ["Welcome to New Jamestown. Biggest city on Earth. Also the only one left.", "Keep your blaster charged out there. In here, keep it holstered."] },
-  { id: 'tully', name: 'Tully', role: 'Gunsmith', rig: 'civ', make: () => makeCivilian('#7a5a3c', '#3d3a36', '#d9a77a', '#3a2a1e', '#4a3a2c'), x: -4.6, z: 8, face: Math.PI / 2, shop: 'guns', guns: ['b1', 'b5', 'c10', 'r15', 'h20'], melee: ['cleaver', 'hook'], idle: ["If it shoots, I can make it shoot better.", "Scrap builds walls too. Press Build out past the city gate."] },
-  { id: 'zib', name: 'Zib', role: 'General store · buys anything', rig: 'spearman', make: () => recolor(makeSpearman(), { '#7fae63': '#8a6fc4', '#4f7a3c': '#5d4a8a' }), x: 4.6, z: 8, face: -Math.PI / 2, shop: 'store', idle: ["Zib buys! Zib sells! Pelts, shells, crystals, all good.", "Rock cores from the mesa fetch a fine price."] },
-  { id: 'mira', name: 'Doc Mira', role: 'Clinic', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#5a6a7a', '#c58a64', '#1e1a18', '#c8402f'), x: 4.6, z: -8, face: -Math.PI / 2, heal: true, idle: ["Hold still. There, good as new.", "Come back in one piece, please. Two pieces is a lot more paperwork."] },
-  { id: 'nash', name: 'Old Nash', role: 'Bank', rig: 'civ', make: () => makeCivilian('#2e5a3a', '#2c2a28', '#e0b892', '#cfcac0'), x: -4.6, z: -8, face: Math.PI / 2, bank: true, idle: ["Credits in the bank don't get dropped when you go down.", "Safest vault on Earth. Probably."] },
-  { id: 'elismas', name: 'Elismas', role: 'Master of the Gun', rig: 'elismas', make: makeElismas, x: -3.6, z: -3.4, face: 0.8, showIf: () => qDone('q3') || qState('q4'), idle: ["A true gunner never wastes a shot.", "The galaxy is wide. Your ship will carry you to the other Masters."] },
-  { id: 'mayor', name: 'Mayor Holloway', role: 'Mayor of New Jamestown · town news', rig: 'civ', make: () => makeCivilian('#3b4f7a', '#2c2a28', '#c58a64', '#cfcac0', '#c9a43a'), x: 0, z: -12.2, face: 0, custom: [['Town news', () => openUpdates(false)]], idle: ["New Jamestown! Named after the old one. Which was named after an older one. We're very traditional.", "Ask me for the town news. I have SO much news."] },
-  { id: 'cookie', name: 'Cookie', role: 'Diner · heals', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#c8402f', '#8a5a3a', '#1e1a18', '#ffd36a'), x: -14, z: 3.6, face: Math.PI, heal: true, idle: ["Today's special: space meatloaf. Yesterday's special: also space meatloaf.", "Eat something. You look like you've been shot. Have you been shot?"] },
-  { id: 'tailor', name: 'Ada the Tailor', role: 'Wardrobe · faces · capes', rig: 'civ', make: () => makeCivilian('#5d3a8a', '#2c2a28', '#e0b892', '#c8402f', '#c86aff'), x: -8.4, z: -12.3, face: 0.5, custom: [['Wardrobe', () => openWardrobe()]], idle: ["Armor is just clothing that argues with bullets.", "Let me guess: something dramatic with a cape. Always a cape."] },
-  { id: 'paws', name: 'Auntie Paws', role: 'Pet shop', rig: 'civ', make: () => makeCivilian('#6fdc5a', '#3d3a36', '#c58a64', '#e8e4dc', '#ffd23a'), x: -14, z: -3.6, face: 0, petshop: true, idle: ["Every pet deserves a home. Some pets deserve a cage. That one bites."] },
-  { id: 'gil', name: 'Gil', role: 'Fish market', rig: 'civ', make: () => makeCivilian('#2a5a7a', '#2c2a28', '#e0b892', '#5a3a22', '#ffb347'), x: 14, z: -3.6, face: 0, shop: 'fish', rods: [1, 2], idle: ["Bring me fish. Any fish. Even the angry ones."] },
-  { id: 'scoop', name: 'Scoop', role: 'Newsie', rig: 'civ', make: () => makeCivilian('#c9a43a', '#3d3a36', '#d9a77a', '#5a3a22', '#c8402f'), x: 3.6, z: -3.4, face: -0.8, idle: ["EXTRA! EXTRA! Trooper saves Earth, still can't parallel park!", "EXTRA! Drome's robots spotted in the scrapyard! Again! Still!", "EXTRA! Mayor says everything is fine! Mayor seen hiding under desk!"] },
-  { id: 'banjo', name: 'Banjo Bob', role: 'Street musician', rig: 'civ', make: () => makeCivilian('#8a3a2e', '#3d3a36', '#c58a64', '#cfcac0', '#c9a43a'), x: 3.6, z: 3.4, face: -2.4, idle: ["♪ Oh the sun is setting red, and the robots want me dead ♪", "Tips appreciated. Requests tolerated."] },
-  { id: 'dent', name: 'Officer Dent', role: 'City watch', rig: 'trooper', make: () => recolor(makeTrooper(), { '#6f7a3e': '#2a3756', '#c9b27c': '#ffd36a' }), x: -2.6, z: 16.5, face: 0, idle: ["No running in the plaza. No shooting in the plaza. No fun in the plaza, basically."] },
-  { id: 'hank', name: 'Hotel Hank', role: 'Hotel · rest', rig: 'civ', make: () => makeCivilian('#3b4f7a', '#2c2a28', '#e0b892', '#1e1a18', '#e8e4dc'), x: 14, z: 3.6, face: Math.PI, heal: true, idle: ["Rooms are free for heroes. Heroes are anyone who pays. Kidding. Mostly."] }
+  { id: 'vega', name: 'Captain Vega', role: 'City watch', rig: 'trooper', make: () => recolor(makeTrooper(), { '#6f7a3e': '#3b4f7a', '#4a5229': '#2a3756', '#c9b27c': '#d9c48a' }), x: 3.5, z: 40, face: 0, idle: ["Welcome to New Jamestown. Biggest city on Earth. Also the only one left.", "Keep your blaster charged out there. In here, keep it holstered."] },
+  { id: 'dent', name: 'Officer Dent', role: 'City watch', rig: 'trooper', make: () => recolor(makeTrooper(), { '#6f7a3e': '#2a3756', '#c9b27c': '#ffd36a' }), x: -3.5, z: 40, face: 0, idle: ["No running in the plaza. No shooting in the plaza. No fun in the plaza, basically."] },
+  { id: 'tully', name: 'Tully', role: 'Gunsmith', rig: 'civ', make: () => makeCivilian('#7a5a3c', '#3d3a36', '#d9a77a', '#3a2a1e', '#4a3a2c'), x: -8.6, z: 14, face: PI2, shop: 'guns', guns: ['b1', 'b5', 'c10', 'r15', 'h20'], melee: ['cleaver', 'hook'], idle: ["If it shoots, I can make it shoot better.", "Scrap builds walls too. Press Build out past the city gate."] },
+  { id: 'zib', name: 'Zib', role: 'General store · buys anything', rig: 'spearman', make: () => recolor(makeSpearman(), { '#7fae63': '#8a6fc4', '#4f7a3c': '#5d4a8a' }), x: 8.6, z: 14, face: -PI2, shop: 'store', idle: ["Zib buys! Zib sells! Pelts, shells, crystals, all good.", "Rock cores from the mesa fetch a fine price."] },
+  { id: 'mira', name: 'Doc Mira', role: 'Clinic', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#5a6a7a', '#c58a64', '#1e1a18', '#c8402f'), x: 8.6, z: -14, face: -PI2, heal: true, idle: ["Hold still. There, good as new.", "Come back in one piece, please. Two pieces is a lot more paperwork."] },
+  { id: 'nash', name: 'Old Nash', role: 'Bank', rig: 'civ', make: () => makeCivilian('#2e5a3a', '#2c2a28', '#e0b892', '#cfcac0'), x: -8.6, z: -14, face: PI2, bank: true, idle: ["Credits in the bank don't get dropped when you go down.", "Safest vault on Earth. Probably."] },
+  { id: 'elismas', name: 'Elismas', role: 'Master of the Gun', rig: 'elismas', make: makeElismas, x: -7.5, z: -7.5, face: 0.8, showIf: () => qDone('q3') || qState('q4'), idle: ["A true gunner never wastes a shot.", "The galaxy is wide. Your ship will carry you to the other Masters."] },
+  { id: 'mayor', name: 'Mayor Holloway', role: 'Mayor of New Jamestown · town news', rig: 'civ', make: () => makeCivilian('#3b4f7a', '#2c2a28', '#c58a64', '#cfcac0', '#c9a43a'), x: 0, z: -30.5, face: 0, custom: [['Town news', () => openUpdates(false)]], idle: ["New Jamestown! Named after the old one. Which was named after an older one. We're very traditional.", "Ask me for the town news. I have SO much news."] },
+  { id: 'cookie', name: 'Cookie', role: 'Diner · heals', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#c8402f', '#8a5a3a', '#1e1a18', '#ffd36a'), x: -9.2, z: 27, face: PI2, heal: true, custom: [
+    ['🍽️ Diner Specials', () => openDinerMenu()]
+  ], idle: ["Today's special: space meatloaf. Yesterday's special: also space meatloaf.", "Eat something. You look like you've been shot. Have you been shot?"] },
+  { id: 'tailor', name: 'Ada the Tailor', role: 'Wardrobe · faces · capes', rig: 'civ', make: () => makeCivilian('#5d3a8a', '#2c2a28', '#e0b892', '#c8402f', '#c86aff'), x: -9.2, z: -27, face: PI2, custom: [['Wardrobe', () => openWardrobe()]], idle: ["Armor is just clothing that argues with bullets.", "Let me guess: something dramatic with a cape. Always a cape."] },
+  { id: 'paws', name: 'Auntie Paws', role: 'Pet shop', rig: 'civ', make: () => makeCivilian('#6fdc5a', '#3d3a36', '#c58a64', '#e8e4dc', '#ffd23a'), x: 9.2, z: -27, face: -PI2, petshop: true, idle: ["Every pet deserves a home. Some pets deserve a cage. That one bites."] },
+  { id: 'gil', name: 'Gil', role: 'Fish market', rig: 'civ', make: () => makeCivilian('#2a5a7a', '#2c2a28', '#e0b892', '#5a3a22', '#ffb347'), x: 28, z: -7.5, face: 0, shop: 'fish', rods: [1, 2], idle: ["Bring me fish. Any fish. Even the angry ones."] },
+  { id: 'scoop', name: 'Scoop', role: 'Newsie', rig: 'civ', make: () => makeCivilian('#c9a43a', '#3d3a36', '#d9a77a', '#5a3a22', '#c8402f'), x: 7, z: -7, face: -0.8, idle: ["EXTRA! EXTRA! Trooper saves Earth, still can't parallel park!", "EXTRA! Drome's robots spotted in the scrapyard! Again! Still!", "EXTRA! Mayor says everything is fine! Mayor seen hiding under desk!"] },
+  { id: 'banjo', name: 'Banjo Bob', role: 'Street musician', rig: 'civ', make: () => makeCivilian('#8a3a2e', '#3d3a36', '#c58a64', '#cfcac0', '#c9a43a'), x: -7, z: 7, face: 2.4, idle: ["♪ Oh the sun is setting red, and the robots want me dead ♪", "Tips appreciated. Requests tolerated."] },
+  { id: 'hank', name: 'Hotel Hank', role: 'Hotel · rest', rig: 'civ', make: () => makeCivilian('#3b4f7a', '#2c2a28', '#e0b892', '#1e1a18', '#e8e4dc'), x: 9.2, z: 27, face: -PI2, heal: true, idle: ["Rooms are free for heroes. Heroes are anyone who pays. Kidding. Mostly."] },
+  { id: 'pete', name: 'Pixel Pete', role: 'Arcade Champion', rig: 'civ', make: () => makeCivilian('#4a2a6b', '#1e1a24', '#e0b892', '#ff6aa8', '#4fe0d0'), x: -27.2, z: -8.2, face: 0.2, idle: ["My record on Space Snake is 34. Think you can beat it?", "Space Rocks is all about thruster feathering. Never hold down W too long!", "Got high scores on both cabinets. Press E to play!"] },
+  // New Additions:
+  { id: 'arthur', name: 'Arthur Vance', role: 'Author · The Astonishing Aranus Man', rig: 'civ', make: () => makeCivilian('#2a6b7c', '#2c2a28', '#e0b892', '#5a3a22', '#ff9a2a'), x: -28, z: 0, face: PI2, custom: [
+    ['📖 Read Aranus Man #1', () => openComicReader()],
+    ['📘 Buy Aranus Man #1 (50 cr)', () => buyComic()],
+    ['💊 Sell writing stimulants', () => openArthurDealing()]
+  ], idle: ["The Astonishing Aranus Man! Earth's favorite lawn-mowing vigilante!", "Suburban justice never sleeps, trooper. Buy a signed copy!", "Writer's block is killing me. If you have any Focus Fizz, I'd pay double."] },
+  { id: 'bobby', name: 'Bobby the Grillmaster', role: 'Backyard BBQ', rig: 'civ', make: () => makeCivilian('#c8402f', '#2c2a28', '#d9a77a', '#1e1a18', '#ffffff'), x: -21, z: 34, face: -0.6, heal: true, custom: [
+    ['🍔 Grab a Bobby Burger', () => grabBurger()]
+  ], idle: ["Low and slow, trooper. That's how you get real flavor into space patties.", "Grab a hot burger off the grate whenever you're hungry."] },
+  { id: 'barnaby', name: 'Barnaby', role: 'Town Cat · 🐱 Pet', rig: 'cat', make: makeCat, x: -18, z: 6, face: 0.4, custom: [
+    ['🐱 Pet Barnaby', () => petBarnaby()],
+    ['🐟 Feed fresh fish', () => feedBarnabyFish()]
+  ], idle: ["Purrrrrr...", "Meow?"] },
+  { id: 'slick', name: 'Slick Eddie', role: 'Shady Street Runner', rig: 'civ', make: () => makeCivilian('#1c1e24', '#141416', '#c58a64', '#1e1a18', '#c9a43a'), x: -23, z: -18, face: PI2, custom: [
+    ['💼 Street Network', () => talkRunner('slick')]
+  ], idle: ["Watch your back in the alleys.", "Got product to push? Talk to me when you've got rep."] },
+  { id: 'viper', name: 'Viper', role: 'Shady Street Runner', rig: 'civ', make: () => makeCivilian('#2e3a24', '#1a1e16', '#d9a77a', '#1e1a18', '#6fdc5a'), x: -23, z: 18, face: PI2, custom: [
+    ['💼 Street Network', () => talkRunner('viper')]
+  ], idle: ["The watch doesn't come down this alley.", "Keep moving unless you're talking business."] }
 ];
-// rework the Earth level around a much bigger city: everything outside town is pushed outward by JT_K
-{ const E0 = LEVELS.earth, T = (p) => ET(p[0], p[1]);
-  E0.size = Math.round(280 * JT_K); E0.radius = Math.round(92 * JT_K); E0.center = T(E0.center); E0.tag = 'New Jamestown, the capital city';
-  E0.zones = E0.zones.map(z => { if (z.id === 'town') return Object.assign({}, z, { name: 'New Jamestown', lvl: 'Safe · capital city', r: JT_R, fr: JT_R + 4 });
-    const [x, zz] = T([z.x, z.z]), o = Object.assign({}, z, { x, z: zz, r: z.r * 1.25, fr: z.fr ? z.fr * 1.25 : z.fr }); if (z.id === 'out') { o.x = 0; o.z = TOWN.z + JT_R + 30; o.r = 20; } return o; });
+
+// Rework Earth level around the revamped capital city
+{
+  const E0 = LEVELS.earth, T = (p) => ET(p[0], p[1]);
+  E0.size = Math.round(280 * JT_K);
+  E0.radius = Math.round(92 * JT_K);
+  E0.center = T(E0.center);
+  E0.tag = 'New Jamestown, the capital city';
+  E0.zones = E0.zones.map(z => {
+    if (z.id === 'town') return Object.assign({}, z, { name: 'New Jamestown', lvl: 'Safe · capital city', r: JT_R, fr: JT_R + 4 });
+    const [x, zz] = T([z.x, z.z]), o = Object.assign({}, z, { x, z: zz, r: z.r * 1.25, fr: z.fr ? z.fr * 1.25 : z.fr });
+    if (z.id === 'out') { o.x = 0; o.z = TOWN.z + JT_R + 30; o.r = 20; }
+    return o;
+  });
   E0.safes = [{ x: TOWN.x, z: TOWN.z, r: JT_R - 1 }];
   const rv = E0.river.map(T); rv[1][0] -= 18; rv[2][0] -= 18; rv[3][0] -= 12; E0.river = rv;
   E0.paths = E0.paths.map((p, i) => i === 0 ? [[0, TOWN.z + JT_R], [0, T([0, 4])[1]]] : p.map(T));
-  E0.pools = E0.pools.map(p => [...T(p), p[2] * 1.3]); E0.lava = E0.lava.map(p => [...T(p), p[2] * 1.3]);
-  const oc = E0.carve; E0.carve = (x, z, h) => oc(TOWN.x + (x - TOWN.x) / JT_K, TOWN.z + (z - TOWN.z) / JT_K, h);
-  E0.spawn = { x: TOWN.x + 1.5, z: TOWN.z + 36, yaw: 0 }; E0.pad = { x: TOWN.x + 28, z: TOWN.z - 30 };
+  E0.pools = E0.pools.map(p => [...T(p), p[2] * 1.3]);
+  E0.lava = E0.lava.map(p => [...T(p), p[2] * 1.3]);
+  const oc = E0.carve;
+  E0.carve = (x, z, h) => oc(TOWN.x + (x - TOWN.x) / JT_K, TOWN.z + (z - TOWN.z) / JT_K, h);
+  E0.spawn = { x: TOWN.x + 1.5, z: TOWN.z + 36, yaw: 0 };
+  E0.pad = { x: TOWN.x + 28, z: TOWN.z - 30 };
   E0.menu = { x: TOWN.x, z: TOWN.z, r: 70, h: 30 };
-  E0.npcs = JT_NPCS.map(n => { const o = EARTH_NPCS.find(q => q.id === n.id), p = JT_POS[n.id] || [n.x, n.z, n.face]; return Object.assign({}, o || n, { x: p[0], z: p[1], face: p[2], role: n.role, idle: n.idle }); });
+  E0.npcs = JT_NPCS.map(n => {
+    const o = EARTH_NPCS.find(q => q.id === n.id), p = JT_POS[n.id] || [n.x, n.z, n.face];
+    return Object.assign({}, o || n, { x: p[0], z: p[1], face: p[2], role: n.role, idle: n.idle, custom: n.custom || (o && o.custom), make: n.make || (o && o.make), shop: n.shop || (o && o.shop), guns: n.guns || (o && o.guns), heal: n.heal || (o && o.heal), bank: n.bank || (o && o.bank), petshop: n.petshop || (o && o.petshop), rods: n.rods || (o && o.rods), showIf: n.showIf || (o && o.showIf) });
+  });
 }
+
 function buildJamestown() {
+  initJamestownLate();
   const tx = TOWN.x, tz = TOWN.z, G = (x, z) => groundH(tx + x, tz + z);
-  // paved streets and plaza
-  const pave = (w, d, x, z, col, top) => { const m = part(props, B(w, 0.3, d), toon(col, 'stone'), tx + x, G(x, z) + top - 0.15, tz + z); m.castShadow = false; };
-  pave(10, JT_R * 2 - 2, 0, 0, '#9a9088', 0.09); pave(JT_R * 2 - 2, 8, 0, 0, '#948a82', 0.12); for (const s of [-1, 1]) { pave(2.2, JT_R * 2 - 4, 6.2 * s, 0, '#b8b0a4', 0.05); pave(JT_R * 2 - 4, 2, 0, 5.1 * s, '#b8b0a4', 0.06); }
-  { const pl = new THREE.Mesh(new THREE.CircleGeometry(11, 32), toon('#b8a888', 'stone')); pl.rotation.x = -Math.PI / 2; pl.position.set(tx, G(0, 0) + 0.155, tz); props.add(pl); }
-  for (let i = -4; i <= 4; i++) for (const zz of [12.5, -12.5]) part(props, B(0.7, 0.04, 2), '#efe7d6', tx + i * 1.1, G(0, zz) + 0.11, tz + zz); for (let i = -3; i <= 3; i++) for (const xx of [12.5, -12.5]) part(props, B(2, 0.04, 0.7), '#efe7d6', tx + xx, G(xx, 0) + 0.14, tz + i * 1.1);
-  // city wall with a south gate and corner towers
-  const N = 92; for (let i = 0; i < N; i++) { const a = (i / N) * Math.PI * 2; if (Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))) < 0.09) continue; const x = Math.cos(a) * JT_R, z = Math.sin(a) * JT_R; part(props, B(3.1, 3.2, 0.7), toon('#a89a88', 'stone'), tx + x, G(x, z) + 1.6, tz + z, 0, -a + Math.PI / 2, 0); if (i % 11 === 5) { part(props, B(2, 5.4, 2), toon('#8a7a68', 'stone'), tx + x, G(x, z) + 2.7, tz + z); part(props, new THREE.ConeGeometry(1.6, 1.6, 4), '#5a3a22', tx + x, G(x, z) + 6.2, tz + z, 0, Math.PI / 4, 0); solid(tx + x, tz + z, 1.2); } }
+
+  // 1. Paved Boulevards, Sidewalks, and Central Plaza
+  const pave = (w, d, x, z, col, top) => {
+    const m = part(props, B(w, 0.3, d), toon(col, 'stone'), tx + x, G(x, z) + top - 0.15, tz + z);
+    m.castShadow = false;
+  };
+
+  // Main Boulevard North-South and Avenue East-West
+  pave(10, JT_R * 2 - 2, 0, 0, '#9a9088', 0.09);
+  pave(JT_R * 2 - 2, 8, 0, 0, '#948a82', 0.12);
+
+  // Sidewalk curbs and stone walkways
+  for (const s of [-1, 1]) {
+    pave(2.4, JT_R * 2 - 4, 6.2 * s, 0, '#b8b0a4', 0.05);
+    pave(JT_R * 2 - 4, 2.2, 0, 5.1 * s, '#b8b0a4', 0.06);
+  }
+
+  // Circular Fountain Plaza
+  {
+    const pl = new THREE.Mesh(new THREE.CircleGeometry(11.5, 32), toon('#b8a888', 'stone'));
+    pl.rotation.x = -Math.PI / 2;
+    pl.position.set(tx, G(0, 0) + 0.155, tz);
+    props.add(pl);
+  }
+
+  // Pedestrian Crosswalks
+  for (let i = -4; i <= 4; i++) {
+    for (const zz of [12.5, -12.5]) part(props, B(0.7, 0.04, 2.2), '#efe7d6', tx + i * 1.1, G(0, zz) + 0.11, tz + zz);
+  }
+  for (let i = -3; i <= 3; i++) {
+    for (const xx of [12.5, -12.5]) part(props, B(2.2, 0.04, 0.7), '#efe7d6', tx + xx, G(xx, 0) + 0.14, tz + i * 1.1);
+  }
+
+  // 2. City Wall & South Gatehouse
+  const N = 92;
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2;
+    if (Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))) < 0.09) continue;
+    const x = Math.cos(a) * JT_R, z = Math.sin(a) * JT_R;
+    part(props, B(3.1, 3.4, 0.8), toon('#a89a88', 'stone'), tx + x, G(x, z) + 1.7, tz + z, 0, -a + Math.PI / 2, 0);
+    if (i % 11 === 5) {
+      part(props, B(2.2, 5.6, 2.2), toon('#8a7a68', 'stone'), tx + x, G(x, z) + 2.8, tz + z);
+      part(props, new THREE.ConeGeometry(1.7, 1.8, 4), '#5a3a22', tx + x, G(x, z) + 6.4, tz + z, 0, Math.PI / 4, 0);
+      solid(tx + x, tz + z, 1.3);
+    }
+  }
   RINGS.push({ x: tx, z: tz, r: JT_R, gate: Math.PI / 2, half: 4.2, safe: true });
-  { const gate = new THREE.Group(); for (const s of [-1, 1]) part(gate, B(1.8, 8, 1.8), toon('#8a7a68', 'stone'), 5 * s, 4, 0); part(gate, B(12, 1.4, 1.8), toon('#8a7a68', 'stone'), 0, 8.4, 0); const sg = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 0.9), new THREE.MeshBasicMaterial({ map: signTex('NEW JAMESTOWN', '#1e1c22', '#ffd36a'), side: THREE.DoubleSide })); sg.position.set(0, 8.4, 0.95); sg.scale.set(1.5, 1.5, 1); gate.add(sg); at(gate, tx, tz + JT_R); solid(tx - 5, tz + JT_R, 1.1); solid(tx + 5, tz + JT_R, 1.1); }
-  // buildings
-  for (const [label, x, z, w, d, h, ry, col, trim, awn] of JT_BUILDINGS) { const b = makeJTBuilding(w, h, d, col, trim, label, awn); at(b, tx + x, tz + z, ry); const sw = Math.abs(Math.sin(ry)) > 0.7; box(tx + x, tz + z, (sw ? d : w) / 2 + 0.15, (sw ? w : d) / 2 + 0.15); }
-  // town hall columns + flag
-  for (let i = 0; i < 6; i++) { const x = -7 + i * 2.8; part(props, Cy(0.4, 0.45, 7, 8), '#e8e4dc', tx + x, G(x, -31.6) + 3.5, tz - 31.6); solid(tx + x, tz - 31.6, 0.45); } part(props, B(18, 0.8, 4), '#d8c8a8', tx, G(0, -32) + 7.3, tz - 32.5); part(props, B(18, 0.4, 5), toon('#9a9088', 'stone'), tx, G(0, -32) + 0.2, tz - 31.8);
-  { const fl = new THREE.Group(); part(fl, Cy(0.06, 0.06, 6, 6), '#cfd3d8', 0, 3, 0); const cl = part(fl, B(1.8, 1.1, 0.04), toon('#3b4f7a', 'cloth'), 0.9, 5.4, 0); at(fl, tx + 12, tz - 29); levelAnims.push(t => { cl.rotation.y = Math.sin(t * 2) * 0.25; }); }
-  // plaza statue: the trooper raising the logo sword
-  { const st = new THREE.Group(); part(st, Cy(1.6, 1.9, 1.2, 10), toon('#9a9088', 'stone'), 0, 0.6, 0); part(st, B(0.9, 3.2, 0.9), toon('#c9c0b0', 'stone'), 0, 2.8, 0); part(st, new THREE.ConeGeometry(0.7, 1, 4), toon('#c9c0b0', 'stone'), 0, 4.9, 0, 0, Math.PI / 4, 0); part(st, new THREE.TorusGeometry(1.1, 0.12, 6, 20, Math.PI), glow('#ff9a3c'), 0, 4.6, 0); for (const s of [-1, 1]) part(st, B(0.12, 2.6, 0.04), '#cfd3d8', 0.55 * s, 4.4, 0.5, 0, 0, 0.6 * s); at(st, tx, tz); solid(tx, tz, 1.9);
-    const water = new THREE.Mesh(new THREE.RingGeometry(1.9, 2.8, 20), new THREE.MeshLambertMaterial({ color: '#4fa8ff', transparent: true, opacity: 0.7 })); water.rotation.x = -Math.PI / 2; water.position.set(tx, G(0, 0) + 0.35, tz); props.add(water); part(props, new THREE.TorusGeometry(2.85, 0.15, 4, 24), toon('#9a9088', 'stone'), tx, G(0, 0) + 0.3, tz, Math.PI / 2); solid(tx, tz, 2.9); }
-  // street lamps, benches, planters, parked hover cars
-  const lampAt = (x, z) => { part(props, Cy(0.08, 0.1, 4, 6), '#2b2a2c', tx + x, G(x, z) + 2, tz + z); part(props, B(0.8, 0.08, 0.08), '#2b2a2c', tx + x + 0.4, G(x, z) + 3.9, tz + z); part(props, B(0.4, 0.35, 0.4), glow('#ffe0a0'), tx + x + 0.75, G(x, z) + 3.7, tz + z); solid(tx + x, tz + z, 0.15); };
+
+  // South Gate Monument
+  {
+    const gate = new THREE.Group();
+    for (const s of [-1, 1]) part(gate, B(2.0, 8.2, 2.0), toon('#8a7a68', 'stone'), 5 * s, 4.1, 0);
+    part(gate, B(12.4, 1.6, 2.0), toon('#8a7a68', 'stone'), 0, 8.6, 0);
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(6.6, 1.0), psx(new THREE.MeshBasicMaterial({ map: signTex('NEW JAMESTOWN', '#181a20', '#ffd36a'), side: THREE.DoubleSide })));
+    sg.position.set(0, 8.6, 1.05);
+    sg.scale.set(1.4, 1.4, 1);
+    gate.add(sg);
+    at(gate, tx, tz + JT_R);
+    solid(tx - 5, tz + JT_R, 1.2);
+    solid(tx + 5, tz + JT_R, 1.2);
+  }
+
+  // 3. Buildings
+  for (const [label, x, z, w, d, h, ry, col, trim, awn, bStyle] of JT_BUILDINGS) {
+    const b = makeJTBuilding(w, h, d, col, trim, label, awn, bStyle);
+    at(b, tx + x, tz + z, ry);
+    const sw = Math.abs(Math.sin(ry)) > 0.7;
+    box(tx + x, tz + z, (sw ? d : w) / 2 + 0.2, (sw ? w : d) / 2 + 0.2);
+  }
+
+  // Cinema Marquee & Walk-In Entrance at [-28, 12]
+  {
+    const cx = tx - 28, cz = tz + 12;
+    const mq = new THREE.Group();
+    // Canopy roof
+    part(mq, B(8.8, 0.45, 3.2), toon('#2a1218'), 0, 3.4, 1.6);
+    part(mq, B(9.2, 0.15, 3.4), toon('#ffd36a'), 0, 3.65, 1.6);
+    // Support rods
+    for (const s of [-1, 1]) {
+      part(mq, Cy(0.04, 0.04, 2.2, 6), '#cfd3d8', 3.8 * s, 4.4, 1.6, 0.45, 0, 0);
+    }
+    // Illuminated neon main sign: "★ THE ROXY · CINEMA ★"
+    const mSign = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 1.1), psx(new THREE.MeshBasicMaterial({ map: signTex('★ THE ROXY · CINEMA ★', '#180810', '#ffd36a'), side: THREE.DoubleSide })));
+    mSign.position.set(0, 3.4, 3.25);
+    mq.add(mSign);
+
+    // Reader-board under canopy: "NOW SHOWING: 1. NIGHT OF THE LIVING DEAD · 2. SANTA CLAUS CONQUERS THE MARTIANS"
+    const rSign = new THREE.Mesh(new THREE.PlaneGeometry(8.0, 0.5), psx(new THREE.MeshBasicMaterial({ map: signTex('1. NIGHT OF THE LIVING DEAD · 2. SANTA CLAUS', '#0c0e14', '#4fe0d0'), side: THREE.DoubleSide })));
+    rSign.position.set(0, 2.9, 3.25);
+    mq.add(rSign);
+
+    // Glowing border chaser lights
+    const chaserL = new THREE.PointLight(0xffb84a, 0.8, 8);
+    chaserL.position.set(0, 2.8, 2.2);
+    mq.add(chaserL);
+
+    // Two movie poster display lightboxes flanking the entrance doors
+    const p1 = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.8), psx(new THREE.MeshBasicMaterial({ map: signTex('NIGHT OF THE\nLIVING DEAD\n(1968)', '#1a0808', '#ff4a3a'), side: THREE.DoubleSide })));
+    p1.position.set(-2.8, 1.7, 4.08);
+    mq.add(p1);
+
+    const p2 = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.8), psx(new THREE.MeshBasicMaterial({ map: signTex('SANTA CLAUS\nCONQUERS THE\nMARTIANS (1964)', '#081a18', '#40ffb0'), side: THREE.DoubleSide })));
+    p2.position.set(2.8, 1.7, 4.08);
+    mq.add(p2);
+
+    // Red carpet runner extending from the double doors out onto the sidewalk
+    part(mq, B(2.8, 0.05, 4.2), toon('#8a1524', 'cloth'), 0, 0.03, 3.2);
+
+    // Grand entrance double doors (glass & brass)
+    part(mq, B(2.4, 2.8, 0.12), toon('#1a1218'), 0, 1.4, 4.02);
+    part(mq, B(1.0, 2.2, 0.08), glow('#ffd890'), -0.55, 1.4, 4.08);
+    part(mq, B(1.0, 2.2, 0.08), glow('#ffd890'), 0.55, 1.4, 4.08);
+    part(mq, B(2.6, 0.15, 0.2), toon('#ffd36a'), 0, 2.85, 4.08);
+
+    at(mq, cx, cz + 4.0, 0);
+
+    // Interaction trigger to enter the Roxy Cinema
+    INTERACTS.push({
+      x: cx,
+      z: cz + 6.2,
+      r: 2.8,
+      label: 'Enter The Roxy Cinema',
+      fn: () => enterCinema(cx, cz + 6.2)
+    });
+  }
+
+  // 4. Town Hall Neoclassical Columns & Municipal Flag
+  for (let i = 0; i < 6; i++) {
+    const x = -7 + i * 2.8;
+    part(props, Cy(0.42, 0.48, 7.2, 8), '#e8e4dc', tx + x, G(x, -31.6) + 3.6, tz - 31.6);
+    solid(tx + x, tz - 31.6, 0.5);
+  }
+  part(props, B(18.4, 0.9, 4.2), '#d8c8a8', tx, G(0, -32) + 7.4, tz - 32.5);
+  part(props, B(18.4, 0.5, 5.2), toon('#9a9088', 'stone'), tx, G(0, -32) + 0.25, tz - 31.8);
+  {
+    const fl = new THREE.Group();
+    part(fl, Cy(0.06, 0.06, 6.4, 6), '#cfd3d8', 0, 3.2, 0);
+    const cl = part(fl, B(1.9, 1.15, 0.04), toon('#3b4f7a', 'cloth'), 0.95, 5.6, 0);
+    at(fl, tx + 12, tz - 29);
+    levelAnims.push(t => { cl.rotation.y = Math.sin(t * 2) * 0.25; });
+  }
+
+  // 5. Central Plaza Statue & Fountain
+  {
+    const st = new THREE.Group();
+    part(st, Cy(1.7, 2.0, 1.3, 10), toon('#9a9088', 'stone'), 0, 0.65, 0);
+    part(st, B(0.9, 3.4, 0.9), toon('#c9c0b0', 'stone'), 0, 3.0, 0);
+    part(st, new THREE.ConeGeometry(0.7, 1.1, 4), toon('#c9c0b0', 'stone'), 0, 5.1, 0, 0, Math.PI / 4, 0);
+    part(st, new THREE.TorusGeometry(1.15, 0.12, 6, 20, Math.PI), glow('#ff9a3c'), 0, 4.8, 0);
+    for (const s of [-1, 1]) part(st, B(0.12, 2.8, 0.04), '#cfd3d8', 0.55 * s, 4.6, 0.5, 0, 0, 0.6 * s);
+    at(st, tx, tz);
+    solid(tx, tz, 2.0);
+
+    const water = new THREE.Mesh(new THREE.RingGeometry(2.0, 3.0, 24), psx(new THREE.MeshLambertMaterial({ map: TEX.water, color: new THREE.Color('#4fa8ff').convertSRGBToLinear(), transparent: true, opacity: 0.75 })));
+    water.rotation.x = -Math.PI / 2;
+    water.position.set(tx, G(0, 0) + 0.35, tz);
+    props.add(water);
+    part(props, new THREE.TorusGeometry(3.05, 0.18, 4, 24), toon('#9a9088', 'stone'), tx, G(0, 0) + 0.3, tz, Math.PI / 2);
+    solid(tx, tz, 3.1);
+  }
+
+  // 6. Arthur Vance's Aranus Man Book Signing Pavilion
+  {
+    const booth = makeBookSigningBooth();
+    at(booth, tx - 28, tz + 0, PI2);
+    solid(tx - 28, tz + 0, 1.8);
+  }
+
+  // 7. Backyard BBQ Patio & Bobby the Grillmaster
+  {
+    const grill = makeBBQGrill();
+    at(grill, tx - 22, tz + 33.5);
+    solid(tx - 22, tz + 33.5, 0.8);
+
+    // Picnic Table with benches & condiments
+    part(props, B(2.4, 0.1, 1.2), toon('#8a5a3a', 'wood'), tx - 24, G(-24, 34) + 0.85, tz + 34);
+    for (const s of [-1, 1]) part(props, B(0.12, 0.8, 0.9), '#3a2a1e', tx - 24 + 0.9 * s, G(-24, 34) + 0.4, tz + 34);
+    for (const s of [-1, 1]) part(props, B(2.4, 0.08, 0.45), toon('#8a5a3a', 'wood'), tx - 24, G(-24, 34) + 0.45, tz + 34 + 0.85 * s);
+    part(props, Cy(0.04, 0.05, 0.22, 6), toon('#c82218'), tx - 24.2, G(-24, 34) + 0.98, tz + 34.1);
+    part(props, Cy(0.04, 0.05, 0.22, 6), toon('#e8b820'), tx - 23.9, G(-24, 34) + 0.98, tz + 34.1);
+    solid(tx - 24, tz + 34, 1.2);
+  }
+
+  // 8. Back Alley Details (Smuggler's Cut)
+  {
+    part(props, B(1.2, 1.2, 1.2), toon('#6a4a2e', 'wood'), tx - 23.5, G(-23.5, -19.5) + 0.6, tz - 19.5);
+    part(props, B(1.0, 1.0, 1.0), toon('#7a5a3c', 'wood'), tx - 23.2, G(-23.2, -19.5) + 1.7, tz - 19.5);
+    part(props, Cy(0.4, 0.4, 1.1, 8), toon('#4a5a6a', 'panel'), tx - 22.4, G(-22.4, 19.5) + 0.55, tz + 19.5);
+    part(props, Cy(0.4, 0.4, 1.1, 8), toon('#4a5a6a', 'panel'), tx - 23.2, G(-23.2, 19.5) + 0.55, tz + 19.5);
+    solid(tx - 23.5, tz - 19.5, 0.9);
+    solid(tx - 22.8, tz + 19.5, 0.9);
+  }
+
+  // 9. Street Lamps, Planters, and Park Benches
+  const lampAt = (x, z) => {
+    part(props, Cy(0.08, 0.1, 4.2, 6), '#2b2a2c', tx + x, G(x, z) + 2.1, tz + z);
+    part(props, B(0.85, 0.08, 0.08), '#2b2a2c', tx + x + 0.4, G(x, z) + 4.1, tz + z);
+    part(props, B(0.42, 0.38, 0.42), glow('#ffe0a0'), tx + x + 0.78, G(x, z) + 3.9, tz + z);
+    solid(tx + x, tz + z, 0.2);
+  };
   for (let z = -26; z <= 38; z += 9) if (Math.abs(z) > 12) for (const s of [-1, 1]) lampAt(7.6 * s, z);
   for (let x = -38; x <= 38; x += 9) if (Math.abs(x) > 12) for (const s of [-1, 1]) lampAt(x, 6.5 * s);
-  for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.39, x = Math.cos(a) * 9, z = Math.sin(a) * 9, b = new THREE.Group(); part(b, B(1.8, 0.1, 0.5), toon('#8a6a44', 'wood'), 0, 0.5, 0); part(b, B(1.8, 0.5, 0.08), toon('#8a6a44', 'wood'), 0, 0.8, -0.22); for (const s of [-1, 1]) part(b, B(0.08, 0.5, 0.45), '#2b2a2c', 0.8 * s, 0.25, 0); at(b, tx + x, tz + z, Math.atan2(-x, -z)); solid(tx + x, tz + z, 0.5); }
-  for (let z = -24; z <= 36; z += 12) if (Math.abs(z) > 14) for (const s of [-1, 1]) { const x = 5.2 * s; part(props, Cy(0.15, 0.2, 2.6, 5), toon('#5a3a22', 'wood'), tx + x, G(x, z) + 1.3, tz + z); E(props, toon('#4f8a3a', 'leaves'), tx + x, G(x, z) + 3, tz + z, 1.1, 1.2, 1.1); solid(tx + x, tz + z, 0.3); }
-  // the park: a pond, trees, benches and a gazebo in the south-west
-  { const px = -30, pz = 24; const pond = new THREE.Mesh(new THREE.CircleGeometry(4.5, 20), new THREE.MeshLambertMaterial({ color: '#4fa8ff', transparent: true, opacity: 0.8 })); pond.rotation.x = -Math.PI / 2; pond.position.set(tx + px, G(px, pz) + 0.08, tz + pz); props.add(pond); solid(tx + px, tz + pz, 4.4);
-    for (let i = 0; i < 10; i++) { const a = i * 0.63, x = px + Math.cos(a) * 8.5, z = pz + Math.sin(a) * 7; part(props, Cy(0.25, 0.35, 3.2, 6), toon('#5a3a22', 'wood'), tx + x, G(x, z) + 1.6, tz + z); E(props, toon(i % 2 ? '#3f8a2f' : '#5aa04a', 'leaves'), tx + x, G(x, z) + 3.8, tz + z, 1.8, 1.5, 1.8); solid(tx + x, tz + z, 0.4); }
-    const gz = new THREE.Group(); for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; part(gz, Cy(0.1, 0.1, 2.6, 5), '#e8e4dc', Math.cos(a) * 2, 1.3, Math.sin(a) * 2); } part(gz, new THREE.ConeGeometry(2.8, 1.4, 6), toon('#c8402f', 'cloth'), 0, 3.2, 0); part(gz, Cy(2.2, 2.2, 0.2, 6), toon('#9a9088', 'stone'), 0, 0.1, 0); at(gz, tx - 20, tz + 30); solid(tx - 20, tz + 30, 0.6); }
-  if (typeof makeHoverCar === 'function') for (const [x, z, ry, c, st] of [[-20, 4.6, 0, '#c8402f', 'muscle'], [20, -4.6, Math.PI, '#4fd2ff', 'wedge'], [24, 4.6, 0, '#ffd36a', 'bubble'], [-32, -4.6, Math.PI, '#6fdc5a', 'jet'], [3.4, 24, Math.PI / 2, '#ff6aa8', 'manta'], [-3.4, -22, -Math.PI / 2, '#e8e4dc', 'phantom'], [34, 4.6, 0, '#8a6fc4', 'buggy']]) { const car = makeHoverCar(c, st); at(car, tx + x, tz + z, ry + Math.PI / 2, 0.3); solid(tx + x, tz + z, 1.4); }
-  // the airport pad (from the Earth sketch) in the north-east
+
+  // Plaza Benches
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * Math.PI * 2 + 0.39, x = Math.cos(a) * 9.2, z = Math.sin(a) * 9.2, b = new THREE.Group();
+    part(b, B(1.8, 0.1, 0.5), toon('#8a6a44', 'wood'), 0, 0.5, 0);
+    part(b, B(1.8, 0.5, 0.08), toon('#8a6a44', 'wood'), 0, 0.8, -0.22);
+    for (const s of [-1, 1]) part(b, B(0.08, 0.5, 0.45), '#2b2a2c', 0.8 * s, 0.25, 0);
+    at(b, tx + x, tz + z, Math.atan2(-x, -z));
+    solid(tx + x, tz + z, 0.55);
+  }
+
+  // Boulevard Street Trees
+  for (let z = -24; z <= 36; z += 12) {
+    if (Math.abs(z) > 14) for (const s of [-1, 1]) {
+      const x = 5.2 * s;
+      part(props, Cy(0.16, 0.22, 2.8, 6), toon('#5a3a22', 'wood'), tx + x, G(x, z) + 1.4, tz + z);
+      E(props, toon('#4f8a3a', 'leaves'), tx + x, G(x, z) + 3.2, tz + z, 1.2, 1.3, 1.2);
+      solid(tx + x, tz + z, 0.35);
+    }
+  }
+
+  // 10. Town Commons & Park (South-West: Pond, Trees, Gazebo)
+  {
+    const px = -30, pz = 24;
+    const pond = new THREE.Mesh(new THREE.CircleGeometry(4.8, 22), psx(new THREE.MeshLambertMaterial({ map: TEX.water, color: new THREE.Color('#4fa8ff').convertSRGBToLinear(), transparent: true, opacity: 0.82 })));
+    pond.rotation.x = -Math.PI / 2;
+    pond.position.set(tx + px, G(px, pz) + 0.08, tz + pz);
+    props.add(pond);
+    solid(tx + px, tz + pz, 4.6);
+
+    for (let i = 0; i < 10; i++) {
+      const a = i * 0.63, x = px + Math.cos(a) * 8.5, z = pz + Math.sin(a) * 7.2;
+      part(props, Cy(0.25, 0.35, 3.4, 6), toon('#5a3a22', 'wood'), tx + x, G(x, z) + 1.7, tz + z);
+      E(props, toon(i % 2 ? '#3f8a2f' : '#5aa04a', 'leaves'), tx + x, G(x, z) + 4.0, tz + z, 1.9, 1.6, 1.9);
+      solid(tx + x, tz + z, 0.45);
+    }
+
+    // Gazebo
+    const gz = new THREE.Group();
+    for (let k = 0; k < 6; k++) {
+      const a = k / 6 * Math.PI * 2;
+      part(gz, Cy(0.1, 0.1, 2.8, 6), '#e8e4dc', Math.cos(a) * 2.2, 1.4, Math.sin(a) * 2.2);
+    }
+    part(gz, new THREE.ConeGeometry(3.0, 1.5, 6), toon('#c8402f', 'cloth'), 0, 3.4, 0);
+    part(gz, Cy(2.4, 2.4, 0.22, 6), toon('#9a9088', 'stone'), 0, 0.11, 0);
+    at(gz, tx - 20, tz + 30);
+    solid(tx - 20, tz + 30, 0.7);
+  }
+
+  // 11. Parked Hover Cars
+  if (typeof makeHoverCar === 'function') {
+    for (const [x, z, ry, c, st] of [
+      [-20, 4.6, 0, '#c8402f', 'muscle'],
+      [20, -4.6, Math.PI, '#4fd2ff', 'wedge'],
+      [24, 4.6, 0, '#ffd36a', 'bubble'],
+      [-32, -4.6, Math.PI, '#6fdc5a', 'jet'],
+      [3.4, 24, Math.PI / 2, '#ff6aa8', 'manta'],
+      [-3.4, -22, -Math.PI / 2, '#e8e4dc', 'phantom'],
+      [34, 4.6, 0, '#8a6fc4', 'buggy']
+    ]) {
+      const car = makeHoverCar(c, st);
+      at(car, tx + x, tz + z, ry + Math.PI / 2, 0.3);
+      solid(tx + x, tz + z, 1.4);
+    }
+  }
+
+  // 12. Airport Dropship Pad in North-East
   dropshipPad(E_PAD().x, E_PAD().z, 0, shipUnlocked() ? 'Board your ship' : 'Dropship pad (locked until you earn a ship)');
-  // crowd: citizens walking loops around the streets
-  const ppl = [], sts = [], C0 = [['#c8402f', '#e0b892'], ['#3b4f7a', '#8a5a3a'], ['#5a6a3a', '#c58a64'], ['#8a6fc4', '#e0b892'], ['#c9a43a', '#5a3a24'], ['#2a5a7a', '#d9a77a'], ['#e8e4dc', '#8a5a3a'], ['#6fdc5a', '#e0b892'], ['#ff9a3c', '#c58a64'], ['#5d636c', '#e0b892']];
-  for (let i = 0; i < 10; i++) { const [sh, sk] = C0[i], o = buildChar(() => makeCivilian(sh, '#2c2a28', sk, ['#1e1a18', '#5a3a22', '#c9a43a', '#cfcac0'][i % 4]), 'civ'); blob(o, 0.4); levelGroup.add(o); ppl.push(o); sts.push({}); MOVERS.push([o, 0.4]); }
-  levelAnims.push(t => ppl.forEach((o, i) => { let x, z, yaw; const sp = 0.9 + (i % 3) * 0.25, L = 30;
-    if (i < 4) { const s = ((t * sp + i * 9) % (L * 2)), fwd = s < L, k = fwd ? s : L * 2 - s; x = (i % 2 ? 6.4 : -6.4); z = -26 + k * 2.1; yaw = fwd ? Math.PI : 0; }
-    else if (i < 8) { const s = ((t * sp + i * 7) % (L * 2)), fwd = s < L, k = fwd ? s : L * 2 - s; z = (i % 2 ? 5.2 : -5.2); x = -38 + k * 2.5; yaw = fwd ? -Math.PI / 2 : Math.PI / 2; }
-    else { const a = t * 0.12 * (i % 2 ? 1 : -1) + i; x = Math.cos(a) * 12.5; z = Math.sin(a) * 12.5; yaw = Math.atan2(-Math.sin(a), Math.cos(a)) * (i % 2 ? 1 : -1) + (i % 2 ? 0 : Math.PI); }
-    o.position.set(tx + x, G(x, z), tz + z); o.rotation.y = yaw + Math.PI; animRig(o, sts[i], 1 / 60, t); }));
+
+  // 13. Street Crowd: Wandering Citizens
+  const ppl = [], sts = [], C0 = [
+    ['#c8402f', '#e0b892'], ['#3b4f7a', '#8a5a3a'], ['#5a6a3a', '#c58a64'], ['#8a6fc4', '#e0b892'],
+    ['#c9a43a', '#5a3a24'], ['#2a5a7a', '#d9a77a'], ['#e8e4dc', '#8a5a3a'], ['#6fdc5a', '#e0b892'],
+    ['#ff9a3c', '#c58a64'], ['#5d636c', '#e0b892']
+  ];
+  for (let i = 0; i < 10; i++) {
+    const [sh, sk] = C0[i];
+    const o = buildChar(() => makeCivilian(sh, '#2c2a28', sk, ['#1e1a18', '#5a3a22', '#c9a43a', '#cfcac0'][i % 4]), 'civ');
+    blob(o, 0.4);
+    levelGroup.add(o);
+    ppl.push(o);
+    sts.push({});
+    MOVERS.push([o, 0.4]);
+  }
+  levelAnims.push(t => ppl.forEach((o, i) => {
+    let x, z, yaw;
+    const sp = 0.9 + (i % 3) * 0.25, L = 30;
+    if (i < 4) {
+      const s = ((t * sp + i * 9) % (L * 2)), fwd = s < L, k = fwd ? s : L * 2 - s;
+      x = (i % 2 ? 6.4 : -6.4); z = -26 + k * 2.1; yaw = fwd ? Math.PI : 0;
+    } else if (i < 8) {
+      const s = ((t * sp + i * 7) % (L * 2)), fwd = s < L, k = fwd ? s : L * 2 - s;
+      z = (i % 2 ? 5.2 : -5.2); x = -38 + k * 2.5; yaw = fwd ? -Math.PI / 2 : Math.PI / 2;
+    } else {
+      const a = t * 0.12 * (i % 2 ? 1 : -1) + i;
+      x = Math.cos(a) * 12.5; z = Math.sin(a) * 12.5;
+      yaw = Math.atan2(-Math.sin(a), Math.cos(a)) * (i % 2 ? 1 : -1) + (i % 2 ? 0 : Math.PI);
+    }
+    o.position.set(tx + x, G(x, z), tz + z);
+    o.rotation.y = yaw + Math.PI;
+    animRig(o, sts[i], 1 / 60, t);
+  }));
+
+  // 14. Retro Arcade Cabinets outside Arcade at [-28, -12]
+  {
+    const ax = tx - 28, az = tz - 12;
+    // Space Snake cabinet
+    const cab1 = makeArcadeCabinet('SPACE SNAKE', '#50ff60', '#2a8a3a');
+    at(cab1, ax + 2.4, az + 4.0, 0);
+    solid(ax + 2.4, az + 4.0, 0.6);
+    INTERACTS.push({
+      x: ax + 2.4,
+      z: az + 5.0,
+      r: 2.0,
+      label: 'Play Space Snake [E]',
+      fn: () => { if (typeof arcOpen === 'function') arcOpen('snake'); else if (typeof openArcade === 'function') openArcade('snake'); else toast('ARCADE', 'Arcade loading...', 2); }
+    });
+
+    // Space Rocks cabinet
+    const cab2 = makeArcadeCabinet('SPACE ROCKS', '#4fe0d0', '#1a5a8a');
+    at(cab2, ax + 4.2, az + 4.0, 0);
+    solid(ax + 4.2, az + 4.0, 0.6);
+    INTERACTS.push({
+      x: ax + 4.2,
+      z: az + 5.0,
+      r: 2.0,
+      label: 'Play Space Rocks [E]',
+      fn: () => { if (typeof arcOpen === 'function') arcOpen('rocks'); else if (typeof openArcade === 'function') openArcade('rocks'); else toast('ARCADE', 'Arcade loading...', 2); }
+    });
+  }
+
+  // 15. Municipal Notice Board in Civic Plaza at [0, -20]
+  {
+    const nb = makeNoticeBoard();
+    at(nb, tx + 0, tz - 20, 0);
+    solid(tx + 0, tz - 20, 0.8);
+    INTERACTS.push({
+      x: tx + 0,
+      z: tz - 18.8,
+      r: 2.6,
+      label: 'Read Jamestown Notice Board [E]',
+      fn: openNoticeBoard
+    });
+  }
+
+  // 16. Cookie's Diner Outdoor Cafe Patio at [-8.6, 23.5] and [-8.6, 30.5]
+  {
+    for (const pz of [23.5, 30.5]) {
+      const pt = makeDinerTable();
+      at(pt, tx - 8.6, tz + pz, 0);
+      solid(tx - 8.6, tz + pz, 0.9);
+    }
+  }
 }
+
 const E_PAD = () => LEVELS.earth.pad;
+
+window.__jamestown = {
+  openComicReader,
+  buyComic,
+  grabBurger,
+  petBarnaby,
+  feedBarnabyFish,
+  openArthurDealing,
+  openDinerMenu,
+  openNoticeBoard,
+  talkRunner,
+  openRunnerSupply,
+  collectRunnerEarnings,
+  JT_BUILDINGS,
+  JT_POS,
+  JT_NPCS,
+  get TOWN() { return TOWN; },
+  get LEVEL() { return LEVEL; },
+  get player() { return player; },
+  get camera() { return camera; },
+  get S() { return S; },
+  get npcObjs() { return npcObjs; },
+  get TEX() { return TEX; },
+  get curInhaler() { return typeof window.getCurInhaler === 'function' ? window.getCurInhaler() : null; },
+  get buffs() { return typeof buffs === 'function' ? buffs() : null; },
+  get useSub() { return typeof window.useSub === 'function' ? window.useSub : null; },
+  get playInhalerAnim() { return typeof window.playInhalerAnim === 'function' ? window.playInhalerAnim : null; },
+  get groundH() { return typeof groundH === 'function' ? groundH : null; },
+  get maxHp() { return typeof maxHp === 'function' ? maxHp : null; },
+  get closeDlg() { return typeof closeDlg === 'function' ? closeDlg : null; }
+};
 
 // =================== ENVIRONMENT DETAIL PASS: every world gets ground clutter, ambient life and air particles ===================
 // Biome kits: what grows / lies around on each world. Decorations are small and walk-through unless marked solid.
@@ -9424,7 +10757,17 @@ LEVELS.fort = {
   build() {
     const [fx, fz] = FORT;
     // compound wall with a gate to the north
-    for (let i = 0; i < 40; i++) { const a = i / 40 * Math.PI * 2; if (Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))) < 0.2) continue; const x = fx + Math.cos(a) * 23.5, z = fz + Math.sin(a) * 23.5; part(props, B(3.8, 3, 0.8), '#5d636c', x, groundH(x, z) + 1.5, z, 0, -a + Math.PI / 2, 0); if (i % 5 === 0) { part(props, B(1.4, 5, 1.4), '#3a3d44', x, groundH(x, z) + 2.5, z); part(props, B(0.6, 0.3, 0.6), glow('#ff8a2a'), x, groundH(x, z) + 5.2, z); } }
+    for (let i = 0; i < 40; i++) {
+      const a = i / 40 * Math.PI * 2;
+      if (Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))) < 0.2) continue;
+      const x = fx + Math.cos(a) * 23.5, z = fz + Math.sin(a) * 23.5;
+      part(props, B(3.8, 3, 0.8), toon('#ffffff', 'ironwall'), x, groundH(x, z) + 1.5, z, 0, -a + Math.PI / 2, 0);
+      part(props, B(3.85, 0.12, 0.9), '#3a3d44', x, groundH(x, z) + 3.06, z, 0, -a + Math.PI / 2, 0);
+      if (i % 5 === 0) {
+        part(props, B(1.4, 5, 1.4), '#3a3d44', x, groundH(x, z) + 2.5, z);
+        part(props, B(0.6, 0.3, 0.6), glow('#ff8a2a'), x, groundH(x, z) + 5.2, z);
+      }
+    }
     RINGS.push({ x: fx, z: fz, r: 23.5, gate: Math.PI / 2, half: 3, safe: true });
     // hangar with the three vehicles on display
     const hg = new THREE.Group(); part(hg, B(18, 0.3, 9), '#3a3d44', 0, 0.15, 0); part(hg, new THREE.CylinderGeometry(4.6, 4.6, 18, 12, 1, true, 0, Math.PI), toon('#6a6a70', 'panel'), 0, 0.2, 0, 0, 0, Math.PI / 2); hg.children[1].material.side = THREE.DoubleSide;
@@ -10839,6 +12182,7 @@ function arcOpen(game) {
     // the two playable cabinets get proper marquees
     [['snake', 'SPACE SNAKE', '#9fff6a', -3.6], ['rocks', 'SPACE ROCKS', '#8fe3ff', 3.2]].forEach(([g, nm, col, x]) => { const mq = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.36), new THREE.MeshBasicMaterial({ map: signTex(nm, '#05060f', col) })); mq.position.set(x, 2.55, -19.45); props.add(mq);
       INTERACTS.push({ x, z: -18.4, r: 1.6, label: `Play ${nm}${S.arcade && S.arcade[g] ? ` (best ${S.arcade[g]})` : ''}`, fn: () => arcOpen(g) }); }); }; }
+window.arcOpen = window.openArcade = arcOpen;
 document.head.insertAdjacentHTML('beforeend', `<style>
 .cscard { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 46px; height: 64px; margin: 2px; border-radius: 7px; background: #f4f1e8; border: 2px solid #1e1c22; font: 700 20px var(--mono, monospace); line-height: 1; box-shadow: 0 2px 4px rgba(0,0,0,.4); cursor: pointer; text-shadow: 0 1px 0 rgba(0,0,0,.35); }
 .cscard b { color: #1e1c22; font-size: 18px; text-shadow: none; } .cscard.back { background: repeating-linear-gradient(45deg,#3b4f7a 0 6px,#2a3756 6px 12px); color: #ffd36a; }
@@ -16453,7 +17797,7 @@ function makePrezSuit() {
 // Optional (Settings → Game → Substances, off by default). Timed boosts with screen effects; illegal ones can bring a bad trip.
 // The Lab is a ship room that brews the illegal ones; owning it keeps you Wanted until you tear it down.
 // Save fields: PREFS.subs, S.buffs['sub_<id>'] (end time), S.buffs.trip, S.lastSub, S.lab ({ st: [{ r, t, n }], shelf }).
-if (PREFS.subs == null) PREFS.subs = false;
+if (PREFS.subs == null) PREFS.subs = true;
 const subsOn = () => !!PREFS.subs;
 const SUBS = {
   focusfizz: { name: 'Focus Fizz', legal: true, price: 60, v: 20, col: '#7fe0ff', sec: 600, xp: 0.15, fx: { sat: 0.15 }, trip: 0, desc: 'A fizzy focus drink. +15% XP for 10 minutes.' },
@@ -16476,16 +17820,146 @@ const tripOn = () => subsOn() && (buffs().trip || 0) > Date.now();
 { const _g = gainXp; gainXp = function (n) { const m = 1 + subSum('xp'); return _g(m > 1 ? Math.round(n * m) : n); }; }
 { const _h = hurt; hurt = function (dmg, src) { const d = subSum('def'), t = subSum('take'); return _h(d || t ? dmg * (1 - d) * (1 + t) : dmg, src); }; }
 
+// ---- First-Person Inhaler Animation ----
+// Raises a high-tech canister inhaler to your mouth. The top dome is clear glass,
+// housing a glowing substance core whose color and light change dynamically based on the drug.
+let curInhaler = null, curInhalerIv = null;
+function playInhalerAnim(id) {
+  if (curInhaler) { camera.remove(curInhaler); curInhaler = null; }
+  if (curInhalerIv) { clearInterval(curInhalerIv); curInhalerIv = null; }
+  if (typeof camera === 'undefined') return;
+
+  const D = SUBS[id] || { col: '#c86aff', name: id };
+  const col = D.col || '#c86aff';
+
+  const g = new THREE.Group();
+  // 1. Sleek sci-fi inhaler body (dark matte casing)
+  part(g, Cy(0.018, 0.019, 0.09, 12), '#25272c', 0, 0, 0);
+  for (let r = 0; r < 3; r++) {
+    part(g, Cy(0.0195, 0.0195, 0.008, 12), '#18191d', 0, -0.02 + r * 0.016, 0);
+  }
+  // Mouthpiece nozzle angled forward
+  const nozzle = part(g, Cy(0.013, 0.014, 0.045, 10), '#32353c', 0, -0.018, 0.035, Math.PI / 3, 0, 0);
+  part(g, Cy(0.011, 0.011, 0.01, 10), '#111215', 0, -0.004, 0.052, Math.PI / 3, 0, 0);
+
+  // 2. Clear glass canister chamber at the top
+  const glassMat = psx(new THREE.MeshBasicMaterial({ color: '#d8f4ff', transparent: true, opacity: 0.45, depthWrite: false }));
+  const glass = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.056, 14), glassMat);
+  glass.position.set(0, 0.072, 0);
+  g.add(glass);
+
+  // Metal cap / actuator on top of the glass
+  const cap = part(g, Cy(0.023, 0.023, 0.016, 12), '#454850', 0, 0.104, 0);
+  part(g, Cy(0.015, 0.015, 0.005, 10), col, 0, 0.113, 0);
+
+  // 3. Glowing substance inside the clear glass
+  const drugCore = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.046, 12), glow(col));
+  drugCore.position.set(0, 0.072, 0);
+  g.add(drugCore);
+
+  const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.009, 0), glow('#ffffff'));
+  orb.position.set(0, 0.072, 0);
+  g.add(orb);
+
+  // Local glow pointlight
+  const pl = new THREE.PointLight(new THREE.Color(col), 1.2, 2.0);
+  pl.position.set(0, 0.075, 0.03);
+  g.add(pl);
+
+  // Hand / thumb & fingers supporting the inhaler
+  const skinCol = (typeof FACE !== 'undefined' && FACE.skin && typeof charLook !== 'undefined' && charLook && FACE.skin[typeof getFaceParts === 'function' ? getFaceParts().s : 0]) || '#e0b892';
+  part(g, B(0.07, 0.05, 0.06), toon(skinCol, 'skin'), -0.042, -0.01, -0.005, 0.2, 0.1, -0.15);
+  part(g, B(0.025, 0.035, 0.022), toon(skinCol, 'skin'), 0.02, 0.095, -0.01, -0.3, 0, 0.2);
+
+  g.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.renderOrder = 4; } });
+  g.scale.setScalar(1.5);
+  const oldVmVis = typeof vm !== 'undefined' ? vm.visible : true;
+  if (typeof vm !== 'undefined') vm.visible = false;
+  camera.add(g);
+  curInhaler = g;
+
+  const startTime = performance.now();
+  const dur = 1300;
+  let puffed = false;
+
+  curInhalerIv = setInterval(() => {
+    if (window._inhalerFreeze) {
+      g.position.set(0.05, -0.10, -0.28);
+      g.rotation.set(0.12, -0.08, 0.1);
+      drugCore.scale.set(1.08, 1, 1.08);
+      return;
+    }
+
+    const elapsed = performance.now() - startTime;
+    const progress = Math.min(1, elapsed / dur);
+
+    let pX, pY, pZ, rotX, rotY;
+    if (progress < 0.32) {
+      const k = progress / 0.32, ease = 1 - Math.pow(1 - k, 3);
+      pX = 0.20 + (0.05 - 0.20) * ease;
+      pY = -0.34 + (-0.10 - -0.34) * ease;
+      pZ = -0.38 + (-0.28 - -0.38) * ease;
+      rotX = 0.45 * (1 - ease) + 0.12 * ease;
+      rotY = -0.35 * (1 - ease) - 0.08 * ease;
+    } else if (progress < 0.68) {
+      pX = 0.05 + Math.sin((progress - 0.32) * 20) * 0.002;
+      pY = -0.10 + Math.cos((progress - 0.32) * 20) * 0.002;
+      pZ = -0.28;
+      rotX = 0.12;
+      rotY = -0.08;
+      cap.position.y = 0.104 - 0.008;
+
+      if (!puffed) {
+        puffed = true;
+        try {
+          const wp = nozzle.getWorldPosition(new THREE.Vector3());
+          burst(wp.add(new THREE.Vector3(0, 0.01, 0.02)), col, 12, 1.4);
+        } catch (_) {}
+        try { if (SFX.laser) SFX.laser(); else if (SFX.item) SFX.item(); } catch (_) {}
+      }
+
+      drugCore.scale.set(1 + Math.sin(elapsed * 0.02) * 0.14, 1, 1 + Math.cos(elapsed * 0.02) * 0.14);
+      orb.position.y = 0.072 + Math.sin(elapsed * 0.015) * 0.014;
+    } else {
+      const k = (progress - 0.68) / 0.32, ease = k * k;
+      pX = 0.05 + (0.20 - 0.05) * ease;
+      pY = -0.10 + (-0.38 - -0.10) * ease;
+      pZ = -0.28 + (-0.38 - -0.28) * ease;
+      rotX = 0.12 + (0.45 - 0.12) * ease;
+      rotY = -0.08 + (-0.35 - -0.08) * ease;
+      cap.position.y = 0.104;
+    }
+
+    g.position.set(pX, pY, pZ);
+    g.rotation.set(rotX, rotY, 0.1);
+
+    if (progress >= 1) {
+      clearInterval(curInhalerIv);
+      curInhalerIv = null;
+      if (curInhaler === g) {
+        camera.remove(g);
+        curInhaler = null;
+      }
+      if (typeof vm !== 'undefined') vm.visible = oldVmVis;
+    }
+  }, 16);
+}
+
 // ---- taking one ----
 function useSub(id) {
   const D = SUBS[id]; if (!D || !(S.inv[id] > 0)) return false;
   if (!subsOn()) { log('Substances are switched off. Turn them on in Settings → Game.'); SFX.hit(); return true; }
   S.inv[id]--; if (!S.inv[id]) delete S.inv[id]; buffs()['sub_' + id] = Date.now() + D.sec * 1000; S.lastSub = id; markDirty();
+  playInhalerAnim(id);
   try { burst(player.pos.clone().add(V(0, 1.3, 0)), D.col, 16, 2.5); } catch (_) {} SFX.quest();
   toast(D.name.toUpperCase(), D.desc.split('. ').slice(1).join('. ').replace(/\.$/, '') || D.desc, 2.4);
   if (D.trip && Math.random() < D.trip) setTimeout(() => startTrip(40 + Math.random() * 50), 2500 + Math.random() * 4000);
   subChip(); invQuickRender(); return true;
 }
+window.playInhalerAnim = playInhalerAnim;
+window.getCurInhaler = () => curInhaler;
+window.useSub = useSub;
+window.SUBS = SUBS;
 { const _ou = outUseItem; outUseItem = function (id) { if (SUBS[id]) return useSub(id); return _ou(id); }; }
 // hide them from the bag while the system is off (they stay saved)
 { const _ik = invKeys; invKeys = function () { const ks = _ik(); return subsOn() ? ks : ks.filter(k => !SUBS[k.slice(2)]); }; }
@@ -17209,6 +18683,29 @@ const UPDATES = [
   { id: 110, title: '2.14.3 · Vega narrates every cutscene, iPhone fix', items: ['iPhones and iPads: the game no longer crashes on load (Safari has no mouse lock, and one line assumed it did).', 'Vega, the voice from the opening film, now reads every cutscene and the prologue out loud. Shots wait for her to finish.', 'Opening film: the stray "And…" is gone, your wingmen fly in formation beside you, the enemy fleet is spread out and mixed, the battle has six kinds of robots, and dropped guns lie flat on the ground.', 'Prologue: the stars are smaller and calmer, and the odd ball of stars around one planet is gone.'] },
   { id: 111, title: '2.14.4 · A real hangar, a proper catch card', items: ['Hangar: the floor pad no longer flickers. Your selected war vehicle now turns on a lit turntable, with a gantry crane overhead, a tool wall, a red tool chest, tyre stacks, fuel drums, a fuel pump and guide lights to the launch door.', 'Fishing: the fish you caught now swims in front of its card, and the card waits for you to tap Continue (or press Enter or E).', 'Phones: the USE button can no longer land on top of the radar.', 'New drawn icons for the camera and repair buttons. The ship and the car share the same camera icon.'] },
   { id: 112, title: "2.14.5 · The Angler's Den, rooms that grow, Vega's film", items: ["New ship room: the Angler's Den. Mount your catches on 12 wall plaques, each showing the fish and your best length. Take one down any time to get the fish back. It also has a rod rack, an armchair and a big aquarium.", 'Upgraded ship rooms now look upgraded. Lv 2 and 3 each add a themed prop, Lv 4 hangs a banner and a second light, and Lv 5 adds gold trim and a crest at the door.', 'Ship corridor: the hull posts no longer stand in doorways, and the crane hook that was floating in the hall is back inside the hangar.', 'Fishing: the Bug Pond, Fern Pond and Coolant Canal are bigger, your cast always lands in water, and Coil in Robot City moved back from the dock.', 'Opening film: Captain Vega is the hero now (you are a fresh recruit), and the soldiers that were standing inside her are gone. Her ship flies the film\'s space battle.', 'Prologue: the ball of stars is gone, the stars are dimmer so the planets stand out, the thing behind Vector is now the Watcher rising out of the dark, and Drome\'s flagship wears a setting-sun sigil instead of a big red dot. With voice off, the prologue no longer stalls on its first line.'] },
+  { id: 134, title: '2.19.3 · Fort Ironrock Armored Perimeter Walls', items: [
+    'Fort Ironrock perimeter wall armor: The circular perimeter wall enclosing Fort Ironrock is now reinforced with riveted heavy iron plates, corner bolts, rust seams, and gunmetal coping caps.',
+    'Retro graphics alignment: All new surfaces and structures pass through the authentic PS1 shader pipeline (discrete toon ramp, 320×240 vertex grid snapping, and affine texture warping).',
+    'Custom texture asset: Embedded 64×64 pixel art riveted steel plate texture (TEX.ironwall) with nearest-neighbor filtering and repeat wrapping.'
+  ] },
+  { id: 133, title: '2.19.2 · New Jamestown Town Life · Stimulants, Arcades & Gazette', items: [
+    'Stimulant dealing with Arthur Vance: Sell Focus Fizz, Stim Patches, Void Spice, and more to Arthur at his signing booth to fuel his writing on Issue #2. Focus Fizz pays a 2× premium (120 cr)!',
+    'Playable retro arcade cabinets: Two full-sized coin-op cabinets (Space Snake & Space Rocks) stand outside the Neon Arcade on West Street, ready to play for high scores.',
+    'Arcade Champion Pixel Pete: Hang out with Pete by the machines to talk high-score strategies and retro gaming.',
+    'Feed Barnaby fresh fish: Treat Barnaby the cat to any fresh catch from Gil\'s Fish Market for a full heal, +50 XP, and a 10-minute Feline Agility (+15% move speed) buff.',
+    'Cookie\'s Diner specials: Order savory Space Meatloaf (+10% dmg), piping hot Black Coffee (+15% speed), or Warm Cherry Pie at Cookie\'s Diner, complete with outdoor checkered cafe tables.',
+    'Municipal Notice Board: Read local town bulletins, cinema showtimes, lost-and-found notices, and your active Outlaw Rep & Wanted status at the Central Plaza board.',
+    'Cinema soundscape: Added dedicated auditorium acoustic profile with lowpass room wash, projector hum, and theater reverb.'
+  ] },
+  { id: 132, title: '2.19.1 · The Roxy Cinema & Dual-Channel Movies', items: [
+    'The Roxy Cinema: walk into New Jamestown\'s grand movie palace on the west entertainment strip, featuring an art-deco neon marquee, double movie posters, ticket window, and double doors.',
+    'Cinema auditorium: indoor screening room with sloped stadium seating tiers, plush red velvet armchairs, aisle step lights, proscenium velvet curtains, and concession stand with hot butter popcorn.',
+    'Giant silver screen: 14.4m x 8.1m screen with black velvet framing borders, ambient screen glow illuminating the auditorium, and a volumetric projector beam shining from the projection booth.',
+    'Dual-channel movie catalog: enjoy Night of the Living Dead (1968, CH 1) and Santa Claus Conquers the Martians (1964, CH 2) with independent timestamp progress.',
+    'Channel switching: press C or use the TV/theatre prompts to change channels anytime in the cinema or on the ship\'s fishing room couch.',
+    'Inactivity auto-hide: while seated and watching the film, on-screen prompts and buttons smoothly fade away after 2.8 seconds of inactivity, immediately restoring upon any mouse or keyboard input.'
+  ] },
+  { id: 131, title: '2.19 · New Jamestown Revamp & The Astonishing Aranus Man', items: ['New Jamestown full city overhaul: distinct civic, commercial, entertainment, residential, and park districts with brick facades and slate mansard roofs.', 'Arthur Vance book signing booth: meet the author of The Astonishing Aranus Man, read the 10-page in-game comic book, help his writer\'s block, and fix the Arena match for an exclusive Aranus Cape and signed comic.', 'Shady street runners: recruit Slick Eddie and Viper in the alleys to move product across the city using your Outlaw reputation.', 'Bobby the Grillmaster: sizzling backyard BBQ kettle grill behind the diner with hot space patties.', 'Barnaby the Cat: friendly neighborhood orange tabby in the park you can pet for purrs and warm fuzzies.', 'First-person inhaler animation: taking substances now shows a custom inhaler with clear glass chamber dynamically glowing in the drug\'s color.'] },
   { id: 130, title: "2.18.12 · Bridge layout", items: ["The galaxy map and the captain's chair sit a little further back on the bridge"] },
   { id: 129, title: "2.18.11 · Cleaner terminals", items: ["Room terminals are plain bridge consoles again, with no screen above", "Removed the floating screen beside the drone bay"] },
   { id: 128, title: "2.18.10 · Room terminals and the drone bay", items: ["Every ship room terminal now matches the new bridge consoles, with a screen above", "The drone bay moved behind the two upgrade consoles and got a new cradle with a hovering drone"] },
@@ -17228,11 +18725,11 @@ const UPDATES = [
   { id: 114, title: '2.16 · Side hustles, a clearer ocean and Vega on the radio', items: ['Sell drugs to the President (he pays way too much) and to random people. Some refuse, and in lawful places someone might report you', 'Give your partner product to sell from their apartment or your ship quarters, then collect the earnings. Push it too hard and they get arrested; post bail with Marshal Rook', 'Your bag shows one tile each for guns, staffs, melee and ordnance with a picture of the weapon. Tap it to pick from the whole list. Weapons and ordnance no longer take bag space or weight', 'Ocean World cleaned up: no torn water, no domes showing through the surface, floors sit on the seabed, no sky underwater, taller glass tunnels', 'Every world\'s water matches its colors', 'Vega is the only voice in the cutscenes and does all the battle radio at the Greater Maw, fully voiced', 'New space fonts and a light space blue in place of the orange', 'Fullscreen works in more browsers. On iPhone, Add to Home Screen to play fullscreen', 'The casino carpet no longer flickers and the high-low table looks like a table', 'Mezar shows its name on the galaxy map'] },
   { id: 113, title: '2.15 · The Lucky Asteroid, the Undercroft dive and a bigger lounge', items: ['The Neon Arcade has a casino now: the Lucky Asteroid. Six slot machines, a high-low table and a space poker table with Rook and Nyx. Win real credits', 'Two playable arcade cabinets: SPACE SNAKE and SPACE ROCKS. Good scores pay out a few credits', 'The Undercroft is a proper hive of scum and villainy: the Rusty Rivet bar, a band, back-room poker with One-Eye Jax, a members-only back room, wanted posters, drunks and smoke', 'The Starlight Lounge got a second bar, VIP couches, plants, waiter bots and people mingling. The President has his own spot and the dancers no longer walk through him', 'When a person and a thing are both in reach (like your partner and your bed), the one you are looking at gets the button. Your roommate also stands away from the bunk now', 'Romance music only plays while you are talking to them', 'Q, Y and the weapon box all cycle gun, staff, melee. Staffs are their own magic slot again', 'The weapon box stays the same size for ammo, spells and the shield', 'New energy shield: a glowing kite shield with the setting-sun sigil', 'Muzzle flashes now come out of the end of each barrel', 'Earth no longer shrinks and vanishes when you look at it from the Moon'] },
 ];
-const UPDATES_LATEST = UPDATES[UPDATES.length - 1].id;
+const UPDATES_LATEST = Math.max(...UPDATES.map(u => u.id));
 function updateRows(list) {
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.maxHeight = '46vh'; rows.style.overflowY = 'auto';
   // the newest few open; older ones fold down to their title, tap to read
-  list.slice().reverse().forEach((u, i) => { const d = document.createElement('div'); d.className = 'row'; d.style.display = 'block'; const fold = i >= 4;
+  list.slice().sort((a, b) => b.id - a.id).forEach((u, i) => { const d = document.createElement('div'); d.className = 'row'; d.style.display = 'block'; const fold = i >= 4;
     const h = document.createElement('b'); h.textContent = (fold ? '▸ ' : '') + u.title; h.style.color = '#ffd36a'; d.appendChild(h);
     const ul = document.createElement('ul'); ul.style.margin = '4px 0 2px 18px'; ul.style.padding = '0'; u.items.forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); }); d.appendChild(ul); rows.appendChild(d);
     if (fold) { ul.hidden = true; d.style.cursor = 'pointer'; d.addEventListener('click', () => { ul.hidden = !ul.hidden; h.textContent = (ul.hidden ? '▸ ' : '▾ ') + u.title; SFX.ui(); if (typeof pageRows === 'function') pageRows(); }); } });
@@ -17253,6 +18750,7 @@ function updatesOnLogin(isNew) {
 }
 // tester unlock wins over every world's own gate
 { const _po = planetOpen; planetOpen = function (id) { if (DEV_ALL && LEVELS[id] && id !== 'zfloor') return true; return _po(id); }; }
+window.openUpdates = openUpdates;
 
 // =================== NOTEBOOK GALLERY (2.12.4): Phil & Caleb's drawings next to the models they became ===================
 const GALLERY = [
@@ -20194,55 +21692,350 @@ TEX.fishpaper = canvasTex(64, (x, s) => { x.fillStyle = '#c4a274'; x.fillRect(0,
   fish(16, 14, '#4f8a96', 1); fish(48, 30, '#c8763a', -1); fish(20, 46, '#c8763a', 1); fish(50, 58, '#4f8a96', -1); x.fillStyle = '#a8c8d0'; for (const [a, b] of [[34, 10], [8, 30], [40, 48], [60, 18]]) x.fillRect(a, b, 1, 1); });
 // Phil's wallpaper tile (64x64), drawn over the fallback above once it loads
 { const im = new Image(); im.onload = () => { const T = TEX.fishpaper, c = T.image, x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(im, 0, 0, c.width, c.height); T.needsUpdate = true; }; im.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kb9Lw0AcxV9Ti1IqKnYQcchQdbGLijjWKhShQqgVWnUwufQXNGlIUlwcBdeCgz8Wqw4uzro6uAqC4A8Q/wBxUnSREr+XFFrEenDch3f3HnfvAKFeZprVFQM03TZTibiYya6K3a8Ioh8DCGBcZpYxJ0lJdBxf9/Dx9S7Kszqf+3P0qjmLAT6ROMYM0ybeIJ7ZtA3O+8RhVpRV4nPiCZMuSPzIdcXjN84FlwWeGTbTqXniMLFYaGOljVnR1IiniSOqplO+kPFY5bzFWStXWfOe/IWhnL6yzHWaI0hgEUuQIEJBFSWUYSNKq06KhRTtxzv4h12/RC6FXCUwciygAg2y6wf/g9/dWvmpSS8pFAcCL47zMQp07wKNmuN8HztO4wTwPwNXestfqQOzn6TXWlrkCOjbBi6uW5qyB1zuAENPhmzKruSnKeTzwPsZfVMWGLwFgmteb819nD4AaeoqeQMcHAJjBcpe7/Dunvbe/j3T7O8HfDJyqghqD2cAAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAALiMAAC4jAXilP3YAAAAHdElNRQfqChARCxn72WU2AAAAGXRFWHRDb21tZW50AENyZWF0ZWQgd2l0aCBHSU1QV4EOFwAAAQNJREFUeNrt2jsOwjAMgGETsSDEJbpzlCw9EAPchqFLTsAZ2HsJhBhh6sCjQ6Mo2M7vralayV8eSiKvLufTUwrH7f6Q3Xaj/p8iIkEaDwAAAAAAAAAAAAAAAAAAgCZjnfPRmIa35y72MqZButj7HwGfyc+1uQSYEj2m69c7i72/GGBK8hD3bkbB4inwq6et9n72IugJgX0AAAAAAAAAAAAAAPcBBqPEvUTwknzuiTRYTr7EvYRJgJL3EmanQKkjuelFsAQC+wAAAAAAAAAAAAAAAAAAAIAWo/pxWFt9Ufhn8nNtLgG01hdVA9BaX1R1Cmgsram+CGpDYB8AAAAAAABAw/ECYDlM/3fE2AsAAAAASUVORK5CYII='; }
-const TV_REMOTE = ['https://archive.org/download/night_of_the_living_dead_dvd/Night.mp4'];
-const TVD = { room: null, scr: null, led: null, vid: null, tex: null, idle: null, on: false, parts: null, part: 0, cand: 0, sinceSave: 0, musDown: false, hole: null };
+const TV_CHANNELS = [
+  {
+    id: 'notld',
+    title: 'Night of the Living Dead (1968)',
+    short: 'Night of the Living Dead',
+    dir: 'George A. Romero',
+    year: '1968',
+    localJson: 'video/notld/parts.json',
+    remotes: ['https://archive.org/download/night_of_the_living_dead_dvd/Night.mp4']
+  },
+  {
+    id: 'santamartians',
+    title: 'Santa Claus Conquers the Martians (1964)',
+    short: 'Santa Claus Conquers the Martians',
+    dir: 'Nicholas Webster',
+    year: '1964',
+    localJson: 'video/santamartians/parts.json',
+    remotes: [
+      'https://upload.wikimedia.org/wikipedia/commons/transcoded/8/83/Santa_Claus_Conquers_the_Martians_%281964%29_by_Nicholas_Webster.webm/Santa_Claus_Conquers_the_Martians_%281964%29_by_Nicholas_Webster.webm.480p.vp9.webm',
+      'https://archive.org/download/santa_claus_conquers_the_martians/santa_claus_conquers_the_martians.mp4',
+      'https://upload.wikimedia.org/wikipedia/commons/8/83/Santa_Claus_Conquers_the_Martians_%281964%29_by_Nicholas_Webster.webm'
+    ]
+  }
+];
+
+const TVD = { room: null, scr: null, led: null, vid: null, tex: null, idle: null, on: false, parts: null, channelParts: {}, part: 0, cand: 0, sinceSave: 0, musDown: false, hole: null };
 const SEAT = { on: false, x: 0, z: 0, yaw: 0, out: null, y: 0.62 };
+
+// Inactivity tracking for prompt auto-hide when seated
+let _tvLastInput = performance.now();
+const _noteInput = () => { _tvLastInput = performance.now(); };
+window.addEventListener('mousemove', _noteInput, { passive: true });
+window.addEventListener('pointermove', _noteInput, { passive: true });
+window.addEventListener('keydown', (e) => {
+  _noteInput();
+  if (e.code === 'KeyC' && typeof state !== 'undefined' && state === 'play' && !dlgOpen && (SEAT.on || tvInRoom())) {
+    tvChangeChannel(1);
+  }
+}, { passive: true });
+window.addEventListener('touchstart', _noteInput, { passive: true });
+window.addEventListener('touchmove', _noteInput, { passive: true });
+window.addEventListener('wheel', _noteInput, { passive: true });
+
 // ---- every fish in the game, for the Worm Hole ----
 function wormTable() { const seen = new Map();
   for (const k in FISH_TABLES) { if (k === 'wormhole') continue; for (const e of FISH_TABLES[k]) { if (!ITEMS[e[0]] || (typeof fishJunk === 'function' && fishJunk(e[0]))) continue; const o = seen.get(e[0]); if (!o) seen.set(e[0], [e[0], e[1], e[2] || 0.3]); else o[1] = Math.max(o[1], e[1]); } }
   return [...seen.values()]; }
+
 // ---- the screen before the film starts, and when there's no signal ----
 function tvIdleTex() { const c = document.createElement('canvas'); c.width = 256; c.height = 192; const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.userData = { c, x: c.getContext('2d') }; return t; }
-function tvDrawIdle(mode, time) { const T = TVD.idle; if (!T) return; const { c, x } = T.userData;
-  if (mode === 'static') { const id = x.createImageData(c.width, c.height); for (let i = 0; i < id.data.length; i += 4) { const v = Math.random() * 200; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; } x.putImageData(id, 0, 0);
-    x.fillStyle = 'rgba(0,0,0,.65)'; x.fillRect(48, 78, 160, 36); x.fillStyle = '#e8f4ff'; x.font = 'bold 18px monospace'; x.textAlign = 'center'; x.fillText('NO SIGNAL', 128, 102); }
-  else if (mode === 'load') { x.fillStyle = '#05060a'; x.fillRect(0, 0, c.width, c.height); x.fillStyle = '#cfd6e0'; x.font = 'bold 14px monospace'; x.textAlign = 'center'; x.fillText('NIGHT OF THE LIVING DEAD', 128, 88); x.fillStyle = '#8a8e96'; x.font = '12px monospace'; x.fillText('loading' + '.'.repeat(1 + Math.floor(time * 2) % 3), 128, 112); }
-  else { x.fillStyle = '#07080c'; x.fillRect(0, 0, c.width, c.height); const g = x.createLinearGradient(0, 0, c.width, c.height); g.addColorStop(0, 'rgba(120,150,190,.12)'); g.addColorStop(0.5, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, c.width, c.height); }
-  T.needsUpdate = true; }
-// ---- the film: local parts first, then the Internet Archive ----
-async function tvLoadParts() {
-  if (TVD.parts) return TVD.parts; TVD.partsDone = false; try { return await tvFetchParts(); } finally { TVD.partsDone = true; } }
-async function tvFetchParts() {
-  try { const r = await fetch('video/notld/parts.json', { cache: 'no-cache' }); if (r.ok) { const j = await r.json(); if (j && j.parts && j.parts.length) return (TVD.parts = j.parts.map(p => ({ u: 'video/notld/' + p.f, d: +p.d || 0 }))); } } catch (_) {}
-  return (TVD.parts = null);
+function tvDrawIdle(mode, time) {
+  const T = TVD.idle; if (!T) return;
+  const { c, x } = T.userData;
+  const mov = tvCurMovie();
+  const chNum = tvCurChan() + 1;
+  if (mode === 'static') {
+    const id = x.createImageData(c.width, c.height);
+    for (let i = 0; i < id.data.length; i += 4) {
+      const v = Math.random() * 200;
+      id.data[i] = id.data[i + 1] = id.data[i + 2] = v;
+      id.data[i + 3] = 255;
+    }
+    x.putImageData(id, 0, 0);
+    x.fillStyle = 'rgba(0,0,0,.65)';
+    x.fillRect(36, 78, 184, 36);
+    x.fillStyle = '#e8f4ff';
+    x.font = 'bold 16px monospace';
+    x.textAlign = 'center';
+    x.fillText(`CH ${chNum} · NO SIGNAL`, 128, 102);
+  } else if (mode === 'load') {
+    x.fillStyle = '#05060a';
+    x.fillRect(0, 0, c.width, c.height);
+    x.fillStyle = '#4fd2ff';
+    x.font = 'bold 11px monospace';
+    x.textAlign = 'center';
+    x.fillText(`[ CH ${chNum} · ${mov.year} ]`, 128, 62);
+    x.fillStyle = '#cfd6e0';
+    x.font = 'bold 12px monospace';
+    x.fillText(mov.short.toUpperCase(), 128, 88);
+    x.fillStyle = '#8a8e96';
+    x.font = '12px monospace';
+    x.fillText('loading' + '.'.repeat(1 + Math.floor((time || 0) * 2) % 3), 128, 114);
+  } else {
+    x.fillStyle = '#07080c';
+    x.fillRect(0, 0, c.width, c.height);
+    const g = x.createLinearGradient(0, 0, c.width, c.height);
+    g.addColorStop(0, 'rgba(120,150,190,.12)');
+    g.addColorStop(0.5, 'rgba(0,0,0,0)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, c.width, c.height);
+    x.fillStyle = 'rgba(255,255,255,0.45)';
+    x.font = 'bold 12px monospace';
+    x.textAlign = 'center';
+    x.fillText(`CH ${chNum} · ${mov.short}`, 128, 96);
+    x.fillStyle = 'rgba(255,255,255,0.2)';
+    x.font = '10px monospace';
+    x.fillText(`dir. ${mov.dir}`, 128, 116);
+  }
+  T.needsUpdate = true;
+  if (typeof THEATRE !== 'undefined' && THEATRE && THEATRE.scr && !TVD.on) {
+    THEATRE.scr.material.map = T;
+    THEATRE.scr.material.needsUpdate = true;
+  }
 }
-const tvSave = () => { if (!S.tv) S.tv = { t: 0 }; return S.tv; };
-function tvNow() { const v = TVD.vid; if (!v) return tvSave().t; if (!TVD.parts) return v.currentTime || 0; let t = 0; for (let i = 0; i < TVD.part; i++) t += TVD.parts[i].d; return t + (v.currentTime || 0); }
+
+// ---- multi-channel catalog helpers ----
+const tvSave = () => {
+  if (!S.tv) S.tv = { t: 0, ch: 0, times: {} };
+  if (!S.tv.times) S.tv.times = {};
+  if (S.tv.ch == null) S.tv.ch = 0;
+  return S.tv;
+};
+function tvCurChan() {
+  const s = tvSave();
+  return (s.ch >= 0 && s.ch < TV_CHANNELS.length) ? s.ch : 0;
+}
+function tvCurMovie() {
+  return TV_CHANNELS[tvCurChan()];
+}
+function tvGetTime(ch) {
+  const s = tvSave();
+  if (s.times && s.times[ch] != null) return s.times[ch];
+  if (ch === 0 && s.t) return s.t;
+  return 0;
+}
+function tvSetTime(ch, t) {
+  const s = tvSave();
+  s.times[ch] = t;
+  if (s.ch === ch) s.t = t;
+}
+
+// ---- the film: local parts first, then remote streams ----
+async function tvLoadParts(ch = tvCurChan()) {
+  const mov = TV_CHANNELS[ch] || TV_CHANNELS[0];
+  if (TVD.channelParts && TVD.channelParts[ch] !== undefined) {
+    TVD.parts = TVD.channelParts[ch];
+    return TVD.parts;
+  }
+  TVD.partsDone = false;
+  try {
+    if (!TVD.channelParts) TVD.channelParts = {};
+    if (mov.localJson) {
+      try {
+        const r = await fetch(mov.localJson, { cache: 'no-cache' });
+        if (r.ok) {
+          const j = await r.json();
+          if (j && j.parts && j.parts.length) {
+            const basePath = mov.localJson.substring(0, mov.localJson.lastIndexOf('/') + 1);
+            TVD.parts = j.parts.map(p => ({ u: basePath + p.f, d: +p.d || 0 }));
+            TVD.channelParts[ch] = TVD.parts;
+            return TVD.parts;
+          }
+        }
+      } catch (_) {}
+    }
+    TVD.parts = null;
+    TVD.channelParts[ch] = null;
+    return null;
+  } finally {
+    TVD.partsDone = true;
+  }
+}
+
+function tvNow() {
+  const v = TVD.vid;
+  if (!v) return tvGetTime(tvCurChan());
+  if (!TVD.parts) return v.currentTime || 0;
+  let t = 0;
+  for (let i = 0; i < TVD.part; i++) t += TVD.parts[i].d;
+  return t + (v.currentTime || 0);
+}
+
 function tvVideo() {
-  if (TVD.vid) return TVD.vid; const v = document.createElement('video'); v.crossOrigin = 'anonymous'; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto'; v.volume = 0;
-  v.addEventListener('ended', () => { if (TVD.parts && TVD.part < TVD.parts.length - 1) { let at = 0; for (let i = 0; i <= TVD.part; i++) at += TVD.parts[i].d; tvSrc(at + 0.05); v.play().catch(() => {}); } else { tvSave().t = 0; tvOff(true); toast('THE END', 'Night of the Living Dead · 1968', 3); } });
-  v.addEventListener('error', () => { if (!TVD.on) return; if (!TVD.parts && TVD.cand < TV_REMOTE.length - 1) { TVD.cand++; tvSrc(tvSave().t); v.play().catch(() => {}); return; } TVD.err = true; });
-  v.addEventListener('playing', () => { TVD.err = false; TVD.played = true; if (TVD.scr) TVD.scr.material.map = TVD.tex; TVD.scr.material.needsUpdate = true; });
-  TVD.tex = new THREE.VideoTexture(v); TVD.tex.encoding = THREE.sRGBEncoding; TVD.tex.minFilter = THREE.LinearFilter; TVD.tex.magFilter = THREE.LinearFilter;
+  if (TVD.vid) return TVD.vid;
+  const v = document.createElement('video');
+  v.crossOrigin = 'anonymous';
+  v.playsInline = true;
+  v.setAttribute('playsinline', '');
+  v.preload = 'auto';
+  v.volume = 0;
+  v.addEventListener('ended', () => {
+    const ch = tvCurChan();
+    const mov = tvCurMovie();
+    if (TVD.parts && TVD.part < TVD.parts.length - 1) {
+      let at = 0;
+      for (let i = 0; i <= TVD.part; i++) at += TVD.parts[i].d;
+      tvSrc(at + 0.05);
+      v.play().catch(() => {});
+    } else {
+      tvSetTime(ch, 0);
+      tvOff(true);
+      toast('THE END', mov.title, 4);
+    }
+  });
+  v.addEventListener('error', () => {
+    if (!TVD.on) return;
+    const mov = tvCurMovie();
+    const remotes = mov.remotes || [];
+    if (!TVD.parts && TVD.cand < remotes.length - 1) {
+      TVD.cand++;
+      tvSrc(tvGetTime(tvCurChan()));
+      v.play().catch(() => {});
+      return;
+    }
+    TVD.err = true;
+  });
+  v.addEventListener('playing', () => {
+    TVD.err = false;
+    TVD.played = true;
+    if (TVD.scr) {
+      TVD.scr.material.map = TVD.tex;
+      TVD.scr.material.needsUpdate = true;
+    }
+    if (typeof THEATRE !== 'undefined' && THEATRE && THEATRE.scr) {
+      THEATRE.scr.material.map = TVD.tex;
+      THEATRE.scr.material.needsUpdate = true;
+    }
+  });
+  TVD.tex = new THREE.VideoTexture(v);
+  TVD.tex.encoding = THREE.sRGBEncoding;
+  TVD.tex.minFilter = THREE.LinearFilter;
+  TVD.tex.magFilter = THREE.LinearFilter;
   return (TVD.vid = v);
 }
-function tvSrc(at) { const v = TVD.vid;
-  if (TVD.parts) { let i = 0, t = at; while (i < TVD.parts.length - 1 && t >= TVD.parts[i].d) { t -= TVD.parts[i].d; i++; } if (TVD.part !== i || !v.src.endsWith(TVD.parts[i].u)) { TVD.part = i; v.src = TVD.parts[i].u; } const go = () => { try { v.currentTime = t; } catch (_) {} }; if (v.readyState >= 1) go(); else v.addEventListener('loadedmetadata', go, { once: true }); }
-  else { const u = TV_REMOTE[TVD.cand]; if (v.src !== u) v.src = u; const go = () => { try { v.currentTime = at; } catch (_) {} }; if (v.readyState >= 1) go(); else v.addEventListener('loadedmetadata', go, { once: true }); } }
+
+function tvSrc(at) {
+  const v = tvVideo();
+  const ch = tvCurChan();
+  const mov = TV_CHANNELS[ch] || TV_CHANNELS[0];
+  if (TVD.parts && TVD.parts.length) {
+    let i = 0, t = at;
+    while (i < TVD.parts.length - 1 && t >= TVD.parts[i].d) {
+      t -= TVD.parts[i].d;
+      i++;
+    }
+    if (TVD.part !== i || !v.src.endsWith(TVD.parts[i].u)) {
+      TVD.part = i;
+      v.src = TVD.parts[i].u;
+    }
+    const go = () => { try { v.currentTime = t; } catch (_) {} };
+    if (v.readyState >= 1) go(); else v.addEventListener('loadedmetadata', go, { once: true });
+  } else {
+    const remotes = mov.remotes || [];
+    const idx = Math.min(TVD.cand || 0, remotes.length - 1);
+    const u = remotes[idx] || '';
+    if (v.src !== u) v.src = u;
+    const go = () => { try { v.currentTime = at; } catch (_) {} };
+    if (v.readyState >= 1) go(); else v.addEventListener('loadedmetadata', go, { once: true });
+  }
+}
+
 async function tvOn() {
-  if (TVD.on) return; TVD.on = true; TVD.err = false; TVD.played = false; SFX.ui && SFX.ui(); TVD.scr.material.map = TVD.idle; tvDrawIdle('load', 0);
-  const v = tvVideo(); if (!TVD.partsDone) { await tvLoadParts(); if (!TVD.on) return; } tvSrc(tvSave().t); // play() straight from the button press when we can, so phones allow the sound
+  if (TVD.on) return;
+  TVD.on = true;
+  TVD.err = false;
+  TVD.played = false;
+  SFX.ui && SFX.ui();
+  if (TVD.scr) TVD.scr.material.map = TVD.idle;
+  if (typeof THEATRE !== 'undefined' && THEATRE && THEATRE.scr) THEATRE.scr.material.map = TVD.idle;
+  tvDrawIdle('load', 0);
+  const ch = tvCurChan();
+  const mov = tvCurMovie();
+  const v = tvVideo();
+  if (!TVD.partsDone) {
+    await tvLoadParts(ch);
+    if (!TVD.on) return;
+  }
+  const curTime = tvGetTime(ch);
+  tvSrc(curTime);
   v.play().catch(() => { TVD.err = true; });
-  const t = tvSave().t; if (t > 30) log(`TV: picking up Night of the Living Dead at ${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}.`);
+  if (curTime > 30) log(`TV: picking up ${mov.short} at ${Math.floor(curTime / 60)}:${String(Math.floor(curTime % 60)).padStart(2, '0')}.`);
 }
+
 function tvOff(quiet) {
-  if (!TVD.on) return; TVD.on = false; const v = TVD.vid; if (v) { if (TVD.played) { tvSave().t = tvNow(); markDirty(); } v.pause(); }
-  if (TVD.scr) { TVD.scr.material.map = TVD.idle; TVD.scr.material.needsUpdate = true; } tvDrawIdle('off'); if (!quiet) SFX.ui && SFX.ui(); tvMusic(false);
+  if (!TVD.on) return;
+  TVD.on = false;
+  const v = TVD.vid;
+  if (v) {
+    if (TVD.played) {
+      tvSetTime(tvCurChan(), tvNow());
+      markDirty();
+    }
+    v.pause();
+  }
+  if (TVD.scr) {
+    TVD.scr.material.map = TVD.idle;
+    TVD.scr.material.needsUpdate = true;
+  }
+  if (typeof THEATRE !== 'undefined' && THEATRE && THEATRE.scr) {
+    THEATRE.scr.material.map = TVD.idle;
+    THEATRE.scr.material.needsUpdate = true;
+  }
+  tvDrawIdle('off');
+  if (!quiet) SFX.ui && SFX.ui();
+  tvMusic(false);
 }
-function tvMusic(down) { if (down === TVD.musDown) return; TVD.musDown = down; try { musTick(); } catch (_) {} }
+
+function tvChangeChannel(delta = 1) {
+  const wasOn = TVD.on;
+  const oldCh = tvCurChan();
+  if (wasOn) {
+    tvSetTime(oldCh, tvNow());
+  }
+  const newCh = (oldCh + delta + TV_CHANNELS.length) % TV_CHANNELS.length;
+  tvSave().ch = newCh;
+  markDirty();
+  TVD.cand = 0;
+  TVD.part = 0;
+  TVD.partsDone = false;
+  TVD.parts = null;
+
+  const mov = TV_CHANNELS[newCh];
+  if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui();
+  toast(`CHANNEL ${newCh + 1}`, mov.title, 3);
+  log(`TV: switched to Channel ${newCh + 1}: ${mov.title}`, 'chat');
+
+  if (wasOn) {
+    const v = TVD.vid;
+    if (v) v.pause();
+    tvDrawIdle('load', 0);
+    tvLoadParts(newCh).then(() => {
+      if (!TVD.on || tvCurChan() !== newCh) return;
+      const targetTime = tvGetTime(newCh);
+      tvSrc(targetTime);
+      v.play().catch(() => { TVD.err = true; });
+    });
+  } else {
+    tvDrawIdle('off');
+  }
+}
+
+function tvMusic(down) {
+  if (down === TVD.musDown) return;
+  TVD.musDown = down;
+  try { musTick(); } catch (_) {}
+}
+
 // the music system asks what should play; while the film is on in the den, the answer is nothing (it comes back when the TV goes off or you leave)
 { const _mc = musContext; musContext = function (dt) { if (TVD.on && TVD.musDown && tvInRoom()) return null; return _mc.apply(this, arguments); }; }
-const tvInRoom = () => { const r = TVD.room; return !!r && LEVEL.id === 'ship' && player.pos.x > r.x0 && player.pos.x < r.x1 && player.pos.z > r.z0 && player.pos.z < r.z1; };
+const tvInRoom = () => {
+  if (typeof LEVEL !== 'undefined' && LEVEL && LEVEL.id === 'theatre') return true;
+  const r = TVD.room;
+  return !!r && typeof LEVEL !== 'undefined' && LEVEL && LEVEL.id === 'ship' && player.pos.x > r.x0 && player.pos.x < r.x1 && player.pos.z > r.z0 && player.pos.z < r.z1;
+};
 // ---- the den: couch, side table, TV, and at Lv 5 the Worm Hole ----
 function tvDen(s, cx, cz, props) {
   const sd = s.side; TVD.room = { x0: Math.min(s.x0, s.x1), x1: Math.max(s.x0, s.x1), z0: s.z0, z1: s.z1 }; TVD.on = false; TVD.musDown = false; if (TVD.vid) TVD.vid.pause();
@@ -20263,6 +22056,7 @@ function tvDen(s, cx, cz, props) {
     const sp = new THREE.PointLight(0x9fb4d8, 0, 6, 2); sp.position.set(0, 0, 1.2); g.add(sp); TVD.glow = sp;
     g.position.set(mx, 1.85, s.z0 + 0.12); levelGroup.add(g); TVD.g = g; }
   INTERACTS.push({ x: mx, z: s.z0 + 1.1, r: 2.0, label: 'Turn on the TV', tv: true, /* only right by the TV, so the prompt stays out of the way while you watch */ fn: () => (TVD.on ? tvOff() : tvOn()) });
+  INTERACTS.push({ x: mx - sd * 0.9, z: s.z0 + 1.1, r: 2.0, label: 'Change channel (C)', tvChan: true, fn: () => tvChangeChannel(1) });
   INTERACTS.push({ x: mx, z: cz + 1.2, r: 1.7, label: 'Sit on the couch', seat: true, fn: () => seatDown(mx, cz + 1.05, Math.PI * 0) });
   // ---- the Worm Hole (Lv 5) ----
   TVD.hole = null;
@@ -20285,22 +22079,68 @@ function tvDen(s, cx, cz, props) {
 { const _ar = anglerRoom; anglerRoom = function (s, cx, cz, outer, term, props) { _ar.apply(this, arguments); try { tvDen(s, cx, cz, props); } catch (e) { console.warn('tv den', e); } }; }
 { const _ll = loadLevel; loadLevel = function () { if (TVD.on) tvOff(true); TVD.room = null; seatUp(true); const r = _ll.apply(this, arguments); if (TVD.hole && LEVEL.id === 'ship' && !FISH_SPOTS.includes(TVD.hole)) FISH_SPOTS.push(TVD.hole); return r; }; }
 // ---- sitting ----
-function seatDown(x, z, yaw) { if (SEAT.on) return; SEAT.on = true; SEAT.x = x; SEAT.z = z; SEAT.out = V(player.pos.x, player.pos.y, player.pos.z); player.yaw = yaw; player.pitch = -0.05; SFX.ui && SFX.ui(); toast('ON THE COUCH', TOUCH ? 'Move the stick to get up' : 'Move to get up', 1.8); }
-function seatUp(quiet) { if (!SEAT.on) return; SEAT.on = false; const r = TVD.room; if (SEAT.out) { player.pos.x = SEAT.x; player.pos.z = SEAT.z - 0.9; } if (!quiet) SFX.ui && SFX.ui(); }
+function seatDown(x, z, yaw, msg) { if (SEAT.on) return; SEAT.on = true; SEAT.x = x; SEAT.z = z; SEAT.out = V(player.pos.x, player.pos.y, player.pos.z); player.yaw = yaw; player.pitch = -0.05; _noteInput(); SFX.ui && SFX.ui(); toast(msg || 'ON THE COUCH', TOUCH ? 'Move stick to get up' : 'Move to get up · Press C to change channel', 2.5); }
+function seatUp(quiet) { if (!SEAT.on) return; SEAT.on = false; _noteInput(); const tb = $('talk'); if (tb) { tb.style.opacity = '1'; tb.style.pointerEvents = 'auto'; } if (SEAT.out) { player.pos.x = SEAT.x; player.pos.z = SEAT.z - 0.9; } if (!quiet) SFX.ui && SFX.ui(); }
 { const _st = step; step = function (dt) {
   if (SEAT.on && state === 'play' && !dlgOpen && (keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD || keys.Space || Math.hypot(move.x, move.y) > 0.3)) seatUp();
   _st(dt);
   if (SEAT.on) { player.pos.x = SEAT.x; player.pos.z = SEAT.z; player.vy = 0; camera.position.set(SEAT.x, player.pos.y + 1.05, SEAT.z); }
+  // Auto-hide prompt button on inactivity when seated
+  const tb = $('talk');
+  if (SEAT.on) {
+    const idleTime = performance.now() - _tvLastInput;
+    if (idleTime > 2800) {
+      if (tb && tb.style.opacity !== '0') {
+        tb.style.transition = 'opacity 0.6s ease';
+        tb.style.opacity = '0';
+        tb.style.pointerEvents = 'none';
+      }
+    } else {
+      if (tb && tb.style.opacity !== '1') {
+        tb.style.transition = 'opacity 0.2s ease';
+        tb.style.opacity = '1';
+        tb.style.pointerEvents = 'auto';
+      }
+    }
+  } else {
+    if (tb && (tb.style.opacity === '0' || tb.style.pointerEvents === 'none')) {
+      tb.style.transition = '';
+      tb.style.opacity = '1';
+      tb.style.pointerEvents = 'auto';
+    }
+  }
   // the TV: label, power light, sound by distance, auto-pause, music down, keep the save current
   const tvI = INTERACTS.find(a => a.tv); if (tvI) tvI.label = TVD.on ? 'Turn off the TV' : 'Turn on the TV';
-  for (const a of INTERACTS) if (a.seat) a.label = SEAT.on ? 'Get up' : 'Sit on the couch';
+  const tvCI = INTERACTS.find(a => a.tvChan); if (tvCI) { const nextM = TV_CHANNELS[(tvCurChan() + 1) % TV_CHANNELS.length]; tvCI.label = `Switch to ${nextM.short} (C)`; }
+  for (const a of INTERACTS) {
+    if (a.seat) {
+      if (typeof LEVEL !== 'undefined' && LEVEL && LEVEL.id === 'theatre') {
+        a.label = SEAT.on ? (TVD.on ? 'Pause Movie [E] (Move: get up · C: Channel)' : 'Start Movie [E] (Move: get up · C: Channel)') : (a.seatLabel || 'Sit in Cinema Seat');
+      } else {
+        a.label = SEAT.on ? 'Get up' : 'Sit on the couch';
+      }
+    }
+  }
   if (TVD.on) { const v = TVD.vid, inR = tvInRoom();
-    if (!inR) { tvOff(true); log('TV paused. It will pick up where you left off.'); }
-    else if (v) { const d = Math.hypot(player.pos.x - TVD.g.position.x, player.pos.z - TVD.g.position.z); v.volume = Math.max(0, Math.min(1, (PREFS.sfx === false ? 0 : 1) * (1.15 - d / 11))); tvMusic(true);
-      TVD.sinceSave += dt; if (TVD.sinceSave > 10 && !v.paused && TVD.played) { TVD.sinceSave = 0; tvSave().t = tvNow(); markDirty(); }
-      if (TVD.err || (v.readyState < 2 && v.paused)) { TVD.errT = (TVD.errT || 0) + dt; if (TVD.err || TVD.errT > 12) { tvDrawIdle('static'); TVD.scr.material.map = TVD.idle; } else tvDrawIdle('load', gameTime); } else TVD.errT = 0;
-      if (TVD.glow) TVD.glow.intensity = v.paused ? 0 : 0.5 + Math.random() * 0.15; } }
-  else if (TVD.glow) TVD.glow.intensity = 0;
+    if (!inR) { tvOff(true); log('Movie paused. It will pick up where you left off.'); }
+    else if (v) {
+      const isTheat = typeof LEVEL !== 'undefined' && LEVEL && LEVEL.id === 'theatre';
+      const refX = isTheat && typeof THEATRE !== 'undefined' && THEATRE.scr ? THEATRE.scr.position.x : (TVD.g ? TVD.g.position.x : player.pos.x);
+      const refZ = isTheat && typeof THEATRE !== 'undefined' && THEATRE.scr ? THEATRE.scr.position.z : (TVD.g ? TVD.g.position.z : player.pos.z);
+      const d = Math.hypot(player.pos.x - refX, player.pos.z - refZ);
+      const maxD = isTheat ? 38 : 11;
+      v.volume = Math.max(0, Math.min(1, (PREFS.sfx === false ? 0 : 1) * (1.15 - d / maxD))); tvMusic(true);
+      TVD.sinceSave += dt; if (TVD.sinceSave > 10 && !v.paused && TVD.played) { TVD.sinceSave = 0; tvSetTime(tvCurChan(), tvNow()); markDirty(); }
+      if (TVD.err || (v.readyState < 2 && v.paused)) { TVD.errT = (TVD.errT || 0) + dt; if (TVD.err || TVD.errT > 12) { tvDrawIdle('static'); } else tvDrawIdle('load', gameTime); } else TVD.errT = 0;
+      if (TVD.glow) TVD.glow.intensity = v.paused ? 0 : 0.5 + Math.random() * 0.15;
+      if (typeof THEATRE !== 'undefined' && THEATRE && THEATRE.glow) {
+        THEATRE.glow.intensity = v.paused ? 0 : 1.2 + Math.random() * 0.35;
+      }
+    } }
+  else {
+    if (TVD.glow) TVD.glow.intensity = 0;
+    if (typeof THEATRE !== 'undefined' && THEATRE && THEATRE.glow) THEATRE.glow.intensity = 0;
+  }
   if (TVD.led) TVD.led.material.color.set(TVD.on ? '#4fff7a' : '#ff3a2a');
 }; }
 // the couch's own "Get up" works too
@@ -20317,6 +22157,337 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && TVD
 { const _br = scene.onBeforeRender; scene.onBeforeRender = function () { if (_br) _br.apply(this, arguments); const F = fishing; if (!F || !FSH.F || !FSH.iceLine || !(FSH.spot && FSH.spot.ice) || !fshLine.visible) return;
   camera.updateMatrixWorld(true); const a = fshTip(), b = fshBobber.visible ? FSH.pos : a, P = fshLine.geometry.attributes.position, sag = F.st === 'bite' || FSH.pull > 0 ? 0.02 : 0.12;
     for (let i = 0; i < 16; i++) { const k = i / 15; P.setXYZ(i, a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k - Math.sin(k * Math.PI) * sag * Math.min(1, a.distanceTo(b) / 4), a.z + (b.z - a.z) * k); } P.needsUpdate = true; }; }
+
+window.TV_CHANNELS = TV_CHANNELS;
+window.TVD = TVD;
+window.SEAT = SEAT;
+window.tvCurChan = tvCurChan;
+window.tvCurMovie = tvCurMovie;
+window.tvChangeChannel = tvChangeChannel;
+window.tvOn = tvOn;
+window.tvOff = tvOff;
+window.seatDown = seatDown;
+window.seatUp = seatUp;
+
+
+// =================== THE ROXY CINEMA: New Jamestown Movie Theatre ===================
+const THEATRE = {
+  scr: null,
+  glow: null,
+  beam: null,
+  sconces: [],
+  popcorn: null,
+  from: null
+};
+
+function enterCinema(fromX, fromZ) {
+  THEATRE.from = {
+    x: fromX != null ? fromX : (typeof TOWN !== 'undefined' ? TOWN.x - 28 : -28),
+    z: fromZ != null ? fromZ : (typeof TOWN !== 'undefined' ? TOWN.z + 16.5 : 16.5)
+  };
+  if (typeof SFX !== 'undefined' && SFX.door) SFX.door();
+  if (typeof loadLevel === 'function') {
+    loadLevel('theatre');
+    const mov = typeof tvCurMovie === 'function' ? tvCurMovie() : { short: 'Night of the Living Dead' };
+    toast('THE ROXY CINEMA', `Now Showing: ${mov.short} · Press C to switch channels`, 3.5);
+  }
+}
+
+function exitCinema() {
+  if (typeof tvOff === 'function' && TVD && TVD.on) tvOff(true);
+  if (typeof seatUp === 'function' && SEAT && SEAT.on) seatUp(true);
+  if (typeof SFX !== 'undefined' && SFX.door) SFX.door();
+  const dest = THEATRE.from || { x: (typeof TOWN !== 'undefined' ? TOWN.x - 28 : -28), z: (typeof TOWN !== 'undefined' ? TOWN.z + 16.5 : 16.5) };
+  THEATRE.from = null;
+  if (typeof loadLevel === 'function') {
+    loadLevel('earth', { at: { x: dest.x, z: dest.z, yaw: 0 } });
+  }
+}
+
+function grabPopcorn() {
+  player.hp = maxHp();
+  if (typeof SFX !== 'undefined' && SFX.item) SFX.item();
+  toast('BUTTER POPCORN', 'Fresh, salty movie popcorn! (Full Heal)', 2.5);
+  log('Grabbed a tub of hot butter popcorn from the Roxy concession counter. Health fully restored!', 'loot');
+  closeDlg();
+}
+
+function buildTheatreLevel() {
+  const W = 11, D = 14, H = 8.2;
+  THEATRE.sconces = [];
+
+  // 1. Auditorium Structure & Sloped Tiers
+  // Floor tiers rising toward the back
+  const carpetMat = toon('#6a1824', 'cloth');
+  const woodMat = toon('#241914', 'wood');
+  const wallMat = toon('#1a1218');
+  const trimMat = toon('#9a7830', 'stone');
+
+  // Stage Platform at front (z: -12.5)
+  part(props, B(18, 0.9, 5), woodMat, 0, 0.45, -12);
+  part(props, B(18.4, 0.12, 5.2), trimMat, 0, 0.92, -12);
+
+  // Sloped stadium seating tiers
+  part(props, B(19.6, 0.4, 4.5), carpetMat, 0, 0.2, -5);     // Tier 1 (front)
+  part(props, B(19.6, 0.6, 4.5), carpetMat, 0, 0.5, 0);      // Tier 2 (center)
+  part(props, B(19.6, 0.6, 4.5), carpetMat, 0, 0.8, 5);      // Tier 3 (back)
+  part(props, B(19.6, 0.6, 5.0), carpetMat, 0, 1.1, 10.5);   // Tier 4 (lobby/exit)
+
+  // Outer Auditorium Walls
+  const wall = (x, z, w, d) => {
+    part(props, B(w, H, d), wallMat, x, H / 2, z);
+    box(x, z, w / 2, d / 2);
+  };
+  wall(0, -D - 0.25, W * 2, 0.5);  // Front screen wall
+  wall(0, D + 0.25, W * 2, 0.5);   // Back exit wall
+  wall(-W - 0.25, 0, 0.5, D * 2);  // West wall
+  wall(W + 0.25, 0, 0.5, D * 2);   // East wall
+
+  // Ceiling
+  const ce = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, D * 2).rotateX(Math.PI / 2), toon('#100a12'));
+  ce.position.y = H;
+  props.add(ce);
+
+  // Gold pilasters along the side walls
+  for (const z of [-10, -5, 0, 5, 10]) {
+    for (const sx of [-W + 0.15, W - 0.15]) {
+      part(props, B(0.3, H, 0.6), trimMat, sx, H / 2, z);
+      // Wall sconce torch on each pilaster
+      const sc = new THREE.PointLight(0xffb86a, 0.85, 12, 1.8);
+      sc.position.set(sx > 0 ? sx - 0.4 : sx + 0.4, 3.8, z);
+      props.add(sc);
+      THEATRE.sconces.push(sc);
+
+      // Sconce fixture model
+      part(props, Cy(0.08, 0.16, 0.35, 6), glow('#ffd880'), sx > 0 ? sx - 0.25 : sx + 0.25, 3.8, z);
+      part(props, B(0.12, 0.28, 0.18), trimMat, sx > 0 ? sx - 0.1 : sx + 0.1, 3.7, z);
+    }
+  }
+
+  // Illuminated golden aisle floor strips along the central aisle (x = +/- 1.4)
+  for (let z = -7; z <= 12; z += 1.6) {
+    for (const s of [-1, 1]) {
+      const y = z < -2.5 ? 0.42 : z < 2.5 ? 0.82 : z < 7.5 ? 1.12 : 1.42;
+      part(props, B(0.1, 0.04, 1.2), glow('#ffd36a'), 1.4 * s, y, z);
+    }
+  }
+
+  // 2. The Giant Silver Screen
+  const scrW = 14.4, scrH = 8.1;
+  const scrG = new THREE.PlaneGeometry(scrW, scrH);
+  THEATRE.idle = tvIdleTex();
+  tvDrawIdle('off');
+
+  const scr = new THREE.Mesh(scrG, new THREE.MeshBasicMaterial({ map: (TVD.on && TVD.tex) ? TVD.tex : THEATRE.idle, toneMapped: false }));
+  scr.position.set(0, 4.8, -12.4);
+  props.add(scr);
+  THEATRE.scr = scr;
+
+  // Velvet Black Framing Border
+  part(props, B(scrW + 0.4, 0.3, 0.15), '#0c0a0e', 0, 4.8 + scrH / 2 + 0.15, -12.35);
+  part(props, B(scrW + 0.4, 0.3, 0.15), '#0c0a0e', 0, 4.8 - scrH / 2 - 0.15, -12.35);
+  part(props, B(0.3, scrH + 0.6, 0.15), '#0c0a0e', -scrW / 2 - 0.15, 4.8, -12.35);
+  part(props, B(0.3, scrH + 0.6, 0.15), '#0c0a0e', scrW / 2 + 0.15, 4.8, -12.35);
+
+  // Red Velvet Proscenium Curtains
+  for (const s of [-1, 1]) {
+    for (let c = 0; c < 4; c++) {
+      part(props, Cy(0.55, 0.55, H - 0.8, 10), toon('#8a1524', 'cloth'), (scrW / 2 + 0.6 + c * 0.45) * s, (H - 0.8) / 2, -12.1);
+    }
+  }
+  // Overhead ruffled valance drape
+  part(props, B(scrW + 3.2, 1.1, 0.3), toon('#8a1524', 'cloth'), 0, H - 0.55, -12.0);
+  part(props, B(scrW + 3.4, 0.12, 0.35), trimMat, 0, H - 1.12, -11.95);
+
+  // Ambient Stage Light from Screen
+  const sp = new THREE.PointLight(0xa0c8f8, TVD.on ? 1.4 : 0, 28, 1.4);
+  sp.position.set(0, 4.5, -9.5);
+  props.add(sp);
+  THEATRE.glow = sp;
+
+  // 3. Volumetric Projection Booth & Light Beam
+  // Projection booth window on rear wall
+  part(props, B(2.2, 1.4, 0.2), '#15121a', 0, 6.2, D - 0.1);
+  part(props, B(1.6, 0.8, 0.05), glow('#ffffff'), 0, 6.2, D - 0.16);
+
+  // Volumetric projector cone shining from booth to screen
+  const beamG = new THREE.ConeGeometry(7.5, 25, 16, 1, true);
+  beamG.rotateX(Math.PI / 2);
+  const beamMat = psx(new THREE.MeshBasicMaterial({
+    color: 0x9fb8e8,
+    transparent: true,
+    opacity: TVD.on ? 0.08 : 0.0,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  }));
+  const beam = new THREE.Mesh(beamG, beamMat);
+  beam.position.set(0, 5.5, 0.5);
+  props.add(beam);
+  THEATRE.beam = beam;
+
+  // 4. Velvet Cinema Seats
+  const makeSeat = (x, y, z, facing) => {
+    const sg = new THREE.Group();
+    sg.position.set(x, y, z);
+    sg.rotation.y = facing;
+    // Pedestal
+    part(sg, Cy(0.06, 0.08, 0.35, 6), '#221f24', 0, 0.18, 0);
+    // Velvet seat pan
+    part(sg, B(0.68, 0.14, 0.62), toon('#8e1a2c', 'cloth'), 0, 0.42, 0.05);
+    // Cushioned high backrest
+    part(sg, B(0.68, 0.72, 0.16), toon('#8e1a2c', 'cloth'), 0, 0.8, -0.22, 0.12);
+    // Armrests with cup holders
+    for (const s of [-0.38, 0.38]) {
+      part(sg, B(0.08, 0.35, 0.55), '#2a2228', s, 0.56, 0.02);
+      part(sg, Cy(0.05, 0.04, 0.08, 8), '#ffd36a', s, 0.75, 0.22); // Brass cup holder
+    }
+    props.add(sg);
+    box(x, z, 0.38, 0.38);
+  };
+
+  // Build 3 rows of seats on left and right sides of central aisle
+  const rows = [
+    { z: -5, y: 0.4, label: 'Front Row' },
+    { z: 0,  y: 0.7, label: 'Center Row (Best View)' },
+    { z: 5,  y: 1.0, label: 'Back Row' }
+  ];
+
+  rows.forEach((r, rowIdx) => {
+    // Left side (x = -5.6 to -2.0)
+    for (let x = -5.6; x <= -2.0; x += 0.9) makeSeat(x, r.y, r.z, 0);
+    // Right side (x = 2.0 to 5.6)
+    for (let x = 2.0; x <= 5.6; x += 0.9) makeSeat(x, r.y, r.z, 0);
+
+    // Row sitting interactions (Center aisle seats)
+    INTERACTS.push({
+      x: 0, z: r.z, r: 2.2,
+      label: `Sit in ${r.label}`,
+      seat: true,
+      seatLabel: `Sit in ${r.label}`,
+      fn: () => seatDown(0, r.z + 0.1, 0, `${r.label.toUpperCase()} · THE ROXY`)
+    });
+  });
+
+  // 5. Projector & Channel Podium Controls (in central aisle)
+  {
+    const pod = new THREE.Group();
+    pod.position.set(-2.2, 0.7, 1.8);
+    part(pod, Cy(0.25, 0.3, 0.9, 8), toon('#3a2820', 'wood'), 0, 0.45, 0);
+    part(pod, B(0.65, 0.08, 0.55), trimMat, 0, 0.92, 0, 0.2);
+    // Screen preview monitor on podium
+    part(pod, B(0.35, 0.25, 0.05), glow('#4fd2ff'), 0, 1.1, 0, 0.2);
+    props.add(pod);
+    solid(-2.2, 1.8, 0.4);
+
+    INTERACTS.push({
+      x: -2.2, z: 1.8, r: 2.0,
+      label: 'Turn on the Movie', tv: true,
+      fn: () => (TVD.on ? tvOff() : tvOn())
+    });
+    INTERACTS.push({
+      x: -2.2, z: 2.8, r: 2.0,
+      label: 'Change Movie Channel (C)', tvChan: true,
+      fn: () => tvChangeChannel(1)
+    });
+  }
+
+  // 6. Concession Counter / Hot Popcorn Stand (in rear lobby area)
+  {
+    const pop = new THREE.Group();
+    pop.position.set(7.5, 1.4, 11);
+    part(pop, B(3.4, 0.9, 1.4), toon('#2a1a1e'), 0, 0.45, 0);
+    part(pop, B(3.6, 0.08, 1.6), trimMat, 0, 0.92, 0);
+    // Popcorn glass kettle machine
+    part(pop, B(1.1, 1.1, 1.1), toon('#d82a3a'), -0.8, 1.5, 0);
+    part(pop, B(0.9, 0.9, 0.9), glow('#ffd860'), -0.8, 1.5, 0.05); // Glowing hot popcorn
+    // Marquee sign above concessions
+    const popSign = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.5), psx(new THREE.MeshBasicMaterial({ map: signTex('POPCORN & DRINKS', '#2a0a12', '#ffd36a') })));
+    popSign.position.set(0, 2.2, 0.1);
+    pop.add(popSign);
+    props.add(pop);
+    box(7.5, 11, 1.8, 0.8);
+
+    INTERACTS.push({
+      x: 7.5, z: 9.8, r: 2.2,
+      label: '🍿 Grab Fresh Butter Popcorn',
+      fn: grabPopcorn
+    });
+  }
+
+  // 7. Back Double Exit Doors & Illuminated "EXIT" Sign
+  {
+    const ed = new THREE.Group();
+    ed.position.set(0, 1.4, D - 0.2);
+    // Double door frames
+    for (const s of [-1, 1]) {
+      part(ed, B(1.4, 3.2, 0.15), toon('#3a2418', 'wood'), 0.75 * s, 1.6, 0);
+      part(ed, B(0.8, 0.08, 0.18), trimMat, 0.75 * s, 1.6, 0.1); // Brass push bars
+    }
+    // Illuminated green EXIT sign
+    const exSign = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.4), psx(new THREE.MeshBasicMaterial({ map: signTex('EXIT', '#082a12', '#40ff70'), side: THREE.DoubleSide })));
+    exSign.position.set(0, 3.65, -0.15);
+    ed.add(exSign);
+    const exLight = new THREE.PointLight(0x40ff70, 0.6, 6);
+    exLight.position.set(0, 3.6, -0.3);
+    ed.add(exLight);
+    props.add(ed);
+
+    INTERACTS.push({
+      x: 0, z: D - 1.2, r: 2.4,
+      label: 'Exit to New Jamestown',
+      fn: exitCinema
+    });
+  }
+
+  // Dynamic animation loop for projector light & house light dimming
+  levelAnims.push((t) => {
+    const isPlaying = TVD.on && TVD.vid && !TVD.vid.paused;
+
+    // Smoothly dim wall sconces when movie is on
+    const targetIntensity = isPlaying ? 0.12 : 0.85;
+    for (const sc of THEATRE.sconces) {
+      sc.intensity += (targetIntensity - sc.intensity) * 0.08;
+    }
+
+    // Volumetric projector cone animation
+    if (THEATRE.beam) {
+      const targetBeamOp = isPlaying ? 0.09 + Math.sin(t * 12) * 0.02 + Math.random() * 0.02 : 0.0;
+      THEATRE.beam.material.opacity += (targetBeamOp - THEATRE.beam.material.opacity) * 0.15;
+    }
+  });
+}
+
+LEVELS.theatre = {
+  id: 'theatre',
+  name: 'Jamestown Cinema',
+  tag: 'The Roxy · Est. 2104',
+  lvls: 'Screen 1 & 2',
+  size: 40,
+  center: [0, 0],
+  radius: 60,
+  water: -99,
+  sky: 'black',
+  weather: 'none',
+  indoor: true,
+  terrain: null,
+  palette: { grass: '#140c16' },
+  zones: [{ id: 'theatre', name: 'The Roxy Cinema', lvl: 'Feature Presentation', x: 0, z: 0, r: 30, col: '#140c16', safe: true, h: 0 }],
+  paths: [],
+  river: [],
+  pools: [],
+  lava: [],
+  safes: [{ x: 0, z: 0, r: 100 }],
+  spawn: { x: 0, z: 11.5, yaw: 0 },
+  menu: { x: 0, z: 0, r: 10, h: 3 },
+  npcBase: [0, 0],
+  spawns: [],
+  npcs: [],
+  build: buildTheatreLevel
+};
+
+window.enterCinema = enterCinema;
+window.exitCinema = exitCinema;
+window.THEATRE = THEATRE;
 
 // =================== CODEX: ITEMS — every item in the game, and who to kill (or pay) to get it ===================
 // A Codex tab listing everything you can own: loot (ITEMS), guns and staffs (GUNS), melee (MELEE), ordnance (ORD), armor, helmets
@@ -20788,6 +22959,7 @@ const AMB_PROFILES = {
   boarding: { bed: [['lowpass', 380, 0.7, 0.04, 0.05, 0.4]], hum: [[52, 0.04]], ev: [['beep', 2.5, 6, 0.6], ['clank', 6, 14, 0.6]] },
   speedway: { bed: [['bandpass', 700, 0.6, 0.035, 0.06, 0.5]], ev: [['murmur', 1.5, 4, 0.6], ['cheer', 16, 30, 0.5]] },
   jamestown: { bed: [['lowpass', 600, 0.6, 0.04, 0.1, 0.8]], ev: [['chirp', 3, 9, 0.6], ['creak', 10, 20, 0.4]] },
+  theatre: { bed: [['lowpass', 240, 0.7, 0.03, 0.04, 0.3]], hum: [[60, 0.012]], ev: [['creak', 10, 24, 0.4], ['murmur', 6, 16, 0.4]] },
   indoor: { bed: [['lowpass', 300, 0.7, 0.025, 0.04, 0.4]], hum: [[60, 0.01]], ev: [['creak', 12, 26, 0.4]] },
   outdoor: { bed: [['lowpass', 650, 0.6, 0.045, 0.1, 0.8]], ev: [['chirp', 4, 11, 0.5]] }
 };
@@ -22233,7 +24405,7 @@ const _closeDlgRef = closeDlg;
 $('dlg').addEventListener('click', e => { if (e.target.closest('.pbtn')) setTimeout(() => { if ($('dlg').hidden) clearRows(); }, 0); });
 const dlgObserver = new MutationObserver(() => { if ($('dlg').hidden) clearRows(); }); dlgObserver.observe($('dlg'), { attributes: true, attributeFilter: ['hidden'] });
 resize(); setState('menu'); refreshNpcs(); renderQuest(); requestAnimationFrame(frame); document.documentElement.classList.add('ready');
-window.__game = { get LEVEL() { return LEVEL; }, loadLevel, travel, skipTutorial, openQuestLog, openGalaxy, openShipTerminal, openWorkbench, INTERACTS, QDEFS, startQuest, foundQuest, completeQuest, questTarget, checkReady, ENV, setBuild, placePiece, baseState, renderBase, renderer, S, get S2() { return S; }, player, enemies, npcObjs, drops, setState, talk, step, fire: () => fire(), get fly() { return fly; }, get petObj() { return petObj; }, startBout: () => startBout(), startWaves: () => startWaves(), openBookie: () => openBookie(), get ARENA() { return ARENA; }, spaceFire: () => shipFire(), get state() { return state; }, get dlgOpen() { return dlgOpen; }, closeDlg, kill, gainXp, Z, groundH, openStore, openGuns, openBag, syncPeers, remotes };
+window.__game = { get LEVEL() { return LEVEL; }, loadLevel, travel, skipTutorial, openQuestLog, openGalaxy, openShipTerminal, openWorkbench, INTERACTS, QDEFS, startQuest, foundQuest, completeQuest, questTarget, checkReady, ENV, setBuild, placePiece, baseState, renderBase, renderer, camera, scene, S, get S2() { return S; }, player, enemies, npcObjs, drops, setState, talk, step, fire: () => fire(), get fly() { return fly; }, get petObj() { return petObj; }, startBout: () => startBout(), startWaves: () => startWaves(), openBookie: () => openBookie(), get ARENA() { return ARENA; }, spaceFire: () => shipFire(), get state() { return state; }, get dlgOpen() { return dlgOpen; }, closeDlg, kill, gainXp, Z, groundH, openStore, openGuns, openBag, syncPeers, remotes };
 })();
 </script>
 </body>

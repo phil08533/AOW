@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.20.0</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.20.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -803,7 +803,7 @@ const gun = () => GUNS[S.gun] || GUNS.b1;
 let db = null, uid = null, saveRef = null, dirty = false, writing = false, lastWrite = 0;
 function readLocal() { try { const s = JSON.parse(localStorage.getItem('aow-save') || 'null'); return s && s.v === 1 ? s : null; } catch (_) { return null; } }
 function writeLocal() { try { localStorage.setItem('aow-save', JSON.stringify(S)); } catch (_) {} }
-function adopt(s) { S = Object.assign(fresh(), s); if (!S.ship || !Array.isArray(S.ship.rooms)) S.ship = fresh().ship; if (!S.qst || typeof S.qst !== 'object') S.qst = {}; if (!Array.isArray(S.gear)) S.gear = []; migrateQuests(); }
+function adopt(s) { try { s = JSON.parse(JSON.stringify(s)); } catch (_) {} S = Object.assign(fresh(), s); if (!S.ship || !Array.isArray(S.ship.rooms)) S.ship = fresh().ship; if (!S.qst || typeof S.qst !== 'object') S.qst = {}; if (!Array.isArray(S.gear)) S.gear = []; migrateQuests(); }
 function markDirty() { dirty = true; S.t = Date.now(); writeLocal(); }
 async function flushSave() {
   if (!dirty || writing || !saveRef) return;

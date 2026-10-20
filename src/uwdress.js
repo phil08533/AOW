@@ -13,7 +13,7 @@ function uwDice() {
   setBets();
 }
 LEVELS.underworld.npcs.push(
-  { id: 'grub', name: 'Grub', role: 'Bartender · drinks', rig: 'civ', make: () => makeCivilian('#5a4a3a', '#1e1c22', '#8a5a3a', '#2a2420', '#e8e4dc'), x: 0, z: -9.7, face: 0, custom: [['Buy a drink (25 cr)', uwDrink]],
+  { id: 'grub', name: 'Grub', role: 'Bartender · drinks', rig: 'civ', make: () => makeCivilian('#5a4a3a', '#1e1c22', '#8a5a3a', '#2a2420', '#e8e4dc'), x: 0, z: -9.7, face: 0, custom: [['Buy a drink (25 cr)', uwDrink], ['Hire crew', () => openHire()]],
     idle: ["What'll it be? We have rot-gut, and we have rot-gut with ice.", "Saw a Marshal down here once. Once.", "The Fence pays more than the shops, but don't tell him I said that. He'll pay me less."] },
   { id: 'lucky', name: 'Lucky Seven', role: 'Dice dealer', rig: 'civ', make: () => makeCivilian('#1e4a2a', '#1e1c22', '#e8b896', '#c8402f', '#ffd36a'), x: -8, z: 2.2, face: Math.PI, custom: [['Roll dice', uwDice]],
     idle: ["Feeling lucky? Everyone does. Right up until they don't.", "Seven's my number. Also my name. Also how many husbands I've had."] },
@@ -61,13 +61,23 @@ function uwDress() {
     for (let i = 0; i < 4; i++) part(props, Cy(0.07, 0.07, 0.17, 8), glow(i % 2 ? '#ffb347' : '#ffd36a'), -2.6 + i * 1.5, 1.2, -8.25);
     // regulars on the stools and around two tables
     const regs = [() => recolor(makeBugHybrid(), { '#5f8a3a': '#4a8a3a' }), () => makeCivilian('#3a3430', '#1e1c22', '#d9cfc0', '#1e1a18', '#5a3a22'), () => makeCivilian('#5a2a6a', '#2c2a28', '#c58a64', '#cfcac0', '#3a3d44'), () => makeCivilian('#2a4a6a', '#1e1c22', '#e0b892', '#1e1a18', '#c8402f')];
-    const sit = (mk, rig, x, y, z, ry, i) => { const o = buildChar(mk, rig), R = o.userData.rig; if (R && R.legL) R.legL.rotation.x = R.legR.rotation.x = -1.05; o.position.set(x, y - 0.95, z); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.35);
+    const ucStand = (mk, rig, x, z, ry) => { const o = buildChar(mk, rig); o.position.set(x, 0, z); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.35); const st = {}; levelAnims.push(t => { if (o.parent) animRig(o, st, 1 / 60, t); }); };
+    const sit = (mk, rig, x, y, z, ry, i) => { const o = buildChar(mk, rig), R = o.userData.rig; o.position.set(x, y - (R ? R.spec.hip : 0.95) + 0.07, z); sitChar(o, y); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.35);
       if (R && R.head) levelAnims.push(t => { R.head.rotation.y = Math.sin(t * 0.5 + i * 2) * 0.25; if (R.armR) R.armR.rotation.x = -0.6 + Math.sin(t * 0.8 + i) * 0.25; }); };
-    [[-3.2, 0], [-0.64, 1], [1.92, 3]].forEach(([x, k], i) => sit(regs[k], k ? 'civ' : 'bughybrid', x, 0.8, -7.4, Math.PI, i));
+    [[-3.2, 0], [-0.64, 1], [1.92, 3]].forEach(([x, k], i) => sit(regs[k], k ? 'civ' : 'bughybrid', x, 0.78, -7.5, Math.PI, i));
     for (const [tx, tz] of [[-6.5, -4], [5.5, -2.6]]) { part(props, B(1.8, 0.1, 1.0), toon('#4a3020', 'wood'), tx, 0.82, tz); part(props, B(0.16, 0.78, 0.16), '#2a2c32', tx, 0.4, tz); box(tx, tz, 0.9, 0.5);
       for (let k = 0; k < 3; k++) part(props, Cy(0.05, 0.06, 0.22, 6), glow(['#7fff6a', '#ffd36a', '#ff4fd8'][k]), tx - 0.5 + k * 0.5, 0.98, tz);
       for (const s of [-1, 1]) { part(props, Cy(0.24, 0.24, 0.08, 10), toon('#8a1e24', 'cloth'), tx, 0.5, tz + s * 0.95); part(props, Cy(0.04, 0.04, 0.48, 5), '#2a2c32', tx, 0.25, tz + s * 0.95); } }
-    sit(regs[2], 'civ', -6.5, 0.55, -4.95, 0, 3); sit(regs[0], 'bughybrid', 5.5, 0.55, -1.65, Math.PI, 4); sit(regs[3], 'civ', 5.5, 0.55, -3.55, 0, 5);
+    sit(regs[2], 'civ', -6.5, 0.54, -4.95, 0, 3); sit(regs[0], 'bughybrid', 5.5, 0.54, -1.65, Math.PI, 4); sit(regs[3], 'civ', 5.5, 0.54, -3.55, 0, 5);
+    // more regulars: a couple eating in the east booth, a deal going down in a new north booth, two talking business by the dice table
+    const look = (tx, tz, x, z) => Math.atan2(tx - x, tz - z);
+    sit(regs[3], 'civ', 10.6, 0.45, 1.0, look(9.6, 1.0, 10.6, 1.0), 6); sit(regs[1], 'civ', 10.6, 0.45, 2.1, look(9.6, 2.1, 10.6, 2.1), 7);
+    for (const [x, z] of [[9.6, 1.1], [9.6, 1.9]]) { part(props, Cy(0.18, 0.18, 0.02, 10), '#e8e4dc', x, 0.42, z); part(props, B(0.16, 0.08, 0.16), toon('#c88a3a'), x, 0.46, z); }
+    part(props, B(3.2, 0.45, 0.8), toon('#5a1e2a', 'cloth'), -5, 0.22, 9.9); part(props, B(3.2, 1.0, 0.2), toon('#5a1e2a', 'cloth'), -5, 0.7, 10.35); box(-5, 9.9, 1.6, 0.4);
+    part(props, B(2.4, 0.08, 0.9), toon('#4a3020', 'wood'), -5, 0.75, 8.9); part(props, B(0.16, 0.72, 0.16), '#2a2c32', -5, 0.37, 8.9); box(-5, 8.9, 1.2, 0.45);
+    sit(regs[2], 'civ', -5.8, 0.45, 9.85, look(-5.8, 8.9, -5.8, 9.85), 8); sit(regs[0], 'bughybrid', -4.2, 0.45, 9.85, look(-4.2, 8.9, -4.2, 9.85), 9);
+    part(props, B(0.5, 0.36, 0.14), toon('#2a2420'), -5, 0.97, 8.85); part(props, B(0.3, 0.05, 0.2), glow('#7fff6a'), -4.4, 0.81, 8.7); for (let k = 0; k < 4; k++) part(props, B(0.16, 0.03, 0.08), toon('#6fdc5a'), -5.6 + k * 0.05, 0.8 + k * 0.03, 8.75);
+    for (const [x, z, tx, tz, k] of [[-9.6, -1.2, -8.6, -1.2, 2], [-8.6, -1.2, -9.6, -1.2, 3]]) ucStand(regs[k], 'civ', x, z, look(tx, tz, x, z));
     // junk on the floor
     for (let i = 0; i < 18; i++) { const x = -10 + ((i * 37) % 20), z = -6 + ((i * 23) % 15); if (Math.abs(x) < 3 && z > 0 && z < 4) continue;
       part(props, i % 3 ? Cy(0.04, 0.04, 0.12, 6) : B(0.28, 0.03, 0.2), toon(['#8a8f96', '#c8402f', '#d9c79a', '#3a6a8a'][i % 4]), x, 0.03, z, i % 3 ? Math.PI / 2 : 0, i, 0); }

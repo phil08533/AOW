@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.19.15</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.19.16</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -4826,6 +4826,21 @@ function animRig(obj, st, dt, t) {
   if (R.head) { R.head.rotation.y = (st.look || 0); R.head.rotation.x = Math.sin(t * 0.9 + st.ph0) * 0.04; }
 }
 
+// Seated pose: hide the straight leg pivots and give the character a flat thigh and a shin bent 90° at the knee.
+// The character is placed so its hips rest on a seat seatH above its feet' floor; call after positioning x/z.
+function sitChar(o, seatH) {
+  const R = o.userData.rig; if (!R || !R.legL) return o;
+  const sp = R.spec, hip = sp.hip, th = Math.min(0.5, hip * 0.5), sh = Math.max(0.2, seatH);
+  for (const leg of [R.legL, R.legR]) {
+    let mat = null; leg.traverse(c => { if (!mat && c.isMesh) mat = c.material; }); leg.visible = false;
+    const g = new THREE.Group(); g.position.set(leg.position.x, hip, 0); o.add(g);
+    const w = Math.max(0.12, Math.abs(sp.legX) * 1.4);
+    const a = new THREE.Mesh(new THREE.BoxGeometry(w, w, th + w / 2), mat); a.position.set(0, 0, th / 2); g.add(a);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, sh, w), mat); b.position.set(0, -sh / 2, th); g.add(b);
+    const f = new THREE.Mesh(new THREE.BoxGeometry(w * 1.05, 0.08, w * 1.6), new THREE.MeshLambertMaterial({ color: '#1e1a18' })); f.position.set(0, -sh + 0.04, th + w * 0.3); g.add(f);
+  }
+  o.position.y += 0; o.userData.seated = 1; return o;
+}
 
 function collide(p, r, keepOutTown) {
   for (const [cx, cz, cr] of CIRCLES) {
@@ -18606,7 +18621,7 @@ function uwDice() {
   setBets();
 }
 LEVELS.underworld.npcs.push(
-  { id: 'grub', name: 'Grub', role: 'Bartender · drinks', rig: 'civ', make: () => makeCivilian('#5a4a3a', '#1e1c22', '#8a5a3a', '#2a2420', '#e8e4dc'), x: 0, z: -9.7, face: 0, custom: [['Buy a drink (25 cr)', uwDrink]],
+  { id: 'grub', name: 'Grub', role: 'Bartender · drinks', rig: 'civ', make: () => makeCivilian('#5a4a3a', '#1e1c22', '#8a5a3a', '#2a2420', '#e8e4dc'), x: 0, z: -9.7, face: 0, custom: [['Buy a drink (25 cr)', uwDrink], ['Hire crew', () => openHire()]],
     idle: ["What'll it be? We have rot-gut, and we have rot-gut with ice.", "Saw a Marshal down here once. Once.", "The Fence pays more than the shops, but don't tell him I said that. He'll pay me less."] },
   { id: 'lucky', name: 'Lucky Seven', role: 'Dice dealer', rig: 'civ', make: () => makeCivilian('#1e4a2a', '#1e1c22', '#e8b896', '#c8402f', '#ffd36a'), x: -8, z: 2.2, face: Math.PI, custom: [['Roll dice', uwDice]],
     idle: ["Feeling lucky? Everyone does. Right up until they don't.", "Seven's my number. Also my name. Also how many husbands I've had."] },
@@ -18654,13 +18669,23 @@ function uwDress() {
     for (let i = 0; i < 4; i++) part(props, Cy(0.07, 0.07, 0.17, 8), glow(i % 2 ? '#ffb347' : '#ffd36a'), -2.6 + i * 1.5, 1.2, -8.25);
     // regulars on the stools and around two tables
     const regs = [() => recolor(makeBugHybrid(), { '#5f8a3a': '#4a8a3a' }), () => makeCivilian('#3a3430', '#1e1c22', '#d9cfc0', '#1e1a18', '#5a3a22'), () => makeCivilian('#5a2a6a', '#2c2a28', '#c58a64', '#cfcac0', '#3a3d44'), () => makeCivilian('#2a4a6a', '#1e1c22', '#e0b892', '#1e1a18', '#c8402f')];
-    const sit = (mk, rig, x, y, z, ry, i) => { const o = buildChar(mk, rig), R = o.userData.rig; if (R && R.legL) R.legL.rotation.x = R.legR.rotation.x = -1.05; o.position.set(x, y - 0.95, z); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.35);
+    const ucStand = (mk, rig, x, z, ry) => { const o = buildChar(mk, rig); o.position.set(x, 0, z); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.35); const st = {}; levelAnims.push(t => { if (o.parent) animRig(o, st, 1 / 60, t); }); };
+    const sit = (mk, rig, x, y, z, ry, i) => { const o = buildChar(mk, rig), R = o.userData.rig; o.position.set(x, y - (R ? R.spec.hip : 0.95) + 0.07, z); sitChar(o, y); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.35);
       if (R && R.head) levelAnims.push(t => { R.head.rotation.y = Math.sin(t * 0.5 + i * 2) * 0.25; if (R.armR) R.armR.rotation.x = -0.6 + Math.sin(t * 0.8 + i) * 0.25; }); };
-    [[-3.2, 0], [-0.64, 1], [1.92, 3]].forEach(([x, k], i) => sit(regs[k], k ? 'civ' : 'bughybrid', x, 0.8, -7.4, Math.PI, i));
+    [[-3.2, 0], [-0.64, 1], [1.92, 3]].forEach(([x, k], i) => sit(regs[k], k ? 'civ' : 'bughybrid', x, 0.78, -7.5, Math.PI, i));
     for (const [tx, tz] of [[-6.5, -4], [5.5, -2.6]]) { part(props, B(1.8, 0.1, 1.0), toon('#4a3020', 'wood'), tx, 0.82, tz); part(props, B(0.16, 0.78, 0.16), '#2a2c32', tx, 0.4, tz); box(tx, tz, 0.9, 0.5);
       for (let k = 0; k < 3; k++) part(props, Cy(0.05, 0.06, 0.22, 6), glow(['#7fff6a', '#ffd36a', '#ff4fd8'][k]), tx - 0.5 + k * 0.5, 0.98, tz);
       for (const s of [-1, 1]) { part(props, Cy(0.24, 0.24, 0.08, 10), toon('#8a1e24', 'cloth'), tx, 0.5, tz + s * 0.95); part(props, Cy(0.04, 0.04, 0.48, 5), '#2a2c32', tx, 0.25, tz + s * 0.95); } }
-    sit(regs[2], 'civ', -6.5, 0.55, -4.95, 0, 3); sit(regs[0], 'bughybrid', 5.5, 0.55, -1.65, Math.PI, 4); sit(regs[3], 'civ', 5.5, 0.55, -3.55, 0, 5);
+    sit(regs[2], 'civ', -6.5, 0.54, -4.95, 0, 3); sit(regs[0], 'bughybrid', 5.5, 0.54, -1.65, Math.PI, 4); sit(regs[3], 'civ', 5.5, 0.54, -3.55, 0, 5);
+    // more regulars: a couple eating in the east booth, a deal going down in a new north booth, two talking business by the dice table
+    const look = (tx, tz, x, z) => Math.atan2(tx - x, tz - z);
+    sit(regs[3], 'civ', 10.6, 0.45, 1.0, look(9.6, 1.0, 10.6, 1.0), 6); sit(regs[1], 'civ', 10.6, 0.45, 2.1, look(9.6, 2.1, 10.6, 2.1), 7);
+    for (const [x, z] of [[9.6, 1.1], [9.6, 1.9]]) { part(props, Cy(0.18, 0.18, 0.02, 10), '#e8e4dc', x, 0.42, z); part(props, B(0.16, 0.08, 0.16), toon('#c88a3a'), x, 0.46, z); }
+    part(props, B(3.2, 0.45, 0.8), toon('#5a1e2a', 'cloth'), -5, 0.22, 9.9); part(props, B(3.2, 1.0, 0.2), toon('#5a1e2a', 'cloth'), -5, 0.7, 10.35); box(-5, 9.9, 1.6, 0.4);
+    part(props, B(2.4, 0.08, 0.9), toon('#4a3020', 'wood'), -5, 0.75, 8.9); part(props, B(0.16, 0.72, 0.16), '#2a2c32', -5, 0.37, 8.9); box(-5, 8.9, 1.2, 0.45);
+    sit(regs[2], 'civ', -5.8, 0.45, 9.85, look(-5.8, 8.9, -5.8, 9.85), 8); sit(regs[0], 'bughybrid', -4.2, 0.45, 9.85, look(-4.2, 8.9, -4.2, 9.85), 9);
+    part(props, B(0.5, 0.36, 0.14), toon('#2a2420'), -5, 0.97, 8.85); part(props, B(0.3, 0.05, 0.2), glow('#7fff6a'), -4.4, 0.81, 8.7); for (let k = 0; k < 4; k++) part(props, B(0.16, 0.03, 0.08), toon('#6fdc5a'), -5.6 + k * 0.05, 0.8 + k * 0.03, 8.75);
+    for (const [x, z, tx, tz, k] of [[-9.6, -1.2, -8.6, -1.2, 2], [-8.6, -1.2, -9.6, -1.2, 3]]) ucStand(regs[k], 'civ', x, z, look(tx, tz, x, z));
     // junk on the floor
     for (let i = 0; i < 18; i++) { const x = -10 + ((i * 37) % 20), z = -6 + ((i * 23) % 15); if (Math.abs(x) < 3 && z > 0 && z < 4) continue;
       part(props, i % 3 ? Cy(0.04, 0.04, 0.12, 6) : B(0.28, 0.03, 0.2), toon(['#8a8f96', '#c8402f', '#d9c79a', '#3a6a8a'][i % 4]), x, 0.03, z, i % 3 ? Math.PI / 2 : 0, i, 0); }
@@ -18777,6 +18802,7 @@ const UPDATES = [
   { id: 144, title: "2.19.13 · Ship fixes", items: ["The galaxy map railing on the bridge is solid now, with the opening at the front", "Crew no longer walk through the front of the hall by the bridge"] },
   { id: 145, title: "2.19.14 · Fewer posters", items: ["Posters and graffiti now only appear on Earth, and fewer of them"] },
   { id: 146, title: "2.19.15 · Grub's Bar in the Underworld", items: ["Grub's bar in the Underworld gets a cyan neon sign, glowing neon bottles, bulb chandeliers on chains, beer taps and mugs", "Regulars sit at the bar and at two new tables; dark floor with junk scattered about"] },
+  { id: 147, title: "2.19.16 · Crew for hire", items: ["Seated people in the theatre and the bar now sit properly, with their knees bent at 90°", "More regulars in the Underworld: a couple eating in a booth, a deal going down in a new booth, two talking business", "Hire crew from Grub: a Runner fetches Lab materials, a Cook brews extra doses, a Dealer sells your product for credits", "One crew slot to start, two at level 15, three at level 30. Crew can get killed on the job, so check back at the bar for replacements", "Manage your crew from the Lab terminal on your ship"] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -22569,8 +22595,7 @@ function buildTheatreLevel() {
   { const cols = [['#c8402f', '#e0b892'], ['#3b4f7a', '#8a5a3a'], ['#5a6a3a', '#c58a64'], ['#8a6fc4', '#e0b892'], ['#c9a43a', '#5a3a24'], ['#2a5a7a', '#d9a77a'], ['#e8e4dc', '#8a5a3a'], ['#ff9a3c', '#c58a64']];
     SEATS.filter((_, i) => (i * 7) % 3 === 0).slice(0, 10).forEach(([x, y, z], i) => {
       const [sh, sk] = cols[i % cols.length], o = buildChar(() => makeCivilian(sh, '#2c2a28', sk, ['#1e1a18', '#5a3a22', '#c9a43a', '#cfcac0'][i % 4]), 'civ'), R = o.userData.rig;
-      if (R && R.legL) { R.legL.rotation.x = R.legR.rotation.x = -1.05; }
-      o.position.set(x, y + 0.58 - 0.95, z + 0.12); o.rotation.y = Math.PI; levelGroup.add(o);
+      o.position.set(x, y + 0.49 - (R ? R.spec.hip : 0.95) + 0.07, z - 0.02); sitChar(o, 0.49); o.rotation.y = Math.PI; levelGroup.add(o);
       if (R && R.head) levelAnims.push(t => { R.head.rotation.y = Math.sin(t * 0.3 + i * 2) * 0.12; });
     }); }
 
@@ -22668,6 +22693,60 @@ function placeWallArt() {
   });
 }
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); setTimeout(() => { try { placeWallArt(); } catch (e) { console.warn('wallart', e); } }, 120); return r; }; }
+
+// =================== CREW FOR HIRE (2.19.16): runners, cooks and dealers for your ship's Lab ===================
+// Hire them from the regulars at Grub's bar in the Underworld. Each job pays off over real time, and each one is risky:
+// now and then a crew member is killed on the job and you head back to the bar for a replacement.
+// One slot to start, two from level 15, all three from level 30. Save field: S.crew { runner|cook|dealer: { name, skill, t } }, S.crewPool.
+const CREW_JOBS = {
+  runner: { name: 'Runner', every: 10, risk: 0.06, desc: 'Goes out for Lab materials (scrap, crystal, circuits, shells) and brings them back to your bag.' },
+  cook: { name: 'Cook', every: 8, risk: 0.04, desc: 'Works the Lab: brews an extra dose on station 1 each shift, if the materials are there.' },
+  dealer: { name: 'Dealer', every: 10, risk: 0.08, desc: 'Takes doses from the Lab and sells them on the street. You get the credits.' }
+};
+const CREW_FIRST = ['Skid', 'Mags', 'Rook', 'Juno', 'Teck', 'Bix', 'Nola', 'Fen', 'Dusty', 'Kade', 'Pell', 'Rhee', 'Sorrow', 'Vic', 'Lux', 'Tam'];
+const CREW_LAST = ['Varga', 'Okoro', 'Quill', 'Marsh', 'Doyle', 'Krane', 'Sato', 'Bellweather', 'Moss', 'Ash', 'Rivet', 'Cole'];
+const CREW_DEATHS = ['got jumped in a back alley on the job', 'took a Marshal round during a pickup', 'never came back from a deal that went sideways', 'was caught in a lab fire', 'crossed the wrong gang'];
+function crewS() { S.crew = S.crew || {}; return S.crew; }
+function crewSlots() { return S.lvl >= 30 ? 3 : S.lvl >= 15 ? 2 : 1; }
+function crewPool() { const now = Date.now(); if (!S.crewPool || now - S.crewPool.t > 30 * 60000) {
+    const P = []; for (let i = 0; i < 4; i++) { const sk = 1 + Math.floor(Math.random() * 3); P.push({ name: CREW_FIRST[Math.floor(Math.random() * CREW_FIRST.length)] + ' ' + CREW_LAST[Math.floor(Math.random() * CREW_LAST.length)], skill: sk, fee: 600 + sk * 700 + Math.floor(Math.random() * 300) }); }
+    S.crewPool = { t: now, list: P }; }
+  return S.crewPool.list; }
+const crewStars = k => '★'.repeat(k) + '☆'.repeat(3 - k);
+function crewWork() { // catch up on every shift since the last check, offline time included (capped)
+  if (!S.crew || !roomLvl('lab')) return; const C = crewS(), now = Date.now();
+  for (const job in C) { const m = C[job], J = CREW_JOBS[job]; if (!m || !J) continue; const ev = J.every * 60000 * (1 - (m.skill - 1) * 0.15);
+    let n = 0; while (now - m.t >= ev && n < 12) { m.t += ev; n++;
+      if (Math.random() < J.risk * (1.3 - m.skill * 0.15)) { delete C[job]; const how = CREW_DEATHS[Math.floor(Math.random() * CREW_DEATHS.length)]; toast('CREW LOST', `${m.name} ${how}.`, 4); log(`Your ${J.name.toLowerCase()} ${m.name} ${how}. Find a replacement at Grub's bar in the Underworld.`, 'loot'); try { SFX.hit(); } catch (_) {} break; }
+      if (job === 'runner') { const mats = ['scrap', 'crystal', 'circuit', 'shell']; for (let k = 0; k < m.skill; k++) { const id = mats[Math.floor(Math.random() * mats.length)]; if (ITEMS[id] && invRoomFor(id) > 0) S.inv[id] = (S.inv[id] || 0) + 1; } }
+      else if (job === 'cook') { const L = labS(), T = L.st[0], need = LAB_RECIPES[T.r] || {}; if (T.n < labMax() && costOk(need)) { costPay(need); T.n++; } }
+      else if (job === 'dealer') { const L = labS(); let sold = 0; for (let k = 0; k < m.skill + 1; k++) { let id = Object.keys(L.shelf).find(i => L.shelf[i] > 0); if (id) { if (!--L.shelf[id]) delete L.shelf[id]; } else { const T = L.st.find(t => t.n > 0); if (!T) break; id = T.r; T.n--; } const cr = Math.round((SUBS[id] ? SUBS[id].price : 100) * 0.8); S.cr += cr; sold += cr; }
+        if (sold) log(`${m.name} sold product on the street: +${sold} CR`, 'loot'); } }
+    if (C[job] && now - m.t > ev) m.t = now; }
+  markDirty();
+}
+setInterval(() => { try { crewWork(); } catch (e) { console.warn('crew', e); } }, 5000);
+function openCrew() {
+  crewWork(); const C = crewS(); openDlg('Crew', `${Object.keys(C).length} of ${crewSlots()} hired`);
+  $('dlgLine').textContent = (roomLvl('lab') ? '' : 'You need a Lab on your ship before your crew can work. ') + Object.keys(CREW_JOBS).map(j => { const m = C[j]; return `${CREW_JOBS[j].name}: ${m ? `${m.name} ${crewStars(m.skill)}` : 'nobody'}`; }).join(' · ') + '. Hire new crew at Grub\'s bar in the Underworld.';
+  const A = []; for (const j in C) A.push([`Fire ${C[j].name}`, () => { delete C[j]; markDirty(); openCrew(); }]); A.push(['Close', closeDlg, true]); acts(A);
+}
+function openHire(pick) {
+  crewWork(); const C = crewS(), P = crewPool(), used = Object.keys(C).length;
+  openDlg("Grub's bar", 'Looking for work'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  $('dlgLine').textContent = `Regulars who'll work for you, for a fee. You have ${used} of ${crewSlots()} crew slots${crewSlots() < 3 ? ` (more at level ${crewSlots() < 2 ? 15 : 30})` : ''}. More skill means faster shifts and less chance they get killed on the job.` + (roomLvl('lab') ? '' : ' They need a Lab on your ship to work.');
+  P.forEach((c, i) => { const r = document.createElement('div'); r.className = 'rowi'; r.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+    const nm = document.createElement('span'); nm.style.flex = '1 1 160px'; nm.textContent = `${c.name} ${crewStars(c.skill)} · ${c.fee} CR`; r.appendChild(nm);
+    for (const j in CREW_JOBS) { const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = CREW_JOBS[j].name; b.title = CREW_JOBS[j].desc;
+      b.disabled = S.cr < c.fee || (!C[j] && used >= crewSlots());
+      b.addEventListener('click', () => { if (S.cr < c.fee) return; S.cr -= c.fee; C[j] = { name: c.name, skill: c.skill, t: Date.now() }; P.splice(i, 1); markDirty(); SFX.coin(); toast('HIRED', `${c.name} is your new ${CREW_JOBS[j].name.toLowerCase()}`, 2.5); openHire(); });
+      r.appendChild(b); }
+    rows.appendChild(r); });
+  if (!P.length) { const r = document.createElement('div'); r.className = 'rowi'; r.textContent = 'Nobody else is looking for work right now. Check back later.'; rows.appendChild(r); }
+  $('dlgActs').before(rows); acts([['My crew', openCrew], ['Close', closeDlg, true]]);
+}
+// the Lab terminal gets a Crew button
+{ const _ol = openLab; openLab = function () { _ol.apply(this, arguments); const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = 'Crew'; b.addEventListener('click', openCrew); $('dlgActs').prepend(b); }; }
 
 // =================== CODEX: ITEMS — every item in the game, and who to kill (or pay) to get it ===================
 // A Codex tab listing everything you can own: loot (ITEMS), guns and staffs (GUNS), melee (MELEE), ordnance (ORD), armor, helmets

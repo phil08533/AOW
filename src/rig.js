@@ -96,3 +96,18 @@ function animRig(obj, st, dt, t) {
   if (R.head) { R.head.rotation.y = (st.look || 0); R.head.rotation.x = Math.sin(t * 0.9 + st.ph0) * 0.04; }
 }
 
+// Seated pose: hide the straight leg pivots and give the character a flat thigh and a shin bent 90° at the knee.
+// The character is placed so its hips rest on a seat seatH above its feet' floor; call after positioning x/z.
+function sitChar(o, seatH) {
+  const R = o.userData.rig; if (!R || !R.legL) return o;
+  const sp = R.spec, hip = sp.hip, th = Math.min(0.5, hip * 0.5), sh = Math.max(0.2, seatH);
+  for (const leg of [R.legL, R.legR]) {
+    let mat = null; leg.traverse(c => { if (!mat && c.isMesh) mat = c.material; }); leg.visible = false;
+    const g = new THREE.Group(); g.position.set(leg.position.x, hip, 0); o.add(g);
+    const w = Math.max(0.12, Math.abs(sp.legX) * 1.4);
+    const a = new THREE.Mesh(new THREE.BoxGeometry(w, w, th + w / 2), mat); a.position.set(0, 0, th / 2); g.add(a);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, sh, w), mat); b.position.set(0, -sh / 2, th); g.add(b);
+    const f = new THREE.Mesh(new THREE.BoxGeometry(w * 1.05, 0.08, w * 1.6), new THREE.MeshLambertMaterial({ color: '#1e1a18' })); f.position.set(0, -sh + 0.04, th + w * 0.3); g.add(f);
+  }
+  o.position.y += 0; o.userData.seated = 1; return o;
+}

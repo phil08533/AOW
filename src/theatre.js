@@ -274,8 +274,7 @@ function buildTheatreLevel() {
   { const cols = [['#c8402f', '#e0b892'], ['#3b4f7a', '#8a5a3a'], ['#5a6a3a', '#c58a64'], ['#8a6fc4', '#e0b892'], ['#c9a43a', '#5a3a24'], ['#2a5a7a', '#d9a77a'], ['#e8e4dc', '#8a5a3a'], ['#ff9a3c', '#c58a64']];
     SEATS.filter((_, i) => (i * 7) % 3 === 0).slice(0, 10).forEach(([x, y, z], i) => {
       const [sh, sk] = cols[i % cols.length], o = buildChar(() => makeCivilian(sh, '#2c2a28', sk, ['#1e1a18', '#5a3a22', '#c9a43a', '#cfcac0'][i % 4]), 'civ'), R = o.userData.rig;
-      if (R && R.legL) { R.legL.rotation.x = R.legR.rotation.x = -1.05; }
-      o.position.set(x, y + 0.58 - 0.95, z + 0.12); o.rotation.y = Math.PI; levelGroup.add(o);
+      o.position.set(x, y + 0.49 - (R ? R.spec.hip : 0.95) + 0.07, z - 0.02); sitChar(o, 0.49); o.rotation.y = Math.PI; levelGroup.add(o);
       if (R && R.head) levelAnims.push(t => { R.head.rotation.y = Math.sin(t * 0.3 + i * 2) * 0.12; });
     }); }
 

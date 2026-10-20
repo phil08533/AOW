@@ -248,8 +248,11 @@ function settlePads(L) {
 // the HUD weapon line just shows ordnance charges now (Phil: no gun name)
 { const _u = updateHud; updateHud = function () { _u(); if (!LEVEL.fly && !handMelee()) $('gunLbl').textContent = `◆ ${ordCharges} ordnance`; else if (!LEVEL.fly) $('gunLbl').textContent = `◆ ${ordCharges} ordnance`; }; }
 // signs seen from behind used to read backwards: give each two-sided sign a proper back face instead
+// a sign merged into the static world mesh has its geometry in world space, so a back copy spun about its origin would land mirrored across the map
+function bakedMesh(o) { if (o.position.lengthSq() > 1e-6 || o.rotation.y) return false; o.geometry.computeBoundingSphere(); return o.geometry.boundingSphere.center.lengthSq() > 4; }
 function unmirrorSigns(root) {
-  const list = []; root.traverse(o => { const m = o.material; if (o.isMesh && m && !Array.isArray(m) && m.map && m.map.userData && m.map.userData.sign && m.side === THREE.DoubleSide && !o.userData.unmir) list.push(o); });
+  root.updateMatrixWorld(true); root.traverse(o => { if (o.isMesh) fitSign(o); });
+  const list = []; root.traverse(o => { const m = o.material; if (o.isMesh && m && !Array.isArray(m) && m.map && m.map.userData && m.map.userData.sign && m.side === THREE.DoubleSide && !o.userData.unmir && !bakedMesh(o)) list.push(o); });
   for (const o of list) { o.userData.unmir = true; const f = o.material.clone(); f.side = THREE.FrontSide; o.material = f; const b = new THREE.Mesh(o.geometry, f); b.rotation.y = Math.PI; b.userData.unmir = true; o.add(b); }
 }
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); try { unmirrorSigns(levelGroup); setTimeout(() => { try { unmirrorSigns(scene); } catch (_) {} }, 1500); } catch (_) {} return r; }; }

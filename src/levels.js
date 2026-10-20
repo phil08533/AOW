@@ -111,6 +111,7 @@ function tessellate(pos, nor, uv, L) {
 }
 function mergeStatic(root) {
   root.updateMatrixWorld(true);
+  root.traverse(o => { if (o.isMesh) fitSign(o); });
   const buckets = new Map();
   root.traverse(o => {
     if (!o.isMesh) return;

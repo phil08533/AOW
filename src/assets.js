@@ -780,14 +780,36 @@ function makeDrome() {
 
 // =================== EARTH SAFE ZONE TOWN ===================
 const TOWN = V(0, 0, -24);
+// Signs are painted as chunky pixel-art plaques (bevelled board, pixel font, drop shadow) so they sit in the PS1 look.
+// The canvas is repainted to the exact shape of the plane it ends up on (fitSign), so text is never squashed or stretched.
+function paintSign(c, text, bg, fg, aspect) {
+  const lines = String(text).split('\n'), H = Math.max(28, 22 * lines.length + 10), W = Math.max(H, Math.round(H * (aspect || 4)));
+  c.width = W; c.height = H; const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+  const sh = (hex, k) => { const n = parseInt(String(hex).replace('#', '').padEnd(6, '0').slice(0, 6), 16); const f = v => Math.max(0, Math.min(255, Math.round(v * k))); return `rgb(${f(n >> 16 & 255)},${f(n >> 8 & 255)},${f(n & 255)})`; };
+  x.fillStyle = sh(bg, 0.55); x.fillRect(0, 0, W, H);                     // outer frame
+  x.fillStyle = bg; x.fillRect(2, 2, W - 4, H - 4);                       // board
+  x.fillStyle = sh(bg, 1.45); x.fillRect(2, 2, W - 4, 1); x.fillRect(2, 2, 1, H - 4);   // top/left light edge
+  x.fillStyle = sh(bg, 0.7); x.fillRect(2, H - 3, W - 4, 1); x.fillRect(W - 3, 2, 1, H - 4); // bottom/right shade
+  x.fillStyle = sh(fg, 0.8); x.fillRect(4, 4, W - 8, 1); x.fillRect(4, H - 5, W - 8, 1);    // inner trim lines
+  for (const px of [5, W - 6]) for (const py of [5, H - 6]) { x.fillStyle = sh(fg, 0.9); x.fillRect(px - 1, py - 1, 2, 2); } // corner rivets
+  const lh = (H - 10) / lines.length; let fs = Math.floor(lh * 0.78);
+  const font = n => `bold ${n}px "Pixelify Sans", "VT323", "Courier New", monospace`;
+  x.font = font(fs); const widest = Math.max(...lines.map(l => x.measureText(l).width)); if (widest > W - 14) { fs = Math.max(6, Math.floor(fs * (W - 14) / widest)); x.font = font(fs); }
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  lines.forEach((l, i) => { const ty = Math.round(5 + lh * (i + 0.5)) + 1; x.fillStyle = 'rgba(0,0,0,0.55)'; x.fillText(l, Math.round(W / 2) + 1, ty + 1); x.fillStyle = fg; x.fillText(l, Math.round(W / 2), ty); });
+}
 function signTex(text, bg, fg) {
-  const c = document.createElement('canvas'); c.width = 512; c.height = 128;
-  const x = c.getContext('2d');
-  x.fillStyle = bg; x.fillRect(0, 0, 512, 128);
-  x.strokeStyle = fg; x.lineWidth = 8; x.strokeRect(10, 10, 492, 108);
-  x.fillStyle = fg; x.font = 'bold 72px Impact, "Arial Narrow", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(text, 256, 68, 470);
-  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; t.userData = { sign: true }; return t;
+  const c = document.createElement('canvas'); paintSign(c, text, bg, fg, 4);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.magFilter = THREE.NearestFilter; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false;
+  t.userData = { sign: true, text, bg, fg, aspect: 4 }; return t;
+}
+// repaint a sign texture to the plane's real width:height
+function fitSign(o) {
+  const m = o.material, t = m && !Array.isArray(m) && m.map; if (!t || !t.userData || !t.userData.sign || t.userData.text == null) return;
+  const p = o.geometry && o.geometry.parameters; if (!p || !p.width || !p.height) return;
+  const sc = new THREE.Vector3(); o.getWorldScale(sc); const a = (p.width * Math.abs(sc.x)) / (p.height * Math.abs(sc.y)); if (!isFinite(a) || Math.abs(a - t.userData.aspect) < 0.05) return;
+  if (t.userData.fitted) { const t2 = signTex(t.userData.text, t.userData.bg, t.userData.fg); m.map = t2; return fitSign(o); } // shared by planes of different shapes
+  paintSign(t.image, t.userData.text, t.userData.bg, t.userData.fg, a); t.userData.aspect = a; t.userData.fitted = true; t.needsUpdate = true;
 }
 function sign(g, text, bg, fg, x, y, z, w, ry) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w / 4), new THREE.MeshBasicMaterial({ map: signTex(text, bg, fg) }));

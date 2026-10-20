@@ -678,18 +678,16 @@ const JT_BUILDINGS = [
   ['ARCADE', -28, -12, 10, 7, 7, 0, '#5a2a6a', '#ff6aa8', '#ff6aa8', 'entertainment'],
   ['CINEMA', -28, 12, 11, 8, 9, Math.PI, '#8a2a3a', '#ffd36a', '#c8402f', 'entertainment'],
   ['GARAGE', 28, 12, 11, 7, 6, Math.PI, '#5d636c', '#ff8a2a', '#ff8a2a', 'industrial'],
-  ['APARTMENTS', 36, 28, 9, 9, 15, Math.PI, '#b8a088', '#5a3a22', null, 'residential'],
-  ['APARTMENTS', -38, -24, 9, 9, 14, 0, '#a8b0b8', '#3a4a5a', null, 'residential'],
-  [null, -26, 36, 8, 7, 7, Math.PI, '#c8a888', '#5a3a22', null, 'residential'],
-  [null, 26, 36, 8, 7, 7.5, Math.PI, '#a8c8a8', '#3a4a3a', null, 'residential'],
-  [null, -40, 10, 7, 8, 7, PI2, '#d8c098', '#5a3a22', null, 'residential'],
-  [null, 40, -8, 7, 8, 7.5, -PI2, '#b8b8c8', '#3b4f7a', null, 'residential'],
+  ['APARTMENTS', 28.5, 22.5, 9, 9, 15, Math.PI, '#b8a088', '#5a3a22', null, 'residential'],
+  ['APARTMENTS', -30.5, -20.5, 9, 9, 14, 0, '#a8b0b8', '#3a4a5a', null, 'residential'],
+  [null, -37.5, 10.5, 7, 6, 7, PI2, '#d8c098', '#5a3a22', null, 'residential'],
+  [null, 38, -8, 7, 6, 7.5, -PI2, '#b8b8c8', '#3b4f7a', null, 'residential'],
   [null, -24, -36, 8, 7, 8, 0.3, '#c8b0d8', '#5d3a8a', null, 'residential']
 ];
 
 // NPC Positions: [x, z, face]
 const JT_POS = {
-  mayor: [0, -30.5, 0],
+  mayor: [0, -28.4, 0],
   nash: [-8.6, -14, PI2],
   mira: [8.6, -14, -PI2],
   tully: [-8.6, 14, PI2],
@@ -1144,26 +1142,26 @@ function buildJamestown() {
     part(mq, B(1.0, 2.2, 0.08), glow('#ffd890'), 0.55, 1.4, 4.08);
     part(mq, B(2.6, 0.15, 0.2), toon('#ffd36a'), 0, 2.85, 4.08);
 
-    at(mq, cx, cz + 4.0, 0);
+    at(mq, cx, cz - 4.0, Math.PI);
 
     // Interaction trigger to enter the Roxy Cinema
     INTERACTS.push({
       x: cx,
-      z: cz + 6.2,
+      z: cz - 6.2,
       r: 2.8,
       label: 'Enter The Roxy Cinema',
-      fn: () => enterCinema(cx, cz + 6.2)
+      fn: () => enterCinema(cx, cz - 6.2)
     });
   }
 
   // 4. Town Hall Neoclassical Columns & Municipal Flag
   for (let i = 0; i < 6; i++) {
     const x = -7 + i * 2.8;
-    part(props, Cy(0.42, 0.48, 7.2, 8), '#e8e4dc', tx + x, G(x, -31.6) + 3.6, tz - 31.6);
-    solid(tx + x, tz - 31.6, 0.5);
+    part(props, Cy(0.42, 0.48, 7.2, 8), '#e8e4dc', tx + x, G(x, -30.4) + 3.6, tz - 30.4);
+    solid(tx + x, tz - 30.4, 0.5);
   }
-  part(props, B(18.4, 0.9, 4.2), '#d8c8a8', tx, G(0, -32) + 7.4, tz - 32.5);
-  part(props, B(18.4, 0.5, 5.2), toon('#9a9088', 'stone'), tx, G(0, -32) + 0.25, tz - 31.8);
+  part(props, B(18.4, 0.9, 2.2), '#d8c8a8', tx, G(0, -31) + 7.4, tz - 30.6);
+  part(props, B(18.4, 0.5, 3.4), toon('#9a9088', 'stone'), tx, G(0, -31) + 0.25, tz - 30.4);
   {
     const fl = new THREE.Group();
     part(fl, Cy(0.06, 0.06, 6.4, 6), '#cfd3d8', 0, 3.2, 0);
@@ -1242,7 +1240,7 @@ function buildJamestown() {
   // Boulevard Street Trees
   for (let z = -24; z <= 36; z += 12) {
     if (Math.abs(z) > 14) for (const s of [-1, 1]) {
-      const x = 5.2 * s;
+      const x = 6.5 * s;
       part(props, Cy(0.16, 0.22, 2.8, 6), toon('#5a3a22', 'wood'), tx + x, G(x, z) + 1.4, tz + z);
       E(props, toon('#4f8a3a', 'leaves'), tx + x, G(x, z) + 3.2, tz + z, 1.2, 1.3, 1.2);
       solid(tx + x, tz + z, 0.35);
@@ -1259,7 +1257,7 @@ function buildJamestown() {
     solid(tx + px, tz + pz, 4.6);
 
     for (let i = 0; i < 10; i++) {
-      const a = i * 0.63, x = px + Math.cos(a) * 8.5, z = pz + Math.sin(a) * 7.2;
+      const a = i * 0.63, x = px + Math.cos(a) * 7.2, z = pz + Math.sin(a) * 5.6;
       part(props, Cy(0.25, 0.35, 3.4, 6), toon('#5a3a22', 'wood'), tx + x, G(x, z) + 1.7, tz + z);
       E(props, toon(i % 2 ? '#3f8a2f' : '#5aa04a', 'leaves'), tx + x, G(x, z) + 4.0, tz + z, 1.9, 1.6, 1.9);
       solid(tx + x, tz + z, 0.45);

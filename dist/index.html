@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.19.4</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.19.5</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1578,14 +1578,36 @@ function makeDrome() {
 
 // =================== EARTH SAFE ZONE TOWN ===================
 const TOWN = V(0, 0, -24);
+// Signs are painted as chunky pixel-art plaques (bevelled board, pixel font, drop shadow) so they sit in the PS1 look.
+// The canvas is repainted to the exact shape of the plane it ends up on (fitSign), so text is never squashed or stretched.
+function paintSign(c, text, bg, fg, aspect) {
+  const lines = String(text).split('\n'), H = Math.max(28, 22 * lines.length + 10), W = Math.max(H, Math.round(H * (aspect || 4)));
+  c.width = W; c.height = H; const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+  const sh = (hex, k) => { const n = parseInt(String(hex).replace('#', '').padEnd(6, '0').slice(0, 6), 16); const f = v => Math.max(0, Math.min(255, Math.round(v * k))); return `rgb(${f(n >> 16 & 255)},${f(n >> 8 & 255)},${f(n & 255)})`; };
+  x.fillStyle = sh(bg, 0.55); x.fillRect(0, 0, W, H);                     // outer frame
+  x.fillStyle = bg; x.fillRect(2, 2, W - 4, H - 4);                       // board
+  x.fillStyle = sh(bg, 1.45); x.fillRect(2, 2, W - 4, 1); x.fillRect(2, 2, 1, H - 4);   // top/left light edge
+  x.fillStyle = sh(bg, 0.7); x.fillRect(2, H - 3, W - 4, 1); x.fillRect(W - 3, 2, 1, H - 4); // bottom/right shade
+  x.fillStyle = sh(fg, 0.8); x.fillRect(4, 4, W - 8, 1); x.fillRect(4, H - 5, W - 8, 1);    // inner trim lines
+  for (const px of [5, W - 6]) for (const py of [5, H - 6]) { x.fillStyle = sh(fg, 0.9); x.fillRect(px - 1, py - 1, 2, 2); } // corner rivets
+  const lh = (H - 10) / lines.length; let fs = Math.floor(lh * 0.78);
+  const font = n => `bold ${n}px "Pixelify Sans", "VT323", "Courier New", monospace`;
+  x.font = font(fs); const widest = Math.max(...lines.map(l => x.measureText(l).width)); if (widest > W - 14) { fs = Math.max(6, Math.floor(fs * (W - 14) / widest)); x.font = font(fs); }
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  lines.forEach((l, i) => { const ty = Math.round(5 + lh * (i + 0.5)) + 1; x.fillStyle = 'rgba(0,0,0,0.55)'; x.fillText(l, Math.round(W / 2) + 1, ty + 1); x.fillStyle = fg; x.fillText(l, Math.round(W / 2), ty); });
+}
 function signTex(text, bg, fg) {
-  const c = document.createElement('canvas'); c.width = 512; c.height = 128;
-  const x = c.getContext('2d');
-  x.fillStyle = bg; x.fillRect(0, 0, 512, 128);
-  x.strokeStyle = fg; x.lineWidth = 8; x.strokeRect(10, 10, 492, 108);
-  x.fillStyle = fg; x.font = 'bold 72px Impact, "Arial Narrow", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(text, 256, 68, 470);
-  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; t.userData = { sign: true }; return t;
+  const c = document.createElement('canvas'); paintSign(c, text, bg, fg, 4);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.magFilter = THREE.NearestFilter; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false;
+  t.userData = { sign: true, text, bg, fg, aspect: 4 }; return t;
+}
+// repaint a sign texture to the plane's real width:height
+function fitSign(o) {
+  const m = o.material, t = m && !Array.isArray(m) && m.map; if (!t || !t.userData || !t.userData.sign || t.userData.text == null) return;
+  const p = o.geometry && o.geometry.parameters; if (!p || !p.width || !p.height) return;
+  const sc = new THREE.Vector3(); o.getWorldScale(sc); const a = (p.width * Math.abs(sc.x)) / (p.height * Math.abs(sc.y)); if (!isFinite(a) || Math.abs(a - t.userData.aspect) < 0.05) return;
+  if (t.userData.fitted) { const t2 = signTex(t.userData.text, t.userData.bg, t.userData.fg); m.map = t2; return fitSign(o); } // shared by planes of different shapes
+  paintSign(t.image, t.userData.text, t.userData.bg, t.userData.fg, a); t.userData.aspect = a; t.userData.fitted = true; t.needsUpdate = true;
 }
 function sign(g, text, bg, fg, x, y, z, w, ry) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w / 4), new THREE.MeshBasicMaterial({ map: signTex(text, bg, fg) }));
@@ -3844,6 +3866,7 @@ function tessellate(pos, nor, uv, L) {
 }
 function mergeStatic(root) {
   root.updateMatrixWorld(true);
+  root.traverse(o => { if (o.isMesh) fitSign(o); });
   const buckets = new Map();
   root.traverse(o => {
     if (!o.isMesh) return;
@@ -5914,18 +5937,16 @@ const JT_BUILDINGS = [
   ['ARCADE', -28, -12, 10, 7, 7, 0, '#5a2a6a', '#ff6aa8', '#ff6aa8', 'entertainment'],
   ['CINEMA', -28, 12, 11, 8, 9, Math.PI, '#8a2a3a', '#ffd36a', '#c8402f', 'entertainment'],
   ['GARAGE', 28, 12, 11, 7, 6, Math.PI, '#5d636c', '#ff8a2a', '#ff8a2a', 'industrial'],
-  ['APARTMENTS', 36, 28, 9, 9, 15, Math.PI, '#b8a088', '#5a3a22', null, 'residential'],
-  ['APARTMENTS', -38, -24, 9, 9, 14, 0, '#a8b0b8', '#3a4a5a', null, 'residential'],
-  [null, -26, 36, 8, 7, 7, Math.PI, '#c8a888', '#5a3a22', null, 'residential'],
-  [null, 26, 36, 8, 7, 7.5, Math.PI, '#a8c8a8', '#3a4a3a', null, 'residential'],
-  [null, -40, 10, 7, 8, 7, PI2, '#d8c098', '#5a3a22', null, 'residential'],
-  [null, 40, -8, 7, 8, 7.5, -PI2, '#b8b8c8', '#3b4f7a', null, 'residential'],
+  ['APARTMENTS', 28.5, 22.5, 9, 9, 15, Math.PI, '#b8a088', '#5a3a22', null, 'residential'],
+  ['APARTMENTS', -30.5, -20.5, 9, 9, 14, 0, '#a8b0b8', '#3a4a5a', null, 'residential'],
+  [null, -37.5, 10.5, 7, 6, 7, PI2, '#d8c098', '#5a3a22', null, 'residential'],
+  [null, 38, -8, 7, 6, 7.5, -PI2, '#b8b8c8', '#3b4f7a', null, 'residential'],
   [null, -24, -36, 8, 7, 8, 0.3, '#c8b0d8', '#5d3a8a', null, 'residential']
 ];
 
 // NPC Positions: [x, z, face]
 const JT_POS = {
-  mayor: [0, -30.5, 0],
+  mayor: [0, -28.4, 0],
   nash: [-8.6, -14, PI2],
   mira: [8.6, -14, -PI2],
   tully: [-8.6, 14, PI2],
@@ -6380,26 +6401,26 @@ function buildJamestown() {
     part(mq, B(1.0, 2.2, 0.08), glow('#ffd890'), 0.55, 1.4, 4.08);
     part(mq, B(2.6, 0.15, 0.2), toon('#ffd36a'), 0, 2.85, 4.08);
 
-    at(mq, cx, cz + 4.0, 0);
+    at(mq, cx, cz - 4.0, Math.PI);
 
     // Interaction trigger to enter the Roxy Cinema
     INTERACTS.push({
       x: cx,
-      z: cz + 6.2,
+      z: cz - 6.2,
       r: 2.8,
       label: 'Enter The Roxy Cinema',
-      fn: () => enterCinema(cx, cz + 6.2)
+      fn: () => enterCinema(cx, cz - 6.2)
     });
   }
 
   // 4. Town Hall Neoclassical Columns & Municipal Flag
   for (let i = 0; i < 6; i++) {
     const x = -7 + i * 2.8;
-    part(props, Cy(0.42, 0.48, 7.2, 8), '#e8e4dc', tx + x, G(x, -31.6) + 3.6, tz - 31.6);
-    solid(tx + x, tz - 31.6, 0.5);
+    part(props, Cy(0.42, 0.48, 7.2, 8), '#e8e4dc', tx + x, G(x, -30.4) + 3.6, tz - 30.4);
+    solid(tx + x, tz - 30.4, 0.5);
   }
-  part(props, B(18.4, 0.9, 4.2), '#d8c8a8', tx, G(0, -32) + 7.4, tz - 32.5);
-  part(props, B(18.4, 0.5, 5.2), toon('#9a9088', 'stone'), tx, G(0, -32) + 0.25, tz - 31.8);
+  part(props, B(18.4, 0.9, 2.2), '#d8c8a8', tx, G(0, -31) + 7.4, tz - 30.6);
+  part(props, B(18.4, 0.5, 3.4), toon('#9a9088', 'stone'), tx, G(0, -31) + 0.25, tz - 30.4);
   {
     const fl = new THREE.Group();
     part(fl, Cy(0.06, 0.06, 6.4, 6), '#cfd3d8', 0, 3.2, 0);
@@ -6478,7 +6499,7 @@ function buildJamestown() {
   // Boulevard Street Trees
   for (let z = -24; z <= 36; z += 12) {
     if (Math.abs(z) > 14) for (const s of [-1, 1]) {
-      const x = 5.2 * s;
+      const x = 6.5 * s;
       part(props, Cy(0.16, 0.22, 2.8, 6), toon('#5a3a22', 'wood'), tx + x, G(x, z) + 1.4, tz + z);
       E(props, toon('#4f8a3a', 'leaves'), tx + x, G(x, z) + 3.2, tz + z, 1.2, 1.3, 1.2);
       solid(tx + x, tz + z, 0.35);
@@ -6495,7 +6516,7 @@ function buildJamestown() {
     solid(tx + px, tz + pz, 4.6);
 
     for (let i = 0; i < 10; i++) {
-      const a = i * 0.63, x = px + Math.cos(a) * 8.5, z = pz + Math.sin(a) * 7.2;
+      const a = i * 0.63, x = px + Math.cos(a) * 7.2, z = pz + Math.sin(a) * 5.6;
       part(props, Cy(0.25, 0.35, 3.4, 6), toon('#5a3a22', 'wood'), tx + x, G(x, z) + 1.7, tz + z);
       E(props, toon(i % 2 ? '#3f8a2f' : '#5aa04a', 'leaves'), tx + x, G(x, z) + 4.0, tz + z, 1.9, 1.6, 1.9);
       solid(tx + x, tz + z, 0.45);
@@ -13424,8 +13445,11 @@ function settlePads(L) {
 // the HUD weapon line just shows ordnance charges now (Phil: no gun name)
 { const _u = updateHud; updateHud = function () { _u(); if (!LEVEL.fly && !handMelee()) $('gunLbl').textContent = `◆ ${ordCharges} ordnance`; else if (!LEVEL.fly) $('gunLbl').textContent = `◆ ${ordCharges} ordnance`; }; }
 // signs seen from behind used to read backwards: give each two-sided sign a proper back face instead
+// a sign merged into the static world mesh has its geometry in world space, so a back copy spun about its origin would land mirrored across the map
+function bakedMesh(o) { if (o.position.lengthSq() > 1e-6 || o.rotation.y) return false; o.geometry.computeBoundingSphere(); return o.geometry.boundingSphere.center.lengthSq() > 4; }
 function unmirrorSigns(root) {
-  const list = []; root.traverse(o => { const m = o.material; if (o.isMesh && m && !Array.isArray(m) && m.map && m.map.userData && m.map.userData.sign && m.side === THREE.DoubleSide && !o.userData.unmir) list.push(o); });
+  root.updateMatrixWorld(true); root.traverse(o => { if (o.isMesh) fitSign(o); });
+  const list = []; root.traverse(o => { const m = o.material; if (o.isMesh && m && !Array.isArray(m) && m.map && m.map.userData && m.map.userData.sign && m.side === THREE.DoubleSide && !o.userData.unmir && !bakedMesh(o)) list.push(o); });
   for (const o of list) { o.userData.unmir = true; const f = o.material.clone(); f.side = THREE.FrontSide; o.material = f; const b = new THREE.Mesh(o.geometry, f); b.rotation.y = Math.PI; b.userData.unmir = true; o.add(b); }
 }
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); try { unmirrorSigns(levelGroup); setTimeout(() => { try { unmirrorSigns(scene); } catch (_) {} }, 1500); } catch (_) {} return r; }; }
@@ -18688,6 +18712,7 @@ const UPDATES = [
   { id: 110, title: '2.14.3 · Vega narrates every cutscene, iPhone fix', items: ['iPhones and iPads: the game no longer crashes on load (Safari has no mouse lock, and one line assumed it did).', 'Vega, the voice from the opening film, now reads every cutscene and the prologue out loud. Shots wait for her to finish.', 'Opening film: the stray "And…" is gone, your wingmen fly in formation beside you, the enemy fleet is spread out and mixed, the battle has six kinds of robots, and dropped guns lie flat on the ground.', 'Prologue: the stars are smaller and calmer, and the odd ball of stars around one planet is gone.'] },
   { id: 111, title: '2.14.4 · A real hangar, a proper catch card', items: ['Hangar: the floor pad no longer flickers. Your selected war vehicle now turns on a lit turntable, with a gantry crane overhead, a tool wall, a red tool chest, tyre stacks, fuel drums, a fuel pump and guide lights to the launch door.', 'Fishing: the fish you caught now swims in front of its card, and the card waits for you to tap Continue (or press Enter or E).', 'Phones: the USE button can no longer land on top of the radar.', 'New drawn icons for the camera and repair buttons. The ship and the car share the same camera icon.'] },
   { id: 112, title: "2.14.5 · The Angler's Den, rooms that grow, Vega's film", items: ["New ship room: the Angler's Den. Mount your catches on 12 wall plaques, each showing the fish and your best length. Take one down any time to get the fish back. It also has a rod rack, an armchair and a big aquarium.", 'Upgraded ship rooms now look upgraded. Lv 2 and 3 each add a themed prop, Lv 4 hangs a banner and a second light, and Lv 5 adds gold trim and a crest at the door.', 'Ship corridor: the hull posts no longer stand in doorways, and the crane hook that was floating in the hall is back inside the hangar.', 'Fishing: the Bug Pond, Fern Pond and Coolant Canal are bigger, your cast always lands in water, and Coil in Robot City moved back from the dock.', 'Opening film: Captain Vega is the hero now (you are a fresh recruit), and the soldiers that were standing inside her are gone. Her ship flies the film\'s space battle.', 'Prologue: the ball of stars is gone, the stars are dimmer so the planets stand out, the thing behind Vector is now the Watcher rising out of the dark, and Drome\'s flagship wears a setting-sun sigil instead of a big red dot. With voice off, the prologue no longer stalls on its first line.'] },
+  { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
   { id: 135, title: "2.19.4 · New Jamestown, tidied up", items: ["Streets are clear: the scattered stalls, crates and bins are gone from the roads, and no bushes grow through the pavement", "One market row of four stalls on East Avenue, and a bench, bin and hydrant at each corner where the streets leave the plaza", "Parked hover cars sit at the curb instead of on the sidewalk", "Slick Eddie and Viper work the two back alleys west of Main Street, with crates and a dim lamp in each", "Arthur Vance's signing booth moved off West Avenue onto the sidewalk, the notice board moved off Main Street, and Bobby's BBQ no longer clips into the house behind it", "The Aranus Man comic reader matches the game's look, and its pages load much faster", "The Fort Ironrock iron wall texture now gets the same smoothing as every other texture in the HD styles"] },
   { id: 134, title: '2.19.3 · Fort Ironrock Armored Perimeter Walls', items: [
     'Fort Ironrock perimeter wall armor: The circular perimeter wall enclosing Fort Ironrock is now reinforced with riveted heavy iron plates, corner bolts, rust seams, and gunmetal coping caps.',

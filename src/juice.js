@@ -29,7 +29,7 @@ function beam(pos, col, h) {
   m.position.copy(pos).add(V(0, (h || 14) / 2, 0)); scene.add(m); FX.beams.push({ m, life: 1.4, max: 1.4 });
 }
 // hooks into the existing game
-{ const _f = fire; fire = function () { const before = player.ammo; const r = _f(); if (player.ammo !== before || (S.clip && !handMelee())) { muzzleFlash(); shake(gun().kind === 'rocket' || gun().splash ? 0.35 : gun().kind === 'shotgun' || gun().pellets ? 0.25 : 0.08); } return r; }; }
+{ const _f = fire; fire = function () { const before = player.ammo, c0 = player.cool; const r = _f(); if (player.ammo !== before || (S.clip && !handMelee() && player.cool > c0)) { muzzleFlash(); shake(gun().kind === 'rocket' || gun().splash ? 0.35 : gun().kind === 'shotgun' || gun().pellets ? 0.25 : 0.08); } return r; }; }
 { const _h = hurt; hurt = function (dmg, src) { const hp0 = player.hp, r = _h(dmg, src); const lost = hp0 - player.hp; if (lost > 0.5) { shake(Math.min(0.6, 0.12 + lost / maxHp() * 2)); damageNumber(player.pos.clone().add(V(0, 2.1, 0)), lost, '#ff5a4a'); } return r; }; }
 { const _k = kill; kill = function (e) { const p = e.obj.position.clone().add(V(0, e.def.hy * e.sc, 0)); impactFlash(p, e.def.boss ? '#ff4040' : '#ffb347', e.def.boss ? 4 : 1.8); if (e.def.boss) { shake(0.9); beam(e.obj.position.clone(), '#ffd36a', 30); } return _k(e); }; }
 { const _g = gainXp; gainXp = function (n) { const lv0 = S.lvl, r = _g(n); if (S.lvl > lv0 && player.pos) { beam(player.pos.clone(), '#ffd36a', 18); burst(player.pos.clone().add(V(0, 1, 0)), '#ffd36a', 40, 7); burst(player.pos.clone().add(V(0, 1, 0)), '#ffffff', 20, 4); shake(0.3); } return r; }; }

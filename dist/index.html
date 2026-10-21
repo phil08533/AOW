@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.21.7</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.21.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -4767,6 +4767,7 @@ const RIGS = {
   jumper: { type: 'biped', hip: 0.5, neck: 0.9, armX: 0.21, ax: 0.22, sh: 0.82, legX: 0.1 }
 };
 const _box = new THREE.Box3(), _c = V(0, 0, 0);
+const _s = new THREE.Vector3();
 function rig(obj, spec) {
   if (obj.userData.anim && obj.children.length <= 1) return obj;
   obj.updateMatrixWorld(true);
@@ -4790,6 +4791,8 @@ function rig(obj, spec) {
       if (_c.y < spec.hip - 0.06) target = _c.x >= 0 ? (_c.z >= 0 ? R.fl : R.bl) : (_c.z >= 0 ? R.fr : R.br);
     } else if (_c.y > spec.neck) target = R.head;
     else if (Math.abs(_c.x) > spec.armX && _c.y > spec.hip + 0.05) target = _c.x > 0 ? R.armL : R.armR;
+    // hands hang just below the hip line: small parts out at arm width go with the arm, so they stay on the wrist
+    else if (Math.abs(_c.x) > spec.armX && _c.y > spec.hip - 0.3 && _box.getSize(_s).length() < 0.3) target = _c.x > 0 ? R.armL : R.armR;
     else if (_c.y < spec.hip && Math.abs(_c.x) > 0.03) target = _c.x > 0 ? R.legL : R.legR;
     target.attach(c);
   }
@@ -13147,7 +13150,7 @@ function beam(pos, col, h) {
   m.position.copy(pos).add(V(0, (h || 14) / 2, 0)); scene.add(m); FX.beams.push({ m, life: 1.4, max: 1.4 });
 }
 // hooks into the existing game
-{ const _f = fire; fire = function () { const before = player.ammo; const r = _f(); if (player.ammo !== before || (S.clip && !handMelee())) { muzzleFlash(); shake(gun().kind === 'rocket' || gun().splash ? 0.35 : gun().kind === 'shotgun' || gun().pellets ? 0.25 : 0.08); } return r; }; }
+{ const _f = fire; fire = function () { const before = player.ammo, c0 = player.cool; const r = _f(); if (player.ammo !== before || (S.clip && !handMelee() && player.cool > c0)) { muzzleFlash(); shake(gun().kind === 'rocket' || gun().splash ? 0.35 : gun().kind === 'shotgun' || gun().pellets ? 0.25 : 0.08); } return r; }; }
 { const _h = hurt; hurt = function (dmg, src) { const hp0 = player.hp, r = _h(dmg, src); const lost = hp0 - player.hp; if (lost > 0.5) { shake(Math.min(0.6, 0.12 + lost / maxHp() * 2)); damageNumber(player.pos.clone().add(V(0, 2.1, 0)), lost, '#ff5a4a'); } return r; }; }
 { const _k = kill; kill = function (e) { const p = e.obj.position.clone().add(V(0, e.def.hy * e.sc, 0)); impactFlash(p, e.def.boss ? '#ff4040' : '#ffb347', e.def.boss ? 4 : 1.8); if (e.def.boss) { shake(0.9); beam(e.obj.position.clone(), '#ffd36a', 30); } return _k(e); }; }
 { const _g = gainXp; gainXp = function (n) { const lv0 = S.lvl, r = _g(n); if (S.lvl > lv0 && player.pos) { beam(player.pos.clone(), '#ffd36a', 18); burst(player.pos.clone().add(V(0, 1, 0)), '#ffd36a', 40, 7); burst(player.pos.clone().add(V(0, 1, 0)), '#ffffff', 20, 4); shake(0.3); } return r; }; }
@@ -18863,6 +18866,7 @@ const UPDATES = [
   { id: 159, title: "2.21.5 · Street dealers", items: ["Every outlaw world now has a street corner under a lamp post, with someone looking for work. Hire them and they sell your Lab product there every shift, sending the credits home.", "Rivals can kill a street dealer, and some rat you out: the Marshals hear your name, your outlaw rep jumps and you may go Wanted. Either way the corner is empty until you hire again.", "With a Dealer on your crew you can set up street dealers from the Crew panel (Street dealers button) without flying there, for a bigger fee. Careful and Loyal dealers last longer."] },
   { id: 160, title: "2.21.6 · Dealer heat", items: ["Every street dealer has a heat meter. Each sale adds heat, and the hotter they run the more likely rivals hit them or they rat you out. You get a warning when one runs hot.", "Tell a dealer to Lay low from the Street dealers list or by talking to them on their corner. They stop selling and cool off fast."] },
   { id: 161, title: "2.21.7 · Loading bars, faster Earth", items: ["A loading bar shows while the game starts up and every time you travel to another world, so on slower phones you know it is working.", "Earth loads about a third faster: the scenery merge does far less work, and the ground is reused when you come back to a world you already visited."] },
+  { id: 162, title: "2.21.8 · Bench, stats and fixes", items: ["The Boutique Bench keeps its scroll position when you change something, so on phones it no longer jumps back to the top.", "The Stats tab is rebuilt: each recipe shows its colour, grade, street rep stars (up to five, by doses sold), credits earned, current price and how far to the next star.", "Lab crew hold their hands properly now (hands were floating off the arms), and the dealer has their own counting table out of the way of the consoles.", "No more muzzle flash when you pull the trigger somewhere you can't fire."] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -22861,12 +22865,13 @@ function openHire(pick) {
 // and the crew are there in the Lab, doing their jobs: the cook at the flask bench, the runner sorting crates, the dealer counting cash
 { const _lr = labRoom; labRoom = function (s, cx, cz, far, outer, faceIn, term, props) { _lr.apply(this, arguments);
   try { const C = crewS(), mid = (far + cx) / 2;
-    const spots = { cook: [far - s.side * 0.95, cz - 1.2, far, cz - 1.2], runner: [mid - s.side * 0.4, cz + 0.6, cx - s.side * 2, cz + 0.6], dealer: [cx - s.side * 0.2, cz - 2.6, cx, cz] };
+    const spots = { cook: [far - s.side * 0.95, cz - 1.2, far, cz - 1.2], runner: [mid - s.side * 0.4, cz + 0.6, cx - s.side * 2, cz + 0.6], dealer: [cx + s.side * 0.9, cz + 2.0, cx + s.side * 0.9, cz + 3.0] };
+    // the dealer's own little counting table, out of the way of the consoles
+    { const tx = cx + s.side * 0.9, tz = cz + 2.75; part(props, B(0.9, 0.75, 0.6), toon('#3a2e24', 'wood'), tx, 0.375, tz); part(props, B(0.95, 0.05, 0.65), toon('#5a4632'), tx, 0.77, tz); for (let i = 0; i < 3; i++) part(props, B(0.16, 0.04 + i * 0.03, 0.08), toon('#6fdc5a'), tx - 0.25 + i * 0.2, 0.8 + i * 0.015, tz - 0.05); part(props, B(0.3, 0.12, 0.2), toon('#2a2c32'), tx + 0.25, 0.86, tz + 0.1); solid(tx, tz, 0.5); }
     part(props, B(0.6, 0.5, 0.6), toon('#5a4a32', 'wood'), spots.runner[0] - s.side * 0.7, 0.25, cz + 0.6); part(props, B(0.5, 0.4, 0.5), toon('#4a3a28', 'wood'), spots.runner[0] - s.side * 0.7, 0.7, cz + 0.6);
     for (const j in spots) { const m = C[j]; if (!m || (m.hurt && Date.now() < m.hurt) || m.low) continue; const [x, z, tx, tz] = spots[j], L = CREW_LOOKS[m.look] || CREW_LOOKS[0];
       const o = buildChar(() => makeCivilian(...L), 'civ'); o.position.set(x, 0, z); o.rotation.y = Math.atan2(tx - x, tz - z); levelGroup.add(o); const R = o.userData.rig, ph = Math.random() * 6;
-      if (j === 'dealer') part(o, B(0.18, 0.05, 0.1), toon('#6fdc5a'), 0.12, 1.0, 0.25);
-      levelAnims.push(t => { if (!o.parent || !R || !R.armL) return; const k = t + ph;
+            levelAnims.push(t => { if (!o.parent || !R || !R.armL) return; const k = t + ph;
         if (j === 'cook') { R.armR.rotation.x = -1.1 + Math.sin(k * 3) * 0.25; R.armL.rotation.x = -0.9 + Math.cos(k * 2.2) * 0.15; }
         else if (j === 'runner') { const b = Math.max(0, Math.sin(k * 0.9)); R.armL.rotation.x = R.armR.rotation.x = -0.4 - b * 0.9; o.rotation.y = Math.atan2(tx - x, tz - z) + Math.sin(k * 0.45) * 0.6; }
         else { R.armR.rotation.x = -0.9 + Math.abs(Math.sin(k * 5)) * 0.2; R.armL.rotation.x = -0.8; } });
@@ -23563,7 +23568,7 @@ function bqRegisterAll() { try { chemS().rec.forEach(bqRegister); } catch (e) { 
   if (U.tintA.value < 0.05) { U.tint.value.set(D.col); U.tintA.value = Math.max(U.tintA.value, (D.fx.ghost || 0) * 0.35); } } catch (_) {} }; }
 // count doses that leave the bag other than by using them as sold: that is what spreads word of mouth
 { let last = {}, used = 0; const _u = useSub; useSub = function (id) { if (SUBS[id] && SUBS[id].boutique) used = id; return _u.apply(this, arguments); }; window.useSub = useSub;
-  setInterval(() => { try { const C = chemS(); for (const r of C.rec) { const n = S.inv[r.id] || 0, was = last[r.id]; if (was != null && n < was) { const gone = was - n - (used === r.id ? 1 : 0); if (gone > 0) { C.sold[r.id] = (C.sold[r.id] || 0) + gone; C.xp += gone * (2 + ['F', 'D', 'C', 'B', 'A', 'S'].indexOf(bqEval(r).grade)); SUBS[r.id].price = bqPrice(r.id); markDirty(); } } last[r.id] = n; } used = 0; } catch (_) {} }, 1500); }
+  setInterval(() => { try { const C = chemS(); for (const r of C.rec) { const n = S.inv[r.id] || 0, was = last[r.id]; if (was != null && n < was) { const gone = was - n - (used === r.id ? 1 : 0); if (gone > 0) { C.sold[r.id] = (C.sold[r.id] || 0) + gone; C.earn = C.earn || {}; C.earn[r.id] = (C.earn[r.id] || 0) + gone * bqPrice(r.id); C.xp += gone * (2 + ['F', 'D', 'C', 'B', 'A', 'S'].indexOf(bqEval(r).grade)); SUBS[r.id].price = bqPrice(r.id); markDirty(); } } last[r.id] = n; } used = 0; } catch (_) {} }, 1500); }
 
 // ---- gathering: glowing nodes out in the worlds, back after 20 minutes ----
 function bqNodeModel(k) { const g = new THREE.Group(), I = BQ_ING[k], gl = glow(I.col);
@@ -23590,6 +23595,8 @@ function bqPlaceNodes() {
 const BQ = { r: null };
 function bqNew() { return { id: 'bq_' + Date.now().toString(36), name: 'House Special', col: '#c86aff', ing: [], heat: 50, stir: 50, press: 50, steep: 50, cut: 20, kick: 'dmg' }; }
 function openBoutique(tab) {
+  const keep = [...document.querySelectorAll('#dlg, #dlg *')].filter(el => el.scrollTop > 0).map(el => [el.id ? '#' + el.id : null, el.className, el.scrollTop]); const sameTab = (tab || 'design') === BQ.tab; BQ.tab = tab || 'design';
+  setTimeout(() => { if (!sameTab) return; for (const [id, cls, top] of keep) { const el = id ? document.querySelector(id) : [...document.querySelectorAll('#dlg *')].find(x => x.className === cls && x.scrollHeight > x.clientHeight); if (el) el.scrollTop = top; } }, 0);
   const C = chemS(); BQ.r = BQ.r || bqNew(); const r = BQ.r; tab = tab || 'design';
   openDlg('Boutique Bench', `Chemist level ${chemLvl()}`); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.cssText = 'display:flex;flex-direction:column;gap:6px';
   const row = (lbl, el, note) => { const d = document.createElement('div'); d.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap'; const s = document.createElement('span'); s.textContent = lbl; s.style.cssText = 'flex:0 0 92px'; d.append(s, el); if (note) { const n = document.createElement('span'); n.className = 'meta'; n.textContent = note; d.appendChild(n); } rows.appendChild(d); return d; };
@@ -23627,8 +23634,20 @@ function openBoutique(tab) {
     $('dlgActs').before(rows); acts([['New recipe', () => { BQ.r = bqNew(); openBoutique(); }], ['Back', () => openBoutique()], ['Close', closeDlg]]);
   } else {
     const best = C.rec.map(x => [x, bqEval(x).grade, C.sold[x.id] || 0]).sort((a, b) => b[2] - a[2]), tot = Object.values(C.sold).reduce((a, n) => a + n, 0);
-    $('dlgLine').textContent = `Chemist level ${chemLvl()} · ${C.xp} xp (next level at ${Math.pow(chemLvl(), 2) * 40}) · ${C.made || 0} batches brewed · ${tot} doses sold. Level 3 opens a second extract slot, level 6 a third, and every level raises how far Potency and Purity can go.`;
-    best.forEach(([x, g, n]) => { const d = document.createElement('div'); d.className = 'rowi'; d.textContent = `${x.name} · grade ${g} · ${n} sold · now ${bqPrice(x.id)} CR a dose${g === 'S' && n ? ' · word is spreading' : ''}`; rows.appendChild(d); });
+    $('dlgLine').textContent = `Chemist level ${chemLvl()} · ${C.xp} xp (next level at ${Math.pow(chemLvl(), 2) * 40}) · ${C.made || 0} batches brewed · ${tot} doses sold. Level 3 opens a second extract slot, level 6 a third, and every level sharpens your slider hints and raises how strong a perfect cook can get.`;
+    C.earn = C.earn || {}; const tierAt = [0, 5, 20, 50, 120, 300], stars = n => { let k = 0; tierAt.forEach((t, j) => { if (n >= t && j) k = j; }); return k; };
+    if (!best.length) { const d = document.createElement('div'); d.className = 'rowi'; d.textContent = 'No recipes yet. Brew one on the Design tab.'; rows.appendChild(d); }
+    best.forEach(([x, g, n], rank) => { const d = document.createElement('div'); d.className = 'rowi'; d.style.cssText = 'display:block;padding:8px 6px;line-height:1.5';
+      const k = stars(n), nxt = tierAt[k + 1], e = bqEval(x);
+      const top = document.createElement('div'); top.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:nowrap';
+      const sw = document.createElement('i'); sw.style.cssText = `display:inline-block;width:14px;height:14px;background:${x.col};border:2px solid #07060a;flex:none`;
+      const nm = document.createElement('b'); nm.style.cssText = 'flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'; nm.textContent = `${rank + 1}. ${x.name}`;
+      const gr = document.createElement('b'); gr.style.cssText = `flex:none;color:${{ S: '#ffd36a', A: '#7fff6a', B: '#4fe0ff', C: '#e8e4dc', D: '#c8a080', F: '#ff5a4a' }[g]}`; gr.textContent = `Grade ${g}`;
+      top.append(sw, nm, gr);
+      const st = document.createElement('div'); st.style.cssText = 'color:#ffd36a;letter-spacing:2px'; st.textContent = '★'.repeat(k) + '☆'.repeat(5 - k) + `  street rep`;
+      const info = document.createElement('div'); info.className = 'meta'; info.style.cssText = 'white-space:normal;text-align:left';
+      info.textContent = `${n} sold · ${(C.earn[x.id] || 0).toLocaleString()} CR earned · ${bqPrice(x.id)} CR a dose now · +${Math.round(e.str * 100)}% ${BQ_KICK[x.kick][1]}${nxt ? ` · next star at ${nxt} sold` : ' · legendary'}${g === 'S' && n ? ' · word is spreading' : ''}`;
+      d.append(top, st, info); rows.appendChild(d); });
     $('dlgActs').before(rows); acts([['Back', () => openBoutique()], ['Close', closeDlg]]);
   }
 }

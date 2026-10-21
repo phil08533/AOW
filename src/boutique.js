@@ -63,7 +63,7 @@ function bqRegisterAll() { try { chemS().rec.forEach(bqRegister); } catch (e) { 
   if (U.tintA.value < 0.05) { U.tint.value.set(D.col); U.tintA.value = Math.max(U.tintA.value, (D.fx.ghost || 0) * 0.35); } } catch (_) {} }; }
 // count doses that leave the bag other than by using them as sold: that is what spreads word of mouth
 { let last = {}, used = 0; const _u = useSub; useSub = function (id) { if (SUBS[id] && SUBS[id].boutique) used = id; return _u.apply(this, arguments); }; window.useSub = useSub;
-  setInterval(() => { try { const C = chemS(); for (const r of C.rec) { const n = S.inv[r.id] || 0, was = last[r.id]; if (was != null && n < was) { const gone = was - n - (used === r.id ? 1 : 0); if (gone > 0) { C.sold[r.id] = (C.sold[r.id] || 0) + gone; C.xp += gone * (2 + ['F', 'D', 'C', 'B', 'A', 'S'].indexOf(bqEval(r).grade)); SUBS[r.id].price = bqPrice(r.id); markDirty(); } } last[r.id] = n; } used = 0; } catch (_) {} }, 1500); }
+  setInterval(() => { try { const C = chemS(); for (const r of C.rec) { const n = S.inv[r.id] || 0, was = last[r.id]; if (was != null && n < was) { const gone = was - n - (used === r.id ? 1 : 0); if (gone > 0) { C.sold[r.id] = (C.sold[r.id] || 0) + gone; C.earn = C.earn || {}; C.earn[r.id] = (C.earn[r.id] || 0) + gone * bqPrice(r.id); C.xp += gone * (2 + ['F', 'D', 'C', 'B', 'A', 'S'].indexOf(bqEval(r).grade)); SUBS[r.id].price = bqPrice(r.id); markDirty(); } } last[r.id] = n; } used = 0; } catch (_) {} }, 1500); }
 
 // ---- gathering: glowing nodes out in the worlds, back after 20 minutes ----
 function bqNodeModel(k) { const g = new THREE.Group(), I = BQ_ING[k], gl = glow(I.col);
@@ -90,6 +90,8 @@ function bqPlaceNodes() {
 const BQ = { r: null };
 function bqNew() { return { id: 'bq_' + Date.now().toString(36), name: 'House Special', col: '#c86aff', ing: [], heat: 50, stir: 50, press: 50, steep: 50, cut: 20, kick: 'dmg' }; }
 function openBoutique(tab) {
+  const keep = [...document.querySelectorAll('#dlg, #dlg *')].filter(el => el.scrollTop > 0).map(el => [el.id ? '#' + el.id : null, el.className, el.scrollTop]); const sameTab = (tab || 'design') === BQ.tab; BQ.tab = tab || 'design';
+  setTimeout(() => { if (!sameTab) return; for (const [id, cls, top] of keep) { const el = id ? document.querySelector(id) : [...document.querySelectorAll('#dlg *')].find(x => x.className === cls && x.scrollHeight > x.clientHeight); if (el) el.scrollTop = top; } }, 0);
   const C = chemS(); BQ.r = BQ.r || bqNew(); const r = BQ.r; tab = tab || 'design';
   openDlg('Boutique Bench', `Chemist level ${chemLvl()}`); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.cssText = 'display:flex;flex-direction:column;gap:6px';
   const row = (lbl, el, note) => { const d = document.createElement('div'); d.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap'; const s = document.createElement('span'); s.textContent = lbl; s.style.cssText = 'flex:0 0 92px'; d.append(s, el); if (note) { const n = document.createElement('span'); n.className = 'meta'; n.textContent = note; d.appendChild(n); } rows.appendChild(d); return d; };
@@ -127,8 +129,20 @@ function openBoutique(tab) {
     $('dlgActs').before(rows); acts([['New recipe', () => { BQ.r = bqNew(); openBoutique(); }], ['Back', () => openBoutique()], ['Close', closeDlg]]);
   } else {
     const best = C.rec.map(x => [x, bqEval(x).grade, C.sold[x.id] || 0]).sort((a, b) => b[2] - a[2]), tot = Object.values(C.sold).reduce((a, n) => a + n, 0);
-    $('dlgLine').textContent = `Chemist level ${chemLvl()} · ${C.xp} xp (next level at ${Math.pow(chemLvl(), 2) * 40}) · ${C.made || 0} batches brewed · ${tot} doses sold. Level 3 opens a second extract slot, level 6 a third, and every level raises how far Potency and Purity can go.`;
-    best.forEach(([x, g, n]) => { const d = document.createElement('div'); d.className = 'rowi'; d.textContent = `${x.name} · grade ${g} · ${n} sold · now ${bqPrice(x.id)} CR a dose${g === 'S' && n ? ' · word is spreading' : ''}`; rows.appendChild(d); });
+    $('dlgLine').textContent = `Chemist level ${chemLvl()} · ${C.xp} xp (next level at ${Math.pow(chemLvl(), 2) * 40}) · ${C.made || 0} batches brewed · ${tot} doses sold. Level 3 opens a second extract slot, level 6 a third, and every level sharpens your slider hints and raises how strong a perfect cook can get.`;
+    C.earn = C.earn || {}; const tierAt = [0, 5, 20, 50, 120, 300], stars = n => { let k = 0; tierAt.forEach((t, j) => { if (n >= t && j) k = j; }); return k; };
+    if (!best.length) { const d = document.createElement('div'); d.className = 'rowi'; d.textContent = 'No recipes yet. Brew one on the Design tab.'; rows.appendChild(d); }
+    best.forEach(([x, g, n], rank) => { const d = document.createElement('div'); d.className = 'rowi'; d.style.cssText = 'display:block;padding:8px 6px;line-height:1.5';
+      const k = stars(n), nxt = tierAt[k + 1], e = bqEval(x);
+      const top = document.createElement('div'); top.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:nowrap';
+      const sw = document.createElement('i'); sw.style.cssText = `display:inline-block;width:14px;height:14px;background:${x.col};border:2px solid #07060a;flex:none`;
+      const nm = document.createElement('b'); nm.style.cssText = 'flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'; nm.textContent = `${rank + 1}. ${x.name}`;
+      const gr = document.createElement('b'); gr.style.cssText = `flex:none;color:${{ S: '#ffd36a', A: '#7fff6a', B: '#4fe0ff', C: '#e8e4dc', D: '#c8a080', F: '#ff5a4a' }[g]}`; gr.textContent = `Grade ${g}`;
+      top.append(sw, nm, gr);
+      const st = document.createElement('div'); st.style.cssText = 'color:#ffd36a;letter-spacing:2px'; st.textContent = '★'.repeat(k) + '☆'.repeat(5 - k) + `  street rep`;
+      const info = document.createElement('div'); info.className = 'meta'; info.style.cssText = 'white-space:normal;text-align:left';
+      info.textContent = `${n} sold · ${(C.earn[x.id] || 0).toLocaleString()} CR earned · ${bqPrice(x.id)} CR a dose now · +${Math.round(e.str * 100)}% ${BQ_KICK[x.kick][1]}${nxt ? ` · next star at ${nxt} sold` : ' · legendary'}${g === 'S' && n ? ' · word is spreading' : ''}`;
+      d.append(top, st, info); rows.appendChild(d); });
     $('dlgActs').before(rows); acts([['Back', () => openBoutique()], ['Close', closeDlg]]);
   }
 }

@@ -98,12 +98,13 @@ function openHire(pick) {
 // and the crew are there in the Lab, doing their jobs: the cook at the flask bench, the runner sorting crates, the dealer counting cash
 { const _lr = labRoom; labRoom = function (s, cx, cz, far, outer, faceIn, term, props) { _lr.apply(this, arguments);
   try { const C = crewS(), mid = (far + cx) / 2;
-    const spots = { cook: [far - s.side * 0.95, cz - 1.2, far, cz - 1.2], runner: [mid - s.side * 0.4, cz + 0.6, cx - s.side * 2, cz + 0.6], dealer: [cx - s.side * 0.2, cz - 2.6, cx, cz] };
+    const spots = { cook: [far - s.side * 0.95, cz - 1.2, far, cz - 1.2], runner: [mid - s.side * 0.4, cz + 0.6, cx - s.side * 2, cz + 0.6], dealer: [cx + s.side * 0.9, cz + 2.0, cx + s.side * 0.9, cz + 3.0] };
+    // the dealer's own little counting table, out of the way of the consoles
+    { const tx = cx + s.side * 0.9, tz = cz + 2.75; part(props, B(0.9, 0.75, 0.6), toon('#3a2e24', 'wood'), tx, 0.375, tz); part(props, B(0.95, 0.05, 0.65), toon('#5a4632'), tx, 0.77, tz); for (let i = 0; i < 3; i++) part(props, B(0.16, 0.04 + i * 0.03, 0.08), toon('#6fdc5a'), tx - 0.25 + i * 0.2, 0.8 + i * 0.015, tz - 0.05); part(props, B(0.3, 0.12, 0.2), toon('#2a2c32'), tx + 0.25, 0.86, tz + 0.1); solid(tx, tz, 0.5); }
     part(props, B(0.6, 0.5, 0.6), toon('#5a4a32', 'wood'), spots.runner[0] - s.side * 0.7, 0.25, cz + 0.6); part(props, B(0.5, 0.4, 0.5), toon('#4a3a28', 'wood'), spots.runner[0] - s.side * 0.7, 0.7, cz + 0.6);
     for (const j in spots) { const m = C[j]; if (!m || (m.hurt && Date.now() < m.hurt) || m.low) continue; const [x, z, tx, tz] = spots[j], L = CREW_LOOKS[m.look] || CREW_LOOKS[0];
       const o = buildChar(() => makeCivilian(...L), 'civ'); o.position.set(x, 0, z); o.rotation.y = Math.atan2(tx - x, tz - z); levelGroup.add(o); const R = o.userData.rig, ph = Math.random() * 6;
-      if (j === 'dealer') part(o, B(0.18, 0.05, 0.1), toon('#6fdc5a'), 0.12, 1.0, 0.25);
-      levelAnims.push(t => { if (!o.parent || !R || !R.armL) return; const k = t + ph;
+            levelAnims.push(t => { if (!o.parent || !R || !R.armL) return; const k = t + ph;
         if (j === 'cook') { R.armR.rotation.x = -1.1 + Math.sin(k * 3) * 0.25; R.armL.rotation.x = -0.9 + Math.cos(k * 2.2) * 0.15; }
         else if (j === 'runner') { const b = Math.max(0, Math.sin(k * 0.9)); R.armL.rotation.x = R.armR.rotation.x = -0.4 - b * 0.9; o.rotation.y = Math.atan2(tx - x, tz - z) + Math.sin(k * 0.45) * 0.6; }
         else { R.armR.rotation.x = -0.9 + Math.abs(Math.sin(k * 5)) * 0.2; R.armL.rotation.x = -0.8; } });

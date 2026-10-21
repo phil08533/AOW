@@ -20,6 +20,7 @@ const RIGS = {
   jumper: { type: 'biped', hip: 0.5, neck: 0.9, armX: 0.21, ax: 0.22, sh: 0.82, legX: 0.1 }
 };
 const _box = new THREE.Box3(), _c = V(0, 0, 0);
+const _s = new THREE.Vector3();
 function rig(obj, spec) {
   if (obj.userData.anim && obj.children.length <= 1) return obj;
   obj.updateMatrixWorld(true);
@@ -43,6 +44,8 @@ function rig(obj, spec) {
       if (_c.y < spec.hip - 0.06) target = _c.x >= 0 ? (_c.z >= 0 ? R.fl : R.bl) : (_c.z >= 0 ? R.fr : R.br);
     } else if (_c.y > spec.neck) target = R.head;
     else if (Math.abs(_c.x) > spec.armX && _c.y > spec.hip + 0.05) target = _c.x > 0 ? R.armL : R.armR;
+    // hands hang just below the hip line: small parts out at arm width go with the arm, so they stay on the wrist
+    else if (Math.abs(_c.x) > spec.armX && _c.y > spec.hip - 0.3 && _box.getSize(_s).length() < 0.3) target = _c.x > 0 ? R.armL : R.armR;
     else if (_c.y < spec.hip && Math.abs(_c.x) > 0.03) target = _c.x > 0 ? R.legL : R.legR;
     target.attach(c);
   }

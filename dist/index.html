@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.5</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.6</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18887,6 +18887,7 @@ const UPDATES = [
   { id: 168, title: '2.22.3 · Better laser shots', items: ['Laser bolts glow in their gun colour, with a soft spark racing down them instead of a ball.', 'Alien guns blow out a soft glowing ring instead of a hard circle.', 'Twelve new synthwave laser sounds, picked at random each shot.'] },
   { id: 169, title: '2.22.4 · Drug box fix', items: ['The Drug Room Box list no longer stacks up or leaks into other menus, and each material sits on one line.'] },
   { id: 170, title: '2.22.5 · One sound per gun', items: ['Each gun now always fires with its own laser sound instead of a random one.'] },
+  { id: 171, title: '2.22.6 · Dev unlock', items: ['Testing shortcut: tap the version line on the title screen 7 times quickly to unlock everything.'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -23941,6 +23942,18 @@ applyUiTheme();
     brand.style.display = 'block'; brand.style.left = d.style.left; brand.style.width = W + 'px'; brand.style.top = (parseFloat(d.style.top) + H + bz * 0.5 - 6) + 'px';
     brand.style.transformOrigin = `50% ${-(H / 2 + bz * 0.5 - 6)}px`; brand.style.transform = d.style.transform; brand.style.fontSize = Math.max(8, Math.min(12, bz * 0.5)) + 'px'; };
   requestAnimationFrame(loop); }
+
+// =================== DEV UNLOCK: tap the version line on the title screen 7 times to unlock everything (for testing) ===================
+function devUnlockAll() {
+  S.lvl = Math.max(S.lvl, 100); S.xp = 0; S.cr += 10000000;
+  S.guns = [...new Set([...(S.guns || []), ...Object.keys(GUNS)])];
+  S.melees = [...new Set([...(S.melees || []), ...Object.keys(MELEE)])];
+  S.gear = [...new Set([...(S.gear || []), ...Object.keys(GEAR)])];
+  S.ship = S.ship || {}; S.ship.unlocked = true;
+  if (typeof chemS === 'function') { chemS().xp = Math.max(chemS().xp, 4000); const b = bqBox(); for (const k in BQ_ING) { b[k] = (b[k] || 0) + 20; b['x_' + k] = (b['x_' + k] || 0) + 10; } }
+  markDirty(); try { updateHud(); } catch (_) {} toast('DEV UNLOCK', 'Level 100, every gun, melee and gear piece, ship, 10M credits and a full drug box', 4);
+}
+{ const el = document.querySelector('.credit'); let n = 0, t = 0; if (el) el.addEventListener('click', () => { const now = Date.now(); n = now - t < 600 ? n + 1 : 1; t = now; if (n >= 7) { n = 0; devUnlockAll(); } }); }
 
 
 // =================== STATE + SAVE ===================

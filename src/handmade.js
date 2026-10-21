@@ -40,7 +40,7 @@ body { text-shadow: 2px 2px 0 #07060a !important; }
 .pbtn:disabled { opacity: .45 !important; filter: grayscale(.6); }
 .pbtn kbd, .pbtn .k { border: 0 !important; background: rgba(0,0,0,.35) !important; color: inherit !important; border-radius: 0 !important; }
 .rowi { border-bottom: 2px dashed ${T.lite} !important; }
-#tabWrap { z-index: 60 !important; } body.menuopen #map { visibility: hidden; }
+#tabWrap { z-index: 60 !important; } body.menuopen #map, body.menuopen #vitals, body.menuopen #ammo, body.menuopen #quest, body.menuopen #compass, body.menuopen #clock { visibility: hidden; }
 #map { border-image: none !important; border: 4px solid ${T.lite} !important; border-radius: 50% !important; background: ${T.screen} !important; box-shadow: 0 0 0 2px #07060a, inset 0 0 0 2px ${T.dark}, 4px 4px 0 rgba(0,0,0,.55) !important; overflow: hidden !important; }
 #map canvas { border-radius: 50% !important; }
 #map::before, #map::after { content: none !important; }

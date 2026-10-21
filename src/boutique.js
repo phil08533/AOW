@@ -140,7 +140,7 @@ function openBoutique(tab) {
     $('dlgLine').textContent = C.rec.length ? 'Your recipes. Load one to brew it again or tweak it.' : 'No saved recipes yet. Brew one and it lands here.';
     C.rec.forEach(x => { const e = bqEval(x), d = document.createElement('div'); d.className = 'rowi'; d.style.cssText = 'display:flex;align-items:center;gap:8px';
       const sw = document.createElement('i'); sw.style.cssText = `width:14px;height:14px;background:${x.col};border:2px solid #07060a;flex:none`; const s = document.createElement('span'); s.style.flex = '1'; s.textContent = `${x.name} · ${e.grade} · sold ${C.sold[x.id] || 0} · ${bqPrice(x.id)} CR`;
-      d.append(sw, s, btn('Load', () => { BQ.r = JSON.parse(JSON.stringify(x)); openBoutique(); }), btn('Forget', () => { C.rec = C.rec.filter(y => y !== x); markDirty(); openBoutique('book'); })); rows.appendChild(d); });
+      d.append(sw, s, btn(`Take (${S.inv[x.id] || 0})`, () => { closeDlg(); useSub(x.id); }, false, !(S.inv[x.id] > 0)), btn('Load', () => { BQ.r = JSON.parse(JSON.stringify(x)); openBoutique(); }), btn('Forget', () => { C.rec = C.rec.filter(y => y !== x); markDirty(); openBoutique('book'); })); rows.appendChild(d); });
     $('dlgActs').before(rows); acts([['New recipe', () => { BQ.r = bqNew(); openBoutique(); }], ['Back', () => openBoutique()], ['Close', closeDlg]]);
   } else {
     const best = C.rec.map(x => [x, bqEval(x).grade, C.sold[x.id] || 0]).sort((a, b) => b[2] - a[2]), tot = Object.values(C.sold).reduce((a, n) => a + n, 0);

@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -17170,6 +17170,7 @@ function invDetailPanel() {
   if (m.kind === 'melee') { if (!equipped) act('Equip', () => invEquip(key), true); else if (m.id !== 'knife') act('Unequip', () => invUnequip('melee')); }
   if (m.kind === 'ord' && !equipped) act('Select', () => invEquip(key), true);
   if (m.id === 'medkit' && m.kind === 'item') act('Use', () => invUse(key), true, player.hp >= maxHp());
+  else if (m.kind === 'item' && typeof SUBS !== 'undefined' && SUBS[m.id]) act('Take', () => invUse(key), true);
   else if (m.kind === 'item' && (ITEMS[m.id].heal || ITEMS[m.id].papers)) act(ITEMS[m.id].heal ? 'Eat' : 'Use', () => invUse(key), true, !!ITEMS[m.id].heal && player.hp >= maxHp());
   if (m.kind === 'item' && !ITEMS[m.id].quest) { act('Drop 1', () => invDrop(m.id, 1)); if (m.n > 2) act(`Drop ${Math.floor(m.n / 2)}`, () => invDrop(m.id, Math.floor(m.n / 2))); if (m.n > 1) act(`Drop all ${m.n}`, () => invDrop(m.id, m.n)); }
   if (m.kind === 'item' && !ITEMS[m.id].quest && roomLvl('cargo')) { act('Beam 1 to ship', () => beamUp(m.id, 1)); if (m.n > 1) act(`Beam all ${m.n} to ship`, () => beamUp(m.id, m.n)); }
@@ -18890,6 +18891,7 @@ const UPDATES = [
   { id: 171, title: '2.22.6 · Dev unlock', items: ['Testing shortcut: tap the version line on the title screen 7 times quickly to unlock everything.'] },
   { id: 172, title: '2.22.7 · Dev unlock covers everything', items: ['The 7-tap unlock now also builds and maxes every ship room, and unlocks all armor, furniture, pets, saber mods, ship parts and paints, the drone, race cars and war vehicles.'] },
   { id: 173, title: '2.22.8 · Dev unlock stocks items', items: ['The 7-tap unlock also fills your pack with 50 of every item and material, for testing drugs and crafting.'] },
+  { id: 174, title: '2.22.9 · Take your own drugs', items: ['Drugs you brew now have a Take button in your bag, and on the Recipes tab of the Boutique Bench.'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -23775,7 +23777,7 @@ function openBoutique(tab) {
     $('dlgLine').textContent = C.rec.length ? 'Your recipes. Load one to brew it again or tweak it.' : 'No saved recipes yet. Brew one and it lands here.';
     C.rec.forEach(x => { const e = bqEval(x), d = document.createElement('div'); d.className = 'rowi'; d.style.cssText = 'display:flex;align-items:center;gap:8px';
       const sw = document.createElement('i'); sw.style.cssText = `width:14px;height:14px;background:${x.col};border:2px solid #07060a;flex:none`; const s = document.createElement('span'); s.style.flex = '1'; s.textContent = `${x.name} · ${e.grade} · sold ${C.sold[x.id] || 0} · ${bqPrice(x.id)} CR`;
-      d.append(sw, s, btn('Load', () => { BQ.r = JSON.parse(JSON.stringify(x)); openBoutique(); }), btn('Forget', () => { C.rec = C.rec.filter(y => y !== x); markDirty(); openBoutique('book'); })); rows.appendChild(d); });
+      d.append(sw, s, btn(`Take (${S.inv[x.id] || 0})`, () => { closeDlg(); useSub(x.id); }, false, !(S.inv[x.id] > 0)), btn('Load', () => { BQ.r = JSON.parse(JSON.stringify(x)); openBoutique(); }), btn('Forget', () => { C.rec = C.rec.filter(y => y !== x); markDirty(); openBoutique('book'); })); rows.appendChild(d); });
     $('dlgActs').before(rows); acts([['New recipe', () => { BQ.r = bqNew(); openBoutique(); }], ['Back', () => openBoutique()], ['Close', closeDlg]]);
   } else {
     const best = C.rec.map(x => [x, bqEval(x).grade, C.sold[x.id] || 0]).sort((a, b) => b[2] - a[2]), tot = Object.values(C.sold).reduce((a, n) => a + n, 0);

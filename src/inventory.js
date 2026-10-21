@@ -370,6 +370,7 @@ function invDetailPanel() {
   if (m.kind === 'melee') { if (!equipped) act('Equip', () => invEquip(key), true); else if (m.id !== 'knife') act('Unequip', () => invUnequip('melee')); }
   if (m.kind === 'ord' && !equipped) act('Select', () => invEquip(key), true);
   if (m.id === 'medkit' && m.kind === 'item') act('Use', () => invUse(key), true, player.hp >= maxHp());
+  else if (m.kind === 'item' && typeof SUBS !== 'undefined' && SUBS[m.id]) act('Take', () => invUse(key), true);
   else if (m.kind === 'item' && (ITEMS[m.id].heal || ITEMS[m.id].papers)) act(ITEMS[m.id].heal ? 'Eat' : 'Use', () => invUse(key), true, !!ITEMS[m.id].heal && player.hp >= maxHp());
   if (m.kind === 'item' && !ITEMS[m.id].quest) { act('Drop 1', () => invDrop(m.id, 1)); if (m.n > 2) act(`Drop ${Math.floor(m.n / 2)}`, () => invDrop(m.id, Math.floor(m.n / 2))); if (m.n > 1) act(`Drop all ${m.n}`, () => invDrop(m.id, m.n)); }
   if (m.kind === 'item' && !ITEMS[m.id].quest && roomLvl('cargo')) { act('Beam 1 to ship', () => beamUp(m.id, 1)); if (m.n > 1) act(`Beam all ${m.n} to ship`, () => beamUp(m.id, m.n)); }

@@ -58,7 +58,7 @@ LEVELS.zfloor = {
   terrain: null, palette: { grass: '#3a3d44' }, zones: [], paths: [], river: [], pools: [], lava: [],
   safes: [], spawn: { x: 22, z: 20, yaw: -Math.PI / 2 }, pad: { x: 22, z: 24 }, menu: { x: 0, z: 10, r: 16, h: 6 }, npcBase: [0, 0], npcs: [], spawns: [],
   build() {
-    const n = ZF.floor, th = zTheme(n), T = ZTHEMES[th] || { col: '#c9a43a', floor: '#2c2f36', neon: '#8fe3ff' }, H = 7, W = 30, D = 28;
+    const n = ZF.floor, th = zTheme(n), T = ZTHEMES[th] || { col: '#c9a43a', floor: '#2c2f36', neon: '#8fe3ff' }, H = 7, big = th === 'bar' || th === 'homes' || th === 'under', W = big ? 30 : 26, D = big ? 28 : 24; // working decks are a little tighter so they feel full
     const fl = new THREE.PlaneGeometry(W * 2, D * 2, 12, 12); fl.rotateX(-Math.PI / 2); const uv = fl.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * W, uv.getY(i) * D);
     props.add(new THREE.Mesh(fl, toon(T.floor, 'panel'))); const ce = new THREE.Mesh(fl.clone(), toon('#24262c', 'panel')); ce.rotation.x = Math.PI; ce.position.y = H; props.add(ce);
     for (const [x, z, w, d] of [[0, -D, W * 2, 0.6], [0, D, W * 2, 0.6], [-W, 0, 0.6, D * 2], [W, 0, 0.6, D * 2]]) { part(props, B(w, H, d), '#4a4e56', x, H / 2, z); box(x, z, w / 2, d / 2); }

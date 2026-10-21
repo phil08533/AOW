@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.12</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.13</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18900,6 +18900,7 @@ const UPDATES = [
   { id: 175, title: '2.22.10 · Aranus Man pages', items: ['The Aranus Man comic pages show up again.'] },
   { id: 176, title: '2.22.11 · Drug asteroids and crate furniture', items: ['Green-glowing asteroids in the belt drop drug materials when you break them, sometimes even Star Nectar.', 'Furniture is no longer bought. Every piece is found in salvage crates, on planets, in space and in boarded ships.'] },
   { id: 177, title: '2.22.12 · Cleaner iTab', items: ['Health, ammo, quest and clock panels hide while the iTab is open, so nothing sits on top of it.'] },
+  { id: 178, title: '2.22.13 · Smooth melee', items: ['Melee weapons and sabers swing in a smooth flowing arc. Hold attack and the blade carves a continuous figure-eight, one strike per pass.', 'Nunchucks, Poison Claws and Driller Claws are two-handed now: one in each hand, swinging in turn.'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -23954,6 +23955,32 @@ applyUiTheme();
     brand.style.display = 'block'; brand.style.left = d.style.left; brand.style.width = W + 'px'; brand.style.top = (parseFloat(d.style.top) + H + bz * 0.5 - 6) + 'px';
     brand.style.transformOrigin = `50% ${-(H / 2 + bz * 0.5 - 6)}px`; brand.style.transform = d.style.transform; brand.style.fontSize = Math.max(8, Math.min(12, bz * 0.5)) + 'px'; };
   requestAnimationFrame(loop); }
+
+// =================== SMOOTH MELEE (2.22.13): flowing swings instead of a jerky up-and-down chop ===================
+// Hold attack and the weapon carves a continuous figure-eight in front of you: every pass across is one strike, and the
+// blade turns to follow its own path. A single tap does one clean eased pass. Everything blends in and out of the rest pose.
+const SWG = { th: Math.PI / 2, blend: 0, pos: null, rot: null, off: null, offId: null };
+// two-handed weapons: a mirrored copy in the left hand that swings half a beat behind the right
+const TWO_HAND = { nunchucks: 1, claws: 1, driller: 1 };
+const vmOffM = new THREE.Group(); camera.add(vmOffM); vmOffM.visible = false;
+function swPose(th, b, big) { const s = Math.sin(th), c = Math.cos(th), ly = s * c;
+  return [[0.2 + (0.04 - 0.2 + s * 0.24 * big) * b, -0.27 + (0.07 + ly * 0.26 * big) * b, -0.42 + (0.06 - Math.abs(c) * 0.05) * b],
+    [-0.75 + (0.15 - ly * 1.1 - Math.abs(s) * 0.2) * b, 0.25 + (-s * 0.55) * b, -0.4 + (0.9 - s * 1.5 + Math.atan2(Math.cos(2 * th), c) * 0.35) * b]]; }
+updateMelee = function (dt) { meleeCool -= dt; if (meleeT > 0) meleeT -= dt; if (!handMelee() && meleeT <= 0) vmMelee.visible = false; };
+{ const _uh = updateHands; updateHands = function (dt, t) { _uh(dt, t);
+  try { if (!handMelee() && meleeT <= 0) { SWG.blend = 0; SWG.pos = null; vmOffM.visible = false; return; }
+    const M = MELEE[S.melee || 'knife'] || {}, held = firing && !SHIELD.blocking && handMelee(), active = held || meleeT > 0;
+    SWG.blend += ((active ? 1 : 0) - SWG.blend) * (1 - Math.exp(-dt * (active ? 12 : 7)));
+    if (active) SWG.th += dt * Math.PI / (held ? Math.max(0.2, (M.rate || 0.4) * 1.05) : 0.3);
+    else if (SWG.blend < 0.05) SWG.th = Math.PI / 2;
+    const b = SWG.blend, big = M.saber ? 1.15 : 1, [P, R] = swPose(SWG.th, b, big);
+    if (!SWG.pos) { SWG.pos = P.slice(); SWG.rot = R.slice(); }
+    const k = 1 - Math.exp(-dt * 22); for (let i = 0; i < 3; i++) { SWG.pos[i] += (P[i] - SWG.pos[i]) * k; SWG.rot[i] += (R[i] - SWG.rot[i]) * k; }
+    vmMelee.visible = true; vmMelee.position.set(SWG.pos[0], SWG.pos[1] + Math.sin(t * 2) * 0.006 * (1 - b), SWG.pos[2]); vmMelee.rotation.set(SWG.rot[0], SWG.rot[1], SWG.rot[2]);
+    const id = S.melee || 'knife', two = !!TWO_HAND[id]; vmOffM.visible = two && vmMelee.visible; vmShield.visible = vmShield.visible && (!two || SHIELD.blocking);
+    if (two) { if (SWG.offId !== id) { SWG.offId = id; while (vmOffM.children.length) vmOffM.remove(vmOffM.children[0]); const m = makeMeleeModel(id); m.scale.x = -1; vmOffM.add(m); }
+      const [P2, R2] = swPose(SWG.th + Math.PI, b, big); vmOffM.scale.setScalar(0.8); vmOffM.position.set(-P2[0], P2[1], P2[2]); vmOffM.rotation.set(R2[0], -R2[1], -R2[2]); }
+  } catch (e) { console.warn('swing', e); } }; }
 
 // =================== DEV UNLOCK: tap the version line on the title screen 7 times to unlock everything (for testing) ===================
 function devUnlockAll() {

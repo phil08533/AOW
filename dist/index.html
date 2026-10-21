@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.15</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.16</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18903,6 +18903,7 @@ const UPDATES = [
   { id: 178, title: '2.22.13 · Smooth melee', items: ['Melee weapons and sabers swing in a smooth flowing arc. Hold attack and the blade carves a continuous figure-eight, one strike per pass.', 'Nunchucks, Poison Claws and Driller Claws are two-handed now: one in each hand, swinging in turn.'] },
   { id: 179, title: '2.22.14 · Two-handed weapons', items: ['Twin Master Swords: one sword in each hand.', 'Frost Staff and Reaper Scythe are held across your body in both hands, and the swing turns into a spin.'] },
   { id: 180, title: '2.22.15 · Enemy plasma bolts', items: ['Enemy shots are glowing plasma bolts with a coloured halo and a comet tail, and they flash where they land. Coloured lobbed shots glow too.'] },
+  { id: 181, title: '2.22.16 · Drug timers and a tidier bench', items: ['Brewing takes time now: a batch cooks for 1.5 to 3.75 minutes depending on how many extracts it uses, and keeps cooking while you play elsewhere. Come back and Collect.', 'Refining takes 25 seconds per extract, with a Refine All button that queues the lot.', 'The bench shows what is cooking with a progress bar at the top, and the design page is split into Look, Extracts and Cook sections with a shorter summary line.'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -23756,33 +23757,34 @@ function openBoutique(tab) {
   const keep = [...document.querySelectorAll('#dlg, #dlg *')].filter(el => el.scrollTop > 0).map(el => [el.id ? '#' + el.id : null, el.className, el.scrollTop]); const sameTab = (tab || 'design') === BQ.tab; BQ.tab = tab || 'design';
   setTimeout(() => { if (!sameTab) return; for (const [id, cls, top] of keep) { const el = id ? document.querySelector(id) : [...document.querySelectorAll('#dlg *')].find(x => x.className === cls && x.scrollHeight > x.clientHeight); if (el) el.scrollTop = top; } }, 0);
   const C = chemS(); BQ.r = BQ.r || bqNew(); const r = BQ.r; tab = tab || 'design';
-  openDlg('Boutique Bench', `Chemist level ${chemLvl()}`); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.cssText = 'display:flex;flex-direction:column;gap:6px';
+  openDlg('Boutique Bench', `Chemist level ${chemLvl()}`); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.cssText = 'display:flex;flex-direction:column;gap:6px'; rows.appendChild(bqStatusEl());
   const row = (lbl, el, note) => { const d = document.createElement('div'); d.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap'; const s = document.createElement('span'); s.textContent = lbl; s.style.cssText = 'flex:0 0 92px'; d.append(s, el); if (note) { const n = document.createElement('span'); n.className = 'meta'; n.textContent = note; d.appendChild(n); } rows.appendChild(d); return d; };
   const btn = (t, fn, on, dis) => { const b = document.createElement('button'); b.className = 'pbtn' + (on ? ' go' : ''); b.textContent = t; b.disabled = !!dis; b.addEventListener('click', fn); return b; };
   if (tab === 'design') {
     const e = bqEval(r), line = $('dlgLine');
-    line.textContent = `Looks like grade ${bqGuess(e)} · +${Math.round(e.str * 100)}% ${BQ_KICK[r.kick][1]} for ${Math.round(e.sec / 60)} min · ${Math.round(e.trip * 100)}% bad trip · ${e.doses} doses a batch · sells ~${bqPriceOf(r)} CR each`;
+    line.textContent = `Grade ${bqGuess(e)} · +${Math.round(e.str * 100)}% ${BQ_KICK[r.kick][0].toLowerCase()} · ${e.doses} doses · ~${bqPriceOf(r)} CR each`;
     const nm = document.createElement('input'); nm.value = r.name; nm.maxLength = 22; nm.style.cssText = 'flex:1 1 140px;font:inherit;padding:4px 6px;background:#0c0d10;color:#f2e8d0;border:2px solid #4a5058'; nm.addEventListener('input', () => { r.name = nm.value || 'Unnamed'; });
     const cl = document.createElement('input'); cl.type = 'color'; cl.value = r.col; cl.style.cssText = 'width:40px;height:30px;border:2px solid #07060a;padding:0;background:none'; cl.addEventListener('input', () => { r.col = cl.value; bqPreview(r); });
-    const nr = row('Name', nm); nr.appendChild(cl); rows.appendChild(bqPreviewEl()); bqPreview(r);
+    const head = t => { const h = document.createElement('div'); h.textContent = t; h.style.cssText = 'margin-top:6px;color:var(--gold);font-size:13px;letter-spacing:.06em'; rows.appendChild(h); };
+    head('1 · LOOK'); const nr = row('Name', nm); nr.appendChild(cl); rows.appendChild(bqPreviewEl()); bqPreview(r);
     // ingredient slots: tap to cycle through the extracts you own
     const sl = document.createElement('div'); sl.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
     for (let i = 0; i < 3; i++) { const lock = i >= chemSlots(), k = r.ing[i];
       sl.appendChild(btn(lock ? `Locked (Chemist ${i === 1 ? 3 : 6})` : k ? `${BQ_ING[k].name} (${bqHave('x_' + k)})` : 'Empty slot', () => {
         const own = [null, ...Object.keys(BQ_ING).filter(x => bqHave('x_' + x) > 0)], at = own.indexOf(r.ing[i] || null); r.ing[i] = own[(at + 1) % own.length]; r.ing = r.ing.filter((x, j) => x || j > i).slice(0, 3); openBoutique(); }, false, lock)); }
-    row('Extracts', sl);
+    head('2 · EXTRACTS'); row('Extracts', sl);
     const slider = (lbl, key) => { const s = document.createElement('input'); s.type = 'range'; s.min = 0; s.max = 100; s.value = r[key]; s.style.flex = '1 1 140px';
       const d = row(lbl, s, key === 'cut' ? `${r[key]}% filler` : bqHint(e, key)); s.addEventListener('input', () => { r[key] = +s.value; bqPreview(r); }); s.addEventListener('change', () => { openBoutique(); }); return d; };
-    for (const [k, l] of BQ_SL) slider(l, k); slider('Cut', 'cut');
+    head('3 · COOK'); for (const [k, l] of BQ_SL) slider(l, k); slider('Cut', 'cut');
     const kk = document.createElement('div'); kk.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap'; for (const k in BQ_KICK) kk.appendChild(btn(BQ_KICK[k][0], () => { r.kick = k; openBoutique(); }, r.kick === k)); row('Kick', kk);
     if (!r.ing.filter(Boolean).length) line.textContent = 'Put an extract in a slot first. Refine raw ingredients into extracts on the Refine tab.';
     $('dlgActs').before(rows);
-    const need = r.ing.filter(Boolean), canBrew = need.length && need.every(k => bqHave('x_' + k) >= 1) && e.grade !== 'F';
-    acts([[`Brew ${e.doses}`, () => bqBrew(), true, !canBrew], ['Refine', () => openBoutique('refine')], ['Recipes', () => openBoutique('book')], ['Stats', () => openBoutique('stats')], ['Close', closeDlg]]);
+    const need = r.ing.filter(Boolean), canBrew = !C.batch && need.length && need.every(k => bqHave('x_' + k) >= 1) && e.grade !== 'F';
+    acts([[C.batch ? 'Burner busy' : `Brew ${e.doses} · ${bqClock(BQ_BREW_S(need.length) * 1000)}`, () => bqBrew(), true, !canBrew], ['Refine', () => openBoutique('refine')], ['Recipes', () => openBoutique('book')], ['Stats', () => openBoutique('stats')], ['Close', closeDlg]]);
   } else if (tab === 'refine') {
-    $('dlgLine').textContent = 'Two raw ingredients refine into one extract. Find raw ones glowing out in the worlds.';
+    $('dlgLine').textContent = `Two raw make one extract, ${BQ_REF_S}s each. Extracts land in your drug box.`;
     for (const k in BQ_ING) { const have = bqHave(k), d = document.createElement('div'); d.className = 'rowi'; d.style.cssText = 'display:flex;align-items:center;gap:8px';
-      const s = document.createElement('span'); s.style.flex = '1'; s.textContent = `${BQ_ING[k].name}: ${have} raw · ${bqHave('x_' + k)} extract`; d.append(s, btn('Refine', () => { bqTake(k, 2); bqBox()['x_' + k] = (bqBox()['x_' + k] || 0) + 1; chemS().xp += 1; SFX.coin(); markDirty(); openBoutique('refine'); }, false, have < 2)); rows.appendChild(d); }
+      const s = document.createElement('span'); s.style.flex = '1'; s.textContent = `${BQ_ING[k].name}: ${have} raw · ${bqHave('x_' + k)} extract`; d.append(s, btn('Refine 1', () => { bqRefine(k); openBoutique('refine'); }, false, have < 2), btn('All', () => { while (bqHave(k) >= 2) bqRefine(k); openBoutique('refine'); }, false, have < 4)); rows.appendChild(d); }
     $('dlgActs').before(rows); acts([['Back', () => openBoutique()], ['Close', closeDlg]]);
   } else if (tab === 'book') {
     $('dlgLine').textContent = C.rec.length ? 'Your recipes. Load one to brew it again or tweak it.' : 'No saved recipes yet. Brew one and it lands here.';
@@ -23828,15 +23830,36 @@ function bqPreview(r) { if (!BQV.r) return; const e = BQV.e = bqEval(r), col = n
   BQV.liq.material.color.setHSL(hsl.h, hsl.s * (0.4 + e.U / 160), Math.min(0.85, hsl.l * (0.55 + e.G / 110))); BQV.liq.material.opacity = 0.55 + e.U / 220;
   BQV.glass.material.color.set(e.U < 30 ? '#8a8a80' : '#d8f4ff'); BQV.glass.material.opacity = e.U < 30 ? 0.55 : 0.25; BQV.halo.material.color.copy(col); BQV.halo.material.opacity = e.G / 260; }
 const bqPriceOf = r => { const had = chemS().rec.find(x => x.id === r.id); if (had) return bqPrice(r.id); chemS().rec.push(r); const p = bqPrice(r.id); chemS().rec.pop(); return p; };
+// brewing and refining take real time (it keeps cooking while you're away); one batch on the burner at a time
+const BQ_BREW_S = n => 90 + n * 45, BQ_REF_S = 25;
+const bqClock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 function bqBrew() {
-  const r = BQ.r, C = chemS(), e = bqEval(r); if (e.grade === 'F') return;
-  for (const k of r.ing.filter(Boolean)) { bqTake('x_' + k, 1); }
+  const r = BQ.r, C = chemS(), e = bqEval(r); if (e.grade === 'F' || C.batch) return;
+  const ing = r.ing.filter(Boolean); for (const k of ing) { bqTake('x_' + k, 1); }
   let saved = C.rec.find(x => x.id === r.id); const same = saved && JSON.stringify(saved) === JSON.stringify(r);
   if (saved && !same) { r.id = 'bq_' + Date.now().toString(36); saved = null; } // changed settings make a new drug with its own name and reputation
   if (!saved) { C.rec.unshift(JSON.parse(JSON.stringify(r))); if (C.rec.length > 8) C.rec.length = 8; }
-  bqRegister(C.rec.find(x => x.id === r.id)); invAdd(r.id, e.doses); C.made = (C.made || 0) + 1; C.xp += 5 + ['F', 'D', 'C', 'B', 'A', 'S'].indexOf(e.grade) * 3;
-  SFX.level(); toast('BREWED', `${e.doses} × ${r.name} (${e.grade})`, 2.5); markDirty(); openBoutique();
+  bqRegister(C.rec.find(x => x.id === r.id)); const dur = BQ_BREW_S(ing.length) * 1000;
+  C.batch = { id: r.id, name: r.name, grade: e.grade, doses: e.doses, col: r.col, t0: Date.now(), done: Date.now() + dur };
+  SFX.item(); toast('COOKING', `${r.name} · ready in ${bqClock(dur)}`, 2.5); markDirty(); openBoutique();
 }
+function bqCollect() { const C = chemS(), b = C.batch; if (!b || Date.now() < b.done) return;
+  if (!invAdd(b.id, b.doses)) { toast('BAG FULL', 'Make room, then collect your batch', 2.5); return; } C.made = (C.made || 0) + 1; C.xp += 5 + ['F', 'D', 'C', 'B', 'A', 'S'].indexOf(b.grade) * 3; C.batch = null;
+  SFX.level(); toast('BREWED', `${b.doses} × ${b.name} (${b.grade})`, 2.5); markDirty(); }
+function bqRefCollect() { const C = chemS(); C.ref = (C.ref || []).filter(q => { if (Date.now() < q.done) return true; const b = bqBox(); b['x_' + q.k] = (b['x_' + q.k] || 0) + 1; C.xp += 1; return false; }); }
+function bqRefine(k) { const C = chemS(); C.ref = C.ref || []; if (bqHave(k) < 2) return; bqTake(k, 2); const last = C.ref.length ? C.ref[C.ref.length - 1].done : Date.now();
+  C.ref.push({ k, done: Math.max(Date.now(), last) + BQ_REF_S * 1000 }); SFX.coin(); markDirty(); }
+// the live status strip at the top of the bench: what's cooking, what's refining, and a progress bar
+function bqStatusEl() { const d = document.createElement('div'); d.id = 'bqTimer'; d.style.cssText = 'display:flex;flex-direction:column;gap:4px;padding:6px 8px;border:2px solid #4a5058;background:#0c0d10'; bqStatusFill(d); return d; }
+function bqStatusFill(d) { const C = chemS(), b = C.batch, now = Date.now(); bqRefCollect(); d.textContent = '';
+  const line = (txt, k, col, btnTxt, fn) => { const r = document.createElement('div'); r.style.cssText = 'display:flex;align-items:center;gap:8px'; const t = document.createElement('span'); t.style.flex = '1'; t.textContent = txt; r.appendChild(t);
+    if (btnTxt) { const bt = document.createElement('button'); bt.className = 'pbtn go'; bt.textContent = btnTxt; bt.addEventListener('click', fn); r.appendChild(bt); }
+    d.appendChild(r); if (k != null) { const bar = document.createElement('div'); bar.style.cssText = 'height:6px;background:#22252b'; const f = document.createElement('i'); f.style.cssText = `display:block;height:100%;width:${Math.round(k * 100)}%;background:${col}`; bar.appendChild(f); d.appendChild(bar); } };
+  if (b) { const left = b.done - now; if (left > 0) line(`Cooking ${b.name} (${b.grade}) · ${bqClock(left)}`, 1 - left / (b.done - b.t0), b.col); else line(`${b.name} is ready: ${b.doses} doses`, null, null, 'Collect', () => { bqCollect(); openBoutique(BQ.tab); }); }
+  else line('Burner free. Set up a recipe and press Brew.');
+  const q = C.ref || []; if (q.length) line(`Refining ${q.length} · next extract in ${bqClock(q[0].done - now)}`, null);
+}
+setInterval(() => { try { const d = document.getElementById('bqTimer'); if (d && !$('dlg').hidden) bqStatusFill(d); } catch (_) {} }, 1000);
 // the bench sits in the Lab next to the house-brew console
 { const _lr = labRoom; labRoom = function (s, cx, cz, far, outer, faceIn, term, props) { _lr.apply(this, arguments);
   try { const x = cx - s.side * 0.9, z = s.z0 + 0.6; part(props, B(1.1, 0.85, 0.7), '#2a2c32', x, 0.42, z); part(props, B(1.15, 0.05, 0.75), toon('#5a5e66'), x, 0.87, z);
@@ -24030,9 +24053,9 @@ function devUnlockAll() {
   T(() => { S.drone = Object.assign(S.drone || {}, { own: true }); for (const k in DRONE_UP) S.drone[k] = DRONE_UP[k].max; });
   T(() => { const R = rs(); R.owned = [...new Set([...R.owned, ...Object.keys(RCARS)])]; });
   T(() => { const V = vehS(); V.owned = [...new Set([...V.owned, ...Object.keys(VEH)])]; if (!V.sel) V.sel = V.owned[0]; for (const k in V.res) V.res[k] = Math.max(V.res[k], 5); });
-  T(() => { for (const k in ITEMS) if (!ITEMS[k].quest && !ITEMS[k].key) S.inv[k] = Math.max(S.inv[k] || 0, 50); });
+  T(() => { S.stash = S.stash || {}; for (const k in ITEMS) if (!ITEMS[k].quest && !ITEMS[k].key && !(S.inv[k] > 0)) S.stash[k] = Math.max(S.stash[k] || 0, 50); });
   if (typeof chemS === 'function') { chemS().xp = Math.max(chemS().xp, 4000); const b = bqBox(); for (const k in BQ_ING) { b[k] = (b[k] || 0) + 20; b['x_' + k] = (b['x_' + k] || 0) + 10; } }
-  markDirty(); try { updateHud(); } catch (_) {} toast('DEV UNLOCK', 'Everything unlocked, rooms maxed, 50 of every item and material', 4);
+  markDirty(); try { updateHud(); } catch (_) {} toast('DEV UNLOCK', 'Everything unlocked, rooms maxed, 50 of every item in your ship stash', 4);
 }
 { const el = document.querySelector('.credit'); let n = 0, t = 0; if (el) el.addEventListener('click', () => { const now = Date.now(); n = now - t < 600 ? n + 1 : 1; t = now; if (n >= 7) { n = 0; devUnlockAll(); } }); }
 

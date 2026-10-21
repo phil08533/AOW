@@ -74,8 +74,11 @@ function scavenge(where) {
   const M = smS(), locked = [];
   SHIP_PAINTS.forEach((p, i) => { if (!smOwn('p', i)) locked.push(['p', i, p[0] + ' paint']); }); SHIP_ACCENTS.forEach((p, i) => { if (!smOwn('a', i)) locked.push(['a', i, p[0] + ' accent']); });
   for (const [k] of SM_SLOTS) SHIP_PARTS[k].forEach((p, i) => { if (!smOwn(k, i)) locked.push([k, i, p[0]]); });
+  if (typeof FURN !== 'undefined') for (const id in FURN) if (!furnOwned(id)) locked.push(['f', id, FURN[id][0]]);
   if (!locked.length || Math.random() < 0.35) { const cr = 150 + randi(0, 250); S.cr += cr; S.inv.ore = (S.inv.ore || 0) + 2; S.inv.scrap = (S.inv.scrap || 0) + 3; toast('SALVAGE', `+${cr} cr, ore and scrap`, 2.5); SFX.coin(); markDirty(); return; }
-  const [k, i, name] = locked[randi(0, locked.length - 1)]; M.own[k + i] = 1; markDirty();
+  const [k, i, name] = locked[randi(0, locked.length - 1)];
+  if (k === 'f') { S.furn = S.furn || {}; S.furn[i] = 1; markDirty(); toast('FURNITURE FOUND!', `${name} · place it from Decorate on your ship`, 4); SFX.level(); log(`Found ${name} ${where}. Place as many as you like from Decorate.`, 'loot'); return; }
+  M.own[k + i] = 1; markDirty();
   toast('SCAVENGED!', `${name} for your ship · fit it at the Ship customizer`, 4); SFX.level(); log(`Scavenged ${where}: ${name}. Fit it from the Ship customizer on your ship.`, 'loot');
 }
 function makeSalvageCrate(big) {

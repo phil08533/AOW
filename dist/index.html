@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.10</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.11</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -7487,12 +7487,14 @@ LEVELS.space = {
     const dm = new THREE.Object3D();
     for (let i = 0; i < N; i++) {
       const a = (i / N) * Math.PI * 2 + Math.sin(i * 7.3) * 0.08, d = 760 + Math.sin(i * 3.1) * 90 + (i % 5) * 14, s = 3 + (i * 37 % 11) * 1.4 + (i % 13 === 0 ? 10 : 0);
-      const p = V(Math.cos(a) * d, Math.sin(i * 1.7) * 40, Math.sin(a) * d * 0.7 + 90), crystal = i % 9 === 0;
-      fly.rockData.push({ p, s, hp: s * 12, max: s * 12, crystal, dead: 0, spin: V(Math.sin(i), Math.cos(i * 2), Math.sin(i * 3)).multiplyScalar(0.2) });
+      const p = V(Math.cos(a) * d, Math.sin(i * 1.7) * 40, Math.sin(a) * d * 0.7 + 90), crystal = i % 9 === 0, drug = i % 9 === 4;
+      fly.rockData.push({ p, s, hp: s * 12, max: s * 12, crystal, drug, dead: 0, spin: V(Math.sin(i), Math.cos(i * 2), Math.sin(i * 3)).multiplyScalar(0.2) });
       dm.position.copy(p); dm.scale.setScalar(s); dm.rotation.set(i, i * 2, i * 3); dm.updateMatrix(); rocks.setMatrixAt(i, dm.matrix);
-      rocks.setColorAt(i, new THREE.Color(crystal ? '#ffe070' : ['#ffffff', '#d8c8b8', '#b8b0a8'][i % 3]));
+      rocks.setColorAt(i, new THREE.Color(crystal ? '#ffe070' : drug ? '#6aff7a' : ['#ffffff', '#d8c8b8', '#b8b0a8'][i % 3]));
     }
     levelGroup.add(rocks); fly.rocks = rocks; fly.dm = dm;
+    // drug rocks: a soft green glow around each one, so you can spot them across the belt
+    for (const R of fly.rockData) if (R.drug) { const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: FLASH_TEX, color: '#3aff5a', transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); gl.position.copy(R.p); gl.scale.setScalar(R.s * 3.2); levelGroup.add(gl); R.glow = gl; }
     // raider packs
     for (const [cx, cy, cz, n, lv] of [[450, 20, -420, 4, 12], [-480, 0, -480, 5, 18], [520, 10, 300, 5, 24], [-300, 30, 480, 4, 28], [80, 0, 520, 3, 20]]) for (let i = 0; i < n; i++) spawnRaider(V(cx + rand(-60, 60), cy + rand(-30, 30), cz + rand(-60, 60)), lv);
     // name markers you can see from anywhere
@@ -7587,7 +7589,7 @@ function spaceStep(dt, t) {
     if (done) { levelGroup.remove(b.m); F.bolts.splice(i, 1); } }
   // asteroid respawn + spin
   let dirty = false;
-  F.rockData.forEach((R, i) => { if (R.dead) { R.dead += dt; if (R.dead > 60) { R.dead = 0; R.hp = R.max; dirty = true; F.dm.position.copy(R.p); F.dm.scale.setScalar(R.s); F.dm.rotation.set(i, i * 2, i * 3); F.dm.updateMatrix(); F.rocks.setMatrixAt(i, F.dm.matrix); } } });
+  F.rockData.forEach((R, i) => { if (R.dead) { R.dead += dt; if (R.dead > 60) { R.dead = 0; R.hp = R.max; dirty = true; if (R.glow) R.glow.visible = true; F.dm.position.copy(R.p); F.dm.scale.setScalar(R.s); F.dm.rotation.set(i, i * 2, i * 3); F.dm.updateMatrix(); F.rocks.setMatrixAt(i, F.dm.matrix); } } });
   if (dirty) F.rocks.instanceMatrix.needsUpdate = true;
   // floating loot
   for (let i = F.drops.length - 1; i >= 0; i--) { const dr = F.drops[i]; dr.life -= dt; dr.m.rotation.y += dt * 2; const d = dr.m.position.distanceTo(player.pos);
@@ -7621,7 +7623,7 @@ function shipFire() {
     if (hit) { hit.hp -= dmg / 2; hit.aggro = true; burst(end, '#ffd36a', 6, 12); hitmark(false); if (hit.hp <= 0) killRaider(hit); else drawPlate(hit.plate, (hit.def && hit.def.name) || 'Drome Raider', 'Lv ' + hit.lv, hpColor(hit.lv), hit.hp / hit.max); }
     else if (rock >= 0) { const R = F.rockData[rock]; R.hp -= dmg / 2; burst(end, '#b8a07a', 4, 10);
       if (R.hp <= 0) { R.dead = 0.001; F.dm.position.copy(R.p); F.dm.scale.setScalar(0.0001); F.dm.updateMatrix(); F.rocks.setMatrixAt(rock, F.dm.matrix); F.rocks.instanceMatrix.needsUpdate = true; burst(R.p, '#b8a07a', 24, 30); SFX.crack();
-        const n = Math.max(1, Math.round(R.s / 4)); for (let k = 0; k < n; k++) spaceDrop(R.p, 'item', 'ore', 1); if (R.crystal || Math.random() < 0.1) spaceDrop(R.p, 'item', 'starcrystal', 1); questProgressKill('asteroid'); } }
+        const n = Math.max(1, Math.round(R.s / 4)); for (let k = 0; k < n; k++) spaceDrop(R.p, 'item', 'ore', 1); if (R.crystal || Math.random() < 0.1) spaceDrop(R.p, 'item', 'starcrystal', 1); if (R.drug) { if (R.glow) R.glow.visible = false; const ks = Object.keys(BQ_ING).filter(k => !BQ_ING[k].rare); for (let k = 0; k < 2 + randi(0, 2); k++) spaceDrop(R.p, 'item', ks[randi(0, ks.length - 1)], 1); if (Math.random() < 0.08) spaceDrop(R.p, 'item', 'starnectar', 1); } questProgressKill('asteroid'); } }
   }
 }
 function killRaider(r) {
@@ -12834,8 +12836,11 @@ function scavenge(where) {
   const M = smS(), locked = [];
   SHIP_PAINTS.forEach((p, i) => { if (!smOwn('p', i)) locked.push(['p', i, p[0] + ' paint']); }); SHIP_ACCENTS.forEach((p, i) => { if (!smOwn('a', i)) locked.push(['a', i, p[0] + ' accent']); });
   for (const [k] of SM_SLOTS) SHIP_PARTS[k].forEach((p, i) => { if (!smOwn(k, i)) locked.push([k, i, p[0]]); });
+  if (typeof FURN !== 'undefined') for (const id in FURN) if (!furnOwned(id)) locked.push(['f', id, FURN[id][0]]);
   if (!locked.length || Math.random() < 0.35) { const cr = 150 + randi(0, 250); S.cr += cr; S.inv.ore = (S.inv.ore || 0) + 2; S.inv.scrap = (S.inv.scrap || 0) + 3; toast('SALVAGE', `+${cr} cr, ore and scrap`, 2.5); SFX.coin(); markDirty(); return; }
-  const [k, i, name] = locked[randi(0, locked.length - 1)]; M.own[k + i] = 1; markDirty();
+  const [k, i, name] = locked[randi(0, locked.length - 1)];
+  if (k === 'f') { S.furn = S.furn || {}; S.furn[i] = 1; markDirty(); toast('FURNITURE FOUND!', `${name} · place it from Decorate on your ship`, 4); SFX.level(); log(`Found ${name} ${where}. Place as many as you like from Decorate.`, 'loot'); return; }
+  M.own[k + i] = 1; markDirty();
   toast('SCAVENGED!', `${name} for your ship · fit it at the Ship customizer`, 4); SFX.level(); log(`Scavenged ${where}: ${name}. Fit it from the Ship customizer on your ship.`, 'loot');
 }
 function makeSalvageCrate(big) {
@@ -18893,6 +18898,7 @@ const UPDATES = [
   { id: 173, title: '2.22.8 · Dev unlock stocks items', items: ['The 7-tap unlock also fills your pack with 50 of every item and material, for testing drugs and crafting.'] },
   { id: 174, title: '2.22.9 · Take your own drugs', items: ['Drugs you brew now have a Take button in your bag, and on the Recipes tab of the Boutique Bench.'] },
   { id: 175, title: '2.22.10 · Aranus Man pages', items: ['The Aranus Man comic pages show up again.'] },
+  { id: 176, title: '2.22.11 · Drug asteroids and crate furniture', items: ['Green-glowing asteroids in the belt drop drug materials when you break them, sometimes even Star Nectar.', 'Furniture is no longer bought. Every piece is found in salvage crates, on planets, in space and in boarded ships.'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -24710,7 +24716,7 @@ canBuild = function (type, gx, gz) {
   if (!SHIP_ROOMS.some(r => x - h >= r.x0 + 0.3 && x + h <= r.x1 - 0.3 && z - h >= r.z0 + 0.3 && z + h <= r.z1 - 0.3)) return 'Place it inside one of your ship’s rooms';
   if (myBase().some(p => p[1] === gx && p[2] === gz && PIECES[p[0]] && PIECES[p[0]].layer === def.layer)) return 'Something is already there';
   if (myBase().length >= MAX_PIECES) return 'Your ship is full of stuff';
-  if (!furnOwned(type)) return S.cr >= def.price ? null : `Costs ${def.price} cr`;
+  if (!furnOwned(type)) return 'Not found yet. Furniture turns up in salvage crates';
   return null;
 };
 placePiece = function () {
@@ -24744,7 +24750,7 @@ updateGhost = function () {
   FG.g.visible = true; FG.g.position.set(c.gx * CELL, pieceY(myBase(), c.gx, c.gz, def.layer), c.gz * CELL); FG.g.rotation.y = c.rot * Math.PI / 2;
   const ok = !why; if (FG.ok !== ok) { FG.ok = ok; FG.g.userData.model.traverse(o => { if (o.isMesh) o.material = ok ? fgMatOk : fgMatBad; }); }
   const t = performance.now() / 1000; fgMatOk.opacity = fgMatBad.opacity = 0.5 + Math.sin(t * 4) * 0.12; FG.g.userData.am.opacity = 0.75 + Math.sin(t * 6) * 0.2;
-  $('buildMsg').textContent = why || `${def.name}${furnOwned(baseState.type) ? '' : ` · ${def.price} cr`} · yellow arrow = front · Rotate turns it`;
+  $('buildMsg').textContent = why || `${def.name}${furnOwned(baseState.type) ? '' : ' · find in crates'} · yellow arrow = front · Rotate turns it`;
 };
 baseState.cat = 'Living'; baseState.type = 'sofa';
 renderBuildBar = function () {
@@ -24754,7 +24760,7 @@ renderBuildBar = function () {
   Object.entries(PIECES).filter(([, p]) => p.cat === baseState.cat).forEach(([id, p]) => {
     const b = document.createElement('button'); b.className = 'pbtn' + (baseState.type === id && !baseState.remove ? ' go' : '');
     const n = document.createElement('span'); n.textContent = p.name; const c = document.createElement('small');
-    c.textContent = furnOwned(id) ? (p.price ? 'Owned' : 'Free') : `${p.price} cr`; c.style.color = furnOwned(id) || S.cr >= p.price ? 'var(--dim)' : '#ff8a80';
+    c.textContent = furnOwned(id) ? (p.price ? 'Found' : 'Free') : 'Crate find'; c.style.color = furnOwned(id) ? 'var(--dim)' : '#ff8a80';
     b.append(n, c); b.addEventListener('click', () => { baseState.type = id; baseState.remove = false; SFX.ui(); renderBuildBar(); }); bar.appendChild(b); });
   $('bRemove').classList.toggle('go', baseState.remove);
   $('buildCount').textContent = `${myBase().length}/${MAX_PIECES} pieces · ${S.cr} cr`;

@@ -265,12 +265,14 @@ LEVELS.space = {
     const dm = new THREE.Object3D();
     for (let i = 0; i < N; i++) {
       const a = (i / N) * Math.PI * 2 + Math.sin(i * 7.3) * 0.08, d = 760 + Math.sin(i * 3.1) * 90 + (i % 5) * 14, s = 3 + (i * 37 % 11) * 1.4 + (i % 13 === 0 ? 10 : 0);
-      const p = V(Math.cos(a) * d, Math.sin(i * 1.7) * 40, Math.sin(a) * d * 0.7 + 90), crystal = i % 9 === 0;
-      fly.rockData.push({ p, s, hp: s * 12, max: s * 12, crystal, dead: 0, spin: V(Math.sin(i), Math.cos(i * 2), Math.sin(i * 3)).multiplyScalar(0.2) });
+      const p = V(Math.cos(a) * d, Math.sin(i * 1.7) * 40, Math.sin(a) * d * 0.7 + 90), crystal = i % 9 === 0, drug = i % 9 === 4;
+      fly.rockData.push({ p, s, hp: s * 12, max: s * 12, crystal, drug, dead: 0, spin: V(Math.sin(i), Math.cos(i * 2), Math.sin(i * 3)).multiplyScalar(0.2) });
       dm.position.copy(p); dm.scale.setScalar(s); dm.rotation.set(i, i * 2, i * 3); dm.updateMatrix(); rocks.setMatrixAt(i, dm.matrix);
-      rocks.setColorAt(i, new THREE.Color(crystal ? '#ffe070' : ['#ffffff', '#d8c8b8', '#b8b0a8'][i % 3]));
+      rocks.setColorAt(i, new THREE.Color(crystal ? '#ffe070' : drug ? '#6aff7a' : ['#ffffff', '#d8c8b8', '#b8b0a8'][i % 3]));
     }
     levelGroup.add(rocks); fly.rocks = rocks; fly.dm = dm;
+    // drug rocks: a soft green glow around each one, so you can spot them across the belt
+    for (const R of fly.rockData) if (R.drug) { const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: FLASH_TEX, color: '#3aff5a', transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); gl.position.copy(R.p); gl.scale.setScalar(R.s * 3.2); levelGroup.add(gl); R.glow = gl; }
     // raider packs
     for (const [cx, cy, cz, n, lv] of [[450, 20, -420, 4, 12], [-480, 0, -480, 5, 18], [520, 10, 300, 5, 24], [-300, 30, 480, 4, 28], [80, 0, 520, 3, 20]]) for (let i = 0; i < n; i++) spawnRaider(V(cx + rand(-60, 60), cy + rand(-30, 30), cz + rand(-60, 60)), lv);
     // name markers you can see from anywhere
@@ -365,7 +367,7 @@ function spaceStep(dt, t) {
     if (done) { levelGroup.remove(b.m); F.bolts.splice(i, 1); } }
   // asteroid respawn + spin
   let dirty = false;
-  F.rockData.forEach((R, i) => { if (R.dead) { R.dead += dt; if (R.dead > 60) { R.dead = 0; R.hp = R.max; dirty = true; F.dm.position.copy(R.p); F.dm.scale.setScalar(R.s); F.dm.rotation.set(i, i * 2, i * 3); F.dm.updateMatrix(); F.rocks.setMatrixAt(i, F.dm.matrix); } } });
+  F.rockData.forEach((R, i) => { if (R.dead) { R.dead += dt; if (R.dead > 60) { R.dead = 0; R.hp = R.max; dirty = true; if (R.glow) R.glow.visible = true; F.dm.position.copy(R.p); F.dm.scale.setScalar(R.s); F.dm.rotation.set(i, i * 2, i * 3); F.dm.updateMatrix(); F.rocks.setMatrixAt(i, F.dm.matrix); } } });
   if (dirty) F.rocks.instanceMatrix.needsUpdate = true;
   // floating loot
   for (let i = F.drops.length - 1; i >= 0; i--) { const dr = F.drops[i]; dr.life -= dt; dr.m.rotation.y += dt * 2; const d = dr.m.position.distanceTo(player.pos);
@@ -399,7 +401,7 @@ function shipFire() {
     if (hit) { hit.hp -= dmg / 2; hit.aggro = true; burst(end, '#ffd36a', 6, 12); hitmark(false); if (hit.hp <= 0) killRaider(hit); else drawPlate(hit.plate, (hit.def && hit.def.name) || 'Drome Raider', 'Lv ' + hit.lv, hpColor(hit.lv), hit.hp / hit.max); }
     else if (rock >= 0) { const R = F.rockData[rock]; R.hp -= dmg / 2; burst(end, '#b8a07a', 4, 10);
       if (R.hp <= 0) { R.dead = 0.001; F.dm.position.copy(R.p); F.dm.scale.setScalar(0.0001); F.dm.updateMatrix(); F.rocks.setMatrixAt(rock, F.dm.matrix); F.rocks.instanceMatrix.needsUpdate = true; burst(R.p, '#b8a07a', 24, 30); SFX.crack();
-        const n = Math.max(1, Math.round(R.s / 4)); for (let k = 0; k < n; k++) spaceDrop(R.p, 'item', 'ore', 1); if (R.crystal || Math.random() < 0.1) spaceDrop(R.p, 'item', 'starcrystal', 1); questProgressKill('asteroid'); } }
+        const n = Math.max(1, Math.round(R.s / 4)); for (let k = 0; k < n; k++) spaceDrop(R.p, 'item', 'ore', 1); if (R.crystal || Math.random() < 0.1) spaceDrop(R.p, 'item', 'starcrystal', 1); if (R.drug) { if (R.glow) R.glow.visible = false; const ks = Object.keys(BQ_ING).filter(k => !BQ_ING[k].rare); for (let k = 0; k < 2 + randi(0, 2); k++) spaceDrop(R.p, 'item', ks[randi(0, ks.length - 1)], 1); if (Math.random() < 0.08) spaceDrop(R.p, 'item', 'starnectar', 1); } questProgressKill('asteroid'); } }
   }
 }
 function killRaider(r) {

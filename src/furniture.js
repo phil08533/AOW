@@ -86,7 +86,7 @@ canBuild = function (type, gx, gz) {
   if (!SHIP_ROOMS.some(r => x - h >= r.x0 + 0.3 && x + h <= r.x1 - 0.3 && z - h >= r.z0 + 0.3 && z + h <= r.z1 - 0.3)) return 'Place it inside one of your ship’s rooms';
   if (myBase().some(p => p[1] === gx && p[2] === gz && PIECES[p[0]] && PIECES[p[0]].layer === def.layer)) return 'Something is already there';
   if (myBase().length >= MAX_PIECES) return 'Your ship is full of stuff';
-  if (!furnOwned(type)) return S.cr >= def.price ? null : `Costs ${def.price} cr`;
+  if (!furnOwned(type)) return 'Not found yet. Furniture turns up in salvage crates';
   return null;
 };
 placePiece = function () {
@@ -120,7 +120,7 @@ updateGhost = function () {
   FG.g.visible = true; FG.g.position.set(c.gx * CELL, pieceY(myBase(), c.gx, c.gz, def.layer), c.gz * CELL); FG.g.rotation.y = c.rot * Math.PI / 2;
   const ok = !why; if (FG.ok !== ok) { FG.ok = ok; FG.g.userData.model.traverse(o => { if (o.isMesh) o.material = ok ? fgMatOk : fgMatBad; }); }
   const t = performance.now() / 1000; fgMatOk.opacity = fgMatBad.opacity = 0.5 + Math.sin(t * 4) * 0.12; FG.g.userData.am.opacity = 0.75 + Math.sin(t * 6) * 0.2;
-  $('buildMsg').textContent = why || `${def.name}${furnOwned(baseState.type) ? '' : ` · ${def.price} cr`} · yellow arrow = front · Rotate turns it`;
+  $('buildMsg').textContent = why || `${def.name}${furnOwned(baseState.type) ? '' : ' · find in crates'} · yellow arrow = front · Rotate turns it`;
 };
 baseState.cat = 'Living'; baseState.type = 'sofa';
 renderBuildBar = function () {
@@ -130,7 +130,7 @@ renderBuildBar = function () {
   Object.entries(PIECES).filter(([, p]) => p.cat === baseState.cat).forEach(([id, p]) => {
     const b = document.createElement('button'); b.className = 'pbtn' + (baseState.type === id && !baseState.remove ? ' go' : '');
     const n = document.createElement('span'); n.textContent = p.name; const c = document.createElement('small');
-    c.textContent = furnOwned(id) ? (p.price ? 'Owned' : 'Free') : `${p.price} cr`; c.style.color = furnOwned(id) || S.cr >= p.price ? 'var(--dim)' : '#ff8a80';
+    c.textContent = furnOwned(id) ? (p.price ? 'Found' : 'Free') : 'Crate find'; c.style.color = furnOwned(id) ? 'var(--dim)' : '#ff8a80';
     b.append(n, c); b.addEventListener('click', () => { baseState.type = id; baseState.remove = false; SFX.ui(); renderBuildBar(); }); bar.appendChild(b); });
   $('bRemove').classList.toggle('go', baseState.remove);
   $('buildCount').textContent = `${myBase().length}/${MAX_PIECES} pieces · ${S.cr} cr`;

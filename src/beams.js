@@ -8,13 +8,13 @@ function boltAlong(m, a, b, r) { const d = b.clone().sub(a), L = d.length(); m.p
 { const _t = tracer; tracer = function (a, b, col) {
   if (BEAM.capture) { BEAM.end = b.clone(); return; }
   try { const c = new THREE.Color(col || '#ffd36a'), g = new THREE.Group();
-    const halo = new THREE.Mesh(BOLT.unit, boltMat(c, 0.45)), core = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff').lerp(c, 0.25), 0.95)), slug = new THREE.Mesh(BOLT.slug, boltMat(new THREE.Color('#ffffff').lerp(c, 0.4), 1));
-    boltAlong(halo, a, b, 0.022); boltAlong(core, a, b, 0.007); slug.scale.set(0.028, 0.028, 0.35); slug.lookAt(b.clone().sub(a).add(a)); slug.position.copy(a);
+    const halo = new THREE.Mesh(BOLT.unit, boltMat(c.clone().multiplyScalar(1.3), 0.6)), core = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff').lerp(c, 0.6), 0.95)), slug = new THREE.Sprite(new THREE.SpriteMaterial({ map: FLASH_TEX, color: c.clone().multiplyScalar(1.5), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+    boltAlong(halo, a, b, 0.022); boltAlong(core, a, b, 0.007); slug.scale.setScalar(0.12); slug.position.copy(a);
     g.add(halo, core, slug); scene.add(g); BOLT.list.push({ g, halo, core, slug, a: a.clone(), b: b.clone(), life: 0.11, max: 0.11 });
   } catch (e) { _t(a, b, col); } }; }
 function boltStep(dt) {
   for (let i = BOLT.list.length - 1; i >= 0; i--) { const B = BOLT.list[i]; B.life -= dt; const k = Math.max(0, B.life / B.max);
-    B.halo.material.opacity = 0.45 * k; B.core.material.opacity = 0.95 * k; B.slug.position.lerpVectors(B.a, B.b, Math.min(1, (1 - k) * 2.2)); B.slug.lookAt(B.b); B.slug.material.opacity = k;
+    B.halo.material.opacity = 0.6 * k; B.core.material.opacity = 0.95 * k; B.slug.position.lerpVectors(B.a, B.b, Math.min(1, (1 - k) * 2.2)); B.slug.material.opacity = k;
     if (B.life <= 0) { scene.remove(B.g); [B.halo, B.core, B.slug].forEach(m => m.material.dispose()); BOLT.list.splice(i, 1); } } }
 
 // ---- the Black Galaxy Beam ----

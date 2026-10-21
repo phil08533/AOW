@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.2</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.3</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -752,8 +752,14 @@ const SFX = (() => {
     const t = ac.currentTime + 0.005, fam = family(g), fn = GUNSND[fam] || GUNSND.blaster;
     // very fast guns: skip the heavy layers if the last shot was a moment ago, so the mix doesn't turn to mush
     if (t - lastGun < 0.045 && fam !== 'minigun') { const d = out(0.8, 0.1); click(d, t, 0.3); nz(d, t, 0.05, 0.4, 'bandpass', 2000, 800, 1); thump(d, t, 120, 0.06, 0.4); lastGun = t; return; }
-    lastGun = t; fn(t, g);
+    lastGun = t; if (fam.startsWith('m_') || !lzPlay(t)) fn(t, g);
   }
+  // Phil's synthwave laser samples: every shot picks one at random, slightly re-pitched so repeats don't sound copied
+  const LZ = { buf: [], loading: false };
+  function lzLoad() { if (LZ.loading || !ac) return; LZ.loading = true;
+    for (let i = 1; i <= 12; i++) fetch('sfx/laser' + i + '.mp3').then(r => r.arrayBuffer()).then(a => new Promise((ok, no) => ac.decodeAudioData(a, ok, no))).then(b => LZ.buf.push(b)).catch(() => {}); }
+  function lzPlay(t) { lzLoad(); if (!LZ.buf.length) return false;
+    const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = LZ.buf[Math.floor(Math.random() * LZ.buf.length)]; src.playbackRate.value = 0.94 + Math.random() * 0.12; g.gain.value = 0.55; src.connect(g); g.connect(out(1, 0.12)); src.start(t); return true; }
   function gunReload(g) {
     if (!ac) return; const t = ac.currentTime, fam = family(g), d = out(0.8, 0.15), dur = (g && g.reload) || 1.2;
     if (fam.startsWith('m_')) { os(d, t, 'sine', 220, 880, dur * 0.8, 0.1, dur * 0.4); os(d, t, 'triangle', 330, 1320, dur * 0.8, 0.05, dur * 0.4); nz(d, t, dur * 0.8, 0.08, 'bandpass', 800, 4000, 3, dur * 0.4); os(d, t + dur * 0.8, 'sine', 1320, 0, 0.25, 0.1); return; }
@@ -18878,6 +18884,7 @@ const UPDATES = [
   { id: 165, title: "2.22.0 · The beam guns", items: ["Beams are half as wide and now come straight out of the barrel, swinging with you as you turn.", "Six beam guns, each with its own body, beam, sparkles and hum, sold by Seer Ixa on the Zeltac: Black Galaxy Beam (Lv 18), Solar Lance (Lv 30), Glacier Ray (Lv 45), Venom Stream (Lv 60), Crimson Ray (Lv 80) and the Lvl 100 Darkbeam, a solid black beam with a white edge like the dark saber."] },
   { id: 166, title: '2.22.1 · New ship track', items: ['"Wistful Drift" joins the ship playlist.'] },
   { id: 167, title: '2.22.2 · More drug materials', items: ['Six new materials: Ember Root, Sky Pollen, Rust Lichen, Tide Pearl, Ghost Orchid and Quasarite. Fort, Sky City and Vector now grow them too.', 'A Drug Room Box in your Lab. Tap "Dump materials" to store everything you gathered; the Boutique Bench uses the box first.'] },
+  { id: 168, title: '2.22.3 · Better laser shots', items: ['Laser bolts glow in their gun colour, with a soft spark racing down them instead of a ball.', 'Alien guns blow out a soft glowing ring instead of a hard circle.', 'Twelve new synthwave laser sounds, picked at random each shot.'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -20362,6 +20369,8 @@ addEventListener('keydown', e => { if (FSH.catch && document.body.classList.cont
 body.fshcard #dlg.fishing { visibility: hidden; }
 @media (max-height: 520px) { #catchCard { top: calc(env(safe-area-inset-top, 0px) + 6px) !important; } #catchCard .cfish { width: 180px; height: 112px; margin-bottom: -38px; } #catchCard .cbox { padding-top: 32px; } #catchCard .crows { gap: 1px; margin-top: 4px; } #catchCard .crow { font-size: 12px; } #catchCard .ccont { margin-top: 6px; padding: 4px 12px; } }`; document.head.appendChild(st); }
 
+// a blurred glow ring, soft on both edges, so the muzzle burst reads as light and not a hard circle
+const SOFT_RING = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,0.25)'); g.addColorStop(0.45, 'rgba(255,255,255,0.15)'); g.addColorStop(0.7, 'rgba(255,255,255,0.7)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
 // =================== GUNS 2: cooler models, firing animation, alien glow, and other players see it all ===================
 // Every gun gets sights, a muzzle brake, a moving slide and a side light strip in its accent color.
 // Alien-tech guns also get a floating energy core and spinning rings that pulse, and flash their own color when fired.
@@ -20406,8 +20415,8 @@ function gunShotFx() {
   GUNFX.shots = (GUNFX.shots + 1) % 1000; GUNFX.kick = 1; GUNFX.heat = Math.min(1, GUNFX.heat + 0.12);
   const U = vmGun && vmGun.userData.gfx; if (!U) return;
   if (U.alien) { // a ring of energy bursts off the muzzle in the gun's color
-    const ring = new THREE.Mesh(new THREE.RingGeometry(0.03, 0.05, 18), new THREE.MeshBasicMaterial({ color: new THREE.Color(U.col).convertSRGBToLinear(), transparent: true, opacity: 0.9, depthWrite: false, depthTest: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
-    ring.position.set(0, 0.05, 0.46); vmGun.add(ring); GUNFX.casings.push({ m: ring, life: 0.22, ring: true, par: vmGun });
+    const ring = new THREE.Sprite(new THREE.SpriteMaterial({ map: SOFT_RING, color: new THREE.Color(U.col).convertSRGBToLinear().multiplyScalar(1.4), transparent: true, opacity: 0.8, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending }));
+    ring.scale.setScalar(0.06); ring.position.set(0, 0.05, 0.46); vmGun.add(ring); GUNFX.casings.push({ m: ring, life: 0.22, ring: true, par: vmGun });
     const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: FLASH_TEX, color: U.col, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending })); fl.position.set(0, 0.05, 0.46); fl.scale.setScalar(0.3); vmGun.add(fl); GUNFX.casings.push({ m: fl, life: 0.07, par: vmGun });
     if (typeof fxFlashLight !== 'undefined') fxFlashLight.color.set(U.col);
   } else if (gunIsBallistic(S.gun)) { // a brass casing flips out to the right
@@ -20437,7 +20446,7 @@ function remoteShots(r, n) {
   if (vmGun) { gunAnim(vmGun, dt, t, GUNFX.kick); const U = vmGun.userData.gfx; if (U && U.heat) U.heat.forEach((v, i) => { v.scale.y = 1 + GUNFX.heat * 3; }); }
   for (const r of remotes.values()) { if (r.gnObj && r.obj.visible) { r.gfxKick = Math.max(0, (r.gfxKick || 0) - dt * 9); gunAnim(r.gnObj, dt, t, r.gfxKick); } }
   for (let i = GUNFX.casings.length - 1; i >= 0; i--) { const c = GUNFX.casings[i]; c.life -= dt;
-    if (c.ring) { const k = 1 + (0.22 - c.life) * 30; c.m.scale.setScalar(k); c.m.material.opacity = Math.max(0, c.life / 0.22); }
+    if (c.ring) { const k = 0.06 + (0.22 - c.life) * 1.4; c.m.scale.setScalar(k); c.m.material.opacity = 0.8 * Math.pow(Math.max(0, c.life / 0.22), 1.5); }
     if (c.v) { c.v.y -= 6 * dt; c.m.position.addScaledVector(c.v, dt * 0.25); c.m.rotation.x += c.spin.x * dt; c.m.rotation.z += c.spin.y * dt; }
     if (c.life <= 0) { if (c.m.parent) c.m.parent.remove(c.m); c.m.geometry && c.m.geometry.dispose(); c.m.material.dispose(); GUNFX.casings.splice(i, 1); } } }; }
 
@@ -22963,13 +22972,13 @@ function boltAlong(m, a, b, r) { const d = b.clone().sub(a), L = d.length(); m.p
 { const _t = tracer; tracer = function (a, b, col) {
   if (BEAM.capture) { BEAM.end = b.clone(); return; }
   try { const c = new THREE.Color(col || '#ffd36a'), g = new THREE.Group();
-    const halo = new THREE.Mesh(BOLT.unit, boltMat(c, 0.45)), core = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff').lerp(c, 0.25), 0.95)), slug = new THREE.Mesh(BOLT.slug, boltMat(new THREE.Color('#ffffff').lerp(c, 0.4), 1));
-    boltAlong(halo, a, b, 0.022); boltAlong(core, a, b, 0.007); slug.scale.set(0.028, 0.028, 0.35); slug.lookAt(b.clone().sub(a).add(a)); slug.position.copy(a);
+    const halo = new THREE.Mesh(BOLT.unit, boltMat(c.clone().multiplyScalar(1.3), 0.6)), core = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff').lerp(c, 0.6), 0.95)), slug = new THREE.Sprite(new THREE.SpriteMaterial({ map: FLASH_TEX, color: c.clone().multiplyScalar(1.5), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+    boltAlong(halo, a, b, 0.022); boltAlong(core, a, b, 0.007); slug.scale.setScalar(0.12); slug.position.copy(a);
     g.add(halo, core, slug); scene.add(g); BOLT.list.push({ g, halo, core, slug, a: a.clone(), b: b.clone(), life: 0.11, max: 0.11 });
   } catch (e) { _t(a, b, col); } }; }
 function boltStep(dt) {
   for (let i = BOLT.list.length - 1; i >= 0; i--) { const B = BOLT.list[i]; B.life -= dt; const k = Math.max(0, B.life / B.max);
-    B.halo.material.opacity = 0.45 * k; B.core.material.opacity = 0.95 * k; B.slug.position.lerpVectors(B.a, B.b, Math.min(1, (1 - k) * 2.2)); B.slug.lookAt(B.b); B.slug.material.opacity = k;
+    B.halo.material.opacity = 0.6 * k; B.core.material.opacity = 0.95 * k; B.slug.position.lerpVectors(B.a, B.b, Math.min(1, (1 - k) * 2.2)); B.slug.material.opacity = k;
     if (B.life <= 0) { scene.remove(B.g); [B.halo, B.core, B.slug].forEach(m => m.material.dispose()); BOLT.list.splice(i, 1); } } }
 
 // ---- the Black Galaxy Beam ----

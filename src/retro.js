@@ -318,8 +318,14 @@ const SFX = (() => {
     const t = ac.currentTime + 0.005, fam = family(g), fn = GUNSND[fam] || GUNSND.blaster;
     // very fast guns: skip the heavy layers if the last shot was a moment ago, so the mix doesn't turn to mush
     if (t - lastGun < 0.045 && fam !== 'minigun') { const d = out(0.8, 0.1); click(d, t, 0.3); nz(d, t, 0.05, 0.4, 'bandpass', 2000, 800, 1); thump(d, t, 120, 0.06, 0.4); lastGun = t; return; }
-    lastGun = t; fn(t, g);
+    lastGun = t; if (fam.startsWith('m_') || !lzPlay(t)) fn(t, g);
   }
+  // Phil's synthwave laser samples: every shot picks one at random, slightly re-pitched so repeats don't sound copied
+  const LZ = { buf: [], loading: false };
+  function lzLoad() { if (LZ.loading || !ac) return; LZ.loading = true;
+    for (let i = 1; i <= 12; i++) fetch('sfx/laser' + i + '.mp3').then(r => r.arrayBuffer()).then(a => new Promise((ok, no) => ac.decodeAudioData(a, ok, no))).then(b => LZ.buf.push(b)).catch(() => {}); }
+  function lzPlay(t) { lzLoad(); if (!LZ.buf.length) return false;
+    const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = LZ.buf[Math.floor(Math.random() * LZ.buf.length)]; src.playbackRate.value = 0.94 + Math.random() * 0.12; g.gain.value = 0.55; src.connect(g); g.connect(out(1, 0.12)); src.start(t); return true; }
   function gunReload(g) {
     if (!ac) return; const t = ac.currentTime, fam = family(g), d = out(0.8, 0.15), dur = (g && g.reload) || 1.2;
     if (fam.startsWith('m_')) { os(d, t, 'sine', 220, 880, dur * 0.8, 0.1, dur * 0.4); os(d, t, 'triangle', 330, 1320, dur * 0.8, 0.05, dur * 0.4); nz(d, t, dur * 0.8, 0.08, 'bandpass', 800, 4000, 3, dur * 0.4); os(d, t + dur * 0.8, 'sine', 1320, 0, 0.25, 0.1); return; }

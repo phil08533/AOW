@@ -1,3 +1,5 @@
+// a blurred glow ring, soft on both edges, so the muzzle burst reads as light and not a hard circle
+const SOFT_RING = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,0.25)'); g.addColorStop(0.45, 'rgba(255,255,255,0.15)'); g.addColorStop(0.7, 'rgba(255,255,255,0.7)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
 // =================== GUNS 2: cooler models, firing animation, alien glow, and other players see it all ===================
 // Every gun gets sights, a muzzle brake, a moving slide and a side light strip in its accent color.
 // Alien-tech guns also get a floating energy core and spinning rings that pulse, and flash their own color when fired.
@@ -42,8 +44,8 @@ function gunShotFx() {
   GUNFX.shots = (GUNFX.shots + 1) % 1000; GUNFX.kick = 1; GUNFX.heat = Math.min(1, GUNFX.heat + 0.12);
   const U = vmGun && vmGun.userData.gfx; if (!U) return;
   if (U.alien) { // a ring of energy bursts off the muzzle in the gun's color
-    const ring = new THREE.Mesh(new THREE.RingGeometry(0.03, 0.05, 18), new THREE.MeshBasicMaterial({ color: new THREE.Color(U.col).convertSRGBToLinear(), transparent: true, opacity: 0.9, depthWrite: false, depthTest: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
-    ring.position.set(0, 0.05, 0.46); vmGun.add(ring); GUNFX.casings.push({ m: ring, life: 0.22, ring: true, par: vmGun });
+    const ring = new THREE.Sprite(new THREE.SpriteMaterial({ map: SOFT_RING, color: new THREE.Color(U.col).convertSRGBToLinear().multiplyScalar(1.4), transparent: true, opacity: 0.8, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending }));
+    ring.scale.setScalar(0.06); ring.position.set(0, 0.05, 0.46); vmGun.add(ring); GUNFX.casings.push({ m: ring, life: 0.22, ring: true, par: vmGun });
     const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: FLASH_TEX, color: U.col, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending })); fl.position.set(0, 0.05, 0.46); fl.scale.setScalar(0.3); vmGun.add(fl); GUNFX.casings.push({ m: fl, life: 0.07, par: vmGun });
     if (typeof fxFlashLight !== 'undefined') fxFlashLight.color.set(U.col);
   } else if (gunIsBallistic(S.gun)) { // a brass casing flips out to the right
@@ -73,6 +75,6 @@ function remoteShots(r, n) {
   if (vmGun) { gunAnim(vmGun, dt, t, GUNFX.kick); const U = vmGun.userData.gfx; if (U && U.heat) U.heat.forEach((v, i) => { v.scale.y = 1 + GUNFX.heat * 3; }); }
   for (const r of remotes.values()) { if (r.gnObj && r.obj.visible) { r.gfxKick = Math.max(0, (r.gfxKick || 0) - dt * 9); gunAnim(r.gnObj, dt, t, r.gfxKick); } }
   for (let i = GUNFX.casings.length - 1; i >= 0; i--) { const c = GUNFX.casings[i]; c.life -= dt;
-    if (c.ring) { const k = 1 + (0.22 - c.life) * 30; c.m.scale.setScalar(k); c.m.material.opacity = Math.max(0, c.life / 0.22); }
+    if (c.ring) { const k = 0.06 + (0.22 - c.life) * 1.4; c.m.scale.setScalar(k); c.m.material.opacity = 0.8 * Math.pow(Math.max(0, c.life / 0.22), 1.5); }
     if (c.v) { c.v.y -= 6 * dt; c.m.position.addScaledVector(c.v, dt * 0.25); c.m.rotation.x += c.spin.x * dt; c.m.rotation.z += c.spin.y * dt; }
     if (c.life <= 0) { if (c.m.parent) c.m.parent.remove(c.m); c.m.geometry && c.m.geometry.dispose(); c.m.material.dispose(); GUNFX.casings.splice(i, 1); } } }; }

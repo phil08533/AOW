@@ -1,6 +1,6 @@
 // =================== SOUNDTRACK: real music per place and moment, with clean crossfades ===================
-const TRACKS = { hymn: 'music/hymn.mp3', mushroom: 'music/mushroom.mp3', nebula: 'music/nebula.mp3', neon: 'music/neon.mp3', wakeup: 'music/wakeup.mp3', dancing: 'music/dancing.mp3', apocalyptic: 'music/apocalyptic.mp3', enchanted: 'music/enchanted.mp3', low: 'music/low.mp3', overture: 'music/overture.mp3', tidal: 'music/tidal.mp3', iloveyou: 'music/iloveyou.mp3', c4po: 'music/c4po.mp3', glinky: 'music/glinky.mp3', clarinet: 'music/clarinet.mp3' };
-const PLAYLISTS = { cutscene: ['hymn'], romance: ['iloveyou'], boss: ['apocalyptic'], battle: ['low'], lounge: ['nebula', 'neon', 'wakeup', 'dancing'], ship: ['mushroom', 'hymn'], earth: ['enchanted'], speedway: ['overture'], fort: ['tidal'], other: ['c4po'], cantina: ['glinky', 'clarinet'] };
+const TRACKS = { hymn: 'music/hymn.mp3', wistful: 'music/wistful.mp3', mushroom: 'music/mushroom.mp3', nebula: 'music/nebula.mp3', neon: 'music/neon.mp3', wakeup: 'music/wakeup.mp3', dancing: 'music/dancing.mp3', apocalyptic: 'music/apocalyptic.mp3', enchanted: 'music/enchanted.mp3', low: 'music/low.mp3', overture: 'music/overture.mp3', tidal: 'music/tidal.mp3', iloveyou: 'music/iloveyou.mp3', c4po: 'music/c4po.mp3', glinky: 'music/glinky.mp3', clarinet: 'music/clarinet.mp3' };
+const PLAYLISTS = { cutscene: ['hymn'], romance: ['iloveyou'], boss: ['apocalyptic'], battle: ['low'], lounge: ['nebula', 'neon', 'wakeup', 'dancing'], ship: ['mushroom', 'hymn', 'wistful'], earth: ['enchanted'], speedway: ['overture'], fort: ['tidal'], other: ['c4po'], cantina: ['glinky', 'clarinet'] };
 MUSIC_NAMES[3] = 'Soundtrack';
 if (!PREFS.musicV2) { PREFS.musicV2 = 1; PREFS.music = 3; if (PREFS.musicVol == null) PREFS.musicVol = 0.7; try { savePrefs(); } catch (_) {} }
 if (PREFS.musicVol == null) PREFS.musicVol = 0.7;
@@ -17,7 +17,7 @@ function musStart(list, idx) {
   musFade(next, musVol(), 1.6); if (old && old !== next) musFade(old, 0, 1.6, () => { if (old !== MUS.cur) old.pause(); });
   MUS.cur = next; MUS.list = list; MUS.idx = idx;
 }
-function musPlay(list) { if (!MUS.a || list === MUS.list) return; const start = list === 'ship' ? Math.floor(Math.random() * 2) : list === 'lounge' ? Math.floor(Math.random() * 4) : 0; musStart(list, start); }
+function musPlay(list) { if (!MUS.a || list === MUS.list) return; const start = list === 'ship' ? Math.floor(Math.random() * PLAYLISTS.ship.length) : list === 'lounge' ? Math.floor(Math.random() * 4) : 0; musStart(list, start); }
 function musStop() { for (const el of [MUS.a, MUS.b]) if (el) musFade(el, 0, 1.2, () => el.pause()); MUS.list = null; MUS.cur = null; }
 function musUnlock() { if (MUS.unlocked) return; MUS.unlocked = true; MUS.a = musEl(); MUS.b = musEl();
   musTick(true); }

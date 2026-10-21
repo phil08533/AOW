@@ -10,8 +10,23 @@ const BQ_ING = {
   lumabug: { name: 'Luma Beetle', col: '#c8ff5a', worlds: ['ocean', 'earth', 'forestlife', 'capitone'], pot: 5, pur: 10, glow: 15, kick: 'spd', v: 20 },
   frostsalt: { name: 'Frost Salt', col: '#cfefff', worlds: ['zarlich', 'moon', 'ocean'], pot: 0, pur: 30, glow: 0, kick: 'def', v: 22 },
   nebmoss: { name: 'Nebula Moss', col: '#ff7ad8', worlds: ['capitone', 'zarlich', 'forestlife'], pot: 5, pur: 5, glow: 20, kick: 'cr', v: 22 },
-  starnectar: { name: 'Star Nectar', col: '#ffd36a', worlds: [], pot: 35, pur: 30, glow: 20, kick: null, v: 90, rare: true }
+  starnectar: { name: 'Star Nectar', col: '#ffd36a', worlds: [], pot: 35, pur: 30, glow: 20, kick: null, v: 90, rare: true },
+  emberroot: { name: 'Ember Root', col: '#ff6a3a', worlds: ['fort', 'skycity', 'mezar', 'robot'], pot: 25, pur: -5, glow: 10, kick: 'dmg', v: 22 },
+  skypollen: { name: 'Sky Pollen', col: '#9ad8ff', worlds: ['skycity', 'vector', 'earth', 'ocean'], pot: 5, pur: 15, glow: 15, kick: 'spd', v: 20, sh: 'moss' },
+  rustlichen: { name: 'Rust Lichen', col: '#e09a4a', worlds: ['robot', 'fort', 'vector', 'moon'], pot: 10, pur: 15, glow: 5, kick: 'def', v: 20, sh: 'moss' },
+  tidepearl: { name: 'Tide Pearl', col: '#a0fff0', worlds: ['ocean', 'capitone', 'skycity'], pot: 10, pur: 20, glow: 15, kick: 'cr', v: 26, sh: 'moss' },
+  ghostorchid: { name: 'Ghost Orchid', col: '#e8e0ff', worlds: ['zarlich', 'forestlife', 'vector', 'fort'], pot: 15, pur: 10, glow: 25, kick: 'xp', v: 26 },
+  quasarite: { name: 'Quasarite', col: '#4a7aff', worlds: ['moon', 'vector', 'skycity', 'mezar'], pot: 30, pur: 5, glow: 10, kick: 'dmg', v: 28, sh: 'shard' }
 };
+// the drug room box: materials dumped here stay out of your pack, and the bench uses them (box first, then pack)
+function bqBox() { return S.drugBox = S.drugBox || {}; }
+const bqHave = k => (S.inv[k] || 0) + (bqBox()[k] || 0);
+function bqTake(k, n) { const b = bqBox(), a = Math.min(n, b[k] || 0); b[k] = (b[k] || 0) - a; if (!b[k]) delete b[k]; n -= a; if (n > 0) { S.inv[k] -= n; if (!S.inv[k]) delete S.inv[k]; } }
+function bqDump() { const b = bqBox(); let n = 0; for (const k in BQ_ING) for (const id of [k, 'x_' + k]) if (S.inv[id] > 0) { b[id] = (b[id] || 0) + S.inv[id]; n += S.inv[id]; delete S.inv[id]; } markDirty(); return n; }
+function openDrugBox() { const b = bqBox(); openDlg('Drug Room Box', 'Materials for the Boutique Bench'); const rows = document.createElement('div'); rows.className = 'rows'; rows.style.cssText = 'display:flex;flex-direction:column;gap:4px';
+  const ks = Object.keys(b).filter(k => b[k] > 0); $('dlgLine').textContent = ks.length ? 'The bench pulls from this box first.' : 'Empty. Dump your gathered materials in here.';
+  for (const k of ks) { const d = document.createElement('div'); d.className = 'rowi'; d.textContent = `${ITEMS[k] ? ITEMS[k].name : k}: ${b[k]}`; rows.appendChild(d); }
+  $('dlgActs').before(rows); acts([['Dump materials', () => { const n = bqDump(); SFX.item(); toast('DRUG BOX', n ? `Stored ${n} materials` : 'Nothing to dump', 2); openDrugBox(); }, true], ['Close', closeDlg]]); }
 const BQ_KICK = { dmg: ['Damage', 'damage'], spd: ['Speed', 'move speed'], def: ['Defense', 'damage taken'], xp: ['XP', 'XP'], cr: ['Credits', 'credits from kills'] };
 for (const k in BQ_ING) { const I = BQ_ING[k]; ITEMS[k] = Object.assign(ITEMS[k] || {}, { name: I.name, v: I.v, col: I.col, desc: `Raw ingredient. Refine it at the Boutique Bench in your Lab.` });
   ITEMS['x_' + k] = Object.assign(ITEMS['x_' + k] || {}, { name: I.name + ' Extract', v: I.v * 3, col: I.col, desc: `Refined ${I.name}. Goes into boutique drugs.` }); }
@@ -68,9 +83,9 @@ function bqRegisterAll() { try { chemS().rec.forEach(bqRegister); } catch (e) { 
 // ---- gathering: glowing nodes out in the worlds, back after 20 minutes ----
 function bqNodeModel(k) { const g = new THREE.Group(), I = BQ_ING[k], gl = glow(I.col);
   if (k === 'glowcap') for (let i = 0; i < 4; i++) { const a = i * 1.7, r = i ? 0.25 : 0, h = 0.25 + (i % 2) * 0.15; part(g, Cy(0.04, 0.05, h, 6), '#e8e0c8', Math.cos(a) * r, h / 2, Math.sin(a) * r); part(g, new THREE.SphereGeometry(0.14 - i * 0.015, 8, 5, 0, Math.PI * 2, 0, Math.PI / 2), gl, Math.cos(a) * r, h, Math.sin(a) * r); }
-  else if (k === 'voidshard' || k === 'frostsalt') for (let i = 0; i < 5; i++) { const a = i * 1.26, h = 0.3 + (i % 3) * 0.18; part(g, Cy(0.0, 0.09, h, 5), gl, Math.cos(a) * 0.16, h / 2, Math.sin(a) * 0.16, Math.cos(a) * 0.3, 0, Math.sin(a) * 0.3); }
+  else if (k === 'voidshard' || k === 'frostsalt' || I.sh === 'shard') for (let i = 0; i < 5; i++) { const a = i * 1.26, h = 0.3 + (i % 3) * 0.18; part(g, Cy(0.0, 0.09, h, 5), gl, Math.cos(a) * 0.16, h / 2, Math.sin(a) * 0.16, Math.cos(a) * 0.3, 0, Math.sin(a) * 0.3); }
   else if (k === 'lumabug') { for (let i = 0; i < 3; i++) { const b = new THREE.Group(); part(b, B(0.12, 0.06, 0.16), toon('#2a2c20'), 0, 0, 0); part(b, B(0.1, 0.04, 0.06), gl, 0, 0, -0.08); b.position.set((i - 1) * 0.3, 0.35 + i * 0.1, 0); g.add(b); } part(g, Cy(0.05, 0.08, 0.3, 6), toon('#4a3a2a', 'bark'), 0, 0.15, 0); }
-  else if (k === 'nebmoss') for (let i = 0; i < 6; i++) part(g, new THREE.SphereGeometry(0.12, 6, 4), gl, Math.cos(i) * 0.25, 0.06, Math.sin(i * 1.3) * 0.25);
+  else if (k === 'nebmoss' || I.sh === 'moss') for (let i = 0; i < 6; i++) part(g, new THREE.SphereGeometry(0.12, 6, 4), gl, Math.cos(i) * 0.25, 0.06, Math.sin(i * 1.3) * 0.25);
   else { part(g, Cy(0.02, 0.03, 0.5, 5), '#4a8a3a', 0, 0.25, 0); for (let i = 0; i < 6; i++) part(g, B(0.1, 0.02, 0.18), gl, Math.cos(i) * 0.1, 0.5, Math.sin(i) * 0.1, 0, i, 0.4); }
   const l = new THREE.PointLight(new THREE.Color(I.col).getHex(), 0.5, 3, 2); l.position.y = 0.6; g.add(l); return g; }
 function bqPlaceNodes() {
@@ -105,8 +120,8 @@ function openBoutique(tab) {
     // ingredient slots: tap to cycle through the extracts you own
     const sl = document.createElement('div'); sl.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
     for (let i = 0; i < 3; i++) { const lock = i >= chemSlots(), k = r.ing[i];
-      sl.appendChild(btn(lock ? `Locked (Chemist ${i === 1 ? 3 : 6})` : k ? `${BQ_ING[k].name} (${S.inv['x_' + k] || 0})` : 'Empty slot', () => {
-        const own = [null, ...Object.keys(BQ_ING).filter(x => (S.inv['x_' + x] || 0) > 0)], at = own.indexOf(r.ing[i] || null); r.ing[i] = own[(at + 1) % own.length]; r.ing = r.ing.filter((x, j) => x || j > i).slice(0, 3); openBoutique(); }, false, lock)); }
+      sl.appendChild(btn(lock ? `Locked (Chemist ${i === 1 ? 3 : 6})` : k ? `${BQ_ING[k].name} (${bqHave('x_' + k)})` : 'Empty slot', () => {
+        const own = [null, ...Object.keys(BQ_ING).filter(x => bqHave('x_' + x) > 0)], at = own.indexOf(r.ing[i] || null); r.ing[i] = own[(at + 1) % own.length]; r.ing = r.ing.filter((x, j) => x || j > i).slice(0, 3); openBoutique(); }, false, lock)); }
     row('Extracts', sl);
     const slider = (lbl, key) => { const s = document.createElement('input'); s.type = 'range'; s.min = 0; s.max = 100; s.value = r[key]; s.style.flex = '1 1 140px';
       const d = row(lbl, s, key === 'cut' ? `${r[key]}% filler` : bqHint(e, key)); s.addEventListener('input', () => { r[key] = +s.value; bqPreview(r); }); s.addEventListener('change', () => { openBoutique(); }); return d; };
@@ -114,12 +129,12 @@ function openBoutique(tab) {
     const kk = document.createElement('div'); kk.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap'; for (const k in BQ_KICK) kk.appendChild(btn(BQ_KICK[k][0], () => { r.kick = k; openBoutique(); }, r.kick === k)); row('Kick', kk);
     if (!r.ing.filter(Boolean).length) line.textContent = 'Put an extract in a slot first. Refine raw ingredients into extracts on the Refine tab.';
     $('dlgActs').before(rows);
-    const need = r.ing.filter(Boolean), canBrew = need.length && need.every(k => (S.inv['x_' + k] || 0) >= 1) && e.grade !== 'F';
+    const need = r.ing.filter(Boolean), canBrew = need.length && need.every(k => bqHave('x_' + k) >= 1) && e.grade !== 'F';
     acts([[`Brew ${e.doses}`, () => bqBrew(), true, !canBrew], ['Refine', () => openBoutique('refine')], ['Recipes', () => openBoutique('book')], ['Stats', () => openBoutique('stats')], ['Close', closeDlg]]);
   } else if (tab === 'refine') {
     $('dlgLine').textContent = 'Two raw ingredients refine into one extract. Find raw ones glowing out in the worlds.';
-    for (const k in BQ_ING) { const have = S.inv[k] || 0, d = document.createElement('div'); d.className = 'rowi'; d.style.cssText = 'display:flex;align-items:center;gap:8px';
-      const s = document.createElement('span'); s.style.flex = '1'; s.textContent = `${BQ_ING[k].name}: ${have} raw · ${S.inv['x_' + k] || 0} extract`; d.append(s, btn('Refine', () => { S.inv[k] -= 2; if (!S.inv[k]) delete S.inv[k]; invAdd('x_' + k, 1); chemS().xp += 1; SFX.coin(); markDirty(); openBoutique('refine'); }, false, have < 2)); rows.appendChild(d); }
+    for (const k in BQ_ING) { const have = bqHave(k), d = document.createElement('div'); d.className = 'rowi'; d.style.cssText = 'display:flex;align-items:center;gap:8px';
+      const s = document.createElement('span'); s.style.flex = '1'; s.textContent = `${BQ_ING[k].name}: ${have} raw · ${bqHave('x_' + k)} extract`; d.append(s, btn('Refine', () => { bqTake(k, 2); bqBox()['x_' + k] = (bqBox()['x_' + k] || 0) + 1; chemS().xp += 1; SFX.coin(); markDirty(); openBoutique('refine'); }, false, have < 2)); rows.appendChild(d); }
     $('dlgActs').before(rows); acts([['Back', () => openBoutique()], ['Close', closeDlg]]);
   } else if (tab === 'book') {
     $('dlgLine').textContent = C.rec.length ? 'Your recipes. Load one to brew it again or tweak it.' : 'No saved recipes yet. Brew one and it lands here.';
@@ -167,7 +182,7 @@ function bqPreview(r) { if (!BQV.r) return; const e = BQV.e = bqEval(r), col = n
 const bqPriceOf = r => { const had = chemS().rec.find(x => x.id === r.id); if (had) return bqPrice(r.id); chemS().rec.push(r); const p = bqPrice(r.id); chemS().rec.pop(); return p; };
 function bqBrew() {
   const r = BQ.r, C = chemS(), e = bqEval(r); if (e.grade === 'F') return;
-  for (const k of r.ing.filter(Boolean)) { S.inv['x_' + k]--; if (!S.inv['x_' + k]) delete S.inv['x_' + k]; }
+  for (const k of r.ing.filter(Boolean)) { bqTake('x_' + k, 1); }
   let saved = C.rec.find(x => x.id === r.id); const same = saved && JSON.stringify(saved) === JSON.stringify(r);
   if (saved && !same) { r.id = 'bq_' + Date.now().toString(36); saved = null; } // changed settings make a new drug with its own name and reputation
   if (!saved) { C.rec.unshift(JSON.parse(JSON.stringify(r))); if (C.rec.length > 8) C.rec.length = 8; }
@@ -178,5 +193,7 @@ function bqBrew() {
 { const _lr = labRoom; labRoom = function (s, cx, cz, far, outer, faceIn, term, props) { _lr.apply(this, arguments);
   try { const x = cx - s.side * 0.9, z = s.z0 + 0.6; part(props, B(1.1, 0.85, 0.7), '#2a2c32', x, 0.42, z); part(props, B(1.15, 0.05, 0.75), toon('#5a5e66'), x, 0.87, z);
     for (let i = 0; i < 4; i++) part(props, Cy(0.05, 0.06, 0.2, 6), glow(['#7fffd0', '#b86aff', '#ffd36a', '#ff7ad8'][i]), x - 0.36 + i * 0.24, 1.0, z); solid(x, z, 0.55);
-    INTERACTS.push({ x, z: z + 0.9, r: 1.3, label: 'Boutique Bench (design drugs)', fn: () => openBoutique() }); } catch (e) { console.warn('bench', e); } }; }
+    INTERACTS.push({ x, z: z + 0.9, r: 1.3, label: 'Boutique Bench (design drugs)', fn: () => openBoutique() });
+    const bx = x - s.side * 1.25; part(props, B(0.6, 0.5, 0.6), toon('#4a3a2a', 'bark'), bx, 0.25, z); part(props, B(0.64, 0.06, 0.64), toon('#2a2c32'), bx, 0.52, z); part(props, B(0.5, 0.03, 0.04), glow('#b86aff'), bx, 0.45, z + 0.31); solid(bx, z, 0.35);
+    INTERACTS.push({ x: bx, z: z + 0.8, r: 1.0, label: 'Drug Room Box (store materials)', fn: () => openDrugBox() }); } catch (e) { console.warn('bench', e); } }; }
 bqRegisterAll();

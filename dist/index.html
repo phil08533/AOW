@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.3</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.4</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18885,6 +18885,7 @@ const UPDATES = [
   { id: 166, title: '2.22.1 · New ship track', items: ['"Wistful Drift" joins the ship playlist.'] },
   { id: 167, title: '2.22.2 · More drug materials', items: ['Six new materials: Ember Root, Sky Pollen, Rust Lichen, Tide Pearl, Ghost Orchid and Quasarite. Fort, Sky City and Vector now grow them too.', 'A Drug Room Box in your Lab. Tap "Dump materials" to store everything you gathered; the Boutique Bench uses the box first.'] },
   { id: 168, title: '2.22.3 · Better laser shots', items: ['Laser bolts glow in their gun colour, with a soft spark racing down them instead of a ball.', 'Alien guns blow out a soft glowing ring instead of a hard circle.', 'Twelve new synthwave laser sounds, picked at random each shot.'] },
+  { id: 169, title: '2.22.4 · Drug box fix', items: ['The Drug Room Box list no longer stacks up or leaks into other menus, and each material sits on one line.'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -23653,9 +23654,9 @@ function bqBox() { return S.drugBox = S.drugBox || {}; }
 const bqHave = k => (S.inv[k] || 0) + (bqBox()[k] || 0);
 function bqTake(k, n) { const b = bqBox(), a = Math.min(n, b[k] || 0); b[k] = (b[k] || 0) - a; if (!b[k]) delete b[k]; n -= a; if (n > 0) { S.inv[k] -= n; if (!S.inv[k]) delete S.inv[k]; } }
 function bqDump() { const b = bqBox(); let n = 0; for (const k in BQ_ING) for (const id of [k, 'x_' + k]) if (S.inv[id] > 0) { b[id] = (b[id] || 0) + S.inv[id]; n += S.inv[id]; delete S.inv[id]; } markDirty(); return n; }
-function openDrugBox() { const b = bqBox(); openDlg('Drug Room Box', 'Materials for the Boutique Bench'); const rows = document.createElement('div'); rows.className = 'rows'; rows.style.cssText = 'display:flex;flex-direction:column;gap:4px';
+function openDrugBox() { const b = bqBox(); openDlg('Drug Room Box', 'Materials for the Boutique Bench'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.cssText = 'display:flex;flex-direction:column;gap:4px';
   const ks = Object.keys(b).filter(k => b[k] > 0); $('dlgLine').textContent = ks.length ? 'The bench pulls from this box first.' : 'Empty. Dump your gathered materials in here.';
-  for (const k of ks) { const d = document.createElement('div'); d.className = 'rowi'; d.textContent = `${ITEMS[k] ? ITEMS[k].name : k}: ${b[k]}`; rows.appendChild(d); }
+  for (const k of ks) { const d = document.createElement('div'); d.className = 'rowi'; d.style.cssText = 'display:flex;justify-content:space-between;gap:8px'; const a = document.createElement('span'), c = document.createElement('span'); a.textContent = ITEMS[k] ? ITEMS[k].name : k; c.textContent = '×' + b[k]; d.append(a, c); rows.appendChild(d); }
   $('dlgActs').before(rows); acts([['Dump materials', () => { const n = bqDump(); SFX.item(); toast('DRUG BOX', n ? `Stored ${n} materials` : 'Nothing to dump', 2); openDrugBox(); }, true], ['Close', closeDlg]]); }
 const BQ_KICK = { dmg: ['Damage', 'damage'], spd: ['Speed', 'move speed'], def: ['Defense', 'damage taken'], xp: ['XP', 'XP'], cr: ['Credits', 'credits from kills'] };
 for (const k in BQ_ING) { const I = BQ_ING[k]; ITEMS[k] = Object.assign(ITEMS[k] || {}, { name: I.name, v: I.v, col: I.col, desc: `Raw ingredient. Refine it at the Boutique Bench in your Lab.` });

@@ -23,9 +23,9 @@ function bqBox() { return S.drugBox = S.drugBox || {}; }
 const bqHave = k => (S.inv[k] || 0) + (bqBox()[k] || 0);
 function bqTake(k, n) { const b = bqBox(), a = Math.min(n, b[k] || 0); b[k] = (b[k] || 0) - a; if (!b[k]) delete b[k]; n -= a; if (n > 0) { S.inv[k] -= n; if (!S.inv[k]) delete S.inv[k]; } }
 function bqDump() { const b = bqBox(); let n = 0; for (const k in BQ_ING) for (const id of [k, 'x_' + k]) if (S.inv[id] > 0) { b[id] = (b[id] || 0) + S.inv[id]; n += S.inv[id]; delete S.inv[id]; } markDirty(); return n; }
-function openDrugBox() { const b = bqBox(); openDlg('Drug Room Box', 'Materials for the Boutique Bench'); const rows = document.createElement('div'); rows.className = 'rows'; rows.style.cssText = 'display:flex;flex-direction:column;gap:4px';
+function openDrugBox() { const b = bqBox(); openDlg('Drug Room Box', 'Materials for the Boutique Bench'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.cssText = 'display:flex;flex-direction:column;gap:4px';
   const ks = Object.keys(b).filter(k => b[k] > 0); $('dlgLine').textContent = ks.length ? 'The bench pulls from this box first.' : 'Empty. Dump your gathered materials in here.';
-  for (const k of ks) { const d = document.createElement('div'); d.className = 'rowi'; d.textContent = `${ITEMS[k] ? ITEMS[k].name : k}: ${b[k]}`; rows.appendChild(d); }
+  for (const k of ks) { const d = document.createElement('div'); d.className = 'rowi'; d.style.cssText = 'display:flex;justify-content:space-between;gap:8px'; const a = document.createElement('span'), c = document.createElement('span'); a.textContent = ITEMS[k] ? ITEMS[k].name : k; c.textContent = '×' + b[k]; d.append(a, c); rows.appendChild(d); }
   $('dlgActs').before(rows); acts([['Dump materials', () => { const n = bqDump(); SFX.item(); toast('DRUG BOX', n ? `Stored ${n} materials` : 'Nothing to dump', 2); openDrugBox(); }, true], ['Close', closeDlg]]); }
 const BQ_KICK = { dmg: ['Damage', 'damage'], spd: ['Speed', 'move speed'], def: ['Defense', 'damage taken'], xp: ['XP', 'XP'], cr: ['Credits', 'credits from kills'] };
 for (const k in BQ_ING) { const I = BQ_ING[k]; ITEMS[k] = Object.assign(ITEMS[k] || {}, { name: I.name, v: I.v, col: I.col, desc: `Raw ingredient. Refine it at the Boutique Bench in your Lab.` });

@@ -24,7 +24,8 @@ function musUnlock() { if (MUS.unlocked) return; MUS.unlocked = true; MUS.a = mu
 // in the lounge the music comes out of the DJ's speakers: louder near them, panned toward them, muffled far away
 const LOUNGE_SPK = [[-3.2, 21.6], [3.2, 21.6]];
 function musSpace() { if (!MUS.ac) return; const now = MUS.ac.currentTime, set = (p, v) => p.setTargetAtTime(v, now, 0.12);
-  if (MUS.list === 'lounge' && LEVEL.id === 'zfloor') { let best = 1e9, sx = 0, sz = 0; for (const [x, z] of LOUNGE_SPK) { const d = Math.hypot(player.pos.x - x, player.pos.z - z); if (d < best) best = d; sx += x / 2; sz += z / 2; }
+  const SPK = MUS.list === 'lounge' && LEVEL.id === 'zfloor' ? LOUNGE_SPK : MUS.list === 'cantina' && LEVEL.id === 'underworld' && window.UW_SPK ? UW_SPK : null;
+  if (SPK) { let best = 1e9, sx = 0, sz = 0; for (const [x, z] of SPK) { const d = Math.hypot(player.pos.x - x, player.pos.z - z); if (d < best) best = d; sx += x / 2; sz += z / 2; }
     const dx = sx - player.pos.x, dz = sz - player.pos.z, dl = Math.hypot(dx, dz) || 1, right = [Math.cos(player.yaw), -Math.sin(player.yaw)], fwd = [-Math.sin(player.yaw), -Math.cos(player.yaw)];
     const p = (dx * right[0] + dz * right[1]) / dl, behind = (dx * fwd[0] + dz * fwd[1]) / dl < 0;
     const trip = (MUS.tripUntil || 0) > performance.now(); set(MUS.gn.gain, Math.max(0.3, Math.min(1.35, 1.6 / (1 + best / 9))) * (trip ? 1.3 : 1)); if (MUS.pan) set(MUS.pan.pan, Math.max(-0.85, Math.min(0.85, p * 0.85))); set(MUS.lp.frequency, trip ? 2600 + Math.sin(performance.now() / 380) * 1400 : Math.max(1800, 20000 - Math.max(0, best - 6) * 900) * (behind ? 0.7 : 1));

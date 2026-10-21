@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.13</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.14</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18901,6 +18901,7 @@ const UPDATES = [
   { id: 176, title: '2.22.11 · Drug asteroids and crate furniture', items: ['Green-glowing asteroids in the belt drop drug materials when you break them, sometimes even Star Nectar.', 'Furniture is no longer bought. Every piece is found in salvage crates, on planets, in space and in boarded ships.'] },
   { id: 177, title: '2.22.12 · Cleaner iTab', items: ['Health, ammo, quest and clock panels hide while the iTab is open, so nothing sits on top of it.'] },
   { id: 178, title: '2.22.13 · Smooth melee', items: ['Melee weapons and sabers swing in a smooth flowing arc. Hold attack and the blade carves a continuous figure-eight, one strike per pass.', 'Nunchucks, Poison Claws and Driller Claws are two-handed now: one in each hand, swinging in turn.'] },
+  { id: 179, title: '2.22.14 · Two-handed weapons', items: ['Twin Master Swords: one sword in each hand.', 'Frost Staff and Reaper Scythe are held across your body in both hands, and the swing turns into a spin.'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -23961,7 +23962,9 @@ applyUiTheme();
 // blade turns to follow its own path. A single tap does one clean eased pass. Everything blends in and out of the rest pose.
 const SWG = { th: Math.PI / 2, blend: 0, pos: null, rot: null, off: null, offId: null };
 // two-handed weapons: a mirrored copy in the left hand that swings half a beat behind the right
-const TWO_HAND = { nunchucks: 1, claws: 1, driller: 1 };
+const TWO_HAND = { nunchucks: 1, claws: 1, driller: 1, twinmaster: 1 }, POLE = { staff: 1, scythe: 1 };
+// twin swords: split the pair, blue sword in the right hand and red in the left
+function swSplit(m, side) { for (const c of [...m.children]) { const x = c.position.x; if (side > 0 ? x < -0.001 : x > 0.001) m.remove(c); else c.position.x = 0; } return m; }
 const vmOffM = new THREE.Group(); camera.add(vmOffM); vmOffM.visible = false;
 function swPose(th, b, big) { const s = Math.sin(th), c = Math.cos(th), ly = s * c;
   return [[0.2 + (0.04 - 0.2 + s * 0.24 * big) * b, -0.27 + (0.07 + ly * 0.26 * big) * b, -0.42 + (0.06 - Math.abs(c) * 0.05) * b],
@@ -23973,12 +23976,15 @@ updateMelee = function (dt) { meleeCool -= dt; if (meleeT > 0) meleeT -= dt; if 
     SWG.blend += ((active ? 1 : 0) - SWG.blend) * (1 - Math.exp(-dt * (active ? 12 : 7)));
     if (active) SWG.th += dt * Math.PI / (held ? Math.max(0.2, (M.rate || 0.4) * 1.05) : 0.3);
     else if (SWG.blend < 0.05) SWG.th = Math.PI / 2;
-    const b = SWG.blend, big = M.saber ? 1.15 : 1, [P, R] = swPose(SWG.th, b, big);
+    const b = SWG.blend, big = M.saber ? 1.15 : 1, [P, R] = swPose(SWG.th, b, big), pole = POLE[S.melee || 'knife'];
+    // pole arms are held across the body in both hands: pulled to the middle, tilted diagonal, and the swing turns into a spin
+    if (pole) { P[0] -= 0.14; P[1] += 0.03; R[2] += 0.7 + Math.sin(SWG.th) * 0.6 * b; R[1] -= 0.2; }
     if (!SWG.pos) { SWG.pos = P.slice(); SWG.rot = R.slice(); }
     const k = 1 - Math.exp(-dt * 22); for (let i = 0; i < 3; i++) { SWG.pos[i] += (P[i] - SWG.pos[i]) * k; SWG.rot[i] += (R[i] - SWG.rot[i]) * k; }
     vmMelee.visible = true; vmMelee.position.set(SWG.pos[0], SWG.pos[1] + Math.sin(t * 2) * 0.006 * (1 - b), SWG.pos[2]); vmMelee.rotation.set(SWG.rot[0], SWG.rot[1], SWG.rot[2]);
-    const id = S.melee || 'knife', two = !!TWO_HAND[id]; vmOffM.visible = two && vmMelee.visible; vmShield.visible = vmShield.visible && (!two || SHIELD.blocking);
-    if (two) { if (SWG.offId !== id) { SWG.offId = id; while (vmOffM.children.length) vmOffM.remove(vmOffM.children[0]); const m = makeMeleeModel(id); m.scale.x = -1; vmOffM.add(m); }
+    const id = S.melee || 'knife'; if (id === 'twinmaster' && vmMelee.children[0] && !vmMelee.children[0].userData.split) { swSplit(vmMelee.children[0], 1); vmMelee.children[0].userData.split = 1; }
+    const two = !!TWO_HAND[id]; vmOffM.visible = two && vmMelee.visible; vmShield.visible = vmShield.visible && (!two || SHIELD.blocking);
+    if (two) { if (SWG.offId !== id) { SWG.offId = id; while (vmOffM.children.length) vmOffM.remove(vmOffM.children[0]); const m = makeMeleeModel(id); if (id === 'twinmaster') swSplit(m, -1); m.scale.x = -1; vmOffM.add(m); }
       const [P2, R2] = swPose(SWG.th + Math.PI, b, big); vmOffM.scale.setScalar(0.8); vmOffM.position.set(-P2[0], P2[1], P2[2]); vmOffM.rotation.set(R2[0], -R2[1], -R2[2]); }
   } catch (e) { console.warn('swing', e); } }; }
 

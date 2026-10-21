@@ -39,8 +39,12 @@ function heightExact(x, z) {
 const HG = { x0: 0, z0: 0, n: 2, a: new Float32Array(4) };
 function buildHeightGrid() {
   const size = LEVEL.size || 280; HG.n = size + 1; HG.x0 = WORLD_C.x - size / 2; HG.z0 = WORLD_C.z - size / 2;
+  // the ground never changes for a given world, so the grid is computed once per visit and reused after that
+  const key = LEVEL.id + ':' + size + ':' + HG.x0 + ':' + HG.z0 + ':' + ZONES.length; HG.cache = HG.cache || {};
+  if (HG.cache[key]) { HG.a = HG.cache[key]; return; }
   HG.a = new Float32Array(HG.n * HG.n);
   for (let j = 0; j < HG.n; j++) for (let i = 0; i < HG.n; i++) HG.a[j * HG.n + i] = heightExact(HG.x0 + i, HG.z0 + j);
+  HG.cache[key] = HG.a;
 }
 function groundH(x, z) {
   const fx = clamp(x - HG.x0, 0, HG.n - 1.001), fz = clamp(z - HG.z0, 0, HG.n - 1.001), i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, n = HG.n, a = HG.a;

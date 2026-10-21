@@ -250,13 +250,23 @@ body.flying #tBoost { display: grid; }
 .fishbar .fm { position: absolute; top: -5px; bottom: -5px; width: 6px; margin-left: -3px; background: #ffd75e; border: 1px solid #000; }
 #fade { position: fixed; inset: 0; z-index: 50; background: #02030a; display: flex; align-items: center; justify-content: center; transition: opacity .4s; }
 #fade[hidden] { display: none !important; }
+#fade { pointer-events: none; }
 #fadeTxt { color: var(--gold); font-size: 26px; letter-spacing: 2px; }
 /* the start card stays hidden until the game script has run, so phones never flash the bare, half-built card while the page loads */
 html:not(.ready) #start .sheet > .win.sheet { display: none; }
 html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block; text-align: center; margin-top: 18px; color: #ffd36a; letter-spacing: .2em; font-size: 14px; }
+/* a loading bar while the big game script parses (phones take a while); compositor-animated so it keeps moving */
+#bootLoad { position: fixed; left: 50%; bottom: 14%; width: min(320px, 70vw); transform: translateX(-50%); z-index: 90; font: 12px monospace; color: #ffd36a; letter-spacing: .2em; text-align: center; pointer-events: none; }
+#bootLoad b, #fadeBar { display: block; height: 10px; margin-top: 8px; background: #0c0d10; border: 2px solid #9aa0a8; box-shadow: 0 0 0 2px #07060a; overflow: hidden; }
+#bootLoad b i, #fadeBar i { display: block; height: 100%; background: repeating-linear-gradient(90deg, #ffd36a 0 8px, #e0a83a 8px 12px); transform-origin: left; transform: scaleX(0); }
+#bootLoad b i { animation: bootFill 9s cubic-bezier(.15,.75,.3,1) forwards; }
+@keyframes bootFill { to { transform: scaleX(.94); } }
+html.ready #bootLoad { display: none; }
+#fadeBar { width: min(320px, 70vw); margin: 16px auto 0; }
 </style>
 </head>
 <body>
+<div id="bootLoad">LOADING<b><i></i></b></div>
 
 <div id="stage" aria-label="Game view"></div>
 <div id="vignette"></div>
@@ -339,7 +349,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.21.6</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.21.7</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -366,7 +376,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
   </div>
 </div>
 <div class="screen" id="dead" hidden><div class="sheet win"><div class="logo" style="font-size:48px">DOWN</div><p id="deadTxt"></p><button class="cta win" id="respawnBtn">Respawn</button></div></div>
-<div id="fade" hidden><div id="fadeTxt"></div></div>
+<div id="fade" hidden><div style="text-align:center"><div id="fadeTxt"></div><div id="fadeBar"><i></i></div></div></div>
 <div id="err" class="screen" hidden><div class="sheet win"><p>The game needs WebGL, which this browser has turned off.</p></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>

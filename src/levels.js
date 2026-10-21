@@ -98,15 +98,16 @@ function dropshipPad(x, z, ry, label) {
 }
 // Merge static scenery into one mesh per material: thousands of parts become a few dozen draw calls
 function tessellate(pos, nor, uv, L) {
-  const P = [], N = [], U = [], q = [];
-  for (let i = 0; i < pos.length / 9; i++) q.push([[0, 1, 2].map(k => [pos[i * 9 + k * 3], pos[i * 9 + k * 3 + 1], pos[i * 9 + k * 3 + 2]]), [0, 1, 2].map(k => [nor[i * 9 + k * 3], nor[i * 9 + k * 3 + 1], nor[i * 9 + k * 3 + 2]]), [0, 1, 2].map(k => [uv[i * 6 + k * 2], uv[i * 6 + k * 2 + 1]])]);
-  const mid = (a, b) => a.map((v, i) => (v + b[i]) / 2), d2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
-  let guard = 0;
-  while (q.length) { const [p, n, u] = q.pop();
-    if (guard++ < 200000 && Math.max(d2(p[0], p[1]), d2(p[1], p[2]), d2(p[2], p[0])) > L * L) {
-      const pm = [mid(p[0], p[1]), mid(p[1], p[2]), mid(p[2], p[0])], nm = [mid(n[0], n[1]), mid(n[1], n[2]), mid(n[2], n[0])], um = [mid(u[0], u[1]), mid(u[1], u[2]), mid(u[2], u[0])];
-      q.push([[p[0], pm[0], pm[2]], [n[0], nm[0], nm[2]], [u[0], um[0], um[2]]], [[pm[0], p[1], pm[1]], [nm[0], n[1], nm[1]], [um[0], u[1], um[1]]], [[pm[2], pm[1], p[2]], [nm[2], nm[1], n[2]], [um[2], um[1], u[2]]], [pm, nm, um]); continue; }
-    for (let k = 0; k < 3; k++) { P.push(...p[k]); N.push(...n[k]); U.push(...u[k]); } }
+  // split big triangles until no edge is longer than L (keeps vertex lighting and fog smooth); flat number arrays, no per-vertex allocations
+  const P = [], N = [], U = [], L2 = L * L; let guard = 0;
+  const split = (t, d) => { // t: 24 numbers = 3 x (pos3, nor3, uv2)
+    const e = (i, j) => (t[i * 8] - t[j * 8]) ** 2 + (t[i * 8 + 1] - t[j * 8 + 1]) ** 2 + (t[i * 8 + 2] - t[j * 8 + 2]) ** 2;
+    if (d < 12 && guard++ < 200000 && Math.max(e(0, 1), e(1, 2), e(2, 0)) > L2) {
+      const m = (i, j) => { const r = new Array(8); for (let k = 0; k < 8; k++) r[k] = (t[i * 8 + k] + t[j * 8 + k]) / 2; return r; };
+      const v0 = t.slice(0, 8), v1 = t.slice(8, 16), v2 = t.slice(16, 24), a = m(0, 1), b = m(1, 2), c = m(2, 0);
+      split([...v0, ...a, ...c], d + 1); split([...a, ...v1, ...b], d + 1); split([...c, ...b, ...v2], d + 1); split([...a, ...b, ...c], d + 1); return; }
+    for (let k = 0; k < 3; k++) { const o = k * 8; P.push(t[o], t[o + 1], t[o + 2]); N.push(t[o + 3], t[o + 4], t[o + 5]); U.push(t[o + 6], t[o + 7]); } };
+  for (let i = 0; i < pos.length / 9; i++) { const t = new Array(24); for (let k = 0; k < 3; k++) { const o = k * 8, pi = i * 9 + k * 3, ui = i * 6 + k * 2; t[o] = pos[pi]; t[o + 1] = pos[pi + 1]; t[o + 2] = pos[pi + 2]; t[o + 3] = nor[pi]; t[o + 4] = nor[pi + 1]; t[o + 5] = nor[pi + 2]; t[o + 6] = uv[ui]; t[o + 7] = uv[ui + 1]; } split(t, 0); }
   return [new Float32Array(P), new Float32Array(N), new Float32Array(U)];
 }
 function mergeStatic(root) {
@@ -118,7 +119,7 @@ function mergeStatic(root) {
     let b = buckets.get(o.material); if (!b) { b = { pos: [], nor: [], uv: [] }; buckets.set(o.material, b); }
     const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()); g.applyMatrix4(o.matrixWorld);
     let pa = g.attributes.position.array, na = g.attributes.normal.array, ua = g.attributes.uv ? g.attributes.uv.array : new Float32Array(g.attributes.position.count * 2);
-    g.computeBoundingSphere(); if (g.boundingSphere.radius > 2.2) [pa, na, ua] = tessellate(pa, na, ua, 2.4);
+    g.computeBoundingSphere(); if (g.boundingSphere.radius > 2.9) [pa, na, ua] = tessellate(pa, na, ua, 3.2);
     b.pos.push(pa); b.nor.push(na); b.uv.push(ua); g.dispose();
   });
   const out = new THREE.Group();
@@ -594,6 +595,8 @@ function loadLevel(id, opts) {
 const resumeWhere = () => S.where && planetOpen(S.where) ? S.where : shipUnlocked() ? 'ship' : 'earth';
 function travel(id, opts) {
   SFX.warp();
+  { const bi = document.querySelector('#fadeBar i'); if (bi) { bi.style.transition = 'none'; bi.style.transform = 'scaleX(0)'; void bi.offsetWidth; bi.style.transition = 'transform 3s cubic-bezier(.15,.75,.3,1)'; bi.style.transform = 'scaleX(.9)';
+    const _l = loadLevel; loadLevel = function () { loadLevel = _l; const r = _l.apply(this, arguments); bi.style.transition = 'transform .25s'; bi.style.transform = 'scaleX(1)'; return r; }; } }
   const fade = $('fade'); fade.hidden = false; fade.style.opacity = 1; $('fadeTxt').textContent = id === 'ship' ? 'Boarding the Setting Sun…' : id === 'space' ? 'Taking the helm…' : id === 'zeltac' ? 'Docking at the Zeltac Ship…' : id === 'maw' ? 'Entering the wormhole…' : `Landing on ${LEVELS[id].name}…`;
   SFX.ui();
   setTimeout(() => { loadLevel(id, opts); markDirty(); setTimeout(() => { fade.style.opacity = 0; setTimeout(() => { fade.hidden = true; }, 400); toast(LEVELS[id].name.toUpperCase(), LEVELS[id].tag, 3); burp(id === 'ship' ? 'ship' : id === 'space' ? 'space' : 'land'); }, 150); }, 450);

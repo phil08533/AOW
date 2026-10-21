@@ -73,8 +73,11 @@ function playInhalerAnim(id) {
 
   // Hand / thumb & fingers supporting the inhaler
   const skinCol = (typeof FACE !== 'undefined' && FACE.skin && typeof charLook !== 'undefined' && charLook && FACE.skin[typeof getFaceParts === 'function' ? getFaceParts().s : 0]) || '#e0b892';
-  part(g, B(0.07, 0.05, 0.06), toon(skinCol, 'skin'), -0.042, -0.01, -0.005, 0.2, 0.1, -0.15);
-  part(g, B(0.025, 0.035, 0.022), toon(skinCol, 'skin'), 0.02, 0.095, -0.01, -0.3, 0, 0.2);
+  // fingers curled round the body and a thumb resting on the actuator
+  const skinM = new THREE.MeshLambertMaterial({ color: new THREE.Color(skinCol).convertSRGBToLinear() });
+  for (let i = 0; i < 4; i++) part(g, B(0.012, 0.011, 0.03), skinM, -0.012, 0.03 - i * 0.014, 0.012, 0, 0.5, 0);
+  part(g, B(0.03, 0.06, 0.02), skinM, -0.026, 0.008, -0.004);
+  part(g, B(0.011, 0.028, 0.012), skinM, 0.019, 0.04, 0.006, 0, 0, -0.2);
 
   g.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.renderOrder = 4; } });
   g.scale.setScalar(1.5);

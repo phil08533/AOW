@@ -339,7 +339,7 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.21.2</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.21.3</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -17945,8 +17945,11 @@ function playInhalerAnim(id) {
 
   // Hand / thumb & fingers supporting the inhaler
   const skinCol = (typeof FACE !== 'undefined' && FACE.skin && typeof charLook !== 'undefined' && charLook && FACE.skin[typeof getFaceParts === 'function' ? getFaceParts().s : 0]) || '#e0b892';
-  part(g, B(0.07, 0.05, 0.06), toon(skinCol, 'skin'), -0.042, -0.01, -0.005, 0.2, 0.1, -0.15);
-  part(g, B(0.025, 0.035, 0.022), toon(skinCol, 'skin'), 0.02, 0.095, -0.01, -0.3, 0, 0.2);
+  // fingers curled round the body and a thumb resting on the actuator
+  const skinM = new THREE.MeshLambertMaterial({ color: new THREE.Color(skinCol).convertSRGBToLinear() });
+  for (let i = 0; i < 4; i++) part(g, B(0.012, 0.011, 0.03), skinM, -0.012, 0.03 - i * 0.014, 0.012, 0, 0.5, 0);
+  part(g, B(0.03, 0.06, 0.02), skinM, -0.026, 0.008, -0.004);
+  part(g, B(0.011, 0.028, 0.012), skinM, 0.019, 0.04, 0.006, 0, 0, -0.2);
 
   g.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; o.renderOrder = 4; } });
   g.scale.setScalar(1.5);
@@ -18838,6 +18841,7 @@ const UPDATES = [
   { id: 154, title: "2.21.0 · Boutique drugs", items: ["Glowing ingredients now grow out in the worlds: Glowcaps, Void Shards, Luma Beetles, Frost Salt, Nebula Moss, and the very rare Star Nectar. Walk up and harvest them; they regrow after a while.", "A new Boutique Bench in your Lab refines two raw ingredients into one extract, then lets you design your own drug: a name, a liquid colour, up to three extracts, and the five sliders. Extracts set how high each slider can really go.", "Your Chemist level rises slowly as you refine and brew, unlocking more extract slots and higher caps. F grade will not sell; S grade spreads by word of mouth and sells for more.", "Your saved recipes and their sales are on the bench Stats tab. The house brews stay as they were."] },
   { id: 155, title: "2.21.1 · Brewing that makes sense", items: ["You can brew with just one extract now. The Potency/Purity/Glow sliders are gone: you cook with Heat, Stir, Pressure, Steep and Cut, and every mix of extracts has its own hidden sweet spot. Maxing everything burns the batch.", "Each slider gives you a hint like \"runs hot\" or \"thin\", and the hints and grade guess get sharper as your Chemist level rises.", "A spinning inhaler at the bench shows your drug: its liquid takes your colour, glows, bubbles with strength, and goes cloudy when it is impure."] },
   { id: 156, title: "2.21.2 · The Glonk Quartet", items: ["The cantina band in Grub's bar has a bigger stage with a lighting truss, sweeping colour spotlights, a glowing backdrop and a singer up front.", "The music now comes out of the band's speaker stacks: louder and clearer as you walk up, panned toward the stage, and muffled across the room."] },
+  { id: 157, title: "2.21.3 · Fixes", items: ["Taking a drug shows a proper hand on the inhaler instead of the spongy block.", "The Comet Bar in the Starlight Lounge moved over so the elevator is no longer hidden behind it."] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -21712,7 +21716,7 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
 // plus a second bar, a VIP couch corner, plants, waiter bots, and people mingling with drinks.
 { const _bn = barNpcs; barNpcs = function () { const L = _bn();
   const ves = L.find(d => d.name === 'Vesper'); if (ves) ves.z = 12.8;
-  L.push({ id: 'cometbar', name: 'Lyra', role: 'The Comet Bar · cocktails', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#1e1c22', '#9fe8ff', '#c86aff', '#ff6aa8'), x: 22, z: 25.2, face: Math.PI, heal: true,
+  L.push({ id: 'cometbar', name: 'Lyra', role: 'The Comet Bar · cocktails', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#1e1c22', '#9fe8ff', '#c86aff', '#ff6aa8'), x: 12, z: 25.2, face: Math.PI, heal: true,
     custom: [['Comet cocktail (40 cr)', () => { if (S.cr < 40) { toast('NOT ENOUGH', 'Lyra raises one perfect eyebrow.', 2); return; } S.cr -= 40; player.hp = Math.min(player.maxHp || player.hp, player.hp + 60); markDirty(); closeDlg(); toast('COMET COCKTAIL', 'It sparkles on the way down. +60 HP', 2.5); SFX.coin && SFX.coin(); }]],
     idle: ["Moe-bot does volume. I do art. The art costs more.", "The President tips in commemorative coins with his own face on them.", "Try the Supernova. It's on fire. On purpose."] });
   L.push({ id: 'vipguard', name: 'Agent Brooks', role: 'Secret Service · very tired', rig: 'civ', make: () => makeCivilian('#1e1c22', '#1e1c22', '#8a5a3a', '#1e1a18', '#1e1c22'), x: 6.6, z: 0.4, face: -Math.PI * 0.75,
@@ -21725,16 +21729,16 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
   levelAnims.push(t => ring.material.color.setHSL(0.12, 0.9, 0.5 + Math.sin(t * 3) * 0.12));
   for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4; part(props, Cy(0.05, 0.08, 0.9, 6), gold, Math.cos(a) * 1.6, 0.45, 6.5 + Math.sin(a) * 1.6); part(props, new THREE.SphereGeometry(0.08, 8, 6), gold, Math.cos(a) * 1.6, 0.92, 6.5 + Math.sin(a) * 1.6); }
   // ---- the Comet Bar: back right ----
-  part(props, B(8, 1.1, 1.2), toon('#2a1e3a', 'panel'), 22, 0.55, 23.6); part(props, B(8.3, 0.1, 1.5), gold, 22, 1.15, 23.6); part(props, B(8, 0.08, 0.1), glow('#4fd2ff'), 22, 0.15, 22.98); box(22, 23.6, 4, 0.7);
-  part(props, B(8, 3.2, 0.3), wood, 22, 1.6, D - 0.5); for (let r = 0; r < 2; r++) for (let i = 0; i < 12; i++) part(props, Cy(0.07, 0.07, 0.42, 6), glow(['#4fd2ff', '#c86aff', '#ff6aa8'][(i + r) % 3]), 18.6 + i * 0.62, 2.0 + r * 0.9, D - 0.75);
-  const cs = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 0.8), new THREE.MeshBasicMaterial({ map: signTex('COMET BAR', '#0e0a1e', '#4fd2ff') })); cs.position.set(22, 4.0, D - 0.6); cs.rotation.y = Math.PI; levelGroup.add(cs);
-  for (let i = 0; i < 4; i++) { const x = 19.4 + i * 1.75; part(props, Cy(0.26, 0.26, 0.08, 10), velvet, x, 0.8, 22.2); part(props, Cy(0.04, 0.04, 0.78, 5), metal, x, 0.4, 22.2); }
+  part(props, B(8, 1.1, 1.2), toon('#2a1e3a', 'panel'), 12, 0.55, 23.6); part(props, B(8.3, 0.1, 1.5), gold, 12, 1.15, 23.6); part(props, B(8, 0.08, 0.1), glow('#4fd2ff'), 12, 0.15, 22.98); box(12, 23.6, 4, 0.7);
+  part(props, B(8, 3.2, 0.3), wood, 12, 1.6, D - 0.5); for (let r = 0; r < 2; r++) for (let i = 0; i < 12; i++) part(props, Cy(0.07, 0.07, 0.42, 6), glow(['#4fd2ff', '#c86aff', '#ff6aa8'][(i + r) % 3]), 8.6 + i * 0.62, 2.0 + r * 0.9, D - 0.75);
+  const cs = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 0.8), new THREE.MeshBasicMaterial({ map: signTex('COMET BAR', '#0e0a1e', '#4fd2ff') })); cs.position.set(12, 4.0, D - 0.6); cs.rotation.y = Math.PI; levelGroup.add(cs);
+  for (let i = 0; i < 4; i++) { const x = 9.4 + i * 1.75; part(props, Cy(0.26, 0.26, 0.08, 10), velvet, x, 0.8, 22.2); part(props, Cy(0.04, 0.04, 0.78, 5), metal, x, 0.4, 22.2); }
   // ---- the VIP couches: back left ----
   for (const [x, z, ry] of [[-22, 25.4, 0], [-25.6, 21.6, Math.PI / 2], [-18.4, 21.6, -Math.PI / 2]]) { const g = new THREE.Group(); part(g, B(3.6, 0.5, 1.1), velvet, 0, 0.35, 0); part(g, B(3.6, 0.9, 0.3), velvet, 0, 0.8, 0.45); for (const s of [-1, 1]) part(g, B(0.3, 0.7, 1.1), velvet, s * 1.8, 0.5, 0); g.position.set(x, 0, z); g.rotation.y = ry + Math.PI; props.add(g); box(x, z, ry ? 0.6 : 1.9, ry ? 1.9 : 0.6); }
   part(props, B(2, 0.4, 1.2), toon('#1e1c22', 'panel'), -22, 0.2, 21.6); part(props, B(2.04, 0.04, 1.24), gold, -22, 0.41, 21.6); box(-22, 21.6, 1, 0.6); part(props, Cy(0.12, 0.08, 0.3, 8), glow('#ffd36a'), -22.4, 0.58, 21.6); part(props, Cy(0.04, 0.04, 0.4, 6), glow('#7fff6a'), -21.5, 0.6, 21.4);
   for (let i = 0; i < 5; i++) { const x = -26.5 + i * 2.25; part(props, Cy(0.05, 0.08, 1.0, 6), gold, x, 0.5, 18.4); if (i < 4) { const rope = part(props, Cy(0.03, 0.03, 2.25, 6), velvet, x + 1.12, 0.82, 18.4, 0, 0, Math.PI / 2); } }
   const vs = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.6), new THREE.MeshBasicMaterial({ map: signTex('VIP', '#1e0e1a', '#ffd36a') })); vs.position.set(-22, 4.2, D - 0.6); vs.rotation.y = Math.PI; levelGroup.add(vs);
-  const L = new THREE.PointLight(0xffd36a, 0.8, 14, 1.6); L.position.set(-22, 4.5, 22); levelGroup.add(L); const L2 = new THREE.PointLight(0x4fd2ff, 0.8, 14, 1.6); L2.position.set(22, 4.5, 22); levelGroup.add(L2);
+  const L = new THREE.PointLight(0xffd36a, 0.8, 14, 1.6); L.position.set(-22, 4.5, 22); levelGroup.add(L); const L2 = new THREE.PointLight(0x4fd2ff, 0.8, 14, 1.6); L2.position.set(12, 4.5, 22); levelGroup.add(L2);
   // people: lounging VIPs, bar regulars and mingling groups
   const P = [['#ffd36a', '#1e1c22', '#e0b892', '#5a3a22', '#ff6aa8'], ['#c86aff', '#2a1e3a', '#8a5a3a', '#1e1a18', '#ffd36a'], ['#e8e4dc', '#3a3d44', '#c58a64', '#c8402f', '#4fd2ff'], ['#3bd2ff', '#1e1c22', '#9fe8ff', '#e8e4dc', '#ff6aa8'], ['#ff3b8a', '#1e1c22', '#e0b892', '#1e1a18', '#ffd36a'], ['#2a5a3a', '#1e1c22', '#8a5a3a', '#ffd36a', '#c9a43a']];
   const guy = (k, x, z, ry, fn, y) => { const o = buildChar(() => makeCivilian(...P[k % P.length]), 'civ'); o.position.set(x, y || 0, z); o.rotation.y = ry; blob(o, 0.4); levelGroup.add(o); if (!y) solid(x, z, 0.4); const st = {}, ph = k * 1.3; levelAnims.push(t => { if (!o.parent) return; fn && fn(o, t, ph); animRig(o, st, 1 / 60, t); }); return o; };
@@ -21743,7 +21747,7 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
   // seated on the VIP couches (low and leaning back)
   for (const [k, x, z, ry] of [[0, -23, 25.2, Math.PI], [1, -21, 25.2, Math.PI], [2, -25.4, 21.6, -Math.PI / 2], [3, -18.6, 22.2, Math.PI / 2]]) { const o = guy(k, x, z, ry, (o, t, ph) => { o.rotation.y = ry + Math.sin(t * 0.4 + ph) * 0.2; }, -0.4); o.userData.rig.torso.rotation.x = -0.25; glass(o, '#7fff6a'); }
   // at the Comet Bar
-  for (const [k, x] of [[4, 19.4], [5, 22.9], [2, 24.6]]) glass(guy(k, x, 21.4, 0, chat(0)), '#4fd2ff');
+  for (const [k, x] of [[4, 9.4], [5, 12.9], [2, 14.6]]) glass(guy(k, x, 21.4, 0, chat(0)), '#4fd2ff');
   // mingling groups with drinks
   for (const [cx, cz] of [[-7, -11], [7, -11], [-20, 9], [20, 10]]) for (let k = 0; k < 3; k++) { const a = k * 2.09 + cx, x = cx + Math.cos(a) * 1.0, z = cz + Math.sin(a) * 1.0, ry = Math.atan2(cx - x, cz - z); glass(guy(k + Math.abs(cx), x, z, ry, chat(ry)), ['#ff6aa8', '#ffd36a', '#4fd2ff'][k]); }
   // potted palms around the edges

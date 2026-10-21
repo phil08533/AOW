@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.4</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.5</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -752,14 +752,14 @@ const SFX = (() => {
     const t = ac.currentTime + 0.005, fam = family(g), fn = GUNSND[fam] || GUNSND.blaster;
     // very fast guns: skip the heavy layers if the last shot was a moment ago, so the mix doesn't turn to mush
     if (t - lastGun < 0.045 && fam !== 'minigun') { const d = out(0.8, 0.1); click(d, t, 0.3); nz(d, t, 0.05, 0.4, 'bandpass', 2000, 800, 1); thump(d, t, 120, 0.06, 0.4); lastGun = t; return; }
-    lastGun = t; if (fam.startsWith('m_') || !lzPlay(t)) fn(t, g);
+    lastGun = t; if (fam.startsWith('m_') || !lzPlay(t, g)) fn(t, g);
   }
-  // Phil's synthwave laser samples: every shot picks one at random, slightly re-pitched so repeats don't sound copied
+  // Phil's synthwave laser samples: each gun is tied to one of them by its name, so every gun has its own voice
   const LZ = { buf: [], loading: false };
   function lzLoad() { if (LZ.loading || !ac) return; LZ.loading = true;
-    for (let i = 1; i <= 12; i++) fetch('sfx/laser' + i + '.mp3').then(r => r.arrayBuffer()).then(a => new Promise((ok, no) => ac.decodeAudioData(a, ok, no))).then(b => LZ.buf.push(b)).catch(() => {}); }
-  function lzPlay(t) { lzLoad(); if (!LZ.buf.length) return false;
-    const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = LZ.buf[Math.floor(Math.random() * LZ.buf.length)]; src.playbackRate.value = 0.94 + Math.random() * 0.12; g.gain.value = 0.55; src.connect(g); g.connect(out(1, 0.12)); src.start(t); return true; }
+    for (let i = 1; i <= 12; i++) fetch('sfx/laser' + i + '.mp3').then(r => r.arrayBuffer()).then(a => new Promise((ok, no) => ac.decodeAudioData(a, ok, no))).then(b => { LZ.buf[i - 1] = b; }).catch(() => {}); }
+  function lzPlay(t, g) { lzLoad(); let h = 7; for (const c of String((g && (g.id || g.name)) || 'x')) h = (h * 31 + c.charCodeAt(0)) >>> 0; const b = LZ.buf[h % 12]; if (!b) return false;
+    const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = b; src.playbackRate.value = 0.97 + Math.random() * 0.06; g.gain.value = 0.55; src.connect(g); g.connect(out(1, 0.12)); src.start(t); return true; }
   function gunReload(g) {
     if (!ac) return; const t = ac.currentTime, fam = family(g), d = out(0.8, 0.15), dur = (g && g.reload) || 1.2;
     if (fam.startsWith('m_')) { os(d, t, 'sine', 220, 880, dur * 0.8, 0.1, dur * 0.4); os(d, t, 'triangle', 330, 1320, dur * 0.8, 0.05, dur * 0.4); nz(d, t, dur * 0.8, 0.08, 'bandpass', 800, 4000, 3, dur * 0.4); os(d, t + dur * 0.8, 'sine', 1320, 0, 0.25, 0.1); return; }
@@ -18886,6 +18886,7 @@ const UPDATES = [
   { id: 167, title: '2.22.2 · More drug materials', items: ['Six new materials: Ember Root, Sky Pollen, Rust Lichen, Tide Pearl, Ghost Orchid and Quasarite. Fort, Sky City and Vector now grow them too.', 'A Drug Room Box in your Lab. Tap "Dump materials" to store everything you gathered; the Boutique Bench uses the box first.'] },
   { id: 168, title: '2.22.3 · Better laser shots', items: ['Laser bolts glow in their gun colour, with a soft spark racing down them instead of a ball.', 'Alien guns blow out a soft glowing ring instead of a hard circle.', 'Twelve new synthwave laser sounds, picked at random each shot.'] },
   { id: 169, title: '2.22.4 · Drug box fix', items: ['The Drug Room Box list no longer stacks up or leaks into other menus, and each material sits on one line.'] },
+  { id: 170, title: '2.22.5 · One sound per gun', items: ['Each gun now always fires with its own laser sound instead of a random one.'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },

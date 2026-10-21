@@ -136,7 +136,7 @@ function openComicReader(startPage = 1) {
   wrap.appendChild(nav);
 
   function update() {
-    img.src = `shots/aranus%20man/${page}.jpg`;
+    img.src = `shots/aranus/${page}.jpg`;
     const numEl = document.getElementById('comicPageNum');
     if (numEl) numEl.textContent = `Page ${page} of 10`;
     prevBtn.disabled = (page <= 1);

@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.21.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.21.10</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1742,7 +1742,9 @@ window.addEventListener('pagehide', () => { writeLocal(); });
 const _closeDlgRef = closeDlg;
 $('dlg').addEventListener('click', e => { if (e.target.closest('.pbtn')) setTimeout(() => { if ($('dlg').hidden) clearRows(); }, 0); });
 const dlgObserver = new MutationObserver(() => { if ($('dlg').hidden) clearRows(); }); dlgObserver.observe($('dlg'), { attributes: true, attributeFilter: ['hidden'] });
-resize(); setState('menu'); refreshNpcs(); renderQuest(); requestAnimationFrame(frame); document.documentElement.classList.add('ready');
+resize(); setState('menu'); refreshNpcs(); renderQuest(); requestAnimationFrame(frame); try { const bi = document.querySelector('#bootLoad i'); bi.style.animation = 'none'; bi.style.transform = 'scaleX(.96)'; } catch (_) {}
+// keep the startup bar up until the first frames are actually drawn (shader warm-up was the long blank wait on phones)
+requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.add('ready')));
 window.__game = { get LEVEL() { return LEVEL; }, loadLevel, travel, skipTutorial, openQuestLog, openGalaxy, openShipTerminal, openWorkbench, INTERACTS, QDEFS, startQuest, foundQuest, completeQuest, questTarget, checkReady, ENV, setBuild, placePiece, baseState, renderBase, renderer, camera, scene, S, get S2() { return S; }, player, enemies, npcObjs, drops, setState, talk, step, fire: () => fire(), get fly() { return fly; }, get petObj() { return petObj; }, startBout: () => startBout(), startWaves: () => startWaves(), openBookie: () => openBookie(), get ARENA() { return ARENA; }, spaceFire: () => shipFire(), get state() { return state; }, get dlgOpen() { return dlgOpen; }, closeDlg, kill, gainXp, Z, groundH, openStore, openGuns, openBag, syncPeers, remotes };
 })();
 </script>

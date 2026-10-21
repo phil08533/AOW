@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.21.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.21.10</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -4393,11 +4393,17 @@ function loadLevel(id, opts) {
 const resumeWhere = () => S.where && planetOpen(S.where) ? S.where : shipUnlocked() ? 'ship' : 'earth';
 function travel(id, opts) {
   SFX.warp();
-  { const bi = document.querySelector('#fadeBar i'); if (bi) { bi.style.transition = 'none'; bi.style.transform = 'scaleX(0)'; void bi.offsetWidth; bi.style.transition = 'transform 3s cubic-bezier(.15,.75,.3,1)'; bi.style.transform = 'scaleX(.9)';
-    const _l = loadLevel; loadLevel = function () { loadLevel = _l; const r = _l.apply(this, arguments); bi.style.transition = 'transform .25s'; bi.style.transform = 'scaleX(1)'; return r; }; } }
+  // the bar follows the real load: it paces itself on how long this world took on this device last time, then the
+  // shaders and textures are warmed up behind the fade (that was the long freeze after landing) before it fills and lifts
+  const bi = document.querySelector('#fadeBar i'); let LT = {}; try { LT = JSON.parse(localStorage.getItem('aowLoadT') || '{}'); } catch (_) {}
+  const est = LT[id] || 2500, bar = (to, ms) => { if (!bi) return; bi.style.transition = ms ? `transform ${ms}ms cubic-bezier(.2,.6,.4,1)` : 'none'; bi.style.transform = `scaleX(${to})`; };
+  bar(0); if (bi) void bi.offsetWidth; bar(0.7, est * 0.7 + 450);
   const fade = $('fade'); fade.hidden = false; fade.style.opacity = 1; $('fadeTxt').textContent = id === 'ship' ? 'Boarding the Setting Sun…' : id === 'space' ? 'Taking the helm…' : id === 'zeltac' ? 'Docking at the Zeltac Ship…' : id === 'maw' ? 'Entering the wormhole…' : `Landing on ${LEVELS[id].name}…`;
   SFX.ui();
-  setTimeout(() => { loadLevel(id, opts); markDirty(); setTimeout(() => { fade.style.opacity = 0; setTimeout(() => { fade.hidden = true; }, 400); toast(LEVELS[id].name.toUpperCase(), LEVELS[id].tag, 3); burp(id === 'ship' ? 'ship' : id === 'space' ? 'space' : 'land'); }, 150); }, 450);
+  setTimeout(() => { const t0 = performance.now(); loadLevel(id, opts); markDirty(); const tb = performance.now() - t0; bar(0.8, 150);
+    setTimeout(() => { const t1 = performance.now(); try { renderer.compile(scene, camera); renderer.render(scene, camera); } catch (_) {} const tc = performance.now() - t1;
+      LT[id] = Math.round(LT[id] ? LT[id] * 0.4 + (tb + tc) * 0.6 : tb + tc); try { localStorage.setItem('aowLoadT', JSON.stringify(LT)); } catch (_) {} bar(1, 180);
+    setTimeout(() => { fade.style.opacity = 0; setTimeout(() => { fade.hidden = true; }, 400); toast(LEVELS[id].name.toUpperCase(), LEVELS[id].tag, 3); burp(id === 'ship' ? 'ship' : id === 'space' ? 'space' : 'land'); }, 200); }, 180); }, 450);
 }
 function boardShip() { if (!shipUnlocked()) { log('Your ship is not ready yet.'); return; } closeDlg(); travel('ship'); }
 const PLANET_ORDER = ['earth', 'zeltac', 'mezar', 'capitone', 'robot'];
@@ -18868,6 +18874,7 @@ const UPDATES = [
   { id: 161, title: "2.21.7 · Loading bars, faster Earth", items: ["A loading bar shows while the game starts up and every time you travel to another world, so on slower phones you know it is working.", "Earth loads about a third faster: the scenery merge does far less work, and the ground is reused when you come back to a world you already visited."] },
   { id: 162, title: "2.21.8 · Bench, stats and fixes", items: ["The Boutique Bench keeps its scroll position when you change something, so on phones it no longer jumps back to the top.", "The Stats tab is rebuilt: each recipe shows its colour, grade, street rep stars (up to five, by doses sold), credits earned, current price and how far to the next star.", "Lab crew hold their hands properly now (hands were floating off the arms), and the dealer has their own counting table out of the way of the consoles.", "No more muzzle flash when you pull the trigger somewhere you can't fire."] },
   { id: 163, title: "2.21.9 · Real laser bolts and the Black Galaxy Beam", items: ["Shots are no longer thin lines. Every gun fires a glowing bolt with a white-hot core inside a coloured halo and a bright slug racing down it.", "New gun: the Black Galaxy Beam (Seer Ixa on the Zeltac, level 18). Hold the trigger for a steady beam of drifting black starfield that throws off sparkles and hums low while it fires."] },
+  { id: 164, title: "2.21.10 · An honest loading bar", items: ["The travel loading bar now paces itself on how long that world actually took to load on your device last time, instead of a fixed timer.", "The graphics are warmed up behind the loading screen before it lifts, so the long freeze right after landing (worst on Earth, on phones) happens while the bar is still showing, and it only fills once the world is ready.", "The startup bar stays up until the first frame is actually drawn."] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -25185,7 +25192,9 @@ window.addEventListener('pagehide', () => { writeLocal(); });
 const _closeDlgRef = closeDlg;
 $('dlg').addEventListener('click', e => { if (e.target.closest('.pbtn')) setTimeout(() => { if ($('dlg').hidden) clearRows(); }, 0); });
 const dlgObserver = new MutationObserver(() => { if ($('dlg').hidden) clearRows(); }); dlgObserver.observe($('dlg'), { attributes: true, attributeFilter: ['hidden'] });
-resize(); setState('menu'); refreshNpcs(); renderQuest(); requestAnimationFrame(frame); document.documentElement.classList.add('ready');
+resize(); setState('menu'); refreshNpcs(); renderQuest(); requestAnimationFrame(frame); try { const bi = document.querySelector('#bootLoad i'); bi.style.animation = 'none'; bi.style.transform = 'scaleX(.96)'; } catch (_) {}
+// keep the startup bar up until the first frames are actually drawn (shader warm-up was the long blank wait on phones)
+requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.add('ready')));
 window.__game = { get LEVEL() { return LEVEL; }, loadLevel, travel, skipTutorial, openQuestLog, openGalaxy, openShipTerminal, openWorkbench, INTERACTS, QDEFS, startQuest, foundQuest, completeQuest, questTarget, checkReady, ENV, setBuild, placePiece, baseState, renderBase, renderer, camera, scene, S, get S2() { return S; }, player, enemies, npcObjs, drops, setState, talk, step, fire: () => fire(), get fly() { return fly; }, get petObj() { return petObj; }, startBout: () => startBout(), startWaves: () => startWaves(), openBookie: () => openBookie(), get ARENA() { return ARENA; }, spaceFire: () => shipFire(), get state() { return state; }, get dlgOpen() { return dlgOpen; }, closeDlg, kill, gainXp, Z, groundH, openStore, openGuns, openBag, syncPeers, remotes };
 })();
 </script>

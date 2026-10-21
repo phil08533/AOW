@@ -595,11 +595,17 @@ function loadLevel(id, opts) {
 const resumeWhere = () => S.where && planetOpen(S.where) ? S.where : shipUnlocked() ? 'ship' : 'earth';
 function travel(id, opts) {
   SFX.warp();
-  { const bi = document.querySelector('#fadeBar i'); if (bi) { bi.style.transition = 'none'; bi.style.transform = 'scaleX(0)'; void bi.offsetWidth; bi.style.transition = 'transform 3s cubic-bezier(.15,.75,.3,1)'; bi.style.transform = 'scaleX(.9)';
-    const _l = loadLevel; loadLevel = function () { loadLevel = _l; const r = _l.apply(this, arguments); bi.style.transition = 'transform .25s'; bi.style.transform = 'scaleX(1)'; return r; }; } }
+  // the bar follows the real load: it paces itself on how long this world took on this device last time, then the
+  // shaders and textures are warmed up behind the fade (that was the long freeze after landing) before it fills and lifts
+  const bi = document.querySelector('#fadeBar i'); let LT = {}; try { LT = JSON.parse(localStorage.getItem('aowLoadT') || '{}'); } catch (_) {}
+  const est = LT[id] || 2500, bar = (to, ms) => { if (!bi) return; bi.style.transition = ms ? `transform ${ms}ms cubic-bezier(.2,.6,.4,1)` : 'none'; bi.style.transform = `scaleX(${to})`; };
+  bar(0); if (bi) void bi.offsetWidth; bar(0.7, est * 0.7 + 450);
   const fade = $('fade'); fade.hidden = false; fade.style.opacity = 1; $('fadeTxt').textContent = id === 'ship' ? 'Boarding the Setting Sun…' : id === 'space' ? 'Taking the helm…' : id === 'zeltac' ? 'Docking at the Zeltac Ship…' : id === 'maw' ? 'Entering the wormhole…' : `Landing on ${LEVELS[id].name}…`;
   SFX.ui();
-  setTimeout(() => { loadLevel(id, opts); markDirty(); setTimeout(() => { fade.style.opacity = 0; setTimeout(() => { fade.hidden = true; }, 400); toast(LEVELS[id].name.toUpperCase(), LEVELS[id].tag, 3); burp(id === 'ship' ? 'ship' : id === 'space' ? 'space' : 'land'); }, 150); }, 450);
+  setTimeout(() => { const t0 = performance.now(); loadLevel(id, opts); markDirty(); const tb = performance.now() - t0; bar(0.8, 150);
+    setTimeout(() => { const t1 = performance.now(); try { renderer.compile(scene, camera); renderer.render(scene, camera); } catch (_) {} const tc = performance.now() - t1;
+      LT[id] = Math.round(LT[id] ? LT[id] * 0.4 + (tb + tc) * 0.6 : tb + tc); try { localStorage.setItem('aowLoadT', JSON.stringify(LT)); } catch (_) {} bar(1, 180);
+    setTimeout(() => { fade.style.opacity = 0; setTimeout(() => { fade.hidden = true; }, 400); toast(LEVELS[id].name.toUpperCase(), LEVELS[id].tag, 3); burp(id === 'ship' ? 'ship' : id === 'space' ? 'space' : 'land'); }, 200); }, 180); }, 450);
 }
 function boardShip() { if (!shipUnlocked()) { log('Your ship is not ready yet.'); return; } closeDlg(); travel('ship'); }
 const PLANET_ORDER = ['earth', 'zeltac', 'mezar', 'capitone', 'robot'];

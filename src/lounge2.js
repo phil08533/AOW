@@ -32,7 +32,7 @@
   const chat = ry => (o, t, ph) => { o.rotation.y = ry + Math.sin(t * 0.6 + ph) * 0.4; };
   const glass = (o, c) => part(o, Cy(0.05, 0.035, 0.16, 6), glow(c), 0.3, 1.0, 0.18);
   // seated on the VIP couches (low and leaning back)
-  for (const [k, x, z, ry] of [[0, -23, 25.2, Math.PI], [1, -21, 25.2, Math.PI], [2, -25.4, 21.6, -Math.PI / 2], [3, -18.6, 22.2, Math.PI / 2]]) { const o = guy(k, x, z, ry, (o, t, ph) => { o.rotation.y = ry + Math.sin(t * 0.4 + ph) * 0.2; }, -0.4); o.userData.rig.torso.rotation.x = -0.25; glass(o, '#7fff6a'); }
+  for (const [k, x, z, ry] of [[0, -23, 25.1, Math.PI], [1, -21, 25.1, Math.PI], [2, -25.3, 21.0, -Math.PI / 2], [4, -25.3, 22.4, -Math.PI / 2], [3, -18.7, 22.2, Math.PI / 2], [5, -18.7, 20.8, Math.PI / 2]]) { const o = guy(k, x, z, ry, (o, t, ph) => { o.rotation.y = ry + Math.sin(t * 0.4 + ph) * 0.2; }, 1); const R = o.userData.rig; o.position.y = 0.6 - (R ? R.spec.hip : 0.95) + 0.07; sitChar(o, 0.6); if (R) R.torso.rotation.x = -0.12; glass(o, '#7fff6a'); }
   // at the Comet Bar
   for (const [k, x] of [[4, 9.4], [5, 12.9], [2, 14.6]]) glass(guy(k, x, 21.4, 0, chat(0)), '#4fd2ff');
   // mingling groups with drinks

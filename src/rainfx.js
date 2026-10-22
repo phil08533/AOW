@@ -16,7 +16,7 @@ function rfxTick() { const now = performance.now(), dt = Math.min(0.05, (now - R
 { const _u = updateEnv; updateEnv = function () { const r = _u.apply(this, arguments); try { rfxTick(); if (!(LEVEL && LEVEL.ocean && swimHere())) SWE.out = true; } catch (_) {} return r; }; }
 // jumping off a dock: you keep falling until you hit the water, splash, sink a couple of metres, then bob back up to swimming depth
 const SWE = { out: true, air: false, vy: 0, sink: 0 };
-{ const _sw = swimStep; swimStep = function (dt, mx, mz, sprint) { const now = performance.now(), top = WATER_Y - 1.15;
+{ const _sw = swimStep; swimStep = function (dt, mx, mz, sprint) { if (typeof OCSIT !== 'undefined' && OCSIT.g) { ocSitPin(); return; } const now = performance.now(), top = WATER_Y - 1.15;
   if (SWE.out) { SWE.out = false; SWE.vy = Math.min(0, player.vy || 0); SWE.air = player.pos.y > top + 0.3; SWE.sink = 0; if (!SWE.air && SWE.vy < -4) SWE.sink = Math.max(-9, SWE.vy * 0.5); }
   if (SWE.air) { const y0 = player.pos.y; _sw(dt, mx, mz, sprint); SWE.vy -= 22 * dt; player.pos.y = y0 + SWE.vy * dt; player.onGround = false;
     if (player.pos.y <= top) { SWE.air = false; SWE.sink = Math.max(-9, Math.min(-2.2, SWE.vy * 0.45)); try { SFX.splash(); SFX.splash(); } catch (_) {} rfxSplash(player.pos.x, player.pos.z, Math.min(1.6, -SWE.vy / 8)); } return; }
@@ -28,3 +28,6 @@ const SWE = { out: true, air: false, vy: 0, sink: 0 };
 function rfxSplash(x, z, k) { if (RFX.lvl !== levelGroup) rfxBuild(); const y = WATER_Y + 0.03;
   for (let i = 0; i < 6; i++) { const r = RFX.rings.find(r => r.life <= 0); if (!r) break; r.life = 1 + i * 0.15; r.m.position.set(x, y, z); r.m.visible = true; r.s = (0.8 + i * 0.5) * k; }
   for (let i = 0; i < 16; i++) { const p = RFX.drops.find(p => p.life <= 0); if (!p) break; const a = Math.random() * 6.283, d = Math.random() * 0.8; p.life = 1.4; p.vy = 3 + Math.random() * 4 * k; p.m.position.set(x + Math.cos(a) * d, y, z + Math.sin(a) * d); p.m.visible = true; } }
+// riding in a boat: pin the player to the front bench every frame, wherever the boat bobs
+function ocSitPin() { const g = OCSIT.g; if (!g || !g.parent) { OCSIT.g = null; return; } const w = new THREE.Vector3(0, 0.5, 0.75); g.localToWorld(w); player.pos.set(w.x, w.y - 0.75, w.z); player.vy = 0; player.onGround = true; }
+{ const _u = updateEnv; updateEnv = function () { const r = _u.apply(this, arguments); try { if (typeof OCSIT !== 'undefined' && OCSIT.g) { if (!LEVEL || !LEVEL.ocean) OCSIT.g = null; else ocSitPin(); } } catch (_) {} return r; }; }

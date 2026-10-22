@@ -193,7 +193,9 @@ function bcLow() { const D = bcD('low'), X = D.x, Z = D.z;
   BC.low = {};
   fronts.forEach(([name, col, id], i) => { const side = i % 2 ? 1 : -1, x = X - 14 + Math.floor(i / 2) * 14, z = Z + side * 9.5, h = 7 + (i % 3) * 2.5, g = new THREE.Group(), ry = side > 0 ? Math.PI : 0;
     part(g, B(10, h, 6), bcMat('brick', 5, Math.round(h / 1.5), ['#7a6488', '#5a7a88', '#886070'][i % 3]), 0, h / 2, 0);
-    part(g, B(6, 2.4, 0.1), new THREE.MeshBasicMaterial({ color: '#1a1020' }), 0, 1.4, 3.03); part(g, B(6.2, 0.12, 0.2), glow(col), 0, 2.7, 3.05);
+    for (const sx of [-1, 1]) { const wx = sx * 2.25; part(g, B(2.3, 1.9, 0.06), new THREE.MeshBasicMaterial({ color: ['#3a2a44', '#2a3a4a', '#4a2a3a'][i % 3] }), wx, 1.55, 3.02); part(g, B(2.3, 1.9, 0.04), new THREE.MeshLambertMaterial({ color: '#cfefff', transparent: true, opacity: 0.25 }), wx, 1.55, 3.08);
+      for (const fy of [0.55, 2.55]) part(g, B(2.5, 0.12, 0.16), toonNS('#2b2a2c'), wx, fy, 3.1); for (const fx of [-1.2, 0, 1.2]) part(g, B(0.1, 2.0, 0.14), toonNS('#2b2a2c'), wx + fx, 1.55, 3.1); part(g, B(2.5, 0.5, 0.3), bcMat('brick', 2, 1, '#6a5a6a'), wx, 0.25, 3.12);
+      for (let k = 0; k < 3; k++) part(g, B(0.35, 0.3 + (k % 2) * 0.25, 0.3), glow([col, '#ffd36a', '#f4f0e8'][k]), wx - 0.6 + k * 0.6, 0.85 + (k % 2) * 0.12, 2.9); } part(g, B(6.2, 0.12, 0.2), glow(col), 0, 2.7, 3.05);
     const sg = new THREE.Mesh(new THREE.PlaneGeometry(6, 1), new THREE.MeshBasicMaterial({ map: bubSignTex(name, '#120818', col, 6, 1) })); sg.position.set(0, 3.4, 3.12); g.add(sg);
     // awning, AC units, cables, posters and a bit of trash on every front
     for (let k = 0; k < 6; k++) part(g, B(1.05, 0.06, 1.3), toonNS(k % 2 ? col : '#f4f0e8'), -2.6 + k * 1.04, 2.95, 3.6, 0.35, 0, 0);

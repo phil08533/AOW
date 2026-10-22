@@ -293,7 +293,11 @@ function ocHullGeo(w, L, h, inset) { const sh = new THREE.Shape(), pt = (k) => {
   const o = pt(0); sh.moveTo(o[0][0], o[0][1]); for (const [x, z] of o.slice(1)) sh.lineTo(x, z); sh.closePath();
   if (inset) { const hp = new THREE.Path(), q = pt(inset); hp.moveTo(q[0][0], q[0][1]); for (const [x, z] of q.slice(1)) hp.lineTo(x, z); hp.closePath(); sh.holes.push(hp); }
   const g = new THREE.ExtrudeGeometry(sh, { depth: h, bevelEnabled: false }); g.rotateX(Math.PI / 2); g.translate(0, h, 0); return g; }
-function ocBoats() { const spots = []; for (let i = 0; i < 40 && spots.length < 5; i++) { const a = i * 1.37, r = 34 + (i * 11) % 40, x = PORT[0] + Math.cos(a) * r, z = PORT[1] + Math.sin(a) * r;
+const OCB = [], OCSIT = { g: null };
+// sitting in a boat: you ride on the front bench facing the fisher, free to look around; Use again to hop back in the water
+function ocSit(g) { if (OCSIT.g) { const o = OCSIT.g; OCSIT.g = null; const w = new THREE.Vector3(1.8, 0, 0.7); o.localToWorld(w); player.pos.set(w.x, WATER_Y - 1.15, w.z); try { SFX.splash(); } catch (_) {} return; }
+  OCSIT.g = g; player.vy = 0; player.yaw = g.rotation.y + Math.PI; toast('IN THE BOAT', 'Use again to get up', 1.6); }
+function ocBoats() { OCB.length = 0; OCSIT.g = null; const spots = []; for (let i = 0; i < 40 && spots.length < 5; i++) { const a = i * 1.37, r = 34 + (i * 11) % 40, x = PORT[0] + Math.cos(a) * r, z = PORT[1] + Math.sin(a) * r;
     if (groundH(x, z) > WATER_Y - 2.5 || spots.some(([sx, sz]) => Math.hypot(x - sx, z - sz) < 18)) continue; if (Z.bubble && Math.hypot(x - Z.bubble.x, z - Z.bubble.z) < 30) continue; spots.push([x, z, a]); }
   const shirts = ['#c8402f', '#ffd36a', '#3a5266', '#4f9a4a', '#ff9a8a'], fishC = ['#ffb347', '#7fe8ff', '#c8d8e0', '#ff6aa8', '#9aff7a'];
   spots.forEach(([x, z, a], i) => { const g = new THREE.Group(), hullC = ['#f4f0e8', '#3a6a8a', '#c8402f', '#4f7a5a', '#e8c86a'][i], wood = toon('#8a6a44', 'wood');
@@ -301,11 +305,12 @@ function ocBoats() { const spots = []; for (let i = 0; i < 40 && spots.length < 
     const bottom = new THREE.Mesh(ocHullGeo(1.6, 3.9, 0.1, 0), toon('#5a4030', 'wood')); bottom.position.y = -0.02; g.add(bottom);
     const stripe = new THREE.Mesh(ocHullGeo(1.74, 4.04, 0.1, 0.03), toon('#c9a43a')); stripe.position.y = 0.28; g.add(stripe);
     const rim = new THREE.Mesh(ocHullGeo(1.78, 4.08, 0.07, 0.16), wood); rim.position.y = 0.58; g.add(rim);
-    for (const zz of [-1.0, 0.7]) part(g, B(1.45, 0.07, 0.32), wood, 0, 0.38, zz); part(g, B(0.3, 0.35, 0.4), toon('#3a3d44'), 0, 0.4, -2.0); part(g, Cy(0.03, 0.03, 0.5, 4), toon('#2b2a2c'), 0, 0.1, -2.15);
+    const deck = new THREE.Mesh(ocHullGeo(1.5, 3.8, 0.04, 0), toon('#7a5a3a', 'wood')); deck.position.y = 0.2; g.add(deck); for (let k = -3; k <= 3; k++) part(g, B(0.03, 0.01, 3.4), toon('#5a4030'), k * 0.2, 0.245, -0.1);
+    for (const zz of [-1.0, 0.7]) part(g, B(1.45, 0.07, 0.32), wood, 0, 0.5, zz); part(g, B(0.3, 0.35, 0.4), toon('#3a3d44'), 0, 0.4, -2.0); part(g, Cy(0.03, 0.03, 0.5, 4), toon('#2b2a2c'), 0, 0.1, -2.15);
     part(g, B(0.5, 0.3, 0.4), toon('#4fd2ff'), -0.35, 0.25, -1.4); part(g, Cy(0.22, 0.2, 0.3, 8), wood, 0.4, 0.25, 1.3);
     const lan = part(g, new THREE.SphereGeometry(0.09, 6, 4), glow('#ffd36a'), -0.55, 1.0, -1.7); part(g, Cy(0.02, 0.02, 0.6, 4), toon('#2b2a2c'), -0.55, 0.7, -1.7);
     // the fisher sits on the back bench facing over the side, rod gripped in both hands
-    const npc = makeCivilian(shirts[i], '#2c2a28', ['#c58a64', '#8a5a3a', '#e0b892', '#6a4a2a', '#f0c8a8'][i], '#1e1a18', i % 2 ? '#e8e4dc' : null); npc.scale.setScalar(0.9); npc.position.set(0, -0.05, -1.0); npc.rotation.y = Math.PI / 2; g.add(npc);
+    const npc = makeCivilian(shirts[i], '#2c2a28', ['#c58a64', '#8a5a3a', '#e0b892', '#6a4a2a', '#f0c8a8'][i], '#1e1a18', i % 2 ? '#e8e4dc' : null); npc.scale.setScalar(0.9); npc.position.set(0, 0.1, -1.0); npc.rotation.y = Math.PI / 2; g.add(npc);
     const rod = new THREE.Group(); part(rod, Cy(0.012, 0.03, 2.6, 5), toon('#2b2a2c'), 0, 1.3, 0); part(rod, Cy(0.05, 0.05, 0.08, 8), toon('#c9a43a'), 0.04, 0.25, 0, 0, 0, Math.PI / 2);
     rod.position.set(0.05, 0.95, 0.28); rod.rotation.x = 0.95; npc.add(rod);
     for (const s of [-1, 1]) part(npc, B(0.1, 0.1, 0.36), toon(shirts[i]), 0.2 * s, 1.0, 0.2, -0.3, 0, 0);
@@ -313,9 +318,10 @@ function ocBoats() { const spots = []; for (let i = 0; i < 40 && spots.length < 
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: '#e8e4dc' })); levelGroup.add(line);
     const bob = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), toon('#ff3b2a')); levelGroup.add(bob);
     const fish = new THREE.Group(); part(fish, B(0.12, 0.2, 0.42), toon(fishC[i]), 0, 0, 0); part(fish, B(0.04, 0.2, 0.14), toon(fishC[i]), 0, 0, -0.26); fish.visible = false; levelGroup.add(fish);
-    const ry = a + Math.PI / 2 + i; g.position.set(x, WATER_Y - 0.25, z); g.rotation.y = ry; g.userData.boat = 1; levelGroup.add(g); solid(x, z, 2);
+    const ry = a + Math.PI / 2 + i; g.position.set(x, WATER_Y - 0.06, z); g.rotation.y = ry; g.userData.boat = 1; levelGroup.add(g); solid(x, z, 2);
     const V = new THREE.Vector3(), W = new THREE.Vector3(); let next = 6 + i * 3, catchT = -1;
-    levelAnims.push(t => { g.position.y = WATER_Y - 0.25 + Math.sin(t * 1.1 + i) * 0.07; g.rotation.z = Math.sin(t * 0.9 + i * 2) * 0.04; g.rotation.x = Math.sin(t * 0.7 + i) * 0.025; g.rotation.y = ry + Math.sin(t * 0.05 + i) * 0.4; lan.visible = ENV.night > 0.3;
+    OCB.push(g); INTERACTS.push({ x, z, r: 3.2, get label() { return OCSIT.g === g ? '🪑 Get up (back into the water)' : '🪑 Sit in the boat'; }, fn: () => ocSit(g) });
+    levelAnims.push(t => { g.position.y = WATER_Y - 0.06 + Math.sin(t * 1.1 + i) * 0.05; g.rotation.z = Math.sin(t * 0.9 + i * 2) * 0.04; g.rotation.x = Math.sin(t * 0.7 + i) * 0.025; g.rotation.y = ry + Math.sin(t * 0.05 + i) * 0.4; lan.visible = ENV.night > 0.3;
       if (t > next && catchT < 0) catchT = t; let k = catchT < 0 ? -1 : t - catchT;
       rod.rotation.x = k < 0 ? 0.95 + Math.sin(t * 0.6 + i) * 0.04 + (Math.sin(t * 3 + i) > 0.97 ? 0.08 : 0) : k < 0.6 ? 0.95 + Math.sin(t * 30) * 0.06 : k < 1.0 ? 0.95 - (k - 0.6) * 1.8 : k < 2.2 ? 0.23 : 0.23 + Math.min(1, (k - 2.2) * 1.2) * 0.72;
       g.updateMatrixWorld(); tip.getWorldPosition(V); npc.localToWorld(W.set(0.05, 0, 2.4)); W.y = WATER_Y + 0.02 + Math.sin(t * 2 + i) * 0.03;

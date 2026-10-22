@@ -27,6 +27,14 @@ function ltRoom(S0, k) { const X = 150, Zc = -32 - k * 14, W = 9, L = 10, wall =
   bubNeon(S0.name, S0.col, X, 2.7, Zc - L / 2 + 0.15, 0, 4.2);
   // a counter across the back with the keeper behind it
   part(g, B(4.4, 1.05, 0.8), toonNS('#3a2a20', 'wood'), X, 0.53, Zc - L / 2 + 1.9); part(g, B(4.6, 0.08, 0.95), toonNS(S0.id === 'mart' ? '#d8d0c0' : '#8a6a44', 'wood'), X, 1.08, Zc - L / 2 + 1.9); box(X, Zc - L / 2 + 1.9, 2.2, 0.45);
+  // lived-in dressing: rug, wainscot, posters, corner plants, a ceiling fan, a stool and a regular
+  part(g, B(3.6, 0.03, 2.6), toonNS(S0.col), X, 0.11, Zc + 1.2); part(g, B(3.2, 0.035, 2.2), toonNS('#2a2430'), X, 0.12, Zc + 1.2);
+  for (const s of [-1, 1]) { part(g, B(0.06, 0.9, L - 0.4), toonNS('#3a2a20', 'wood'), X + s * (W / 2 - 0.03), 0.45, Zc); part(g, B(0.08, 0.06, L - 0.4), toonNS('#c9a43a'), X + s * (W / 2 - 0.05), 0.92, Zc);
+    for (const zz of [1.2, 3.4]) { const pp = part(g, B(0.04, 0.9, 0.65), toonNS(['#c8402f', '#3a6ad0', '#e8c040', '#7a3ac0'][(k + zz + s + 3) % 4 | 0]), X + s * (W / 2 - 0.08), 2.05, Zc + zz); part(g, B(0.05, 0.98, 0.73), toonNS('#1a1418'), X + s * (W / 2 - 0.06), 2.05, Zc + zz); }
+    const px = X + s * (W / 2 - 0.55), pz = Zc + L / 2 - 0.6; part(g, Cy(0.28, 0.22, 0.5, 10), toonNS('#8a4a2a'), px, 0.35, pz); for (let j = 0; j < 6; j++) part(g, new THREE.SphereGeometry(0.22, 7, 5), toonNS(j % 2 ? '#3f8a3a' : '#2e6a2e'), px + Math.cos(j) * 0.18, 0.75 + (j % 3) * 0.2, pz + Math.sin(j) * 0.18); solid(px, pz, 0.35); }
+  { const fan = new THREE.Group(); fan.position.set(X, 3.15, Zc + 1.2); g.add(fan); part(fan, Cy(0.15, 0.15, 0.2, 10), toonNS('#2b2a2c'), 0, 0, 0); for (let j = 0; j < 4; j++) { const bl = part(fan, B(1.1, 0.03, 0.22), toonNS('#6a4f34', 'wood'), 0, -0.08, 0); bl.geometry.translate(0.6, 0, 0); bl.rotation.y = j * Math.PI / 2; } levelAnims.push(t => { fan.rotation.y = t * 2.4; }); }
+  if (S0.id !== 'kar') { const sx = X + 2.6, sz = Zc - L / 2 + 2.9; part(g, Cy(0.25, 0.25, 0.08, 12), toonNS('#c8402f'), sx, 0.75, sz); part(g, Cy(0.05, 0.05, 0.7, 6), toonNS('#888'), sx, 0.38, sz); solid(sx, sz, 0.3);
+    bubNpc(X - 2.9, Zc + 0.4, Math.PI * 0.6, [['#4a6a8a', '#8a4a6a', '#5a8a4a'][k % 3], '#3a3440', ['#c99a6e', '#8a5a3a', '#e8c09a'][k % 3], '#2a1a10'], null); }
   LT.rooms[S0.id] = { x: X, z: Zc, W, L };
   INTERACTS.push({ x: X, z: Zc + L / 2 - 1.1, r: 1.6, label: '🚪 Back out to the Low Tide', fn: () => ltLeave(S0.id) });
   return { X, Zc, W, L }; }
@@ -134,9 +142,14 @@ function ltSing(nm, sp, lvl) { openDlg('Karaoke Clam', '♪ ' + nm); const rows 
 // ---- wire it into the Low Tide: doors on every front, rooms out back, domes over the far-off interiors ----
 function ltDoors() { LT.out = {}; const D = bcD('low');
   LT_SHOPS.forEach((S0, i) => { const p = BC.low[S0.id]; if (!p) return; const side = p[1] > D.z ? 1 : -1, fx = p[0], fz = p[1] + side * 1.2; // front face of the shop
-    const dr = new THREE.Group(); part(dr, B(1.5, 2.4, 0.08), new THREE.MeshLambertMaterial({ color: '#9fd8ea', transparent: true, opacity: 0.55 }), 0, 1.2, 0); part(dr, B(1.7, 0.12, 0.14), toonNS('#2b2a2c'), 0, 2.45, 0); for (const s of [-1, 1]) part(dr, B(0.1, 2.4, 0.14), toonNS('#2b2a2c'), s * 0.8, 1.2, 0);
-    part(dr, B(0.5, 0.18, 0.02), glow(S0.col), 0, 1.7, 0.06); dr.position.set(fx, 0, fz); dr.rotation.y = side > 0 ? Math.PI : 0; levelGroup.add(dr);
-    const mat = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.9).rotateX(-Math.PI / 2), toonNS(S0.col)); mat.position.set(fx, 0.12, fz - side * 0.7); levelGroup.add(mat);
+    // a proper shop door: painted panels, a round porthole glowing from inside, brass handle and kick plate, a frame, a step, a lamp and an OPEN sign
+    const dc = ['#7a3a2a', '#2a5a5a', '#4a2a5a', '#2a4a2a', '#8a4a1a', '#3a2a6a'][i], dr = new THREE.Group(), dm = toonNS(dc, 'wood');
+    part(dr, B(1.1, 2.15, 0.08), dm, 0, 1.12, 0); for (const py of [0.55, 1.15]) for (const px of [-0.25, 0.25]) part(dr, B(0.38, 0.45, 0.03), toonNS(dc), px, py, 0.05);
+    part(dr, new THREE.TorusGeometry(0.2, 0.04, 6, 16), toonNS('#c9a43a'), 0, 1.7, 0.05); part(dr, new THREE.CircleGeometry(0.18, 16), glow(S0.col), 0, 1.7, 0.045); part(dr, Cy(0.03, 0.03, 0.18, 6), toonNS('#c9a43a'), 0.42, 1.05, 0.08, 0, 0, Math.PI / 2); part(dr, B(1.0, 0.15, 0.02), toonNS('#c9a43a'), 0, 0.12, 0.05);
+    part(dr, B(1.4, 0.14, 0.16), toonNS('#2b2a2c'), 0, 2.27, 0.02); for (const s of [-1, 1]) part(dr, B(0.12, 2.3, 0.16), toonNS('#2b2a2c'), s * 0.61, 1.15, 0.02); part(dr, B(1.5, 0.12, 0.5), toonNS('#5d636c', 'panel'), 0, 0.06, 0.25);
+    part(dr, B(0.12, 0.12, 0.25), toonNS('#2b2a2c'), 0.9, 2.2, 0.12); part(dr, new THREE.SphereGeometry(0.1, 8, 6), glow('#ffe9a0'), 0.9, 2.08, 0.25);
+    { const op = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.24), new THREE.MeshBasicMaterial({ map: bubSignTex('OPEN', '#120818', S0.col, 0.62, 0.24) })); op.position.set(-0.95, 1.6, 0.04); dr.add(op); } dr.position.set(fx, 0, fz); dr.rotation.y = side > 0 ? Math.PI : 0; levelGroup.add(dr);
+    const mat = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.6).rotateX(-Math.PI / 2), toonNS(S0.col)); mat.position.set(fx, 0.14, fz - side * 0.75); levelGroup.add(mat);
     LT.out[S0.id] = [fx, fz - side * 1.8, side > 0 ? 0 : Math.PI];
     INTERACTS.push({ x: fx, z: fz - side * 0.8, r: 1.6, label: `🚪 Go into ${S0.name.toLowerCase().replace(/(^|[\s\/])\w/g, c => c.toUpperCase())}`, fn: () => ltEnter(S0.id) }); });
   LT_SHOPS.forEach((S0, k) => ltRoom(S0, k)); ltDress();

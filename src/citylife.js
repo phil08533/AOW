@@ -26,7 +26,7 @@ const CITY_KITS = {
   zarlich: ['specimen', 'crates', 'lamp', 'pod', 'hoload', 'plant'],
   vector: ['brazier', 'crates', 'totem', 'lanterns', 'rug'],
   forest: ['flowerbox', 'bench', 'lanterns', 'plant', 'woodpile'],
-  zeltac: ['stall', 'hoload', 'vending', 'plant', 'bench', 'crates', 'neonsign', 'lamp']
+  zeltac: [] // the Zeltac Plaza is laid out by hand in zmall.js, so no random street clutter
 };
 const CITY_FOLK = {
   earth: () => makeCivilian(pickC(['#c8402f', '#3b4f7a', '#5a6a3a', '#8a6fc4', '#c9a43a', '#2a5a7a', '#e8e4dc']), pickC(['#2c2a28', '#3d3a36', '#5a4a3a']), pickC(['#e0b892', '#c58a64', '#8a5a3a', '#5a3a24']), pickC(['#1e1a18', '#5a3a22', '#c9a43a', '#cfcac0', '#c8402f'])),
@@ -105,7 +105,7 @@ function cityClear(x, z, pad, L, loose) {
 function cityLife(L, id) {
   const C = CITY[id]; if (!C) return; const Zn = Z[C.zone]; if (!Zn) return;
   const kit = CITY_KITS[C.style], cx = Zn.x, cz = Zn.z, R = Zn.r * (id === 'zeltac' ? 1.1 : 0.92);
-  let placed = 0;
+  let placed = kit.length ? 0 : C.n;
   for (let i = 0; i < C.n * 8 && placed < C.n; i++) {
     const a = Math.random() * 6.283, d = R * (0.28 + Math.random() * 0.7), x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
     const kind = kit[placed % kit.length], pad = ['stall', 'boat', 'rover', 'tent', 'jeep', 'cart', 'campfire'].includes(kind) ? 2.0 : 1.2;

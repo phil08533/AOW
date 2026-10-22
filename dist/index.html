@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.19</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.20</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -13024,7 +13024,7 @@ const CITY_KITS = {
   zarlich: ['specimen', 'crates', 'lamp', 'pod', 'hoload', 'plant'],
   vector: ['brazier', 'crates', 'totem', 'lanterns', 'rug'],
   forest: ['flowerbox', 'bench', 'lanterns', 'plant', 'woodpile'],
-  zeltac: ['stall', 'hoload', 'vending', 'plant', 'bench', 'crates', 'neonsign', 'lamp']
+  zeltac: [] // the Zeltac Plaza is laid out by hand in zmall.js, so no random street clutter
 };
 const CITY_FOLK = {
   earth: () => makeCivilian(pickC(['#c8402f', '#3b4f7a', '#5a6a3a', '#8a6fc4', '#c9a43a', '#2a5a7a', '#e8e4dc']), pickC(['#2c2a28', '#3d3a36', '#5a4a3a']), pickC(['#e0b892', '#c58a64', '#8a5a3a', '#5a3a24']), pickC(['#1e1a18', '#5a3a22', '#c9a43a', '#cfcac0', '#c8402f'])),
@@ -13103,7 +13103,7 @@ function cityClear(x, z, pad, L, loose) {
 function cityLife(L, id) {
   const C = CITY[id]; if (!C) return; const Zn = Z[C.zone]; if (!Zn) return;
   const kit = CITY_KITS[C.style], cx = Zn.x, cz = Zn.z, R = Zn.r * (id === 'zeltac' ? 1.1 : 0.92);
-  let placed = 0;
+  let placed = kit.length ? 0 : C.n;
   for (let i = 0; i < C.n * 8 && placed < C.n; i++) {
     const a = Math.random() * 6.283, d = R * (0.28 + Math.random() * 0.7), x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
     const kind = kit[placed % kit.length], pad = ['stall', 'boat', 'rover', 'tent', 'jeep', 'cart', 'campfire'].includes(kind) ? 2.0 : 1.2;
@@ -18907,6 +18907,7 @@ const UPDATES = [
   { id: 182, title: '2.22.17 · Zeltac Mall', items: ['The Zeltac Plaza is a little mall now: nine glass-fronted shops with neon signs, shelves of goods and awnings line both walls.', 'Kiosks, benches, planters with trees, lit walkways, hanging banners, a starlit skylight and a mall directory by the airlock.'] },
   { id: 183, title: '2.22.18 · A tighter, livelier Underworld', items: ['The Underworld basement is about a quarter smaller, so it feels packed instead of empty.', "Grub's bar is dressed up: a lit back bar of bottles, beer taps and glasses, red bar stools, neon signs, a dartboard, a rug and steaming pipes."] },
   { id: 184, title: '2.22.19 · Zeltac decks, dressed', items: ['The working Zeltac decks are a little tighter and better organised: pillars with lit caps, wall lights, trim borders, ceiling beams and hanging lamps, and a sign for each deck.', 'Market lanterns and produce crates, grow lights and a water channel in Hydroponics, a prize counter and couches in the Arcade, hazard stripes, steam vents and barrels on the Engine Deck, bonfires and totems in the Alien Quarter, reading desks in the Archive, and a captain\'s dais on the Bridge.'] },
+  { id: 185, title: '2.22.20 · Planned plaza, a real bridge window, and the big shipment', items: ['The Underworld is back to full size; the Undercroft deck is the one that shrank.', 'The Zeltac Plaza is laid out properly: a stone-columned Zeltac Bank with a vault door and teller glass, a Mission Center with a holographic job board, the Zeltac Exchange stall, a clinic with a red cross, and a sealed blast door to the Alien Quarter. The plywood fronts, loose crates and floating banners are gone.', 'The mall skylight and the bridge window are real openings now: real stars, planets, drifting asteroids and passing ships outside.', 'The bridge has a crew at its stations. Quartermaster Dax wants a big drug shipment, and the Marshals crash the handover.'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -24042,7 +24043,7 @@ function eshStep(dt) {
 // =================== ZELTAC PLAZA MALL (2.22.17): the first floor becomes a little shopping mall ===================
 // Glass-fronted shops line both long walls under neon signs, with shelves of goods, counters and awnings. Kiosks, benches
 // and planters dress the concourse, a starlit skylight runs down the ceiling, and a directory greets you at the airlock.
-{ const _zb = LEVELS.zeltac.build; LEVELS.zeltac.build = function () { _zb.apply(this, arguments); try { zMall(); } catch (e) { console.warn('mall', e); } }; }
+{ const _zb = LEVELS.zeltac.build; LEVELS.zeltac.build = function () { _zb.apply(this, arguments); try { zMallClear(); zMall(); zMallCivic(); } catch (e) { console.warn('mall', e); } }; }
 function zMall() {
   const glass = new THREE.MeshLambertMaterial({ color: '#9fd8ff', transparent: true, opacity: 0.22, depthWrite: false });
   const sign = (txt, bg, fg, w, h) => new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: signTex(txt, bg, fg) }));
@@ -24067,7 +24068,7 @@ function zMall() {
     part(g, Cy(0.35, 0.4, 0.5, 10), '#e8e4dc', x0 - s * 3.3, 0.25, z - 1.9); part(g, new THREE.IcosahedronGeometry(0.32, 0), glow(col), x0 - s * 3.3, 0.85, z - 1.9);
     props.add(g); box(x0 - s * d / 2, z, d / 2, w / 2); };
   let n = 0; for (const z of [-20, -12, -4, 12, 20]) unit(-1, z, SHOPS[n++ % SHOPS.length], n);
-  for (const z of [-20, -12, -4, 15]) unit(1, z, SHOPS[n++ % SHOPS.length], n);
+  for (const z of [-20, -12, 20]) unit(1, z, SHOPS[n++ % SHOPS.length], n);
   // concourse: inlaid walkway strips and a polished centre
   for (const x of [-7, 7]) { part(props, B(0.25, 0.03, 52), glow('#8fe3ff'), x, 0.02, 2); part(props, B(3.2, 0.02, 52), toon('#6a6f78', 'panel'), x - Math.sign(x) * 1.7, 0.01, 2); }
   // planters with little trees and benches around the hologram
@@ -24081,20 +24082,70 @@ function zMall() {
     for (const [ox, oz] of [[-0.8, -0.8], [0.8, -0.8], [-0.8, 0.8], [0.8, 0.8]]) part(props, Cy(0.04, 0.04, 1.6, 5), '#9aa0a8', x + ox, 1.85, z + oz);
     part(props, B(2.0, 0.12, 2.0), toon(col), x, 2.7, z); const sg = sign(label, '#0c0d14', col, 1.8, 0.4); sg.position.set(x, 2.95, z + 1.01); props.add(sg); solid(x, z, 1.1); };
   kiosk(-16, -16, 'JUICE', '#ffb347'); kiosk(16, -16, 'HOLO CASES', '#8fe3ff'); kiosk(-16, 22, 'SNACKS', '#ff6aa8'); kiosk(14, 22, 'MAPS', '#7fff6a');
-  // a skylight of stars down the middle of the ceiling
-  const sky = new THREE.Mesh(new THREE.PlaneGeometry(10, 56), new THREE.MeshBasicMaterial({ color: '#0a0e2a' })); sky.rotation.x = Math.PI / 2; sky.position.set(0, 8.94, 0); props.add(sky);
-  for (let i = 0; i < 70; i++) part(props, B(0.06, 0.02, 0.06), glow(i % 7 ? '#ffffff' : '#9fd8ff'), Math.sin(i * 12.9) * 4.6, 8.92, Math.cos(i * 7.7) * 27);
-  for (const e of [-1, 1]) part(props, B(0.3, 0.2, 56), '#9aa0a8', e * 5.1, 8.85, 0);
-  // hanging banners between the balconies
-  for (const [z, c] of [[-18, '#ff6aa8'], [-6, '#8fe3ff'], [10, '#ffd36a'], [22, '#b86aff']]) for (const e of [-1, 1]) { part(props, B(0.06, 2.6, 1.4), toon(c), e * 11, 6.2, z); part(props, B(0.08, 0.08, 1.6), '#9aa0a8', e * 11, 7.55, z); }
+  // a real skylight: the ceiling is cut open down the middle so you look straight out at the stars, a planet and passing traffic
+  props.children.filter(o => o.isMesh && Math.abs(o.position.y - 9) < 0.01 && Math.abs(o.rotation.x - Math.PI) < 0.01).forEach(o => { o.visible = false; });
+  for (const e of [-1, 1]) { const c = new THREE.Mesh(new THREE.PlaneGeometry(25, 68), toon('#2c2f36', 'panel')); c.rotation.x = Math.PI / 2; c.position.set(e * 17.5, 9, 0); props.add(c); part(props, B(0.4, 0.5, 68), '#9aa0a8', e * 5.1, 8.8, 0); }
+  for (let z = -30; z <= 30; z += 6) part(props, B(10.4, 0.25, 0.25), '#9aa0a8', 0, 8.9, z);
+  const out = new THREE.Group(); levelGroup.add(out);
+  const pl = new THREE.Mesh(new THREE.SphereGeometry(30, 24, 16), new THREE.MeshBasicMaterial({ map: planetTex('capitone'), fog: false })); pl.position.set(-40, 120, -90); out.add(pl);
+  const mo = new THREE.Mesh(new THREE.SphereGeometry(7, 16, 10), new THREE.MeshBasicMaterial({ map: planetTex('moon'), fog: false })); mo.position.set(30, 90, 40); out.add(mo);
+  for (let i = 0; i < 40; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.6 + (i % 5) * 0.5, 0), new THREE.MeshLambertMaterial({ color: '#6a6460', fog: false })); r.position.set(Math.sin(i * 7.1) * 60, 30 + (i % 9) * 8, Math.cos(i * 3.3) * 80); out.add(r); }
+  const ship = new THREE.Group(); part(ship, B(2, 0.6, 5), toon('#8a8f99'), 0, 0, 0); part(ship, B(5, 0.2, 1.5), toon('#5d636c'), 0, 0, 0.8); part(ship, B(0.6, 0.4, 0.3), glow('#4fd2ff'), 0, 0, 2.6); out.add(ship);
+  levelAnims.push(t => { out.rotation.y = t * 0.004; ship.position.set(Math.sin(t * 0.05) * 50, 22, ((t * 6) % 160) - 80); ship.rotation.y = Math.PI; });
   // the mall directory by the airlock
   part(props, B(0.3, 2.6, 1.6), '#2c2f36', -6, 1.3, 28); const dir = sign('ZELTAC MALL · SHOPS · MISSIONS · VAULT', '#0c0d14', '#8fe3ff', 2.4, 1.4); dir.rotation.y = Math.PI / 2; dir.position.set(-5.84, 1.7, 28); props.add(dir); solid(-6, 28, 0.9);
+}
+
+// the old plaza had plywood shop fronts, loose counters and a barricade of crates; clear them before the planned layout goes in
+function zMallClear() {
+  const near = (o, x, z) => Math.abs(o.position.x - x) < 0.2 && Math.abs(o.position.z - z) < 0.2;
+  for (const o of [...props.children]) { if (o.isGroup && [[-9, -11.5], [9, -11.5], [-15, 4], [0, -17.5]].some(([x, z]) => near(o, x, z))) props.remove(o);
+    else if (o.isMesh && o.position.z < -24.9 && o.position.z > -27 && Math.abs(o.position.x) < 20) props.remove(o); }
+  for (let i = BOXES.length - 1; i >= 0; i--) { const [x, z] = BOXES[i]; if ([[-9, -11.5], [9, -11.5], [0, -17.5], [-15, 4], [-10.2, -26]].some(([a, b]) => Math.abs(x - a) < 0.1 && Math.abs(z - b) < 0.1)) BOXES.splice(i, 1); }
+}
+// the planned civic end of the mall: a proper bank, a mission center, the exchange, a clinic, and a sealed gate to the Alien Quarter
+function zMallCivic() {
+  const sign = (txt, bg, fg, w, h, x, y, z, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: signTex(txt, bg, fg) })); m.position.set(x, y, z); m.rotation.y = ry || 0; props.add(m); return m; };
+  const stone = toon('#d8d0c0', 'panel'), gold = toon('#c9a43a');
+  // ZELTAC BANK: stone facade with columns and steps, a gold sign, a big round vault door and a teller counter behind glass
+  part(props, B(14, 6.5, 0.6), stone, 0, 3.25, -19.5); box(0, -19.5, 7, 0.3);
+  part(props, B(14.6, 0.6, 1.0), stone, 0, 6.6, -19.2); part(props, B(14.8, 0.15, 1.1), gold, 0, 6.95, -19.1);
+  for (let i = 0; i < 6; i++) { const x = -6.25 + i * 2.5; part(props, Cy(0.35, 0.4, 6, 12), stone, x, 3, -18.6); part(props, B(0.9, 0.25, 0.9), stone, x, 0.12, -18.6); part(props, B(0.9, 0.25, 0.9), stone, x, 5.9, -18.6); solid(x, -18.6, 0.45); }
+  for (let k = 0; k < 2; k++) part(props, B(14 - k, 0.2, 1.2 - k * 0.4), stone, 0, 0.1 + k * 0.2, -17.6 + k * 0.2);
+  sign('ZELTAC BANK', '#1a1408', '#ffd36a', 6, 0.9, 0, 6.6, -18.68);
+  const vd = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 0.3, 24), toon('#9aa0a8')); vd.rotation.x = Math.PI / 2; vd.position.set(0, 2.6, -19.1); props.add(vd);
+  part(props, Cy(1.4, 1.4, 0.32, 24), toon('#7a8088'), 0, 2.6, -19.08, Math.PI / 2); for (let i = 0; i < 6; i++) part(props, B(0.12, 1.2, 0.1), gold, Math.cos(i) * 0.01, 2.6, -18.88, 0, 0, i * Math.PI / 3);
+  part(props, Cy(0.3, 0.3, 0.2, 12), gold, 0, 2.6, -18.85, Math.PI / 2);
+  part(props, B(7, 1.1, 0.8), toon('#5a4030', 'wood'), 0, 0.55, -12.8); part(props, B(7.2, 0.08, 1.0), toon('#2c2f36'), 0, 1.14, -12.8); box(0, -12.8, 3.5, 0.4);
+  for (let i = 0; i < 4; i++) { const g = new THREE.Mesh(B(1.6, 1.0, 0.05), new THREE.MeshLambertMaterial({ color: '#9fd8ff', transparent: true, opacity: 0.25, depthWrite: false })); g.position.set(-2.55 + i * 1.7, 1.7, -12.8); props.add(g); part(props, B(0.06, 1.0, 0.06), gold, -3.4 + i * 1.7, 1.7, -12.8); }
+  part(props, B(4.5, 0.02, 2.4), toon('#7a1e1e'), 0, 0.012, -10.8); for (const x of [-4, 4]) { part(props, Cy(0.05, 0.05, 1.0, 6), gold, x, 0.5, -11.4); } part(props, B(8, 0.04, 0.04), toon('#7a1e1e'), 0, 0.95, -11.4);
+  // MISSION CENTER: a raised platform with a holographic job board, two consoles and a railing
+  const mx = -10, mz = -10;
+  part(props, Cy(3.6, 3.8, 0.06, 24), toon('#3a3d44', 'panel'), mx, 0.03, mz); part(props, Cy(3.5, 3.5, 0.02, 24), toon('#2a3a5a'), mx, 0.065, mz); part(props, B(0.3, 0.03, 7), glow('#4fd2ff'), mx + 3.55, 0.07, mz);
+  part(props, B(5, 3, 0.2), '#2c2f36', mx, 1.8, mz - 3.2); const holo = sign('MISSION BOARD', '#06121a', '#7fe8ff', 4.6, 0.6, mx, 3.1, mz - 3.08);
+  const board = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 1.8), new THREE.MeshBasicMaterial({ color: '#4fd2ff', transparent: true, opacity: 0.35, depthWrite: false })); board.position.set(mx, 1.75, mz - 3.05); props.add(board);
+  for (let i = 0; i < 6; i++) part(props, B(1.2, 0.18, 0.02), glow(i % 3 ? '#9fe8ff' : '#ffd36a'), mx - 1.4 + (i % 2) * 2.8, 2.35 - Math.floor(i / 2) * 0.5, mz - 3.0);
+  for (const s of [-1, 1]) { part(props, B(1.2, 1.0, 0.7), '#2c2f36', mx + s * 2.4, 0.8, mz - 1.6, 0, -s * 0.5); part(props, B(1.0, 0.5, 0.05), glow('#4fd2ff'), mx + s * 2.4, 1.5, mz - 1.4, -0.4, -s * 0.5); solid(mx + s * 2.4, mz - 1.6, 0.6); }
+  box(mx, mz - 3.2, 2.5, 0.2); const ml = new THREE.PointLight(0x4fd2ff, 0.7, 10, 1.6); ml.position.set(mx, 3, mz - 1); levelGroup.add(ml); levelAnims.push(t => { board.material.opacity = 0.3 + Math.sin(t * 2) * 0.06; });
+  // THE EXCHANGE: a market stall for Ozzo, mirroring the mission center
+  const ex = 10, ez = -10;
+  part(props, B(6, 0.3, 4), toon('#3a3d44', 'panel'), ex, 0.15, ez - 1); part(props, B(5.6, 1.0, 0.8), toon('#5a4030', 'wood'), ex, 0.8, ez - 0.6); part(props, B(5.8, 0.08, 1.0), toon('#8a6fc4'), ex, 1.34, ez - 0.6); box(ex, ez - 0.6, 2.8, 0.4);
+  for (const s of [-1, 1]) part(props, Cy(0.08, 0.08, 3.2, 6), '#9aa0a8', ex + s * 2.8, 1.9, ez - 2.6); part(props, B(6.2, 0.1, 2.4), toon('#8a6fc4'), ex, 3.5, ez - 1.8, 0.2);
+  sign('ZELTAC EXCHANGE', '#0c0d14', '#c8a8ff', 4.6, 0.6, ex, 3.1, ez - 2.95);
+  for (let i = 0; i < 8; i++) part(props, B(0.4, 0.35, 0.4), toon(['#c9a43a', '#4fa8ff', '#c8402f', '#6fdc5a'][i % 4]), ex - 2.2 + i * 0.6, 1.55, ez - 0.6);
+  // CLINIC: a clean white front with a red cross for Dr. Tova
+  part(props, B(0.4, 5, 7), toon('#e8e4dc', 'panel'), -16.5, 2.5, 4); box(-16.5, 4, 0.2, 3.5); part(props, B(0.1, 1.4, 0.4), glow('#ff3b2a'), -16.25, 3.6, 4); part(props, B(0.1, 0.4, 1.4), glow('#ff3b2a'), -16.25, 3.6, 4);
+  sign('CLINIC', '#f2f2f2', '#c8402f', 2.6, 0.6, -16.25, 4.7, 4, Math.PI / 2); part(props, B(1.6, 0.9, 0.6), toon('#e8e4dc'), -15.4, 0.45, 2.2); box(-15.4, 2.2, 0.8, 0.3);
+  // the Alien Quarter is through a sealed blast door now, not a pile of crates
+  part(props, B(8, 6, 0.5), toon('#3a3d44', 'panel'), -12, 3, -33.5); for (let i = 0; i < 6; i++) part(props, B(1.1, 0.4, 0.06), toon(i % 2 ? '#ffd36a' : '#1e1c22'), -14.8 + i * 1.12, 0.6, -33.2);
+  part(props, B(6, 4.6, 0.1), toon('#5d636c', 'panel'), -12, 2.6, -33.2); part(props, B(0.1, 4.6, 0.12), glow('#ff3b2a'), -12, 2.6, -33.14);
+  sign('ALIEN QUARTER · FLOOR 8 · SEALED', '#3a0e0e', '#ff6a5a', 5.4, 0.7, -12, 5.4, -33.18);
 }
 
 // =================== A TIGHTER UNDERWORLD (2.22.18): the basement den shrinks so it feels packed, not empty ===================
 // Everything built in the den (walls, bar, booths, band, people, lights, colliders and things to press) is pulled in
 // toward the middle by UW_K. Furniture keeps its size, so the room fills up; long walls just run on behind each other.
-const UW_K = 0.72;
+const UW_K = 1; // Phil wanted the den full size after all; the shrink machinery below is reused for the Undercroft
 for (const n of LEVELS.underworld.npcs) { n.x *= UW_K; n.z *= UW_K; }
 LEVELS.underworld.spawn.z *= UW_K;
 { const _b = LEVELS.underworld.build; LEVELS.underworld.build = function () {
@@ -24131,6 +24182,18 @@ function uwBarDetail() {
   part(props, B(5.5, 0.02, 1.6), toon('#4a1e1e'), 0, 0.01, z0 + 1.1);
   for (const [x, z, s] of [[-7.6, 5.2, 0.7], [-7.0, 5.6, 0.5], [7.4, -6.6, 0.6]]) { part(props, B(s, s, s), toon('#6a4a30', 'wood'), x, s / 2, z, 0, x); box(x, z, s / 2, s / 2); }
 }
+// the same trick for the Undercroft deck, which was the one that felt empty
+const UC_K = 0.7;
+{ const _zn = zNpcs; zNpcs = function (n, th) { const L = _zn(n, th); if (th === 'under') for (const c of L) { c.x *= UC_K; c.z *= UC_K; } return L; }; }
+{ const _gf = goFloor, sp0 = Object.assign({}, LEVELS.zfloor.spawn); goFloor = function (n) { LEVELS.zfloor.spawn = zTheme(n) === 'under' ? { x: 22 * UC_K, z: 20 * UC_K, yaw: sp0.yaw } : Object.assign({}, sp0); return _gf.apply(this, arguments); }; }
+{ const _b = LEVELS.zfloor.build; LEVELS.zfloor.build = function () {
+  const under = zTheme(ZF.floor) === 'under', n0 = [props.children.length, levelGroup.children.length, INTERACTS.length, BOXES.length, CIRCLES.length];
+  _b.apply(this, arguments); if (!under) return;
+  try { const sc = o => { o.position.x *= UC_K; o.position.z *= UC_K; };
+    props.children.slice(n0[0]).forEach(sc); levelGroup.children.slice(n0[1]).forEach(o => { if (o !== props) sc(o); });
+    INTERACTS.slice(n0[2]).forEach(i => { i.x *= UC_K; i.z *= UC_K; });
+    BOXES.slice(n0[3]).forEach(b => { b[0] *= UC_K; b[1] *= UC_K; }); CIRCLES.slice(n0[4]).forEach(c => { c[0] *= UC_K; c[1] *= UC_K; });
+  } catch (e) { console.warn('uc shrink', e); } }; }
 
 // =================== ZELTAC DECKS, DRESSED (2.22.19): every working deck gets structure and detail ===================
 // Pillars and wall lights march down the long walls, a trim border frames the floor, the ceiling gets beams and lamps
@@ -24175,11 +24238,61 @@ function zfDress() {
     part(props, B(4, 0.02, D * 2 - 8), toon('#5a1e1e'), 0, 0.012, -2);
     for (const z of [-4, 0, 12]) for (const s of [-1, 1]) { const x = s * 5; part(props, B(2.4, 0.8, 1.2), toon('#5a4a3a', 'wood'), x, 0.4, z); part(props, Cy(0.03, 0.03, 0.4, 4), '#c9a43a', x + 0.7, 1.0, z); part(props, Cy(0.18, 0.12, 0.14, 8), glow('#6fdc5a'), x + 0.7, 1.25, z); box(x, z, 1.2, 0.6); }
   } else if (th === 'bridge') { // a raised captain's dais, railings and crew stations
+    // a real window: drop the painted one and the solid wall, frame an opening, and put the actual stars, a planet and traffic outside
+    for (const o of [...props.children]) { if (!o.isMesh) continue; const p = o.position; if (Math.abs(p.z + D) < 0.7 && p.y > 0.9 && Math.abs(p.x) < W * 0.9 && !(o.geometry && o.geometry.parameters && o.geometry.parameters.width > W * 1.9)) props.remove(o);
+      else if (Math.abs(p.z + D) < 0.01 && o.geometry && o.geometry.parameters && o.geometry.parameters.width >= W * 2) props.remove(o); }
+    levelGroup.children.filter(o => o.isMesh && o.geometry && o.geometry.type === 'SphereGeometry' && o.position.z < -D).forEach(o => levelGroup.remove(o));
+    part(props, B(W * 2, 1.2, 0.6), '#4a4e56', 0, 0.6, -D); part(props, B(W * 2, 1.4, 0.6), '#4a4e56', 0, H - 0.7, -D);
+    for (const s of [-1, 1]) part(props, B(W * 0.25, H, 0.6), '#4a4e56', s * W * 0.875, H / 2, -D);
+    for (let i = 0; i <= 6; i++) part(props, B(0.25, H - 2.6, 0.3), '#9aa0a8', -W * 0.75 + i * W * 0.25, H / 2, -D); part(props, B(W * 1.5, 0.12, 0.2), glow('#4fd2ff'), 0, 1.25, -D + 0.3);
+    const out = new THREE.Group(); levelGroup.add(out);
+    const pl = new THREE.Mesh(new THREE.SphereGeometry(40, 28, 18), new THREE.MeshBasicMaterial({ map: planetTex('mezar'), fog: false })); pl.position.set(-60, 10, -D - 160); out.add(pl);
+    const mo = new THREE.Mesh(new THREE.SphereGeometry(8, 16, 10), new THREE.MeshBasicMaterial({ map: planetTex('moon'), fog: false })); mo.position.set(50, 25, -D - 110); out.add(mo);
+    for (let i = 0; i < 50; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.5 + (i % 5) * 0.6, 0), new THREE.MeshLambertMaterial({ color: '#6a6460', fog: false })); r.position.set(Math.sin(i * 7.1) * 70, Math.cos(i * 2.3) * 18, -D - 20 - (i % 10) * 9); out.add(r); }
+    const sh = new THREE.Group(); part(sh, B(2, 0.6, 5), toon('#8a8f99'), 0, 0, 0); part(sh, B(5, 0.2, 1.5), toon('#5d636c'), 0, 0, 0.8); part(sh, B(0.6, 0.4, 0.3), glow('#ffb347'), 0, 0, 2.6); out.add(sh);
+    levelAnims.push(t => { out.children.forEach((r, i) => { if (i > 1 && r !== sh) r.rotation.set(t * 0.1 + i, t * 0.07, 0); }); sh.position.set(((t * 8) % 200) - 100, 6 + Math.sin(t * 0.3) * 3, -D - 45); sh.rotation.y = -Math.PI / 2; });
     part(props, Cy(4, 4.2, 0.3, 20), toon('#3a3d44', 'panel'), 0, 0.15, -12); part(props, Cy(3.6, 3.6, 0.04, 20), toon('#3a4a7a'), 0, 0.32, -12);
     for (const s of [-1, 1]) { part(props, B(0.08, 1.0, 12), '#9aa0a8', s * 8, 0.5, -12); part(props, B(0.12, 0.08, 12), glow('#4fd2ff'), s * 8, 1.0, -12); }
     for (let i = 0; i < 4; i++) { const x = -15 + i * 10; part(props, B(1.6, 1.0, 0.8), '#2c2f36', x, 0.5, 2); part(props, B(1.4, 0.6, 0.05), glow(i % 2 ? '#4fd2ff' : '#6fdc5a'), x, 1.3, 1.65, -0.3); box(x, 2, 0.8, 0.4); }
   }
 }
+
+// =================== THE BRIDGE CREW AND THE BIG SHIPMENT (2.22.20) ===================
+// The Captain's Bridge gets a working crew at the stations, and Quartermaster Dax runs a side job: bring him a big
+// drug shipment for the officers' "morale fund". When you hand it over, the Marshals were tipped off and storm the bridge.
+// Fight them off and Dax pays double. The job comes back a day later.
+const DAX = { need: 12, fight: null };
+function daxS() { return S.flags.dax = S.flags.dax || { st: 0, t: 0, done: 0 }; }
+function daxDoses() { let n = 0; for (const k in S.inv) if (typeof SUBS !== 'undefined' && SUBS[k] && S.inv[k] > 0) n += S.inv[k]; return n; }
+function daxValue() { let v = 0; for (const k in S.inv) if (SUBS[k] && S.inv[k] > 0) v += S.inv[k] * (SUBS[k].price || 100); return v; }
+function daxTalk() { const D = daxS(), have = daxDoses(); openDlg('Quartermaster · the morale fund', 'Dax');
+  if (DAX.fight) { $('dlgLine').textContent = 'Marshals! Shoot them, not me!'; acts([['Go', closeDlg, true]]); return; }
+  if (D.st === 0 && Date.now() - D.t < 24 * 3600e3) { $('dlgLine').textContent = "That last shipment's still going round. Come back tomorrow."; acts([['Later', closeDlg, true]]); return; }
+  if (D.st === 0) { $('dlgLine').textContent = `The officers need... morale. A big shipment, quietly. ${DAX.need} doses of anything you cook or score. I pay well, and the Captain never looks at the cargo logs.`;
+    acts([['Take the job', () => { D.st = 1; markDirty(); log(`Dax wants ${DAX.need} doses of any drug for the bridge. Bring them to him.`, 'loot'); closeDlg(); }, true], ['Not now', closeDlg]]); return; }
+  $('dlgLine').textContent = have >= DAX.need ? `${have} doses on you. That'll do nicely. Hand them over?` : `You've got ${have} of ${DAX.need} doses. Cook some more at the Boutique Bench, or buy from a dealer.`;
+  acts([['Hand over the shipment', () => daxHandOver(), true, have < DAX.need], ['Later', closeDlg]]); }
+function daxHandOver() { if (daxDoses() < DAX.need) return; const pay = Math.round(daxValue() / Math.max(1, daxDoses()) * DAX.need * 2); let left = DAX.need;
+  for (const k of Object.keys(S.inv)) { if (!left) break; if (!SUBS[k] || !(S.inv[k] > 0)) continue; const q = Math.min(left, S.inv[k]); S.inv[k] -= q; left -= q; if (!S.inv[k]) delete S.inv[k]; }
+  closeDlg(); markDirty(); daxS().st = 2; DAX.pay = pay;
+  toast('MARSHALS!', 'Someone tipped them off. Defend the bridge!', 3.5); SFX.hit(); try { crime(30, "drug deal on the Captain's Bridge"); } catch (_) {}
+  DAX.safes = SAFES.splice(0); const lv = [Math.max(1, S.lvl - 1), S.lvl + 1]; DAX.fight = [];
+  for (let i = 0; i < 6; i++) { const e = makeEnemy({ zone: 'deck', type: 'mhunter', n: 1, lv, at: [-12 + i * 5, 14] }); e.aggro = true; DAX.fight.push(e); } }
+setInterval(() => { try { if (!DAX.fight) return;
+  if (!LEVEL || LEVEL.id !== 'zfloor') { DAX.fight = null; daxS().st = 1; return; } // left mid-fight: the shipment's gone, the job resets to "bring more"
+  for (const e of DAX.fight) if (e.dead && e.obj.parent) { scene.remove(e.obj); const i = enemies.indexOf(e); if (i >= 0) enemies.splice(i, 1); }
+  if (DAX.fight.every(e => e.dead)) { DAX.fight = null; SAFES.push(...(DAX.safes || [])); const D = daxS(); D.st = 0; D.t = Date.now(); D.done++; S.cr += DAX.pay; markDirty(); SFX.level();
+    toast('SHIPMENT DELIVERED', `Dax pays ${DAX.pay.toLocaleString()} CR. "Never happened."`, 4); log(`The Marshals are down. Dax paid ${DAX.pay.toLocaleString()} CR for the shipment.`, 'loot'); }
+} catch (e) { console.warn('dax', e); } }, 500);
+// the crew at their stations
+{ const _zn = zNpcs; zNpcs = function (n, th) { const L = _zn(n, th); if (th !== 'bridge') return L;
+  const crew = (id, name, role, x, z, cols, extra, idle) => Object.assign({ id, name, role, rig: 'civ', make: () => makeCivilian(...cols), x, z, face: Math.PI, idle }, extra || {});
+  L.push(crew('zhelm', 'Helmsman Orrin', 'Helm', -15, 3.2, ['#2a3a7a', '#1e1c22', '#c58a64', '#1e1c22', '#ffd36a'], null, ["Steady as she goes. She always goes."]),
+    crew('znav', 'Navigator Pell-Ri', 'Navigation', -5, 3.2, ['#2a3a7a', '#1e1c22', '#9fe8ff', '#5a4030'], null, ["Eleven decks, four hundred corridors, and they still ask me where the toilet is."]),
+    crew('zcomms', 'Comms Officer Yune', 'Communications', 5, 3.2, ['#2a3a7a', '#1e1c22', '#e0b892', '#c8402f'], null, ["Marshal chatter's been loud lately. Just saying."]),
+    crew('zsci', 'Science Officer Tamm', 'Sensors', 15, 3.2, ['#2a3a7a', '#1e1c22', '#8a5a3a', '#c9a43a'], null, ["Sensors show stars. Lots of them. Riveting."]),
+    crew('zdax', 'Quartermaster Dax', 'Supplies · side jobs', 12, -6, ['#5a3a2a', '#1e1c22', '#c58a64', '#1e1c22', '#6fdc5a'], { face: -Math.PI / 2, custom: [['The morale fund', () => daxTalk()]] }, ["Supplies. All sorts. Don't ask what sort."]));
+  return L; }; }
 
 // =================== DEV UNLOCK: tap the version line on the title screen 7 times to unlock everything (for testing) ===================
 function devUnlockAll() {

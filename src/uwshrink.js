@@ -1,7 +1,7 @@
 // =================== A TIGHTER UNDERWORLD (2.22.18): the basement den shrinks so it feels packed, not empty ===================
 // Everything built in the den (walls, bar, booths, band, people, lights, colliders and things to press) is pulled in
 // toward the middle by UW_K. Furniture keeps its size, so the room fills up; long walls just run on behind each other.
-const UW_K = 0.72;
+const UW_K = 1; // Phil wanted the den full size after all; the shrink machinery below is reused for the Undercroft
 for (const n of LEVELS.underworld.npcs) { n.x *= UW_K; n.z *= UW_K; }
 LEVELS.underworld.spawn.z *= UW_K;
 { const _b = LEVELS.underworld.build; LEVELS.underworld.build = function () {
@@ -38,3 +38,15 @@ function uwBarDetail() {
   part(props, B(5.5, 0.02, 1.6), toon('#4a1e1e'), 0, 0.01, z0 + 1.1);
   for (const [x, z, s] of [[-7.6, 5.2, 0.7], [-7.0, 5.6, 0.5], [7.4, -6.6, 0.6]]) { part(props, B(s, s, s), toon('#6a4a30', 'wood'), x, s / 2, z, 0, x); box(x, z, s / 2, s / 2); }
 }
+// the same trick for the Undercroft deck, which was the one that felt empty
+const UC_K = 0.7;
+{ const _zn = zNpcs; zNpcs = function (n, th) { const L = _zn(n, th); if (th === 'under') for (const c of L) { c.x *= UC_K; c.z *= UC_K; } return L; }; }
+{ const _gf = goFloor, sp0 = Object.assign({}, LEVELS.zfloor.spawn); goFloor = function (n) { LEVELS.zfloor.spawn = zTheme(n) === 'under' ? { x: 22 * UC_K, z: 20 * UC_K, yaw: sp0.yaw } : Object.assign({}, sp0); return _gf.apply(this, arguments); }; }
+{ const _b = LEVELS.zfloor.build; LEVELS.zfloor.build = function () {
+  const under = zTheme(ZF.floor) === 'under', n0 = [props.children.length, levelGroup.children.length, INTERACTS.length, BOXES.length, CIRCLES.length];
+  _b.apply(this, arguments); if (!under) return;
+  try { const sc = o => { o.position.x *= UC_K; o.position.z *= UC_K; };
+    props.children.slice(n0[0]).forEach(sc); levelGroup.children.slice(n0[1]).forEach(o => { if (o !== props) sc(o); });
+    INTERACTS.slice(n0[2]).forEach(i => { i.x *= UC_K; i.z *= UC_K; });
+    BOXES.slice(n0[3]).forEach(b => { b[0] *= UC_K; b[1] *= UC_K; }); CIRCLES.slice(n0[4]).forEach(c => { c[0] *= UC_K; c[1] *= UC_K; });
+  } catch (e) { console.warn('uc shrink', e); } }; }

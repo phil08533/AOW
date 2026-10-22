@@ -41,6 +41,19 @@ function zfDress() {
     part(props, B(4, 0.02, D * 2 - 8), toon('#5a1e1e'), 0, 0.012, -2);
     for (const z of [-4, 0, 12]) for (const s of [-1, 1]) { const x = s * 5; part(props, B(2.4, 0.8, 1.2), toon('#5a4a3a', 'wood'), x, 0.4, z); part(props, Cy(0.03, 0.03, 0.4, 4), '#c9a43a', x + 0.7, 1.0, z); part(props, Cy(0.18, 0.12, 0.14, 8), glow('#6fdc5a'), x + 0.7, 1.25, z); box(x, z, 1.2, 0.6); }
   } else if (th === 'bridge') { // a raised captain's dais, railings and crew stations
+    // a real window: drop the painted one and the solid wall, frame an opening, and put the actual stars, a planet and traffic outside
+    for (const o of [...props.children]) { if (!o.isMesh) continue; const p = o.position; if (Math.abs(p.z + D) < 0.7 && p.y > 0.9 && Math.abs(p.x) < W * 0.9 && !(o.geometry && o.geometry.parameters && o.geometry.parameters.width > W * 1.9)) props.remove(o);
+      else if (Math.abs(p.z + D) < 0.01 && o.geometry && o.geometry.parameters && o.geometry.parameters.width >= W * 2) props.remove(o); }
+    levelGroup.children.filter(o => o.isMesh && o.geometry && o.geometry.type === 'SphereGeometry' && o.position.z < -D).forEach(o => levelGroup.remove(o));
+    part(props, B(W * 2, 1.2, 0.6), '#4a4e56', 0, 0.6, -D); part(props, B(W * 2, 1.4, 0.6), '#4a4e56', 0, H - 0.7, -D);
+    for (const s of [-1, 1]) part(props, B(W * 0.25, H, 0.6), '#4a4e56', s * W * 0.875, H / 2, -D);
+    for (let i = 0; i <= 6; i++) part(props, B(0.25, H - 2.6, 0.3), '#9aa0a8', -W * 0.75 + i * W * 0.25, H / 2, -D); part(props, B(W * 1.5, 0.12, 0.2), glow('#4fd2ff'), 0, 1.25, -D + 0.3);
+    const out = new THREE.Group(); levelGroup.add(out);
+    const pl = new THREE.Mesh(new THREE.SphereGeometry(40, 28, 18), new THREE.MeshBasicMaterial({ map: planetTex('mezar'), fog: false })); pl.position.set(-60, 10, -D - 160); out.add(pl);
+    const mo = new THREE.Mesh(new THREE.SphereGeometry(8, 16, 10), new THREE.MeshBasicMaterial({ map: planetTex('moon'), fog: false })); mo.position.set(50, 25, -D - 110); out.add(mo);
+    for (let i = 0; i < 50; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.5 + (i % 5) * 0.6, 0), new THREE.MeshLambertMaterial({ color: '#6a6460', fog: false })); r.position.set(Math.sin(i * 7.1) * 70, Math.cos(i * 2.3) * 18, -D - 20 - (i % 10) * 9); out.add(r); }
+    const sh = new THREE.Group(); part(sh, B(2, 0.6, 5), toon('#8a8f99'), 0, 0, 0); part(sh, B(5, 0.2, 1.5), toon('#5d636c'), 0, 0, 0.8); part(sh, B(0.6, 0.4, 0.3), glow('#ffb347'), 0, 0, 2.6); out.add(sh);
+    levelAnims.push(t => { out.children.forEach((r, i) => { if (i > 1 && r !== sh) r.rotation.set(t * 0.1 + i, t * 0.07, 0); }); sh.position.set(((t * 8) % 200) - 100, 6 + Math.sin(t * 0.3) * 3, -D - 45); sh.rotation.y = -Math.PI / 2; });
     part(props, Cy(4, 4.2, 0.3, 20), toon('#3a3d44', 'panel'), 0, 0.15, -12); part(props, Cy(3.6, 3.6, 0.04, 20), toon('#3a4a7a'), 0, 0.32, -12);
     for (const s of [-1, 1]) { part(props, B(0.08, 1.0, 12), '#9aa0a8', s * 8, 0.5, -12); part(props, B(0.12, 0.08, 12), glow('#4fd2ff'), s * 8, 1.0, -12); }
     for (let i = 0; i < 4; i++) { const x = -15 + i * 10; part(props, B(1.6, 1.0, 0.8), '#2c2f36', x, 0.5, 2); part(props, B(1.4, 0.6, 0.05), glow(i % 2 ? '#4fd2ff' : '#6fdc5a'), x, 1.3, 1.65, -0.3); box(x, 2, 0.8, 0.4); }

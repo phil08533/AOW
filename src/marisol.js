@@ -79,27 +79,33 @@ function mariFlat() { const X = MARI.x, Z = MARI.z, W = MARI.W, L = MARI.L, g = 
   bcDoor(g, X, 0, Z + L / 2 - 0.02, Math.PI, '#3a4a6a', '4B'); INTERACTS.push({ x: X, z: Z + L / 2 - 1.1, r: 1.5, label: '🚪 Back to the hallway', fn: () => bubFade('Coral Heights', () => { BUB.floor = 4; BUB.lbl && BUB.lbl(); player.pos.set(BAX - BAW / 2 + 1.2, 0, BAZ + 4); player.yaw = -Math.PI / 2; }) });
   // Marisol herself, by the kitchen (she steps out when she is travelling with you)
   MARI.npc = buildChar(() => makeCivilian(...MARI_C), 'civ'); MARI.npc.position.set(X + 1.0, 0, Z - L / 2 + 1.5); g.add(MARI.npc); solid(X + 1.0, Z - L / 2 + 1.5, 0.4); const nx = MARI.npc.position;
-  levelAnims.push(() => { MARI.npc.visible = S.pet !== 'marisol'; });
-  INTERACTS.push({ get x() { return S.pet === 'marisol' ? 1e9 : nx.x; }, z: nx.z + 1.0, r: 1.8, label: '💬 Talk to Marisol', fn: mariTalk }); }
+    INTERACTS.push({ x: nx.x, z: nx.z + 1.0, r: 1.8, label: '💬 Talk to Marisol', fn: mariTalk }); }
 const MARI_C = ['#e86aa0', '#3a3440', '#e8c09a', '#7a3ac0'];
 
 // Peanut returned: now you get invited in
 bubMarisol = function () { const s = bubS();
   if (s.ham === 1) return bubTalk('Coral Heights · 4B', 'Marisol Puddleby', ['PEANUT! Oh my gosh, you found Peanut! He\'s been gone for two days. He takes himself on walks. He\'s very independent.', 'You\'re a hero. Here, I have 500 credits in a sock. Take the sock too.', 'Come in, come in! Don\'t mind the mess. I wasn\'t expecting a hero today.'], () => {
     s.ham = 2; S.cr += 500; markDirty(); SFX.quest(); toast('PEANUT IS HOME', '+500 cr · Marisol invited you in', 2.6); mariIn(); });
-  if (s.ham === 2) { openDlg('Coral Heights · 4B', 'Marisol Puddleby'); $('dlgLine').textContent = S.pet === 'marisol' ? '"Home sweet home. Peanut missed us. He won\'t admit it."' : '"Oh hey, you! Peanut says hi. Come in!"'; return acts([['Go inside', () => { closeDlg(); mariIn(); }, true], ['Not now', closeDlg]]); }
+  if (s.ham === 2) { openDlg('Coral Heights · 4B', 'Marisol Puddleby'); $('dlgLine').textContent = '"Oh hey, you! Peanut says hi. Come in!"'; return acts([['Go inside', () => { closeDlg(); mariIn(); }, true], ['Not now', closeDlg]]); }
   bubTalk('Coral Heights · 4B', 'Marisol Puddleby', ['Have you seen a hamster? Tiny? Even for here? Called Peanut? He likes the coral park. No? Okay. *closes door sadly*']); };
-function mariIn() { SFX.door && SFX.door(); bubFade('Marisol\'s place · 4B', () => { if (S.pet === 'marisol') { S.pet = null; markDirty(); } player.pos.set(MARI.x, 0, MARI.z + MARI.L / 2 - 1.6); player.yaw = 0; player.vy = 0; }); }
-function mariTalk() { const s = bubS(), mate = (S.pets || []).includes('marisol');
+function mariIn() { SFX.door && SFX.door(); bubFade('Marisol\'s place · 4B', () => { player.pos.set(MARI.x, 0, MARI.z + MARI.L / 2 - 1.6); player.yaw = 0; player.vy = 0; }); }
+function mariTalk() { const s = bubS();
   openDlg('Coral Heights · 4B', 'Marisol Puddleby');
   $('dlgLine').textContent = ['"So what do you actually DO? Like, for a job? Is it the shooting? It\'s the shooting, isn\'t it."', '"Peanut likes you. He bit you, which means he likes you."', '"I\'ve never been outside the dome. Is space big? It looks big."'][(s.night || 0) % 3];
-  acts([[mate ? 'Come with me' : 'Ask her to come along', () => mariJoin(mate), true], ['Get high together', mariHaze], ['Stay the night', () => { closeDlg(); bubStayOver(true); }], ['Leave', closeDlg]]); }
-function mariJoin(mate) { if (!mate) { S.pets = (S.pets || []).concat('marisol'); log('Marisol joined you!', 'loot'); }
-  $('dlgLine').textContent = mate ? '"Yes! Let me grab my bag. Peanut, guard the flat."' : '"Wait, like... out there? With you? With the aliens and the guns?" *grabs a jacket* "Okay. YES. I\'m not even scared. I\'m a little scared. Let\'s go."';
-  S.pet = 'marisol'; markDirty(); SFX.quest(); toast('MARISOL JOINED YOU', 'She follows you everywhere and shoots what you shoot. Send her home from the Companions list.', 3.5); acts([['Let\'s go', closeDlg, true]]); }
-
-// companion entry: hidden in the pet shop until she has joined you
-PETS.marisol = { name: 'Marisol', make: () => makeCivilian(...MARI_C), rig: 'civ', scale: 1, price: 0, dmg: 14, ranged: true, secret: true };
+  acts([['Ask her to sell for you', mariJoin, true], ['Get high together', mariHaze], ['Stay the night', () => { closeDlg(); bubStayOver(true); }], ['Leave', closeDlg]]); }
+function mariJoin() { const C = crewS(), m = C.dealer, on = m && m.mari;
+  if (on) { $('dlgLine').textContent = '"I\'m already slinging for you, boss. Your Lab, your shelf, my charm. Pays better than the fish counter."'; return acts([['Good', closeDlg, true]]); }
+  const used = Object.keys(C).filter(k => C[k]).length;
+  if (!m && used >= crewSlots()) { $('dlgLine').textContent = '"I\'d love to, but your crew\'s full. Free up a spot and I\'m yours."'; return acts([['Okay', closeDlg, true]]); }
+  $('dlgLine').textContent = (m ? `"Sell for you? On your ship? I'd be better than ${m.name}, for sure."` : '"Sell for you? Like... the colourful stuff? On your ship?"') + ' *grabs a jacket* "Peanut can mind the flat. I know EVERYONE down here. They\'ll buy anything from me."';
+  acts([[m ? `Hire her (replaces ${m.name})` : 'Hire her as your Dealer', () => {
+    CREW_LOOKS.push(MARI_LOOK); C.dealer = crewFix({ name: 'Marisol Puddleby', skill: 3, t: Date.now(), trait: 'loyal', look: CREW_LOOKS.length - 1, loy: 100, mari: 1 }); crewNote(C.dealer, 'Joined the crew. Brought snacks.');
+    markDirty(); SFX.quest(); toast('MARISOL JOINED YOUR CREW', 'She works your ship\'s Lab as your Dealer: takes doses off the shelf and sells them for you.', 4); log('Marisol is your Dealer now. Find her in the Lab on your ship.', 'loot'); closeDlg(); }, true], ['Not yet', closeDlg]]); }
+const MARI_LOOK = ['#e86aa0', '#3a3440', '#e8c09a', '#7a3ac0', '#ff6ab0'];
+// her look survives reloads: the look index points at her colours
+{ const _f = crewFix; crewFix = function (m) { if (m && m.mari) { if (!CREW_LOOKS.includes(MARI_LOOK)) CREW_LOOKS.push(MARI_LOOK); m.look = CREW_LOOKS.indexOf(MARI_LOOK); } return _f(m); }; }
+// she no longer tags along: anyone who had her as a following companion gets her as a Dealer instead
+setTimeout(() => { try { if (S.pet === 'marisol') S.pet = null; if (S.pets && S.pets.includes('marisol')) { S.pets = S.pets.filter(p => p !== 'marisol'); const C = crewS(); if (!C.dealer) { CREW_LOOKS.push(MARI_LOOK); C.dealer = crewFix({ name: 'Marisol Puddleby', skill: 3, t: Date.now(), trait: 'loyal', look: CREW_LOOKS.length - 1, loy: 100, mari: 1 }); } markDirty(); } } catch (e) {} }, 3000);
 
 // --- the hazy night in: a rainbow cutscene, then morning ---
 function mariHaze() { closeDlg(); const X = MARI.x, Z = MARI.z;

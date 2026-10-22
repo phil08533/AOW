@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.38</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.39</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -8616,7 +8616,7 @@ LEVELS.ocean.npcs.push(
 // dome floors so the city feels like a place
 { const orig = LEVELS.ocean.build; LEVELS.ocean.build = function () { orig.call(this); for (const [x, z, r] of DOMES()) { const f = new THREE.Mesh(new THREE.CircleGeometry(r - 0.2, 20).rotateX(-Math.PI / 2), toon('#d8c890', 'stone')); f.position.set(x, groundH(x, z) + 0.06, z); props.add(f); }
   for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, x = Z.bubble.x + Math.cos(a) * 5, z = Z.bubble.z + Math.sin(a) * 5; const lamp = new THREE.Group(); part(lamp, Cy(0.06, 0.08, 2, 5), '#5d636c', 0, 1, 0); part(lamp, new THREE.SphereGeometry(0.22, 8, 6), glow('#ffe9a0'), 0, 2.1, 0); at(lamp, x, z); solid(x, z, 0.2); }
-  INTERACTS.push({ x: Z.bubble.x, z: Z.bubble.z + 6.5, r: 2.5, label: 'Airlock: call the sub (X)', fn: () => toggleSub(true) }); }; }
+ }; }
 
 // =================== EARTH'S MOON: Luna Dome, low gravity, mines + the notebook's weapon and pet extras ===================
 function makeDrillbot() {
@@ -18923,6 +18923,7 @@ const UPDATES = [
   { id: 201, title: '2.22.36 · McKlunkies', items: ['McKlunkies moved to the mall\'s back wall, with a giant waving Klunky out front and a door into a full restaurant: order counter, diners, and Klunky\'s Fun Zone play place.', 'Lulu Sprinkles runs the play place. You can romance her and make her your partner.', 'Don Klunkleone now sits in a dim private corner at the back of the restaurant.', 'Aquarium fish swim slower and in different directions.'] },
   { id: 202, title: '2.22.37 · Fixes', items: ['The Don\'s sauce is poured right at Glorbo if you have any drug, no inventory step. Glorbo now stands in front of his tank.', 'Klunky\'s arms bend the right way. The McKlunkies interior no longer flickers or wobbles.', 'The Don\'s corner has velvet walls, sconces, a rug, his portrait, a bar cart and cigar smoke.', 'The gaps beside the Zeltac airlock are glass now, and solid.'] },
   { id: 203, title: '2.22.38 · B.U.R.P. and shorter films', items: ['The opening film is shorter and the narration runs line to line without long pauses.', 'In the Maw battle, Captain Vega only speaks her first line out loud.', 'B.U.R.P. has a wall terminal on the ship with a little talking head, and new characters get a hologram B.U.R.P. who walks them through the basics.', 'About half of B.U.R.P.\'s lines were rewritten to be friendly instead of sassy, with new voice clips.', 'McKlunkies: rebuilt play place, solid painted walls and a real door on the Don\'s room, no more flashing floor or rug.'] },
+  { id: 204, title: '2.22.39 · Ocean World overhaul', items: ['The submarine is gone. Port Kelp has three new piers and a space kayak rental shack (40 cr).', 'Paddle the kayak anywhere, then climb out at a pier or the shore.', 'You can now fish anywhere you face open water, on foot or from the kayak, on every water world.', 'Bubble City is now a sealed miniature dome. Use the Shrink-o-Matic beside it to shrink down and enter a full-size city inside.'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -25102,6 +25103,240 @@ function devUnlockAll() {
   markDirty(); try { updateHud(); } catch (_) {} toast('DEV UNLOCK', 'Everything unlocked, rooms maxed, 50 of every item in your ship stash', 4);
 }
 { const el = document.querySelector('.credit'); let n = 0, t = 0; if (el) el.addEventListener('click', () => { const now = Date.now(); n = now - t < 600 ? n + 1 : 1; t = now; if (n >= 7) { n = 0; devUnlockAll(); } }); }
+
+// =================== OCEAN WORLD OVERHAUL ===================
+// Port Kelp gets proper piers and a space kayak rental (the sub is retired). You can fish anywhere you face open water.
+// Bubble City is now a sealed miniature city under one glass dome on the seabed: the Shrink-o-Matic outside shrinks you
+// down and you walk into the full-size city, which is its own map.
+const OC2 = { kayak: null, paddle: null, rentAt: null };
+const OC_BUBBLE_NPCS = ['blub', 'pearlmkt', 'barnacle', 'kelpa', 'pip'];
+
+// ---- the sub is retired: X in the water now means the kayak ----
+toggleSub = function () { return false; };
+toggleBike = function () { if (LEVEL && LEVEL.ocean && kayakToggle()) return; _toggleBike(); };
+{ const q = QDEFS.o1; if (q) { q.title = 'Salt and Paddles';
+  q.intro = ["A new face! Welcome to Port Kelp. Population: me, a crab, and a guy who says he's a fish.", "Everything good on this world is underwater. Rent a kayak at the east pier, paddle out, and dive.", "Get yourself down to the Sunlit Reef, east of here. Come back and tell me what you saw."];
+  q.obj[0].text = 'Swim or kayak out and dive to the Sunlit Reef'; } }
+{ const b = LEVELS.ocean.npcs.find(n => n.id === 'brine'); if (b) b.idle = ["The sea gives, the sea takes. Mostly takes. Mostly my boots.", "Kayaks are at the east pier. Paddle out, fish from it, try not to fall in. You'll fall in."]; }
+{ const b = LEVELS.ocean.npcs.find(n => n.id === 'brine'); if (b) b.x = 3; }
+
+// ---- Bubble City's people move into the city map ----
+const OC_MOVED = LEVELS.ocean.npcs.filter(n => OC_BUBBLE_NPCS.includes(n.id));
+LEVELS.ocean.npcs = LEVELS.ocean.npcs.filter(n => !OC_BUBBLE_NPCS.includes(n.id));
+{ const P = { blub: [0, -7, 0], pearlmkt: [-27, -5, Math.PI / 2], barnacle: [24, 10, -Math.PI / 2], kelpa: [5, -30, Math.PI], pip: [30, -2, -Math.PI / 2] };
+  for (const n of OC_MOVED) { const [x, z, f] = P[n.id]; Object.assign(n, { x, z, face: f }); } }
+// the old domes let you breathe; the city is its own map now, so the seabed is just seabed
+inDome = function () { return false; };
+{ const _bf = buildFishSpots; buildFishSpots = function (id) { if (id === 'ocean') { FISH_SPOTS.length = 0; return; } return _bf(id); }; }
+
+{ const orig = LEVELS.ocean.build; LEVELS.ocean.build = function () { orig.call(this); try { ocClear(); ocPiers(); ocMiniCity(); for (let i = INTERACTS.length - 1; i >= 0; i--) if (/call the sub/.test(INTERACTS[i].label || '')) INTERACTS.splice(i, 1); } catch (e) { console.warn('ocean2', e); } }; }
+
+// remove the old docks, the sub dock and everything that made up the old Bubble City
+function ocClear() {
+  const [px, pz] = PORT, B = Z.bubble, bx = new THREE.Box3(), c = new THREE.Vector3(), sz = new THREE.Vector3();
+  const near = (x, z) => Math.hypot(x - B.x, z - B.z) < 31;
+  const oldDock = (x, z) => [[0, 14], [-14, 2], [14, 2]].some(([ox, oz]) => Math.abs(x - px - ox) < 0.2 && Math.abs(z - pz - oz) < 0.2);
+  for (const root of [props, levelGroup]) for (const o of [...root.children]) {
+    if (o.isGroup && oldDock(o.position.x, o.position.z)) { root.remove(o); continue; }
+    if (o.isLight) continue; bx.setFromObject(o); if (bx.isEmpty()) continue; bx.getCenter(c); bx.getSize(sz);
+    if (Math.max(sz.x, sz.z) < 70 && near(c.x, c.z) && c.y < WATER_Y) root.remove(o); }
+  for (let i = SURFACES.length - 1; i >= 0; i--) { const s = SURFACES[i]; if (Math.hypot(s.x - px, s.z - pz) < 26 || near(s.x, s.z)) SURFACES.splice(i, 1); }
+  for (const A of [BOXES, CIRCLES]) for (let i = A.length - 1; i >= 0; i--) if (near(A[i][0], A[i][1])) A.splice(i, 1);
+  for (let i = INTERACTS.length - 1; i >= 0; i--) if (/^Sub dock/.test(INTERACTS[i].label || '')) INTERACTS.splice(i, 1);
+}
+
+// ---- Port Kelp piers: one straight deck each, pilings to the seabed, cross-bracing, rope rails, lamps ----
+const OC_DECK = WATER_Y + 0.75;
+function ocPiers() {
+  const [px, pz] = PORT, wood = toon('#9a7650', 'wood'), dark = toon('#6a4f34', 'wood'), rope = toon('#d8c890');
+  const piers = [[0, 1, 14], [-1, 0, 10], [1, 0, 11]];
+  OC2.piers = [];
+  for (const [dx, dz, L] of piers) {
+    let r0 = 5; while (r0 < 30 && groundH(px + dx * r0, pz + dz * r0) > WATER_Y + 0.55) r0 += 0.25;
+    const a = r0 - 2, b = r0 + L, len = b - a, cx = px + dx * (a + b) / 2, cz = pz + dz * (a + b) / 2, ry = Math.atan2(dx, dz), g = new THREE.Group(), y = OC_DECK, W = 2.8;
+    // the deck: planks across the pier, two stringers under them
+    for (let s = 0; s < len; s += 0.5) part(g, B(W, 0.1, 0.44), toon(((s * 2) | 0) % 3 ? '#9a7650' : '#8a6a44', 'wood'), 0, y, -len / 2 + s + 0.25);
+    for (const sx of [-1, 1]) part(g, B(0.2, 0.25, len), dark, sx * (W / 2 - 0.25), y - 0.17, 0);
+    // pilings every two meters on both sides, down into the sand, with diagonal braces
+    for (let s = 1; s < len; s += 2) for (const sx of [-1, 1]) { const wx = cx + Math.cos(ry) * sx * (W / 2) + Math.sin(ry) * (-len / 2 + s), wz = cz - Math.sin(ry) * sx * (W / 2) + Math.cos(ry) * (-len / 2 + s);
+      const gy = Math.min(groundH(wx, wz), y - 0.5), h = y + 0.5 - gy; part(g, Cy(0.14, 0.16, h, 7), dark, sx * (W / 2), gy + h / 2, -len / 2 + s);
+      if (h > 1.6) part(g, B(0.08, 0.08, Math.hypot(2, h - 0.8) * 0.98), dark, sx * (W / 2 + 0.05), (y - 0.3 + gy + 0.5) / 2, -len / 2 + s + 1, Math.atan2(h - 0.8, 2), 0, 0); }
+    // rope rail along one side, bollards and a lamp at the far end
+    for (let s = 1; s < len; s += 2) part(g, Cy(0.05, 0.05, 0.6, 5), dark, W / 2 - 0.1, y + 0.55, -len / 2 + s);
+    part(g, Cy(0.03, 0.03, len - 1.5, 4), rope, W / 2 - 0.1, y + 0.75, 0.25, Math.PI / 2, 0, 0);
+    for (const sx of [-1, 1]) part(g, Cy(0.16, 0.2, 0.45, 8), toon('#2b2a2c'), sx * 0.9, y + 0.28, len / 2 - 0.5);
+    part(g, Cy(0.06, 0.06, 2.6, 6), toon('#2b2a2c'), -W / 2 + 0.2, y + 1.3, len / 2 - 0.4); part(g, new THREE.SphereGeometry(0.2, 8, 6), glow('#ffe9a0'), -W / 2 + 0.2, y + 2.7, len / 2 - 0.4);
+    g.position.set(cx, 0, cz); g.rotation.y = ry; levelGroup.add(g);
+    SURFACES.push({ x: cx, z: cz, ux: Math.sin(ry), uz: Math.cos(ry), hl: len / 2, hw: W / 2, y: y + 0.05 });
+    OC2.piers.push({ cx, cz, ry, len, end: [px + dx * (b - 0.6), pz + dz * (b - 0.6)], dx, dz });
+  }
+  // the kayak rental: a little shack and a rack at the root of the east pier
+  const E = OC2.piers[2], sx = px + E.dx * (E.len / 2 - 4) + 0, sz = pz + 3.2; const shack = new THREE.Group();
+  part(shack, B(2.4, 2.2, 1.8), toon('#3f7d7a', 'wood'), 0, 1.1, 0); part(shack, B(2.8, 0.15, 2.3), toon('#ffd36a'), 0, 2.3, 0.15, 0.12); part(shack, B(1.6, 0.9, 0.05), toon('#1e1c22'), 0, 1.4, 0.92);
+  const kc = ['#ff6aa8', '#4fd2ff', '#7fff6a']; for (let i = 0; i < 3; i++) { const k = makeKayak(kc[i]); k.scale.setScalar(0.8); k.position.set(1.9, 0.4 + i * 0.5, 0); k.rotation.y = Math.PI / 2; shack.add(k); }
+  part(shack, B(0.1, 1.8, 2.2), toon('#6a4f34', 'wood'), 1.9, 0.9, -0.9 + 0.9 * 0);
+  const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 0.45), new THREE.MeshBasicMaterial({ map: signTex('SPACE KAYAKS · 40 cr', '#0c1a24', '#7fe8ff') })); sg.position.set(0, 2.6, 1.0); shack.add(sg);
+  const sxx = px + 9, szz = pz + 4.5; shack.position.set(sxx, Math.max(groundH(sxx, szz), OC_DECK - 0.05), szz); shack.rotation.y = Math.PI; levelGroup.add(shack); box(sxx, szz, 1.3, 1.0);
+  OC2.rentAt = [sxx, szz - 1.6];
+  INTERACTS.push({ x: sxx, z: szz - 1.4, r: 2.4, label: '🛶 Rent a space kayak (40 cr)', fn: kayakRent });
+}
+
+// ---- the space kayak ----
+function makeKayak(col) {
+  const g = new THREE.Group(), hull = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8), toon(col || '#4fd2ff')); hull.scale.set(0.42, 0.22, 1.9); hull.position.y = 0.1; g.add(hull);
+  part(g, B(0.06, 0.03, 3.4), glow('#e8f8ff'), 0, 0.31, 0); const ck = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.33, 0.14, 14), toon('#1e1c22')); ck.position.set(0, 0.28, 0.15); ck.scale.z = 1.4; g.add(ck);
+  for (const s of [-1, 1]) part(g, B(0.3, 0.03, 0.4), toon('#2b2a2c'), s * 0.35, 0.12, 1.5, 0, 0, s * 0.3);
+  return g;
+}
+function kayakRent() {
+  if (S.inSub) return; if (S.cr < 40) { SFX.hit(); log("Kayak rental is 40 cr. You're short."); return; }
+  S.cr -= 40; SFX.coin(); markDirty(); const P = OC2.piers[2]; kayakOn(P.end[0] + P.dz * 2.2, P.end[1] - P.dx * 2.2 + 0);
+}
+function kayakOn(x, z) {
+  S.inSub = true; S.kayak = true; player.pos.set(x, WATER_Y - 0.75, z); player.vy = 0;
+  if (!OC2.kayak) { OC2.kayak = makeKayak('#ff8a2a'); } scene.add(OC2.kayak);
+  if (!OC2.paddle) { const p = new THREE.Group(); part(p, Cy(0.02, 0.02, 1.6, 6), toon('#2b2a2c'), 0, 0, 0, 0, 0, Math.PI / 2); for (const s of [-1, 1]) part(p, B(0.22, 0.02, 0.1), toon('#ffd36a'), s * 0.8, 0, 0); p.position.set(0, -0.42, -0.55); camera.add(p); OC2.paddle = p; }
+  OC2.paddle.visible = true; vmSub.scale.setScalar(0.0001);
+  log('Space kayak. W paddles where you look · face open water and press E to fish · X climbs out at a pier or the shore.', 'loot');
+}
+function kayakOff() { S.inSub = false; S.kayak = false; if (OC2.kayak) scene.remove(OC2.kayak); if (OC2.paddle) OC2.paddle.visible = false; vmSub.scale.setScalar(1); }
+function kayakToggle() {
+  if (!S.kayak) return false; if (dlgOpen) return true;
+  // climb out onto the nearest pier, or onto dry land close by
+  for (const s of SURFACES) { const dx = player.pos.x - s.x, dz = player.pos.z - s.z, al = dx * s.ux + dz * s.uz, ac = dx * s.uz - dz * s.ux;
+    if (Math.abs(al) < s.hl + 0.5 && Math.abs(ac) < s.hw + 3) { const a2 = clamp(al, -s.hl + 0.5, s.hl - 0.5); kayakOff(); player.pos.set(s.x + s.ux * a2, s.y, s.z + s.uz * a2); SFX.door(); return true; } }
+  for (let r = 1; r <= 4; r += 0.5) for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2, x = player.pos.x + Math.cos(a) * r, z = player.pos.z + Math.sin(a) * r;
+    if (groundH(x, z) > WATER_Y + 0.1) { kayakOff(); player.pos.set(x, groundH(x, z), z); SFX.door(); return true; } }
+  log('Paddle up to a pier or the shore to climb out.'); return true;
+}
+{ const _ss = subStep; subStep = function (dt, mx, mz, sprint) {
+  if (!S.kayak) return _ss.apply(this, arguments);
+  const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw), rx = Math.cos(player.yaw), rz = -Math.sin(player.yaw), sp = 4.6 * (sprint ? 1.5 : 1);
+  OC2.v = OC2.v || { x: 0, z: 0 }; const V2 = OC2.v; V2.x += (fx * mz + rx * mx * 0.4) * sp * dt * 2.2; V2.z += (fz * mz + rz * mx * 0.4) * sp * dt * 2.2; const dr = Math.pow(0.35, dt); V2.x *= dr; V2.z *= dr;
+  const nx = player.pos.x + V2.x * dt, nz = player.pos.z + V2.z * dt;
+  if (groundH(nx, nz) < WATER_Y - 0.45) { player.pos.x = nx; player.pos.z = nz; } else { V2.x *= -0.3; V2.z *= -0.3; }
+  collide(player.pos, 0.7, false);
+  const t = performance.now() / 1000; player.pos.y = WATER_Y - 0.75 + Math.sin(t * 1.7) * 0.04; player.vy = 0; player.onGround = true; player.wet = false;
+  const K = OC2.kayak; if (K) { K.position.set(player.pos.x, WATER_Y - 0.12 + Math.sin(t * 1.7) * 0.04, player.pos.z); K.rotation.set(Math.sin(t * 1.3) * 0.03, player.yaw + Math.PI, Math.sin(t * 1.1) * 0.04); }
+  const P = OC2.paddle; if (P) { const m = Math.hypot(V2.x, V2.z); P.rotation.z = Math.sin(t * 5) * 0.5 * Math.min(1, m / 2); P.rotation.y = Math.cos(t * 5) * 0.25 * Math.min(1, m / 2); }
+}; }
+{ const _ll = loadLevel; loadLevel = function () { if (S.kayak) kayakOff(); return _ll.apply(this, arguments); }; }
+
+// ---- fish anywhere: face open water from the shore, a pier or the kayak ----
+const OC_TABLES = { ocean: 'sea', earth: 'lake', capitone: 'frost', mezar: 'oasis', robot: 'canal' };
+const OC_FISH_ANY = { r: 4.8, label: '🎣 Fish here', fn: () => startFishing(LEVEL.name, OC_TABLES[LEVEL.id] || 'sea'),
+  get x() { return ocFishAt() ? player.pos.x - Math.sin(player.yaw) * 4.5 : 1e9; }, get z() { return ocFishAt() ? player.pos.z - Math.cos(player.yaw) * 4.5 : 1e9; } };
+let ocFishT = 0, ocFishOk = false;
+function ocFishAt() { const t = performance.now(); if (t - ocFishT < 150) return ocFishOk; ocFishT = t;
+  ocFishOk = false; if (!LEVEL || !OC_TABLES[LEVEL.id] || fishing || dlgOpen || !LEVEL.terrain) return false;
+  if (!S.kayak && (player.pos.y < WATER_Y - 0.5 || (typeof swimHere === 'function' && swimHere()))) return false;
+  const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw); let wet = 0; for (const d of [3, 4.5, 6]) if (groundH(player.pos.x + fx * d, player.pos.z + fz * d) < WATER_Y - 0.4) wet++;
+  ocFishOk = wet >= 2; return ocFishOk; }
+{ const _ll = loadLevel; loadLevel = function () { const r = _ll.apply(this, arguments); if (!INTERACTS.includes(OC_FISH_ANY)) INTERACTS.push(OC_FISH_ANY); return r; }; }
+
+// ---- the miniature Bubble City: a sealed glass dome on the seabed with a tiny city inside, and the Shrink-o-Matic ----
+function ocMiniCity() {
+  const ZB = Z.bubble, y0 = groundH(ZB.x, ZB.z), g = new THREE.Group(), R = 9;
+  part(g, Cy(R + 0.4, R + 0.6, 0.6, 32), toon('#5d636c', 'panel'), 0, 0.3, 0);
+  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; part(g, B(0.25, 0.3, 0.6), glow(i % 2 ? '#4fd2ff' : '#ffd36a'), Math.cos(a) * (R + 0.45), 0.5, Math.sin(a) * (R + 0.45), 0, -a, 0); }
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(R, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: '#bfefff', transparent: true, opacity: 0.18, depthWrite: false, side: THREE.DoubleSide })); dome.position.y = 0.6; g.add(dome);
+  for (let i = 0; i < 8; i++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(R, 0.08, 4, 24, Math.PI), toon('#8a8f99')); rib.rotation.y = i / 8 * Math.PI; rib.position.y = 0.6; g.add(rib); }
+  // the tiny city: streets, little houses with round roofs, towers, a plaza with a fountain, kelp rows, lamps
+  const pastel = ['#ffd0a0', '#c8e0ff', '#b8ffcf', '#ffb8d8', '#fff0a0', '#d8c8ff'];
+  part(g, B(14, 0.05, 0.6), toon('#d8d0c0'), 0, 0.63, 0); part(g, B(0.6, 0.05, 14), toon('#d8d0c0'), 0, 0.63, 0);
+  part(g, Cy(1.2, 1.2, 0.1, 16), toon('#e8e4dc'), 0, 0.66, 0); part(g, Cy(0.3, 0.4, 0.4, 10), toon('#8fd0ff'), 0, 0.85, 0);
+  for (let i = 0; i < 46; i++) { const a = i * 2.39, d = 2 + (i * 7) % 6, x = Math.cos(a) * d, z = Math.sin(a) * d; if (Math.abs(x) < 0.6 || Math.abs(z) < 0.6) continue; const h = 0.4 + (i % 4) * 0.25, w = 0.45 + (i % 3) * 0.15;
+    part(g, B(w, h, w), toon(pastel[i % 6]), x, 0.6 + h / 2, z); part(g, new THREE.SphereGeometry(w * 0.55, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), toon(pastel[(i + 2) % 6]), x, 0.6 + h, z);
+    if (i % 5 === 0) part(g, B(0.08, 0.08, 0.02), glow('#ffe9a0'), x, 0.6 + h * 0.6, z + w / 2 + 0.01); }
+  for (const [x, z, h] of [[-3.5, -3, 2.6], [3.8, 2.4, 2.2], [-1.8, 4.2, 1.8]]) { part(g, Cy(0.3, 0.4, h, 8), toon('#e8e4dc'), x, 0.6 + h / 2, z); part(g, new THREE.SphereGeometry(0.35, 8, 6), glow('#4fd2ff'), x, 0.6 + h + 0.2, z); }
+  for (let i = 0; i < 6; i++) part(g, B(0.15, 0.4, 2.2), toon('#3f7a3a'), 5 + (i % 3) * 0.5, 0.8, -4 + Math.floor(i / 3) * 2.6);
+  g.position.set(ZB.x, y0, ZB.z); levelGroup.add(g); solid(ZB.x, ZB.z, R + 0.6);
+  const bub = []; for (let i = 0; i < 10; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 4), new THREE.MeshBasicMaterial({ color: '#e8f8ff', transparent: true, opacity: 0.6 })); levelGroup.add(m); bub.push(m); }
+  levelAnims.push(t => bub.forEach((m, i) => { const k = (t * 0.6 + i * 0.37) % 1; m.position.set(ZB.x + Math.sin(i * 2.1) * 0.3, y0 + 1 + k * (R - 1.5), ZB.z + Math.cos(i * 2.1) * 0.3); }));
+  // the Shrink-o-Matic: a ringed machine and platform on the south side, with a buoy above it so you can find it from the surface
+  const sx = ZB.x, sz = ZB.z - R - 4, sy = groundH(sx, sz), m = new THREE.Group();
+  part(m, Cy(2.2, 2.4, 0.4, 20), toon('#3a3d44', 'panel'), 0, 0.2, 0); part(m, Cy(1.6, 1.6, 0.05, 20), glow('#4fd2ff'), 0, 0.43, 0);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.18, 8, 28), toon('#c9a43a')); ring.position.y = 2.2; m.add(ring); const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.08, 6, 28), glow('#7fe8ff')); ring2.position.y = 2.2; m.add(ring2);
+  for (const s of [-1, 1]) part(m, B(0.3, 2.4, 0.3), toon('#5d636c'), s * 1.9, 1.2, 0);
+  const sg = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.55), new THREE.MeshBasicMaterial({ map: signTex('SHRINK-O-MATIC · BUBBLE CITY', '#0c1a24', '#7fe8ff') })); sg.position.set(0, 4.2, 0); sg.rotation.y = Math.PI; m.add(sg);
+  m.position.set(sx, sy, sz); levelGroup.add(m); levelAnims.push(t => { ring.rotation.x = t * 0.8; ring2.rotation.y = t * 1.3; });
+  INTERACTS.push({ x: sx, z: sz, r: 2.8, label: '🫧 Shrink down into Bubble City', fn: ocShrink });
+  const buoy = new THREE.Group(); part(buoy, Cy(0.5, 0.7, 1.2, 10), toon('#ff6a3a'), 0, 0, 0); part(buoy, Cy(0.08, 0.08, 1.4, 6), toon('#2b2a2c'), 0, 1.2, 0); part(buoy, new THREE.SphereGeometry(0.18, 8, 6), glow('#7fe8ff'), 0, 1.95, 0);
+  buoy.position.set(sx, WATER_Y, sz); levelGroup.add(buoy); levelAnims.push(t => { buoy.position.y = WATER_Y - 0.1 + Math.sin(t * 1.4) * 0.12; buoy.rotation.z = Math.sin(t) * 0.08; });
+  const line = new THREE.Mesh(Cy(0.02, 0.02, WATER_Y - sy - 4.4, 4), toon('#d8c890')); line.position.set(sx + 0.3, (WATER_Y + sy + 4.4) / 2, sz); levelGroup.add(line);
+}
+function ocShrink() {
+  let el = $('ocShrink'); if (!el) { el = document.createElement('div'); el.id = 'ocShrink'; el.style.cssText = 'position:fixed;inset:0;z-index:60;pointer-events:none;background:radial-gradient(circle,rgba(127,232,255,0) 0%,rgba(127,232,255,.9) 60%,#0a3a5a 100%);opacity:0;transform:scale(3);transition:opacity .9s,transform 1.1s'; document.body.appendChild(el); }
+  SFX.door(); try { SFX.whoosh && SFX.whoosh(); } catch (_) {} el.style.opacity = '1'; el.style.transform = 'scale(1)';
+  setTimeout(() => { travel('bubblecity'); setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'scale(3)'; toast('BUBBLE CITY', 'You are about two centimeters tall', 3); }, 400); }, 1100);
+}
+function ocGrow() {
+  const el = $('ocShrink'); if (el) { el.style.opacity = '1'; el.style.transform = 'scale(1)'; } SFX.door();
+  const B = Z.bubble || { x: 0, z: 62 }; setTimeout(() => { travel('ocean', { at: { x: 0, z: 62 - 9 - 6.5, yaw: Math.PI } }); setTimeout(() => { const e2 = $('ocShrink'); if (e2) { e2.style.opacity = '0'; e2.style.transform = 'scale(3)'; } }, 400); }, 1000);
+}
+
+// ---- Bubble City, full size ----
+LEVELS.bubblecity = {
+  id: 'bubblecity', name: 'Bubble City', tag: 'Under the glass, two centimeters tall', lvls: 'Safe', size: 140, center: [0, 0], radius: 200, water: -99, sky: 'space', weather: 'none', indoor: true,
+  terrain: null, palette: { grass: '#d8c8a0' }, zones: [{ id: 'bcity', name: 'Bubble City', lvl: 'Safe · under the dome', x: 0, z: 0, r: 50, col: '#c8b880', safe: true, h: 0 }], paths: [], river: [], pools: [], lava: [],
+  safes: [{ x: 0, z: 0, r: 300 }], spawn: { x: 0, z: 40, yaw: 0 }, menu: { x: 0, z: 0, r: 10, h: 3 }, npcBase: [0, 0], spawns: [],
+  npcs: OC_MOVED,
+  build() {
+    const Rd = 54, sand = toon('#a8946c'), path = toon('#a9a399'), pastel = ['#ffd0a0', '#c8e0ff', '#b8ffcf', '#ffb8d8', '#fff0a0', '#d8c8ff'];
+    const fl = new THREE.Mesh(new THREE.CircleGeometry(Rd + 2, 48).rotateX(-Math.PI / 2), sand); props.add(fl);
+    // the dome overhead, water beyond it, light coming down through it
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(Rd, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#0c3448', side: THREE.BackSide, fog: false })); levelGroup.add(dome);
+    const glass = new THREE.Mesh(new THREE.SphereGeometry(Rd - 0.5, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#bfefff', transparent: true, opacity: 0.08, side: THREE.BackSide, depthWrite: false, fog: false })); levelGroup.add(glass);
+    for (let i = 0; i < 12; i++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(Rd - 0.6, 0.35, 5, 40, Math.PI), new THREE.MeshLambertMaterial({ color: '#8a8f99' })); rib.rotation.y = i / 12 * Math.PI; levelGroup.add(rib); }
+    for (const ry of [0, 1, 2, 3]) { const L = new THREE.DirectionalLight(0xbfefff, 0.1); L.position.set(Math.cos(ry * 1.6) * 30, 60, Math.sin(ry * 1.6) * 30); levelGroup.add(L); }
+    levelGroup.add(new THREE.HemisphereLight(0x9fd8ef, 0x4a3a2a, 0.3));
+    const fish = []; for (let i = 0; i < 14; i++) { const f = new THREE.Mesh(B(1.4, 0.6, 0.3), new THREE.MeshBasicMaterial({ color: ['#ffb347', '#4fd2ff', '#ff6aa8', '#ffd36a'][i % 4], fog: false })); levelGroup.add(f); fish.push(f); }
+    levelAnims.push(t => fish.forEach((f, i) => { const a = t * (0.04 + (i % 5) * 0.012) * (i % 2 ? 1 : -1) + i, r = Rd + 4 + (i % 3) * 3, e = 0.35 + (i % 4) * 0.12; f.position.set(Math.cos(a) * r * Math.cos(e), Math.sin(e) * r, Math.sin(a) * r * Math.cos(e)); f.rotation.y = -a + (i % 2 ? 0 : Math.PI); }));
+    // keep everyone inside the glass
+    levelAnims.push(() => { const d = Math.hypot(player.pos.x, player.pos.z); if (d > Rd - 3) { player.pos.x *= (Rd - 3) / d; player.pos.z *= (Rd - 3) / d; } });
+    // streets: a ring road and four avenues
+    const ring = new THREE.Mesh(new THREE.RingGeometry(14, 18, 48).rotateX(-Math.PI / 2), path); ring.position.y = 0.02; props.add(ring);
+    for (const ry of [0, Math.PI / 2]) { const av = new THREE.Mesh(new THREE.PlaneGeometry(4, Rd * 2 - 8).rotateX(-Math.PI / 2), path); av.rotation.y = ry; av.position.y = 0.015; props.add(av); }
+    // the plaza: the Mayor's bubble fountain
+    part(props, Cy(5, 5.4, 0.6, 24), toon('#c8e0ff'), 0, 0.3, 0); part(props, Cy(4.4, 4.4, 0.05, 24), new THREE.MeshLambertMaterial({ color: '#4fa8cc', transparent: true, opacity: 0.8 }), 0, 0.58, 0); part(props, Cy(0.5, 0.7, 2.4, 10), toon('#e8e4dc'), 0, 1.2, 0); solid(0, 0, 5.2);
+    const fb = []; for (let i = 0; i < 18; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.15 + (i % 3) * 0.06, 6, 4), new THREE.MeshBasicMaterial({ color: '#e8f8ff', transparent: true, opacity: 0.6 })); levelGroup.add(m); fb.push(m); }
+    levelAnims.push(t => fb.forEach((m, i) => { const k = (t * 0.35 + i * 0.13) % 1; m.position.set(Math.sin(i * 2.4) * (0.4 + k * 1.2), 2.4 + k * 9, Math.cos(i * 2.4) * (0.4 + k * 1.2)); m.material.opacity = 0.6 * (1 - k); }));
+    const sign = (txt, bg, fg, w, h, x, y, z, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: signTex(txt, bg, fg) })); m.position.set(x, y, z); m.rotation.y = ry || 0; props.add(m); return m; };
+    // a house: pastel walls, porthole windows, a round roof and a door
+    const house = (x, z, w, d, h, ry, c) => { const g = new THREE.Group(); part(g, B(w, h, d), toon(pastel[c % 6]), 0, h / 2, 0);
+      const roof = new THREE.Mesh(new THREE.SphereGeometry(Math.max(w, d) * 0.62, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(pastel[(c + 3) % 6])); roof.scale.set(w / Math.max(w, d), 0.6, d / Math.max(w, d)); roof.position.y = h; g.add(roof);
+      part(g, B(1.1, 2.0, 0.08), toon('#3a5266'), 0, 1.0, d / 2 + 0.03); for (const s of [-1, 1]) { const pw = new THREE.Mesh(new THREE.CircleGeometry(0.4, 14), new THREE.MeshBasicMaterial({ color: '#ffe9a0' })); pw.position.set(s * w * 0.3, h * 0.6, d / 2 + 0.05); g.add(pw); }
+      g.position.set(x, 0, z); g.rotation.y = ry; props.add(g); const c2 = Math.abs(Math.cos(ry)), s2 = Math.abs(Math.sin(ry)); box(x, z, (w * c2 + d * s2) / 2, (d * c2 + w * s2) / 2); };
+    // homes in the east: two rows facing a lane
+    let hc = 0; for (const z of [-26, -18, -10, 10, 18, 26]) { house(24, z, 5, 4.5, 3.4 + (hc % 3) * 0.6, -Math.PI / 2, hc++); house(38, z, 5, 4.5, 3.2 + (hc % 3) * 0.7, Math.PI / 2, hc++); }
+    sign('THE HOMES', '#0c1a24', '#c8e0ff', 3, 0.5, 31, 3.6, -34);
+    // the market in the west: striped stalls along the avenue
+    for (let i = 0; i < 10; i++) { const side = i % 2 ? 1 : -1, z = -24 + Math.floor(i / 2) * 10, x = -28 + side * 4.5, g = new THREE.Group();
+      part(g, B(3, 1, 1.6), toon('#8a6a44', 'wood'), 0, 0.5, 0); for (let k = 0; k < 4; k++) part(g, B(0.75, 0.08, 2), toon(k % 2 ? '#ffffff' : pastel[i % 6]), -1.1 + k * 0.75, 2.4, 0.2, 0.25);
+      for (const s of [-1, 1]) part(g, Cy(0.06, 0.06, 2.4, 5), toon('#6a4f34', 'wood'), s * 1.4, 1.2, 0.9); for (let k = 0; k < 5; k++) part(g, new THREE.SphereGeometry(0.16, 6, 4), toon(['#ffb347', '#ff6aa8', '#7fff6a', '#4fd2ff', '#ffd36a'][(k + i) % 5]), -1 + k * 0.5, 1.12, 0);
+      g.position.set(x, 0, z); g.rotation.y = -side * Math.PI / 2; props.add(g); box(x, z, 0.9, 1.6); }
+    sign('BUBBLE MARKET', '#3a1a2a', '#ffd0a0', 3.4, 0.6, -28, 4, -32);
+    house(-40, -16, 6, 5, 4.2, Math.PI / 2, 2); house(-40, 6, 6, 5, 4.6, Math.PI / 2, 4); house(-16, 30, 5, 5, 3.6, Math.PI, 1);
+    // the kelp farm in the north: glowing grow rows
+    for (let r = 0; r < 6; r++) { part(props, B(16, 0.4, 1.2), toon('#6a4f34', 'wood'), 0, 0.2, -36 + r * 2.6); for (let k = 0; k < 10; k++) part(props, B(0.3, 1.1 + ((k + r) % 3) * 0.4, 0.3), toon(k % 2 ? '#3f7a3a' : '#6fce4a', 'leaves'), -7 + k * 1.55, 0.9, -36 + r * 2.6); box(0, -36 + r * 2.6, 8, 0.6);
+      part(props, B(16, 0.08, 0.1), glow('#c86aff'), 0, 3.2, -36 + r * 2.6); }
+    sign('KELP FARM', '#0c240c', '#b8ffcf', 3, 0.5, 0, 4, -22.8);
+    // a coral park in the south-east, lamps all round the ring
+    const cor = ['#ff6aa8', '#ffb347', '#c86aff', '#4fffe0', '#ff6a5a'];
+    for (let i = 0; i < 22; i++) { const a = i * 2.3, d = 3 + (i * 5) % 9, x = 26 + Math.cos(a) * d, z = 36 + Math.sin(a) * d * 0.6; if (Math.hypot(x, z) > Rd - 6) continue; const c = new THREE.Group(); for (let k = 0; k < 4; k++) part(c, Cy(0.12, 0.2, 1 + k * 0.4, 5), toon(cor[(i + k) % 5]), Math.sin(k * 2) * 0.4, 0.5 + k * 0.2, Math.cos(k * 2) * 0.4, Math.sin(k) * 0.4, 0, Math.cos(k) * 0.4); c.position.set(x, 0, z); props.add(c); }
+    for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, x = Math.cos(a) * 19, z = Math.sin(a) * 19; part(props, Cy(0.08, 0.1, 3.4, 6), toon('#2b2a2c'), x, 1.7, z); part(props, new THREE.SphereGeometry(0.3, 8, 6), glow('#ffe9a0'), x, 3.5, z); }
+    // townsfolk out walking
+    const walk = []; for (let i = 0; i < 14; i++) { const o = buildChar(() => i % 4 === 3 ? makeJelly(['#4fffe0', '#ff6aa8', '#c86aff'][i % 3]) : makeCivilian(pastel[i % 6], '#2c2a38', ['#e0b892', '#8a5a3a', '#9fe8ff', '#c58a64'][i % 4], '#1e1a18'), i % 4 === 3 ? null : 'civ'); levelGroup.add(o); walk.push([o, {}, i]); }
+    levelAnims.push(t => walk.forEach(([o, st, i]) => { const r = 16 + (i % 3) * 0.8, a = t * (0.05 + (i % 4) * 0.01) * (i % 2 ? 1 : -1) + i * 0.45; o.position.set(Math.cos(a) * r, 0, Math.sin(a) * r); o.rotation.y = -a + (i % 2 ? Math.PI : 0); if (o.userData.rig) animRig(o, st, 1 / 60, t); }));
+    // the way back: a Shrink-o-Matic that grows you back to normal size
+    const m = new THREE.Group(); part(m, Cy(2.2, 2.4, 0.4, 20), toon('#3a3d44', 'panel'), 0, 0.2, 0); part(m, Cy(1.6, 1.6, 0.05, 20), glow('#4fd2ff'), 0, 0.43, 0);
+    const ringM = new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.18, 8, 28), toon('#c9a43a')); ringM.position.y = 2.2; m.add(ringM); for (const s of [-1, 1]) part(m, B(0.3, 2.4, 0.3), toon('#5d636c'), s * 1.9, 1.2, 0);
+    m.position.set(0, 0, 46); props.add(m); levelAnims.push(t => { ringM.rotation.x = t * 0.8; }); sign('GROW BACK · EXIT', '#0c1a24', '#7fe8ff', 2.4, 0.45, 0, 4.0, 46);
+    INTERACTS.push({ x: 0, z: 46, r: 2.6, label: '🫧 Grow back to normal size (exit)', fn: ocGrow });
+    sign('WELCOME TO BUBBLE CITY · POP. 4,000 · PLEASE DO NOT TAP ON THE DOME', '#0c1a24', '#ffe9a0', 9, 0.7, 0, 5.5, 30, Math.PI);
+  }
+};
+{ const _po = planetOpen; planetOpen = function (id) { if (id === 'bubblecity') return false; return _po(id); }; }
 
 
 // =================== STATE + SAVE ===================

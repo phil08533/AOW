@@ -217,4 +217,4 @@ LEVELS.ocean.npcs.push(
 // dome floors so the city feels like a place
 { const orig = LEVELS.ocean.build; LEVELS.ocean.build = function () { orig.call(this); for (const [x, z, r] of DOMES()) { const f = new THREE.Mesh(new THREE.CircleGeometry(r - 0.2, 20).rotateX(-Math.PI / 2), toon('#d8c890', 'stone')); f.position.set(x, groundH(x, z) + 0.06, z); props.add(f); }
   for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, x = Z.bubble.x + Math.cos(a) * 5, z = Z.bubble.z + Math.sin(a) * 5; const lamp = new THREE.Group(); part(lamp, Cy(0.06, 0.08, 2, 5), '#5d636c', 0, 1, 0); part(lamp, new THREE.SphereGeometry(0.22, 8, 6), glow('#ffe9a0'), 0, 2.1, 0); at(lamp, x, z); solid(x, z, 0.2); }
-  INTERACTS.push({ x: Z.bubble.x, z: Z.bubble.z + 6.5, r: 2.5, label: 'Airlock: call the sub (X)', fn: () => toggleSub(true) }); }; }
+ }; }

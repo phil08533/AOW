@@ -13,7 +13,15 @@ function bubFade(txt, mid, after, hold) { const f = $('fade'); f.hidden = false;
   setTimeout(() => { try { mid && mid(); } catch (e) { console.warn(e); } setTimeout(() => { f.style.opacity = 0; setTimeout(() => { f.hidden = true; after && after(); }, 400); }, hold || 700); }, 600); }
 function bubNpc(x, z, ry, c, label, fn) { const o = buildChar(() => makeCivilian(c[0], c[1], c[2], c[3]), 'civ'); o.position.set(x, 0, z); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.4);
   if (label) INTERACTS.push({ x, z, r: 2.2, label, fn }); return o; }
-function bubSign(txt, bg, fg, w, h, x, y, z, ry) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: signTex(txt, bg, fg) })); m.position.set(x, y, z); m.rotation.y = ry || 0; levelGroup.add(m); return m; }
+function bubSignTex(txt, bg, fg, w, h) { const W = 512, H = Math.max(64, Math.round(512 * h / w)), cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+  const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, bg); g.addColorStop(1, '#000000'); c.fillStyle = bg; c.fillRect(0, 0, W, H); c.globalAlpha = 0.45; c.fillStyle = g; c.fillRect(0, 0, W, H); c.globalAlpha = 1;
+  c.strokeStyle = fg; c.lineWidth = 6; c.strokeRect(8, 8, W - 16, H - 16); c.globalAlpha = 0.4; c.lineWidth = 2; c.strokeRect(18, 18, W - 36, H - 36); c.globalAlpha = 1;
+  c.fillStyle = '#c8ccd4'; for (const [rx, ry] of [[16, 16], [W - 16, 16], [16, H - 16], [W - 16, H - 16]]) { c.beginPath(); c.arc(rx, ry, 5, 0, 7); c.fill(); }
+  const parts = String(txt).split(' · '), main = parts[0], sub = parts.slice(1).join(' · '); let fs = Math.min(H * (sub ? 0.46 : 0.6), 72); c.font = `bold ${fs}px monospace`; while (c.measureText(main).width > W - 60 && fs > 10) { fs -= 2; c.font = `bold ${fs}px monospace`; }
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = fg; c.shadowBlur = 12; c.fillStyle = fg; c.fillText(main, W / 2, sub ? H * 0.4 : H / 2); c.shadowBlur = 0;
+  if (sub) { let s2 = fs * 0.5; c.font = `${s2}px monospace`; while (c.measureText(sub).width > W - 60 && s2 > 8) { s2 -= 1; c.font = `${s2}px monospace`; } c.globalAlpha = 0.8; c.fillText(sub, W / 2, H * 0.74); c.globalAlpha = 1; }
+  c.globalAlpha = 0.08; c.fillStyle = '#000'; for (let y = 0; y < H; y += 4) c.fillRect(0, y, W, 2); c.globalAlpha = 1; const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; return t; }
+function bubSign(txt, bg, fg, w, h, x, y, z, ry) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: bubSignTex(txt, bg, fg, w, h) })); m.position.set(x, y, z); m.rotation.y = ry || 0; levelGroup.add(m); return m; }
 // a lit neon tube sign that flickers now and then
 function bubNeon(txt, col, x, y, z, ry, w) { const m = bubSign(txt, '#120818', col, w || 3, 0.6, x, y, z, ry); const fr = new THREE.Mesh(B((w || 3) + 0.2, 0.8, 0.06), glow(col)); fr.position.set(x, y, z); fr.rotation.y = ry || 0; fr.translateZ(-0.05); levelGroup.add(fr);
   levelAnims.push(t => { m.visible = Math.sin(t * 13 + x) > -0.97; }); }
@@ -29,35 +37,35 @@ function bubCity() { const S2 = bubS();
   // THE LOW TIDE: the west strip goes seedy after dark. Neon, a pawn shop, a dealer, Rizzo and his TV
   bubNeon('THE LOW TIDE', '#ff3bd2', -28, 5.4, 18.5, Math.PI, 4); bubNeon('CRABBY\'S PAWN', '#ffd36a', -37.3, 3.8, -16, Math.PI / 2);
   bubNeon('BAR · OPEN LATE', '#4fffe0', -37.3, 4.2, 6, Math.PI / 2);
-  for (let i = 0; i < 6; i++) { const t = new THREE.Group(); part(t, Cy(0.35, 0.3, 0.9, 8), toon('#3a4a3a'), 0, 0.45, 0); part(t, Cy(0.36, 0.36, 0.08, 8), toon('#2b2a2c'), 0, 0.92, 0); t.position.set(-35 + (i % 3) * 1.1, 0, -6 + Math.floor(i / 3) * 18); levelGroup.add(t); }
+  for (let i = 0; i < 6; i++) { const t = new THREE.Group(); part(t, Cy(0.35, 0.3, 0.9, 8), toonNS('#3a4a3a'), 0, 0.45, 0); part(t, Cy(0.36, 0.36, 0.08, 8), toonNS('#2b2a2c'), 0, 0.92, 0); t.position.set(-35 + (i % 3) * 1.1, 0, -6 + Math.floor(i / 3) * 18); levelGroup.add(t); }
   bubNpc(-36.8, 6, Math.PI / 2, ['#2b2a2c', '#1e1a18', '#c58a64', '#111'], '💊 Dregs (dealer)', () => openSubShop('Low Tide dealer', 'Dregs', BUB_STREET));
   bubNpc(-36.8, -16, Math.PI / 2, ['#c8402f', '#3a3d44', '#ff8a6a', '#e8e4dc'], '🦀 Crabby\'s Pawn', bubPawn);
   bubNpc(-33.5, -4, Math.PI / 2, ['#6a3a8a', '#2c2a38', '#8a5a3a', '#1e1a18'], '📺 Talk to Rizzo', bubRizzo);
   // CORAL HEIGHTS: the apartment tower in the south-west
   const tx = -27, tz = 30, tw = 10, th = 34, tower = new THREE.Group();
-  part(tower, B(tw, th, tw), toon('#8a7f9a', 'panel'), 0, th / 2, 0);
+  part(tower, B(tw, th, tw), toonNS('#8a7f9a', 'panel'), 0, th / 2, 0);
   for (let f = 0; f < 10; f++) for (let k = 0; k < 4; k++) for (const [sx, sz, ry] of [[1, 0, Math.PI / 2], [0, -1, Math.PI]]) {
-    const lit = ((f * 7 + k * 3) % 5) > 1, w = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.4), lit ? glow(['#ffe9a0', '#ffd0a0', '#c8e0ff'][(f + k) % 3]) : toon('#2a3040'));
+    const lit = ((f * 7 + k * 3) % 5) > 1, w = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.4), lit ? glow(['#ffe9a0', '#ffd0a0', '#c8e0ff'][(f + k) % 3]) : toonNS('#2a3040'));
     const o = -3.6 + k * 2.4; w.position.set(sx ? tw / 2 + 0.03 : o, 3.5 + f * 3, sz ? -tw / 2 - 0.03 : o); if (sx) w.position.z = o; w.rotation.y = ry === Math.PI ? Math.PI : Math.PI / 2; tower.add(w); }
-  part(tower, B(tw + 0.6, 0.5, tw + 0.6), toon('#5d636c'), 0, th, 0); part(tower, Cy(0.1, 0.1, 4, 5), toon('#2b2a2c'), 3, th + 2, 3); part(tower, new THREE.SphereGeometry(0.25, 8, 6), glow('#ff3b2a'), 3, th + 4, 3);
-  part(tower, B(0.1, 2.6, 2.4), toon('#3a5266'), tw / 2 + 0.05, 1.3, 0); part(tower, B(0.3, 0.2, 3.4), glow('#ffe9a0'), tw / 2 + 0.6, 2.9, 0);
+  part(tower, B(tw + 0.6, 0.5, tw + 0.6), toonNS('#5d636c'), 0, th, 0); part(tower, Cy(0.1, 0.1, 4, 5), toonNS('#2b2a2c'), 3, th + 2, 3); part(tower, new THREE.SphereGeometry(0.25, 8, 6), glow('#ff3b2a'), 3, th + 4, 3);
+  part(tower, B(0.1, 2.6, 2.4), toonNS('#3a5266'), tw / 2 + 0.05, 1.3, 0); part(tower, B(0.3, 0.2, 3.4), glow('#ffe9a0'), tw / 2 + 0.6, 2.9, 0);
   tower.position.set(tx, 0, tz); levelGroup.add(tower); box(tx, tz, tw / 2, tw / 2);
   bubSign('CORAL HEIGHTS', '#1a1426', '#ffd0a0', 3.4, 0.6, tx + tw / 2 + 0.1, 3.6, tz, Math.PI / 2);
   INTERACTS.push({ x: tx + tw / 2 + 1, z: tz, r: 2.4, label: '🏢 Enter Coral Heights', fn: () => bubGoFloor(1, true) });
   // REEL DEAL TACKLE in the house by the tower
   bubSign('REEL DEAL TACKLE', '#0c2a3a', '#7fe8ff', 3.4, 0.6, -16, 4.2, 27.4, Math.PI);
-  const rod = new THREE.Group(); part(rod, Cy(0.05, 0.08, 4.6, 6), toon('#c9a43a'), 0, 2.3, 0); part(rod, new THREE.TorusGeometry(0.3, 0.08, 6, 12), toon('#5d636c'), 0, 1, 0.1); rod.position.set(-19, 0, 27); rod.rotation.z = 0.35; levelGroup.add(rod);
+  const rod = new THREE.Group(); part(rod, Cy(0.05, 0.08, 4.6, 6), toonNS('#c9a43a'), 0, 2.3, 0); part(rod, new THREE.TorusGeometry(0.3, 0.08, 6, 12), toonNS('#5d636c'), 0, 1, 0.1); rod.position.set(-19, 0, 27); rod.rotation.z = 0.35; levelGroup.add(rod);
   bubNpc(-16, 26.6, Math.PI, ['#3a7a5a', '#5a4a3a', '#e0b892', '#c8c0b0'], '🎣 Reel Deal Tackle', bubTackle);
   // THE CONTROL ROOM in the north-west: glass front, a wall of monitors, a big lever
   const cx = -22, cz = -38, cr = new THREE.Group();
-  part(cr, B(11, 5, 7), toon('#3a3d44', 'panel'), 0, 2.5, 0); part(cr, B(9, 2.2, 0.1), new THREE.MeshLambertMaterial({ color: '#7fe8ff', transparent: true, opacity: 0.35 }), 0, 2.4, 3.52);
+  part(cr, B(11, 5, 7), toonNS('#3a3d44', 'panel'), 0, 2.5, 0); part(cr, B(9, 2.2, 0.1), new THREE.MeshLambertMaterial({ color: '#7fe8ff', transparent: true, opacity: 0.35 }), 0, 2.4, 3.52);
   for (let i = 0; i < 6; i++) { const s = bubTV(1.3, 0.8); s.position.set(-3.2 + (i % 3) * 1.6, 3.5 - Math.floor(i / 3) * 1.0, 3.6); cr.add(s); }
   part(cr, B(11.6, 0.4, 7.6), glow('#4fd2ff'), 0, 5.2, 0); cr.position.set(cx, 0, cz); levelGroup.add(cr); box(cx, cz, 5.5, 3.5);
   bubSign('DOME CONTROL · AUTHORISED FISH ONLY', '#0c1a24', '#7fe8ff', 5, 0.6, cx, 6, cz + 3.6);
   bubNpc(cx + 4, cz + 4.6, Math.PI, ['#4fd2ff', '#2c2a38', '#9fe8ff', '#3a2a1a'], '🖥 Talk to Dot (Dome Control)', bubDot);
   // THE BURBS: lawns, picket fences and mailboxes on the east lane, and a crime scene
-  for (const z of [-26, -18, -10, 10, 18, 26]) for (const x of [28.6, 33.4]) { part(levelGroup, B(0.08, 0.7, 6), toon('#f4f0e8'), x, 0.35, z); const mb = new THREE.Group(); part(mb, Cy(0.04, 0.04, 1, 4), toon('#5d636c'), 0, 0.5, 0); part(mb, B(0.25, 0.25, 0.45), toon(['#c8402f', '#3a5266', '#3f7a3a'][(z + 40) % 3]), 0, 1.1, 0); mb.position.set(x + (x < 31 ? 0.4 : -0.4), 0, z + 2.6); levelGroup.add(mb); }
-  part(levelGroup, B(0.1, 0.1, 64), toon('#e8e4dc'), 31, 0.02, 0);
+  for (const z of [-26, -18, -10, 10, 18, 26]) for (const x of [28.6, 33.4]) { part(levelGroup, B(0.08, 0.7, 6), toonNS('#f4f0e8'), x, 0.35, z); const mb = new THREE.Group(); part(mb, Cy(0.04, 0.04, 1, 4), toonNS('#5d636c'), 0, 0.5, 0); part(mb, B(0.25, 0.25, 0.45), toonNS(['#c8402f', '#3a5266', '#3f7a3a'][(z + 40) % 3]), 0, 1.1, 0); mb.position.set(x + (x < 31 ? 0.4 : -0.4), 0, z + 2.6); levelGroup.add(mb); }
+  part(levelGroup, B(0.1, 0.1, 64), toonNS('#e8e4dc'), 31, 0.02, 0);
   bubSign('WELCOME TO THE BURBS · NICE LAWNS ONLY', '#1a3a1a', '#b8ffcf', 4.4, 0.6, 31, 3.4, -33, 0);
   bubMurderScene();
   // the lost hamster, running laps in the coral park (until you pick him up)
@@ -90,9 +98,22 @@ function bubDot() { const s = bubS();
   L.push(['Bye', closeDlg]); acts(L); }
 
 // ---------------- Reel Deal Tackle: fishing clothes ----------------
-ARMORS.angler = { name: 'Reel Deal Waders', lvl: 1, flag: 'anglerSet', def: 0.04, trim: '#3a7a5a', visor: '#ffd36a' };
-CAPES.angler = { name: 'Pro Angler Vest', lvl: 1, flag: 'anglerVest', col: '#4a6a3a', trim: '#ffd36a' };
-const TACKLE = [['anglerSet', 'Reel Deal Waders', 1200, 'Rubber to the chest. Fish respect you more. (Armor, wardrobe)'], ['anglerVest', 'Pro Angler Vest', 800, 'Forty pockets. You will lose things in all of them. (Cape, wardrobe)']];
+ARMORS.angler = { name: 'Reel Deal Waders', lvl: 1, flag: 'anglerSet', def: 0.04, body: '#4a5a3a', trim: '#2f3a28', visor: '#ffd36a', bare: false, perk: 'Fish bite 40% faster' };
+// chest-high rubber waders: a bib front and back, braces over the shoulders, chunky boots, a reel badge
+ARMOR_KITS.angler = function (g, A) { const rub = toon('#3e4e32'), dk = toon('#262e20'), brace = toon('#c9a43a');
+  part(g, B(0.46, 0.42, 0.05), rub, 0, 1.3, 0.18); part(g, B(0.46, 0.42, 0.05), rub, 0, 1.3, -0.23); part(g, B(0.2, 0.16, 0.03), dk, 0, 1.3, 0.21);
+  for (const s of [-1, 1]) { part(g, B(0.06, 0.4, 0.04), brace, 0.16 * s, 1.56, 0.17, -0.1); part(g, B(0.06, 0.4, 0.04), brace, 0.16 * s, 1.56, -0.24, 0.1); part(g, B(0.06, 0.06, 0.05), toon('#d8d0c0'), 0.16 * s, 1.5, 0.21);
+    part(g, B(0.26, 0.14, 0.4), dk, 0.13 * s, 0.08, 0.05); part(g, B(0.25, 0.08, 0.3), dk, 0.13 * s, 0.6, 0.02); }
+  part(g, Cy(0.05, 0.05, 0.02, 10), glow('#ffd36a'), 0.1, 1.38, 0.215, Math.PI / 2); };
+CAPES.angler = { name: 'Pro Angler Vest', lvl: 1, flag: 'anglerVest', vest: true, perk: 'Rare fish 60% more likely' };
+// the vest is worn, not hung off the back: open front panels full of pockets, a collar and a little fly on the chest
+{ const _mp = makePlayerChar; makePlayerChar = function (look) { const g = _mp.apply(this, arguments); if (!look || look.c !== 'angler') return g;
+  const v = toon('#6a7a4a', 'cloth'), pk = toon('#5a6a3a', 'cloth'), tr = toon('#c9a43a');
+  for (const s of [-1, 1]) { part(g, B(0.17, 0.46, 0.04), v, 0.15 * s, 1.3, 0.2); for (let k = 0; k < 2; k++) { part(g, B(0.12, 0.1, 0.03), pk, 0.15 * s, 1.2 + k * 0.17, 0.225); part(g, B(0.12, 0.02, 0.035), tr, 0.15 * s, 1.25 + k * 0.17, 0.225); }
+    part(g, B(0.1, 0.46, 0.38), v, 0.25 * s, 1.3, -0.02); part(g, B(0.08, 0.06, 0.06), v, 0.13 * s, 1.58, 0.15, 0.4); }
+  part(g, B(0.5, 0.46, 0.04), v, 0, 1.3, -0.24); part(g, B(0.3, 0.2, 0.03), pk, 0, 1.25, -0.265); part(g, B(0.06, 0.03, 0.02), glow('#ff6aa8'), 0.15, 1.46, 0.24);
+  return g; }; }
+const TACKLE = [['anglerSet', 'Reel Deal Waders', 1200, 'Rubber to the chest. Fish bite 40% faster while you wear them. (Armor, wardrobe)'], ['anglerVest', 'Pro Angler Vest', 800, 'Forty pockets, one of them lucky: rare fish 60% more likely. (Vest, wardrobe)']];
 function bubTackle() { openDlg('Reel Deal Tackle', 'Old Hank'); S.flags = S.flags || {};
   const render = () => { $('dlgLine').textContent = `"Fish can smell a beginner. Dress like a pro." You have ${S.cr.toLocaleString()} cr.`;
     acts([...TACKLE.map(([f, n, p]) => [S.flags[f] ? `${n} ✓ owned` : `${n} · ${p} cr`, () => { if (S.flags[f]) return; if (S.cr < p) { SFX.hit(); log('Not enough credits.'); return; } S.cr -= p; S.flags[f] = true; markDirty(); SFX.coin(); toast('NEW GEAR', `${n}. Wear it from the wardrobe.`, 2.4); render(); }, false, !!S.flags[f]]), ['Look around', () => { $('dlgLine').textContent = TACKLE.map(t => `${t[1]}: ${t[3]}`).join('  ·  '); }], ['Done', closeDlg, true]]); };
@@ -101,10 +122,10 @@ function bubTackle() { openDlg('Reel Deal Tackle', 'Old Hank'); S.flags = S.flag
 // ---------------- the murder in the Burbs ----------------
 const MUR_CLUES = { tracks: 'Little round wheel tracks circle the pool. Lots of them. Like something was doing laps.', barb: 'Barb heard "a humming, and a bump, and a splash" at 3 a.m.', dale: 'Dale says Gerald set his robot vacuum to AGGRESSIVE MODE to "deal with the leaves".', manual: 'A soggy manual: "Sir Sucks-a-Lot v2. Do NOT use near pools. Do NOT insult."' };
 function bubMurderScene(X = 31, Zc = 22, D = [[21, 26], [21, 18], [41, 18]]) { const m = bubS().mur;
-  const pool = new THREE.Group(); part(pool, Cy(1.6, 1.6, 0.5, 18), toon('#ff8ab8'), 0, 0.25, 0); part(pool, Cy(1.45, 1.45, 0.05, 18), new THREE.MeshLambertMaterial({ color: '#4fa8cc' }), 0, 0.46, 0); pool.position.set(X + 0.5, 0, Zc); levelGroup.add(pool); solid(X + 0.5, Zc, 1.6);
-  if (m.st < 2) { const body = new THREE.Group(); part(body, B(0.5, 0.35, 1.6), toon('#ffd36a'), 0, 0.55, 0); part(body, B(0.5, 0.2, 0.5), toon('#e0b892'), 0, 0.5, -1.0); body.position.set(X + 0.5, 0, Zc); body.rotation.y = 0.6; levelGroup.add(body);
-    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, t = new THREE.Mesh(B(0.8, 0.5, 0.04), toon(i % 2 ? '#ffd36a' : '#1e1a18')); t.position.set(X + 0.5 + Math.cos(a) * 2.6, 0.7, Zc + Math.sin(a) * 2.6); t.rotation.y = -a + Math.PI / 2; levelGroup.add(t); } }
-  const robo = new THREE.Group(); part(robo, Cy(0.35, 0.35, 0.12, 14), toon('#2b2a2c'), 0, 0.06, 0); part(robo, new THREE.SphereGeometry(0.05, 6, 4), glow('#ff3b2a'), 0, 0.14, 0.25); robo.position.set(X - 1, 0, Zc + 4); levelGroup.add(robo);
+  const pool = new THREE.Group(); part(pool, Cy(1.6, 1.6, 0.5, 18), toonNS('#ff8ab8'), 0, 0.25, 0); part(pool, Cy(1.45, 1.45, 0.05, 18), new THREE.MeshLambertMaterial({ color: '#4fa8cc' }), 0, 0.46, 0); pool.position.set(X + 0.5, 0, Zc); levelGroup.add(pool); solid(X + 0.5, Zc, 1.6);
+  if (m.st < 2) { const body = new THREE.Group(); part(body, B(0.5, 0.35, 1.6), toonNS('#ffd36a'), 0, 0.55, 0); part(body, B(0.5, 0.2, 0.5), toonNS('#e0b892'), 0, 0.5, -1.0); body.position.set(X + 0.5, 0, Zc); body.rotation.y = 0.6; levelGroup.add(body);
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, t = new THREE.Mesh(B(0.8, 0.5, 0.04), toonNS(i % 2 ? '#ffd36a' : '#1e1a18')); t.position.set(X + 0.5 + Math.cos(a) * 2.6, 0.7, Zc + Math.sin(a) * 2.6); t.rotation.y = -a + Math.PI / 2; levelGroup.add(t); } }
+  const robo = new THREE.Group(); part(robo, Cy(0.35, 0.35, 0.12, 14), toonNS('#2b2a2c'), 0, 0.06, 0); part(robo, new THREE.SphereGeometry(0.05, 6, 4), glow('#ff3b2a'), 0, 0.14, 0.25); robo.position.set(X - 1, 0, Zc + 4); levelGroup.add(robo);
   levelAnims.push(t => { if (bubS().mur.st >= 2) return; robo.position.set(X - 1 + Math.sin(t * 0.8) * 1.2, 0, Zc + 4 + Math.cos(t * 0.6) * 0.8); robo.rotation.y = t; });
   bubNpc(X - 1.4, Zc - 2.6, 0.4, ['#6a5a3a', '#3a3d44', '#c58a64', '#2b2a2c'], '🕵 Detective Clam', bubClam);
   INTERACTS.push({ get x() { return bubS().mur.st === 1 ? X + 2.4 : 1e9; }, z: Zc + 1.6, r: 1.6, label: '🔍 Examine the pool edge', fn: () => bubClue('tracks') });
@@ -130,8 +151,8 @@ function bubSuspect(who) { const m = bubS().mur, L = {
   bubTalk('The Burbs', { barb: 'Barb', dale: 'Dale', kevin: 'Kevin' }[who], L, () => { if (m.st === 1 && who !== 'kevin' && !m.clues[who]) bubClue(who); }); }
 
 // ---------------- the hamster ----------------
-function bubHamster() { const g = new THREE.Group(); part(g, new THREE.SphereGeometry(0.16, 10, 8), toon('#d8a060'), 0, 0.15, 0); part(g, new THREE.SphereGeometry(0.1, 8, 6), toon('#f4e0c0'), 0, 0.17, -0.12);
-  for (const s of [-1, 1]) { part(g, new THREE.SphereGeometry(0.04, 6, 4), toon('#ffb8b8'), s * 0.08, 0.3, -0.04); part(g, new THREE.SphereGeometry(0.02, 4, 3), toon('#111'), s * 0.05, 0.21, -0.2); } g.scale.setScalar(1.3); return g; }
+function bubHamster() { const g = new THREE.Group(); part(g, new THREE.SphereGeometry(0.16, 10, 8), toonNS('#d8a060'), 0, 0.15, 0); part(g, new THREE.SphereGeometry(0.1, 8, 6), toonNS('#f4e0c0'), 0, 0.17, -0.12);
+  for (const s of [-1, 1]) { part(g, new THREE.SphereGeometry(0.04, 6, 4), toonNS('#ffb8b8'), s * 0.08, 0.3, -0.04); part(g, new THREE.SphereGeometry(0.02, 4, 3), toonNS('#111'), s * 0.05, 0.21, -0.2); } g.scale.setScalar(1.3); return g; }
 function bubPickHam() { const s = bubS(); if (s.ham) return; s.ham = 1; markDirty(); if (BUB.ham) { BUB.ham.parent && BUB.ham.parent.remove(BUB.ham); BUB.ham = null; } SFX.quest(); toast('TINY HAMSTER', 'He follows you now', 2);
   bubFollower(); setTimeout(() => burpSay('That is a hamster. It is very small, even for here. It probably belongs to someone in the Coral Heights apartments.'), 600); }
 function bubFollower() { const h = bubHamster(); levelGroup.add(h); const p = new THREE.Vector3(player.pos.x, 0, player.pos.z);
@@ -149,26 +170,27 @@ const BRES = {
 function bubGoFloor(f, enter) { BUB.floor = f; bubFade(enter ? 'Coral Heights' : `Floor ${f}`, () => { player.pos.set(BAX, 0, enter ? BAZ + BAL / 2 - 2 : BAZ - BAL / 2 + 2.6); player.yaw = enter ? 0 : Math.PI; BUB.lbl && BUB.lbl(); }, () => toast('CORAL HEIGHTS', f === 1 ? 'Lobby' : `Floor ${f}`, 1.4), 200); }
 function bubElevator() { openDlg('Elevator', 'Coral Heights'); $('dlgLine').textContent = `You're on ${BUB.floor === 1 ? 'the lobby' : 'floor ' + BUB.floor}. The music is a smooth jazz cover of a sea shanty.`;
   acts([...[1, 2, 3, 4, 5, 6].map(f => [f === 1 ? 'Lobby' : `${f}`, () => { closeDlg(); SFX.door(); bubGoFloor(f); }, f === BUB.floor, f === BUB.floor]), ['Stay', closeDlg]]); }
-function bubTower() { const X = BAX, Z = BAZ, hall = toon('#8a6a7a'), carpet = toon('#5a2a3a');
-  part(levelGroup, B(BAW, 0.1, BAL), carpet, X, 0.05, Z); part(levelGroup, B(BAW + 0.4, 0.2, BAL + 0.4), toon('#d8d0c0'), X, 3.3, Z);
+function bubTower() { const X = BAX, Z = BAZ, hall = toonNS('#8a6a7a'), carpet = toonNS('#5a2a3a');
+  part(levelGroup, B(BAW, 0.1, BAL), carpet, X, 0.05, Z); part(levelGroup, B(BAW + 0.4, 0.2, BAL + 0.4), toonNS('#d8d0c0'), X, 3.3, Z);
   for (const s of [-1, 1]) { part(levelGroup, B(0.2, 3.4, BAL), hall, X + s * (BAW / 2 + 0.1), 1.7, Z); box(X + s * (BAW / 2 + 0.3), Z, 0.3, BAL / 2); }
   for (const s of [-1, 1]) { part(levelGroup, B(BAW, 3.4, 0.2), hall, X, 1.7, Z + s * (BAL / 2 + 0.1)); box(X, Z + s * (BAL / 2 + 0.3), BAW / 2, 0.3); }
   for (let i = 0; i < 5; i++) part(levelGroup, B(0.6, 0.06, 0.6), glow('#ffe9a0'), X, 3.18, Z - BAL / 2 + 3 + i * 5);
   // elevator at the far (north) end, the street door at the south end on the lobby
-  part(levelGroup, B(2.2, 2.6, 0.12), toon('#c9a43a'), X, 1.3, Z - BAL / 2 + 0.05); part(levelGroup, B(0.04, 2.6, 0.14), toon('#6a5a3a'), X, 1.3, Z - BAL / 2 + 0.06);
+  part(levelGroup, B(2.2, 2.6, 0.12), toonNS('#c9a43a'), X, 1.3, Z - BAL / 2 + 0.05); part(levelGroup, B(0.04, 2.6, 0.14), toonNS('#6a5a3a'), X, 1.3, Z - BAL / 2 + 0.06);
   INTERACTS.push({ x: X, z: Z - BAL / 2 + 1.2, r: 2, label: '🛗 Call the elevator', fn: bubElevator });
-  part(levelGroup, B(1.6, 2.4, 0.12), toon('#3a5266'), X, 1.2, Z + BAL / 2 - 0.05);
-  INTERACTS.push({ x: X, z: Z + BAL / 2 - 1.1, r: 1.8, label: 'Street door (lobby only)', fn: () => { if (BUB.floor !== 1) { toast('CORAL HEIGHTS', 'Take the elevator down to the lobby', 1.6); return; } bubFade('Bubble City', () => { const e = BUB.towerExit || [-20.4, 30, -Math.PI / 2]; player.pos.set(e[0], 0, e[1]); player.yaw = e[2]; }); } });
+  const sdoor = new THREE.Group(); part(sdoor, B(1.6, 2.4, 0.12), toonNS('#3a5266'), 0, 1.2, 0); part(sdoor, B(1.0, 0.6, 0.02), new THREE.MeshBasicMaterial({ color: '#7fe8ff' }), 0, 1.8, -0.07); part(sdoor, B(0.4, 0.05, 0.08), toonNS('#c9a43a'), 0.5, 1.1, -0.08); sdoor.position.set(X, 0, Z + BAL / 2 - 0.05); levelGroup.add(sdoor);
+  const exitSign = bubSign('EXIT', '#1a3a1a', '#7fff6a', 0.7, 0.25, X, 2.6, Z + BAL / 2 - 0.13, Math.PI);
+  INTERACTS.push({ get x() { return BUB.floor === 1 ? X : 1e9; }, z: Z + BAL / 2 - 1.1, r: 1.8, label: 'Street door', fn: () => { if (BUB.floor !== 1) { toast('CORAL HEIGHTS', 'Take the elevator down to the lobby', 1.6); return; } bubFade('Bubble City', () => { const e = BUB.towerExit || [-20.4, 30, -Math.PI / 2]; player.pos.set(e[0], 0, e[1]); player.yaw = e[2]; }); } });
   // floor plate signs, re-drawn on each floor
   const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const tex = new THREE.CanvasTexture(cv), pl = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), new THREE.MeshBasicMaterial({ map: tex }));
   pl.position.set(X, 2.9, Z - BAL / 2 + 0.15); levelGroup.add(pl);
-  BUB.lbl = () => { const c = cv.getContext('2d'); c.fillStyle = '#1a1426'; c.fillRect(0, 0, 256, 64); c.fillStyle = '#ffd36a'; c.font = 'bold 34px monospace'; c.textAlign = 'center'; c.fillText(BUB.floor === 1 ? 'LOBBY' : 'FLOOR ' + BUB.floor, 128, 44); tex.needsUpdate = true; }; BUB.lbl();
+  BUB.lbl = () => { const c = cv.getContext('2d'); c.fillStyle = '#1a1426'; c.fillRect(0, 0, 256, 64); c.fillStyle = '#ffd36a'; c.font = 'bold 34px monospace'; c.textAlign = 'center'; c.fillText(BUB.floor === 1 ? 'LOBBY' : 'FLOOR ' + BUB.floor, 128, 44); tex.needsUpdate = true; sdoor.visible = exitSign.visible = BUB.floor === 1; }; BUB.lbl();
   // doors: A and B on the west wall, C and D on the east
   [['A', -1, -5], ['B', -1, 4], ['C', 1, -5], ['D', 1, 4]].forEach(([k, s, dz]) => { const dx = X + s * (BAW / 2 - 0.02);
-    part(levelGroup, B(0.1, 2.3, 1.2), toon(['#6a3a2a', '#3a4a6a', '#4a5a3a', '#6a5a2a'][' ABCD'.indexOf(k) - 1]), dx, 1.15, Z + dz); part(levelGroup, new THREE.SphereGeometry(0.06, 6, 4), toon('#c9a43a'), dx - s * 0.08, 1.1, Z + dz + 0.4);
+    part(levelGroup, B(0.1, 2.3, 1.2), toonNS(['#6a3a2a', '#3a4a6a', '#4a5a3a', '#6a5a2a'][' ABCD'.indexOf(k) - 1]), dx, 1.15, Z + dz); part(levelGroup, new THREE.SphereGeometry(0.06, 6, 4), toonNS('#c9a43a'), dx - s * 0.08, 1.1, Z + dz + 0.4);
     INTERACTS.push({ x: dx - s * 0.9, z: Z + dz, r: 1.6, get label() { const r = BRES[BUB.floor][k]; return `🚪 ${BUB.floor}${k} · ${r[0]}`; }, fn: () => bubDoor(k) }); });
-  part(levelGroup, B(1.2, 1, 0.6), toon('#6a4f34', 'wood'), X - 1, 0.5, Z + 4); // lobby desk (only Mrs. Krill uses it, but every floor has one; the building was cheap)
-  const pot = new THREE.Group(); part(pot, Cy(0.3, 0.25, 0.5, 8), toon('#c8402f'), 0, 0.25, 0); part(pot, B(0.1, 1.2, 0.1), toon('#3f7a3a', 'leaves'), 0, 1, 0); pot.position.set(X + 1.5, 0, Z - 9); levelGroup.add(pot); }
+  part(levelGroup, B(1.2, 1, 0.6), toonNS('#6a4f34', 'wood'), X - 1, 0.5, Z + 4); // lobby desk (only Mrs. Krill uses it, but every floor has one; the building was cheap)
+  const pot = new THREE.Group(); part(pot, Cy(0.3, 0.25, 0.5, 8), toonNS('#c8402f'), 0, 0.25, 0); part(pot, B(0.1, 1.2, 0.1), toonNS('#3f7a3a', 'leaves'), 0, 1, 0); pot.position.set(X + 1.5, 0, Z - 9); levelGroup.add(pot); }
 function bubDoor(k) { const f = BUB.floor, r = BRES[f][k], s = bubS();
   if (f === 1 && k === 'B') return bubKrill();
   if (f === 4 && k === 'B') return bubMarisol();
@@ -192,18 +214,24 @@ function bubStayOver(again) { openDlg('Coral Heights · 4B', 'Marisol Puddleby')
       bubFade('…morning.', () => { bubNight(false); player.hp = maxHp(); markDirty(); }, () => { toast('GOOD MORNING', subsOn() ? 'You feel… colourful. Peanut is watching you.' : 'Full health. Peanut is watching you.', 3); }, 1200); }, 1800); }, true], ['Maybe another time', closeDlg]]); }
 
 // ---------------- your flat: 6B ----------------
-function bubFlat() { const X = BFLAT.x, Z = BFLAT.z, W = 4.2, L = 5, wall = toon('#b8a8c8');
-  part(levelGroup, B(W, 0.1, L), toon('#8a6a4a', 'wood'), X, 0.05, Z); part(levelGroup, B(W, 0.1, L), toon('#e8e4dc'), X, 2.8, Z);
+function bubFlat() { const X = BFLAT.x, Z = BFLAT.z, W = 4.2, L = 5, wall = bcMat('wallpaper', 3, 2, '#d8c8e0');
+  part(levelGroup, B(W, 0.1, L), bcMat('wood', 3, 4, '#c89a6a'), X, 0.05, Z); part(levelGroup, B(W, 0.1, L), toonNS('#e8e4dc'), X, 2.8, Z);
   for (const s of [-1, 1]) { part(levelGroup, B(0.2, 2.8, L), wall, X + s * (W / 2 + 0.1), 1.4, Z); box(X + s * (W / 2 + 0.3), Z, 0.3, L / 2); part(levelGroup, B(W, 2.8, 0.2), wall, X, 1.4, Z + s * (L / 2 + 0.1)); box(X, Z + s * (L / 2 + 0.3), W / 2, 0.3); }
   // the porthole, with fish going past
-  const ph = new THREE.Group(); part(ph, new THREE.TorusGeometry(0.55, 0.09, 8, 20), toon('#c9a43a'), 0, 0, 0); const gl = new THREE.Mesh(new THREE.CircleGeometry(0.55, 20), new THREE.MeshBasicMaterial({ color: '#1f6a8a' })); gl.position.z = -0.02; ph.add(gl);
-  const fsh = new THREE.Mesh(B(0.25, 0.12, 0.02), new THREE.MeshBasicMaterial({ color: '#ffb347' })); fsh.position.z = -0.01; ph.add(fsh); levelAnims.push(t => { const k = (t * 0.25) % 1; fsh.position.x = -0.5 + k; fsh.position.y = Math.sin(t) * 0.15; fsh.visible = k > 0.05 && k < 0.95; });
-  ph.position.set(X - W / 2 + 0.01, 1.6, Z); ph.rotation.y = Math.PI / 2; levelGroup.add(ph);
+  const ph = new THREE.Group(); part(ph, new THREE.TorusGeometry(0.55, 0.09, 8, 20), toonNS('#c9a43a'), 0, 0, 0.04); for (let k = 0; k < 8; k++) part(ph, new THREE.SphereGeometry(0.04, 5, 4), toonNS('#8a6a2a'), Math.cos(k * 0.785) * 0.55, Math.sin(k * 0.785) * 0.55, 0.12);
+  const pcv = document.createElement('canvas'); pcv.width = pcv.height = 128; const pc = pcv.getContext('2d'), ptx = new THREE.CanvasTexture(pcv);
+  const gl = new THREE.Mesh(new THREE.CircleGeometry(0.55, 24), new THREE.MeshBasicMaterial({ map: ptx })); gl.position.z = 0.02; ph.add(gl); let pf = 0;
+  levelAnims.push(t => { if ((pf++ & 3) || BUB.floor === undefined && false) return; const g = pc.createLinearGradient(0, 0, 0, 128); g.addColorStop(0, '#3fa8c8'); g.addColorStop(1, '#0a2a44'); pc.fillStyle = g; pc.fillRect(0, 0, 128, 128);
+    pc.globalAlpha = 0.18; pc.fillStyle = '#e8ffff'; for (let k = 0; k < 4; k++) { const x = 20 + k * 30 + Math.sin(t * 0.5 + k) * 10; pc.beginPath(); pc.moveTo(x, 0); pc.lineTo(x + 14, 0); pc.lineTo(x + 30, 128); pc.lineTo(x + 6, 128); pc.fill(); } pc.globalAlpha = 1;
+    pc.fillStyle = '#2f6a3a'; for (let k = 0; k < 5; k++) { pc.beginPath(); const bx = 8 + k * 28; pc.moveTo(bx, 128); for (let y = 128; y > 50 + k % 2 * 20; y -= 8) pc.lineTo(bx + Math.sin(t + y * 0.05 + k) * 6, y); pc.lineTo(bx + 6, 128); pc.fill(); }
+    for (let k = 0; k < 3; k++) { const fx = ((t * (14 + k * 6) + k * 50) % 170) - 20, fy = 30 + k * 26 + Math.sin(t + k) * 6; pc.fillStyle = ['#ffb347', '#ffd36a', '#ff6a5a'][k]; pc.beginPath(); pc.ellipse(fx, fy, 9, 5, 0, 0, 7); pc.fill(); pc.beginPath(); pc.moveTo(fx - 8, fy); pc.lineTo(fx - 15, fy - 5); pc.lineTo(fx - 15, fy + 5); pc.fill(); }
+    pc.fillStyle = 'rgba(255,255,255,0.5)'; for (let k = 0; k < 6; k++) { pc.beginPath(); pc.arc(100 + Math.sin(k) * 6, 128 - ((t * 20 + k * 22) % 128), 2, 0, 7); pc.fill(); } ptx.needsUpdate = true; });
+  ph.position.set(X - W / 2 + 0.02, 1.6, Z); ph.rotation.y = Math.PI / 2; levelGroup.add(ph);
   // the bed along the back wall, the TV on the opposite wall, a tiny kitchen corner
-  const bed = new THREE.Group(); part(bed, B(1.4, 0.4, 2.2), toon('#6a4f34', 'wood'), 0, 0.2, 0); part(bed, B(1.3, 0.2, 2.1), toon('#e8e4dc'), 0, 0.5, 0); part(bed, B(1.3, 0.12, 1.3), toon('#4a6a9a'), 0, 0.62, 0.35); part(bed, B(0.9, 0.15, 0.4), toon('#ffffff'), 0, 0.66, -0.8);
+  const bed = new THREE.Group(); part(bed, B(1.4, 0.4, 2.2), toonNS('#6a4f34', 'wood'), 0, 0.2, 0); part(bed, B(1.3, 0.2, 2.1), toonNS('#e8e4dc'), 0, 0.5, 0); part(bed, B(1.3, 0.12, 1.3), toonNS('#4a6a9a'), 0, 0.62, 0.35); part(bed, B(0.9, 0.15, 0.4), toonNS('#ffffff'), 0, 0.66, -0.8);
   bed.position.set(X + 1.3, 0, Z - 1.2); levelGroup.add(bed); box(X + 1.3, Z - 1.2, 0.7, 1.1);
-  const tv = bubTV(1.2, 0.7); tv.position.set(X + 1.3, 1.4, Z + L / 2 - 0.06); tv.rotation.y = Math.PI; levelGroup.add(tv); part(levelGroup, B(1.35, 0.85, 0.06), toon('#1e1a18'), X + 1.3, 1.4, Z + L / 2 - 0.0);
-  part(levelGroup, B(1.0, 0.9, 0.6), toon('#d8d0c0'), X - 1.5, 0.45, Z - L / 2 + 0.3); part(levelGroup, B(0.4, 0.5, 0.4), toon('#5d636c'), X - 1.5, 1.15, Z - L / 2 + 0.3);
+  const tv = bubTV(1.2, 0.7); tv.position.set(X + 1.3, 1.4, Z + L / 2 - 0.06); tv.rotation.y = Math.PI; levelGroup.add(tv); part(levelGroup, B(1.35, 0.85, 0.06), toonNS('#1e1a18'), X + 1.3, 1.4, Z + L / 2 - 0.0);
+  part(levelGroup, B(1.0, 0.9, 0.6), toonNS('#d8d0c0'), X - 1.5, 0.45, Z - L / 2 + 0.3); part(levelGroup, B(0.4, 0.5, 0.4), toonNS('#5d636c'), X - 1.5, 1.15, Z - L / 2 + 0.3);
   const pl = new THREE.PointLight(0xffe0b0, 0.8, 8); pl.position.set(X, 2.4, Z); levelGroup.add(pl);
   bubSign('HOME SWEET 6B', '#1a1426', '#ffd0a0', 1.4, 0.3, X - W / 2 + 0.02, 2.3, Z + 1.4, Math.PI / 2);
   INTERACTS.push({ x: X + 1.3, z: Z - 0.3, r: 1.6, get label() { return BUB.lie ? 'Get up' : '🛏 Lie down and watch TV'; }, fn: () => { BUB.lie = !BUB.lie; if (BUB.lie) { player.yaw = Math.PI; player.pitch = 0.05; toast('6B', 'Press E to get up. Hold still to sleep it off.', 2); BUB.lieT = performance.now(); } } });
@@ -225,29 +253,29 @@ function bubDetails() {
   const R = i => { const x = Math.sin(i * 91.7 + 13.1) * 43758.5; return x - Math.floor(x); };
   // benches and bins round the plaza ring, a bus stop, hydrants in the Burbs
   for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.2, x = Math.cos(a) * 12.5, z = Math.sin(a) * 12.5, g = new THREE.Group();
-    part(g, B(1.8, 0.08, 0.5), toon('#8a6a44', 'wood'), 0, 0.5, 0); part(g, B(1.8, 0.5, 0.08), toon('#8a6a44', 'wood'), 0, 0.8, -0.25); for (const s of [-1, 1]) part(g, B(0.08, 0.5, 0.5), toon('#2b2a2c'), s * 0.8, 0.25, 0);
+    part(g, B(1.8, 0.08, 0.5), toonNS('#8a6a44', 'wood'), 0, 0.5, 0); part(g, B(1.8, 0.5, 0.08), toonNS('#8a6a44', 'wood'), 0, 0.8, -0.25); for (const s of [-1, 1]) part(g, B(0.08, 0.5, 0.5), toonNS('#2b2a2c'), s * 0.8, 0.25, 0);
     g.position.set(x, 0, z); g.rotation.y = -a - Math.PI / 2; levelGroup.add(g); box(x, z, 0.6, 0.6);
-    if (i % 2) { const b = new THREE.Group(); part(b, Cy(0.28, 0.24, 0.8, 8), toon('#3f7a3a'), 0, 0.4, 0); part(b, Cy(0.3, 0.3, 0.06, 8), toon('#2b2a2c'), 0, 0.82, 0); b.position.set(Math.cos(a + 0.25) * 12.5, 0, Math.sin(a + 0.25) * 12.5); levelGroup.add(b); } }
-  for (const [x, z] of [[29, -22], [29, 14], [33, 4], [29, -6]]) { const h = new THREE.Group(); part(h, Cy(0.14, 0.17, 0.6, 8), toon('#c8402f'), 0, 0.3, 0); part(h, new THREE.SphereGeometry(0.15, 8, 6), toon('#c8402f'), 0, 0.62, 0); part(h, Cy(0.05, 0.05, 0.4, 5), toon('#c8402f'), 0, 0.4, 0, 0, 0, Math.PI / 2); h.position.set(x, 0, z); levelGroup.add(h); }
+    if (i % 2) { const b = new THREE.Group(); part(b, Cy(0.28, 0.24, 0.8, 8), toonNS('#3f7a3a'), 0, 0.4, 0); part(b, Cy(0.3, 0.3, 0.06, 8), toonNS('#2b2a2c'), 0, 0.82, 0); b.position.set(Math.cos(a + 0.25) * 12.5, 0, Math.sin(a + 0.25) * 12.5); levelGroup.add(b); } }
+  for (const [x, z] of [[29, -22], [29, 14], [33, 4], [29, -6]]) { const h = new THREE.Group(); part(h, Cy(0.14, 0.17, 0.6, 8), toonNS('#c8402f'), 0, 0.3, 0); part(h, new THREE.SphereGeometry(0.15, 8, 6), toonNS('#c8402f'), 0, 0.62, 0); part(h, Cy(0.05, 0.05, 0.4, 5), toonNS('#c8402f'), 0, 0.4, 0, 0, 0, Math.PI / 2); h.position.set(x, 0, z); levelGroup.add(h); }
   // the Low Tide: graffiti, puddles, a flickering streetlight, litter, a shopping cart
   for (const [t, c, x, z] of [['GILL COLLINS RULEZ', '#ff3bd2', -38.4, -2], ['NO NARCS', '#7fff6a', -38.4, 12], ['RIZZO OWES ME', '#ffd36a', -38.4, -24]]) { const m = bubSign(t, '#2a2230', c, 2.6, 0.6, x, 1.6, z, Math.PI / 2); m.material.transparent = true; m.material.opacity = 0.85; }
   for (let i = 0; i < 9; i++) { const p = new THREE.Mesh(new THREE.CircleGeometry(0.5 + R(i) * 0.8, 12), new THREE.MeshBasicMaterial({ color: '#2a2a44', transparent: true, opacity: 0.55, depthWrite: false })); p.rotation.x = -Math.PI / 2; p.position.set(-30 - R(i + 9) * 8, 0.03, -26 + R(i + 3) * 44); levelGroup.add(p); }
-  for (let i = 0; i < 14; i++) part(levelGroup, B(0.18, 0.04, 0.12), toon(['#e8e4dc', '#c8402f', '#ffd36a'][i % 3]), -26 - R(i + 30) * 12, 0.03, -24 + R(i + 40) * 42, 0, R(i) * 3, 0);
-  const cart = new THREE.Group(); part(cart, B(0.8, 0.5, 0.5), toon('#9aa1aa'), 0, 0.6, 0); for (const [a, b] of [[-0.35, -0.2], [0.35, -0.2], [-0.35, 0.2], [0.35, 0.2]]) part(cart, Cy(0.06, 0.06, 0.05, 6), toon('#2b2a2c'), a, 0.08, b, Math.PI / 2, 0, 0); cart.position.set(-34.5, 0, 10); cart.rotation.set(0, 0.7, 0.25); levelGroup.add(cart);
+  for (let i = 0; i < 14; i++) part(levelGroup, B(0.18, 0.04, 0.12), toonNS(['#e8e4dc', '#c8402f', '#ffd36a'][i % 3]), -26 - R(i + 30) * 12, 0.03, -24 + R(i + 40) * 42, 0, R(i) * 3, 0);
+  const cart = new THREE.Group(); part(cart, B(0.8, 0.5, 0.5), toonNS('#9aa1aa'), 0, 0.6, 0); for (const [a, b] of [[-0.35, -0.2], [0.35, -0.2], [-0.35, 0.2], [0.35, 0.2]]) part(cart, Cy(0.06, 0.06, 0.05, 6), toonNS('#2b2a2c'), a, 0.08, b, Math.PI / 2, 0, 0); cart.position.set(-34.5, 0, 10); cart.rotation.set(0, 0.7, 0.25); levelGroup.add(cart);
   const sl = new THREE.PointLight(0xff5ad2, 1.2, 10); sl.position.set(-33, 3, 0); levelGroup.add(sl); levelAnims.push(t => { sl.intensity = Math.sin(t * 17) > 0.6 ? 0.2 : 1.2; });
   // kelp swaying outside the dome glass, little skylight bubbles rising up the ribs
-  for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2, k = new THREE.Mesh(B(0.4, 6 + R(i) * 6, 0.1), toon(i % 2 ? '#3f7a3a' : '#2f5a2a', 'leaves')); k.position.set(Math.cos(a) * 57, 3, Math.sin(a) * 57); levelGroup.add(k); levelAnims.push(t => { k.rotation.z = Math.sin(t * 0.7 + i) * 0.15; }); }
+  for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2, k = new THREE.Mesh(B(0.4, 6 + R(i) * 6, 0.1), toonNS(i % 2 ? '#3f7a3a' : '#2f5a2a', 'leaves')); k.position.set(Math.cos(a) * 57, 3, Math.sin(a) * 57); levelGroup.add(k); levelAnims.push(t => { k.rotation.z = Math.sin(t * 0.7 + i) * 0.15; }); }
 }
 function bubFlatDetails() { const X = BFLAT.x, Z = BFLAT.z;
   // rug, a beanbag, a lamp, posters, snack pile, a fish bowl, a clothes pile
-  const rug = new THREE.Mesh(new THREE.CircleGeometry(0.9, 20), toon('#c86a3a')); rug.rotation.x = -Math.PI / 2; rug.position.set(X - 0.4, 0.105, Z + 0.6); levelGroup.add(rug);
-  part(levelGroup, new THREE.SphereGeometry(0.45, 10, 8), toon('#6a3a8a'), X - 1.2, 0.3, Z + 1.3); part(levelGroup, Cy(0.03, 0.03, 1.4, 5), toon('#2b2a2c'), X + 0.35, 0.7, Z - 2.1); part(levelGroup, Cy(0.2, 0.12, 0.25, 8), glow('#ffd36a'), X + 0.35, 1.45, Z - 2.1);
+  const rug = new THREE.Mesh(new THREE.CircleGeometry(0.9, 20), toonNS('#c86a3a')); rug.rotation.x = -Math.PI / 2; rug.position.set(X - 0.4, 0.105, Z + 0.6); levelGroup.add(rug);
+  part(levelGroup, new THREE.SphereGeometry(0.45, 10, 8), toonNS('#6a3a8a'), X - 1.2, 0.3, Z + 1.3); part(levelGroup, Cy(0.03, 0.03, 1.4, 5), toonNS('#2b2a2c'), X + 0.35, 0.7, Z - 2.1); part(levelGroup, Cy(0.2, 0.12, 0.25, 8), glow('#ffd36a'), X + 0.35, 1.45, Z - 2.1);
   for (const [t, c, x] of [['FISH COPS S2', '#c8402f', -0.6], ['GILL COLLINS', '#3a5266', 0.6]]) bubSign(t, c, '#ffffff', 0.7, 0.9, X + x, 1.7, Z - 2.48, 0);
-  for (let i = 0; i < 5; i++) part(levelGroup, B(0.18, 0.06, 0.12), toon(['#ffd36a', '#ff6aa8', '#7fe8ff'][i % 3]), X + 0.4 + i * 0.08, 0.13 + (i % 2) * 0.04, Z + 1.9, 0, i, 0);
-  part(levelGroup, new THREE.SphereGeometry(0.16, 10, 8), new THREE.MeshLambertMaterial({ color: '#9fe8ff', transparent: true, opacity: 0.5 }), X - 1.5, 1.08, Z - 2.2); part(levelGroup, B(0.06, 0.04, 0.02), toon('#ffb347'), X - 1.5, 1.08, Z - 2.2);
-  part(levelGroup, new THREE.SphereGeometry(0.35, 8, 6), toon('#4a6a9a'), X + 1.7, 0.15, Z + 1.8); }
+  for (let i = 0; i < 5; i++) part(levelGroup, B(0.18, 0.06, 0.12), toonNS(['#ffd36a', '#ff6aa8', '#7fe8ff'][i % 3]), X + 0.4 + i * 0.08, 0.13 + (i % 2) * 0.04, Z + 1.9, 0, i, 0);
+  part(levelGroup, new THREE.SphereGeometry(0.16, 10, 8), new THREE.MeshLambertMaterial({ color: '#9fe8ff', transparent: true, opacity: 0.5 }), X - 1.5, 1.08, Z - 2.2); part(levelGroup, B(0.06, 0.04, 0.02), toonNS('#ffb347'), X - 1.5, 1.08, Z - 2.2);
+  part(levelGroup, new THREE.SphereGeometry(0.35, 8, 6), toonNS('#4a6a9a'), X + 1.7, 0.15, Z + 1.8); }
 function bubHallDetails() { const X = BAX, Z = BAZ;
   for (let i = 0; i < 4; i++) bubSign(['NO BALL GAMES', 'QUIET HOURS 10-6', 'RECYCLE YOUR SHELLS', 'WHOSE FISH IS THIS'][i], '#f4f0e8', '#3a2a20', 0.9, 0.5, X + (i % 2 ? 1 : -1) * (BAW / 2 - 0.03), 1.7, Z - 9 + i * 5, i % 2 ? -Math.PI / 2 : Math.PI / 2);
-  for (const z of [-5, 4]) for (const s of [-1, 1]) { const m = new THREE.Mesh(B(0.7, 0.03, 0.5), toon('#8a6a44')); m.position.set(X + s * (BAW / 2 - 0.45), 0.12, Z + z); levelGroup.add(m); }
-  for (const z of [-11, 0, 10]) { part(levelGroup, B(0.6, 0.25, 0.04), toon('#2b2a2c'), X - BAW / 2 + 0.06, 2.5, Z + z, 0, Math.PI / 2, 0); part(levelGroup, B(0.03, 0.18, 0.03), glow('#ff3b2a'), X - BAW / 2 + 0.1, 2.5, Z + z - 0.2); } }
+  for (const z of [-5, 4]) for (const s of [-1, 1]) { const m = new THREE.Mesh(B(0.7, 0.03, 0.5), toonNS('#8a6a44')); m.position.set(X + s * (BAW / 2 - 0.45), 0.12, Z + z); levelGroup.add(m); }
+  for (const z of [-11, 0, 10]) { part(levelGroup, B(0.6, 0.25, 0.04), toonNS('#2b2a2c'), X - BAW / 2 + 0.06, 2.5, Z + z, 0, Math.PI / 2, 0); part(levelGroup, B(0.03, 0.18, 0.03), glow('#ff3b2a'), X - BAW / 2 + 0.1, 2.5, Z + z - 0.2); } }
 { const _b = LEVELS.bubblecity.build; LEVELS.bubblecity.build = function () { _b.apply(this, arguments); try { bubDetails(); bubFlatDetails(); bubHallDetails(); } catch (e) { console.warn('dome2 details', e); } }; }

@@ -376,7 +376,7 @@ LEVELS.ship = {
     for (let z = -14; z <= -3; z += 2.2) part(props, B(13.6, 0.18, 0.22), '#2a2c32', 0, H - 0.2, z);
     part(props, B(0.04, 0.04, 12.6), glow('#8fd0ff'), 0, 0.03, -8.5);
 
-    bridgeConsole(-5, -7, 0, '#6fdc5a', 1.3, 0.95); bridgeConsole(-3.7, -7.6, 0.35, '#4fd2ff', 0.9, 0.8); box(-5, -7, 0.7, 0.3);
+    bridgeConsole(-5, -7, 0, '#6fdc5a', 1.3, 0.95); bridgeConsole(-3.7, -7.6, 0.35, '#4fd2ff', 0.9, 0.8); box(-5, -7, 0.7, 0.3); box(-3.7, -7.6, 0.5, 0.45);
     INTERACTS.push({ x: -5, z: -6.4, r: 2, label: 'Ship upgrades', fn: openShipTerminal });
     INTERACTS.push({ x: 0, z: -6.6, r: 1.6, label: 'Take the helm (fly)', fn: () => enterSpace(S.orbit || 'earth') });
     { const ch = new THREE.Group(), red = toon('#8a2e2a', 'cloth'), dk = '#22252c';

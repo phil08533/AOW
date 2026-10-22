@@ -84,17 +84,24 @@ function mckRoom() {
   const fr = { x: P.x - 2.6, z: P.z - 1.2 }, py = 1.6;
   for (const [x, z] of [[-1.3, -1.3], [1.3, -1.3], [-1.3, 1.3], [1.3, 1.3]]) part(g, Cy(0.1, 0.1, 3.0, 8), toon('#ffd36a'), fr.x + x, 1.5, fr.z + z);
   part(g, B(2.7, 0.15, 2.7), toon('#c8402f'), fr.x, py, fr.z);
-  for (const [x, z, w, d] of [[0, -1.3, 2.6, 0.06], [-1.3, 0, 0.06, 2.6], [0, 1.3, 2.6, 0.06]]) part(g, B(w, 0.6, d), toon('#4fd2ff'), fr.x + x, py + 0.38, fr.z + z);
+  // safety rails: a padded top bar and bars below it on three sides (the slide side stays open)
+  for (const [x, z, w, d] of [[0, -1.3, 2.6, 0.1], [-1.3, 0, 0.1, 2.6], [0, 1.3, 2.6, 0.1]]) { part(g, B(w, 0.1, d), toon('#4fd2ff'), fr.x + x, py + 0.75, fr.z + z);
+    const n2 = 7; for (let k = 0; k < n2; k++) { const f = -1.1 + k * 2.2 / (n2 - 1); part(g, B(0.05, 0.7, 0.05), toon('#ffd36a'), fr.x + (w > 1 ? f : x), py + 0.4, fr.z + (w > 1 ? z : f)); } }
+  part(g, B(2.7, 0.3, 2.7), toon('#ffd36a'), fr.x, py - 0.2, fr.z);
   const roof = new THREE.Mesh(new THREE.ConeGeometry(2.1, 1.0, 4), toon('#ff6aa8')); roof.position.set(fr.x, 3.5, fr.z); roof.rotation.y = Math.PI / 4; g.add(roof);
   for (const s2 of [-1, 1]) part(g, B(0.08, py + 0.1, 0.08), toon('#ffd36a'), fr.x - 0.4 + s2 * 0.35, (py + 0.1) / 2, fr.z + 1.45); for (let r = 0; r < 4; r++) part(g, B(0.7, 0.06, 0.08), toon('#ffd36a'), fr.x - 0.4, 0.35 + r * 0.4, fr.z + 1.45);
   { const x0 = fr.x + 1.35, y0 = py, x1 = pit.x - 0.6, y1 = 0.45, len = Math.hypot(x1 - x0, y1 - y0), a = Math.atan2(y1 - y0, x1 - x0), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-    part(g, B(len, 0.08, 0.9), toon('#7fff6a'), cx, cy, fr.z, 0, 0, a); for (const s2 of [-1, 1]) part(g, B(len, 0.25, 0.06), toon('#3fbf4a'), cx, cy + 0.12, fr.z + s2 * 0.47, 0, 0, a); }
+    part(g, B(len, 0.08, 0.9), toon('#7fff6a'), cx, cy, fr.z, 0, 0, a); for (const s2 of [-1, 1]) part(g, B(len, 0.25, 0.06), toon('#3fbf4a'), cx, cy + 0.12, fr.z + s2 * 0.47, 0, 0, a);
+    part(g, B(0.12, (y0 + y1) / 2, 0.12), toon('#ffd36a'), cx, (y0 + y1) / 4, fr.z); part(g, B(0.5, 0.08, 1.0), toon('#3fbf4a'), x1 + 0.1, y1 - 0.02, fr.z); }
   box(fr.x, fr.z, 1.45, 1.45);
   sign('KLUNKY\'S FUN ZONE', '#ff6aa8', '#ffffff', 4, 0.6, P.x, 3.9, P.z - 3.4); sign('NO ADULTS IN THE BALL PIT. WE MEAN IT, GARY.', '#ffffff', '#c8402f', 3.2, 0.35, P.x - 4.4, 1.5, P.z, Math.PI / 2);
   for (let i = 0; i < 4; i++) { const kid = buildChar(() => makeCivilian(ball[i], '#2c2a28', looks[i][2], '#1e1a18'), 'civ'); kid.scale.setScalar(0.55); levelGroup.add(kid); const st = {};
-    levelAnims.push(t => { const a = t * (0.6 + i * 0.15) + i * 1.6; kid.position.set(P.x + 1.6 + Math.cos(a) * 1.5, 0.3 + Math.abs(Math.sin(t * 5 + i)) * 0.35, P.z + Math.sin(a) * 2.0); kid.rotation.y = -a; animRig(kid, st, 1 / 60, t); }); }
-  const lulu = buildChar(ROMANCE.lulu.make, 'civ'); lulu.position.set(P.x - 5.2, 0, P.z - 1); lulu.rotation.y = Math.PI / 2; levelGroup.add(lulu); solid(P.x - 5.2, P.z - 1, 0.4);
-  INTERACTS.push({ x: P.x - 5.2, z: P.z - 1, r: 2.2, label: '💗 Talk to Lulu', fn: () => openRomance('lulu') });
+    levelAnims.push(t => { const a = t * (0.6 + i * 0.15) + i * 1.6; kid.position.set(P.x + 1.6 + Math.cos(a) * 1.5, 0.3 + Math.abs(Math.sin(t * 5 + i)) * 0.35, P.z + Math.sin(a) * 2.0); kid.rotation.y = Math.atan2(-Math.sin(a) * 1.5, Math.cos(a) * 2.0); animRig(kid, st, 1 / 60, t); }); }
+  // Lulu stands at the pit gate by her little podium, watching the kids
+  const LU = { x: pit.x - pit.w / 2 - 0.9, z: pit.z + pit.d / 2 - 0.6 };
+  part(g, B(0.7, 1.0, 0.5), toon('#ff6aa8'), LU.x - 0.7, 0.5, LU.z + 0.6); part(g, B(0.75, 0.06, 0.55), toon('#ffd36a'), LU.x - 0.7, 1.03, LU.z + 0.6); part(g, B(0.3, 0.02, 0.2), wht, LU.x - 0.7, 1.07, LU.z + 0.6);
+  const lulu = buildChar(ROMANCE.lulu.make, 'civ'); lulu.position.set(LU.x, 0, LU.z); lulu.rotation.y = -Math.PI / 2 - 0.5; levelGroup.add(lulu); solid(LU.x, LU.z, 0.4); box(LU.x - 0.7, LU.z + 0.6, 0.4, 0.3);
+  INTERACTS.push({ x: LU.x, z: LU.z, r: 2.2, label: '💗 Talk to Lulu', fn: () => openRomance('lulu') });
   // the Don's corner: walled off at the back, dark wood, one low red lamp, smoke
   const C = { x: X + 9, z: Z - 6.5 };
   // walls of the den: solid, with a doorway near the front of the side wall; painted McKlunkies murals outside
@@ -185,9 +192,28 @@ function mobHydro() { const M = mobS(); MOB.glorbo = null;
   const mine = M.st >= 3 && S.tank2.length; if (mine) levelGroup.children.forEach(o => { const p = o.geometry && o.geometry.parameters; if (p && p.width === 0.5 && p.height === 0.25 && p.depth === 0.12) o.visible = false; });
   MOB.live = new THREE.Group(); MOB.live.position.set(22, 0, -14); levelGroup.add(MOB.live); mobTankFill();
   if (M.st < 3) { const o = buildChar(() => recolor(makeElismas(), { '#9aa1aa': '#7fdc6a', '#5d636c': '#3a6a8a' }), 'elismas'); o.position.set(22, 0, -9.6); o.rotation.y = Math.PI; levelGroup.add(o); solid(22, -9.6, 0.45); MOB.glorbo = o;
-    const ap = new THREE.Group(); part(ap, B(0.5, 0.06, 0.4), toon('#4fa8ff'), 0, 0, 0); ap.position.set(22, 1.05, -9.3); levelGroup.add(ap); // apron
+    part(o, B(0.5, 0.5, 0.06), toon('#4fa8ff'), 0, 0.85, -0.28); // apron, worn (and falls with him)
     INTERACTS.push({ x: 22, z: -9.6, r: 2.4, label: '🐟 Talk to Glorbo', fn: mobGlorbo }); }
-  else INTERACTS.push({ x: 19, z: -14, r: 2.6, label: 'Fish tank: put your fish in', fn: openMobTank });
+  mobTankDress(M.st >= 3);
+}
+// the tank itself: a pedestal with a trim light, a lid with lamps, gravel, plants, a little castle, rising bubbles, and a terminal to stock it
+function mobTankDress(open) { const X = 22, Z = -14, g = new THREE.Group();
+  part(g, Cy(3.3, 3.5, 0.6, 20), toonNS('#3a3d44', 'panel'), 0, 0.3, 0); part(g, Cy(3.36, 3.36, 0.08, 20), glow('#4fd2ff'), 0, 0.55, 0);
+  part(g, Cy(3.3, 3.3, 0.5, 20), toonNS('#3a3d44', 'panel'), 0, 5.2, 0); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; part(g, Cy(0.18, 0.25, 0.25, 8), glow('#fff4d8'), Math.cos(a) * 2.2, 4.85, Math.sin(a) * 2.2); }
+  for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2 + 0.4; part(g, B(0.25, 4.6, 0.25), toonNS('#5d636c', 'panel'), Math.cos(a) * 3.05, 2.9, Math.sin(a) * 3.05); }
+  part(g, Cy(2.9, 2.9, 0.25, 20), toonNS('#c8b490'), 0, 0.72, 0); for (let i = 0; i < 30; i++) { const a = mckR(i + 400) * 7, r = mckR(i + 450) * 2.6; part(g, new THREE.DodecahedronGeometry(0.1, 0), toonNS(['#8a8f99', '#c8402f', '#ffd36a', '#4fd2ff'][i % 4]), Math.cos(a) * r, 0.88, Math.sin(a) * r); }
+  for (let i = 0; i < 7; i++) { const a = i * 0.9, r = 1.6 + (i % 3) * 0.4, h = 1.2 + (i % 3) * 0.6, pl = new THREE.Mesh(B(0.12, h, 0.04), toonNS(i % 2 ? '#3f7a3a' : '#6fce4a', 'leaves')); pl.position.set(Math.cos(a) * r, 0.85 + h / 2, Math.sin(a) * r); g.add(pl); levelAnims.push(t => { pl.rotation.z = Math.sin(t * 1.3 + i) * 0.15; }); }
+  const ca = new THREE.Group(); part(ca, B(0.9, 0.8, 0.9), toonNS('#b8a888', 'stone'), 0, 0.4, 0); for (const [x, z] of [[-0.4, -0.4], [0.4, -0.4], [-0.4, 0.4], [0.4, 0.4]]) part(ca, Cy(0.15, 0.15, 1.1, 6), toonNS('#b8a888', 'stone'), x, 0.55, z); part(ca, B(0.3, 0.4, 0.06), toonNS('#1e1a18'), 0, 0.2, 0.46); ca.position.set(-1, 0.85, 1); g.add(ca);
+  const bb = []; for (let i = 0; i < 10; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), new THREE.MeshBasicMaterial({ color: '#e8f8ff', transparent: true, opacity: 0.6 })); g.add(m); bb.push(m); }
+  levelAnims.push(t => bb.forEach((m, i) => { const k = (t * 0.4 + i / 10) % 1; m.position.set(-1 + Math.sin(i * 2 + t) * 0.15, 1.8 + k * 3, 1 + Math.cos(i) * 0.15); }));
+  g.position.set(X, 0, Z); levelGroup.add(g);
+  // the terminal: a console on a stand, screen facing the walkway
+  const T = new THREE.Group(); part(T, B(0.5, 1.0, 0.4), toonNS('#3a3d44', 'panel'), 0, 0.5, 0); part(T, B(1.0, 0.7, 0.12), toonNS('#2a2e36', 'panel'), 0, 1.3, 0, -0.35, 0, 0);
+  const cv = document.createElement('canvas'); cv.width = 128; cv.height = 80; const c = cv.getContext('2d'); c.fillStyle = '#04141c'; c.fillRect(0, 0, 128, 80); c.fillStyle = open ? '#7fe8ff' : '#ff6a5a'; c.font = 'bold 12px monospace';
+  c.fillText(open ? 'TANK CONTROL' : 'TANK CONTROL', 8, 18); c.fillText(open ? 'FISH: ' + (S.tank2 || []).length + '/10' : 'LOCKED', 8, 38); c.fillText(open ? 'TEMP 22C  OK' : 'KEEPER: GLORBO', 8, 58);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.88, 0.56), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) })); scr.position.set(0, 1.32, 0.07); scr.rotation.x = -0.35; T.add(scr);
+  T.position.set(X - 3.6, 0, Z + 3.6); T.rotation.y = -0.75; levelGroup.add(T); box(X - 3.6, Z + 3.6, 0.4, 0.4);
+  INTERACTS.push({ x: X - 3.2, z: Z + 4.2, r: 2.0, label: open ? '🖥 Tank terminal: stock your fish' : '🖥 Tank terminal (locked)', fn: () => { if (open) openMobTank(); else { openDlg('Tank terminal', 'Hydroponics'); $('dlgLine').textContent = 'ACCESS DENIED. Keeper on duty: Glorbo Fishwhistle. "Don\'t touch my tank."'; acts([['Close', closeDlg, true]]); } } });
 }
 { const _fb = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _fb.apply(this, arguments); try { if (zTheme(ZF.floor) === 'hydro') mobHydro(); } catch (e) { console.warn('mob hydro', e); } }; }
 
@@ -209,7 +235,7 @@ function mobOD() { const M = mobS(), o = MOB.glorbo; if (M.st >= 3) return; dele
   if (o) { let t0 = performance.now(); const fall = () => { const k = Math.min(1, (performance.now() - t0) / 900); o.rotation.z = k * Math.PI / 2; o.position.y = k * 0.3; if (k < 1) requestAnimationFrame(fall); }; fall(); }
   SFX.hit && SFX.hit(); crime(15, 'Glorbo Fishwhistle'); toast('GLORBO IS SLEEPING WITH THE FISHES', 'Go tell the Don. The tank is yours now', 4);
   for (let i = INTERACTS.length - 1; i >= 0; i--) if (INTERACTS[i].fn === mobGlorbo) INTERACTS.splice(i, 1);
-  INTERACTS.push({ x: 19, z: -14, r: 2.6, label: 'Fish tank: put your fish in', fn: openMobTank }); }
+  for (const it of INTERACTS) if (/^🖥 Tank terminal/.test(it.label || '')) { it.label = '🖥 Tank terminal: stock your fish'; it.fn = openMobTank; } }
 
 function mobTankFill() { const L = MOB.live; if (!L) return; for (const c of [...L.children]) { L.remove(c); disposeTree(c); }
   S.tank2.slice(0, 10).forEach((id, i) => { if (!ITEMS[id]) return; let f; try { f = makeFishModel(id); } catch (_) { return; }

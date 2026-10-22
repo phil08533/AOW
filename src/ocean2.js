@@ -3,7 +3,7 @@
 // Bubble City is now a sealed miniature city under one glass dome on the seabed: the Shrink-o-Matic outside shrinks you
 // down and you walk into the full-size city, which is its own map.
 const OC2 = { kayak: null, paddle: null, rentAt: null };
-const OC_BUBBLE_NPCS = ['blub', 'pearlmkt', 'barnacle', 'kelpa', 'pip'];
+const OC_BUBBLE_NPCS = ['blub', 'pearlmkt', 'barnacle', 'kelpa', 'pip', 'finn', 'nurse'];
 
 // ---- the sub is retired: X in the water now means the kayak ----
 toggleSub = function () { return false; };
@@ -17,7 +17,7 @@ toggleBike = function () { if (LEVEL && LEVEL.ocean && kayakToggle()) return; _t
 // ---- Bubble City's people move into the city map ----
 const OC_MOVED = LEVELS.ocean.npcs.filter(n => OC_BUBBLE_NPCS.includes(n.id));
 LEVELS.ocean.npcs = LEVELS.ocean.npcs.filter(n => !OC_BUBBLE_NPCS.includes(n.id));
-{ const P = { blub: [0, -7, 0], pearlmkt: [-27, -5, Math.PI / 2], barnacle: [24, 10, -Math.PI / 2], kelpa: [5, -30, Math.PI], pip: [30, -2, -Math.PI / 2] };
+{ const P = { finn: [-8, 72, 0], nurse: [-12, -6, Math.PI / 2], blub: [0, -7, 0], pearlmkt: [-27, -5, Math.PI / 2], barnacle: [24, 10, -Math.PI / 2], kelpa: [5, -30, Math.PI], pip: [30, -2, -Math.PI / 2] };
   for (const n of OC_MOVED) { const [x, z, f] = P[n.id]; Object.assign(n, { x, z, face: f }); } }
 // the old domes let you breathe; the city is its own map now, so the seabed is just seabed
 inDome = function () { return false; };
@@ -67,15 +67,14 @@ function ocPiers() {
   // the kayak rental: a little shack and a rack at the root of the east pier
   const E = OC2.piers[2], sx = px + E.dx * (E.len / 2 - 4) + 0, sz = pz + 3.2; const shack = new THREE.Group();
   part(shack, B(2.4, 2.2, 1.8), toon('#3f7d7a', 'wood'), 0, 1.1, 0); part(shack, B(2.8, 0.15, 2.3), toon('#ffd36a'), 0, 2.3, 0.15, 0.12); part(shack, B(1.6, 0.9, 0.05), toon('#1e1c22'), 0, 1.4, 0.92);
-  const kc = ['#ff6aa8', '#4fd2ff', '#7fff6a']; for (let i = 0; i < 3; i++) { const k = makeKayak(kc[i]); k.scale.setScalar(0.8); k.position.set(1.9, 0.4 + i * 0.5, 0); k.rotation.y = Math.PI / 2; shack.add(k); }
-  part(shack, B(0.1, 1.8, 2.2), toon('#6a4f34', 'wood'), 1.9, 0.9, -0.9 + 0.9 * 0);
+  const kc = ['#ff6aa8', '#4fd2ff', '#7fff6a']; for (let i = 0; i < 3; i++) { const k = makeKayak(kc[i]); k.scale.setScalar(0.8); k.position.set(2.2, 0.45 + i * 0.55, 0); shack.add(k); }
+  for (const zz of [-1.1, 1.1]) { part(shack, B(0.1, 1.9, 0.1), toon('#6a4f34', 'wood'), 2.6, 0.95, zz); part(shack, B(0.1, 1.9, 0.1), toon('#6a4f34', 'wood'), 1.8, 0.95, zz); for (let i = 0; i < 3; i++) part(shack, B(0.9, 0.06, 0.08), toon('#6a4f34', 'wood'), 2.2, 0.35 + i * 0.55, zz); }
   const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 0.45), new THREE.MeshBasicMaterial({ map: signTex('SPACE KAYAKS · 40 cr', '#0c1a24', '#7fe8ff') })); sg.position.set(0, 2.6, 1.0); shack.add(sg);
-  const P0 = OC2.piers[0], sxx = P0.cx - 3.4, szz = P0.cz - P0.len / 2 - 0.5; shack.position.set(sxx, Math.max(groundH(sxx, szz), ocDeck() - 0.05), szz); shack.rotation.y = Math.PI; levelGroup.add(shack); box(sxx, szz, 1.3, 1.0);
+  const P0 = OC2.piers[0], sxx = P0.cx - 4.2, szz = P0.cz - P0.len / 2 - 4.5; shack.position.set(sxx, groundH(sxx, szz) - 0.05, szz); shack.rotation.y = Math.PI; levelGroup.add(shack); box(sxx, szz, 1.3, 1.0); box(sxx - 2.2, szz, 0.5, 1.2);
   OC2.rentAt = [sxx, szz - 1.6];
-  { const mast = new THREE.Group(), gy = groundH(sxx + 1.6, szz - 1.4); part(mast, Cy(0.08, 0.1, 5, 6), toon('#2b2a2c'), 0, 2.5, 0); const k = makeKayak('#ff6aa8'); k.position.y = 5.2; k.rotation.z = 0.3; mast.add(k);
-    const ms = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.5), new THREE.MeshBasicMaterial({ map: signTex('🛶 KAYAK RENTAL', '#0c1a24', '#ffd36a'), side: THREE.DoubleSide })); ms.position.y = 4.4; mast.add(ms);
-    mast.position.set(sxx + 1.6, gy, szz - 1.4); levelGroup.add(mast); levelAnims.push(t => { mast.rotation.y = t * 0.5; }); }
+  // (no sign mast: the island is busy enough; the shack's own sign does the job)
   INTERACTS.push({ x: sxx, z: szz - 1.4, r: 2.4, label: '🛶 Rent a space kayak (40 cr)', fn: kayakRent });
+  INTERACTS.push(OC_KAYAK_OUT);
 }
 
 // ---- the space kayak ----
@@ -87,14 +86,17 @@ function makeKayak(col) {
 }
 function kayakRent() {
   if (S.inSub) return; if (S.cr < 40) { SFX.hit(); log("Kayak rental is 40 cr. You're short."); return; }
-  S.cr -= 40; SFX.coin(); markDirty(); const P = OC2.piers[2]; kayakOn(P.end[0] + P.dz * 2.2, P.end[1] - P.dx * 2.2 + 0);
+  S.cr -= 40; SFX.coin(); markDirty();
+  // launch from the nearest open water beside the shack
+  const [ox, oz] = OC2.rentAt; let best = null; for (let r = 3; r < 20 && !best; r += 0.5) for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2, x = ox + Math.cos(a) * r, z = oz + Math.sin(a) * r; if (groundH(x, z) < WATER_Y - 0.6 && floorAt(x, z) < WATER_Y) { best = [x, z]; break; } }
+  const P = OC2.piers[0]; kayakOn(...(best || [P.cx + 4, P.cz]));
 }
 function kayakOn(x, z) {
   S.inSub = true; S.kayak = true; player.pos.set(x, WATER_Y - 0.75, z); player.vy = 0;
   if (!OC2.kayak) { OC2.kayak = makeKayak('#ff8a2a'); } scene.add(OC2.kayak);
   if (!OC2.paddle) { const p = new THREE.Group(); part(p, Cy(0.02, 0.02, 1.6, 6), toon('#2b2a2c'), 0, 0, 0, 0, 0, Math.PI / 2); for (const s of [-1, 1]) part(p, B(0.22, 0.02, 0.1), toon('#ffd36a'), s * 0.8, 0, 0); p.position.set(0, -0.42, -0.55); camera.add(p); OC2.paddle = p; }
   OC2.paddle.visible = true; vmSub.scale.setScalar(0.0001);
-  log('Space kayak. W paddles where you look · face open water and press E to fish · X climbs out at a pier or the shore.', 'loot');
+  log('Space kayak. Paddle where you look · face open water to fish · tap Use near a pier or the shore to climb out.', 'loot');
 }
 function kayakOff() { S.inSub = false; S.kayak = false; if (OC2.kayak) scene.remove(OC2.kayak); if (OC2.paddle) OC2.paddle.visible = false; vmSub.scale.setScalar(1); }
 function kayakToggle() {
@@ -113,7 +115,7 @@ function kayakToggle() {
   const nx = player.pos.x + V2.x * dt, nz = player.pos.z + V2.z * dt;
   if (groundH(nx, nz) < WATER_Y - 0.45) { player.pos.x = nx; player.pos.z = nz; } else { V2.x *= -0.3; V2.z *= -0.3; }
   collide(player.pos, 0.7, false);
-  const t = performance.now() / 1000; player.pos.y = WATER_Y - 0.75 + Math.sin(t * 1.7) * 0.04; player.vy = 0; player.onGround = true; player.wet = false;
+  const t = performance.now() / 1000; player.pos.y = WATER_Y - 0.75 + Math.sin(t * 1.7) * 0.04; player.vy = 0; player.onGround = false; player.wet = false;
   const K = OC2.kayak; if (K) { K.position.set(player.pos.x, WATER_Y - 0.12 + Math.sin(t * 1.7) * 0.04, player.pos.z); K.rotation.set(Math.sin(t * 1.3) * 0.03, player.yaw + Math.PI, Math.sin(t * 1.1) * 0.04); }
   const P = OC2.paddle; if (P) { const m = Math.hypot(V2.x, V2.z); P.rotation.z = Math.sin(t * 5) * 0.5 * Math.min(1, m / 2); P.rotation.y = Math.cos(t * 5) * 0.25 * Math.min(1, m / 2); }
 }; }
@@ -133,23 +135,29 @@ function ocFishAt() { const t = performance.now(); if (t - ocFishT < 150) return
 
 // ---- the miniature Bubble City: a sealed glass dome on the seabed with a tiny city inside, and the Shrink-o-Matic ----
 function ocMiniCity() {
-  const ZB = Z.bubble, y0 = groundH(ZB.x, ZB.z), g = new THREE.Group(), R = 9;
-  part(g, Cy(R + 0.4, R + 0.6, 0.6, 32), toon('#5d636c', 'panel'), 0, 0.3, 0);
-  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; part(g, B(0.25, 0.3, 0.6), glow(i % 2 ? '#4fd2ff' : '#ffd36a'), Math.cos(a) * (R + 0.45), 0.5, Math.sin(a) * (R + 0.45), 0, -a, 0); }
-  const dome = new THREE.Mesh(new THREE.SphereGeometry(R, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: '#bfefff', transparent: true, opacity: 0.18, depthWrite: false, side: THREE.DoubleSide })); dome.position.y = 0.6; g.add(dome);
-  for (let i = 0; i < 8; i++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(R, 0.08, 4, 24, Math.PI), toon('#8a8f99')); rib.rotation.y = i / 8 * Math.PI; rib.position.y = 0.6; g.add(rib); }
-  // the tiny city: streets, little houses with round roofs, towers, a plaza with a fountain, kelp rows, lamps
-  const pastel = ['#ffd0a0', '#c8e0ff', '#b8ffcf', '#ffb8d8', '#fff0a0', '#d8c8ff'];
-  part(g, B(14, 0.05, 0.6), toon('#d8d0c0'), 0, 0.63, 0); part(g, B(0.6, 0.05, 14), toon('#d8d0c0'), 0, 0.63, 0);
-  part(g, Cy(1.2, 1.2, 0.1, 16), toon('#e8e4dc'), 0, 0.66, 0); part(g, Cy(0.3, 0.4, 0.4, 10), toon('#8fd0ff'), 0, 0.85, 0);
-  for (let i = 0; i < 46; i++) { const a = i * 2.39, d = 2 + (i * 7) % 6, x = Math.cos(a) * d, z = Math.sin(a) * d; if (Math.abs(x) < 0.6 || Math.abs(z) < 0.6) continue; const h = 0.4 + (i % 4) * 0.25, w = 0.45 + (i % 3) * 0.15;
-    part(g, B(w, h, w), toon(pastel[i % 6]), x, 0.6 + h / 2, z); part(g, new THREE.SphereGeometry(w * 0.55, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), toon(pastel[(i + 2) % 6]), x, 0.6 + h, z);
-    if (i % 5 === 0) part(g, B(0.08, 0.08, 0.02), glow('#ffe9a0'), x, 0.6 + h * 0.6, z + w / 2 + 0.01); }
-  for (const [x, z, h] of [[-3.5, -3, 2.6], [3.8, 2.4, 2.2], [-1.8, 4.2, 1.8]]) { part(g, Cy(0.3, 0.4, h, 8), toon('#e8e4dc'), x, 0.6 + h / 2, z); part(g, new THREE.SphereGeometry(0.35, 8, 6), glow('#4fd2ff'), x, 0.6 + h + 0.2, z); }
-  for (let i = 0; i < 6; i++) part(g, B(0.15, 0.4, 2.2), toon('#3f7a3a'), 5 + (i % 3) * 0.5, 0.8, -4 + Math.floor(i / 3) * 2.6);
-  g.position.set(ZB.x, y0, ZB.z); levelGroup.add(g); solid(ZB.x, ZB.z, R + 0.6);
+  // a scale model of the real Bubble City: the same five domes and four tunnels, one tenth size, sealed (nobody small enough lives out here)
+  const ZB = Z.bubble, y0 = groundH(ZB.x, ZB.z), g = new THREE.Group(), K = 0.11, R = 12.5;
+  part(g, Cy(R, R + 0.4, 0.5, 40), toon('#4a4f58', 'panel'), 0, 0.25, 0); part(g, Cy(R + 0.05, R + 0.05, 0.06, 40), glow('#4fd2ff'), 0, 0.5, 0);
+  const pc = { hub: '#e8e0d0', kelp: '#4a7a34', burbs: '#7ac05a', low: '#3a2a48', coral: '#e8c8b0' };
+  for (const D of BC.domes) { const x = D.x * K, z = D.z * K, r = D.r * K, d = new THREE.Group();
+    part(d, Cy(r, r, 0.08, 24), toon(pc[D.id]), 0, 0.54, 0);
+    const gl = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: D.glass, transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false })); gl.position.y = 0.55; d.add(gl);
+    for (let i = 0; i < 6; i++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(r, 0.03, 4, 16, Math.PI), toon('#8a8f99')); rib.rotation.y = i / 6 * Math.PI; rib.position.y = 0.55; d.add(rib); }
+    part(d, new THREE.SphereGeometry(0.08, 6, 4), glow('#ffe9a0'), 0, 0.55 + r, 0);
+    // a few tiny landmarks so each dome reads from outside
+    if (D.id === 'coral') { for (const [ox, oz, h] of [[-1.5, 0.7, 2.6], [0, 1.5, 2.9], [1.6, 0.9, 2.0]]) part(d, B(0.9, h, 0.9), toon('#8a7f9a'), ox, 0.55 + h / 2, oz); for (let i = 0; i < 8; i++) part(d, B(0.12, 0.3, 0.12), toon(['#ff6aa8', '#ffb347', '#4fffe0'][i % 3]), -1.3 + (i % 4) * 0.3, 0.7, -1 - Math.floor(i / 4) * 0.4); }
+    if (D.id === 'burbs') for (let i = 0; i < 7; i++) { const a = -Math.PI / 4 + i * 0.85, hx = Math.cos(a) * 2.4, hz = Math.sin(a) * 2.4; part(d, B(0.6, 0.4, 0.5), toon(['#ffd0a0', '#c8e0ff', '#b8ffcf', '#ffb8d8'][i % 4]), hx, 0.75, hz); part(d, new THREE.ConeGeometry(0.45, 0.3, 4), toon('#8a3a2e'), hx, 1.1, hz, 0, Math.PI / 4, 0); }
+    if (D.id === 'low') for (let i = 0; i < 6; i++) { const h = 0.7 + (i % 3) * 0.3; part(d, B(1.0, h, 0.6), toon('#3a3048'), -1.4 + Math.floor(i / 2) * 1.4, 0.55 + h / 2, (i % 2 ? 1 : -1) * 1.0); part(d, B(0.6, 0.08, 0.02), glow(['#ff3bd2', '#4fffe0', '#ffd36a'][i % 3]), -1.4 + Math.floor(i / 2) * 1.4, 0.85, (i % 2 ? 1 : -1) * 0.69); }
+    if (D.id === 'kelp') { part(d, Cy(0.55, 0.6, 1.0, 12), toon('#3a3d44'), 1.3, 1.05, -0.9); for (let r2 = 0; r2 < 5; r2++) part(d, B(2, 0.15, 0.15), toon('#6fce4a'), -0.4, 0.65, 0.2 + r2 * 0.3); }
+    if (D.id === 'hub') { part(d, Cy(0.6, 0.65, 0.15, 14), toon('#c8e0ff'), 0, 0.62, 0); part(d, Cy(0.08, 0.08, 0.5, 6), toon('#c9a43a'), 0, 0.85, 0); }
+    d.position.set(x, 0, z); g.add(d); }
+  for (const id of ['kelp', 'burbs', 'low', 'coral']) { const D = BC.domes.find(d => d.id === id), dx = D.x * K, dz = D.z * K, dl = Math.hypot(dx, dz), ux = dx / dl, uz = dz / dl, a0 = 28 * K, len = dl - a0 - D.r * K;
+    const tb = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.33, len, 10, 1, true), new THREE.MeshLambertMaterial({ color: '#bfefff', transparent: true, opacity: 0.25, side: THREE.DoubleSide, depthWrite: false }));
+    tb.rotation.x = Math.PI / 2; const tg = new THREE.Group(); tg.add(tb); tb.position.z = len / 2; tg.position.set(ux * a0, 0.62, uz * a0); tg.rotation.y = Math.atan2(ux, uz); g.add(tg);
+    part(tg, B(0.4, 0.04, len), toon('#5d636c'), 0, -0.05, len / 2); }
+  g.position.set(ZB.x, y0, ZB.z); levelGroup.add(g); solid(ZB.x, ZB.z, R + 0.4);
   const bub = []; for (let i = 0; i < 10; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 4), new THREE.MeshBasicMaterial({ color: '#e8f8ff', transparent: true, opacity: 0.6 })); levelGroup.add(m); bub.push(m); }
-  levelAnims.push(t => bub.forEach((m, i) => { const k = (t * 0.6 + i * 0.37) % 1; m.position.set(ZB.x + Math.sin(i * 2.1) * 0.3, y0 + 1 + k * (R - 1.5), ZB.z + Math.cos(i * 2.1) * 0.3); }));
+  levelAnims.push(t => bub.forEach((m, i) => { const k = (t * 0.6 + i * 0.37) % 1; m.position.set(ZB.x + Math.sin(i * 2.1) * 0.3, y0 + 1 + k * 8, ZB.z + Math.cos(i * 2.1) * 0.3); }));
   // the Shrink-o-Matic: a ringed machine and platform on the south side, with a buoy above it so you can find it from the surface
   const sx = ZB.x, sz = ZB.z - R - 4, sy = groundH(sx, sz), m = new THREE.Group();
   part(m, Cy(2.2, 2.4, 0.4, 20), toon('#3a3d44', 'panel'), 0, 0.2, 0); part(m, Cy(1.6, 1.6, 0.05, 20), glow('#4fd2ff'), 0, 0.43, 0);
@@ -169,7 +177,7 @@ function ocShrink() {
 }
 function ocGrow() {
   const el = $('ocShrink'); if (el) { el.style.opacity = '1'; el.style.transform = 'scale(1)'; } SFX.door();
-  const B = Z.bubble || { x: 0, z: 62 }; setTimeout(() => { travel('ocean', { at: { x: 0, z: 62 - 9 - 6.5, yaw: Math.PI } }); setTimeout(() => { const e2 = $('ocShrink'); if (e2) { e2.style.opacity = '0'; e2.style.transform = 'scale(3)'; } }, 400); }, 1000);
+  const B = Z.bubble || { x: 0, z: 62 }; setTimeout(() => { travel('ocean', { at: { x: 0, z: 62 - 12.5 - 6.5, yaw: Math.PI } }); setTimeout(() => { const e2 = $('ocShrink'); if (e2) { e2.style.opacity = '0'; e2.style.transform = 'scale(3)'; } }, 400); }, 1000);
 }
 
 // ---- Bubble City, full size ----
@@ -276,3 +284,8 @@ function ocPierDetails() { const y = ocDeck() + 0.11;
     const pad = new THREE.Mesh(new THREE.CircleGeometry(0.6 + (i % 3) * 0.2, 10), toon('#4f9a4a')); pad.rotation.x = -Math.PI / 2; pad.position.set(x, WATER_Y + 0.04, z); levelGroup.add(pad);
     if (i % 4 === 0) { const b = new THREE.Group(); part(b, Cy(0.25, 0.35, 0.7, 8), toon(i % 8 ? '#ff6a3a' : '#f4f0e8'), 0, 0, 0); b.position.set(x + 1.5, WATER_Y, z); levelGroup.add(b); levelAnims.push(t => { b.position.y = WATER_Y + Math.sin(t * 1.3 + i) * 0.1; b.rotation.z = Math.sin(t + i) * 0.12; }); } } }
 { const orig = LEVELS.ocean.build; LEVELS.ocean.build = function () { orig.call(this); try { ocPierDetails(); } catch (e) { console.warn('ocean2 details', e); } }; }
+
+// while you sit in the kayak there is always a Use prompt: climb out when a pier or the shore is close, otherwise a hint
+function kayakCanExit() { for (const s of SURFACES) { const dx = player.pos.x - s.x, dz = player.pos.z - s.z, al = dx * s.ux + dz * s.uz, ac = dx * s.uz - dz * s.ux; if (Math.abs(al) < s.hl + 0.5 && Math.abs(ac) < s.hw + 3) return true; }
+  for (let r = 1; r <= 4; r += 0.5) for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; if (groundH(player.pos.x + Math.cos(a) * r, player.pos.z + Math.sin(a) * r) > WATER_Y + 0.1) return true; } return false; }
+const OC_KAYAK_OUT = { r: 3, get x() { return S.kayak ? player.pos.x : 1e9; }, get z() { return player.pos.z; }, get label() { return kayakCanExit() ? '🛶 Climb out of the kayak' : '🛶 Paddle to a pier or shore to climb out'; }, fn: () => kayakToggle() };

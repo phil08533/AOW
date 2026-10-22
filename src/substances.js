@@ -178,16 +178,22 @@ function subStoreRows(render) {
   return Object.keys(SUBS).filter(id => SUBS[id].legal).map(id => { const D = SUBS[id]; return [id, S.inv[id] || 0, `${D.price} cr`, [['Buy', () => { if (S.cr < D.price) return; if (invRoomFor(id) < 1) { invFullNote(id); return; } S.cr -= D.price; S.inv[id] = (S.inv[id] || 0) + 1; SFX.coin(); markDirty(); render(); }, S.cr < D.price]]]; });
 }
 const MCK_SUBS = ['voidspice', 'neondust'];
+// sellers mark illegal product up hard and only carry a few of each, restocked once a game day: cooking your own should pay
+const DEAL_MARKUP = 3, DEAL_STOCK = 3;
+const dealPrice = id => SUBS[id].legal ? SUBS[id].price : SUBS[id].price * DEAL_MARKUP;
+function dealStock(who, id) { S.dealStock = S.dealStock || {}; const day = Math.floor(Date.now() / 1000 / DAY_LEN), k = who + ':' + id, e = S.dealStock[k];
+  if (!e || e.day !== day) S.dealStock[k] = { day, n: SUBS[id].legal ? 9 : DEAL_STOCK }; return S.dealStock[k]; }
 function openSubShop(role, who, ids, back) {
   openDlg(role, who); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
-  const render = () => { $('dlgLine').textContent = `Cash only, no questions. You have ${S.cr.toLocaleString()} cr.`;
-    itemRows(rows, ids.map(id => { const D = SUBS[id]; return [id, S.inv[id] || 0, `${D.price} cr ▲`, [['Buy', () => buy(id, 1)], ['Buy 5', () => buy(id, 5)]]]; })); };
-  const buy = (id, n) => { const p = SUBS[id].price * n; if (S.cr < p) { SFX.hit(); log('Not enough credits.'); return; } if (invRoomFor(id) < n) { invFullNote(id); return; } S.cr -= p; S.inv[id] = (S.inv[id] || 0) + n; S.invT = S.invT || {}; S.invT['i:' + id] = Date.now(); SFX.coin(); log(`+${n} ${SUBS[id].name}`, 'loot'); markDirty(); render(); };
+  const render = () => { $('dlgLine').textContent = `Cash only, no questions, and I don't carry much. You have ${S.cr.toLocaleString()} cr.`;
+    itemRows(rows, ids.map(id => { const st = dealStock(who, id).n; return [id, S.inv[id] || 0, st > 0 ? `${dealPrice(id)} cr ▲ · ${st} left` : 'sold out · back tomorrow', st > 0 ? [['Buy', () => buy(id, 1)]] : []]; })); };
+  const buy = (id, n) => { const st = dealStock(who, id); if (st.n < n) { SFX.hit(); log('They\'re out. Come back tomorrow.'); return; } const p = dealPrice(id) * n; if (S.cr < p) { SFX.hit(); log('Not enough credits.'); return; } if (invRoomFor(id) < n) { invFullNote(id); return; }
+    S.cr -= p; st.n -= n; S.inv[id] = (S.inv[id] || 0) + n; S.invT = S.invT || {}; S.invT['i:' + id] = Date.now(); SFX.coin(); log(`+${n} ${SUBS[id].name}`, 'loot'); markDirty(); render(); };
   $('dlgActs').before(rows); acts([['Done', closeDlg, true]]); render();
 }
 // Madame Vex: every illegal one but Blackout, for outlaws
 BM_STOCK.forEach(it => { if (it.id === 'voidspice') it.show = () => !subsOn(); });
-for (const id of ['voidspice', 'neondust', 'glimmer', 'redhaze']) BM_STOCK.push({ id, name: SUBS[id].name, price: SUBS[id].price, desc: SUBS[id].desc, show: subsOn, buy: () => { S.inv[id] = (S.inv[id] || 0) + 1; } });
+for (const id of ['voidspice', 'neondust', 'glimmer', 'redhaze']) BM_STOCK.push({ id, name: SUBS[id].name, price: SUBS[id].price * 3, desc: SUBS[id].desc, show: subsOn, buy: () => { S.inv[id] = (S.inv[id] || 0) + 1; } });
 
 // ---- the screen: hue shift, wobble, ghosting, tint, and the dark of a bad trip ----
 const SUBFX = { hue: 0, wob: 0, ghost: 0, tintA: 0, dark: 0, sat: 0, con: 0, warm: 0, bloom: 0, vig: 0, was: false };

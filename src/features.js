@@ -77,7 +77,7 @@ function startFishing(name, table) {
   wrap.innerHTML = '<div class="fishbar"><i class="fz"></i><b class="fm"></b></div>';
   $('dlgActs').before(wrap);
   const bar = wrap.firstChild, zoneEl = bar.querySelector('.fz'), mark = bar.querySelector('.fm');
-  const F = fishing = { st: 'wait', t: rand(1.6, 4.2), table, name, fish: null, zone: 0.3, pos: 0, sp: 1, bar, zoneEl, mark, z0: 0 };
+  const F = fishing = { st: 'wait', t: rand(1.6, 4.2) * (myLook().a === 'angler' ? 0.6 : 1), table, name, fish: null, zone: 0.3, pos: 0, sp: 1, bar, zoneEl, mark, z0: 0 };
   $('dlgLine').textContent = 'You cast your line... wait for a bite.'; SFX.plop(); bar.style.opacity = 0.35;
   const reel = () => {
     if (F.st === 'wait') { $('dlgLine').textContent = 'Too early! The ripples scare the fish. Wait for the bite.'; F.t += 1.2; SFX.ui(); return; }
@@ -100,7 +100,7 @@ function updateFishing(dt) {
   const F = fishing; if (!F) return;
   if (!dlgOpen || !document.body.contains(F.bar)) { fishing = null; return; }
   if (F.st === 'wait') { F.t -= dt; if (F.t <= 0) {
-      const rod = RODS[S.rod], tb = FISH_TABLES[F.table].map(([id, w, d]) => [id, d > 0.55 ? w * rod.rare : w, d]);
+      const rod = RODS[S.rod], tb = FISH_TABLES[F.table].map(([id, w, d]) => [id, d > 0.55 ? w * rod.rare * (myLook().c === 'angler' ? 1.6 : 1) : w, d]);
       let tot = tb.reduce((a, b) => a + b[1], 0), r = Math.random() * tot; let pick = tb[0]; for (const e of tb) { r -= e[1]; if (r <= 0) { pick = e; break; } }
       F.fish = pick[0]; const d = pick[2];
       F.zone = clamp((0.34 - d * 0.24) * rod.zone, 0.08, 0.5); F.need = d > 0.8 ? 3 : d > 0.5 ? 2 : 1; F.sp = 0.7 + d * 1.6; F.z0 = Math.random() * (1 - F.zone);

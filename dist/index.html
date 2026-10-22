@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.43</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.44</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -4180,7 +4180,7 @@ LEVELS.ship = {
     for (let z = -14; z <= -3; z += 2.2) part(props, B(13.6, 0.18, 0.22), '#2a2c32', 0, H - 0.2, z);
     part(props, B(0.04, 0.04, 12.6), glow('#8fd0ff'), 0, 0.03, -8.5);
 
-    bridgeConsole(-5, -7, 0, '#6fdc5a', 1.3, 0.95); bridgeConsole(-3.7, -7.6, 0.35, '#4fd2ff', 0.9, 0.8); box(-5, -7, 0.7, 0.3);
+    bridgeConsole(-5, -7, 0, '#6fdc5a', 1.3, 0.95); bridgeConsole(-3.7, -7.6, 0.35, '#4fd2ff', 0.9, 0.8); box(-5, -7, 0.7, 0.3); box(-3.7, -7.6, 0.5, 0.45);
     INTERACTS.push({ x: -5, z: -6.4, r: 2, label: 'Ship upgrades', fn: openShipTerminal });
     INTERACTS.push({ x: 0, z: -6.6, r: 1.6, label: 'Take the helm (fly)', fn: () => enterSpace(S.orbit || 'earth') });
     { const ch = new THREE.Group(), red = toon('#8a2e2a', 'cloth'), dk = '#22252c';
@@ -6941,7 +6941,7 @@ function startFishing(name, table) {
   wrap.innerHTML = '<div class="fishbar"><i class="fz"></i><b class="fm"></b></div>';
   $('dlgActs').before(wrap);
   const bar = wrap.firstChild, zoneEl = bar.querySelector('.fz'), mark = bar.querySelector('.fm');
-  const F = fishing = { st: 'wait', t: rand(1.6, 4.2), table, name, fish: null, zone: 0.3, pos: 0, sp: 1, bar, zoneEl, mark, z0: 0 };
+  const F = fishing = { st: 'wait', t: rand(1.6, 4.2) * (myLook().a === 'angler' ? 0.6 : 1), table, name, fish: null, zone: 0.3, pos: 0, sp: 1, bar, zoneEl, mark, z0: 0 };
   $('dlgLine').textContent = 'You cast your line... wait for a bite.'; SFX.plop(); bar.style.opacity = 0.35;
   const reel = () => {
     if (F.st === 'wait') { $('dlgLine').textContent = 'Too early! The ripples scare the fish. Wait for the bite.'; F.t += 1.2; SFX.ui(); return; }
@@ -6964,7 +6964,7 @@ function updateFishing(dt) {
   const F = fishing; if (!F) return;
   if (!dlgOpen || !document.body.contains(F.bar)) { fishing = null; return; }
   if (F.st === 'wait') { F.t -= dt; if (F.t <= 0) {
-      const rod = RODS[S.rod], tb = FISH_TABLES[F.table].map(([id, w, d]) => [id, d > 0.55 ? w * rod.rare : w, d]);
+      const rod = RODS[S.rod], tb = FISH_TABLES[F.table].map(([id, w, d]) => [id, d > 0.55 ? w * rod.rare * (myLook().c === 'angler' ? 1.6 : 1) : w, d]);
       let tot = tb.reduce((a, b) => a + b[1], 0), r = Math.random() * tot; let pick = tb[0]; for (const e of tb) { r -= e[1]; if (r <= 0) { pick = e; break; } }
       F.fish = pick[0]; const d = pick[2];
       F.zone = clamp((0.34 - d * 0.24) * rod.zone, 0.08, 0.5); F.need = d > 0.8 ? 3 : d > 0.5 ? 2 : 1; F.sp = 0.7 + d * 1.6; F.z0 = Math.random() * (1 - F.zone);
@@ -8488,7 +8488,7 @@ LEVELS.ocean = {
   build() {
     const [px, pz] = PORT;
     // Port Kelp: plank docks, huts on stilts, a lighthouse (on solid ground at the back of the island)
-    for (const [ox, oz, ry, col] of [[-8, -6, 0.3, '#3f7d7a'], [8, -6, -0.3, '#c8402f'], [-10, 4, 0.8, '#ffd36a'], [10, 4, -0.8, '#3b4f7a']]) { const h = new THREE.Group(); for (const sx of [-1, 1]) for (const sz of [-1, 1]) part(h, Cy(0.12, 0.12, 2.4, 5), toon('#6a4f34', 'wood'), sx * 1.2, 0.6, sz * 1.2); part(h, B(3, 2, 3), toon('#9a7650', 'wood'), 0, 2.4, 0); part(h, new THREE.ConeGeometry(2.4, 1.4, 4), toon(col), 0, 4.1, 0, 0, Math.PI / 4); part(h, B(0.8, 1.2, 0.05), '#2a1e14', 0, 2.2, 1.52); at(h, px + ox, pz + oz, ry); box(px + ox, pz + oz, 1.6, 1.6); }
+    for (const [ox, oz, ry, col] of [[-8, -6, 0.3, '#3f7d7a'], [8, -6, -0.3, '#c8402f']]) { const h = new THREE.Group(); for (const sx of [-1, 1]) for (const sz of [-1, 1]) part(h, Cy(0.12, 0.12, 2.4, 5), toon('#6a4f34', 'wood'), sx * 1.2, 0.6, sz * 1.2); part(h, B(3, 2, 3), toon('#9a7650', 'wood'), 0, 2.4, 0); part(h, new THREE.ConeGeometry(2.4, 1.4, 4), toon(col), 0, 4.1, 0, 0, Math.PI / 4); part(h, B(0.8, 1.2, 0.05), '#2a1e14', 0, 2.2, 1.52); at(h, px + ox, pz + oz, ry); box(px + ox, pz + oz, 1.6, 1.6); }
     { const lh = new THREE.Group(); for (let k = 0; k < 5; k++) part(lh, Cy(1.0 - k * 0.1, 1.1 - k * 0.1, 2, 10), k % 2 ? '#c8402f' : '#efe7d6', 0, 1 + k * 2, 0); part(lh, Cy(0.7, 0.7, 1.2, 8), glow('#ffe9a0'), 0, 10.6, 0); part(lh, new THREE.ConeGeometry(0.9, 1, 8), '#2b2a2c', 0, 11.7, 0); at(lh, px + 2, pz - 12); solid(px + 2, pz - 12, 1.1);
       const beam = new THREE.Mesh(new THREE.ConeGeometry(2, 18, 8, 1, true), new THREE.MeshBasicMaterial({ color: '#ffe9a0', transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false })); beam.position.set(px + 2, groundH(px + 2, pz - 12) + 10.6, pz - 12); levelGroup.add(beam); levelAnims.push(t => { beam.rotation.set(Math.PI / 2, 0, t * 0.8); beam.position.x = px + 2 + Math.sin(t * 0.8) * 9; beam.position.z = pz - 12 - Math.cos(t * 0.8) * 9; }); }
     for (const [ox, oz, ry, L] of [[0, 14, 0, 10], [-14, 2, -Math.PI / 2, 8], [14, 2, Math.PI / 2, 8]]) { const d = new THREE.Group(); for (let i = 0; i < L; i++) part(d, B(2.4, 0.14, 0.9), toon(i % 2 ? '#9a7650' : '#8a6a44', 'wood'), 0, 0, i * 0.95); for (let i = 0; i < L; i += 2) for (const s of [-1, 1]) part(d, Cy(0.1, 0.1, 3, 5), toon('#6a4f34', 'wood'), s * 1.1, -1.3, i * 0.95);
@@ -8497,7 +8497,7 @@ LEVELS.ocean = {
     INTERACTS.push({ x: px, z: pz + 18, r: 4, label: 'Sub dock: board the sub (X)', fn: () => toggleSub(true) });
     dropshipPad(0, -24, 0, 'Return to your ship');
     // islands: palms on the port, swamp trees on the jungle island
-    for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2, x = px + Math.cos(a) * 12.5, z = pz + Math.sin(a) * 12.5; if (groundH(x, z) > WATER_Y + 0.3 && Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))) > 0.4) palm(x, z, 0.9 + (i % 3) * 0.15); }
+    for (let i = 0; i < 10; i += 2) { const a = i / 10 * Math.PI * 2, x = px + Math.cos(a) * 12.5, z = pz + Math.sin(a) * 12.5; if (groundH(x, z) > WATER_Y + 0.3 && Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))) > 0.4) palm(x, z, 0.9 + (i % 3) * 0.15); }
     for (let i = 0; i < 26; i++) { const a = i * 2.4, d = 3 + (i * 5) % 14, x = Z.swamp.x + Math.cos(a) * d, z = Z.swamp.z + Math.sin(a) * d; if (groundH(x, z) < WATER_Y + 0.3) continue; if (i % 3) tree(x, z, 1.3 + (i % 4) * 0.2, '#2f4a26'); else cane(x, z, 3); }
     { const hut = new THREE.Group(); part(hut, B(3.6, 2.6, 3.6), toon('#6a4f34', 'wood'), 0, 1.3, 0); part(hut, new THREE.ConeGeometry(3, 1.8, 4), toon('#4f6e2c', 'leaves'), 0, 3.5, 0, 0, Math.PI / 4); for (let k = 0; k < 3; k++) part(hut, B(0.06, 1.4, 0.2), '#cfd4dc', -1.85, 1.5, -0.8 + k * 0.6, 0, 0, 0.2); at(hut, Z.swamp.x - 4, Z.swamp.z + 12, 0); box(Z.swamp.x - 4, Z.swamp.z + 12, 1.9, 1.9); }
     // underwater: reef corals, kelp forest, bubble city domes, the trench
@@ -12936,7 +12936,7 @@ function makeSalvageCrate(big) {
       levelAnims.push(t => { if (!c.parent) return; c.rotation.y = t * 0.5; c.rotation.x = t * 0.3; if (player.pos.distanceTo(c.position) < 14) { levelGroup.remove(c); burst(c.position.clone(), '#4fd2ff', 30, 20); scavenge('drifting in space'); } }); } }
   return r; }; }
 // customizer on the ship bridge and at the Zeltac shipwright
-{ const ob = LEVELS.ship.build; LEVELS.ship.build = function () { ob.call(this); if (typeof bridgeConsole === 'function') { bridgeConsole(5, -7, 0, '#ff8a2a', 1.3, 0.95); bridgeConsole(3.7, -7.6, -0.35, '#4fd2ff', 0.9, 0.8); } solid(5, -7, 0.7); INTERACTS.push({ x: 5, z: -6.4, r: 1.6, label: 'Ship customizer', fn: openShipMods }); }; }
+{ const ob = LEVELS.ship.build; LEVELS.ship.build = function () { ob.call(this); if (typeof bridgeConsole === 'function') { bridgeConsole(5, -7, 0, '#ff8a2a', 1.3, 0.95); bridgeConsole(3.7, -7.6, -0.35, '#4fd2ff', 0.9, 0.8); } solid(5, -7, 0.7); box(3.7, -7.6, 0.5, 0.45); INTERACTS.push({ x: 5, z: -6.4, r: 1.6, label: 'Ship customizer', fn: openShipMods }); }; }
 { const z = (LEVELS.zeltac.npcs || []).find(n => n.id === 'brakka'); if (z) z.custom = [...(z.custom || []), ['Ship paint & parts', () => openShipMods()]]; }
 
 // =================== GALAXY MAP: a top-down chart of the whole galaxy; tap a world to travel ===================
@@ -18085,16 +18085,22 @@ function subStoreRows(render) {
   return Object.keys(SUBS).filter(id => SUBS[id].legal).map(id => { const D = SUBS[id]; return [id, S.inv[id] || 0, `${D.price} cr`, [['Buy', () => { if (S.cr < D.price) return; if (invRoomFor(id) < 1) { invFullNote(id); return; } S.cr -= D.price; S.inv[id] = (S.inv[id] || 0) + 1; SFX.coin(); markDirty(); render(); }, S.cr < D.price]]]; });
 }
 const MCK_SUBS = ['voidspice', 'neondust'];
+// sellers mark illegal product up hard and only carry a few of each, restocked once a game day: cooking your own should pay
+const DEAL_MARKUP = 3, DEAL_STOCK = 3;
+const dealPrice = id => SUBS[id].legal ? SUBS[id].price : SUBS[id].price * DEAL_MARKUP;
+function dealStock(who, id) { S.dealStock = S.dealStock || {}; const day = Math.floor(Date.now() / 1000 / DAY_LEN), k = who + ':' + id, e = S.dealStock[k];
+  if (!e || e.day !== day) S.dealStock[k] = { day, n: SUBS[id].legal ? 9 : DEAL_STOCK }; return S.dealStock[k]; }
 function openSubShop(role, who, ids, back) {
   openDlg(role, who); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
-  const render = () => { $('dlgLine').textContent = `Cash only, no questions. You have ${S.cr.toLocaleString()} cr.`;
-    itemRows(rows, ids.map(id => { const D = SUBS[id]; return [id, S.inv[id] || 0, `${D.price} cr ▲`, [['Buy', () => buy(id, 1)], ['Buy 5', () => buy(id, 5)]]]; })); };
-  const buy = (id, n) => { const p = SUBS[id].price * n; if (S.cr < p) { SFX.hit(); log('Not enough credits.'); return; } if (invRoomFor(id) < n) { invFullNote(id); return; } S.cr -= p; S.inv[id] = (S.inv[id] || 0) + n; S.invT = S.invT || {}; S.invT['i:' + id] = Date.now(); SFX.coin(); log(`+${n} ${SUBS[id].name}`, 'loot'); markDirty(); render(); };
+  const render = () => { $('dlgLine').textContent = `Cash only, no questions, and I don't carry much. You have ${S.cr.toLocaleString()} cr.`;
+    itemRows(rows, ids.map(id => { const st = dealStock(who, id).n; return [id, S.inv[id] || 0, st > 0 ? `${dealPrice(id)} cr ▲ · ${st} left` : 'sold out · back tomorrow', st > 0 ? [['Buy', () => buy(id, 1)]] : []]; })); };
+  const buy = (id, n) => { const st = dealStock(who, id); if (st.n < n) { SFX.hit(); log('They\'re out. Come back tomorrow.'); return; } const p = dealPrice(id) * n; if (S.cr < p) { SFX.hit(); log('Not enough credits.'); return; } if (invRoomFor(id) < n) { invFullNote(id); return; }
+    S.cr -= p; st.n -= n; S.inv[id] = (S.inv[id] || 0) + n; S.invT = S.invT || {}; S.invT['i:' + id] = Date.now(); SFX.coin(); log(`+${n} ${SUBS[id].name}`, 'loot'); markDirty(); render(); };
   $('dlgActs').before(rows); acts([['Done', closeDlg, true]]); render();
 }
 // Madame Vex: every illegal one but Blackout, for outlaws
 BM_STOCK.forEach(it => { if (it.id === 'voidspice') it.show = () => !subsOn(); });
-for (const id of ['voidspice', 'neondust', 'glimmer', 'redhaze']) BM_STOCK.push({ id, name: SUBS[id].name, price: SUBS[id].price, desc: SUBS[id].desc, show: subsOn, buy: () => { S.inv[id] = (S.inv[id] || 0) + 1; } });
+for (const id of ['voidspice', 'neondust', 'glimmer', 'redhaze']) BM_STOCK.push({ id, name: SUBS[id].name, price: SUBS[id].price * 3, desc: SUBS[id].desc, show: subsOn, buy: () => { S.inv[id] = (S.inv[id] || 0) + 1; } });
 
 // ---- the screen: hue shift, wobble, ghosting, tint, and the dark of a bad trip ----
 const SUBFX = { hue: 0, wob: 0, ghost: 0, tintA: 0, dark: 0, sat: 0, con: 0, warm: 0, bloom: 0, vig: 0, was: false };
@@ -18928,6 +18934,7 @@ const UPDATES = [
   { id: 206, title: '2.22.41 · Docks and kayak sunsets', items: ['The piers now stand above the water and you can walk on them. The kayak shack sits at the root of the main pier, with a spinning kayak sign.', 'Fishing from the kayak slowly turns the sky to a golden sunset, dims the water and lays a glittering path toward the sun.', 'Crates, nets, gulls, lily pads and buoys around Port Kelp. Benches, graffiti, puddles and litter in Bubble City. Your flat has a rug, posters, a beanbag and a fish bowl.', 'The Dome Control lever now dims the city lights.'] },
   { id: 207, title: '2.22.42 · Bubble City, the real city', items: ['Bubble City is now five glass domes on the seabed joined by glass tunnels with moving walkways.', 'Bubble Central: the plaza, the Founder Fishwick fountain, food carts, a transit map, and the way out.', 'The Low Tide: a neon street with a pawn shop, the Barnacle Bar, a tattoo parlour, an arcade, Rizzo\'s van full of TVs, steam vents and a burning barrel.', 'The Burbs: a cul-de-sac of houses with porches, fences, mailboxes, cars, a playground and sprinklers. And a murder.', 'Kelp Gardens: grow beds and Dome Control, a tower with a spinning radar. Coral Heights: three apartment towers, Reel Deal Tackle and the coral park.', 'Outside the glass: kelp forests, rocks, light shafts, fish schools and a whale drifting over the city.', 'People walk facing forward now, and street dealers only sell street drugs.'] },
   { id: 208, title: '2.22.43 · Proper seagulls', items: ['The spinning white blobs on the piers are now real seagulls perched on the posts. They look around now and then instead of spinning.'] },
+  { id: 209, title: '2.22.44 · Bubble City glow-up, waders and the Solar Lance', items: ['Bubble City: sliding glass doors at every tunnel mouth, real textures on floors, walls and roofs (tile, brick, siding, shingles, grass, pavers, grates), new peaked roofs, and no more swimming floors', 'Night follows your real clock: the domes go dark and blue, and the lamp posts light pools on the ground', 'Signs have borders, rivets, glow and sub-lines. The Low Tide got awnings, AC units, cables, posters and trash, and Rizzo\'s van was rebuilt with its TVs facing the street', 'Apartments: the street door only shows in the lobby, the flat has wood floors and wallpaper, and the porthole looks out on the sea with kelp, fish and light rays', 'More life: a backyard BBQ, a dog running round the Burbs, a busker\'s guitar case in the plaza', 'Reel Deal Waders now look like waders (fish bite 40% faster) and the Pro Angler Vest is a real vest (rare fish 60% more likely)', 'The Solar Lance now sings the Staff of the Setting Sun\'s chord, held for as long as you fire', 'You can no longer walk through the small blue bridge consoles on your ship'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -23119,6 +23126,17 @@ function beamHum(on, st) { if (st && BEAM.oscs) { const k = st.hum / 55; BEAM.os
       for (const [type, f, v] of [['sawtooth', 55, 0.5], ['sawtooth', 55.6, 0.5], ['sine', 41, 0.9], ['triangle', 110.4, 0.18]]) { const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.value = f; g.gain.value = v; o.connect(g); g.connect(lp); o.start(); (BEAM.oscs = BEAM.oscs || []).push([o, f]); }
       const wob = ac.createOscillator(), wg = ac.createGain(); wob.frequency.value = 5.5; wg.gain.value = 60; wob.connect(wg); wg.connect(lp.frequency); wob.start(); BEAM.gn = gn; }
     if (BEAM.ac.state !== 'running') BEAM.ac.resume(); const vol = on && PREFS.sfx !== false ? 0.16 : 0; BEAM.gn.gain.setTargetAtTime(vol, BEAM.ac.currentTime, on ? 0.04 : 0.12); } catch (_) {} }
+// the Solar Lance sings the Staff of the Setting Sun's chord, held and stretched out for as long as the trigger is down
+{ const _h = beamHum; beamHum = function (on, st) { const sun = st === BEAM_STYLES.solar || (!st && BEAM.sunOn);
+    if (!sun) { if (BEAM.sunOn) sunHum(false); return _h(on, st); } _h(false, null); sunHum(on); }; }
+function sunHum(on) { BEAM.sunOn = on; try { if (!BEAM.ac) BEAM.ac = new (window.AudioContext || window.webkitAudioContext)(); const ac = BEAM.ac, t = ac.currentTime;
+    if (!BEAM.sg) { const gn = ac.createGain(), lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600; lp.Q.value = 0.7; gn.gain.value = 0; lp.connect(gn); gn.connect(ac.destination);
+      for (const [f, v, ty] of [[131, 0.5, 'sine'], [262, 0.28, 'sawtooth'], [392, 0.22, 'sawtooth'], [523, 0.2, 'sawtooth'], [659, 0.14, 'sawtooth'], [784, 0.12, 'sawtooth'], [1568, 0.06, 'sine']]) for (const dt of [-0.6, 0.6]) { const o = ac.createOscillator(), g = ac.createGain(); o.type = ty; o.frequency.value = f; o.detune.value = dt * 7; g.gain.value = v / 2; o.connect(g); g.connect(lp); o.start(); }
+      const sw = ac.createOscillator(), sg = ac.createGain(); sw.frequency.value = 0.35; sg.gain.value = 900; sw.connect(sg); sg.connect(lp.frequency); sw.start();
+      const tr = ac.createOscillator(), tg = ac.createGain(); tr.frequency.value = 6; tg.gain.value = 0.012; tr.connect(tg); tg.connect(gn.gain); tr.start(); BEAM.sg = gn; BEAM.slp = lp; }
+    if (ac.state !== 'running') ac.resume(); const vol = on && PREFS.sfx !== false ? 0.07 : 0; BEAM.sg.gain.cancelScheduledValues(t);
+    if (on) { BEAM.sg.gain.setTargetAtTime(vol, t, 0.06); BEAM.slp.frequency.setValueAtTime(900, t); BEAM.slp.frequency.linearRampToValueAtTime(2600, t + 0.6); try { SFX.shot(GUNS.w_100); } catch (_) {} }
+    else BEAM.sg.gain.setTargetAtTime(0, t, 0.35); } catch (_) {} }
 { const _f = fire; fire = function () { const g = gun(); if (!g || !g.beam || handMelee()) return _f.apply(this, arguments);
   const before = player.ammo, c0 = player.cool; BEAM.capture = true; BEAM.end = null; let r; const _s = SFX.shot; SFX.shot = () => {}; try { r = _f.apply(this, arguments); } finally { BEAM.capture = false; SFX.shot = _s; try { flash.visible = false; flashLight.intensity = 0; } catch (_) {} }
   if (player.ammo !== before || player.cool > c0) { BEAM.t = performance.now();
@@ -24867,17 +24885,24 @@ function mckRoom() {
   const fr = { x: P.x - 2.6, z: P.z - 1.2 }, py = 1.6;
   for (const [x, z] of [[-1.3, -1.3], [1.3, -1.3], [-1.3, 1.3], [1.3, 1.3]]) part(g, Cy(0.1, 0.1, 3.0, 8), toon('#ffd36a'), fr.x + x, 1.5, fr.z + z);
   part(g, B(2.7, 0.15, 2.7), toon('#c8402f'), fr.x, py, fr.z);
-  for (const [x, z, w, d] of [[0, -1.3, 2.6, 0.06], [-1.3, 0, 0.06, 2.6], [0, 1.3, 2.6, 0.06]]) part(g, B(w, 0.6, d), toon('#4fd2ff'), fr.x + x, py + 0.38, fr.z + z);
+  // safety rails: a padded top bar and bars below it on three sides (the slide side stays open)
+  for (const [x, z, w, d] of [[0, -1.3, 2.6, 0.1], [-1.3, 0, 0.1, 2.6], [0, 1.3, 2.6, 0.1]]) { part(g, B(w, 0.1, d), toon('#4fd2ff'), fr.x + x, py + 0.75, fr.z + z);
+    const n2 = 7; for (let k = 0; k < n2; k++) { const f = -1.1 + k * 2.2 / (n2 - 1); part(g, B(0.05, 0.7, 0.05), toon('#ffd36a'), fr.x + (w > 1 ? f : x), py + 0.4, fr.z + (w > 1 ? z : f)); } }
+  part(g, B(2.7, 0.3, 2.7), toon('#ffd36a'), fr.x, py - 0.2, fr.z);
   const roof = new THREE.Mesh(new THREE.ConeGeometry(2.1, 1.0, 4), toon('#ff6aa8')); roof.position.set(fr.x, 3.5, fr.z); roof.rotation.y = Math.PI / 4; g.add(roof);
   for (const s2 of [-1, 1]) part(g, B(0.08, py + 0.1, 0.08), toon('#ffd36a'), fr.x - 0.4 + s2 * 0.35, (py + 0.1) / 2, fr.z + 1.45); for (let r = 0; r < 4; r++) part(g, B(0.7, 0.06, 0.08), toon('#ffd36a'), fr.x - 0.4, 0.35 + r * 0.4, fr.z + 1.45);
   { const x0 = fr.x + 1.35, y0 = py, x1 = pit.x - 0.6, y1 = 0.45, len = Math.hypot(x1 - x0, y1 - y0), a = Math.atan2(y1 - y0, x1 - x0), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-    part(g, B(len, 0.08, 0.9), toon('#7fff6a'), cx, cy, fr.z, 0, 0, a); for (const s2 of [-1, 1]) part(g, B(len, 0.25, 0.06), toon('#3fbf4a'), cx, cy + 0.12, fr.z + s2 * 0.47, 0, 0, a); }
+    part(g, B(len, 0.08, 0.9), toon('#7fff6a'), cx, cy, fr.z, 0, 0, a); for (const s2 of [-1, 1]) part(g, B(len, 0.25, 0.06), toon('#3fbf4a'), cx, cy + 0.12, fr.z + s2 * 0.47, 0, 0, a);
+    part(g, B(0.12, (y0 + y1) / 2, 0.12), toon('#ffd36a'), cx, (y0 + y1) / 4, fr.z); part(g, B(0.5, 0.08, 1.0), toon('#3fbf4a'), x1 + 0.1, y1 - 0.02, fr.z); }
   box(fr.x, fr.z, 1.45, 1.45);
   sign('KLUNKY\'S FUN ZONE', '#ff6aa8', '#ffffff', 4, 0.6, P.x, 3.9, P.z - 3.4); sign('NO ADULTS IN THE BALL PIT. WE MEAN IT, GARY.', '#ffffff', '#c8402f', 3.2, 0.35, P.x - 4.4, 1.5, P.z, Math.PI / 2);
   for (let i = 0; i < 4; i++) { const kid = buildChar(() => makeCivilian(ball[i], '#2c2a28', looks[i][2], '#1e1a18'), 'civ'); kid.scale.setScalar(0.55); levelGroup.add(kid); const st = {};
-    levelAnims.push(t => { const a = t * (0.6 + i * 0.15) + i * 1.6; kid.position.set(P.x + 1.6 + Math.cos(a) * 1.5, 0.3 + Math.abs(Math.sin(t * 5 + i)) * 0.35, P.z + Math.sin(a) * 2.0); kid.rotation.y = -a; animRig(kid, st, 1 / 60, t); }); }
-  const lulu = buildChar(ROMANCE.lulu.make, 'civ'); lulu.position.set(P.x - 5.2, 0, P.z - 1); lulu.rotation.y = Math.PI / 2; levelGroup.add(lulu); solid(P.x - 5.2, P.z - 1, 0.4);
-  INTERACTS.push({ x: P.x - 5.2, z: P.z - 1, r: 2.2, label: '💗 Talk to Lulu', fn: () => openRomance('lulu') });
+    levelAnims.push(t => { const a = t * (0.6 + i * 0.15) + i * 1.6; kid.position.set(P.x + 1.6 + Math.cos(a) * 1.5, 0.3 + Math.abs(Math.sin(t * 5 + i)) * 0.35, P.z + Math.sin(a) * 2.0); kid.rotation.y = Math.atan2(-Math.sin(a) * 1.5, Math.cos(a) * 2.0); animRig(kid, st, 1 / 60, t); }); }
+  // Lulu stands at the pit gate by her little podium, watching the kids
+  const LU = { x: pit.x - pit.w / 2 - 0.9, z: pit.z + pit.d / 2 - 0.6 };
+  part(g, B(0.7, 1.0, 0.5), toon('#ff6aa8'), LU.x - 0.7, 0.5, LU.z + 0.6); part(g, B(0.75, 0.06, 0.55), toon('#ffd36a'), LU.x - 0.7, 1.03, LU.z + 0.6); part(g, B(0.3, 0.02, 0.2), wht, LU.x - 0.7, 1.07, LU.z + 0.6);
+  const lulu = buildChar(ROMANCE.lulu.make, 'civ'); lulu.position.set(LU.x, 0, LU.z); lulu.rotation.y = -Math.PI / 2 - 0.5; levelGroup.add(lulu); solid(LU.x, LU.z, 0.4); box(LU.x - 0.7, LU.z + 0.6, 0.4, 0.3);
+  INTERACTS.push({ x: LU.x, z: LU.z, r: 2.2, label: '💗 Talk to Lulu', fn: () => openRomance('lulu') });
   // the Don's corner: walled off at the back, dark wood, one low red lamp, smoke
   const C = { x: X + 9, z: Z - 6.5 };
   // walls of the den: solid, with a doorway near the front of the side wall; painted McKlunkies murals outside
@@ -24968,9 +24993,28 @@ function mobHydro() { const M = mobS(); MOB.glorbo = null;
   const mine = M.st >= 3 && S.tank2.length; if (mine) levelGroup.children.forEach(o => { const p = o.geometry && o.geometry.parameters; if (p && p.width === 0.5 && p.height === 0.25 && p.depth === 0.12) o.visible = false; });
   MOB.live = new THREE.Group(); MOB.live.position.set(22, 0, -14); levelGroup.add(MOB.live); mobTankFill();
   if (M.st < 3) { const o = buildChar(() => recolor(makeElismas(), { '#9aa1aa': '#7fdc6a', '#5d636c': '#3a6a8a' }), 'elismas'); o.position.set(22, 0, -9.6); o.rotation.y = Math.PI; levelGroup.add(o); solid(22, -9.6, 0.45); MOB.glorbo = o;
-    const ap = new THREE.Group(); part(ap, B(0.5, 0.06, 0.4), toon('#4fa8ff'), 0, 0, 0); ap.position.set(22, 1.05, -9.3); levelGroup.add(ap); // apron
+    part(o, B(0.5, 0.5, 0.06), toon('#4fa8ff'), 0, 0.85, -0.28); // apron, worn (and falls with him)
     INTERACTS.push({ x: 22, z: -9.6, r: 2.4, label: '🐟 Talk to Glorbo', fn: mobGlorbo }); }
-  else INTERACTS.push({ x: 19, z: -14, r: 2.6, label: 'Fish tank: put your fish in', fn: openMobTank });
+  mobTankDress(M.st >= 3);
+}
+// the tank itself: a pedestal with a trim light, a lid with lamps, gravel, plants, a little castle, rising bubbles, and a terminal to stock it
+function mobTankDress(open) { const X = 22, Z = -14, g = new THREE.Group();
+  part(g, Cy(3.3, 3.5, 0.6, 20), toonNS('#3a3d44', 'panel'), 0, 0.3, 0); part(g, Cy(3.36, 3.36, 0.08, 20), glow('#4fd2ff'), 0, 0.55, 0);
+  part(g, Cy(3.3, 3.3, 0.5, 20), toonNS('#3a3d44', 'panel'), 0, 5.2, 0); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; part(g, Cy(0.18, 0.25, 0.25, 8), glow('#fff4d8'), Math.cos(a) * 2.2, 4.85, Math.sin(a) * 2.2); }
+  for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2 + 0.4; part(g, B(0.25, 4.6, 0.25), toonNS('#5d636c', 'panel'), Math.cos(a) * 3.05, 2.9, Math.sin(a) * 3.05); }
+  part(g, Cy(2.9, 2.9, 0.25, 20), toonNS('#c8b490'), 0, 0.72, 0); for (let i = 0; i < 30; i++) { const a = mckR(i + 400) * 7, r = mckR(i + 450) * 2.6; part(g, new THREE.DodecahedronGeometry(0.1, 0), toonNS(['#8a8f99', '#c8402f', '#ffd36a', '#4fd2ff'][i % 4]), Math.cos(a) * r, 0.88, Math.sin(a) * r); }
+  for (let i = 0; i < 7; i++) { const a = i * 0.9, r = 1.6 + (i % 3) * 0.4, h = 1.2 + (i % 3) * 0.6, pl = new THREE.Mesh(B(0.12, h, 0.04), toonNS(i % 2 ? '#3f7a3a' : '#6fce4a', 'leaves')); pl.position.set(Math.cos(a) * r, 0.85 + h / 2, Math.sin(a) * r); g.add(pl); levelAnims.push(t => { pl.rotation.z = Math.sin(t * 1.3 + i) * 0.15; }); }
+  const ca = new THREE.Group(); part(ca, B(0.9, 0.8, 0.9), toonNS('#b8a888', 'stone'), 0, 0.4, 0); for (const [x, z] of [[-0.4, -0.4], [0.4, -0.4], [-0.4, 0.4], [0.4, 0.4]]) part(ca, Cy(0.15, 0.15, 1.1, 6), toonNS('#b8a888', 'stone'), x, 0.55, z); part(ca, B(0.3, 0.4, 0.06), toonNS('#1e1a18'), 0, 0.2, 0.46); ca.position.set(-1, 0.85, 1); g.add(ca);
+  const bb = []; for (let i = 0; i < 10; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), new THREE.MeshBasicMaterial({ color: '#e8f8ff', transparent: true, opacity: 0.6 })); g.add(m); bb.push(m); }
+  levelAnims.push(t => bb.forEach((m, i) => { const k = (t * 0.4 + i / 10) % 1; m.position.set(-1 + Math.sin(i * 2 + t) * 0.15, 1.8 + k * 3, 1 + Math.cos(i) * 0.15); }));
+  g.position.set(X, 0, Z); levelGroup.add(g);
+  // the terminal: a console on a stand, screen facing the walkway
+  const T = new THREE.Group(); part(T, B(0.5, 1.0, 0.4), toonNS('#3a3d44', 'panel'), 0, 0.5, 0); part(T, B(1.0, 0.7, 0.12), toonNS('#2a2e36', 'panel'), 0, 1.3, 0, -0.35, 0, 0);
+  const cv = document.createElement('canvas'); cv.width = 128; cv.height = 80; const c = cv.getContext('2d'); c.fillStyle = '#04141c'; c.fillRect(0, 0, 128, 80); c.fillStyle = open ? '#7fe8ff' : '#ff6a5a'; c.font = 'bold 12px monospace';
+  c.fillText(open ? 'TANK CONTROL' : 'TANK CONTROL', 8, 18); c.fillText(open ? 'FISH: ' + (S.tank2 || []).length + '/10' : 'LOCKED', 8, 38); c.fillText(open ? 'TEMP 22C  OK' : 'KEEPER: GLORBO', 8, 58);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.88, 0.56), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) })); scr.position.set(0, 1.32, 0.07); scr.rotation.x = -0.35; T.add(scr);
+  T.position.set(X - 3.6, 0, Z + 3.6); T.rotation.y = -0.75; levelGroup.add(T); box(X - 3.6, Z + 3.6, 0.4, 0.4);
+  INTERACTS.push({ x: X - 3.2, z: Z + 4.2, r: 2.0, label: open ? '🖥 Tank terminal: stock your fish' : '🖥 Tank terminal (locked)', fn: () => { if (open) openMobTank(); else { openDlg('Tank terminal', 'Hydroponics'); $('dlgLine').textContent = 'ACCESS DENIED. Keeper on duty: Glorbo Fishwhistle. "Don\'t touch my tank."'; acts([['Close', closeDlg, true]]); } } });
 }
 { const _fb = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _fb.apply(this, arguments); try { if (zTheme(ZF.floor) === 'hydro') mobHydro(); } catch (e) { console.warn('mob hydro', e); } }; }
 
@@ -24992,7 +25036,7 @@ function mobOD() { const M = mobS(), o = MOB.glorbo; if (M.st >= 3) return; dele
   if (o) { let t0 = performance.now(); const fall = () => { const k = Math.min(1, (performance.now() - t0) / 900); o.rotation.z = k * Math.PI / 2; o.position.y = k * 0.3; if (k < 1) requestAnimationFrame(fall); }; fall(); }
   SFX.hit && SFX.hit(); crime(15, 'Glorbo Fishwhistle'); toast('GLORBO IS SLEEPING WITH THE FISHES', 'Go tell the Don. The tank is yours now', 4);
   for (let i = INTERACTS.length - 1; i >= 0; i--) if (INTERACTS[i].fn === mobGlorbo) INTERACTS.splice(i, 1);
-  INTERACTS.push({ x: 19, z: -14, r: 2.6, label: 'Fish tank: put your fish in', fn: openMobTank }); }
+  for (const it of INTERACTS) if (/^🖥 Tank terminal/.test(it.label || '')) { it.label = '🖥 Tank terminal: stock your fish'; it.fn = openMobTank; } }
 
 function mobTankFill() { const L = MOB.live; if (!L) return; for (const c of [...L.children]) { L.remove(c); disposeTree(c); }
   S.tank2.slice(0, 10).forEach((id, i) => { if (!ITEMS[id]) return; let f; try { f = makeFishModel(id); } catch (_) { return; }
@@ -25113,7 +25157,7 @@ function devUnlockAll() {
 // Bubble City is now a sealed miniature city under one glass dome on the seabed: the Shrink-o-Matic outside shrinks you
 // down and you walk into the full-size city, which is its own map.
 const OC2 = { kayak: null, paddle: null, rentAt: null };
-const OC_BUBBLE_NPCS = ['blub', 'pearlmkt', 'barnacle', 'kelpa', 'pip'];
+const OC_BUBBLE_NPCS = ['blub', 'pearlmkt', 'barnacle', 'kelpa', 'pip', 'finn', 'nurse'];
 
 // ---- the sub is retired: X in the water now means the kayak ----
 toggleSub = function () { return false; };
@@ -25127,7 +25171,7 @@ toggleBike = function () { if (LEVEL && LEVEL.ocean && kayakToggle()) return; _t
 // ---- Bubble City's people move into the city map ----
 const OC_MOVED = LEVELS.ocean.npcs.filter(n => OC_BUBBLE_NPCS.includes(n.id));
 LEVELS.ocean.npcs = LEVELS.ocean.npcs.filter(n => !OC_BUBBLE_NPCS.includes(n.id));
-{ const P = { blub: [0, -7, 0], pearlmkt: [-27, -5, Math.PI / 2], barnacle: [24, 10, -Math.PI / 2], kelpa: [5, -30, Math.PI], pip: [30, -2, -Math.PI / 2] };
+{ const P = { finn: [-8, 72, 0], nurse: [-12, -6, Math.PI / 2], blub: [0, -7, 0], pearlmkt: [-27, -5, Math.PI / 2], barnacle: [24, 10, -Math.PI / 2], kelpa: [5, -30, Math.PI], pip: [30, -2, -Math.PI / 2] };
   for (const n of OC_MOVED) { const [x, z, f] = P[n.id]; Object.assign(n, { x, z, face: f }); } }
 // the old domes let you breathe; the city is its own map now, so the seabed is just seabed
 inDome = function () { return false; };
@@ -25177,15 +25221,14 @@ function ocPiers() {
   // the kayak rental: a little shack and a rack at the root of the east pier
   const E = OC2.piers[2], sx = px + E.dx * (E.len / 2 - 4) + 0, sz = pz + 3.2; const shack = new THREE.Group();
   part(shack, B(2.4, 2.2, 1.8), toon('#3f7d7a', 'wood'), 0, 1.1, 0); part(shack, B(2.8, 0.15, 2.3), toon('#ffd36a'), 0, 2.3, 0.15, 0.12); part(shack, B(1.6, 0.9, 0.05), toon('#1e1c22'), 0, 1.4, 0.92);
-  const kc = ['#ff6aa8', '#4fd2ff', '#7fff6a']; for (let i = 0; i < 3; i++) { const k = makeKayak(kc[i]); k.scale.setScalar(0.8); k.position.set(1.9, 0.4 + i * 0.5, 0); k.rotation.y = Math.PI / 2; shack.add(k); }
-  part(shack, B(0.1, 1.8, 2.2), toon('#6a4f34', 'wood'), 1.9, 0.9, -0.9 + 0.9 * 0);
+  const kc = ['#ff6aa8', '#4fd2ff', '#7fff6a']; for (let i = 0; i < 3; i++) { const k = makeKayak(kc[i]); k.scale.setScalar(0.8); k.position.set(2.2, 0.45 + i * 0.55, 0); shack.add(k); }
+  for (const zz of [-1.1, 1.1]) { part(shack, B(0.1, 1.9, 0.1), toon('#6a4f34', 'wood'), 2.6, 0.95, zz); part(shack, B(0.1, 1.9, 0.1), toon('#6a4f34', 'wood'), 1.8, 0.95, zz); for (let i = 0; i < 3; i++) part(shack, B(0.9, 0.06, 0.08), toon('#6a4f34', 'wood'), 2.2, 0.35 + i * 0.55, zz); }
   const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 0.45), new THREE.MeshBasicMaterial({ map: signTex('SPACE KAYAKS · 40 cr', '#0c1a24', '#7fe8ff') })); sg.position.set(0, 2.6, 1.0); shack.add(sg);
-  const P0 = OC2.piers[0], sxx = P0.cx - 3.4, szz = P0.cz - P0.len / 2 - 0.5; shack.position.set(sxx, Math.max(groundH(sxx, szz), ocDeck() - 0.05), szz); shack.rotation.y = Math.PI; levelGroup.add(shack); box(sxx, szz, 1.3, 1.0);
+  const P0 = OC2.piers[0], sxx = P0.cx - 4.2, szz = P0.cz - P0.len / 2 - 4.5; shack.position.set(sxx, groundH(sxx, szz) - 0.05, szz); shack.rotation.y = Math.PI; levelGroup.add(shack); box(sxx, szz, 1.3, 1.0); box(sxx - 2.2, szz, 0.5, 1.2);
   OC2.rentAt = [sxx, szz - 1.6];
-  { const mast = new THREE.Group(), gy = groundH(sxx + 1.6, szz - 1.4); part(mast, Cy(0.08, 0.1, 5, 6), toon('#2b2a2c'), 0, 2.5, 0); const k = makeKayak('#ff6aa8'); k.position.y = 5.2; k.rotation.z = 0.3; mast.add(k);
-    const ms = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.5), new THREE.MeshBasicMaterial({ map: signTex('🛶 KAYAK RENTAL', '#0c1a24', '#ffd36a'), side: THREE.DoubleSide })); ms.position.y = 4.4; mast.add(ms);
-    mast.position.set(sxx + 1.6, gy, szz - 1.4); levelGroup.add(mast); levelAnims.push(t => { mast.rotation.y = t * 0.5; }); }
+  // (no sign mast: the island is busy enough; the shack's own sign does the job)
   INTERACTS.push({ x: sxx, z: szz - 1.4, r: 2.4, label: '🛶 Rent a space kayak (40 cr)', fn: kayakRent });
+  INTERACTS.push(OC_KAYAK_OUT);
 }
 
 // ---- the space kayak ----
@@ -25197,14 +25240,17 @@ function makeKayak(col) {
 }
 function kayakRent() {
   if (S.inSub) return; if (S.cr < 40) { SFX.hit(); log("Kayak rental is 40 cr. You're short."); return; }
-  S.cr -= 40; SFX.coin(); markDirty(); const P = OC2.piers[2]; kayakOn(P.end[0] + P.dz * 2.2, P.end[1] - P.dx * 2.2 + 0);
+  S.cr -= 40; SFX.coin(); markDirty();
+  // launch from the nearest open water beside the shack
+  const [ox, oz] = OC2.rentAt; let best = null; for (let r = 3; r < 20 && !best; r += 0.5) for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2, x = ox + Math.cos(a) * r, z = oz + Math.sin(a) * r; if (groundH(x, z) < WATER_Y - 0.6 && floorAt(x, z) < WATER_Y) { best = [x, z]; break; } }
+  const P = OC2.piers[0]; kayakOn(...(best || [P.cx + 4, P.cz]));
 }
 function kayakOn(x, z) {
   S.inSub = true; S.kayak = true; player.pos.set(x, WATER_Y - 0.75, z); player.vy = 0;
   if (!OC2.kayak) { OC2.kayak = makeKayak('#ff8a2a'); } scene.add(OC2.kayak);
   if (!OC2.paddle) { const p = new THREE.Group(); part(p, Cy(0.02, 0.02, 1.6, 6), toon('#2b2a2c'), 0, 0, 0, 0, 0, Math.PI / 2); for (const s of [-1, 1]) part(p, B(0.22, 0.02, 0.1), toon('#ffd36a'), s * 0.8, 0, 0); p.position.set(0, -0.42, -0.55); camera.add(p); OC2.paddle = p; }
   OC2.paddle.visible = true; vmSub.scale.setScalar(0.0001);
-  log('Space kayak. W paddles where you look · face open water and press E to fish · X climbs out at a pier or the shore.', 'loot');
+  log('Space kayak. Paddle where you look · face open water to fish · tap Use near a pier or the shore to climb out.', 'loot');
 }
 function kayakOff() { S.inSub = false; S.kayak = false; if (OC2.kayak) scene.remove(OC2.kayak); if (OC2.paddle) OC2.paddle.visible = false; vmSub.scale.setScalar(1); }
 function kayakToggle() {
@@ -25223,7 +25269,7 @@ function kayakToggle() {
   const nx = player.pos.x + V2.x * dt, nz = player.pos.z + V2.z * dt;
   if (groundH(nx, nz) < WATER_Y - 0.45) { player.pos.x = nx; player.pos.z = nz; } else { V2.x *= -0.3; V2.z *= -0.3; }
   collide(player.pos, 0.7, false);
-  const t = performance.now() / 1000; player.pos.y = WATER_Y - 0.75 + Math.sin(t * 1.7) * 0.04; player.vy = 0; player.onGround = true; player.wet = false;
+  const t = performance.now() / 1000; player.pos.y = WATER_Y - 0.75 + Math.sin(t * 1.7) * 0.04; player.vy = 0; player.onGround = false; player.wet = false;
   const K = OC2.kayak; if (K) { K.position.set(player.pos.x, WATER_Y - 0.12 + Math.sin(t * 1.7) * 0.04, player.pos.z); K.rotation.set(Math.sin(t * 1.3) * 0.03, player.yaw + Math.PI, Math.sin(t * 1.1) * 0.04); }
   const P = OC2.paddle; if (P) { const m = Math.hypot(V2.x, V2.z); P.rotation.z = Math.sin(t * 5) * 0.5 * Math.min(1, m / 2); P.rotation.y = Math.cos(t * 5) * 0.25 * Math.min(1, m / 2); }
 }; }
@@ -25243,23 +25289,29 @@ function ocFishAt() { const t = performance.now(); if (t - ocFishT < 150) return
 
 // ---- the miniature Bubble City: a sealed glass dome on the seabed with a tiny city inside, and the Shrink-o-Matic ----
 function ocMiniCity() {
-  const ZB = Z.bubble, y0 = groundH(ZB.x, ZB.z), g = new THREE.Group(), R = 9;
-  part(g, Cy(R + 0.4, R + 0.6, 0.6, 32), toon('#5d636c', 'panel'), 0, 0.3, 0);
-  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; part(g, B(0.25, 0.3, 0.6), glow(i % 2 ? '#4fd2ff' : '#ffd36a'), Math.cos(a) * (R + 0.45), 0.5, Math.sin(a) * (R + 0.45), 0, -a, 0); }
-  const dome = new THREE.Mesh(new THREE.SphereGeometry(R, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: '#bfefff', transparent: true, opacity: 0.18, depthWrite: false, side: THREE.DoubleSide })); dome.position.y = 0.6; g.add(dome);
-  for (let i = 0; i < 8; i++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(R, 0.08, 4, 24, Math.PI), toon('#8a8f99')); rib.rotation.y = i / 8 * Math.PI; rib.position.y = 0.6; g.add(rib); }
-  // the tiny city: streets, little houses with round roofs, towers, a plaza with a fountain, kelp rows, lamps
-  const pastel = ['#ffd0a0', '#c8e0ff', '#b8ffcf', '#ffb8d8', '#fff0a0', '#d8c8ff'];
-  part(g, B(14, 0.05, 0.6), toon('#d8d0c0'), 0, 0.63, 0); part(g, B(0.6, 0.05, 14), toon('#d8d0c0'), 0, 0.63, 0);
-  part(g, Cy(1.2, 1.2, 0.1, 16), toon('#e8e4dc'), 0, 0.66, 0); part(g, Cy(0.3, 0.4, 0.4, 10), toon('#8fd0ff'), 0, 0.85, 0);
-  for (let i = 0; i < 46; i++) { const a = i * 2.39, d = 2 + (i * 7) % 6, x = Math.cos(a) * d, z = Math.sin(a) * d; if (Math.abs(x) < 0.6 || Math.abs(z) < 0.6) continue; const h = 0.4 + (i % 4) * 0.25, w = 0.45 + (i % 3) * 0.15;
-    part(g, B(w, h, w), toon(pastel[i % 6]), x, 0.6 + h / 2, z); part(g, new THREE.SphereGeometry(w * 0.55, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), toon(pastel[(i + 2) % 6]), x, 0.6 + h, z);
-    if (i % 5 === 0) part(g, B(0.08, 0.08, 0.02), glow('#ffe9a0'), x, 0.6 + h * 0.6, z + w / 2 + 0.01); }
-  for (const [x, z, h] of [[-3.5, -3, 2.6], [3.8, 2.4, 2.2], [-1.8, 4.2, 1.8]]) { part(g, Cy(0.3, 0.4, h, 8), toon('#e8e4dc'), x, 0.6 + h / 2, z); part(g, new THREE.SphereGeometry(0.35, 8, 6), glow('#4fd2ff'), x, 0.6 + h + 0.2, z); }
-  for (let i = 0; i < 6; i++) part(g, B(0.15, 0.4, 2.2), toon('#3f7a3a'), 5 + (i % 3) * 0.5, 0.8, -4 + Math.floor(i / 3) * 2.6);
-  g.position.set(ZB.x, y0, ZB.z); levelGroup.add(g); solid(ZB.x, ZB.z, R + 0.6);
+  // a scale model of the real Bubble City: the same five domes and four tunnels, one tenth size, sealed (nobody small enough lives out here)
+  const ZB = Z.bubble, y0 = groundH(ZB.x, ZB.z), g = new THREE.Group(), K = 0.11, R = 12.5;
+  part(g, Cy(R, R + 0.4, 0.5, 40), toon('#4a4f58', 'panel'), 0, 0.25, 0); part(g, Cy(R + 0.05, R + 0.05, 0.06, 40), glow('#4fd2ff'), 0, 0.5, 0);
+  const pc = { hub: '#e8e0d0', kelp: '#4a7a34', burbs: '#7ac05a', low: '#3a2a48', coral: '#e8c8b0' };
+  for (const D of BC.domes) { const x = D.x * K, z = D.z * K, r = D.r * K, d = new THREE.Group();
+    part(d, Cy(r, r, 0.08, 24), toon(pc[D.id]), 0, 0.54, 0);
+    const gl = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: D.glass, transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false })); gl.position.y = 0.55; d.add(gl);
+    for (let i = 0; i < 6; i++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(r, 0.03, 4, 16, Math.PI), toon('#8a8f99')); rib.rotation.y = i / 6 * Math.PI; rib.position.y = 0.55; d.add(rib); }
+    part(d, new THREE.SphereGeometry(0.08, 6, 4), glow('#ffe9a0'), 0, 0.55 + r, 0);
+    // a few tiny landmarks so each dome reads from outside
+    if (D.id === 'coral') { for (const [ox, oz, h] of [[-1.5, 0.7, 2.6], [0, 1.5, 2.9], [1.6, 0.9, 2.0]]) part(d, B(0.9, h, 0.9), toon('#8a7f9a'), ox, 0.55 + h / 2, oz); for (let i = 0; i < 8; i++) part(d, B(0.12, 0.3, 0.12), toon(['#ff6aa8', '#ffb347', '#4fffe0'][i % 3]), -1.3 + (i % 4) * 0.3, 0.7, -1 - Math.floor(i / 4) * 0.4); }
+    if (D.id === 'burbs') for (let i = 0; i < 7; i++) { const a = -Math.PI / 4 + i * 0.85, hx = Math.cos(a) * 2.4, hz = Math.sin(a) * 2.4; part(d, B(0.6, 0.4, 0.5), toon(['#ffd0a0', '#c8e0ff', '#b8ffcf', '#ffb8d8'][i % 4]), hx, 0.75, hz); part(d, new THREE.ConeGeometry(0.45, 0.3, 4), toon('#8a3a2e'), hx, 1.1, hz, 0, Math.PI / 4, 0); }
+    if (D.id === 'low') for (let i = 0; i < 6; i++) { const h = 0.7 + (i % 3) * 0.3; part(d, B(1.0, h, 0.6), toon('#3a3048'), -1.4 + Math.floor(i / 2) * 1.4, 0.55 + h / 2, (i % 2 ? 1 : -1) * 1.0); part(d, B(0.6, 0.08, 0.02), glow(['#ff3bd2', '#4fffe0', '#ffd36a'][i % 3]), -1.4 + Math.floor(i / 2) * 1.4, 0.85, (i % 2 ? 1 : -1) * 0.69); }
+    if (D.id === 'kelp') { part(d, Cy(0.55, 0.6, 1.0, 12), toon('#3a3d44'), 1.3, 1.05, -0.9); for (let r2 = 0; r2 < 5; r2++) part(d, B(2, 0.15, 0.15), toon('#6fce4a'), -0.4, 0.65, 0.2 + r2 * 0.3); }
+    if (D.id === 'hub') { part(d, Cy(0.6, 0.65, 0.15, 14), toon('#c8e0ff'), 0, 0.62, 0); part(d, Cy(0.08, 0.08, 0.5, 6), toon('#c9a43a'), 0, 0.85, 0); }
+    d.position.set(x, 0, z); g.add(d); }
+  for (const id of ['kelp', 'burbs', 'low', 'coral']) { const D = BC.domes.find(d => d.id === id), dx = D.x * K, dz = D.z * K, dl = Math.hypot(dx, dz), ux = dx / dl, uz = dz / dl, a0 = 28 * K, len = dl - a0 - D.r * K;
+    const tb = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.33, len, 10, 1, true), new THREE.MeshLambertMaterial({ color: '#bfefff', transparent: true, opacity: 0.25, side: THREE.DoubleSide, depthWrite: false }));
+    tb.rotation.x = Math.PI / 2; const tg = new THREE.Group(); tg.add(tb); tb.position.z = len / 2; tg.position.set(ux * a0, 0.62, uz * a0); tg.rotation.y = Math.atan2(ux, uz); g.add(tg);
+    part(tg, B(0.4, 0.04, len), toon('#5d636c'), 0, -0.05, len / 2); }
+  g.position.set(ZB.x, y0, ZB.z); levelGroup.add(g); solid(ZB.x, ZB.z, R + 0.4);
   const bub = []; for (let i = 0; i < 10; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 4), new THREE.MeshBasicMaterial({ color: '#e8f8ff', transparent: true, opacity: 0.6 })); levelGroup.add(m); bub.push(m); }
-  levelAnims.push(t => bub.forEach((m, i) => { const k = (t * 0.6 + i * 0.37) % 1; m.position.set(ZB.x + Math.sin(i * 2.1) * 0.3, y0 + 1 + k * (R - 1.5), ZB.z + Math.cos(i * 2.1) * 0.3); }));
+  levelAnims.push(t => bub.forEach((m, i) => { const k = (t * 0.6 + i * 0.37) % 1; m.position.set(ZB.x + Math.sin(i * 2.1) * 0.3, y0 + 1 + k * 8, ZB.z + Math.cos(i * 2.1) * 0.3); }));
   // the Shrink-o-Matic: a ringed machine and platform on the south side, with a buoy above it so you can find it from the surface
   const sx = ZB.x, sz = ZB.z - R - 4, sy = groundH(sx, sz), m = new THREE.Group();
   part(m, Cy(2.2, 2.4, 0.4, 20), toon('#3a3d44', 'panel'), 0, 0.2, 0); part(m, Cy(1.6, 1.6, 0.05, 20), glow('#4fd2ff'), 0, 0.43, 0);
@@ -25279,7 +25331,7 @@ function ocShrink() {
 }
 function ocGrow() {
   const el = $('ocShrink'); if (el) { el.style.opacity = '1'; el.style.transform = 'scale(1)'; } SFX.door();
-  const B = Z.bubble || { x: 0, z: 62 }; setTimeout(() => { travel('ocean', { at: { x: 0, z: 62 - 9 - 6.5, yaw: Math.PI } }); setTimeout(() => { const e2 = $('ocShrink'); if (e2) { e2.style.opacity = '0'; e2.style.transform = 'scale(3)'; } }, 400); }, 1000);
+  const B = Z.bubble || { x: 0, z: 62 }; setTimeout(() => { travel('ocean', { at: { x: 0, z: 62 - 12.5 - 6.5, yaw: Math.PI } }); setTimeout(() => { const e2 = $('ocShrink'); if (e2) { e2.style.opacity = '0'; e2.style.transform = 'scale(3)'; } }, 400); }, 1000);
 }
 
 // ---- Bubble City, full size ----
@@ -25387,6 +25439,11 @@ function ocPierDetails() { const y = ocDeck() + 0.11;
     if (i % 4 === 0) { const b = new THREE.Group(); part(b, Cy(0.25, 0.35, 0.7, 8), toon(i % 8 ? '#ff6a3a' : '#f4f0e8'), 0, 0, 0); b.position.set(x + 1.5, WATER_Y, z); levelGroup.add(b); levelAnims.push(t => { b.position.y = WATER_Y + Math.sin(t * 1.3 + i) * 0.1; b.rotation.z = Math.sin(t + i) * 0.12; }); } } }
 { const orig = LEVELS.ocean.build; LEVELS.ocean.build = function () { orig.call(this); try { ocPierDetails(); } catch (e) { console.warn('ocean2 details', e); } }; }
 
+// while you sit in the kayak there is always a Use prompt: climb out when a pier or the shore is close, otherwise a hint
+function kayakCanExit() { for (const s of SURFACES) { const dx = player.pos.x - s.x, dz = player.pos.z - s.z, al = dx * s.ux + dz * s.uz, ac = dx * s.uz - dz * s.ux; if (Math.abs(al) < s.hl + 0.5 && Math.abs(ac) < s.hw + 3) return true; }
+  for (let r = 1; r <= 4; r += 0.5) for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; if (groundH(player.pos.x + Math.cos(a) * r, player.pos.z + Math.sin(a) * r) > WATER_Y + 0.1) return true; } return false; }
+const OC_KAYAK_OUT = { r: 3, get x() { return S.kayak ? player.pos.x : 1e9; }, get z() { return player.pos.z; }, get label() { return kayakCanExit() ? '🛶 Climb out of the kayak' : '🛶 Paddle to a pier or shore to climb out'; }, fn: () => kayakToggle() };
+
 // Bubble City, inside: the Burbs (and their murder), the Low Tide strip (drugs, a fence, a stolen TV), the control room,
 // Reel Deal Tackle, and Coral Heights, an apartment tower with an elevator, six floors of neighbours, a lost hamster and your own flat.
 // Save: S.bub = { tv, tvOff, ham, mur: { st, clues: {} }, apt, night }.
@@ -25402,7 +25459,15 @@ function bubFade(txt, mid, after, hold) { const f = $('fade'); f.hidden = false;
   setTimeout(() => { try { mid && mid(); } catch (e) { console.warn(e); } setTimeout(() => { f.style.opacity = 0; setTimeout(() => { f.hidden = true; after && after(); }, 400); }, hold || 700); }, 600); }
 function bubNpc(x, z, ry, c, label, fn) { const o = buildChar(() => makeCivilian(c[0], c[1], c[2], c[3]), 'civ'); o.position.set(x, 0, z); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.4);
   if (label) INTERACTS.push({ x, z, r: 2.2, label, fn }); return o; }
-function bubSign(txt, bg, fg, w, h, x, y, z, ry) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: signTex(txt, bg, fg) })); m.position.set(x, y, z); m.rotation.y = ry || 0; levelGroup.add(m); return m; }
+function bubSignTex(txt, bg, fg, w, h) { const W = 512, H = Math.max(64, Math.round(512 * h / w)), cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+  const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, bg); g.addColorStop(1, '#000000'); c.fillStyle = bg; c.fillRect(0, 0, W, H); c.globalAlpha = 0.45; c.fillStyle = g; c.fillRect(0, 0, W, H); c.globalAlpha = 1;
+  c.strokeStyle = fg; c.lineWidth = 6; c.strokeRect(8, 8, W - 16, H - 16); c.globalAlpha = 0.4; c.lineWidth = 2; c.strokeRect(18, 18, W - 36, H - 36); c.globalAlpha = 1;
+  c.fillStyle = '#c8ccd4'; for (const [rx, ry] of [[16, 16], [W - 16, 16], [16, H - 16], [W - 16, H - 16]]) { c.beginPath(); c.arc(rx, ry, 5, 0, 7); c.fill(); }
+  const parts = String(txt).split(' · '), main = parts[0], sub = parts.slice(1).join(' · '); let fs = Math.min(H * (sub ? 0.46 : 0.6), 72); c.font = `bold ${fs}px monospace`; while (c.measureText(main).width > W - 60 && fs > 10) { fs -= 2; c.font = `bold ${fs}px monospace`; }
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = fg; c.shadowBlur = 12; c.fillStyle = fg; c.fillText(main, W / 2, sub ? H * 0.4 : H / 2); c.shadowBlur = 0;
+  if (sub) { let s2 = fs * 0.5; c.font = `${s2}px monospace`; while (c.measureText(sub).width > W - 60 && s2 > 8) { s2 -= 1; c.font = `${s2}px monospace`; } c.globalAlpha = 0.8; c.fillText(sub, W / 2, H * 0.74); c.globalAlpha = 1; }
+  c.globalAlpha = 0.08; c.fillStyle = '#000'; for (let y = 0; y < H; y += 4) c.fillRect(0, y, W, 2); c.globalAlpha = 1; const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; return t; }
+function bubSign(txt, bg, fg, w, h, x, y, z, ry) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: bubSignTex(txt, bg, fg, w, h) })); m.position.set(x, y, z); m.rotation.y = ry || 0; levelGroup.add(m); return m; }
 // a lit neon tube sign that flickers now and then
 function bubNeon(txt, col, x, y, z, ry, w) { const m = bubSign(txt, '#120818', col, w || 3, 0.6, x, y, z, ry); const fr = new THREE.Mesh(B((w || 3) + 0.2, 0.8, 0.06), glow(col)); fr.position.set(x, y, z); fr.rotation.y = ry || 0; fr.translateZ(-0.05); levelGroup.add(fr);
   levelAnims.push(t => { m.visible = Math.sin(t * 13 + x) > -0.97; }); }
@@ -25418,35 +25483,35 @@ function bubCity() { const S2 = bubS();
   // THE LOW TIDE: the west strip goes seedy after dark. Neon, a pawn shop, a dealer, Rizzo and his TV
   bubNeon('THE LOW TIDE', '#ff3bd2', -28, 5.4, 18.5, Math.PI, 4); bubNeon('CRABBY\'S PAWN', '#ffd36a', -37.3, 3.8, -16, Math.PI / 2);
   bubNeon('BAR · OPEN LATE', '#4fffe0', -37.3, 4.2, 6, Math.PI / 2);
-  for (let i = 0; i < 6; i++) { const t = new THREE.Group(); part(t, Cy(0.35, 0.3, 0.9, 8), toon('#3a4a3a'), 0, 0.45, 0); part(t, Cy(0.36, 0.36, 0.08, 8), toon('#2b2a2c'), 0, 0.92, 0); t.position.set(-35 + (i % 3) * 1.1, 0, -6 + Math.floor(i / 3) * 18); levelGroup.add(t); }
+  for (let i = 0; i < 6; i++) { const t = new THREE.Group(); part(t, Cy(0.35, 0.3, 0.9, 8), toonNS('#3a4a3a'), 0, 0.45, 0); part(t, Cy(0.36, 0.36, 0.08, 8), toonNS('#2b2a2c'), 0, 0.92, 0); t.position.set(-35 + (i % 3) * 1.1, 0, -6 + Math.floor(i / 3) * 18); levelGroup.add(t); }
   bubNpc(-36.8, 6, Math.PI / 2, ['#2b2a2c', '#1e1a18', '#c58a64', '#111'], '💊 Dregs (dealer)', () => openSubShop('Low Tide dealer', 'Dregs', BUB_STREET));
   bubNpc(-36.8, -16, Math.PI / 2, ['#c8402f', '#3a3d44', '#ff8a6a', '#e8e4dc'], '🦀 Crabby\'s Pawn', bubPawn);
   bubNpc(-33.5, -4, Math.PI / 2, ['#6a3a8a', '#2c2a38', '#8a5a3a', '#1e1a18'], '📺 Talk to Rizzo', bubRizzo);
   // CORAL HEIGHTS: the apartment tower in the south-west
   const tx = -27, tz = 30, tw = 10, th = 34, tower = new THREE.Group();
-  part(tower, B(tw, th, tw), toon('#8a7f9a', 'panel'), 0, th / 2, 0);
+  part(tower, B(tw, th, tw), toonNS('#8a7f9a', 'panel'), 0, th / 2, 0);
   for (let f = 0; f < 10; f++) for (let k = 0; k < 4; k++) for (const [sx, sz, ry] of [[1, 0, Math.PI / 2], [0, -1, Math.PI]]) {
-    const lit = ((f * 7 + k * 3) % 5) > 1, w = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.4), lit ? glow(['#ffe9a0', '#ffd0a0', '#c8e0ff'][(f + k) % 3]) : toon('#2a3040'));
+    const lit = ((f * 7 + k * 3) % 5) > 1, w = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.4), lit ? glow(['#ffe9a0', '#ffd0a0', '#c8e0ff'][(f + k) % 3]) : toonNS('#2a3040'));
     const o = -3.6 + k * 2.4; w.position.set(sx ? tw / 2 + 0.03 : o, 3.5 + f * 3, sz ? -tw / 2 - 0.03 : o); if (sx) w.position.z = o; w.rotation.y = ry === Math.PI ? Math.PI : Math.PI / 2; tower.add(w); }
-  part(tower, B(tw + 0.6, 0.5, tw + 0.6), toon('#5d636c'), 0, th, 0); part(tower, Cy(0.1, 0.1, 4, 5), toon('#2b2a2c'), 3, th + 2, 3); part(tower, new THREE.SphereGeometry(0.25, 8, 6), glow('#ff3b2a'), 3, th + 4, 3);
-  part(tower, B(0.1, 2.6, 2.4), toon('#3a5266'), tw / 2 + 0.05, 1.3, 0); part(tower, B(0.3, 0.2, 3.4), glow('#ffe9a0'), tw / 2 + 0.6, 2.9, 0);
+  part(tower, B(tw + 0.6, 0.5, tw + 0.6), toonNS('#5d636c'), 0, th, 0); part(tower, Cy(0.1, 0.1, 4, 5), toonNS('#2b2a2c'), 3, th + 2, 3); part(tower, new THREE.SphereGeometry(0.25, 8, 6), glow('#ff3b2a'), 3, th + 4, 3);
+  part(tower, B(0.1, 2.6, 2.4), toonNS('#3a5266'), tw / 2 + 0.05, 1.3, 0); part(tower, B(0.3, 0.2, 3.4), glow('#ffe9a0'), tw / 2 + 0.6, 2.9, 0);
   tower.position.set(tx, 0, tz); levelGroup.add(tower); box(tx, tz, tw / 2, tw / 2);
   bubSign('CORAL HEIGHTS', '#1a1426', '#ffd0a0', 3.4, 0.6, tx + tw / 2 + 0.1, 3.6, tz, Math.PI / 2);
   INTERACTS.push({ x: tx + tw / 2 + 1, z: tz, r: 2.4, label: '🏢 Enter Coral Heights', fn: () => bubGoFloor(1, true) });
   // REEL DEAL TACKLE in the house by the tower
   bubSign('REEL DEAL TACKLE', '#0c2a3a', '#7fe8ff', 3.4, 0.6, -16, 4.2, 27.4, Math.PI);
-  const rod = new THREE.Group(); part(rod, Cy(0.05, 0.08, 4.6, 6), toon('#c9a43a'), 0, 2.3, 0); part(rod, new THREE.TorusGeometry(0.3, 0.08, 6, 12), toon('#5d636c'), 0, 1, 0.1); rod.position.set(-19, 0, 27); rod.rotation.z = 0.35; levelGroup.add(rod);
+  const rod = new THREE.Group(); part(rod, Cy(0.05, 0.08, 4.6, 6), toonNS('#c9a43a'), 0, 2.3, 0); part(rod, new THREE.TorusGeometry(0.3, 0.08, 6, 12), toonNS('#5d636c'), 0, 1, 0.1); rod.position.set(-19, 0, 27); rod.rotation.z = 0.35; levelGroup.add(rod);
   bubNpc(-16, 26.6, Math.PI, ['#3a7a5a', '#5a4a3a', '#e0b892', '#c8c0b0'], '🎣 Reel Deal Tackle', bubTackle);
   // THE CONTROL ROOM in the north-west: glass front, a wall of monitors, a big lever
   const cx = -22, cz = -38, cr = new THREE.Group();
-  part(cr, B(11, 5, 7), toon('#3a3d44', 'panel'), 0, 2.5, 0); part(cr, B(9, 2.2, 0.1), new THREE.MeshLambertMaterial({ color: '#7fe8ff', transparent: true, opacity: 0.35 }), 0, 2.4, 3.52);
+  part(cr, B(11, 5, 7), toonNS('#3a3d44', 'panel'), 0, 2.5, 0); part(cr, B(9, 2.2, 0.1), new THREE.MeshLambertMaterial({ color: '#7fe8ff', transparent: true, opacity: 0.35 }), 0, 2.4, 3.52);
   for (let i = 0; i < 6; i++) { const s = bubTV(1.3, 0.8); s.position.set(-3.2 + (i % 3) * 1.6, 3.5 - Math.floor(i / 3) * 1.0, 3.6); cr.add(s); }
   part(cr, B(11.6, 0.4, 7.6), glow('#4fd2ff'), 0, 5.2, 0); cr.position.set(cx, 0, cz); levelGroup.add(cr); box(cx, cz, 5.5, 3.5);
   bubSign('DOME CONTROL · AUTHORISED FISH ONLY', '#0c1a24', '#7fe8ff', 5, 0.6, cx, 6, cz + 3.6);
   bubNpc(cx + 4, cz + 4.6, Math.PI, ['#4fd2ff', '#2c2a38', '#9fe8ff', '#3a2a1a'], '🖥 Talk to Dot (Dome Control)', bubDot);
   // THE BURBS: lawns, picket fences and mailboxes on the east lane, and a crime scene
-  for (const z of [-26, -18, -10, 10, 18, 26]) for (const x of [28.6, 33.4]) { part(levelGroup, B(0.08, 0.7, 6), toon('#f4f0e8'), x, 0.35, z); const mb = new THREE.Group(); part(mb, Cy(0.04, 0.04, 1, 4), toon('#5d636c'), 0, 0.5, 0); part(mb, B(0.25, 0.25, 0.45), toon(['#c8402f', '#3a5266', '#3f7a3a'][(z + 40) % 3]), 0, 1.1, 0); mb.position.set(x + (x < 31 ? 0.4 : -0.4), 0, z + 2.6); levelGroup.add(mb); }
-  part(levelGroup, B(0.1, 0.1, 64), toon('#e8e4dc'), 31, 0.02, 0);
+  for (const z of [-26, -18, -10, 10, 18, 26]) for (const x of [28.6, 33.4]) { part(levelGroup, B(0.08, 0.7, 6), toonNS('#f4f0e8'), x, 0.35, z); const mb = new THREE.Group(); part(mb, Cy(0.04, 0.04, 1, 4), toonNS('#5d636c'), 0, 0.5, 0); part(mb, B(0.25, 0.25, 0.45), toonNS(['#c8402f', '#3a5266', '#3f7a3a'][(z + 40) % 3]), 0, 1.1, 0); mb.position.set(x + (x < 31 ? 0.4 : -0.4), 0, z + 2.6); levelGroup.add(mb); }
+  part(levelGroup, B(0.1, 0.1, 64), toonNS('#e8e4dc'), 31, 0.02, 0);
   bubSign('WELCOME TO THE BURBS · NICE LAWNS ONLY', '#1a3a1a', '#b8ffcf', 4.4, 0.6, 31, 3.4, -33, 0);
   bubMurderScene();
   // the lost hamster, running laps in the coral park (until you pick him up)
@@ -25479,9 +25544,22 @@ function bubDot() { const s = bubS();
   L.push(['Bye', closeDlg]); acts(L); }
 
 // ---------------- Reel Deal Tackle: fishing clothes ----------------
-ARMORS.angler = { name: 'Reel Deal Waders', lvl: 1, flag: 'anglerSet', def: 0.04, trim: '#3a7a5a', visor: '#ffd36a' };
-CAPES.angler = { name: 'Pro Angler Vest', lvl: 1, flag: 'anglerVest', col: '#4a6a3a', trim: '#ffd36a' };
-const TACKLE = [['anglerSet', 'Reel Deal Waders', 1200, 'Rubber to the chest. Fish respect you more. (Armor, wardrobe)'], ['anglerVest', 'Pro Angler Vest', 800, 'Forty pockets. You will lose things in all of them. (Cape, wardrobe)']];
+ARMORS.angler = { name: 'Reel Deal Waders', lvl: 1, flag: 'anglerSet', def: 0.04, body: '#4a5a3a', trim: '#2f3a28', visor: '#ffd36a', bare: false, perk: 'Fish bite 40% faster' };
+// chest-high rubber waders: a bib front and back, braces over the shoulders, chunky boots, a reel badge
+ARMOR_KITS.angler = function (g, A) { const rub = toon('#3e4e32'), dk = toon('#262e20'), brace = toon('#c9a43a');
+  part(g, B(0.46, 0.42, 0.05), rub, 0, 1.3, 0.18); part(g, B(0.46, 0.42, 0.05), rub, 0, 1.3, -0.23); part(g, B(0.2, 0.16, 0.03), dk, 0, 1.3, 0.21);
+  for (const s of [-1, 1]) { part(g, B(0.06, 0.4, 0.04), brace, 0.16 * s, 1.56, 0.17, -0.1); part(g, B(0.06, 0.4, 0.04), brace, 0.16 * s, 1.56, -0.24, 0.1); part(g, B(0.06, 0.06, 0.05), toon('#d8d0c0'), 0.16 * s, 1.5, 0.21);
+    part(g, B(0.26, 0.14, 0.4), dk, 0.13 * s, 0.08, 0.05); part(g, B(0.25, 0.08, 0.3), dk, 0.13 * s, 0.6, 0.02); }
+  part(g, Cy(0.05, 0.05, 0.02, 10), glow('#ffd36a'), 0.1, 1.38, 0.215, Math.PI / 2); };
+CAPES.angler = { name: 'Pro Angler Vest', lvl: 1, flag: 'anglerVest', vest: true, perk: 'Rare fish 60% more likely' };
+// the vest is worn, not hung off the back: open front panels full of pockets, a collar and a little fly on the chest
+{ const _mp = makePlayerChar; makePlayerChar = function (look) { const g = _mp.apply(this, arguments); if (!look || look.c !== 'angler') return g;
+  const v = toon('#6a7a4a', 'cloth'), pk = toon('#5a6a3a', 'cloth'), tr = toon('#c9a43a');
+  for (const s of [-1, 1]) { part(g, B(0.17, 0.46, 0.04), v, 0.15 * s, 1.3, 0.2); for (let k = 0; k < 2; k++) { part(g, B(0.12, 0.1, 0.03), pk, 0.15 * s, 1.2 + k * 0.17, 0.225); part(g, B(0.12, 0.02, 0.035), tr, 0.15 * s, 1.25 + k * 0.17, 0.225); }
+    part(g, B(0.1, 0.46, 0.38), v, 0.25 * s, 1.3, -0.02); part(g, B(0.08, 0.06, 0.06), v, 0.13 * s, 1.58, 0.15, 0.4); }
+  part(g, B(0.5, 0.46, 0.04), v, 0, 1.3, -0.24); part(g, B(0.3, 0.2, 0.03), pk, 0, 1.25, -0.265); part(g, B(0.06, 0.03, 0.02), glow('#ff6aa8'), 0.15, 1.46, 0.24);
+  return g; }; }
+const TACKLE = [['anglerSet', 'Reel Deal Waders', 1200, 'Rubber to the chest. Fish bite 40% faster while you wear them. (Armor, wardrobe)'], ['anglerVest', 'Pro Angler Vest', 800, 'Forty pockets, one of them lucky: rare fish 60% more likely. (Vest, wardrobe)']];
 function bubTackle() { openDlg('Reel Deal Tackle', 'Old Hank'); S.flags = S.flags || {};
   const render = () => { $('dlgLine').textContent = `"Fish can smell a beginner. Dress like a pro." You have ${S.cr.toLocaleString()} cr.`;
     acts([...TACKLE.map(([f, n, p]) => [S.flags[f] ? `${n} ✓ owned` : `${n} · ${p} cr`, () => { if (S.flags[f]) return; if (S.cr < p) { SFX.hit(); log('Not enough credits.'); return; } S.cr -= p; S.flags[f] = true; markDirty(); SFX.coin(); toast('NEW GEAR', `${n}. Wear it from the wardrobe.`, 2.4); render(); }, false, !!S.flags[f]]), ['Look around', () => { $('dlgLine').textContent = TACKLE.map(t => `${t[1]}: ${t[3]}`).join('  ·  '); }], ['Done', closeDlg, true]]); };
@@ -25490,10 +25568,10 @@ function bubTackle() { openDlg('Reel Deal Tackle', 'Old Hank'); S.flags = S.flag
 // ---------------- the murder in the Burbs ----------------
 const MUR_CLUES = { tracks: 'Little round wheel tracks circle the pool. Lots of them. Like something was doing laps.', barb: 'Barb heard "a humming, and a bump, and a splash" at 3 a.m.', dale: 'Dale says Gerald set his robot vacuum to AGGRESSIVE MODE to "deal with the leaves".', manual: 'A soggy manual: "Sir Sucks-a-Lot v2. Do NOT use near pools. Do NOT insult."' };
 function bubMurderScene(X = 31, Zc = 22, D = [[21, 26], [21, 18], [41, 18]]) { const m = bubS().mur;
-  const pool = new THREE.Group(); part(pool, Cy(1.6, 1.6, 0.5, 18), toon('#ff8ab8'), 0, 0.25, 0); part(pool, Cy(1.45, 1.45, 0.05, 18), new THREE.MeshLambertMaterial({ color: '#4fa8cc' }), 0, 0.46, 0); pool.position.set(X + 0.5, 0, Zc); levelGroup.add(pool); solid(X + 0.5, Zc, 1.6);
-  if (m.st < 2) { const body = new THREE.Group(); part(body, B(0.5, 0.35, 1.6), toon('#ffd36a'), 0, 0.55, 0); part(body, B(0.5, 0.2, 0.5), toon('#e0b892'), 0, 0.5, -1.0); body.position.set(X + 0.5, 0, Zc); body.rotation.y = 0.6; levelGroup.add(body);
-    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, t = new THREE.Mesh(B(0.8, 0.5, 0.04), toon(i % 2 ? '#ffd36a' : '#1e1a18')); t.position.set(X + 0.5 + Math.cos(a) * 2.6, 0.7, Zc + Math.sin(a) * 2.6); t.rotation.y = -a + Math.PI / 2; levelGroup.add(t); } }
-  const robo = new THREE.Group(); part(robo, Cy(0.35, 0.35, 0.12, 14), toon('#2b2a2c'), 0, 0.06, 0); part(robo, new THREE.SphereGeometry(0.05, 6, 4), glow('#ff3b2a'), 0, 0.14, 0.25); robo.position.set(X - 1, 0, Zc + 4); levelGroup.add(robo);
+  const pool = new THREE.Group(); part(pool, Cy(1.6, 1.6, 0.5, 18), toonNS('#ff8ab8'), 0, 0.25, 0); part(pool, Cy(1.45, 1.45, 0.05, 18), new THREE.MeshLambertMaterial({ color: '#4fa8cc' }), 0, 0.46, 0); pool.position.set(X + 0.5, 0, Zc); levelGroup.add(pool); solid(X + 0.5, Zc, 1.6);
+  if (m.st < 2) { const body = new THREE.Group(); part(body, B(0.5, 0.35, 1.6), toonNS('#ffd36a'), 0, 0.55, 0); part(body, B(0.5, 0.2, 0.5), toonNS('#e0b892'), 0, 0.5, -1.0); body.position.set(X + 0.5, 0, Zc); body.rotation.y = 0.6; levelGroup.add(body);
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, t = new THREE.Mesh(B(0.8, 0.5, 0.04), toonNS(i % 2 ? '#ffd36a' : '#1e1a18')); t.position.set(X + 0.5 + Math.cos(a) * 2.6, 0.7, Zc + Math.sin(a) * 2.6); t.rotation.y = -a + Math.PI / 2; levelGroup.add(t); } }
+  const robo = new THREE.Group(); part(robo, Cy(0.35, 0.35, 0.12, 14), toonNS('#2b2a2c'), 0, 0.06, 0); part(robo, new THREE.SphereGeometry(0.05, 6, 4), glow('#ff3b2a'), 0, 0.14, 0.25); robo.position.set(X - 1, 0, Zc + 4); levelGroup.add(robo);
   levelAnims.push(t => { if (bubS().mur.st >= 2) return; robo.position.set(X - 1 + Math.sin(t * 0.8) * 1.2, 0, Zc + 4 + Math.cos(t * 0.6) * 0.8); robo.rotation.y = t; });
   bubNpc(X - 1.4, Zc - 2.6, 0.4, ['#6a5a3a', '#3a3d44', '#c58a64', '#2b2a2c'], '🕵 Detective Clam', bubClam);
   INTERACTS.push({ get x() { return bubS().mur.st === 1 ? X + 2.4 : 1e9; }, z: Zc + 1.6, r: 1.6, label: '🔍 Examine the pool edge', fn: () => bubClue('tracks') });
@@ -25519,8 +25597,8 @@ function bubSuspect(who) { const m = bubS().mur, L = {
   bubTalk('The Burbs', { barb: 'Barb', dale: 'Dale', kevin: 'Kevin' }[who], L, () => { if (m.st === 1 && who !== 'kevin' && !m.clues[who]) bubClue(who); }); }
 
 // ---------------- the hamster ----------------
-function bubHamster() { const g = new THREE.Group(); part(g, new THREE.SphereGeometry(0.16, 10, 8), toon('#d8a060'), 0, 0.15, 0); part(g, new THREE.SphereGeometry(0.1, 8, 6), toon('#f4e0c0'), 0, 0.17, -0.12);
-  for (const s of [-1, 1]) { part(g, new THREE.SphereGeometry(0.04, 6, 4), toon('#ffb8b8'), s * 0.08, 0.3, -0.04); part(g, new THREE.SphereGeometry(0.02, 4, 3), toon('#111'), s * 0.05, 0.21, -0.2); } g.scale.setScalar(1.3); return g; }
+function bubHamster() { const g = new THREE.Group(); part(g, new THREE.SphereGeometry(0.16, 10, 8), toonNS('#d8a060'), 0, 0.15, 0); part(g, new THREE.SphereGeometry(0.1, 8, 6), toonNS('#f4e0c0'), 0, 0.17, -0.12);
+  for (const s of [-1, 1]) { part(g, new THREE.SphereGeometry(0.04, 6, 4), toonNS('#ffb8b8'), s * 0.08, 0.3, -0.04); part(g, new THREE.SphereGeometry(0.02, 4, 3), toonNS('#111'), s * 0.05, 0.21, -0.2); } g.scale.setScalar(1.3); return g; }
 function bubPickHam() { const s = bubS(); if (s.ham) return; s.ham = 1; markDirty(); if (BUB.ham) { BUB.ham.parent && BUB.ham.parent.remove(BUB.ham); BUB.ham = null; } SFX.quest(); toast('TINY HAMSTER', 'He follows you now', 2);
   bubFollower(); setTimeout(() => burpSay('That is a hamster. It is very small, even for here. It probably belongs to someone in the Coral Heights apartments.'), 600); }
 function bubFollower() { const h = bubHamster(); levelGroup.add(h); const p = new THREE.Vector3(player.pos.x, 0, player.pos.z);
@@ -25538,26 +25616,27 @@ const BRES = {
 function bubGoFloor(f, enter) { BUB.floor = f; bubFade(enter ? 'Coral Heights' : `Floor ${f}`, () => { player.pos.set(BAX, 0, enter ? BAZ + BAL / 2 - 2 : BAZ - BAL / 2 + 2.6); player.yaw = enter ? 0 : Math.PI; BUB.lbl && BUB.lbl(); }, () => toast('CORAL HEIGHTS', f === 1 ? 'Lobby' : `Floor ${f}`, 1.4), 200); }
 function bubElevator() { openDlg('Elevator', 'Coral Heights'); $('dlgLine').textContent = `You're on ${BUB.floor === 1 ? 'the lobby' : 'floor ' + BUB.floor}. The music is a smooth jazz cover of a sea shanty.`;
   acts([...[1, 2, 3, 4, 5, 6].map(f => [f === 1 ? 'Lobby' : `${f}`, () => { closeDlg(); SFX.door(); bubGoFloor(f); }, f === BUB.floor, f === BUB.floor]), ['Stay', closeDlg]]); }
-function bubTower() { const X = BAX, Z = BAZ, hall = toon('#8a6a7a'), carpet = toon('#5a2a3a');
-  part(levelGroup, B(BAW, 0.1, BAL), carpet, X, 0.05, Z); part(levelGroup, B(BAW + 0.4, 0.2, BAL + 0.4), toon('#d8d0c0'), X, 3.3, Z);
+function bubTower() { const X = BAX, Z = BAZ, hall = toonNS('#8a6a7a'), carpet = toonNS('#5a2a3a');
+  part(levelGroup, B(BAW, 0.1, BAL), carpet, X, 0.05, Z); part(levelGroup, B(BAW + 0.4, 0.2, BAL + 0.4), toonNS('#d8d0c0'), X, 3.3, Z);
   for (const s of [-1, 1]) { part(levelGroup, B(0.2, 3.4, BAL), hall, X + s * (BAW / 2 + 0.1), 1.7, Z); box(X + s * (BAW / 2 + 0.3), Z, 0.3, BAL / 2); }
   for (const s of [-1, 1]) { part(levelGroup, B(BAW, 3.4, 0.2), hall, X, 1.7, Z + s * (BAL / 2 + 0.1)); box(X, Z + s * (BAL / 2 + 0.3), BAW / 2, 0.3); }
   for (let i = 0; i < 5; i++) part(levelGroup, B(0.6, 0.06, 0.6), glow('#ffe9a0'), X, 3.18, Z - BAL / 2 + 3 + i * 5);
   // elevator at the far (north) end, the street door at the south end on the lobby
-  part(levelGroup, B(2.2, 2.6, 0.12), toon('#c9a43a'), X, 1.3, Z - BAL / 2 + 0.05); part(levelGroup, B(0.04, 2.6, 0.14), toon('#6a5a3a'), X, 1.3, Z - BAL / 2 + 0.06);
+  part(levelGroup, B(2.2, 2.6, 0.12), toonNS('#c9a43a'), X, 1.3, Z - BAL / 2 + 0.05); part(levelGroup, B(0.04, 2.6, 0.14), toonNS('#6a5a3a'), X, 1.3, Z - BAL / 2 + 0.06);
   INTERACTS.push({ x: X, z: Z - BAL / 2 + 1.2, r: 2, label: '🛗 Call the elevator', fn: bubElevator });
-  part(levelGroup, B(1.6, 2.4, 0.12), toon('#3a5266'), X, 1.2, Z + BAL / 2 - 0.05);
-  INTERACTS.push({ x: X, z: Z + BAL / 2 - 1.1, r: 1.8, label: 'Street door (lobby only)', fn: () => { if (BUB.floor !== 1) { toast('CORAL HEIGHTS', 'Take the elevator down to the lobby', 1.6); return; } bubFade('Bubble City', () => { const e = BUB.towerExit || [-20.4, 30, -Math.PI / 2]; player.pos.set(e[0], 0, e[1]); player.yaw = e[2]; }); } });
+  const sdoor = new THREE.Group(); part(sdoor, B(1.6, 2.4, 0.12), toonNS('#3a5266'), 0, 1.2, 0); part(sdoor, B(1.0, 0.6, 0.02), new THREE.MeshBasicMaterial({ color: '#7fe8ff' }), 0, 1.8, -0.07); part(sdoor, B(0.4, 0.05, 0.08), toonNS('#c9a43a'), 0.5, 1.1, -0.08); sdoor.position.set(X, 0, Z + BAL / 2 - 0.05); levelGroup.add(sdoor);
+  const exitSign = bubSign('EXIT', '#1a3a1a', '#7fff6a', 0.7, 0.25, X, 2.6, Z + BAL / 2 - 0.13, Math.PI);
+  INTERACTS.push({ get x() { return BUB.floor === 1 ? X : 1e9; }, z: Z + BAL / 2 - 1.1, r: 1.8, label: 'Street door', fn: () => { if (BUB.floor !== 1) { toast('CORAL HEIGHTS', 'Take the elevator down to the lobby', 1.6); return; } bubFade('Bubble City', () => { const e = BUB.towerExit || [-20.4, 30, -Math.PI / 2]; player.pos.set(e[0], 0, e[1]); player.yaw = e[2]; }); } });
   // floor plate signs, re-drawn on each floor
   const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const tex = new THREE.CanvasTexture(cv), pl = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), new THREE.MeshBasicMaterial({ map: tex }));
   pl.position.set(X, 2.9, Z - BAL / 2 + 0.15); levelGroup.add(pl);
-  BUB.lbl = () => { const c = cv.getContext('2d'); c.fillStyle = '#1a1426'; c.fillRect(0, 0, 256, 64); c.fillStyle = '#ffd36a'; c.font = 'bold 34px monospace'; c.textAlign = 'center'; c.fillText(BUB.floor === 1 ? 'LOBBY' : 'FLOOR ' + BUB.floor, 128, 44); tex.needsUpdate = true; }; BUB.lbl();
+  BUB.lbl = () => { const c = cv.getContext('2d'); c.fillStyle = '#1a1426'; c.fillRect(0, 0, 256, 64); c.fillStyle = '#ffd36a'; c.font = 'bold 34px monospace'; c.textAlign = 'center'; c.fillText(BUB.floor === 1 ? 'LOBBY' : 'FLOOR ' + BUB.floor, 128, 44); tex.needsUpdate = true; sdoor.visible = exitSign.visible = BUB.floor === 1; }; BUB.lbl();
   // doors: A and B on the west wall, C and D on the east
   [['A', -1, -5], ['B', -1, 4], ['C', 1, -5], ['D', 1, 4]].forEach(([k, s, dz]) => { const dx = X + s * (BAW / 2 - 0.02);
-    part(levelGroup, B(0.1, 2.3, 1.2), toon(['#6a3a2a', '#3a4a6a', '#4a5a3a', '#6a5a2a'][' ABCD'.indexOf(k) - 1]), dx, 1.15, Z + dz); part(levelGroup, new THREE.SphereGeometry(0.06, 6, 4), toon('#c9a43a'), dx - s * 0.08, 1.1, Z + dz + 0.4);
+    part(levelGroup, B(0.1, 2.3, 1.2), toonNS(['#6a3a2a', '#3a4a6a', '#4a5a3a', '#6a5a2a'][' ABCD'.indexOf(k) - 1]), dx, 1.15, Z + dz); part(levelGroup, new THREE.SphereGeometry(0.06, 6, 4), toonNS('#c9a43a'), dx - s * 0.08, 1.1, Z + dz + 0.4);
     INTERACTS.push({ x: dx - s * 0.9, z: Z + dz, r: 1.6, get label() { const r = BRES[BUB.floor][k]; return `🚪 ${BUB.floor}${k} · ${r[0]}`; }, fn: () => bubDoor(k) }); });
-  part(levelGroup, B(1.2, 1, 0.6), toon('#6a4f34', 'wood'), X - 1, 0.5, Z + 4); // lobby desk (only Mrs. Krill uses it, but every floor has one; the building was cheap)
-  const pot = new THREE.Group(); part(pot, Cy(0.3, 0.25, 0.5, 8), toon('#c8402f'), 0, 0.25, 0); part(pot, B(0.1, 1.2, 0.1), toon('#3f7a3a', 'leaves'), 0, 1, 0); pot.position.set(X + 1.5, 0, Z - 9); levelGroup.add(pot); }
+  part(levelGroup, B(1.2, 1, 0.6), toonNS('#6a4f34', 'wood'), X - 1, 0.5, Z + 4); // lobby desk (only Mrs. Krill uses it, but every floor has one; the building was cheap)
+  const pot = new THREE.Group(); part(pot, Cy(0.3, 0.25, 0.5, 8), toonNS('#c8402f'), 0, 0.25, 0); part(pot, B(0.1, 1.2, 0.1), toonNS('#3f7a3a', 'leaves'), 0, 1, 0); pot.position.set(X + 1.5, 0, Z - 9); levelGroup.add(pot); }
 function bubDoor(k) { const f = BUB.floor, r = BRES[f][k], s = bubS();
   if (f === 1 && k === 'B') return bubKrill();
   if (f === 4 && k === 'B') return bubMarisol();
@@ -25581,18 +25660,24 @@ function bubStayOver(again) { openDlg('Coral Heights · 4B', 'Marisol Puddleby')
       bubFade('…morning.', () => { bubNight(false); player.hp = maxHp(); markDirty(); }, () => { toast('GOOD MORNING', subsOn() ? 'You feel… colourful. Peanut is watching you.' : 'Full health. Peanut is watching you.', 3); }, 1200); }, 1800); }, true], ['Maybe another time', closeDlg]]); }
 
 // ---------------- your flat: 6B ----------------
-function bubFlat() { const X = BFLAT.x, Z = BFLAT.z, W = 4.2, L = 5, wall = toon('#b8a8c8');
-  part(levelGroup, B(W, 0.1, L), toon('#8a6a4a', 'wood'), X, 0.05, Z); part(levelGroup, B(W, 0.1, L), toon('#e8e4dc'), X, 2.8, Z);
+function bubFlat() { const X = BFLAT.x, Z = BFLAT.z, W = 4.2, L = 5, wall = bcMat('wallpaper', 3, 2, '#d8c8e0');
+  part(levelGroup, B(W, 0.1, L), bcMat('wood', 3, 4, '#c89a6a'), X, 0.05, Z); part(levelGroup, B(W, 0.1, L), toonNS('#e8e4dc'), X, 2.8, Z);
   for (const s of [-1, 1]) { part(levelGroup, B(0.2, 2.8, L), wall, X + s * (W / 2 + 0.1), 1.4, Z); box(X + s * (W / 2 + 0.3), Z, 0.3, L / 2); part(levelGroup, B(W, 2.8, 0.2), wall, X, 1.4, Z + s * (L / 2 + 0.1)); box(X, Z + s * (L / 2 + 0.3), W / 2, 0.3); }
   // the porthole, with fish going past
-  const ph = new THREE.Group(); part(ph, new THREE.TorusGeometry(0.55, 0.09, 8, 20), toon('#c9a43a'), 0, 0, 0); const gl = new THREE.Mesh(new THREE.CircleGeometry(0.55, 20), new THREE.MeshBasicMaterial({ color: '#1f6a8a' })); gl.position.z = -0.02; ph.add(gl);
-  const fsh = new THREE.Mesh(B(0.25, 0.12, 0.02), new THREE.MeshBasicMaterial({ color: '#ffb347' })); fsh.position.z = -0.01; ph.add(fsh); levelAnims.push(t => { const k = (t * 0.25) % 1; fsh.position.x = -0.5 + k; fsh.position.y = Math.sin(t) * 0.15; fsh.visible = k > 0.05 && k < 0.95; });
-  ph.position.set(X - W / 2 + 0.01, 1.6, Z); ph.rotation.y = Math.PI / 2; levelGroup.add(ph);
+  const ph = new THREE.Group(); part(ph, new THREE.TorusGeometry(0.55, 0.09, 8, 20), toonNS('#c9a43a'), 0, 0, 0.04); for (let k = 0; k < 8; k++) part(ph, new THREE.SphereGeometry(0.04, 5, 4), toonNS('#8a6a2a'), Math.cos(k * 0.785) * 0.55, Math.sin(k * 0.785) * 0.55, 0.12);
+  const pcv = document.createElement('canvas'); pcv.width = pcv.height = 128; const pc = pcv.getContext('2d'), ptx = new THREE.CanvasTexture(pcv);
+  const gl = new THREE.Mesh(new THREE.CircleGeometry(0.55, 24), new THREE.MeshBasicMaterial({ map: ptx })); gl.position.z = 0.02; ph.add(gl); let pf = 0;
+  levelAnims.push(t => { if ((pf++ & 3) || BUB.floor === undefined && false) return; const g = pc.createLinearGradient(0, 0, 0, 128); g.addColorStop(0, '#3fa8c8'); g.addColorStop(1, '#0a2a44'); pc.fillStyle = g; pc.fillRect(0, 0, 128, 128);
+    pc.globalAlpha = 0.18; pc.fillStyle = '#e8ffff'; for (let k = 0; k < 4; k++) { const x = 20 + k * 30 + Math.sin(t * 0.5 + k) * 10; pc.beginPath(); pc.moveTo(x, 0); pc.lineTo(x + 14, 0); pc.lineTo(x + 30, 128); pc.lineTo(x + 6, 128); pc.fill(); } pc.globalAlpha = 1;
+    pc.fillStyle = '#2f6a3a'; for (let k = 0; k < 5; k++) { pc.beginPath(); const bx = 8 + k * 28; pc.moveTo(bx, 128); for (let y = 128; y > 50 + k % 2 * 20; y -= 8) pc.lineTo(bx + Math.sin(t + y * 0.05 + k) * 6, y); pc.lineTo(bx + 6, 128); pc.fill(); }
+    for (let k = 0; k < 3; k++) { const fx = ((t * (14 + k * 6) + k * 50) % 170) - 20, fy = 30 + k * 26 + Math.sin(t + k) * 6; pc.fillStyle = ['#ffb347', '#ffd36a', '#ff6a5a'][k]; pc.beginPath(); pc.ellipse(fx, fy, 9, 5, 0, 0, 7); pc.fill(); pc.beginPath(); pc.moveTo(fx - 8, fy); pc.lineTo(fx - 15, fy - 5); pc.lineTo(fx - 15, fy + 5); pc.fill(); }
+    pc.fillStyle = 'rgba(255,255,255,0.5)'; for (let k = 0; k < 6; k++) { pc.beginPath(); pc.arc(100 + Math.sin(k) * 6, 128 - ((t * 20 + k * 22) % 128), 2, 0, 7); pc.fill(); } ptx.needsUpdate = true; });
+  ph.position.set(X - W / 2 + 0.02, 1.6, Z); ph.rotation.y = Math.PI / 2; levelGroup.add(ph);
   // the bed along the back wall, the TV on the opposite wall, a tiny kitchen corner
-  const bed = new THREE.Group(); part(bed, B(1.4, 0.4, 2.2), toon('#6a4f34', 'wood'), 0, 0.2, 0); part(bed, B(1.3, 0.2, 2.1), toon('#e8e4dc'), 0, 0.5, 0); part(bed, B(1.3, 0.12, 1.3), toon('#4a6a9a'), 0, 0.62, 0.35); part(bed, B(0.9, 0.15, 0.4), toon('#ffffff'), 0, 0.66, -0.8);
+  const bed = new THREE.Group(); part(bed, B(1.4, 0.4, 2.2), toonNS('#6a4f34', 'wood'), 0, 0.2, 0); part(bed, B(1.3, 0.2, 2.1), toonNS('#e8e4dc'), 0, 0.5, 0); part(bed, B(1.3, 0.12, 1.3), toonNS('#4a6a9a'), 0, 0.62, 0.35); part(bed, B(0.9, 0.15, 0.4), toonNS('#ffffff'), 0, 0.66, -0.8);
   bed.position.set(X + 1.3, 0, Z - 1.2); levelGroup.add(bed); box(X + 1.3, Z - 1.2, 0.7, 1.1);
-  const tv = bubTV(1.2, 0.7); tv.position.set(X + 1.3, 1.4, Z + L / 2 - 0.06); tv.rotation.y = Math.PI; levelGroup.add(tv); part(levelGroup, B(1.35, 0.85, 0.06), toon('#1e1a18'), X + 1.3, 1.4, Z + L / 2 - 0.0);
-  part(levelGroup, B(1.0, 0.9, 0.6), toon('#d8d0c0'), X - 1.5, 0.45, Z - L / 2 + 0.3); part(levelGroup, B(0.4, 0.5, 0.4), toon('#5d636c'), X - 1.5, 1.15, Z - L / 2 + 0.3);
+  const tv = bubTV(1.2, 0.7); tv.position.set(X + 1.3, 1.4, Z + L / 2 - 0.06); tv.rotation.y = Math.PI; levelGroup.add(tv); part(levelGroup, B(1.35, 0.85, 0.06), toonNS('#1e1a18'), X + 1.3, 1.4, Z + L / 2 - 0.0);
+  part(levelGroup, B(1.0, 0.9, 0.6), toonNS('#d8d0c0'), X - 1.5, 0.45, Z - L / 2 + 0.3); part(levelGroup, B(0.4, 0.5, 0.4), toonNS('#5d636c'), X - 1.5, 1.15, Z - L / 2 + 0.3);
   const pl = new THREE.PointLight(0xffe0b0, 0.8, 8); pl.position.set(X, 2.4, Z); levelGroup.add(pl);
   bubSign('HOME SWEET 6B', '#1a1426', '#ffd0a0', 1.4, 0.3, X - W / 2 + 0.02, 2.3, Z + 1.4, Math.PI / 2);
   INTERACTS.push({ x: X + 1.3, z: Z - 0.3, r: 1.6, get label() { return BUB.lie ? 'Get up' : '🛏 Lie down and watch TV'; }, fn: () => { BUB.lie = !BUB.lie; if (BUB.lie) { player.yaw = Math.PI; player.pitch = 0.05; toast('6B', 'Press E to get up. Hold still to sleep it off.', 2); BUB.lieT = performance.now(); } } });
@@ -25614,31 +25699,31 @@ function bubDetails() {
   const R = i => { const x = Math.sin(i * 91.7 + 13.1) * 43758.5; return x - Math.floor(x); };
   // benches and bins round the plaza ring, a bus stop, hydrants in the Burbs
   for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.2, x = Math.cos(a) * 12.5, z = Math.sin(a) * 12.5, g = new THREE.Group();
-    part(g, B(1.8, 0.08, 0.5), toon('#8a6a44', 'wood'), 0, 0.5, 0); part(g, B(1.8, 0.5, 0.08), toon('#8a6a44', 'wood'), 0, 0.8, -0.25); for (const s of [-1, 1]) part(g, B(0.08, 0.5, 0.5), toon('#2b2a2c'), s * 0.8, 0.25, 0);
+    part(g, B(1.8, 0.08, 0.5), toonNS('#8a6a44', 'wood'), 0, 0.5, 0); part(g, B(1.8, 0.5, 0.08), toonNS('#8a6a44', 'wood'), 0, 0.8, -0.25); for (const s of [-1, 1]) part(g, B(0.08, 0.5, 0.5), toonNS('#2b2a2c'), s * 0.8, 0.25, 0);
     g.position.set(x, 0, z); g.rotation.y = -a - Math.PI / 2; levelGroup.add(g); box(x, z, 0.6, 0.6);
-    if (i % 2) { const b = new THREE.Group(); part(b, Cy(0.28, 0.24, 0.8, 8), toon('#3f7a3a'), 0, 0.4, 0); part(b, Cy(0.3, 0.3, 0.06, 8), toon('#2b2a2c'), 0, 0.82, 0); b.position.set(Math.cos(a + 0.25) * 12.5, 0, Math.sin(a + 0.25) * 12.5); levelGroup.add(b); } }
-  for (const [x, z] of [[29, -22], [29, 14], [33, 4], [29, -6]]) { const h = new THREE.Group(); part(h, Cy(0.14, 0.17, 0.6, 8), toon('#c8402f'), 0, 0.3, 0); part(h, new THREE.SphereGeometry(0.15, 8, 6), toon('#c8402f'), 0, 0.62, 0); part(h, Cy(0.05, 0.05, 0.4, 5), toon('#c8402f'), 0, 0.4, 0, 0, 0, Math.PI / 2); h.position.set(x, 0, z); levelGroup.add(h); }
+    if (i % 2) { const b = new THREE.Group(); part(b, Cy(0.28, 0.24, 0.8, 8), toonNS('#3f7a3a'), 0, 0.4, 0); part(b, Cy(0.3, 0.3, 0.06, 8), toonNS('#2b2a2c'), 0, 0.82, 0); b.position.set(Math.cos(a + 0.25) * 12.5, 0, Math.sin(a + 0.25) * 12.5); levelGroup.add(b); } }
+  for (const [x, z] of [[29, -22], [29, 14], [33, 4], [29, -6]]) { const h = new THREE.Group(); part(h, Cy(0.14, 0.17, 0.6, 8), toonNS('#c8402f'), 0, 0.3, 0); part(h, new THREE.SphereGeometry(0.15, 8, 6), toonNS('#c8402f'), 0, 0.62, 0); part(h, Cy(0.05, 0.05, 0.4, 5), toonNS('#c8402f'), 0, 0.4, 0, 0, 0, Math.PI / 2); h.position.set(x, 0, z); levelGroup.add(h); }
   // the Low Tide: graffiti, puddles, a flickering streetlight, litter, a shopping cart
   for (const [t, c, x, z] of [['GILL COLLINS RULEZ', '#ff3bd2', -38.4, -2], ['NO NARCS', '#7fff6a', -38.4, 12], ['RIZZO OWES ME', '#ffd36a', -38.4, -24]]) { const m = bubSign(t, '#2a2230', c, 2.6, 0.6, x, 1.6, z, Math.PI / 2); m.material.transparent = true; m.material.opacity = 0.85; }
   for (let i = 0; i < 9; i++) { const p = new THREE.Mesh(new THREE.CircleGeometry(0.5 + R(i) * 0.8, 12), new THREE.MeshBasicMaterial({ color: '#2a2a44', transparent: true, opacity: 0.55, depthWrite: false })); p.rotation.x = -Math.PI / 2; p.position.set(-30 - R(i + 9) * 8, 0.03, -26 + R(i + 3) * 44); levelGroup.add(p); }
-  for (let i = 0; i < 14; i++) part(levelGroup, B(0.18, 0.04, 0.12), toon(['#e8e4dc', '#c8402f', '#ffd36a'][i % 3]), -26 - R(i + 30) * 12, 0.03, -24 + R(i + 40) * 42, 0, R(i) * 3, 0);
-  const cart = new THREE.Group(); part(cart, B(0.8, 0.5, 0.5), toon('#9aa1aa'), 0, 0.6, 0); for (const [a, b] of [[-0.35, -0.2], [0.35, -0.2], [-0.35, 0.2], [0.35, 0.2]]) part(cart, Cy(0.06, 0.06, 0.05, 6), toon('#2b2a2c'), a, 0.08, b, Math.PI / 2, 0, 0); cart.position.set(-34.5, 0, 10); cart.rotation.set(0, 0.7, 0.25); levelGroup.add(cart);
+  for (let i = 0; i < 14; i++) part(levelGroup, B(0.18, 0.04, 0.12), toonNS(['#e8e4dc', '#c8402f', '#ffd36a'][i % 3]), -26 - R(i + 30) * 12, 0.03, -24 + R(i + 40) * 42, 0, R(i) * 3, 0);
+  const cart = new THREE.Group(); part(cart, B(0.8, 0.5, 0.5), toonNS('#9aa1aa'), 0, 0.6, 0); for (const [a, b] of [[-0.35, -0.2], [0.35, -0.2], [-0.35, 0.2], [0.35, 0.2]]) part(cart, Cy(0.06, 0.06, 0.05, 6), toonNS('#2b2a2c'), a, 0.08, b, Math.PI / 2, 0, 0); cart.position.set(-34.5, 0, 10); cart.rotation.set(0, 0.7, 0.25); levelGroup.add(cart);
   const sl = new THREE.PointLight(0xff5ad2, 1.2, 10); sl.position.set(-33, 3, 0); levelGroup.add(sl); levelAnims.push(t => { sl.intensity = Math.sin(t * 17) > 0.6 ? 0.2 : 1.2; });
   // kelp swaying outside the dome glass, little skylight bubbles rising up the ribs
-  for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2, k = new THREE.Mesh(B(0.4, 6 + R(i) * 6, 0.1), toon(i % 2 ? '#3f7a3a' : '#2f5a2a', 'leaves')); k.position.set(Math.cos(a) * 57, 3, Math.sin(a) * 57); levelGroup.add(k); levelAnims.push(t => { k.rotation.z = Math.sin(t * 0.7 + i) * 0.15; }); }
+  for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2, k = new THREE.Mesh(B(0.4, 6 + R(i) * 6, 0.1), toonNS(i % 2 ? '#3f7a3a' : '#2f5a2a', 'leaves')); k.position.set(Math.cos(a) * 57, 3, Math.sin(a) * 57); levelGroup.add(k); levelAnims.push(t => { k.rotation.z = Math.sin(t * 0.7 + i) * 0.15; }); }
 }
 function bubFlatDetails() { const X = BFLAT.x, Z = BFLAT.z;
   // rug, a beanbag, a lamp, posters, snack pile, a fish bowl, a clothes pile
-  const rug = new THREE.Mesh(new THREE.CircleGeometry(0.9, 20), toon('#c86a3a')); rug.rotation.x = -Math.PI / 2; rug.position.set(X - 0.4, 0.105, Z + 0.6); levelGroup.add(rug);
-  part(levelGroup, new THREE.SphereGeometry(0.45, 10, 8), toon('#6a3a8a'), X - 1.2, 0.3, Z + 1.3); part(levelGroup, Cy(0.03, 0.03, 1.4, 5), toon('#2b2a2c'), X + 0.35, 0.7, Z - 2.1); part(levelGroup, Cy(0.2, 0.12, 0.25, 8), glow('#ffd36a'), X + 0.35, 1.45, Z - 2.1);
+  const rug = new THREE.Mesh(new THREE.CircleGeometry(0.9, 20), toonNS('#c86a3a')); rug.rotation.x = -Math.PI / 2; rug.position.set(X - 0.4, 0.105, Z + 0.6); levelGroup.add(rug);
+  part(levelGroup, new THREE.SphereGeometry(0.45, 10, 8), toonNS('#6a3a8a'), X - 1.2, 0.3, Z + 1.3); part(levelGroup, Cy(0.03, 0.03, 1.4, 5), toonNS('#2b2a2c'), X + 0.35, 0.7, Z - 2.1); part(levelGroup, Cy(0.2, 0.12, 0.25, 8), glow('#ffd36a'), X + 0.35, 1.45, Z - 2.1);
   for (const [t, c, x] of [['FISH COPS S2', '#c8402f', -0.6], ['GILL COLLINS', '#3a5266', 0.6]]) bubSign(t, c, '#ffffff', 0.7, 0.9, X + x, 1.7, Z - 2.48, 0);
-  for (let i = 0; i < 5; i++) part(levelGroup, B(0.18, 0.06, 0.12), toon(['#ffd36a', '#ff6aa8', '#7fe8ff'][i % 3]), X + 0.4 + i * 0.08, 0.13 + (i % 2) * 0.04, Z + 1.9, 0, i, 0);
-  part(levelGroup, new THREE.SphereGeometry(0.16, 10, 8), new THREE.MeshLambertMaterial({ color: '#9fe8ff', transparent: true, opacity: 0.5 }), X - 1.5, 1.08, Z - 2.2); part(levelGroup, B(0.06, 0.04, 0.02), toon('#ffb347'), X - 1.5, 1.08, Z - 2.2);
-  part(levelGroup, new THREE.SphereGeometry(0.35, 8, 6), toon('#4a6a9a'), X + 1.7, 0.15, Z + 1.8); }
+  for (let i = 0; i < 5; i++) part(levelGroup, B(0.18, 0.06, 0.12), toonNS(['#ffd36a', '#ff6aa8', '#7fe8ff'][i % 3]), X + 0.4 + i * 0.08, 0.13 + (i % 2) * 0.04, Z + 1.9, 0, i, 0);
+  part(levelGroup, new THREE.SphereGeometry(0.16, 10, 8), new THREE.MeshLambertMaterial({ color: '#9fe8ff', transparent: true, opacity: 0.5 }), X - 1.5, 1.08, Z - 2.2); part(levelGroup, B(0.06, 0.04, 0.02), toonNS('#ffb347'), X - 1.5, 1.08, Z - 2.2);
+  part(levelGroup, new THREE.SphereGeometry(0.35, 8, 6), toonNS('#4a6a9a'), X + 1.7, 0.15, Z + 1.8); }
 function bubHallDetails() { const X = BAX, Z = BAZ;
   for (let i = 0; i < 4; i++) bubSign(['NO BALL GAMES', 'QUIET HOURS 10-6', 'RECYCLE YOUR SHELLS', 'WHOSE FISH IS THIS'][i], '#f4f0e8', '#3a2a20', 0.9, 0.5, X + (i % 2 ? 1 : -1) * (BAW / 2 - 0.03), 1.7, Z - 9 + i * 5, i % 2 ? -Math.PI / 2 : Math.PI / 2);
-  for (const z of [-5, 4]) for (const s of [-1, 1]) { const m = new THREE.Mesh(B(0.7, 0.03, 0.5), toon('#8a6a44')); m.position.set(X + s * (BAW / 2 - 0.45), 0.12, Z + z); levelGroup.add(m); }
-  for (const z of [-11, 0, 10]) { part(levelGroup, B(0.6, 0.25, 0.04), toon('#2b2a2c'), X - BAW / 2 + 0.06, 2.5, Z + z, 0, Math.PI / 2, 0); part(levelGroup, B(0.03, 0.18, 0.03), glow('#ff3b2a'), X - BAW / 2 + 0.1, 2.5, Z + z - 0.2); } }
+  for (const z of [-5, 4]) for (const s of [-1, 1]) { const m = new THREE.Mesh(B(0.7, 0.03, 0.5), toonNS('#8a6a44')); m.position.set(X + s * (BAW / 2 - 0.45), 0.12, Z + z); levelGroup.add(m); }
+  for (const z of [-11, 0, 10]) { part(levelGroup, B(0.6, 0.25, 0.04), toonNS('#2b2a2c'), X - BAW / 2 + 0.06, 2.5, Z + z, 0, Math.PI / 2, 0); part(levelGroup, B(0.03, 0.18, 0.03), glow('#ff3b2a'), X - BAW / 2 + 0.1, 2.5, Z + z - 0.2); } }
 { const _b = LEVELS.bubblecity.build; LEVELS.bubblecity.build = function () { _b.apply(this, arguments); try { bubDetails(); bubFlatDetails(); bubHallDetails(); } catch (e) { console.warn('dome2 details', e); } }; }
 
 // Bubble City, rebuilt as a real undersea city: five glass domes on the seabed joined by glass tunnels.
@@ -25655,6 +25740,30 @@ const BC = {
   tubes: [], walk: [],
 };
 const bcD = id => BC.domes.find(d => d.id === id);
+// ---------- the city's own textures: drawn once on canvases, tinted per use, tiled by world size ----------
+const BCT = { c: {}, m: {} };
+BC.lamps = [];
+function bcCanvas(kind) { if (BCT.c[kind]) return BCT.c[kind]; const S = 64, cv = document.createElement('canvas'); cv.width = cv.height = S; const x = cv.getContext('2d'), R = i => bcR(i * 7.3 + kind.length * 31);
+  const fill = (c) => { x.fillStyle = c; x.fillRect(0, 0, S, S); }, speck = (n, cols, sz) => { for (let i = 0; i < n; i++) { x.fillStyle = cols[i % cols.length]; x.fillRect(R(i) * S, R(i + 500) * S, sz, sz); } };
+  if (kind === 'tile') { fill('#ddd6c8'); for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { x.fillStyle = (i + j) % 2 ? '#e8e2d6' : '#d2cabb'; x.fillRect(i * 16 + 1, j * 16 + 1, 14, 14); } speck(40, ['#c8c0b0', '#f0ece4'], 1); }
+  else if (kind === 'asphalt') { fill('#3a3640'); speck(260, ['#2a2830', '#4a4650', '#555060'], 1); x.strokeStyle = '#26242a'; x.beginPath(); x.moveTo(5, 40); x.lineTo(22, 33); x.lineTo(30, 45); x.stroke(); }
+  else if (kind === 'brick') { fill('#5a3a3a'); for (let r = 0; r < 8; r++) for (let k = 0; k < 4; k++) { x.fillStyle = ['#7a4a40', '#6a3e38', '#844e44', '#70443c'][(r + k) % 4]; x.fillRect(k * 16 + (r % 2 ? 8 : 0) - 8 + 1, r * 8 + 1, 14, 6); } }
+  else if (kind === 'siding') { fill('#ffffff'); for (let r = 0; r < 8; r++) { x.fillStyle = '#e4e4e4'; x.fillRect(0, r * 8 + 6, S, 2); x.fillStyle = '#f6f6f6'; x.fillRect(0, r * 8, S, 1); } }
+  else if (kind === 'shingle') { fill('#ffffff'); for (let r = 0; r < 8; r++) for (let k = 0; k < 6; k++) { x.fillStyle = ['#e6e6e6', '#d4d4d4', '#f0f0f0'][(r * 3 + k) % 3]; x.fillRect(k * 11 + (r % 2 ? 5 : 0) - 5, r * 8, 10, 7); } }
+  else if (kind === 'grass') { fill('#5a9a40'); speck(300, ['#4a8a34', '#6aaa48', '#78b852', '#3f7a30'], 1); }
+  else if (kind === 'soil') { fill('#4a3a28'); speck(240, ['#3a2c1e', '#5a4632', '#6a5238'], 1); }
+  else if (kind === 'pavers') { fill('#b8a48c'); for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) { x.fillStyle = ['#c8b49c', '#bca890', '#d0bca4'][(r + k * 2) % 3]; x.fillRect(k * 16 + (r % 2 ? 8 : 0) - 8 + 1, r * 16 + 1, 14, 14); } }
+  else if (kind === 'grate') { fill('#4a4f58'); for (let i = 0; i < S; i += 6) { x.fillStyle = '#3a3e46'; x.fillRect(i, 0, 2, S); x.fillRect(0, i, S, 2); } speck(20, ['#5d636c'], 2); }
+  else if (kind === 'carpet') { fill('#6a2a3a'); for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if ((i + j) % 2) { x.fillStyle = '#7a3446'; x.fillRect(i * 8 + 2, j * 8 + 2, 4, 4); } speck(80, ['#5a2232', '#8a4050'], 1); }
+  else if (kind === 'wallpaper') { fill('#c8b8c8'); for (let i = 0; i < 4; i++) { x.fillStyle = '#b8a4ba'; x.fillRect(i * 16, 0, 6, S); } for (let j = 0; j < 4; j++) { x.fillStyle = '#e0d0e0'; x.beginPath(); x.arc(11, j * 16 + 8, 2, 0, 7); x.fill(); } }
+  else if (kind === 'wood') { fill('#8a6a4a'); for (let r = 0; r < 8; r++) { x.fillStyle = ['#7a5a3c', '#946f4e', '#84623f'][r % 3]; x.fillRect(0, r * 8, S, 7); x.fillStyle = '#5a4028'; x.fillRect((r * 23) % S, r * 8, 1, 7); } }
+  else if (kind === 'concrete') { fill('#9a9aa2'); speck(200, ['#8a8a92', '#a8a8b0', '#7e7e86'], 1); x.fillStyle = '#86868e'; x.fillRect(0, 31, S, 1); x.fillRect(31, 0, 1, S); }
+  else if (kind === 'panel') { fill('#5d636c'); x.fillStyle = '#4a4f58'; x.fillRect(0, 0, S, 2); x.fillRect(0, 0, 2, S); x.fillRect(0, 31, S, 2); speck(8, ['#8a8f99'], 2); }
+  return (BCT.c[kind] = cv); }
+function bcMat(kind, rx, ry, tint) { const k = kind + rx + ':' + ry + (tint || ''); if (BCT.m[k]) return BCT.m[k];
+  const t = new THREE.CanvasTexture(bcCanvas(kind)); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.magFilter = THREE.NearestFilter; t.encoding = THREE.sRGBEncoding;
+  return (BCT.m[k] = new THREE.MeshLambertMaterial({ map: t, color: new THREE.Color(tint || '#ffffff').convertSRGBToLinear() })); }
+
 const bcR = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5; return x - Math.floor(x); };
 // is a point somewhere you are allowed to stand (inside a dome, inside a tunnel, or in the apartment interiors)?
 function bcInside(x, z) {
@@ -25666,15 +25775,15 @@ function bcInside(x, z) {
 
 // ---------- building blocks ----------
 function bcDome(D) { const g = new THREE.Group(), R = D.r;
-  const fl = new THREE.Mesh(new THREE.CircleGeometry(R + 0.5, 48).rotateX(-Math.PI / 2), toon(D.floor)); fl.position.y = 0.07; g.add(fl);
+  const fl = new THREE.Mesh(new THREE.CircleGeometry(R + 0.5, 48).rotateX(-Math.PI / 2), bcMat({hub:'tile',kelp:'soil',burbs:'grass',low:'asphalt',coral:'pavers'}[D.id], Math.round(D.r/2), Math.round(D.r/2), D.floor)); fl.position.y = 0.07; g.add(fl);
   const glass = new THREE.Mesh(new THREE.SphereGeometry(R, 40, 18, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: D.glass, transparent: true, opacity: 0.13, side: THREE.DoubleSide, depthWrite: false }));
   g.add(glass);
-  for (let i = 0; i < 10; i++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(R, 0.22, 5, 32, Math.PI), toon('#7a808a')); rib.rotation.y = i / 10 * Math.PI; g.add(rib); }
-  for (const h of [0.35, 0.7]) { const ring = new THREE.Mesh(new THREE.TorusGeometry(R * Math.cos(Math.asin(h)), 0.16, 5, 48), toon('#7a808a')); ring.rotation.x = Math.PI / 2; ring.position.y = R * h; g.add(ring); }
-  const base = new THREE.Mesh(new THREE.TorusGeometry(R, 0.5, 6, 48), toon('#4a4f58', 'panel')); base.rotation.x = Math.PI / 2; base.position.y = 0.25; g.add(base);
+  for (let i = 0; i < 10; i++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(R, 0.22, 5, 32, Math.PI), toonNS('#7a808a')); rib.rotation.y = i / 10 * Math.PI; g.add(rib); }
+  for (const h of [0.35, 0.7]) { const ring = new THREE.Mesh(new THREE.TorusGeometry(R * Math.cos(Math.asin(h)), 0.16, 5, 48), toonNS('#7a808a')); ring.rotation.x = Math.PI / 2; ring.position.y = R * h; g.add(ring); }
+  const base = new THREE.Mesh(new THREE.TorusGeometry(R, 0.5, 6, 48), toonNS('#4a4f58', 'panel')); base.rotation.x = Math.PI / 2; base.position.y = 0.25; g.add(base);
   const strip = new THREE.Mesh(new THREE.TorusGeometry(R - 0.6, 0.07, 4, 48), glow(D.id === 'low' ? '#ff3bd2' : '#7fe8ff')); strip.rotation.x = Math.PI / 2; strip.position.y = 0.1; g.add(strip);
   // a crown light at the top of every dome
-  part(g, Cy(1.2, 1.6, 0.6, 12), toon('#4a4f58', 'panel'), 0, R - 0.2, 0); part(g, new THREE.SphereGeometry(0.5, 10, 8), glow('#ffe9a0'), 0, R + 0.4, 0);
+  part(g, Cy(1.2, 1.6, 0.6, 12), toonNS('#4a4f58', 'panel'), 0, R - 0.2, 0); part(g, new THREE.SphereGeometry(0.5, 10, 8), glow('#ffe9a0'), 0, R + 0.4, 0);
   g.position.set(D.x, 0, D.z); levelGroup.add(g);
   const L = new THREE.PointLight(D.light, D.id === 'low' ? 1.3 : D.id === 'hub' ? 0.6 : 0.9, R * 2.2); L.position.set(D.x, R * 0.75, D.z); levelGroup.add(L);
   // a big name board where the tunnel from the hub arrives
@@ -25682,45 +25791,53 @@ function bcDome(D) { const g = new THREE.Group(), R = D.r;
 function bcTube(a, b) { const A = bcD(a), Bd = bcD(b), dx = Bd.x - A.x, dz = Bd.z - A.z, dd = Math.hypot(dx, dz), ux = dx / dd, uz = dz / dd;
   const ax = A.x + ux * (A.r - 3), az = A.z + uz * (A.r - 3), len = dd - A.r - Bd.r + 6; BC.tubes.push({ ax, az, ux, uz, len });
   const g = new THREE.Group(), ry = Math.atan2(ux, uz);
-  part(g, B(5, 0.18, len), toon('#5d636c', 'panel'), 0, 0.09, len / 2);
+  part(g, B(5, 0.18, len), bcMat('grate', 2, Math.round(len / 2), '#8a9098'), 0, 0.09, len / 2);
   // a moving walkway down the middle, with chevrons sliding along it
   const cv = document.createElement('canvas'); cv.width = 32; cv.height = 64; const c = cv.getContext('2d'); c.fillStyle = '#2a2e36'; c.fillRect(0, 0, 32, 64); c.strokeStyle = '#7fe8ff'; c.lineWidth = 4; c.beginPath(); c.moveTo(4, 40); c.lineTo(16, 24); c.lineTo(28, 40); c.stroke();
   const tex = new THREE.CanvasTexture(cv); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(1, len / 2.5); const belt = new THREE.Mesh(new THREE.PlaneGeometry(1.6, len).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: tex }));
   belt.position.set(0, 0.2, len / 2); g.add(belt); levelAnims.push(t => { tex.offset.y = -t * 0.6; });
   const tube = new THREE.Mesh(new THREE.CylinderGeometry(3.3, 3.3, len, 22, 1, true), new THREE.MeshLambertMaterial({ color: '#bfefff', transparent: true, opacity: 0.14, side: THREE.DoubleSide, depthWrite: false }));
   tube.rotation.x = Math.PI / 2; tube.position.set(0, 0.6, len / 2); g.add(tube);
-  for (let s = 2; s < len; s += 4) { const rib = new THREE.Mesh(new THREE.TorusGeometry(3.3, 0.14, 5, 22, Math.PI), toon('#7a808a')); rib.position.set(0, 0.6, s); g.add(rib);
+  for (let s = 2; s < len; s += 4) { const rib = new THREE.Mesh(new THREE.TorusGeometry(3.3, 0.14, 5, 22, Math.PI), toonNS('#7a808a')); rib.position.set(0, 0.6, s); g.add(rib);
     for (const sx of [-1, 1]) part(g, B(0.12, 0.06, 1.2), glow(s % 8 < 4 ? '#7fe8ff' : '#ffd36a'), sx * 2.3, 0.2, s); }
-  for (const sx of [-1, 1]) part(g, B(0.15, 0.9, len), toon('#3a3d44', 'panel'), sx * 2.55, 0.45, len / 2);
+  for (const sx of [-1, 1]) part(g, B(0.15, 0.9, len), toonNS('#3a3d44', 'panel'), sx * 2.55, 0.45, len / 2);
   g.position.set(ax, 0, az); g.rotation.y = ry; levelGroup.add(g);
   // tunnel mouth signs on both ends
-  const sA = bubSign('→ ' + Bd.name, '#0c1a24', '#7fe8ff', 4, 0.6, ax + ux * 0.5, 4.4, az + uz * 0.5, ry + Math.PI);
-  const sB = bubSign('→ ' + A.name, '#0c1a24', '#7fe8ff', 4, 0.6, ax + ux * (len - 0.5), 4.4, az + uz * (len - 0.5), ry);
-  for (const [px, pz] of [[ax, az], [ax + ux * len, az + uz * len]]) for (const sx of [-1, 1]) part(levelGroup, B(0.5, 5, 0.5), toon('#4a4f58', 'panel'), px + uz * sx * 3, 2.5, pz - ux * sx * 3); }
+  const sA = bubSign('→ ' + Bd.name, '#0c1a24', '#7fe8ff', 4, 0.6, ax + ux * 0.5, 3.95, az + uz * 0.5, ry + Math.PI);
+  const sB = bubSign('→ ' + A.name, '#0c1a24', '#7fe8ff', 4, 0.6, ax + ux * (len - 0.5), 3.95, az + uz * (len - 0.5), ry);
+  // sliding glass doors at each mouth, parting as you walk up
+  for (const zz of [0.4, len - 0.4]) { const pan = []; for (const sx of [-1, 1]) { const d = new THREE.Group(); part(d, B(2.5, 3.4, 0.08), new THREE.MeshLambertMaterial({ color: '#bfefff', transparent: true, opacity: 0.35, depthWrite: false }), 0, 1.8, 0); part(d, B(2.5, 0.12, 0.12), toonNS('#7a808a'), 0, 3.5, 0); part(d, B(2.5, 0.12, 0.12), toonNS('#7a808a'), 0, 0.12, 0); part(d, B(0.1, 3.4, 0.12), toonNS('#7a808a'), -sx * 1.2, 1.8, 0); part(d, B(0.4, 0.05, 0.1), glow('#7fe8ff'), 0, 2.2, 0.06);
+      d.position.set(sx * 1.25, 0, zz); g.add(d); pan.push([d, sx]); }
+    part(g, B(5.4, 0.3, 0.3), toonNS('#4a4f58', 'panel'), 0, 3.7, zz); const wx = ax + ux * zz, wz = az + uz * zz; let o = 0;
+    levelAnims.push((t, dt) => { const near = Math.hypot(player.pos.x - wx, player.pos.z - wz) < 5.5; o += ((near ? 1 : 0) - o) * Math.min(1, (dt || 0.016) * 6); for (const [d, sx] of pan) d.position.x = sx * (1.25 + o * 2.3); }); }
+  for (const [px, pz] of [[ax, az], [ax + ux * len, az + uz * len]]) for (const sx of [-1, 1]) part(levelGroup, B(0.5, 5, 0.5), toonNS('#4a4f58', 'panel'), px + uz * sx * 3, 2.5, pz - ux * sx * 3); }
 function bcHouse(x, z, ry, c, opts) { const o = opts || {}, w = o.w || 6, d = o.d || 5, h = o.h || 3.4, g = new THREE.Group();
-  const wall = toon(c[0]), trim = toon('#f4f0e8');
+  const wall = bcMat('siding', Math.round(w / 2), Math.round(h / 2), c[0]), trim = toonNS('#f4f0e8');
   part(g, B(w, h, d), wall, 0, h / 2, 0);
   // pitched roof from two slabs, a chimney, a porch with steps, windows with shutters and window boxes
-  for (const s of [-1, 1]) part(g, B(w + 0.6, 0.18, d / 2 + 0.7), toon(c[1]), 0, h + d * 0.22, s * d / 4, s * 0.62, 0, 0);
-  part(g, B(w + 0.2, d * 0.45, 0.12), wall, 0, h + d * 0.2, d / 2 - 0.05); part(g, B(w + 0.2, d * 0.45, 0.12), wall, 0, h + d * 0.2, -d / 2 + 0.05);
-  part(g, B(0.6, 1.4, 0.6), toon('#8a5a4a'), w * 0.28, h + 1.2, -d * 0.15);
-  part(g, B(1.2, 2.1, 0.1), toon(c[2] || '#3a5266'), 0, 1.05, d / 2 + 0.05); part(g, new THREE.SphereGeometry(0.06, 6, 4), toon('#c9a43a'), 0.42, 1.0, d / 2 + 0.12);
-  part(g, B(2.4, 0.15, 1.2), toon('#8a6a44', 'wood'), 0, 0.2, d / 2 + 0.6); part(g, B(2.6, 0.12, 1.3), toon(c[1]), 0, 2.6, d / 2 + 0.55);
+  // a proper gable roof: a triangular prism running the width of the house, shingled, with fascia boards along the eaves
+  { const rr = (d + 0.8) / Math.sqrt(3), rg = new THREE.CylinderGeometry(rr, rr, w + 0.6, 3); rg.rotateZ(Math.PI / 2); rg.rotateX(-Math.PI / 2);
+    const roof = new THREE.Mesh(rg, bcMat('shingle', Math.round(w / 1.5), 3, c[1])); roof.position.set(0, h + rr / 2, 0); g.add(roof);
+    for (const s of [-1, 1]) part(g, B(w + 0.7, 0.12, 0.12), trim, 0, h + 0.02, s * (d / 2 + 0.4)); }
+  part(g, B(0.6, 1.4, 0.6), toonNS('#8a5a4a'), w * 0.28, h + 1.2, -d * 0.15);
+  part(g, B(1.2, 2.1, 0.1), toonNS(c[2] || '#3a5266'), 0, 1.05, d / 2 + 0.05); part(g, new THREE.SphereGeometry(0.06, 6, 4), toonNS('#c9a43a'), 0.42, 1.0, d / 2 + 0.12);
+  part(g, B(2.4, 0.15, 1.2), toonNS('#8a6a44', 'wood'), 0, 0.2, d / 2 + 0.6); part(g, B(2.6, 0.12, 1.3), toonNS(c[1]), 0, 2.6, d / 2 + 0.55);
   for (const s of [-1, 1]) { part(g, Cy(0.07, 0.07, 2.4, 6), trim, s * 1.1, 1.4, d / 2 + 1.1);
     const wx = s * w * 0.32; part(g, B(1.1, 1.0, 0.06), new THREE.MeshBasicMaterial({ color: o.dark ? '#2a3040' : '#ffe9a0' }), wx, 1.7, d / 2 + 0.04);
     part(g, B(1.2, 0.08, 0.1), trim, wx, 2.24, d / 2 + 0.08); part(g, B(0.08, 1.0, 0.1), trim, wx, 1.7, d / 2 + 0.08);
-    for (const k of [-1, 1]) part(g, B(0.3, 1.1, 0.05), toon(c[1]), wx + k * 0.72, 1.7, d / 2 + 0.06);
-    part(g, B(1.1, 0.22, 0.3), toon('#6a4f34', 'wood'), wx, 1.12, d / 2 + 0.2); for (let f = 0; f < 4; f++) part(g, new THREE.SphereGeometry(0.1, 5, 4), toon(['#ff6aa8', '#ffd36a', '#c86aff', '#ff6a5a'][(f + (x | 0)) % 4]), wx - 0.4 + f * 0.27, 1.3, d / 2 + 0.22); }
+    for (const k of [-1, 1]) part(g, B(0.3, 1.1, 0.05), toonNS(c[1]), wx + k * 0.72, 1.7, d / 2 + 0.06);
+    part(g, B(1.1, 0.22, 0.3), toonNS('#6a4f34', 'wood'), wx, 1.12, d / 2 + 0.2); for (let f = 0; f < 4; f++) part(g, new THREE.SphereGeometry(0.1, 5, 4), toonNS(['#ff6aa8', '#ffd36a', '#c86aff', '#ff6a5a'][(f + (x | 0)) % 4]), wx - 0.4 + f * 0.27, 1.3, d / 2 + 0.22); }
   g.position.set(x, 0, z); g.rotation.y = ry; levelGroup.add(g);
   const c2 = Math.abs(Math.cos(ry)), s2 = Math.abs(Math.sin(ry)); box(x, z, (w * c2 + d * s2) / 2, (d * c2 + w * s2) / 2);
   return { door: [x + Math.sin(ry) * (d / 2 + 1.6), z + Math.cos(ry) * (d / 2 + 1.6)] }; }
-function bcLamp(x, z, col) { part(levelGroup, Cy(0.08, 0.12, 3.6, 6), toon('#2b2a2c'), x, 1.8, z); part(levelGroup, B(0.6, 0.08, 0.08), toon('#2b2a2c'), x + 0.25, 3.55, z);
+function bcLamp(x, z, col) { const pool = new THREE.Mesh(new THREE.CircleGeometry(2.6, 20).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: col || '#ffe9a0', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })); pool.position.set(x + 0.5, 0.14, z); levelGroup.add(pool);
+  let pl = null; if (BC.lamps.length < 10) { pl = new THREE.PointLight(new THREE.Color(col || '#ffe9a0'), 0, 9, 2); pl.position.set(x + 0.5, 3.1, z); levelGroup.add(pl); } BC.lamps.push({ pool, pl }); part(levelGroup, Cy(0.08, 0.12, 3.6, 6), toonNS('#2b2a2c'), x, 1.8, z); part(levelGroup, B(0.6, 0.08, 0.08), toonNS('#2b2a2c'), x + 0.25, 3.55, z);
   part(levelGroup, new THREE.SphereGeometry(0.22, 8, 6), glow(col || '#ffe9a0'), x + 0.5, 3.35, z); }
-function bcKelpTree(x, z, s) { const g = new THREE.Group(); s = s || 1; for (let i = 0; i < 5; i++) { const k = new THREE.Mesh(B(0.25 * s, (3 + (i % 3)) * s, 0.08), toon(i % 2 ? '#3f7a3a' : '#5a9a3a', 'leaves')); k.position.set(Math.cos(i * 1.3) * 0.3, (1.5 + (i % 3) * 0.5) * s, Math.sin(i * 1.3) * 0.3); k.rotation.y = i; g.add(k); }
+function bcKelpTree(x, z, s) { const g = new THREE.Group(); s = s || 1; for (let i = 0; i < 5; i++) { const k = new THREE.Mesh(B(0.25 * s, (3 + (i % 3)) * s, 0.08), toonNS(i % 2 ? '#3f7a3a' : '#5a9a3a', 'leaves')); k.position.set(Math.cos(i * 1.3) * 0.3, (1.5 + (i % 3) * 0.5) * s, Math.sin(i * 1.3) * 0.3); k.rotation.y = i; g.add(k); }
   for (let i = 0; i < 6; i++) part(g, new THREE.SphereGeometry(0.12 * s, 6, 4), glow('#b8ff6a'), Math.cos(i) * 0.4, (2 + i * 0.5) * s, Math.sin(i) * 0.4);
   g.position.set(x, 0, z); levelGroup.add(g); levelAnims.push(t => { g.rotation.z = Math.sin(t * 0.8 + x) * 0.05; g.rotation.x = Math.cos(t * 0.6 + z) * 0.05; }); solid(x, z, 0.4); }
 function bcCoral(x, z, s, i) { const g = new THREE.Group(), cols = ['#ff6aa8', '#ffb347', '#c86aff', '#4fffe0', '#ff6a5a'];
-  for (let k = 0; k < 5; k++) { const h = (0.6 + bcR(i + k) * 1.4) * s; const b = new THREE.Mesh(Cy(0.08 * s, 0.14 * s, h, 6), toon(cols[(i + k) % 5])); b.position.set(Math.cos(k * 1.7) * 0.3 * s, h / 2, Math.sin(k * 1.7) * 0.3 * s); b.rotation.set(Math.cos(k) * 0.4, 0, Math.sin(k) * 0.4); g.add(b);
+  for (let k = 0; k < 5; k++) { const h = (0.6 + bcR(i + k) * 1.4) * s; const b = new THREE.Mesh(Cy(0.08 * s, 0.14 * s, h, 6), toonNS(cols[(i + k) % 5])); b.position.set(Math.cos(k * 1.7) * 0.3 * s, h / 2, Math.sin(k * 1.7) * 0.3 * s); b.rotation.set(Math.cos(k) * 0.4, 0, Math.sin(k) * 0.4); g.add(b);
     part(g, new THREE.SphereGeometry(0.12 * s, 6, 4), glow(cols[(i + k + 2) % 5]), b.position.x * 1.6, h, b.position.z * 1.6); }
   g.position.set(x, 0, z); levelGroup.add(g); }
 // people walking set routes and facing the way they walk
@@ -25733,20 +25850,20 @@ function bcWalkers(D, n, kind, seed) { for (let i = 0; i < n; i++) { const k = s
 
 // ---------- the seabed outside ----------
 function bcSeabed() {
-  const sea = new THREE.Mesh(new THREE.CircleGeometry(230, 48).rotateX(-Math.PI / 2), toon('#1c3e4a')); sea.position.y = -0.15; levelGroup.add(sea);
+  const sea = new THREE.Mesh(new THREE.CircleGeometry(230, 48).rotateX(-Math.PI / 2), toonNS('#1c3e4a')); sea.position.y = -0.15; levelGroup.add(sea);
   const sky = new THREE.Mesh(new THREE.SphereGeometry(240, 24, 12), new THREE.MeshBasicMaterial({ color: '#0a2a3e', side: THREE.BackSide, fog: false })); levelGroup.add(sky);
   // light shafts coming down from the surface
   for (let i = 0; i < 9; i++) { const sh = new THREE.Mesh(new THREE.PlaneGeometry(6 + bcR(i) * 6, 90), new THREE.MeshBasicMaterial({ color: '#9fe8ff', transparent: true, opacity: 0.06, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
     sh.position.set(-110 + i * 27, 45, -60 + bcR(i + 3) * 120); sh.rotation.set(0, bcR(i + 6) * 3, 0.25); levelGroup.add(sh); levelAnims.push(t => { sh.material.opacity = 0.04 + Math.sin(t * 0.3 + i) * 0.025; }); }
   // rocks and kelp forest between the domes (never inside them)
   for (let i = 0; i < 70; i++) { const a = bcR(i) * Math.PI * 2, r = 40 + bcR(i + 99) * 80, x = Math.cos(a) * r, z = Math.sin(a) * r; if (BC.domes.some(d => Math.hypot(x - d.x, z - d.z) < d.r + 6) || BC.tubes.some(t => { const dx = x - t.ax, dz = z - t.az, a = dx * t.ux + dz * t.uz, c = -dx * t.uz + dz * t.ux; return a > -6 && a < t.len + 6 && Math.abs(c) < 9; })) continue;
-    if (i % 3) { const kg = new THREE.Group(); for (let k = 0; k < 4; k++) { const h = 6 + bcR(i + k) * 10, m = new THREE.Mesh(B(0.5, h, 0.12), toon(k % 2 ? '#2f6a3a' : '#3f8a3a', 'leaves')); m.position.set(k * 0.6 - 0.9, h / 2, Math.sin(k) * 0.5); kg.add(m); }
+    if (i % 3) { const kg = new THREE.Group(); for (let k = 0; k < 4; k++) { const h = 6 + bcR(i + k) * 10, m = new THREE.Mesh(B(0.5, h, 0.12), toonNS(k % 2 ? '#2f6a3a' : '#3f8a3a', 'leaves')); m.position.set(k * 0.6 - 0.9, h / 2, Math.sin(k) * 0.5); kg.add(m); }
       kg.position.set(x, 0, z); levelGroup.add(kg); levelAnims.push(t => { kg.rotation.z = Math.sin(t * 0.5 + i) * 0.08; }); }
-    else { const rk = new THREE.Mesh(new THREE.DodecahedronGeometry(1.5 + bcR(i + 4) * 3, 0), toon('#3a4a52')); rk.position.set(x, 0.5, z); rk.scale.y = 0.6; rk.rotation.y = i; levelGroup.add(rk); } }
+    else { const rk = new THREE.Mesh(new THREE.DodecahedronGeometry(1.5 + bcR(i + 4) * 3, 0), toonNS('#3a4a52')); rk.position.set(x, 0.5, z); rk.scale.y = 0.6; rk.rotation.y = i; levelGroup.add(rk); } }
   // a whale drifting slowly over the whole city
-  const wh = new THREE.Group(), wm = toon('#3a5a7a'), wb = toon('#c8d8e0');
+  const wh = new THREE.Group(), wm = toonNS('#3a5a7a'), wb = toonNS('#c8d8e0');
   part(wh, B(5, 4, 16), wm, 0, 0, 0); part(wh, B(4.6, 1.2, 12), wb, 0, -2.2, 1); part(wh, B(3, 3, 5), wm, 0, -0.3, -9.5); part(wh, B(8, 0.4, 3), wm, 0, 0, -12.5);
-  for (const s of [-1, 1]) { part(wh, B(4, 0.3, 2), wm, s * 4, -1.3, 3, 0, 0, s * 0.4); part(wh, new THREE.SphereGeometry(0.3, 6, 4), toon('#111'), s * 2.55, 0.6, 6.5); }
+  for (const s of [-1, 1]) { part(wh, B(4, 0.3, 2), wm, s * 4, -1.3, 3, 0, 0, s * 0.4); part(wh, new THREE.SphereGeometry(0.3, 6, 4), toonNS('#111'), s * 2.55, 0.6, 6.5); }
   levelGroup.add(wh); levelAnims.push(t => { const a = t * 0.02; wh.position.set(Math.cos(a) * 90, 60 + Math.sin(t * 0.2) * 3, Math.sin(a) * 90); wh.rotation.y = -a; wh.rotation.z = Math.sin(t * 0.3) * 0.05; });
   // fish schools circling each dome
   const fc = ['#ffb347', '#4fd2ff', '#ff6aa8', '#ffd36a', '#b8ff6a'];
@@ -25760,11 +25877,11 @@ function bcSeabed() {
 // ---------- districts ----------
 function bcHub() { const D = bcD('hub'), X = D.x, Z = D.z;
   // tiled plaza with rings of pale stone, a three-tier bubble fountain and the founder's statue
-  const tile = new THREE.Mesh(new THREE.CircleGeometry(14, 40).rotateX(-Math.PI / 2), toon('#a89e8e')); tile.position.set(X, 0.1, Z); levelGroup.add(tile);
-  const ring = new THREE.Mesh(new THREE.RingGeometry(14, 15, 40).rotateX(-Math.PI / 2), toon('#8fb8cc')); ring.position.set(X, 0.11, Z); levelGroup.add(ring);
-  for (const [r, h, y] of [[5, 0.6, 0.3], [3.4, 0.5, 0.9], [1.8, 0.4, 1.5]]) { part(levelGroup, Cy(r, r + 0.3, h, 28), toon('#c8e0ff'), X, y, Z); part(levelGroup, Cy(r - 0.3, r - 0.3, 0.05, 28), new THREE.MeshLambertMaterial({ color: '#4fa8cc', transparent: true, opacity: 0.8 }), X, y + h / 2 + 0.01, Z); }
+  const tile = new THREE.Mesh(new THREE.CircleGeometry(14, 40).rotateX(-Math.PI / 2), bcMat('tile', 8, 8, '#c8beb0')); tile.position.set(X, 0.1, Z); levelGroup.add(tile);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(14, 15, 40).rotateX(-Math.PI / 2), toonNS('#8fb8cc')); ring.position.set(X, 0.11, Z); levelGroup.add(ring);
+  for (const [r, h, y] of [[5, 0.6, 0.3], [3.4, 0.5, 0.9], [1.8, 0.4, 1.5]]) { part(levelGroup, Cy(r, r + 0.3, h, 28), toonNS('#c8e0ff'), X, y, Z); part(levelGroup, Cy(r - 0.3, r - 0.3, 0.05, 28), new THREE.MeshLambertMaterial({ color: '#4fa8cc', transparent: true, opacity: 0.8 }), X, y + h / 2 + 0.01, Z); }
   solid(X, Z, 5.4);
-  const fish = new THREE.Group(); part(fish, B(1.2, 1.6, 3), toon('#c9a43a'), 0, 0, 0); part(fish, B(0.2, 1.6, 1.2), toon('#c9a43a'), 0, 0.3, -1.9); part(fish, new THREE.SphereGeometry(0.15, 6, 4), toon('#111'), 0.62, 0.3, 1);
+  const fish = new THREE.Group(); part(fish, B(1.2, 1.6, 3), toonNS('#c9a43a'), 0, 0, 0); part(fish, B(0.2, 1.6, 1.2), toonNS('#c9a43a'), 0, 0.3, -1.9); part(fish, new THREE.SphereGeometry(0.15, 6, 4), toonNS('#111'), 0.62, 0.3, 1);
   fish.position.set(X, 3.4, Z); fish.rotation.x = -0.5; levelGroup.add(fish); levelAnims.push(t => { fish.rotation.y = t * 0.2; });
   bubSign('FOUNDER FISHWICK · HE SWAM SO WE COULD SIT', '#3a2a1a', '#ffd36a', 4.4, 0.45, X, 1.25, Z + 5.45);
   const fb = []; for (let i = 0; i < 20; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.12 + (i % 3) * 0.05, 6, 4), new THREE.MeshBasicMaterial({ color: '#e8f8ff', transparent: true, opacity: 0.6 })); levelGroup.add(m); fb.push(m); }
@@ -25775,50 +25892,68 @@ function bcHub() { const D = bcD('hub'), X = D.x, Z = D.z;
   c.font = 'bold 13px monospace'; c.textAlign = 'center'; for (const d of BC.domes) { c.fillStyle = d.glass; c.beginPath(); c.arc(128 + d.x * 1.1, 128 + d.z * 1.1, d.r * 0.7, 0, 7); c.fill(); c.fillStyle = '#0c1a24'; c.fillText(d.name.replace('THE ', ''), 128 + d.x * 1.1, 132 + d.z * 1.1); }
   c.fillStyle = '#ffd36a'; c.fillText('YOU ARE HERE', 128, 112);
   const board = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) })); board.position.set(X + 9, 2.2, Z + 9); board.rotation.y = Math.PI * 0.25; board.position.set(X + 8.95, 2.2, Z + 8.95); levelGroup.add(board);
-  part(levelGroup, B(2.9, 2.9, 0.2), toon('#3a3d44', 'panel'), X + 9.07, 2.2, Z + 9.07, 0, Math.PI * 0.75, 0); part(levelGroup, B(0.2, 0.8, 0.2), toon('#3a3d44'), X + 9.07, 0.4, Z + 9.07); box(X + 9.07, Z + 9.07, 1, 1);
+  part(levelGroup, B(2.9, 2.9, 0.2), toonNS('#3a3d44', 'panel'), X + 9.07, 2.2, Z + 9.07, 0, Math.PI * 0.75, 0); part(levelGroup, B(0.2, 0.8, 0.2), toonNS('#3a3d44'), X + 9.07, 0.4, Z + 9.07); box(X + 9.07, Z + 9.07, 1, 1);
   // food carts, kelp trees, benches, lamps, flags
-  const cart = (x, z, ry, name, col) => { const g = new THREE.Group(); part(g, B(2.2, 1.0, 1.2), toon(col), 0, 0.7, 0); for (const [a, b] of [[-0.8, -0.6], [0.8, -0.6], [-0.8, 0.6], [0.8, 0.6]]) part(g, Cy(0.22, 0.22, 0.1, 10), toon('#2b2a2c'), a, 0.22, b, Math.PI / 2, 0, 0);
-    for (let k = 0; k < 4; k++) part(g, B(0.6, 0.08, 1.6), toon(k % 2 ? '#ffffff' : col), -0.9 + k * 0.6, 2.4, 0, 0.2); for (const s of [-1, 1]) part(g, Cy(0.04, 0.04, 1.3, 4), toon('#2b2a2c'), s * 1.0, 1.85, 0.5);
+  const cart = (x, z, ry, name, col) => { const g = new THREE.Group(); part(g, B(2.2, 1.0, 1.2), toonNS(col), 0, 0.7, 0); for (const [a, b] of [[-0.8, -0.6], [0.8, -0.6], [-0.8, 0.6], [0.8, 0.6]]) part(g, Cy(0.22, 0.22, 0.1, 10), toonNS('#2b2a2c'), a, 0.22, b, Math.PI / 2, 0, 0);
+    for (let k = 0; k < 4; k++) part(g, B(0.6, 0.08, 1.6), toonNS(k % 2 ? '#ffffff' : col), -0.9 + k * 0.6, 2.4, 0, 0.2); for (const s of [-1, 1]) part(g, Cy(0.04, 0.04, 1.3, 4), toonNS('#2b2a2c'), s * 1.0, 1.85, 0.5);
     const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.35), new THREE.MeshBasicMaterial({ map: signTex(name, '#1a1a1a', '#ffd36a') })); sg.position.set(0, 1.0, 0.61); g.add(sg); g.position.set(x, 0, z); g.rotation.y = ry; levelGroup.add(g); box(x, z, 1.2, 1.2); };
   cart(X - 11, Z + 6, Math.PI / 2 + 0.4, 'KELP DOGS', '#c8402f'); cart(X + 12, Z - 4, -Math.PI / 2, 'BUBBLE TEA', '#4fd2ff'); cart(X - 8, Z - 12, 0.6, 'PEARL POPS', '#ff6aa8');
   for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.4; bcKelpTree(X + Math.cos(a) * 20, Z + Math.sin(a) * 20, 1.1); bcLamp(X + Math.cos(a + 0.3) * 16, Z + Math.sin(a + 0.3) * 16); }
   for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, x = X + Math.cos(a) * 9, z = Z + Math.sin(a) * 9, g = new THREE.Group();
-    part(g, B(1.8, 0.08, 0.5), toon('#8a6a44', 'wood'), 0, 0.5, 0); part(g, B(1.8, 0.5, 0.08), toon('#8a6a44', 'wood'), 0, 0.8, -0.25); for (const s of [-1, 1]) part(g, B(0.08, 0.5, 0.5), toon('#2b2a2c'), s * 0.8, 0.25, 0);
+    part(g, B(1.8, 0.08, 0.5), toonNS('#8a6a44', 'wood'), 0, 0.5, 0); part(g, B(1.8, 0.5, 0.08), toonNS('#8a6a44', 'wood'), 0, 0.8, -0.25); for (const s of [-1, 1]) part(g, B(0.08, 0.5, 0.5), toonNS('#2b2a2c'), s * 0.8, 0.25, 0);
     g.position.set(x, 0, z); g.rotation.y = -a - Math.PI / 2; levelGroup.add(g); box(x, z, 0.6, 0.6); }
-  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2, f = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.5), toon(['#ff6aa8', '#ffd36a', '#4fd2ff', '#7fff6a'][i % 4])); f.position.set(X + Math.cos(a) * 12, 7, Z + Math.sin(a) * 12); f.lookAt(X, 7, Z); levelGroup.add(f); }
+  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2, f = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.5), toonNS(['#ff6aa8', '#ffd36a', '#4fd2ff', '#7fff6a'][i % 4])); f.position.set(X + Math.cos(a) * 12, 7, Z + Math.sin(a) * 12); f.lookAt(X, 7, Z); levelGroup.add(f); }
   // the Shrink-o-Matic out (grow back to normal size)
-  const m = new THREE.Group(); part(m, Cy(2.2, 2.4, 0.4, 20), toon('#3a3d44', 'panel'), 0, 0.2, 0); part(m, Cy(1.6, 1.6, 0.05, 20), glow('#4fd2ff'), 0, 0.43, 0);
-  const ringM = new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.18, 8, 28), toon('#c9a43a')); ringM.position.y = 2.2; m.add(ringM); for (const s of [-1, 1]) part(m, B(0.3, 2.4, 0.3), toon('#5d636c'), s * 1.9, 1.2, 0);
+  const m = new THREE.Group(); part(m, Cy(2.2, 2.4, 0.4, 20), toonNS('#3a3d44', 'panel'), 0, 0.2, 0); part(m, Cy(1.6, 1.6, 0.05, 20), glow('#4fd2ff'), 0, 0.43, 0);
+  const ringM = new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.18, 8, 28), toonNS('#c9a43a')); ringM.position.y = 2.2; m.add(ringM); for (const s of [-1, 1]) part(m, B(0.3, 2.4, 0.3), toonNS('#5d636c'), s * 1.9, 1.2, 0);
   m.position.set(X + 15, 0, Z + 16); levelGroup.add(m); levelAnims.push(t => { ringM.rotation.x = t * 0.8; }); bubSign('GROW BACK · EXIT', '#0c1a24', '#7fe8ff', 2.4, 0.45, X + 15, 4.0, Z + 16, Math.PI * 0.75);
   INTERACTS.push({ x: X + 15, z: Z + 16, r: 2.6, label: '🫧 Grow back to normal size (exit)', fn: ocGrow });
   bubSign('WELCOME TO BUBBLE CITY · POP. 4,000 · PLEASE DO NOT TAP ON THE DOME', '#0c1a24', '#ffe9a0', 9, 0.7, X, 8.5, Z + 18, Math.PI);
   bcWalkers(D, 10, 'mix', 0); }
 function bcLow() { const D = bcD('low'), X = D.x, Z = D.z;
   // wet asphalt street running east-west, kerbs, puddles reflecting neon
-  part(levelGroup, B(44, 0.04, 7), toon('#1e1c24'), X, 0.1, Z); for (let i = 0; i < 10; i++) part(levelGroup, B(1.6, 0.05, 0.15), toon('#ffd36a'), X - 20 + i * 4.4, 0.13, Z);
+  part(levelGroup, B(44, 0.04, 7), toonNS('#1e1c24'), X, 0.1, Z); for (let i = 0; i < 10; i++) part(levelGroup, B(1.6, 0.05, 0.15), toonNS('#ffd36a'), X - 20 + i * 4.4, 0.13, Z);
   for (let i = 0; i < 14; i++) { const p = new THREE.Mesh(new THREE.CircleGeometry(0.5 + bcR(i) * 0.9, 12), new THREE.MeshBasicMaterial({ color: ['#ff3bd2', '#4fffe0', '#2a2a44'][i % 3], transparent: true, opacity: 0.35, depthWrite: false })); p.rotation.x = -Math.PI / 2; p.position.set(X - 18 + bcR(i + 9) * 36, 0.14, Z - 3 + bcR(i + 3) * 6); levelGroup.add(p); }
   // storefronts: tall narrow buildings with neon, fire escapes and roof junk, on both sides of the street
   const fronts = [['CRABBY\'S PAWN', '#ffd36a', 'pawn'], ['THE BARNACLE BAR', '#4fffe0', 'bar'], ['INK SQUID TATTOO', '#ff3bd2', 'ink'], ['FISH FRY ARCADE', '#7fff6a', 'arc'], ['24/7 SHELLMART', '#ff6a3a', 'mart'], ['KARAOKE CLAM', '#c86aff', 'kar']];
   BC.low = {};
   fronts.forEach(([name, col, id], i) => { const side = i % 2 ? 1 : -1, x = X - 14 + Math.floor(i / 2) * 14, z = Z + side * 9.5, h = 7 + (i % 3) * 2.5, g = new THREE.Group(), ry = side > 0 ? Math.PI : 0;
-    part(g, B(10, h, 6), toon(['#3a3048', '#2a3a44', '#44303a'][i % 3], 'panel'), 0, h / 2, 0);
+    part(g, B(10, h, 6), bcMat('brick', 5, Math.round(h / 1.5), ['#7a6488', '#5a7a88', '#886070'][i % 3]), 0, h / 2, 0);
     part(g, B(6, 2.4, 0.1), new THREE.MeshBasicMaterial({ color: '#1a1020' }), 0, 1.4, 3.03); part(g, B(6.2, 0.12, 0.2), glow(col), 0, 2.7, 3.05);
-    const sg = new THREE.Mesh(new THREE.PlaneGeometry(6, 1), new THREE.MeshBasicMaterial({ map: signTex(name, '#120818', col) })); sg.position.set(0, 3.4, 3.12); g.add(sg);
-    for (let f = 1; f < h / 2.6; f++) for (const s of [-1, 1]) part(g, B(1.4, 1.2, 0.06), (f + i + s) % 3 ? new THREE.MeshBasicMaterial({ color: ['#ffd0a0', '#ff6ad2', '#7fe8ff'][(f + i) % 3] }) : toon('#1a1a22'), s * 2.8, 2.2 + f * 2.6, 3.04);
-    for (let f = 1; f < h / 2.6; f++) { part(g, B(2.4, 0.08, 1), toon('#2b2a2c'), 3.6, 1.6 + f * 2.6, 3.5); part(g, B(2.4, 0.6, 0.04), toon('#2b2a2c'), 3.6, 1.9 + f * 2.6, 4.0); }
-    part(g, Cy(0.5, 0.5, 1.4, 8), toon('#5d636c'), -3, h + 0.7, -1); part(g, B(1.4, 0.8, 1.4), toon('#5d636c', 'panel'), 2.5, h + 0.4, 0);
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(6, 1), new THREE.MeshBasicMaterial({ map: bubSignTex(name, '#120818', col, 6, 1) })); sg.position.set(0, 3.4, 3.12); g.add(sg);
+    // awning, AC units, cables, posters and a bit of trash on every front
+    for (let k = 0; k < 6; k++) part(g, B(1.05, 0.06, 1.3), toonNS(k % 2 ? col : '#f4f0e8'), -2.6 + k * 1.04, 2.95, 3.6, 0.35, 0, 0);
+    for (let f = 1; f < h / 2.6; f++) if ((f + i) % 2) { part(g, B(0.9, 0.6, 0.5), toonNS('#a8acb4', 'panel'), -1.2, 2.2 + f * 2.6 - 0.9, 3.3); part(g, Cy(0.22, 0.22, 0.05, 10), toonNS('#3a3d44'), -1.2, 2.2 + f * 2.6 - 0.9, 3.56, Math.PI / 2, 0, 0); }
+    part(g, Cy(0.03, 0.03, 10, 4), toonNS('#111'), 0, h - 0.6, 3.1, 0, 0, Math.PI / 2 + 0.06); part(g, Cy(0.03, 0.03, 4, 4), toonNS('#111'), -4.9, h / 2, 3.08);
+    for (let k = 0; k < 3; k++) { const pc = document.createElement('canvas'); pc.width = 32; pc.height = 48; const c = pc.getContext('2d'); c.fillStyle = ['#ffd36a', '#ff6ad2', '#7fe8ff', '#7fff6a'][(i + k) % 4]; c.fillRect(0, 0, 32, 48); c.fillStyle = '#120818'; c.fillRect(4, 6, 24, 18); c.font = 'bold 8px monospace'; c.fillText(['GIG', 'LOST', 'SALE', 'WANTED'][(i + k) % 4], 3, 36); c.fillRect(4, 40, 24, 2);
+      const pm = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.75), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(pc) })); pm.position.set(3.4 + k * 0.55, 1.2 + (k % 2) * 0.2, 3.07); pm.rotation.z = (k - 1) * 0.08; g.add(pm); }
+    for (let k = 0; k < 3; k++) part(g, k === 2 ? Cy(0.25, 0.25, 0.6, 8) : B(0.5, 0.4, 0.4), toonNS(k === 2 ? '#3a5a3a' : '#2b2a2c'), -4.2 + k * 0.6, k === 2 ? 0.3 : 0.2, 3.6);
+    for (let f = 1; f < h / 2.6; f++) for (const s of [-1, 1]) part(g, B(1.4, 1.2, 0.06), (f + i + s) % 3 ? new THREE.MeshBasicMaterial({ color: ['#ffd0a0', '#ff6ad2', '#7fe8ff'][(f + i) % 3] }) : toonNS('#1a1a22'), s * 2.8, 2.2 + f * 2.6, 3.04);
+    for (let f = 1; f < h / 2.6; f++) { part(g, B(2.4, 0.08, 1), toonNS('#2b2a2c'), 3.6, 1.6 + f * 2.6, 3.5); part(g, B(2.4, 0.6, 0.04), toonNS('#2b2a2c'), 3.6, 1.9 + f * 2.6, 4.0); }
+    part(g, Cy(0.5, 0.5, 1.4, 8), toonNS('#5d636c'), -3, h + 0.7, -1); part(g, B(1.4, 0.8, 1.4), toonNS('#5d636c', 'panel'), 2.5, h + 0.4, 0);
     g.position.set(x, 0, z); g.rotation.y = ry; levelGroup.add(g); box(x, z, 5, 3); BC.low[id] = [x, z - side * 4.2];
     const L = new THREE.PointLight(new THREE.Color(col), 0.8, 9); L.position.set(x, 2.5, z - side * 4.5); levelGroup.add(L); levelAnims.push(t => { L.intensity = (Math.sin(t * 9 + i * 7) > 0.93 ? 0.15 : 0.8); }); });
   // alley props: dumpsters, a burning barrel, steam vents, a van full of TVs, a broken payphone
-  for (const [x, z] of [[X - 21, Z - 4.6], [X + 19, Z + 4.6]]) { const dg = new THREE.Group(); part(dg, B(2, 1.3, 1.1), toon('#2f5a3a'), 0, 0.75, 0); part(dg, B(2.1, 0.12, 1.2), toon('#1e3a26'), 0, 1.45, -0.1, -0.3, 0, 0); dg.position.set(x, 0, z); levelGroup.add(dg); box(x, z, 1.1, 0.6); }
-  const bar = new THREE.Group(); part(bar, Cy(0.4, 0.38, 1, 10), toon('#5a3a2a'), 0, 0.5, 0); bar.position.set(X + 4, 0, Z - 4.2); levelGroup.add(bar); solid(X + 4, Z - 4.2, 0.5);
+  for (const [x, z] of [[X - 21, Z - 4.6], [X + 19, Z + 4.6]]) { const dg = new THREE.Group(); part(dg, B(2, 1.3, 1.1), toonNS('#2f5a3a'), 0, 0.75, 0); part(dg, B(2.1, 0.12, 1.2), toonNS('#1e3a26'), 0, 1.45, -0.1, -0.3, 0, 0); dg.position.set(x, 0, z); levelGroup.add(dg); box(x, z, 1.1, 0.6); }
+  const bar = new THREE.Group(); part(bar, Cy(0.4, 0.38, 1, 10), toonNS('#5a3a2a'), 0, 0.5, 0); bar.position.set(X + 4, 0, Z - 4.2); levelGroup.add(bar); solid(X + 4, Z - 4.2, 0.5);
   const fire = []; for (let i = 0; i < 6; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.18, 6, 4), new THREE.MeshBasicMaterial({ color: i % 2 ? '#ff8a2a' : '#ffd36a', transparent: true, opacity: 0.85 })); levelGroup.add(f); fire.push(f); }
   const fl = new THREE.PointLight(0xff8a2a, 1.2, 7); fl.position.set(X + 4, 1.6, Z - 4.2); levelGroup.add(fl);
   levelAnims.push(t => { fire.forEach((f, i) => { const k = (t * 1.2 + i / 6) % 1; f.position.set(X + 4 + Math.sin(i * 2 + t * 3) * 0.15, 1.05 + k * 1.1, Z - 4.2 + Math.cos(i * 2) * 0.15); f.scale.setScalar(1 - k); }); fl.intensity = 1 + Math.sin(t * 13) * 0.3; });
-  for (const [x, z] of [[X - 8, Z + 1.5], [X + 10, Z - 1.8]]) { const st = []; part(levelGroup, B(1, 0.06, 1), toon('#5d636c'), x, 0.08, z); for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.3, 6, 4), new THREE.MeshBasicMaterial({ color: '#d8d8e8', transparent: true, opacity: 0.25, depthWrite: false })); levelGroup.add(m); st.push(m); }
+  for (const [x, z] of [[X - 8, Z + 1.5], [X + 10, Z - 1.8]]) { const st = []; part(levelGroup, B(1, 0.06, 1), toonNS('#5d636c'), x, 0.08, z); for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.3, 6, 4), new THREE.MeshBasicMaterial({ color: '#d8d8e8', transparent: true, opacity: 0.25, depthWrite: false })); levelGroup.add(m); st.push(m); }
     levelAnims.push(t => st.forEach((m, i) => { const k = (t * 0.4 + i / 6) % 1; m.position.set(x + Math.sin(i + t) * 0.3, 0.2 + k * 3, z); m.scale.setScalar(0.6 + k * 2); m.material.opacity = 0.25 * (1 - k); })); }
-  const van = new THREE.Group(); part(van, B(2.2, 2, 4.6), toon('#d8d0c0'), 0, 1.3, 0); part(van, B(2.1, 0.9, 1.2), new THREE.MeshBasicMaterial({ color: '#2a3040' }), 0, 1.8, 2.2); for (const [a, b] of [[-1.1, -1.4], [1.1, -1.4], [-1.1, 1.4], [1.1, 1.4]]) part(van, Cy(0.4, 0.4, 0.3, 10), toon('#1e1a18'), a, 0.4, b, 0, 0, Math.PI / 2);
-  for (let i = 0; i < 4; i++) { const tv = bubTV(0.8, 0.5); tv.position.set(-1.12, 1.1 + (i % 2) * 0.7, -1.3 + Math.floor(i / 2) * 1.0); tv.rotation.y = -Math.PI / 2; van.add(tv); }
+  // Rizzo's van: a proper box van, cab at the front, TVs racked on the street side
+  const van = new THREE.Group(), body = toonNS('#d8d0c0'), dark = toonNS('#1e1a18'), chrome = toonNS('#c8ccd4');
+  part(van, B(2.2, 2.1, 3.4), body, 0, 1.45, -0.6); part(van, B(2.2, 1.4, 1.5), body, 0, 1.1, 1.85); part(van, B(2.1, 0.75, 0.9), body, 0, 2.05, 1.55);
+  part(van, B(1.9, 0.6, 0.05), new THREE.MeshBasicMaterial({ color: '#5a7a9a' }), 0, 2.05, 2.03, -0.35, 0, 0); for (const sx of [-1, 1]) part(van, B(0.05, 0.5, 0.7), new THREE.MeshBasicMaterial({ color: '#4a6a8a' }), sx * 1.11, 2.0, 1.5);
+  part(van, B(2.25, 0.35, 0.15), chrome, 0, 0.55, 2.62); part(van, B(1.4, 0.4, 0.05), dark, 0, 0.95, 2.61); for (let k = 0; k < 4; k++) part(van, B(1.3, 0.04, 0.06), chrome, 0, 0.8 + k * 0.1, 2.63);
+  for (const sx of [-1, 1]) { part(van, B(0.35, 0.22, 0.05), glow('#fff6d0'), sx * 0.85, 1.05, 2.62); part(van, B(0.25, 0.3, 0.05), glow('#ff3b2a'), sx * 0.9, 1.2, -2.32); part(van, B(0.08, 0.25, 0.25), dark, sx * 1.2, 1.9, 2.1); }
+  part(van, B(2.25, 0.4, 0.15), chrome, 0, 0.55, -2.35); part(van, B(0.04, 1.8, 0.04), dark, 0, 1.45, -2.31); part(van, B(0.7, 0.35, 0.02), new THREE.MeshBasicMaterial({ color: '#f4f0e8' }), 0.5, 0.75, -2.32);
+  for (const [a, b] of [[-1.1, -1.5], [1.1, -1.5], [-1.1, 1.6], [1.1, 1.6]]) { part(van, Cy(0.42, 0.42, 0.3, 12), dark, a, 0.42, b, 0, 0, Math.PI / 2); part(van, Cy(0.2, 0.2, 0.32, 8), chrome, a, 0.42, b, 0, 0, Math.PI / 2); }
+  for (const sx of [-1, 1]) part(van, B(0.05, 0.5, 1.2), dark, sx * 1.12, 0.65, 0.05);
+  part(van, B(2.0, 0.1, 3.0), dark, 0, 2.55, -0.6); for (const z of [-1.6, 0.4]) part(van, B(2.1, 0.06, 0.06), chrome, 0, 2.62, z); part(van, B(1.2, 0.5, 0.8), toonNS('#5d636c', 'panel'), 0, 2.85, -0.9);
+  { const lg = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.55), new THREE.MeshBasicMaterial({ map: bubSignTex("RIZZO'S · TVs · RADIOS · NO REFUNDS", '#1a1426', '#ffd36a', 2.6, 0.55) })); lg.position.set(1.13, 2.25, -0.6); lg.rotation.y = Math.PI / 2; van.add(lg); const l2 = lg.clone(); l2.position.x = -1.13; l2.rotation.y = -Math.PI / 2; van.add(l2); }
+  for (let i = 0; i < 6; i++) { const tv = bubTV(0.75, 0.48); tv.position.set(1.16, 0.95 + (i % 2) * 0.65, -1.7 + Math.floor(i / 2) * 0.95); tv.rotation.y = Math.PI / 2; van.add(tv); }
+  part(van, B(0.1, 1.5, 3.0), dark, 1.13, 1.3, -0.75); part(van, B(0.9, 0.06, 3.0), toonNS('#5a3a2a', 'wood'), 1.55, 0.6, -0.75); for (const z of [-2.1, 0.6]) part(van, B(0.06, 0.6, 0.06), dark, 1.95, 0.3, z);
   van.position.set(X + 13, 0, Z + 4.6); van.rotation.y = Math.PI / 2; levelGroup.add(van); box(X + 13, Z + 4.6, 2.4, 1.2);
   // the people of the strip
   bubNpc(BC.low.pawn[0], BC.low.pawn[1], BC.low.pawn[1] > Z ? 0 : Math.PI, ['#c8402f', '#3a3d44', '#ff8a6a', '#e8e4dc'], '🦀 Crabby\'s Pawn', bubPawn);
@@ -25832,27 +25967,27 @@ function bcLow() { const D = bcD('low'), X = D.x, Z = D.z;
   bcWalkers(D, 6, 'civ', 40); }
 function bcBurbs() { const D = bcD('burbs'), X = D.x, Z = D.z;
   // a cul-de-sac: a loop road round a green island with a tree, houses all round facing in, picket fences and mailboxes
-  const road = new THREE.Mesh(new THREE.RingGeometry(8, 13, 40).rotateX(-Math.PI / 2), toon('#5a5a62')); road.position.set(X, 0.1, Z); levelGroup.add(road);
-  const kerb = new THREE.Mesh(new THREE.RingGeometry(13, 13.4, 40).rotateX(-Math.PI / 2), toon('#d8d0c0')); kerb.position.set(X, 0.11, Z); levelGroup.add(kerb);
+  const road = new THREE.Mesh(new THREE.RingGeometry(8, 13, 40).rotateX(-Math.PI / 2), toonNS('#5a5a62')); road.position.set(X, 0.1, Z); levelGroup.add(road);
+  const kerb = new THREE.Mesh(new THREE.RingGeometry(13, 13.4, 40).rotateX(-Math.PI / 2), toonNS('#d8d0c0')); kerb.position.set(X, 0.11, Z); levelGroup.add(kerb);
   bcKelpTree(X, Z, 1.6); for (let i = 0; i < 6; i++) bcCoral(X + Math.cos(i) * 4.5, Z + Math.sin(i) * 4.5, 0.8, i);
   const cols = [['#ffd0a0', '#8a3a2e'], ['#c8e0ff', '#3a5266'], ['#b8ffcf', '#3f7a3a'], ['#ffb8d8', '#8a3a5a'], ['#fff0a0', '#8a6a2a'], ['#d8c8ff', '#4a3a7a'], ['#f4f0e8', '#5d636c']];
   BC.burbs = [];
   for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + Math.PI / 4 + i * (Math.PI * 2 - Math.PI / 2) / 6.5, r = 22, x = X + Math.cos(a) * r, z = Z + Math.sin(a) * r, ry = Math.atan2(X - x, Z - z);
     const h = bcHouse(x, z, ry, cols[i], { w: 6.5, d: 5.5, h: 3.4, dark: i === 3 }); BC.burbs.push(h.door);
     const tx = Math.sin(ry), tz = Math.cos(ry), rx = Math.cos(ry), rz = -Math.sin(ry);
-    for (const s of [-1, 1]) { for (let k = 0; k < 6; k++) part(levelGroup, B(0.08, 0.8, 0.08), toon('#f4f0e8'), x + tx * 5.2 + rx * s * (1.8 + k * 0.45), 0.4, z + tz * 5.2 + rz * s * (1.8 + k * 0.45));
-      part(levelGroup, B(0.06, 0.08, 2.5), toon('#f4f0e8'), x + tx * 5.2 + rx * s * 2.9, 0.65, z + tz * 5.2 + rz * s * 2.9, 0, ry + Math.PI / 2, 0); }
-    const mb = new THREE.Group(); part(mb, Cy(0.04, 0.04, 1, 4), toon('#5d636c'), 0, 0.5, 0); part(mb, B(0.25, 0.25, 0.45), toon(cols[i][1]), 0, 1.1, 0); part(mb, B(0.03, 0.18, 0.08), toon('#c8402f'), 0.14, 1.25, 0.1);
+    for (const s of [-1, 1]) { for (let k = 0; k < 6; k++) part(levelGroup, B(0.08, 0.8, 0.08), toonNS('#f4f0e8'), x + tx * 5.2 + rx * s * (1.8 + k * 0.45), 0.4, z + tz * 5.2 + rz * s * (1.8 + k * 0.45));
+      part(levelGroup, B(0.06, 0.08, 2.5), toonNS('#f4f0e8'), x + tx * 5.2 + rx * s * 2.9, 0.65, z + tz * 5.2 + rz * s * 2.9, 0, ry + Math.PI / 2, 0); }
+    const mb = new THREE.Group(); part(mb, Cy(0.04, 0.04, 1, 4), toonNS('#5d636c'), 0, 0.5, 0); part(mb, B(0.25, 0.25, 0.45), toonNS(cols[i][1]), 0, 1.1, 0); part(mb, B(0.03, 0.18, 0.08), toonNS('#c8402f'), 0.14, 1.25, 0.1);
     mb.position.set(x + tx * 5.6 + rx * 1.4, 0, z + tz * 5.6 + rz * 1.4); mb.rotation.y = ry; levelGroup.add(mb);
-    part(levelGroup, B(1.6, 0.03, 3.4), toon('#d8d0c0'), x + tx * 4.4, 0.06, z + tz * 4.4, 0, ry, 0);
-    if (i % 2) { const car = new THREE.Group(); part(car, B(1.8, 0.8, 3.6), toon(['#c8402f', '#3a5266', '#ffd36a'][i % 3]), 0, 0.6, 0); part(car, B(1.6, 0.7, 1.8), new THREE.MeshLambertMaterial({ color: '#8fb8cc' }), 0, 1.3, -0.2);
-      for (const [a, b] of [[-0.9, -1.2], [0.9, -1.2], [-0.9, 1.2], [0.9, 1.2]]) part(car, Cy(0.35, 0.35, 0.25, 10), toon('#1e1a18'), a, 0.35, b, 0, 0, Math.PI / 2);
+    part(levelGroup, B(1.6, 0.03, 3.4), toonNS('#d8d0c0'), x + tx * 4.4, 0.06, z + tz * 4.4, 0, ry, 0);
+    if (i % 2) { const car = new THREE.Group(); part(car, B(1.8, 0.8, 3.6), toonNS(['#c8402f', '#3a5266', '#ffd36a'][i % 3]), 0, 0.6, 0); part(car, B(1.6, 0.7, 1.8), new THREE.MeshLambertMaterial({ color: '#8fb8cc' }), 0, 1.3, -0.2);
+      for (const [a, b] of [[-0.9, -1.2], [0.9, -1.2], [-0.9, 1.2], [0.9, 1.2]]) part(car, Cy(0.35, 0.35, 0.25, 10), toonNS('#1e1a18'), a, 0.35, b, 0, 0, Math.PI / 2);
       car.position.set(x + tx * 4.6 - rx * 3.6, 0, z + tz * 4.6 - rz * 3.6); car.rotation.y = ry; levelGroup.add(car); box(car.position.x, car.position.z, 1.4, 1.4); } }
   // a playground: swings and a slide on the north-east lawn
-  const pg = new THREE.Group(); for (const s of [-1, 1]) part(pg, B(0.12, 2.6, 0.12), toon('#c8402f'), s * 1.6, 1.3, 0); part(pg, B(3.4, 0.12, 0.12), toon('#c8402f'), 0, 2.6, 0);
-  const sw = []; for (const s of [-0.7, 0.7]) { const p = new THREE.Group(); part(p, B(0.03, 1.8, 0.03), toon('#5d636c'), 0, -0.9, 0); part(p, B(0.5, 0.06, 0.25), toon('#2b2a2c'), 0, -1.8, 0); p.position.set(s, 2.6, 0); pg.add(p); sw.push(p); }
+  const pg = new THREE.Group(); for (const s of [-1, 1]) part(pg, B(0.12, 2.6, 0.12), toonNS('#c8402f'), s * 1.6, 1.3, 0); part(pg, B(3.4, 0.12, 0.12), toonNS('#c8402f'), 0, 2.6, 0);
+  const sw = []; for (const s of [-0.7, 0.7]) { const p = new THREE.Group(); part(p, B(0.03, 1.8, 0.03), toonNS('#5d636c'), 0, -0.9, 0); part(p, B(0.5, 0.06, 0.25), toonNS('#2b2a2c'), 0, -1.8, 0); p.position.set(s, 2.6, 0); pg.add(p); sw.push(p); }
   levelAnims.push(t => sw.forEach((p, i) => { p.rotation.x = Math.sin(t * 1.6 + i) * 0.35; }));
-  part(pg, B(0.8, 0.08, 3.2), toon('#ffd36a'), 3.4, 1.0, 0, 0.6, 0, 0); part(pg, B(0.8, 2.2, 0.8), toon('#4fd2ff'), 3.4, 1.1, -1.6);
+  part(pg, B(0.8, 0.08, 3.2), toonNS('#ffd36a'), 3.4, 1.0, 0, 0.6, 0, 0); part(pg, B(0.8, 2.2, 0.8), toonNS('#4fd2ff'), 3.4, 1.1, -1.6);
   pg.position.set(X + 15, 0, Z + 3); pg.rotation.y = -0.4; levelGroup.add(pg); box(X + 15, Z + 3, 2, 1);
   // sprinklers on the lawns
   for (let i = 0; i < 4; i++) { const sx = X + Math.cos(i * 1.6) * 17, sz = Z + Math.sin(i * 1.6) * 17, dr = []; for (let k = 0; k < 8; k++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.05, 4, 3), new THREE.MeshBasicMaterial({ color: '#bfefff' })); levelGroup.add(m); dr.push(m); }
@@ -25864,45 +25999,45 @@ function bcBurbs() { const D = bcD('burbs'), X = D.x, Z = D.z;
   bcWalkers(D, 6, 'civ', 70); }
 function bcKelp() { const D = bcD('kelp'), X = D.x, Z = D.z;
   // grow beds in rows under purple lamps
-  for (let r = 0; r < 7; r++) { const z = Z + 2 + r * 2.8; part(levelGroup, B(18, 0.5, 1.4), toon('#6a4f34', 'wood'), X - 4, 0.25, z); box(X - 4, z, 9, 0.7);
-    for (let k = 0; k < 12; k++) { const h = 1 + ((k + r) % 3) * 0.5, m = new THREE.Mesh(B(0.3, h, 0.3), toon(k % 2 ? '#3f7a3a' : '#6fce4a', 'leaves')); m.position.set(X - 12.5 + k * 1.5, 0.5 + h / 2, z); levelGroup.add(m); levelAnims.push(t => { m.rotation.z = Math.sin(t + k + r) * 0.08; }); }
+  for (let r = 0; r < 7; r++) { const z = Z + 2 + r * 2.8; part(levelGroup, B(18, 0.5, 1.4), toonNS('#6a4f34', 'wood'), X - 4, 0.25, z); box(X - 4, z, 9, 0.7);
+    for (let k = 0; k < 12; k++) { const h = 1 + ((k + r) % 3) * 0.5, m = new THREE.Mesh(B(0.3, h, 0.3), toonNS(k % 2 ? '#3f7a3a' : '#6fce4a', 'leaves')); m.position.set(X - 12.5 + k * 1.5, 0.5 + h / 2, z); levelGroup.add(m); levelAnims.push(t => { m.rotation.z = Math.sin(t + k + r) * 0.08; }); }
     part(levelGroup, B(18, 0.04, 0.05), glow('#c86aff'), X - 4, 4.4, z); }
-  for (let i = 0; i < 4; i++) { part(levelGroup, Cy(0.15, 0.15, 3.4, 6), toon('#5d636c'), X - 13 + i * 6, 1.7, Z + 1); }
+  for (let i = 0; i < 4; i++) { part(levelGroup, Cy(0.15, 0.15, 3.4, 6), toonNS('#5d636c'), X - 13 + i * 6, 1.7, Z + 1); }
   // Dome Control: a round tower with a glass top, a spinning radar dish and a beacon
-  const T = new THREE.Group(), cx = X + 12, cz = Z - 8; part(T, Cy(5, 5.4, 6, 20), toon('#3a3d44', 'panel'), 0, 3, 0); part(T, Cy(5.4, 5, 3, 20, 1, true), new THREE.MeshLambertMaterial({ color: '#7fe8ff', transparent: true, opacity: 0.35, side: THREE.DoubleSide }), 0, 7.5, 0);
-  part(T, Cy(5.6, 5.6, 0.4, 20), toon('#4a4f58', 'panel'), 0, 9.2, 0); part(T, Cy(5.5, 5.5, 0.15, 20), glow('#4fd2ff'), 0, 6.05, 0);
-  const dish = new THREE.Group(); part(dish, Cy(0.15, 0.15, 2, 6), toon('#5d636c'), 0, 1, 0); const bowl = new THREE.Mesh(new THREE.SphereGeometry(1.4, 12, 6, 0, Math.PI * 2, 0, Math.PI / 3), toon('#d8d0c0')); bowl.rotation.x = Math.PI / 2 + 0.4; bowl.position.y = 2; dish.add(bowl); dish.position.y = 9.4; T.add(dish);
+  const T = new THREE.Group(), cx = X + 12, cz = Z - 8; part(T, Cy(5, 5.4, 6, 20), toonNS('#3a3d44', 'panel'), 0, 3, 0); part(T, Cy(5.4, 5, 3, 20, 1, true), new THREE.MeshLambertMaterial({ color: '#7fe8ff', transparent: true, opacity: 0.35, side: THREE.DoubleSide }), 0, 7.5, 0);
+  part(T, Cy(5.6, 5.6, 0.4, 20), toonNS('#4a4f58', 'panel'), 0, 9.2, 0); part(T, Cy(5.5, 5.5, 0.15, 20), glow('#4fd2ff'), 0, 6.05, 0);
+  const dish = new THREE.Group(); part(dish, Cy(0.15, 0.15, 2, 6), toonNS('#5d636c'), 0, 1, 0); const bowl = new THREE.Mesh(new THREE.SphereGeometry(1.4, 12, 6, 0, Math.PI * 2, 0, Math.PI / 3), toonNS('#d8d0c0')); bowl.rotation.x = Math.PI / 2 + 0.4; bowl.position.y = 2; dish.add(bowl); dish.position.y = 9.4; T.add(dish);
   const bea = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 6), glow('#ff3b2a')); bea.position.set(2.5, 10.2, 0); T.add(bea);
   for (let i = 0; i < 8; i++) { const s = bubTV(1.2, 0.75); const a = i / 8 * Math.PI * 2; s.position.set(Math.cos(a) * 5.45, 7.2, Math.sin(a) * 5.45); s.lookAt(Math.cos(a) * 20, 7.2, Math.sin(a) * 20); T.add(s); }
-  part(T, B(2, 2.6, 0.2), toon('#2a3040'), 0, 1.3, 5.25); T.position.set(cx, 0, cz); levelGroup.add(T); solid(cx, cz, 5.5);
+  part(T, B(2, 2.6, 0.2), toonNS('#2a3040'), 0, 1.3, 5.25); T.position.set(cx, 0, cz); levelGroup.add(T); solid(cx, cz, 5.5);
   levelAnims.push(t => { dish.rotation.y = t * 0.6; bea.visible = Math.sin(t * 4) > 0; });
   bubSign('DOME CONTROL · AUTHORISED FISH ONLY', '#0c1a24', '#7fe8ff', 4.6, 0.6, cx, 3.4, cz + 5.45);
   bubNpc(cx, cz + 7, Math.PI, ['#4fd2ff', '#2c2a38', '#9fe8ff', '#3a2a1a'], '🖥 Talk to Dot (Dome Control)', bubDot);
   // pipes snaking to big pump tanks
-  for (const [x, z] of [[X - 16, Z - 10], [X - 10, Z - 15]]) { part(levelGroup, Cy(1.6, 1.6, 4, 14), toon('#5d636c', 'panel'), x, 2, z); part(levelGroup, Cy(1.65, 1.65, 0.2, 14), glow('#7fff6a'), x, 2.8, z); solid(x, z, 1.7); }
-  part(levelGroup, Cy(0.3, 0.3, 14, 8), toon('#8a8f99'), X - 3, 0.35, Z - 12, 0, 0, Math.PI / 2);
+  for (const [x, z] of [[X - 16, Z - 10], [X - 10, Z - 15]]) { part(levelGroup, Cy(1.6, 1.6, 4, 14), toonNS('#5d636c', 'panel'), x, 2, z); part(levelGroup, Cy(1.65, 1.65, 0.2, 14), glow('#7fff6a'), x, 2.8, z); solid(x, z, 1.7); }
+  part(levelGroup, Cy(0.3, 0.3, 14, 8), toonNS('#8a8f99'), X - 3, 0.35, Z - 12, 0, 0, Math.PI / 2);
   bubSign('KELP GARDENS · PICK ONLY WHAT YOU PAY FOR', '#0c240c', '#b8ffcf', 4.4, 0.6, X - 4, 4.4, Z + 0.4);
   bcWalkers(D, 5, 'mix', 100); }
 function bcCoralHeights() { const D = bcD('coral'), X = D.x, Z = D.z;
   // three towers: Coral Heights (the one you can enter) and two neighbours, with lit windows and roof beacons
   const tower = (tx, tz, tw, th, col, enter) => { const g = new THREE.Group();
-    part(g, B(tw, th, tw), toon(col, 'panel'), 0, th / 2, 0);
-    for (let f = 0; f < Math.floor(th / 3) - 1; f++) for (let k = 0; k < 3; k++) for (let side = 0; side < 4; side++) { const lit = ((f * 7 + k * 3 + side) % 5) > 1, w = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.4), lit ? new THREE.MeshBasicMaterial({ color: ['#ffe9a0', '#ffd0a0', '#c8e0ff'][(f + k) % 3] }) : toon('#2a3040'));
+    part(g, B(tw, th, tw), bcMat('concrete', Math.round(tw / 2), Math.round(th / 2), col), 0, th / 2, 0);
+    for (let f = 0; f < Math.floor(th / 3) - 1; f++) for (let k = 0; k < 3; k++) for (let side = 0; side < 4; side++) { const lit = ((f * 7 + k * 3 + side) % 5) > 1, w = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.4), lit ? new THREE.MeshBasicMaterial({ color: ['#ffe9a0', '#ffd0a0', '#c8e0ff'][(f + k) % 3] }) : toonNS('#2a3040'));
       const a = side * Math.PI / 2, o = (k - 1) * (tw / 3.2); w.position.set(Math.sin(a) * (tw / 2 + 0.03) + Math.cos(a) * o, 3.5 + f * 3, Math.cos(a) * (tw / 2 + 0.03) - Math.sin(a) * o); w.rotation.y = a; g.add(w); }
-    for (let f = 1; f < th / 3; f++) part(g, B(tw + 0.3, 0.15, tw + 0.3), toon('#d8d0c0'), 0, f * 3, 0);
-    part(g, B(tw + 0.6, 0.5, tw + 0.6), toon('#5d636c'), 0, th, 0); part(g, Cy(0.1, 0.1, 4, 5), toon('#2b2a2c'), tw / 4, th + 2, tw / 4); const bc2 = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 6), glow('#ff3b2a')); bc2.position.set(tw / 4, th + 4, tw / 4); g.add(bc2);
+    for (let f = 1; f < th / 3; f++) part(g, B(tw + 0.3, 0.15, tw + 0.3), toonNS('#d8d0c0'), 0, f * 3, 0);
+    part(g, B(tw + 0.6, 0.5, tw + 0.6), toonNS('#5d636c'), 0, th, 0); part(g, Cy(0.1, 0.1, 4, 5), toonNS('#2b2a2c'), tw / 4, th + 2, tw / 4); const bc2 = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 6), glow('#ff3b2a')); bc2.position.set(tw / 4, th + 4, tw / 4); g.add(bc2);
     g.position.set(tx, 0, tz); levelGroup.add(g); box(tx, tz, tw / 2, tw / 2); return g; };
   tower(X - 14, Z + 6, 9, 24, '#7a6f8a'); tower(X + 15, Z + 8, 8, 18, '#8a7a6a');
   const ex = X, ez = Z + 14, ew = 10, main = tower(ex, ez, ew, 26, '#8a7f9a');
-  part(main, B(4, 3, 0.2), toon('#3a5266'), 0, 1.5, -ew / 2 - 0.05); part(main, B(5.4, 0.3, 2), toon('#c9a43a'), 0, 3.3, -ew / 2 - 1); for (const s of [-1, 1]) part(main, Cy(0.1, 0.1, 3.3, 6), toon('#c9a43a'), s * 2.5, 1.65, -ew / 2 - 1.9);
+  part(main, B(4, 3, 0.2), toonNS('#3a5266'), 0, 1.5, -ew / 2 - 0.05); part(main, B(5.4, 0.3, 2), toonNS('#c9a43a'), 0, 3.3, -ew / 2 - 1); for (const s of [-1, 1]) part(main, Cy(0.1, 0.1, 3.3, 6), toonNS('#c9a43a'), s * 2.5, 1.65, -ew / 2 - 1.9);
   bubSign('CORAL HEIGHTS', '#1a1426', '#ffd0a0', 4, 0.6, ex, 3.9, ez - ew / 2 - 1.05, Math.PI);
   INTERACTS.push({ x: ex, z: ez - ew / 2 - 1.4, r: 2.4, label: '🏢 Enter Coral Heights', fn: () => bubGoFloor(1, true) }); BUB.towerExit = [ex, ez - ew / 2 - 2.4, Math.PI];
   // Reel Deal Tackle: a little shopfront with a giant fish on the roof
-  const sx = X + 14, sz = Z - 8, sh = new THREE.Group(); part(sh, B(8, 4, 6), toon('#3f7d7a', 'wood'), 0, 2, 0); part(sh, B(8.6, 0.3, 6.6), toon('#ffd36a'), 0, 4.15, 0);
-  const bf = new THREE.Group(); part(bf, B(1.4, 1.8, 4.5), toon('#4fa8cc'), 0, 0, 0); part(bf, B(0.3, 1.8, 1.4), toon('#4fa8cc'), 0, 0.2, -2.8); part(bf, new THREE.SphereGeometry(0.2, 6, 4), toon('#111'), 0.72, 0.3, 1.6); part(bf, B(0.1, 0.1, 2.5), toon('#c9a43a'), 0, 1.4, 2.6, -0.6, 0, 0);
+  const sx = X + 14, sz = Z - 8, sh = new THREE.Group(); part(sh, B(8, 4, 6), toonNS('#3f7d7a', 'wood'), 0, 2, 0); part(sh, B(8.6, 0.3, 6.6), toonNS('#ffd36a'), 0, 4.15, 0);
+  const bf = new THREE.Group(); part(bf, B(1.4, 1.8, 4.5), toonNS('#4fa8cc'), 0, 0, 0); part(bf, B(0.3, 1.8, 1.4), toonNS('#4fa8cc'), 0, 0.2, -2.8); part(bf, new THREE.SphereGeometry(0.2, 6, 4), toonNS('#111'), 0.72, 0.3, 1.6); part(bf, B(0.1, 0.1, 2.5), toonNS('#c9a43a'), 0, 1.4, 2.6, -0.6, 0, 0);
   bf.position.set(0, 5.6, 0); bf.rotation.y = Math.PI / 2; sh.add(bf); levelAnims.push(t => { bf.rotation.z = Math.sin(t) * 0.1; });
   part(sh, B(4, 2.2, 0.1), new THREE.MeshBasicMaterial({ color: '#2a4a5a' }), 0, 1.3, -3.03); const tsg = new THREE.Mesh(new THREE.PlaneGeometry(5, 0.8), new THREE.MeshBasicMaterial({ map: signTex('REEL DEAL TACKLE', '#0c2a3a', '#7fe8ff') })); tsg.position.set(0, 3.2, -3.06); tsg.rotation.y = Math.PI; sh.add(tsg);
-  for (let i = 0; i < 4; i++) part(sh, Cy(0.03, 0.05, 2.6, 5), toon('#c9a43a'), -3.4 + i * 0.25, 1.3, -3.3, 0.2, 0, 0);
+  for (let i = 0; i < 4; i++) part(sh, Cy(0.03, 0.05, 2.6, 5), toonNS('#c9a43a'), -3.4 + i * 0.25, 1.3, -3.3, 0.2, 0, 0);
   sh.position.set(sx, 0, sz); levelGroup.add(sh); box(sx, sz, 4, 3);
   bubNpc(sx, sz - 4.4, Math.PI, ['#3a7a5a', '#5a4a3a', '#e0b892', '#c8c0b0'], '🎣 Reel Deal Tackle', bubTackle);
   // the coral park: winding path, coral, a pond, the loose hamster
@@ -25917,13 +26052,13 @@ function bcCoralHeights() { const D = bcD('coral'), X = D.x, Z = D.z;
 
 // ---------- the level ----------
 { const L = LEVELS.bubblecity; L.size = 260; L.spawn = { x: 15, z: 12, yaw: Math.PI * 0.25 };
-  const npcPos = { blub: [0, -9, 0], pearlmkt: [-10, 9, Math.PI * 0.75], barnacle: [84 - 6, -14, Math.PI], kelpa: [-6, -76, Math.PI], pip: [6, 76, 0] };
+  const npcPos = { finn: [-8, 72, 0], nurse: [-12, -6, Math.PI / 2], blub: [0, -9, 0], pearlmkt: [-10, 9, Math.PI * 0.75], barnacle: [84 - 6, -14, Math.PI], kelpa: [-6, -76, Math.PI], pip: [6, 76, 0] };
   for (const n of L.npcs) if (npcPos[n.id]) { const [x, z, f] = npcPos[n.id]; Object.assign(n, { x, z, face: f }); }
-  L.build = function () { BC.tubes.length = 0; BC.walk.length = 0;
+  L.build = function () { BC.tubes.length = 0; BC.walk.length = 0; BC.lamps.length = 0;
     levelGroup.add(new THREE.HemisphereLight(0x9fd8ef, 0x4a3a2a, 0.45)); const sunL = new THREE.DirectionalLight(0xbfefff, 0.25); sunL.position.set(30, 80, 20); levelGroup.add(sunL);
     for (const D of BC.domes) bcDome(D);
     bcTube('hub', 'kelp'); bcTube('hub', 'burbs'); bcTube('hub', 'low'); bcTube('hub', 'coral');
-    const parts = [bcSeabed, bcHub, bcLow, bcBurbs, bcKelp, bcCoralHeights, bubTower, bubFlat, bubFlatDetails, bubHallDetails];
+    const parts = [bcLife, bcSeabed, bcHub, bcLow, bcBurbs, bcKelp, bcCoralHeights, bubTower, bubFlat, bubFlatDetails, bubHallDetails];
     for (const f of parts) { try { f(); } catch (e) { console.warn('bubble3 ' + f.name, e); } }
     // keep the player inside the glass: if a step would leave every dome and tunnel, undo it
     let ok = new THREE.Vector3(L.spawn.x, 0, L.spawn.z);
@@ -25933,6 +26068,25 @@ function bcCoralHeights() { const D = bcD('coral'), X = D.x, Z = D.z;
   };
 }
 // coming back up from the city drops you beside the miniature dome; coming down lands you at the hub's exit machine
+// the city keeps real time: lamps come on at dusk, the domes go dark and blue at night, and the lamp posts light the paths
+function bcNightK() { if (typeof BUB !== 'undefined' && BUB.night) return 1; const d = new Date(), h = d.getHours() + d.getMinutes() / 60; return h >= 20 || h < 5 ? 1 : h >= 18 ? (h - 18) / 2 : h < 7 ? (7 - h) / 2 : 0; }
+{ const _u = updateEnv; updateEnv = function () { const r = _u.apply(this, arguments); if (!LEVEL || LEVEL.id !== 'bubblecity') return r;
+  const k = bcNightK(), inside = Math.abs(player.pos.x - 150) < 20; if (inside) return r;
+  hemi.intensity *= 1 - 0.72 * k; sun.intensity *= 1 - 0.85 * k; fill.intensity *= 1 - 0.6 * k; if (k > 0) { hemi.color.lerp(new THREE.Color('#3a4a8a'), k * 0.6); scene.fog.color.lerp(new THREE.Color('#02060e'), k * 0.8); }
+  if (!BC.dl || BC.dlG !== levelGroup.children.length) { BC.dl = []; BC.dlG = levelGroup.children.length; levelGroup.traverse(o => { if (o.isHemisphereLight || o.isDirectionalLight || o.isAmbientLight) BC.dl.push([o, o.userData.bcI ?? (o.userData.bcI = o.intensity)]); }); }
+  for (const [o, i0] of BC.dl) o.intensity = i0 * (1 - 0.75 * k);
+  for (const l of BC.lamps) { l.pool.material.opacity = 0.05 + 0.3 * k; if (l.pl) l.pl.intensity = 2.2 * k; } return r; }; }
+// small bits of life: a backyard BBQ with smoke, a dog trotting round the Burbs loop, a busker's open guitar case in the plaza
+function bcLife() { const Bd = bcD('burbs'), H = bcD('hub');
+  const gx = Bd.x - 6, gz = Bd.z + 18, gr = new THREE.Group(); part(gr, Cy(0.5, 0.35, 0.5, 12), toonNS('#2b2a2c'), 0, 0.95, 0); part(gr, Cy(0.52, 0.52, 0.04, 12), toonNS('#5d636c'), 0, 1.2, 0); for (let k = 0; k < 3; k++) part(gr, Cy(0.03, 0.03, 0.95, 4), toonNS('#2b2a2c'), Math.cos(k * 2.1) * 0.3, 0.47, Math.sin(k * 2.1) * 0.3);
+  for (let k = 0; k < 3; k++) part(gr, Cy(0.06, 0.06, 0.3, 6), toonNS('#8a3a2a'), -0.2 + k * 0.2, 1.25, 0, 0, 0, Math.PI / 2); gr.position.set(gx, 0, gz); levelGroup.add(gr); solid(gx, gz, 0.6);
+  const sm = []; for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.25, 6, 4), new THREE.MeshBasicMaterial({ color: '#d8d8d8', transparent: true, opacity: 0.3, depthWrite: false })); levelGroup.add(m); sm.push(m); }
+  levelAnims.push(t => sm.forEach((m, i) => { const k = (t * 0.4 + i / 6) % 1; m.position.set(gx + Math.sin(t + i) * 0.2, 1.4 + k * 3, gz); m.scale.setScalar(0.6 + k * 2); m.material.opacity = 0.35 * (1 - k); }));
+  const dog = new THREE.Group(), fur = toonNS('#a8743a'); part(dog, B(0.3, 0.3, 0.7), fur, 0, 0.45, 0); part(dog, B(0.25, 0.25, 0.3), fur, 0, 0.65, 0.42); part(dog, B(0.1, 0.1, 0.15), toonNS('#2b2a2c'), 0, 0.62, 0.6); part(dog, B(0.05, 0.2, 0.05), fur, 0, 0.65, -0.4, -0.6, 0, 0);
+  const legs = []; for (const [a, b] of [[-0.1, 0.25], [0.1, 0.25], [-0.1, -0.25], [0.1, -0.25]]) { const l = new THREE.Group(); part(l, B(0.07, 0.3, 0.07), fur, 0, -0.15, 0); l.position.set(a, 0.3, b); dog.add(l); legs.push(l); }
+  levelGroup.add(dog); levelAnims.push(t => { const a = t * 0.18, r = 10.5; dog.position.set(Bd.x + Math.cos(a) * r, 0, Bd.z + Math.sin(a) * r); dog.rotation.y = Math.atan2(-Math.sin(a), Math.cos(a)); legs.forEach((l, i) => { l.rotation.x = Math.sin(t * 12 + (i % 3 ? 0 : Math.PI)) * 0.6; }); });
+  const cs = new THREE.Group(); part(cs, B(1.1, 0.12, 0.45), toonNS('#2b2a2c'), 0, 0.1, 0); part(cs, B(1.0, 0.04, 0.38), toonNS('#8a2a4a'), 0, 0.17, 0); for (let k = 0; k < 5; k++) part(cs, Cy(0.05, 0.05, 0.02, 8), toonNS('#c9a43a'), -0.3 + k * 0.14, 0.2, (k % 2) * 0.1 - 0.05);
+  cs.position.set(H.x - 8, 0, H.z + 15); levelGroup.add(cs); }
 
 
 // =================== STATE + SAVE ===================

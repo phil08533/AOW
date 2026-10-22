@@ -115,7 +115,7 @@ function mergeStatic(root) {
   root.traverse(o => { if (o.isMesh) fitSign(o); });
   const buckets = new Map();
   root.traverse(o => {
-    if (!o.isMesh) return;
+    if (!o.isMesh || !o.visible) return;
     let b = buckets.get(o.material); if (!b) { b = { pos: [], nor: [], uv: [] }; buckets.set(o.material, b); }
     const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()); g.applyMatrix4(o.matrixWorld);
     let pa = g.attributes.position.array, na = g.attributes.normal.array, ua = g.attributes.uv ? g.attributes.uv.array : new Float32Array(g.attributes.position.count * 2);

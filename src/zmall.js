@@ -42,7 +42,7 @@ function zMall() {
     part(props, B(2.0, 0.12, 2.0), toon(col), x, 2.7, z); const sg = sign(label, '#0c0d14', col, 1.8, 0.4); sg.position.set(x, 2.95, z + 1.01); props.add(sg); solid(x, z, 1.1); };
   kiosk(-16, -16, 'JUICE', '#ffb347'); kiosk(16, -16, 'HOLO CASES', '#8fe3ff'); kiosk(-16, 22, 'SNACKS', '#ff6aa8'); kiosk(14, 22, 'MAPS', '#7fff6a');
   // a real skylight: the ceiling is cut open down the middle so you look straight out at the stars, a planet and passing traffic
-  props.children.filter(o => o.isMesh && Math.abs(o.position.y - 9) < 0.01 && Math.abs(o.rotation.x - Math.PI) < 0.01).forEach(o => { o.visible = false; });
+  props.children.filter(o => o.isMesh && Math.abs(o.position.y - 9) < 0.01 && Math.abs(o.rotation.x - Math.PI) < 0.01).forEach(o => props.remove(o));
   for (const e of [-1, 1]) { const c = new THREE.Mesh(new THREE.PlaneGeometry(25, 68), toon('#2c2f36', 'panel')); c.rotation.x = Math.PI / 2; c.position.set(e * 17.5, 9, 0); props.add(c); part(props, B(0.4, 0.5, 68), '#9aa0a8', e * 5.1, 8.8, 0); }
   for (let z = -30; z <= 30; z += 6) part(props, B(10.4, 0.25, 0.25), '#9aa0a8', 0, 8.9, z);
   const out = new THREE.Group(); levelGroup.add(out);

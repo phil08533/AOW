@@ -40,16 +40,16 @@ function ocClear() {
 }
 
 // ---- Port Kelp piers: one straight deck each, pilings to the seabed, cross-bracing, rope rails, lamps ----
-const OC_DECK = WATER_Y + 0.75;
+const ocDeck = () => WATER_Y + 1.15;
 function ocPiers() {
   const [px, pz] = PORT, wood = toon('#9a7650', 'wood'), dark = toon('#6a4f34', 'wood'), rope = toon('#d8c890');
   const piers = [[0, 1, 14], [-1, 0, 10], [1, 0, 11]];
   OC2.piers = [];
   for (const [dx, dz, L] of piers) {
     let r0 = 5; while (r0 < 30 && groundH(px + dx * r0, pz + dz * r0) > WATER_Y + 0.55) r0 += 0.25;
-    const a = r0 - 2, b = r0 + L, len = b - a, cx = px + dx * (a + b) / 2, cz = pz + dz * (a + b) / 2, ry = Math.atan2(dx, dz), g = new THREE.Group(), y = OC_DECK, W = 2.8;
+    const a = r0 - 2, b = r0 + L, len = b - a, cx = px + dx * (a + b) / 2, cz = pz + dz * (a + b) / 2, ry = Math.atan2(dx, dz), g = new THREE.Group(), y = ocDeck(), W = 2.8;
     // the deck: planks across the pier, two stringers under them
-    for (let s = 0; s < len; s += 0.5) part(g, B(W, 0.1, 0.44), toon(((s * 2) | 0) % 3 ? '#9a7650' : '#8a6a44', 'wood'), 0, y, -len / 2 + s + 0.25);
+    for (let s = 0; s < len; s += 0.5) part(g, B(W, 0.22, 0.44), toon(((s * 2) | 0) % 3 ? '#9a7650' : '#8a6a44', 'wood'), 0, y, -len / 2 + s + 0.25);
     for (const sx of [-1, 1]) part(g, B(0.2, 0.25, len), dark, sx * (W / 2 - 0.25), y - 0.17, 0);
     // pilings every two meters on both sides, down into the sand, with diagonal braces
     for (let s = 1; s < len; s += 2) for (const sx of [-1, 1]) { const wx = cx + Math.cos(ry) * sx * (W / 2) + Math.sin(ry) * (-len / 2 + s), wz = cz - Math.sin(ry) * sx * (W / 2) + Math.cos(ry) * (-len / 2 + s);
@@ -70,8 +70,11 @@ function ocPiers() {
   const kc = ['#ff6aa8', '#4fd2ff', '#7fff6a']; for (let i = 0; i < 3; i++) { const k = makeKayak(kc[i]); k.scale.setScalar(0.8); k.position.set(1.9, 0.4 + i * 0.5, 0); k.rotation.y = Math.PI / 2; shack.add(k); }
   part(shack, B(0.1, 1.8, 2.2), toon('#6a4f34', 'wood'), 1.9, 0.9, -0.9 + 0.9 * 0);
   const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 0.45), new THREE.MeshBasicMaterial({ map: signTex('SPACE KAYAKS · 40 cr', '#0c1a24', '#7fe8ff') })); sg.position.set(0, 2.6, 1.0); shack.add(sg);
-  const sxx = px + 9, szz = pz + 4.5; shack.position.set(sxx, Math.max(groundH(sxx, szz), OC_DECK - 0.05), szz); shack.rotation.y = Math.PI; levelGroup.add(shack); box(sxx, szz, 1.3, 1.0);
+  const P0 = OC2.piers[0], sxx = P0.cx - 3.4, szz = P0.cz - P0.len / 2 - 0.5; shack.position.set(sxx, Math.max(groundH(sxx, szz), ocDeck() - 0.05), szz); shack.rotation.y = Math.PI; levelGroup.add(shack); box(sxx, szz, 1.3, 1.0);
   OC2.rentAt = [sxx, szz - 1.6];
+  { const mast = new THREE.Group(), gy = groundH(sxx + 1.6, szz - 1.4); part(mast, Cy(0.08, 0.1, 5, 6), toon('#2b2a2c'), 0, 2.5, 0); const k = makeKayak('#ff6aa8'); k.position.y = 5.2; k.rotation.z = 0.3; mast.add(k);
+    const ms = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.5), new THREE.MeshBasicMaterial({ map: signTex('🛶 KAYAK RENTAL', '#0c1a24', '#ffd36a'), side: THREE.DoubleSide })); ms.position.y = 4.4; mast.add(ms);
+    mast.position.set(sxx + 1.6, gy, szz - 1.4); levelGroup.add(mast); levelAnims.push(t => { mast.rotation.y = t * 0.5; }); }
   INTERACTS.push({ x: sxx, z: szz - 1.4, r: 2.4, label: '🛶 Rent a space kayak (40 cr)', fn: kayakRent });
 }
 
@@ -231,3 +234,39 @@ LEVELS.bubblecity = {
   }
 };
 { const _po = planetOpen; planetOpen = function (id) { if (id === 'bubblecity') return false; return _po(id); }; }
+
+// fishing from the kayak: the sun slides down to a golden sunset and lays a glittering path on the water toward it
+const KSUN = { k: 0, path: null };
+setInterval(() => { try {
+  const fishing = state === 'play' && S.kayak && dlgOpen && /^Fishing/.test($('dlgRole').textContent || '');
+  const real = (((Date.now() / 1000 + DAY_LEN * 0.74) % DAY_LEN) / DAY_LEN * 24 + ((LEVEL && LEVEL.hourOffset) || 0)) % 24;
+  KSUN.k = Math.max(0, Math.min(1, KSUN.k + (fishing ? 0.012 : -0.02)));
+  if (KSUN.lvl !== LEVEL) { KSUN.lvl = LEVEL; KSUN.wm = []; scene.traverse(o => { const m = o.material; if (m && !Array.isArray(m) && m.map === TEX.water && m.color && o.geometry && o.geometry.boundingSphere !== undefined) KSUN.wm.push([m, m.color.clone()]); }); }
+  const tint = e => { for (const [m, c] of KSUN.wm) m.color.copy(c).lerp(KSUN.dusk || (KSUN.dusk = new THREE.Color('#6a4a62').convertSRGBToLinear()), e * 0.65); };
+  if (KSUN.k <= 0) { if (KSUN.on) { ENV.forceHour = null; KSUN.on = false; tint(0); } if (KSUN.path) KSUN.path.visible = false; return; }
+  KSUN.on = true; let d = 18.35 - real; if (d > 12) d -= 24; if (d < -12) d += 24; const e = KSUN.k * KSUN.k * (3 - 2 * KSUN.k); ENV.forceHour = (real + d * e - ((LEVEL && LEVEL.hourOffset) || 0) + 48) % 24;
+  if (!KSUN.path) { const cv = document.createElement('canvas'); cv.width = 64; cv.height = 256; const c = cv.getContext('2d'), g = c.createLinearGradient(0, 0, 0, 256);
+    g.addColorStop(0, 'rgba(255,200,120,0)'); g.addColorStop(0.3, 'rgba(255,170,90,0.55)'); g.addColorStop(1, 'rgba(255,220,150,0.9)'); c.fillStyle = g; c.fillRect(0, 0, 64, 256);
+    c.globalCompositeOperation = 'destination-in'; for (let y = 0; y < 256; y += 3) { c.fillStyle = `rgba(0,0,0,${0.4 + Math.random() * 0.6})`; c.fillRect(Math.random() * 20, y, 24 + Math.random() * 30, 2); }
+    KSUN.path = new THREE.Mesh(new THREE.PlaneGeometry(14, 70), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    KSUN.path.rotation.x = -Math.PI / 2; KSUN.path.renderOrder = 3; }
+  if (KSUN.path.parent !== scene) scene.add(KSUN.path);
+  const sd = sunDir.clone(); sd.y = 0; if (sd.lengthSq() < 1e-4) sd.set(1, 0, 0); sd.normalize();
+  tint(e); KSUN.path.visible = true; KSUN.path.material.opacity = e * (0.75 + Math.sin(performance.now() / 300) * 0.1);
+  KSUN.path.position.set(player.pos.x + sd.x * 37, WATER_Y + 0.3, player.pos.z + sd.z * 37); KSUN.path.rotation.z = Math.atan2(-sd.x, -sd.z);
+} catch (_) {} }, 50);
+
+// pier dressing: crates, nets, buckets, a fish-gutting table, gulls on the pilings, lanterns that come on at dusk
+function ocPierDetails() { const y = ocDeck() + 0.11;
+  OC2.piers.forEach((P, i) => { const g = new THREE.Group(); g.position.set(P.cx, 0, P.cz); g.rotation.y = P.ry; levelGroup.add(g); const L = P.len;
+    part(g, B(0.7, 0.6, 0.7), toon('#8a6a44', 'wood'), 0.6, y + 0.3, -L / 2 + 3); part(g, B(0.6, 0.5, 0.6), toon('#7a5a3a', 'wood'), 0.7, y + 0.85, -L / 2 + 3.1, 0, 0.4, 0);
+    part(g, Cy(0.2, 0.16, 0.4, 8), toon(['#4fd2ff', '#c8402f', '#ffd36a'][i]), -0.8, y + 0.2, -L / 2 + 5);
+    const net = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1), new THREE.MeshBasicMaterial({ color: '#d8c890', wireframe: true })); net.position.set(1.35, y + 0.5, 0); net.rotation.y = Math.PI / 2; g.add(net);
+    if (i === 0) { part(g, B(1.2, 0.08, 0.6), toon('#9a7650', 'wood'), -0.7, y + 0.8, 1); for (const s of [-1, 1]) part(g, B(0.06, 0.8, 0.06), toon('#6a4f34', 'wood'), -0.7 + s * 0.5, y + 0.4, 1); part(g, B(0.4, 0.08, 0.15), toon('#ffb347'), -0.7, y + 0.88, 1); }
+    for (let k = 0; k < 2; k++) { const gull = new THREE.Group(); part(gull, new THREE.SphereGeometry(0.14, 8, 6), toon('#f4f0e8'), 0, 0, 0); part(gull, B(0.4, 0.03, 0.12), toon('#c8c0b0'), 0, 0.02, 0); part(gull, B(0.06, 0.04, 0.12), toon('#ffb347'), 0, 0.02, -0.16);
+      gull.position.set((k ? -1 : 1) * 1.4, y + 0.55, -L / 2 + 6 + k * 4); g.add(gull); levelAnims.push(t => { gull.rotation.y = Math.sin(t * 0.6 + k * 3 + i) * 1.2; }); } });
+  // drifting space-lily pads and a few floating buoys around the harbour
+  for (let i = 0; i < 12; i++) { const a = i * 2.4, r = 14 + (i * 7) % 18, x = PORT[0] + Math.cos(a) * r, z = PORT[1] + 26 + Math.sin(a) * r * 0.6; if (groundH(x, z) > WATER_Y - 0.3) continue;
+    const pad = new THREE.Mesh(new THREE.CircleGeometry(0.6 + (i % 3) * 0.2, 10), toon('#4f9a4a')); pad.rotation.x = -Math.PI / 2; pad.position.set(x, WATER_Y + 0.04, z); levelGroup.add(pad);
+    if (i % 4 === 0) { const b = new THREE.Group(); part(b, Cy(0.25, 0.35, 0.7, 8), toon(i % 8 ? '#ff6a3a' : '#f4f0e8'), 0, 0, 0); b.position.set(x + 1.5, WATER_Y, z); levelGroup.add(b); levelAnims.push(t => { b.position.y = WATER_Y + Math.sin(t * 1.3 + i) * 0.1; b.rotation.z = Math.sin(t + i) * 0.12; }); } } }
+{ const orig = LEVELS.ocean.build; LEVELS.ocean.build = function () { orig.call(this); try { ocPierDetails(); } catch (e) { console.warn('ocean2 details', e); } }; }

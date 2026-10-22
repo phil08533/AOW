@@ -201,7 +201,7 @@ function swimStep(dt, mx, mz, sprint) {
   const fl = groundH(player.pos.x, player.pos.z), top = WATER_Y - 1.15; player.pos.y = clamp(player.pos.y, Math.min(fl, top), top);
   player.vy = 0; player.onGround = true; player.wet = true;
 }
-const swimHere = () => LEVEL && LEVEL.ocean && !S.inSub && groundH(player.pos.x, player.pos.z) < WATER_Y - 2.2 && !inDome();
+const swimHere = () => LEVEL && LEVEL.ocean && !S.inSub && groundH(player.pos.x, player.pos.z) < WATER_Y - 2.2 && !inDome() && !(floorAt(player.pos.x, player.pos.z) > WATER_Y && player.pos.y > WATER_Y - 1.6);
 let airEl = null;
 function updateAir(dt) {
   if (!airEl) { airEl = document.createElement('div'); airEl.className = 'win'; airEl.id = 'air'; $('hud').appendChild(airEl); }

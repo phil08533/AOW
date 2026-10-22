@@ -84,7 +84,7 @@ function bubDot() { const s = bubS();
   openDlg('Dome Control', 'Dot'); $('dlgLine').textContent = '"Welcome to Dome Control. I control the dome. Mostly the lights. Sometimes the hum."';
   const L = []; if (s.tv === 1) L.push(['Ask about TV trackers', () => { $('dlgLine').textContent = '"A tracker? On a TV that is definitely yours? I could switch it off. The coffee fund is 200 credits, by the way. Unrelated."';
     acts([['Pay 200 cr', () => { if (S.cr < 200) { SFX.hit(); $('dlgLine').textContent = '"The coffee fund only takes credits. You do not have them."'; return; } S.cr -= 200; s.tv = 2; markDirty(); SFX.coin(); $('dlgLine').textContent = '"Click. Oh no, I seem to have lost track of a TV. Anyway."'; acts([['Thanks', closeDlg, true]]); }, true], ['Never mind', closeDlg]]); }, true]);
-  L.push(['Flip the day/night lever', () => { ENV.hour = ENV.hour > 6 && ENV.hour < 19 ? 22 : 9; SFX.door(); $('dlgLine').textContent = '"Whoa! Ok. Everyone just got very confused. I love it."'; }]);
+  L.push(['Flip the day/night lever', () => { bubNight(!BUB.night); SFX.door(); $('dlgLine').textContent = '"Whoa! Ok. Everyone just got very confused. I love it."'; }]);
   L.push(['Read the PA announcements', () => { $('dlgLine').textContent = ['"Reminder: tapping on the dome is a crime. A big one."', '"Lost: one hamster, small, even for here. Answers to Peanut. Probably."', '"The Burbs HOA would like to remind residents that lawns are measured with a ruler."'][Math.floor(Math.random() * 3)]; }]);
   L.push(['Bye', closeDlg]); acts(L); }
 
@@ -188,7 +188,7 @@ function bubMarisol() { const s = bubS();
 function bubStayOver(again) { openDlg('Coral Heights · 4B', 'Marisol Puddleby');
   $('dlgLine').textContent = again ? '"Oh hey, you! Peanut says hi. Want to come in and hang out? I\'ve got snacks and, um, other snacks."' : '"So... it\'s late. Do you want to stay over? We could watch something. I have snacks. And, um, other snacks."';
   acts([['Stay the night', () => { closeDlg(); bubFade('Later that night…', () => { bubS().night = (bubS().night || 0) + 1; if (subsOn()) { buffs().sub_neondust = Date.now() + 120000; } }, () => {
-      bubFade('…morning.', () => { ENV.hour = 7.5; player.hp = maxHp(); markDirty(); }, () => { toast('GOOD MORNING', subsOn() ? 'You feel… colourful. Peanut is watching you.' : 'Full health. Peanut is watching you.', 3); }, 1200); }, 1800); }, true], ['Maybe another time', closeDlg]]); }
+      bubFade('…morning.', () => { bubNight(false); player.hp = maxHp(); markDirty(); }, () => { toast('GOOD MORNING', subsOn() ? 'You feel… colourful. Peanut is watching you.' : 'Full health. Peanut is watching you.', 3); }, 1200); }, 1800); }, true], ['Maybe another time', closeDlg]]); }
 
 // ---------------- your flat: 6B ----------------
 function bubFlat() { const X = BFLAT.x, Z = BFLAT.z, W = 4.2, L = 5, wall = toon('#b8a8c8');
@@ -215,3 +215,38 @@ function bubFlat() { const X = BFLAT.x, Z = BFLAT.z, W = 4.2, L = 5, wall = toon
 { const _l = loadLevel; loadLevel = function () { BUB.lie = false; BUB.ham = null; return _l.apply(this, arguments); }; }
 // sleeping in your own bed works like the ship bunk after a while of lying still
 setInterval(() => { try { if (BUB.lie && BUB.lieT && performance.now() - BUB.lieT > 20000) { BUB.lieT = 0; sleepInBunk(); } } catch (_) {} }, 1000);
+// the dome has no sun; "night" dims the dome's own lights and turns the street lamps up
+function bubNight(on) { BUB.night = on; BUB.base = BUB.base || new Map(); levelGroup.traverse(o => { if (!o.isLight) return; if (!BUB.base.has(o)) BUB.base.set(o, o.intensity); o.intensity = BUB.base.get(o) * (on ? 0.3 : 1); }); }
+{ const _l2 = loadLevel; loadLevel = function () { BUB.night = false; BUB.base = null; return _l2.apply(this, arguments); }; }
+
+// ---------------- extra dressing ----------------
+function bubDetails() {
+  const R = i => { const x = Math.sin(i * 91.7 + 13.1) * 43758.5; return x - Math.floor(x); };
+  // benches and bins round the plaza ring, a bus stop, hydrants in the Burbs
+  for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.2, x = Math.cos(a) * 12.5, z = Math.sin(a) * 12.5, g = new THREE.Group();
+    part(g, B(1.8, 0.08, 0.5), toon('#8a6a44', 'wood'), 0, 0.5, 0); part(g, B(1.8, 0.5, 0.08), toon('#8a6a44', 'wood'), 0, 0.8, -0.25); for (const s of [-1, 1]) part(g, B(0.08, 0.5, 0.5), toon('#2b2a2c'), s * 0.8, 0.25, 0);
+    g.position.set(x, 0, z); g.rotation.y = -a - Math.PI / 2; levelGroup.add(g); box(x, z, 0.6, 0.6);
+    if (i % 2) { const b = new THREE.Group(); part(b, Cy(0.28, 0.24, 0.8, 8), toon('#3f7a3a'), 0, 0.4, 0); part(b, Cy(0.3, 0.3, 0.06, 8), toon('#2b2a2c'), 0, 0.82, 0); b.position.set(Math.cos(a + 0.25) * 12.5, 0, Math.sin(a + 0.25) * 12.5); levelGroup.add(b); } }
+  for (const [x, z] of [[29, -22], [29, 14], [33, 4], [29, -6]]) { const h = new THREE.Group(); part(h, Cy(0.14, 0.17, 0.6, 8), toon('#c8402f'), 0, 0.3, 0); part(h, new THREE.SphereGeometry(0.15, 8, 6), toon('#c8402f'), 0, 0.62, 0); part(h, Cy(0.05, 0.05, 0.4, 5), toon('#c8402f'), 0, 0.4, 0, 0, 0, Math.PI / 2); h.position.set(x, 0, z); levelGroup.add(h); }
+  // the Low Tide: graffiti, puddles, a flickering streetlight, litter, a shopping cart
+  for (const [t, c, x, z] of [['GILL COLLINS RULEZ', '#ff3bd2', -38.4, -2], ['NO NARCS', '#7fff6a', -38.4, 12], ['RIZZO OWES ME', '#ffd36a', -38.4, -24]]) { const m = bubSign(t, '#2a2230', c, 2.6, 0.6, x, 1.6, z, Math.PI / 2); m.material.transparent = true; m.material.opacity = 0.85; }
+  for (let i = 0; i < 9; i++) { const p = new THREE.Mesh(new THREE.CircleGeometry(0.5 + R(i) * 0.8, 12), new THREE.MeshBasicMaterial({ color: '#2a2a44', transparent: true, opacity: 0.55, depthWrite: false })); p.rotation.x = -Math.PI / 2; p.position.set(-30 - R(i + 9) * 8, 0.03, -26 + R(i + 3) * 44); levelGroup.add(p); }
+  for (let i = 0; i < 14; i++) part(levelGroup, B(0.18, 0.04, 0.12), toon(['#e8e4dc', '#c8402f', '#ffd36a'][i % 3]), -26 - R(i + 30) * 12, 0.03, -24 + R(i + 40) * 42, 0, R(i) * 3, 0);
+  const cart = new THREE.Group(); part(cart, B(0.8, 0.5, 0.5), toon('#9aa1aa'), 0, 0.6, 0); for (const [a, b] of [[-0.35, -0.2], [0.35, -0.2], [-0.35, 0.2], [0.35, 0.2]]) part(cart, Cy(0.06, 0.06, 0.05, 6), toon('#2b2a2c'), a, 0.08, b, Math.PI / 2, 0, 0); cart.position.set(-34.5, 0, 10); cart.rotation.set(0, 0.7, 0.25); levelGroup.add(cart);
+  const sl = new THREE.PointLight(0xff5ad2, 1.2, 10); sl.position.set(-33, 3, 0); levelGroup.add(sl); levelAnims.push(t => { sl.intensity = Math.sin(t * 17) > 0.6 ? 0.2 : 1.2; });
+  // kelp swaying outside the dome glass, little skylight bubbles rising up the ribs
+  for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2, k = new THREE.Mesh(B(0.4, 6 + R(i) * 6, 0.1), toon(i % 2 ? '#3f7a3a' : '#2f5a2a', 'leaves')); k.position.set(Math.cos(a) * 57, 3, Math.sin(a) * 57); levelGroup.add(k); levelAnims.push(t => { k.rotation.z = Math.sin(t * 0.7 + i) * 0.15; }); }
+}
+function bubFlatDetails() { const X = BFLAT.x, Z = BFLAT.z;
+  // rug, a beanbag, a lamp, posters, snack pile, a fish bowl, a clothes pile
+  const rug = new THREE.Mesh(new THREE.CircleGeometry(0.9, 20), toon('#c86a3a')); rug.rotation.x = -Math.PI / 2; rug.position.set(X - 0.4, 0.105, Z + 0.6); levelGroup.add(rug);
+  part(levelGroup, new THREE.SphereGeometry(0.45, 10, 8), toon('#6a3a8a'), X - 1.2, 0.3, Z + 1.3); part(levelGroup, Cy(0.03, 0.03, 1.4, 5), toon('#2b2a2c'), X + 0.35, 0.7, Z - 2.1); part(levelGroup, Cy(0.2, 0.12, 0.25, 8), glow('#ffd36a'), X + 0.35, 1.45, Z - 2.1);
+  for (const [t, c, x] of [['FISH COPS S2', '#c8402f', -0.6], ['GILL COLLINS', '#3a5266', 0.6]]) bubSign(t, c, '#ffffff', 0.7, 0.9, X + x, 1.7, Z - 2.48, 0);
+  for (let i = 0; i < 5; i++) part(levelGroup, B(0.18, 0.06, 0.12), toon(['#ffd36a', '#ff6aa8', '#7fe8ff'][i % 3]), X + 0.4 + i * 0.08, 0.13 + (i % 2) * 0.04, Z + 1.9, 0, i, 0);
+  part(levelGroup, new THREE.SphereGeometry(0.16, 10, 8), new THREE.MeshLambertMaterial({ color: '#9fe8ff', transparent: true, opacity: 0.5 }), X - 1.5, 1.08, Z - 2.2); part(levelGroup, B(0.06, 0.04, 0.02), toon('#ffb347'), X - 1.5, 1.08, Z - 2.2);
+  part(levelGroup, new THREE.SphereGeometry(0.35, 8, 6), toon('#4a6a9a'), X + 1.7, 0.15, Z + 1.8); }
+function bubHallDetails() { const X = BAX, Z = BAZ;
+  for (let i = 0; i < 4; i++) bubSign(['NO BALL GAMES', 'QUIET HOURS 10-6', 'RECYCLE YOUR SHELLS', 'WHOSE FISH IS THIS'][i], '#f4f0e8', '#3a2a20', 0.9, 0.5, X + (i % 2 ? 1 : -1) * (BAW / 2 - 0.03), 1.7, Z - 9 + i * 5, i % 2 ? -Math.PI / 2 : Math.PI / 2);
+  for (const z of [-5, 4]) for (const s of [-1, 1]) { const m = new THREE.Mesh(B(0.7, 0.03, 0.5), toon('#8a6a44')); m.position.set(X + s * (BAW / 2 - 0.45), 0.12, Z + z); levelGroup.add(m); }
+  for (const z of [-11, 0, 10]) { part(levelGroup, B(0.6, 0.25, 0.04), toon('#2b2a2c'), X - BAW / 2 + 0.06, 2.5, Z + z, 0, Math.PI / 2, 0); part(levelGroup, B(0.03, 0.18, 0.03), glow('#ff3b2a'), X - BAW / 2 + 0.1, 2.5, Z + z - 0.2); } }
+{ const _b = LEVELS.bubblecity.build; LEVELS.bubblecity.build = function () { _b.apply(this, arguments); try { bubDetails(); bubFlatDetails(); bubHallDetails(); } catch (e) { console.warn('dome2 details', e); } }; }

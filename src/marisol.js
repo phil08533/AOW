@@ -19,6 +19,9 @@ function mariDoors() { const X = BAX, Z = BAZ;
     if (p.width === 4 && p.height === 3 && p.depth === 0.2) m.visible = false;
     if (p.width === 1.6 && p.height === 2.4 && p.depth === 0.12 && Math.abs(wp.x - X) < 1 && wp.z > Z) m.parent.visible = false; });
   levelGroup.traverse(m => { if (m.isMesh && m.geometry.type === 'SphereGeometry' && m.geometry.parameters.radius === 0.06 && Math.abs(m.position.x - X) > BAW / 2 - 0.3 && Math.abs(m.position.x - X) < BAW / 2 && Math.abs(m.position.z - Z) < BAL / 2) m.visible = false; });
+  // the lobby desk was built on every floor, right in front of door B: lobby only, and moved clear of the doors
+  let desk = null; levelGroup.traverse(m => { const p = m.isMesh && m.geometry.parameters; if (p && p.width === 1.2 && p.height === 1 && p.depth === 0.6 && Math.abs(m.position.x - (X - 1)) < 0.01 && Math.abs(m.position.z - (Z + 4)) < 0.01) desk = m; });
+  if (desk) desk.position.set(X + 1.1, 0.5, Z + BAL / 2 - 3.2);
   const plates = [];
   [['A', -1, -5], ['B', -1, 4], ['C', 1, -5], ['D', 1, 4]].forEach(([k, s, dz], i) => { const d = bcDoor(levelGroup, X + s * (BAW / 2 - 0.02), 0, Z + dz, -s * Math.PI / 2, ['#6a3a2a', '#3a4a6a', '#4a5a3a', '#6a5a2a'][i], null); plates.push([d, k]);
     const mat = part(levelGroup, B(0.9, 0.03, 1.2), toonNS('#5a3a2a'), X + s * (BAW / 2 - 0.6), 0.11, Z + dz); mat.visible = true;
@@ -28,7 +31,7 @@ function mariDoors() { const X = BAX, Z = BAZ;
   const _l = BUB.lbl; BUB.lbl = () => { _l && _l(); for (const [cv, t, k] of np) { const c = cv.getContext('2d'); c.fillStyle = '#c9a43a'; c.fillRect(0, 0, 96, 48); c.fillStyle = '#2b2420'; c.font = 'bold 30px monospace'; c.textAlign = 'center'; c.fillText(BUB.floor + k, 48, 36); t.needsUpdate = true; } }; BUB.lbl();
   // lobby street door: glass double door
   const sd = new THREE.Group(); sd.position.set(X, 0, Z + BAL / 2 - 0.05); sd.rotation.y = Math.PI; levelGroup.add(sd); mariGlassDoors(sd);
-  const _l2 = BUB.lbl; BUB.lbl = () => { _l2(); sd.visible = BUB.floor === 1; }; BUB.lbl();
+  const _l2 = BUB.lbl; BUB.lbl = () => { _l2(); sd.visible = BUB.floor === 1; if (desk) desk.visible = BUB.floor === 1; }; BUB.lbl();
   // the building's front entrance: glass double doors with frame, step and intercom
   const ex = BUB.towerExit[0], ez = BUB.towerExit[1] + 2.4 - 0.12; const fe = new THREE.Group(); fe.position.set(ex, 0, ez); fe.rotation.y = Math.PI; levelGroup.add(fe); mariGlassDoors(fe, 1);
 }

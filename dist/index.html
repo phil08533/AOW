@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.49</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.50</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18948,6 +18948,7 @@ const UPDATES = [
   { id: 212, title: '2.22.47 · Boats you can sit in, proper Low Tide shopfronts', items: ['Fishing boats have a solid deck now, so no more water sloshing inside', 'Swim up to a boat and press E to sit on the bench beside the fisher, then E again to hop back into the water', 'Low Tide shops got real panel doors with portholes, handles, lamps and OPEN signs, plus framed display windows', 'Every shop inside now has a rug, wood trim, posters, potted plants, a spinning ceiling fan and a regular hanging around'] },
   { id: 213, title: '2.22.48 · Marisol and Peanut', items: ['Bring Peanut home and Marisol invites you into her flat in 4B: a couch, TV, lava lamp, kitchenette, bed, string lights, and Peanut running on his wheel', 'Talk to her inside to ask her along. She becomes a companion who follows you and shoots what you shoot (send her home from the Companions list)', 'Or get high together: a rainbow haze fills the room, then it fades to morning with full health', 'Coral Heights has real doors now: glass double doors at the entrance and in the lobby, and panel doors with number plates, peepholes and lamps in the halls'] },
   { id: 214, title: '2.22.49 · Marisol works for you', items: ['Marisol no longer follows you around. Ask her to sell for you and she joins your ship crew as your Dealer, working the Lab: she takes doses off the shelf and sells them, and you get the credits', 'She starts at three stars and is Loyal'] },
+  { id: 215, title: '2.22.50 · Clear hallways', items: ['Coral Heights: the lobby desk no longer appears on every floor in front of the doors. It stays in the lobby, out of the way'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -26361,6 +26362,9 @@ function mariDoors() { const X = BAX, Z = BAZ;
     if (p.width === 4 && p.height === 3 && p.depth === 0.2) m.visible = false;
     if (p.width === 1.6 && p.height === 2.4 && p.depth === 0.12 && Math.abs(wp.x - X) < 1 && wp.z > Z) m.parent.visible = false; });
   levelGroup.traverse(m => { if (m.isMesh && m.geometry.type === 'SphereGeometry' && m.geometry.parameters.radius === 0.06 && Math.abs(m.position.x - X) > BAW / 2 - 0.3 && Math.abs(m.position.x - X) < BAW / 2 && Math.abs(m.position.z - Z) < BAL / 2) m.visible = false; });
+  // the lobby desk was built on every floor, right in front of door B: lobby only, and moved clear of the doors
+  let desk = null; levelGroup.traverse(m => { const p = m.isMesh && m.geometry.parameters; if (p && p.width === 1.2 && p.height === 1 && p.depth === 0.6 && Math.abs(m.position.x - (X - 1)) < 0.01 && Math.abs(m.position.z - (Z + 4)) < 0.01) desk = m; });
+  if (desk) desk.position.set(X + 1.1, 0.5, Z + BAL / 2 - 3.2);
   const plates = [];
   [['A', -1, -5], ['B', -1, 4], ['C', 1, -5], ['D', 1, 4]].forEach(([k, s, dz], i) => { const d = bcDoor(levelGroup, X + s * (BAW / 2 - 0.02), 0, Z + dz, -s * Math.PI / 2, ['#6a3a2a', '#3a4a6a', '#4a5a3a', '#6a5a2a'][i], null); plates.push([d, k]);
     const mat = part(levelGroup, B(0.9, 0.03, 1.2), toonNS('#5a3a2a'), X + s * (BAW / 2 - 0.6), 0.11, Z + dz); mat.visible = true;
@@ -26370,7 +26374,7 @@ function mariDoors() { const X = BAX, Z = BAZ;
   const _l = BUB.lbl; BUB.lbl = () => { _l && _l(); for (const [cv, t, k] of np) { const c = cv.getContext('2d'); c.fillStyle = '#c9a43a'; c.fillRect(0, 0, 96, 48); c.fillStyle = '#2b2420'; c.font = 'bold 30px monospace'; c.textAlign = 'center'; c.fillText(BUB.floor + k, 48, 36); t.needsUpdate = true; } }; BUB.lbl();
   // lobby street door: glass double door
   const sd = new THREE.Group(); sd.position.set(X, 0, Z + BAL / 2 - 0.05); sd.rotation.y = Math.PI; levelGroup.add(sd); mariGlassDoors(sd);
-  const _l2 = BUB.lbl; BUB.lbl = () => { _l2(); sd.visible = BUB.floor === 1; }; BUB.lbl();
+  const _l2 = BUB.lbl; BUB.lbl = () => { _l2(); sd.visible = BUB.floor === 1; if (desk) desk.visible = BUB.floor === 1; }; BUB.lbl();
   // the building's front entrance: glass double doors with frame, step and intercom
   const ex = BUB.towerExit[0], ez = BUB.towerExit[1] + 2.4 - 0.12; const fe = new THREE.Group(); fe.position.set(ex, 0, ez); fe.rotation.y = Math.PI; levelGroup.add(fe); mariGlassDoors(fe, 1);
 }

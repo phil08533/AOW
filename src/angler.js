@@ -22,7 +22,7 @@ function anglerRoom(s, cx, cz, outer, term, props) {
     part(tk, B(1.0, 0.7, 2.6), toon('#2a2c32'), 0, 0.35, 0); part(tk, B(0.9, 1.0, 2.5), new THREE.MeshBasicMaterial({ color: '#4fa8ff', transparent: true, opacity: 0.3, depthWrite: false }), 0, 1.2, 0); part(tk, B(1.0, 0.08, 2.6), toon('#2a2c32'), 0, 1.74, 0); part(tk, B(0.86, 0.12, 2.46), toon('#d8c8a0', 'grime'), 0, 0.76, 0);
     const fs = []; ['#ff9a3c', '#ffd36a', '#4fd2ff', '#ff6aa8'].forEach((c, i) => { const f = new THREE.Group(); part(f, B(0.16, 0.08, 0.04), glow(c), 0, 0, 0); part(f, B(0.05, 0.08, 0.02), glow(c), -0.1, 0, 0); f.rotation.y = Math.PI / 2; tk.add(f); fs.push(f); });
     levelAnims.push(t => fs.forEach((f, i) => { const a = t * (0.4 + i * 0.1) + i * 1.6; f.position.set(Math.sin(a * 1.3) * 0.25, 1.0 + i * 0.15 + Math.sin(a * 2) * 0.05, Math.sin(a) * 1.0); f.rotation.y = Math.cos(a) >= 0 ? Math.PI / 2 : -Math.PI / 2; }));
-    box(ax, az, 0.55, 1.35); }
+    box(ax, az, 0.55, 1.35); ANG.tank = tk; ANG.live = new THREE.Group(); tk.add(ANG.live); angTankFill(); INTERACTS.push({ x: ax + sd * 1.1, z: az, r: 1.8, label: 'Aquarium: drop in a fish', fn: openAngTank }); }
   // rod rack: every rod tier standing up against the front wall (2.17: they used to lie on the floor)
   { const rk = new THREE.Group(), wd = toon('#5a3e2a', 'wood'); part(rk, B(1.5, 0.14, 0.34), wd, 0, 0.07, 0); part(rk, B(1.5, 0.08, 0.1), wd, 0, 1.3, -0.1); for (const x of [-0.72, 0.72]) part(rk, B(0.08, 1.34, 0.08), wd, x, 0.67, -0.12);
     for (let i = 0; i < 4; i++) { part(rk, Cy(0.05, 0.05, 0.03, 8), '#2a2c32', -0.48 + i * 0.32, 0.15, 0); try { const r = makeRodModel(Math.min(i + 1, 4)); r.position.set(-0.48 + i * 0.32, 0.12, 0); r.rotation.x = -0.07; rk.add(r); } catch (_) {} }
@@ -59,4 +59,32 @@ function anglerMount(id) {
 }
 function anglerTake(i) {
   const M = angMounts(), m = M[i]; if (!m) return; M[i] = null; S.inv[m.id] = (S.inv[m.id] || 0) + 1; markDirty(); anglerPlaques(); SFX.ui && SFX.ui(); if (ANG.render) ANG.render();
+}
+
+// ---- the aquarium (2.22.33): drop a catch in and it shrinks down and swims laps. Save field: S.tank = [fishId, ...] (max 16) ----
+const ANG_TANK_MAX = 16;
+const angTank = () => { if (!Array.isArray(S.tank)) S.tank = []; return S.tank; };
+function angTankFill() {
+  const L = ANG.live; if (!L || !ANG.tank || !ANG.tank.parent) return; for (const c of [...L.children]) { L.remove(c); disposeTree(c); }
+  angTank().forEach((id, i) => { if (!ITEMS[id]) return; let f; try { f = makeFishModel(id); } catch (_) { return; }
+    const b = new THREE.Box3().setFromObject(f), sz = b.getSize(new THREE.Vector3()), k = 0.26 / Math.max(sz.x, sz.z, 0.05), c = b.getCenter(new THREE.Vector3()).multiplyScalar(k);
+    f.scale.setScalar(k); f.position.sub(c); const w = new THREE.Group(), turn = new THREE.Group(); turn.add(f); w.add(turn); L.add(w);
+    const sp = 0.25 + (i % 5) * 0.06, ph = i * 2.39, y0 = 0.95 + (i % 4) * 0.15, sx = sz.x >= sz.z; w.userData = { sp, ph, y0, sx, turn }; });
+}
+// swim: lazy figure-eights inside the glass, turning to face where they go
+setInterval(() => { try { const L = ANG.live; if (!L || !L.parent || !L.parent.parent) return; const t = performance.now() / 1000;
+  for (const w of L.children) { const { sp, ph, y0, sx, turn } = w.userData, a = t * sp + ph, x = Math.sin(a * 1.7) * 0.28, z = Math.sin(a) * 1.05, y = y0 + Math.sin(a * 2.3) * 0.07;
+    const dx = Math.cos(a * 1.7) * 1.7 * 0.28, dz = Math.cos(a) * 1.05; w.position.set(x, y, z); turn.rotation.y = Math.atan2(dz, dx) * -1 + (sx ? 0 : Math.PI / 2); turn.rotation.z = Math.sin(t * 6 + ph) * 0.08; } } catch (_) {} }, 33);
+function openAngTank() {
+  openDlg("Angler's Den", 'The aquarium'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const fishSet = angFish();
+  const render = () => { const T = angTank(), have = Object.keys(S.inv).filter(k => S.inv[k] > 0 && fishSet.has(k));
+    $('dlgLine').textContent = T.length >= ANG_TANK_MAX ? `The tank is full (${T.length}/${ANG_TANK_MAX}). Take one out to make room.` : `Drop a catch in: the tank's shrink field makes it aquarium-sized. ${T.length}/${ANG_TANK_MAX} swimming.`;
+    const inTank = {}; T.forEach(id => { inTank[id] = (inTank[id] || 0) + 1; });
+    itemRows(rows, [...have.map(k => [k, S.inv[k], 'in your bag', [['Drop in', () => drop(k), T.length >= ANG_TANK_MAX]]]),
+      ...Object.keys(inTank).map(k => [k, inTank[k], 'swimming in the tank', [['Take out', () => take(k)]]])]); };
+  const drop = k => { const T = angTank(); if (T.length >= ANG_TANK_MAX || !(S.inv[k] > 0)) return; S.inv[k]--; if (!S.inv[k]) delete S.inv[k]; T.push(k); markDirty(); angTankFill(); try { SFX.splash ? SFX.splash() : SFX.quest(); } catch (_) {}
+    if (ANG.tank) try { const p = new THREE.Vector3(); ANG.tank.getWorldPosition(p); burst(p.add(V(0, 1.7, 0)), '#9fe8ff', 12, 1.5); } catch (_) {} toast('PLOP', `${ITEMS[k].name} shrinks to fit and swims off.`, 2); render(); };
+  const take = k => { const T = angTank(), i = T.indexOf(k); if (i < 0) return; if (typeof invRoomFor === 'function' && invRoomFor(k) < 1) { invFullNote(k); return; } T.splice(i, 1); S.inv[k] = (S.inv[k] || 0) + 1; markDirty(); angTankFill(); render(); };
+  $('dlgActs').before(rows); acts([['Done', closeDlg, true]]); render();
 }

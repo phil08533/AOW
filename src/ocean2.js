@@ -187,7 +187,7 @@ LEVELS.bubblecity = {
     const fish = []; for (let i = 0; i < 14; i++) { const f = new THREE.Mesh(B(1.4, 0.6, 0.3), new THREE.MeshBasicMaterial({ color: ['#ffb347', '#4fd2ff', '#ff6aa8', '#ffd36a'][i % 4], fog: false })); levelGroup.add(f); fish.push(f); }
     levelAnims.push(t => fish.forEach((f, i) => { const a = t * (0.04 + (i % 5) * 0.012) * (i % 2 ? 1 : -1) + i, r = Rd + 4 + (i % 3) * 3, e = 0.35 + (i % 4) * 0.12; f.position.set(Math.cos(a) * r * Math.cos(e), Math.sin(e) * r, Math.sin(a) * r * Math.cos(e)); f.rotation.y = -a + (i % 2 ? 0 : Math.PI); }));
     // keep everyone inside the glass
-    levelAnims.push(() => { const d = Math.hypot(player.pos.x, player.pos.z); if (d > Rd - 3) { player.pos.x *= (Rd - 3) / d; player.pos.z *= (Rd - 3) / d; } });
+    levelAnims.push(() => { if (player.pos.x > 100) return; const d = Math.hypot(player.pos.x, player.pos.z); if (d > Rd - 3) { player.pos.x *= (Rd - 3) / d; player.pos.z *= (Rd - 3) / d; } });
     // streets: a ring road and four avenues
     const ring = new THREE.Mesh(new THREE.RingGeometry(14, 18, 48).rotateX(-Math.PI / 2), path); ring.position.y = 0.02; props.add(ring);
     for (const ry of [0, Math.PI / 2]) { const av = new THREE.Mesh(new THREE.PlaneGeometry(4, Rd * 2 - 8).rotateX(-Math.PI / 2), path); av.rotation.y = ry; av.position.y = 0.015; props.add(av); }

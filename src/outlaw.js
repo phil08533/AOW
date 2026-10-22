@@ -176,16 +176,16 @@ function openMcK() {
 function openMcKBack() {
   openDlg('McKlunkies', 'The back counter');
   if (outTier() < 1) { $('dlgLine').textContent = "ORDER-BOT: BACK COUNTER? THERE IS NO BACK COUNTER. THIS IS A FAMILY RESTAURANT. :) (Come back when you've got a bit of a reputation.)"; acts([['Order food', () => openMcK()], ['Done', closeDlg, true]]); return; }
-  openFence('McKlunkies', 'The back counter', subsOn() ? "ORDER-BOT (whispering, still smiling): WE BUY WHAT THE SHOPS WON'T. AND WE SELL A LITTLE SOMETHING TOO." : "ORDER-BOT (whispering, still smiling): WE BUY WHAT THE SHOPS WON'T.", 1.0);
-  if (subsOn()) acts([['Buy substances', () => openSubShop('McKlunkies', 'The back counter', MCK_SUBS)], ['Done', closeDlg, true]]);
+  if (!mobIn()) { $('dlgLine').textContent = "ORDER-BOT (whispering, still smiling): WE DON'T KNOW YOU. :) THE DON HASN'T VOUCHED FOR YOU. HE EATS IN THE McKLUNKIES BOOTHS IN THE ZELTAC MALL."; acts([['Order food', () => openMcK()], ['Done', closeDlg, true]]); return; }
+  openFence('McKlunkies', 'The back counter', "ORDER-BOT (whispering, still smiling): THE DON SAYS YOU'RE FAMILY. WE BUY WHAT THE SHOPS WON'T.", 1.0, true);
 }
 // ---- the Fence: buys contraband (and regular loot for 20% more) ----
-function openFence(role, name, line, contraMult) {
+function openFence(role, name, line, contraMult, onlyContra) {
   openDlg(role, name); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   const render = () => { $('dlgLine').textContent = `${line} You have ${S.cr.toLocaleString()} cr.`;
-    const list = Object.entries(S.inv).filter(([k, n]) => ITEMS[k] && n > 0 && !ITEMS[k].quest && k !== 'medkit' && !ITEMS[k].food).sort((a, b) => (ITEMS[b[0]].illegal ? 1 : 0) - (ITEMS[a[0]].illegal ? 1 : 0));
+    const list = Object.entries(S.inv).filter(([k, n]) => ITEMS[k] && n > 0 && !ITEMS[k].quest && k !== 'medkit' && !ITEMS[k].food && (!onlyContra || (ITEMS[k].illegal && !ITEMS[k].drug))).sort((a, b) => (ITEMS[b[0]].illegal ? 1 : 0) - (ITEMS[a[0]].illegal ? 1 : 0));
     itemRows(rows, list.map(([k, n]) => [k, n, `${fencePrice(k, contraMult)} cr each${ITEMS[k].illegal ? ' ▲' : ''}`, [['Sell 1', () => sell(k, 1)], ['Sell all', () => sell(k, S.inv[k] || 0)]]])); };
-  const sell = (k, n) => { n = Math.min(n, S.inv[k] || 0); if (n < 1) return; const p = fencePrice(k, contraMult) * n; S.cr += p; S.inv[k] -= n; if (!S.inv[k]) delete S.inv[k]; SFX.coin(); log(`Sold ${n} ${ITEMS[k].name} for ${p} cr`, 'loot'); if (ITEMS[k].illegal) crime(Math.min(10, n), 'Fenced contraband'); markDirty(); renderQuest(); render(); };
+  const sell = (k, n) => { n = Math.min(n, S.inv[k] || 0); if (n < 1) return; if (ITEMS[k].illegal && !ITEMS[k].drug && !mobIn()) { SFX.hit(); $('dlgLine').textContent = '"Hot goods? Not from you. Nobody moves contraband without the Don\'s say. Find him in the McKlunkies booths at the Zeltac mall."'; return; } const p = fencePrice(k, contraMult) * n; S.cr += p; S.inv[k] -= n; if (!S.inv[k]) delete S.inv[k]; SFX.coin(); log(`Sold ${n} ${ITEMS[k].name} for ${p} cr`, 'loot'); if (ITEMS[k].illegal) crime(Math.min(10, n), 'Fenced contraband'); markDirty(); renderQuest(); render(); };
   $('dlgActs').before(rows); acts([['Done', closeDlg, true]]); render();
 }
 const fencePrice = (k, m) => ITEMS[k].illegal ? Math.round(ITEMS[k].v * (m || 1)) : Math.ceil(sellPrice(k) * 1.2);

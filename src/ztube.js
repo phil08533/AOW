@@ -35,7 +35,8 @@ const ZTUBE = { at: null };
 for (const lv of ['zfloor', 'zeltac']) { const _b = LEVELS[lv].build; LEVELS[lv].build = function () { _b.apply(this, arguments); try { zTube(); if (lv === 'zeltac') zAirlock(); } catch (e) { console.warn('ztube', e); } }; }
 function zAirlock() {
   const slab = props.children.find(o => zIsBox(o, 8, 6, 0.4)), gl = props.children.find(o => zIsBox(o, 6, 5, 0.3)); if (!slab) return; const Zw = slab.position.z - 0.2; props.remove(slab); if (gl) props.remove(gl);
-  BOXES.push([slab.position.x, Zw + 0.3, 4.4, 0.45]);
+  BOXES.push([slab.position.x, Zw + 0.3, 5.6, 0.6]);
+  { const gm = new THREE.MeshLambertMaterial({ color: '#9fdcff', transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }); const pane = new THREE.Mesh(B(9.4, 8, 0.06), gm); pane.position.set(0, 4, Zw + 0.75); levelGroup.add(pane); } // glass seal behind the blast doors
   const dark = toon('#2a2d34', 'panel'), steel = toon('#6a707a', 'panel'), chrome = toon('#b8bec8'), hz = new THREE.MeshLambertMaterial({ map: zHazardTex() });
   // deep frame and an arched lintel
   for (const s of [-1, 1]) { part(props, B(1.6, 6.4, 1.4), dark, s * 4.6, 3.2, Zw); part(props, B(0.3, 5.6, 1.42), hz, s * 3.95, 2.8, Zw); for (let k = 0; k < 5; k++) part(props, B(0.12, 0.12, 0.12), glow(k % 2 ? '#ff8a2a' : '#ffd36a'), s * 4.6, 0.8 + k * 1.1, Zw - 0.72); }
@@ -54,5 +55,4 @@ function zAirlock() {
   part(props, B(8.4, 0.02, 1.2), hz, 0, 0.012, Zw - 1.6); for (const s of [-1, 1]) part(props, B(0.1, 0.03, 8), glow('#7fe8ff'), s * 3.2, 0.02, Zw - 5.6);
   for (const s of [-1, 1]) { part(props, B(0.9, 1.2, 0.1), toon('#14161c'), s * 5.6, 1.6, Zw - 0.75); for (let k = 0; k < 4; k++) { const l = part(props, B(0.12, 0.12, 0.02), glow(k === 3 ? '#7fff6a' : '#4fd2ff'), s * 5.6 - 0.25 + (k % 2) * 0.5, 1.4 + Math.floor(k / 2) * 0.4, Zw - 0.81); props.remove(l); levelGroup.add(l); if (k === 3) levelAnims.push(t => { l.visible = Math.sin(t * 4 + s) > -0.3; }); } }
   const sg = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 0.7), new THREE.MeshBasicMaterial({ map: signTex('AIRLOCK · DOCK 7', '#0f1757', '#ffd75e') })); sg.position.set(0, 6.6, Zw - 0.75); sg.rotation.y = Math.PI; levelGroup.add(sg);
-  const ps = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.4), new THREE.MeshBasicMaterial({ map: signTex('PRESSURE OK', '#06140a', '#7fff6a') })); ps.position.set(0, 0.95, Zw - 0.75); ps.rotation.y = Math.PI; levelGroup.add(ps);
 }

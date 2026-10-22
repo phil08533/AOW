@@ -468,7 +468,7 @@ LEVELS.zeltac = {
     // crowd: aliens walking the plaza
     const walkers = [() => recolor(makeSpearman(), { '#7fae63': '#c47a4a' }), () => makeCivilian('#8a3a2e', '#2c2a28', '#9fe8ff', '#1e1a18'), () => recolor(makeBugHybrid(), { '#5f8a3a': '#7a6a3a' }), () => makeCivilian('#3f7d7a', '#5a4030', '#e0b892', '#c9a43a'), () => recolor(makeSpearman(), { '#7fae63': '#5d7f99' })];
     const rigs = ['spearman', 'civ', 'bughybrid', 'civ', 'spearman'];
-    for (let i = 0; i < 8; i++) { const w = buildChar(walkers[i % 5], rigs[i % 5]); blob(w, 0.45); levelGroup.add(w); MOVERS.push([w, 0.45]); const st = {}, r0 = 8 + (i % 3) * 3.5, sp = (i % 2 ? 1 : -1) * (0.12 + (i % 4) * 0.03), ph = i * 0.8;
+    for (let i = 0; i < 8; i++) { const w = buildChar(() => npcDisarm(walkers[i % 5]()), rigs[i % 5]); blob(w, 0.45); levelGroup.add(w); MOVERS.push([w, 0.45]); const st = {}, r0 = 8 + (i % 3) * 3.5, sp = (i % 2 ? 1 : -1) * (0.12 + (i % 4) * 0.03), ph = i * 0.8;
       levelAnims.push(t => { const a = ph + t * sp; w.position.set(Math.cos(a) * r0 * 1.3, 0, Math.sin(a) * r0); w.rotation.y = Math.atan2(-Math.sin(a) * r0 * 1.3 * sp, Math.cos(a) * r0 * sp); animRig(w, st, 1 / 60, t); }); }
     const lamp = new THREE.PointLight(0xcfe6ff, 0.8, 50, 1.5); lamp.position.set(0, 7, 0); levelGroup.add(lamp);
   }

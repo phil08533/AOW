@@ -61,8 +61,8 @@ function uwDress() {
     for (let i = 0; i < 4; i++) part(props, Cy(0.07, 0.07, 0.17, 8), glow(i % 2 ? '#ffb347' : '#ffd36a'), -2.6 + i * 1.5, 1.2, -8.25);
     // regulars on the stools and around two tables
     const regs = [() => recolor(makeBugHybrid(), { '#5f8a3a': '#4a8a3a' }), () => makeCivilian('#3a3430', '#1e1c22', '#d9cfc0', '#1e1a18', '#5a3a22'), () => makeCivilian('#5a2a6a', '#2c2a28', '#c58a64', '#cfcac0', '#3a3d44'), () => makeCivilian('#2a4a6a', '#1e1c22', '#e0b892', '#1e1a18', '#c8402f')];
-    const ucStand = (mk, rig, x, z, ry) => { const o = buildChar(mk, rig); o.position.set(x, 0, z); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.35); const st = {}; levelAnims.push(t => { if (o.parent) animRig(o, st, 1 / 60, t); }); };
-    const sit = (mk, rig, x, y, z, ry, i) => { const o = buildChar(mk, rig), R = o.userData.rig; o.position.set(x, y - (R ? R.spec.hip : 0.95) + 0.07, z); sitChar(o, y); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.35);
+    const ucStand = (mk, rig, x, z, ry) => { const o = buildChar(() => npcDisarm(mk()), rig); o.position.set(x, 0, z); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.35); const st = {}; levelAnims.push(t => { if (o.parent) animRig(o, st, 1 / 60, t); }); };
+    const sit = (mk, rig, x, y, z, ry, i) => { const o = buildChar(() => npcDisarm(mk()), rig), R = o.userData.rig; o.position.set(x, y - (R ? R.spec.hip : 0.95) + 0.07, z); sitChar(o, y); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.35);
       if (R && R.head) levelAnims.push(t => { R.head.rotation.y = Math.sin(t * 0.5 + i * 2) * 0.25; if (R.armR) R.armR.rotation.x = -0.6 + Math.sin(t * 0.8 + i) * 0.25; }); };
     [[-3.2, 0], [-0.64, 1], [1.92, 3]].forEach(([x, k], i) => sit(regs[k], k ? 'civ' : 'bughybrid', x, 0.78, -7.5, Math.PI, i));
     for (const [tx, tz] of [[-6.5, -4], [5.5, -2.6]]) { part(props, B(1.8, 0.1, 1.0), toon('#4a3020', 'wood'), tx, 0.82, tz); part(props, B(0.16, 0.78, 0.16), '#2a2c32', tx, 0.4, tz); box(tx, tz, 0.9, 0.5);
@@ -89,7 +89,7 @@ function uwDress() {
       window.UW_SPK = [[sx + 1.6, sz - 1.9], [sx + 1.6, sz + 1.9]];
       const sl = new THREE.PointLight(0xc86aff, 0.9, 6, 1.8); sl.position.set(sx + 0.5, 2.6, sz); levelGroup.add(sl);
       const ry = Math.PI / 2 + 0.35, band = [];
-      const play = (mk, rig, x, z, fn) => { const o = buildChar(mk, rig); o.position.set(x, 0.3, z); o.rotation.y = ry; levelGroup.add(o); band.push([o, fn]); return o; };
+      const play = (mk, rig, x, z, fn) => { const o = buildChar(() => npcDisarm(mk()), rig); o.position.set(x, 0.3, z); o.rotation.y = ry; levelGroup.add(o); band.push([o, fn]); return o; };
       const kt = play(() => recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a8a', '#3e5e26': '#2a3a6a' }), 'bughybrid', sx - 0.5, sz - 1.1, (o, R, t) => { R.armL.rotation.x = -1.0 + Math.sin(t * 9) * 0.25; R.armR.rotation.x = -1.0 - Math.sin(t * 9) * 0.25; });
       part(kt, B(0.9, 0.08, 0.25), toon('#1a1a2a'), 0, 1.15, 0.35, 0, 0, 0.25); part(kt, B(0.6, 0.02, 0.12), glow('#4fe0ff'), 0.05, 1.2, 0.38, 0, 0, 0.25);
       play(() => makeCivilian('#5a2a6a', '#1e1c22', '#8fae6a', '#cfcac0', '#c86aff'), 'civ', sx + 0.2, sz + 0.9, (o, R, t) => { R.armR.rotation.x = -1.2 + Math.sin(t * 2.3) * 0.4; R.armL.rotation.x = -0.6 + Math.sin(t * 3.1) * 0.3; });

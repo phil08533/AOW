@@ -20,6 +20,7 @@ function gunVent(g) { sfxHiss(Math.min(1.4, (g.reload || 1) * 0.8), 0.32, 5600);
 // HUD: the Unlimited Clip shows ∞ on guns it covers, and phones lose the Reload button (guns reload on their own when they run dry)
 { const _u = updateHud; updateHud = function () { _u(); if (LEVEL.fly) return; const g = GUNS[S.gun];
     if (S.clip && g && !handMelee() && !g.mana && !gunHot(g) && player.reloading <= 0) { const el = $('ammoN'), h = `∞<small> ${ammoUnit(g)}</small>`; if (el.innerHTML !== h) el.innerHTML = h; }
-    const rb = $('tReload'); if (rb && TOUCH) rb.style.display = handMelee() ? '' : 'none'; }; }
+    const rb = $('tReload'); if (rb) rb.classList.toggle('mel', !!handMelee()); }; }
+if (TOUCH) { const st = document.createElement('style'); st.textContent = '#tReload:not(.mel) { display: none !important; }'; document.head.appendChild(st); }
 // an empty hot gun reloads by itself the moment you let go of the trigger
 setInterval(() => { try { if (state === 'play' && !LEVEL.fly && !handMelee() && gunHot(gun()) && player.ammo <= 0 && player.reloading <= 0) reload(); } catch (_) {} }, 250);

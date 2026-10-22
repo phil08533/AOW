@@ -124,7 +124,7 @@ function cityLife(L, id) {
   const spot = () => SP[Math.floor(Math.random() * SP.length)];
   const pathClear = (a, b) => { for (let k = 1; k < 8; k++) { const t = k / 8; if (!cityClear(a.x + (b.x - a.x) * t, a.z + (b.z - a.z) * t, 0.45, L, true)) return false; } return true; };
   const used = []; const nW = Math.min(C.walkers, Math.floor(SP.length / 4));
-  for (let i = 0; i < nW; i++) { const o = buildChar(mk, rigN); blob(o, 0.4); let p = spot(); for (let k = 0; k < 20 && used.some(u => u.distanceTo(p) < 2.5); k++) p = spot(); used.push(p); o.position.set(p.x, L.terrain ? groundH(p.x, p.z) : 0, p.z); o.rotation.y = Math.random() * 6.28; levelGroup.add(o); MOVERS.push([o, 0.4]); folk.push({ o, st: {}, tgt: null, wait: Math.random() * 3, sp: 0.9 + Math.random() * 0.5 }); }
+  for (let i = 0; i < nW; i++) { const o = buildChar(() => npcDisarm(mk()), rigN); blob(o, 0.4); let p = spot(); for (let k = 0; k < 20 && used.some(u => u.distanceTo(p) < 2.5); k++) p = spot(); used.push(p); o.position.set(p.x, L.terrain ? groundH(p.x, p.z) : 0, p.z); o.rotation.y = Math.random() * 6.28; levelGroup.add(o); MOVERS.push([o, 0.4]); folk.push({ o, st: {}, tgt: null, wait: Math.random() * 3, sp: 0.9 + Math.random() * 0.5 }); }
   let last = 0;
   levelAnims.push(t => { const dt = Math.min(0.05, t - last || 0.016); last = t;
     for (const f of folk) { const o = f.o;

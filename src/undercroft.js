@@ -15,7 +15,7 @@ function ucPoster(name, crime, reward, hue, you) {
 }
 const UC_POSTERS = [['Krell the Gut', 'Ate a customs officer', '5,000 CR', 20], ['Twin Vasko', 'Both of them', '8,000 CR', 200], ['Madame Slyth', 'Poisoned a senator', '12,000 CR', 300], ['Gorvo', 'Stole a moon', '40,000 CR', 90],
   ['Skeets', 'Unpaid bar tab', '45 CR', 50], ['Doc Ninefinger', 'Unlicensed surgery', '6,500 CR', 160], ['The Hum', 'Unknown', '20,000 CR', 260], ['Rax Vorell', 'Piracy, 31 counts', '15,000 CR', 0]];
-function ucChar(make, rigN, x, z, ry, fn) { const o = buildChar(make, rigN); o.position.set(x, 0, z); o.rotation.y = ry; blob(o, 0.45); levelGroup.add(o); solid(x, z, 0.45);
+function ucChar(make, rigN, x, z, ry, fn) { const o = buildChar(() => npcDisarm(make()), rigN); o.position.set(x, 0, z); o.rotation.y = ry; blob(o, 0.45); levelGroup.add(o); solid(x, z, 0.45);
   const st = {}, ph = Math.random() * 6; levelAnims.push(t => { if (!o.parent) return; if (fn) fn(o, t, ph); animRig(o, st, 1 / 60, t); }); return o; }
 const ucSway = (o, t, ph) => { o.rotation.z = Math.sin(t * 0.9 + ph) * 0.06; };
 const ucChat = ry => (o, t, ph) => { o.rotation.y = ry + Math.sin(t * 0.7 + ph) * 0.35; };

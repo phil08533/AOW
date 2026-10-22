@@ -76,7 +76,7 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
   const P = [() => recolor(makeBugHybrid(), { '#5f8a3a': '#6a5a2a', '#3e5e26': '#4a3a1e' }), () => makeCivilian('#3a3430', '#1e1c22', '#8fae6a', '#1e1a18', '#5a3a22'), () => recolor(makeSpearman(), { '#7fae63': '#8a4a6a', '#4f7a3c': '#5a2a4a' }), () => makeCivilian('#5a2a1e', '#2c2a28', '#c58a64', '#cfcac0', '#3a3d44')];
   const PR = ['bughybrid', 'civ', 'spearman', 'civ'];
   [-5, -1, 3].forEach((x, i) => { const o = ucChar(P[i], PR[i], x, -18.2, Math.PI, ucSway); if (i === 1) ucSmoke(o); });
-  { const o = ucChar(P[3], 'civ', 6.4, -18.6, Math.PI, null); o.userData.rig.torso.rotation.x = 0.9; o.position.z = -18.9; let k = 0; levelAnims.push(t => { if (!o.parent) return; o.userData.rig.torso.rotation.x = 0.85 + Math.sin(t * 0.6) * 0.04; if (++k % 140 === 0) burst(o.position.clone().add(V(0, 1.6, -0.5)), '#cfe8ff', 1, 0.2); }); }
+  { const o = ucChar(P[3], 'civ', 6.4, -18.6, Math.PI, null); o.userData.rig.torso.rotation.x = 0.75; o.position.z = -17.9; let k = 0; levelAnims.push(t => { if (!o.parent) return; o.userData.rig.torso.rotation.x = 0.72 + Math.sin(t * 0.6) * 0.04; if (++k % 140 === 0) burst(o.position.clone().add(V(0, 1.6, -0.5)), '#cfe8ff', 1, 0.2); }); }
   // ---- the band, stage left ----
   part(props, B(10, 0.5, 7), toon('#2a1e1a', 'wood'), -24, 0.25, -23.5); box(-24, -23.5, 5, 3.5); part(props, B(10, 0.06, 0.08), glow('#c86aff'), -24, 0.52, -20.02);
   for (const s of [-1, 1]) { part(props, B(1.2, 2.2, 1), dark, -24 + s * 4.2, 1.6, -25.8); for (let k = 0; k < 2; k++) part(props, Cy(0.34, 0.34, 0.05, 12), metal, -24 + s * 4.2, 1.1 + k * 0.9, -25.28, Math.PI / 2); }

@@ -8,7 +8,7 @@ const hbIn = p => p.x < -16.2 * HB_K && p.z > 12.2 * HB_K && p.z < 28 * HB_K;
 const hbSgrade = () => Object.keys(S.inv).filter(k => SUBS[k] && SUBS[k].boutique && / \(S\)$/.test(SUBS[k].name) && S.inv[k] > 0);
 function hbBuyer(who, mult) {
   openDlg('High roller · S-grade only', who); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
-  const price = k => Math.round((typeof bqPrice === 'function' ? bqPrice(k) : SUBS[k].price) * mult);
+  const price = k => Math.round(((typeof bqPrice === 'function' && bqPrice(k)) || SUBS[k].price) * mult);
   const render = () => { const have = hbSgrade();
     $('dlgLine').textContent = have.length ? `"S-grade? Now we're talking. I pay ${mult}× what the street pays."` : `"I don't touch anything under S-grade. Cook something perfect and come back."`;
     itemRows(rows, have.map(k => [k, S.inv[k], `${price(k).toLocaleString()} cr each`, [['Sell 1', () => sell(k, 1)], ['Sell all', () => sell(k, S.inv[k])]]])); };

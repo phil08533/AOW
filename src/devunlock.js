@@ -1,8 +1,11 @@
+// a test S-grade drug for trying Vixen's quest and the high rollers (dev unlock gives 10)
+SUBS.dev_sgrade = { name: 'Starlight Reserve (S)', price: 900, v: 300, col: '#ff6ad8', sec: 120, trip: 0, legal: false, boutique: 1, desc: 'S-grade boutique drug. A perfect cook. +20% damage for 2 min.', fx: { cycle: 0.6, sat: 0.4, bloom: 0.3 } };
+ITEMS.dev_sgrade = Object.assign(ITEMS.dev_sgrade || {}, { name: SUBS.dev_sgrade.name, v: 300, col: '#ff6ad8', drug: true, illegal: true, desc: SUBS.dev_sgrade.desc });
 // =================== DEV UNLOCK: tap the version line on the title screen 7 times to unlock everything (for testing) ===================
 function devUnlockAll() {
   S.lvl = Math.max(S.lvl, 100); S.xp = 0; S.cr += 10000000;
   S.guns = [...new Set([...(S.guns || []), ...Object.keys(GUNS)])];
-  S.melees = [...new Set([...(S.melees || []), ...Object.keys(MELEE)])];
+  S.melees = [...new Set([...(S.melees || []), ...Object.keys(MELEE).filter(k => !MELEE[k].hide)])];
   S.gear = [...new Set([...(S.gear || []), ...Object.keys(GEAR)])];
   S.ship = S.ship || {}; S.ship.unlocked = true;
   const T = (f) => { try { f(); } catch (e) { console.warn('unlock', e); } };
@@ -17,6 +20,7 @@ function devUnlockAll() {
   T(() => { const V = vehS(); V.owned = [...new Set([...V.owned, ...Object.keys(VEH)])]; if (!V.sel) V.sel = V.owned[0]; for (const k in V.res) V.res[k] = Math.max(V.res[k], 5); });
   T(() => { S.stash = S.stash || {}; for (const k in ITEMS) if (!ITEMS[k].quest && !ITEMS[k].key && !(S.inv[k] > 0)) S.stash[k] = Math.max(S.stash[k] || 0, 50); });
   if (typeof chemS === 'function') { chemS().xp = Math.max(chemS().xp, 4000); const b = bqBox(); for (const k in BQ_ING) { b[k] = (b[k] || 0) + 20; b['x_' + k] = (b['x_' + k] || 0) + 10; } }
+  S.inv.dev_sgrade = (S.inv.dev_sgrade || 0) + 10;
   markDirty(); try { updateHud(); } catch (_) {} toast('DEV UNLOCK', 'Everything unlocked, rooms maxed, 50 of every item in your ship stash', 4);
 }
 { const el = document.querySelector('.credit'); let n = 0, t = 0; if (el) el.addEventListener('click', () => { const now = Date.now(); n = now - t < 600 ? n + 1 : 1; t = now; if (n >= 7) { n = 0; devUnlockAll(); } }); }

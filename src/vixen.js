@@ -3,14 +3,15 @@
 // Take the job and go in with your fists only (no guns, no blades, safe-zone rules off for the fight), knock him out,
 // and he stays on his floor for good. After that Vixen can be romanced like the lounge regulars (she stays in the Undercroft).
 // Save field: S.vixen { st: 0 none, 1 job taken, 2 done }.
-function makeVixen() {
+function makeVixen(outfit) {
   const pink = '#f29ac0', red = '#c8102e', g = makeCivilian(pink, pink, pink, '#9a4ae0', null), dress = toon(red, 'cloth'), skin = new THREE.MeshLambertMaterial({ color: pink });
   // smooth skin: the base body's pink parts get a plain soft material instead of the textured one
   g.children.forEach(o => { const c = o.isMesh && o.material && o.material.color; if (c && c.r > c.g && c.r > c.b && c.b > c.g) o.material = skin; });
   // the red dress: a fitted bodice with a sweetheart line, thin straps, a flared skirt with a slit, a sparkle belt
   part(g, B(0.5, 0.42, 0.28), dress, 0, 1.15, 0); for (const s of [-1, 1]) { part(g, new THREE.SphereGeometry(0.1, 10, 8), dress, s * 0.09, 1.36, 0.08); part(g, B(0.025, 0.2, 0.02), dress, s * 0.15, 1.46, 0.1); }
-  part(g, new THREE.CylinderGeometry(0.25, 0.4, 0.82, 18, 1, true), new THREE.MeshLambertMaterial({ color: red, side: THREE.DoubleSide }), 0, 0.53, 0);
-  part(g, B(0.08, 0.5, 0.02), skin, 0.12, 0.42, 0.33, -0.25);
+  if (outfit === 'shorts') { for (const sx of [-1, 1]) part(g, B(0.2, 0.26, 0.22), dress, sx * 0.11, 0.84, 0); part(g, B(0.44, 0.14, 0.24), dress, 0, 0.93, 0); }
+  else { part(g, new THREE.CylinderGeometry(0.25, 0.4, 0.82, 18, 1, true), new THREE.MeshLambertMaterial({ color: red, side: THREE.DoubleSide }), 0, 0.53, 0);
+  part(g, B(0.08, 0.5, 0.02), skin, 0.12, 0.42, 0.33, -0.25); }
   part(g, B(0.52, 0.05, 0.3), glow('#ffd6f0'), 0, 0.95, 0);
   for (const s of [-1, 1]) { part(g, B(0.1, 0.12, 0.2), toon(red), s * 0.11, 0.06, 0.05); part(g, B(0.03, 0.12, 0.03), toon(red), s * 0.11, 0.06, -0.07); }
   // a small, pretty face: almond eyes with lashes, a little nose, glossy lips, gold earrings and a pendant
@@ -52,11 +53,13 @@ function vixTalk() {
   const V = vixS(); openDlg('Singer · the Undercroft band', 'Vixen Glippo');
   if (V.st === 2) { closeDlg(); openRomance('vixen'); return; }
   if (V.st === 1) { $('dlgLine').textContent = '"9C, the door on the left wall. I\'ll be there after this set. Don\'t keep a girl waiting."'; acts([['See you there', closeDlg, true]]); return; }
-  $('dlgLine').textContent = '"You stayed for the whole set. Nobody does that." She leans on the mic stand. "I\'m in 9C, just off this floor. Come by after the show? I\'ll make drinks. Real ones."';
-  acts([['I\'ll be there', () => { V.st = 1; markDirty(); toast('AN INVITATION', 'Vixen asked you over to her place: apartment 9C, on the left wall.', 3.5); log('Vixen Glippo invited you to her apartment, 9C, off the Undercroft (left wall).', 'loot'); SFX.quest(); closeDlg(); }, true], ['Maybe another night', closeDlg]]);
+  const have = typeof hbSgrade === 'function' ? hbSgrade() : [];
+  if (!have.length) { $('dlgLine').textContent = '"You stayed for the whole set. Cute." She looks you over. "Tell you what. Bring me something S-grade, cooked perfect, and maybe I\'ll invite you up. I don\'t party with amateurs, sugar."'; acts([['I\'ll cook something', closeDlg, true]]); return; }
+  $('dlgLine').textContent = `"Is that... S-grade? ${SUBS[have[0]].name}?" Her antennae would perk up if she still had antennae. "Okay. You're interesting. I'm in 9C, just off this floor. Bring that."`;
+  acts([[`Give her the ${SUBS[have[0]].name}`, () => { const k = have[0]; S.inv[k]--; if (!S.inv[k]) delete S.inv[k]; V.st = 1; markDirty(); toast('AN INVITATION', 'Vixen asked you over to her place: apartment 9C.', 3.5); log(`You gave Vixen Glippo a ${SUBS[k].name}. She invited you to her apartment, 9C, off the Undercroft.`, 'loot'); SFX.quest(); closeDlg(); }, true], ['Maybe another night', closeDlg]]);
 }
 // apartment 9C: a small flat built off to the side of the Undercroft; the door on the left wall takes you there
-const VX = { scene: 0, krenn: null, fight: null, home: [-19.6, -8], flat: [70, 0] };
+const VX = { scene: 0, krenn: null, fight: null, home: [-19.6, 1.2], flat: [70, 0] };
 MELEE.fists = { name: 'Bare Fists', dmg: 30, rate: 0.4, reach: 2.2, req: 9999, price: 0, hide: 1 };
 { const _mm = makeMeleeModel; makeMeleeModel = function (id) { if (id !== 'fists') return _mm(id); const g = new THREE.Group(); part(g, B(0.11, 0.1, 0.12), '#c58a64', 0, 0.05, 0); part(g, B(0.1, 0.03, 0.12), '#a8704e', 0, 0.11, 0.0); return g; }; }
 { const _f = fire; fire = function () { if (VX.fight) { if (Math.random() < 0.05) toast('FISTS ONLY', 'No weapons in this fight. Swing!', 1.2); return; } return _f.apply(this, arguments); }; }
@@ -64,8 +67,26 @@ MELEE.fists = { name: 'Bare Fists', dmg: 30, rate: 0.4, reach: 2.2, req: 9999, p
 { const _sh = swapHand; swapHand = function () { if (VX.fight) { toast('FISTS ONLY', 'Your weapons are at the door.', 1.2); return; } return _sh.apply(this, arguments); }; }
 function vixEndFight(won) {
   const F = VX.fight; if (!F) return; VX.fight = null; S.melee = F.melee; S.hand = F.hand; SAFES.push(...F.safes); meleeShown = null; try { refreshMeleeModel(); } catch (_) {}
-  if (won) { const V = vixS(); V.st = 2; const M = romOf('vixen'); M.aff = Math.max(M.aff, 40); markDirty(); SFX.level(); toast('KNOCKED OUT', 'Krenn is out cold. Vixen: "...Wow. Okay. Stay for that drink?"', 4.5); log('You knocked out Krenn Vosh. Vixen Glippo is grateful, and you can get to know her now.', 'loot'); }
+  vixDrone(true);
+  if (won) { const V = vixS(); V.st = 2; const M = romOf('vixen'); M.aff = Math.max(M.aff, 40); markDirty(); SFX.level(); toast('KNOCKED OUT', 'Krenn Vosh is out cold.', 2.5);
+    setTimeout(() => vixSeq([
+      ['Vixen Glippo', 'Oh. My. Stars. You knocked him out with your HANDS. Nobody does anything with their hands down here except pick pockets.'],
+      ['Vixen Glippo', 'Look at him. He\'s drooling on my good rug. That rug was a gift. From him. Okay, he can drool on it.'],
+      ['You', 'Is he going to be okay?'],
+      ['Vixen Glippo', 'He\'s snoring, so he\'s fine. Krenn snores through everything. Meteor storms. Our anniversary. Both of our anniversaries.'],
+      ['Vixen Glippo', 'Thank you. Really. You\'re kind of my hero now. Don\'t let it go to your head. Your head took a few hits.'],
+      ['Vixen Glippo', 'Oh no, what time is it? I have to go play my next set! The horn section can\'t be trusted alone. They start doing jazz.'],
+      ['Vixen Glippo', 'Come find me by the stage. I\'ll dedicate a song to you. It\'s called "The Hero Who Smelled Like My Couch".']
+    ], () => { if (VX.vix && VX.vix.parent) levelGroup.remove(VX.vix); VX.vix = null; toast('VIXEN', 'She blows you a kiss and runs back to the stage.', 3); log('You knocked out Krenn Vosh. Vixen Glippo is grateful, and you can get to know her now. She\'s back on stage.', 'loot'); }), 1800); }
 }
+// a short scripted conversation in the dialog box, one line at a time
+function vixSeq(lines, done, i) { i = i || 0; if (i >= lines.length) { closeDlg(); if (done) done(); return; } const [who, t] = lines[i];
+  openDlg(who === 'You' ? 'You' : who === 'Krenn Vosh' ? 'Her ex · very upset' : 'Singer · apartment 9C', who); $('dlgLine').textContent = t; try { SFX.babble && SFX.babble(voicePitch(who), Math.min(14, 4 + (t.length >> 4))); } catch (_) {}
+  acts([[i === lines.length - 1 ? 'Okay' : 'Next ▸', () => vixSeq(lines, done, i + 1), true]]); }
+// keep your combat drone out of this: it's parked for the scene and the fight
+function vixDrone(back) { const D = droneS(); if (!back) { VX.drone = D.on; D.on = false; } else if (VX.drone != null) { D.on = VX.drone; VX.drone = null; } }
+function vixBlack(on, txt) { let el = $('vixBlack'); if (!el) { el = document.createElement('div'); el.id = 'vixBlack'; el.style.cssText = 'position:fixed;inset:0;background:#000;z-index:60;pointer-events:none;opacity:0;transition:opacity 1.6s;display:flex;align-items:center;justify-content:center;color:#cfc8d8;font:20px monospace;letter-spacing:2px'; document.body.appendChild(el); }
+  el.textContent = txt || ''; el.style.opacity = on ? '1' : '0'; }
 function vixKO(x, z) { const o = buildChar(() => makeCivilian('#5a3a1e', '#1e1c22', '#7a8a5a', '#1e1a18', '#c8402f'), 'civ'); o.rotation.set(-Math.PI / 2, 0, 0.3); o.position.set(x, 0.18, z); levelGroup.add(o);
   levelAnims.push(t => { if (o.parent && Math.random() < 0.012) burst(V(x, 0.7, z + 0.6), '#cfe8ff', 1, 0.15); }); }
 { const _b = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _b.apply(this, arguments); if (zTheme(ZF.floor) !== 'under') return; try { vixBuild(); } catch (e) { console.warn('vixen', e); } }; }
@@ -87,27 +108,53 @@ function vixBuild() {
   const lamp = new THREE.PointLight(0xffb070, 1.4, 12, 1.6); lamp.position.set(fx, 2.8, fz); levelGroup.add(lamp);
   part(props, B(0.2, 2.6, 1.4), toon('#3a2a1e', 'wood'), fx - W + 0.12, 1.3, fz); INTERACTS.push({ x: fx - W + 0.9, z: fz, r: 1.6, label: 'Leave 9C', fn: () => { if (VX.fight || VX.scene) { toast('NO ESCAPE', 'Krenn blocks the door. Finish this.', 1.6); return; } player.pos.set(hx + 0.6, 0, hz); player.yaw = -Math.PI / 2; SFX.door(); } });
   VX.scene = 0; VX.krenn = null; if (vixS().st === 2) vixKO(fx + 1.5, fz + 0.5);
-  VX.vix = null; if (vixS().st >= 1) vixHome();
+  VX.vix = null; if (vixS().st === 1) vixHome();
   levelAnims.push(() => { const F = VX.fight; if (!F) return;
     if (!player.alive) { vixEndFight(false); toast('KNOCKED DOWN', 'Krenn got the better of you. Try again.', 3); return; }
     if (F.e.dead) { const p = F.e.obj.position; scene.remove(F.e.obj); const i = enemies.indexOf(F.e); if (i >= 0) enemies.splice(i, 1); vixKO(p.x, p.z); vixEndFight(true); } });
 }
-function vixHome() { if (VX.vix && VX.vix.parent) return; const [fx, fz] = VX.flat; { const v = buildChar(makeVixen, 'civ'); VX.vix = v; v.position.set(fx + 3.4, 0, fz + 1.2); v.rotation.y = -Math.PI / 2 - 0.3; levelGroup.add(v); solid(fx + 3.4, fz + 1.2, 0.4); const st = {}; levelAnims.push(t => { if (v.parent) { animRig(v, st, 1 / 60, t); v.rotation.y = -Math.PI / 2 - 0.3 + Math.sin(t * 0.5) * 0.15; } }); } }
+function vixHome(outfit) { if (VX.vix && VX.vix.parent) { if (!outfit) return; levelGroup.remove(VX.vix); } const [fx, fz] = VX.flat; { const v = buildChar(() => makeVixen(outfit), 'civ'); VX.vix = v; v.position.set(fx + 3.4, 0, fz + 1.2); v.rotation.y = -Math.PI / 2 - 0.3; levelGroup.add(v); solid(fx + 3.4, fz + 1.2, 0.4); const st = {}; levelAnims.push(t => { if (v.parent) { animRig(v, st, 1 / 60, t); v.rotation.y = -Math.PI / 2 - 0.3 + Math.sin(t * 0.5) * 0.15; } }); } }
 function vixDoor() {
   const V = vixS(), [fx, fz] = VX.flat;
   if (V.st === 0) { toast('9C', 'Locked. A nameplate on the door says GLIPPO.', 2); return; }
   SFX.door(); player.pos.set(fx - 3.8, 0, fz); player.yaw = -Math.PI / 2;
   if (V.st === 2 || VX.scene) return;
-  // she's home: a beat of small talk, then the door opens behind you
-  vixHome(); player.pos.set(fx - 0.5, 0, fz - 0.8); player.yaw = Math.atan2(-3.9, -2.0);
-  VX.scene = 1; const say = (who, t, d) => setTimeout(() => { if (!VX.scene) return; toast(who, t, 3.2); try { SFX.babble && SFX.babble(voicePitch(who), 8); } catch (_) {} }, d);
-  say('VIXEN', '"You came! Sit anywhere. Ignore the mess, I was... rehearsing."', 600);
-  say('VIXEN', '"Funny thing about the Undercroft. Everyone listens. Nobody ever stays."', 4200);
-  setTimeout(() => { if (!VX.scene) return; SFX.door(); const k = buildChar(() => makeCivilian('#5a3a1e', '#1e1c22', '#7a8a5a', '#1e1a18', '#c8402f'), 'civ'); k.position.set(fx - 4.2, 0, fz); k.rotation.y = Math.PI / 2; levelGroup.add(k); VX.krenn = k; }, 7600);
-  say('KRENN', '"Vix? Who\'s THIS? You said you were done singing for strangers."', 8000);
-  say('VIXEN', '"Krenn, you don\'t live here anymore. Get out."', 11600);
-  say('KRENN', '"Yeah? Then I guess I\'m just going to have to fight you."', 15000);
-  setTimeout(() => { if (!VX.scene) return; VX.scene = 0; if (VX.krenn) { levelGroup.remove(VX.krenn); VX.krenn = null; } vixFight(fx - 4.0, fz); }, 18200);
+  vixHome(); vixDrone(false); VX.scene = 1; player.pos.set(fx - 0.5, 0, fz - 0.8); player.yaw = Math.atan2(-3.9, -2.0);
+  vixSeq([
+    ['Vixen Glippo', 'You came! Sit anywhere. Not there, that\'s the cat. I don\'t have a cat. Don\'t sit there anyway.'],
+    ['Vixen Glippo', 'Excuse the mess. I was rehearsing. Rehearsing is mostly lying on the floor and humming at the ceiling.'],
+    ['You', 'Nice place. Is that a hole in the wall?'],
+    ['Vixen Glippo', 'That\'s a window. Into the next apartment. Say hi to Doug. Doug doesn\'t say hi back. Doug is a plant.'],
+    ['Vixen Glippo', 'So... I promised drinks, but I lied. I have something better. Hotbox-grade. Straight from the back room.'],
+    ['You', 'Is that legal?'],
+    ['Vixen Glippo', 'We live on floor nine of a flying city run by a guy named Brakka. Nothing is legal. Everything is allowed.']
+  ], () => vixHigh());
+}
+function vixHigh() {
+  const [fx, fz] = VX.flat; toast('YOU', 'You take a long pull. Then another. Then Vixen says "that one was for me" and you take that too.', 4);
+  try { playInhalerAnim && playInhalerAnim('glimmer'); } catch (_) {} try { if (subsOn()) buffs().sub_hotbox = Date.now() + 40000; } catch (_) {}
+  for (let i = 0; i < 6; i++) setTimeout(() => { try { burst(player.pos.clone().add(V(Math.random() - 0.5, 1.4, Math.random() - 0.5)), ['#c86aff', '#ff6ad8', '#7fe8ff', '#ffd36a'][i % 4], 10, 1.5); } catch (_) {} }, i * 500);
+  setTimeout(() => toast('VIXEN', '"Whoa. Your face is doing a thing. A nice thing. Keep doing it."', 3.2), 2600);
+  setTimeout(() => toast('YOU', '"Vixen. Vixen. The ceiling is breathing. Is your ceiling supposed to breathe?"', 3.2), 5800);
+  setTimeout(() => { vixBlack(true, ''); }, 8800);
+  setTimeout(() => { vixBlack(true, 'Some time later...'); player.pos.set(fx - 0.2, 0, fz - 1.6); player.pitch = 0.6; vixHome('shorts'); }, 11000);
+  setTimeout(() => { vixBlack(true, 'BANG. BANG. BANG.'); try { SFX.hit(); } catch (_) {} }, 13600);
+  setTimeout(() => { vixBlack(false); try { SFX.hit(); } catch (_) {} }, 15200);
+  const knock = ['"VIXEN! I KNOW YOU\'RE IN THERE! I CAN HEAR THE HUMMING!"', '"IS SOMEONE ELSE IN THERE? I SMELL A STRANGER! AND... IS THAT MY GOOD STUFF?!"', '"I\'M COUNTING TO THREE! ONE! TWO! TWO AND A HALF!"'];
+  knock.forEach((t, i) => setTimeout(() => { toast('THROUGH THE DOOR', t, 3); try { SFX.hit(); } catch (_) {} }, 16400 + i * 3300));
+  setTimeout(() => toast('VIXEN', '"Oh no. That\'s Krenn. Get up. GET UP. Act casual! And stop staring at my shorts, I got warm. Why are you upside down?"', 3.4), 26300);
+  setTimeout(() => { if (!VX.scene) return; SFX.door(); player.pitch = 0; const k = buildChar(() => makeCivilian('#5a3a1e', '#1e1c22', '#7a8a5a', '#1e1a18', '#c8402f'), 'civ'); k.position.set(fx - 4.2, 0, fz); k.rotation.y = Math.PI / 2; levelGroup.add(k); VX.krenn = k;
+    player.yaw = Math.atan2(3.7, 1.6);
+    vixSeq([
+      ['Krenn Vosh', 'TWO AND THREE QUARTERS! ...Oh. The door was open. Okay. That\'s on me.'],
+      ['Krenn Vosh', 'Who is THIS? Vix, you said you were done singing for strangers! And you\'re both... is the ceiling breathing in here?'],
+      ['Vixen Glippo', 'Krenn, you don\'t live here anymore. You moved out. You moved out THREE TIMES.'],
+      ['Krenn Vosh', 'I came back for my blender!'],
+      ['Vixen Glippo', 'You never owned a blender. You owned a bucket and a dream.'],
+      ['You', 'Hey, buddy. Let\'s all just calm down. Maybe sit. Not there, that\'s the cat.'],
+      ['Krenn Vosh', 'THERE IS NO CAT! ...Okay. Okay. I guess I\'m just going to have to fight you.'],
+      ['Krenn Vosh', 'No guns. No blades. Fists, like our ancestors. Our ancestors were very angry people.']
+    ], () => { VX.scene = 0; if (VX.krenn) { levelGroup.remove(VX.krenn); VX.krenn = null; } vixFight(fx - 4.0, fz); }); }, 30000);
 }
 function vixFight(x, z) {
   const [fx, fz] = VX.flat, safes = SAFES.splice(0), e = makeEnemy({ zone: 'deck', type: 'scavenger', n: 1, lv: [S.lvl, S.lvl], at: [x, z] });

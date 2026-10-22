@@ -3,6 +3,7 @@
 // Save: S.bub = { tv, tvOff, ham, mur: { st, clues: {} }, apt, night }.
 const bubS = () => (S.bub = S.bub || { tv: 0, ham: 0, mur: { st: 0, clues: {} }, apt: 0 });
 const BUB = { floor: 1, lie: false, ham: null };
+const BUB_STREET = ['voidspice', 'neondust', 'glimmer', 'redhaze']; // street stock only: no lab or player-made product
 const BAX = 150, BAZ = 0, BAL = 26, BAW = 4; // the hallway, built far from the city; your flat sits beyond it
 const BFLAT = { x: 150, z: 60 };
 function bubTalk(role, name, lines, done, i) { i = i || 0; if (i >= lines.length) { closeDlg(); if (done) done(); return; }
@@ -29,7 +30,7 @@ function bubCity() { const S2 = bubS();
   bubNeon('THE LOW TIDE', '#ff3bd2', -28, 5.4, 18.5, Math.PI, 4); bubNeon('CRABBY\'S PAWN', '#ffd36a', -37.3, 3.8, -16, Math.PI / 2);
   bubNeon('BAR · OPEN LATE', '#4fffe0', -37.3, 4.2, 6, Math.PI / 2);
   for (let i = 0; i < 6; i++) { const t = new THREE.Group(); part(t, Cy(0.35, 0.3, 0.9, 8), toon('#3a4a3a'), 0, 0.45, 0); part(t, Cy(0.36, 0.36, 0.08, 8), toon('#2b2a2c'), 0, 0.92, 0); t.position.set(-35 + (i % 3) * 1.1, 0, -6 + Math.floor(i / 3) * 18); levelGroup.add(t); }
-  bubNpc(-36.8, 6, Math.PI / 2, ['#2b2a2c', '#1e1a18', '#c58a64', '#111'], '💊 Dregs (dealer)', () => openSubShop('Low Tide dealer', 'Dregs', Object.keys(SUBS).filter(k => !SUBS[k].legal && !SUBS[k].lab)));
+  bubNpc(-36.8, 6, Math.PI / 2, ['#2b2a2c', '#1e1a18', '#c58a64', '#111'], '💊 Dregs (dealer)', () => openSubShop('Low Tide dealer', 'Dregs', BUB_STREET));
   bubNpc(-36.8, -16, Math.PI / 2, ['#c8402f', '#3a3d44', '#ff8a6a', '#e8e4dc'], '🦀 Crabby\'s Pawn', bubPawn);
   bubNpc(-33.5, -4, Math.PI / 2, ['#6a3a8a', '#2c2a38', '#8a5a3a', '#1e1a18'], '📺 Talk to Rizzo', bubRizzo);
   // CORAL HEIGHTS: the apartment tower in the south-west
@@ -99,7 +100,7 @@ function bubTackle() { openDlg('Reel Deal Tackle', 'Old Hank'); S.flags = S.flag
 
 // ---------------- the murder in the Burbs ----------------
 const MUR_CLUES = { tracks: 'Little round wheel tracks circle the pool. Lots of them. Like something was doing laps.', barb: 'Barb heard "a humming, and a bump, and a splash" at 3 a.m.', dale: 'Dale says Gerald set his robot vacuum to AGGRESSIVE MODE to "deal with the leaves".', manual: 'A soggy manual: "Sir Sucks-a-Lot v2. Do NOT use near pools. Do NOT insult."' };
-function bubMurderScene() { const m = bubS().mur, X = 31, Zc = 22;
+function bubMurderScene(X = 31, Zc = 22, D = [[21, 26], [21, 18], [41, 18]]) { const m = bubS().mur;
   const pool = new THREE.Group(); part(pool, Cy(1.6, 1.6, 0.5, 18), toon('#ff8ab8'), 0, 0.25, 0); part(pool, Cy(1.45, 1.45, 0.05, 18), new THREE.MeshLambertMaterial({ color: '#4fa8cc' }), 0, 0.46, 0); pool.position.set(X + 0.5, 0, Zc); levelGroup.add(pool); solid(X + 0.5, Zc, 1.6);
   if (m.st < 2) { const body = new THREE.Group(); part(body, B(0.5, 0.35, 1.6), toon('#ffd36a'), 0, 0.55, 0); part(body, B(0.5, 0.2, 0.5), toon('#e0b892'), 0, 0.5, -1.0); body.position.set(X + 0.5, 0, Zc); body.rotation.y = 0.6; levelGroup.add(body);
     for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, t = new THREE.Mesh(B(0.8, 0.5, 0.04), toon(i % 2 ? '#ffd36a' : '#1e1a18')); t.position.set(X + 0.5 + Math.cos(a) * 2.6, 0.7, Zc + Math.sin(a) * 2.6); t.rotation.y = -a + Math.PI / 2; levelGroup.add(t); } }
@@ -108,9 +109,9 @@ function bubMurderScene() { const m = bubS().mur, X = 31, Zc = 22;
   bubNpc(X - 1.4, Zc - 2.6, 0.4, ['#6a5a3a', '#3a3d44', '#c58a64', '#2b2a2c'], '🕵 Detective Clam', bubClam);
   INTERACTS.push({ get x() { return bubS().mur.st === 1 ? X + 2.4 : 1e9; }, z: Zc + 1.6, r: 1.6, label: '🔍 Examine the pool edge', fn: () => bubClue('tracks') });
   INTERACTS.push({ get x() { return bubS().mur.st === 1 ? robo.position.x : 1e9; }, get z() { return robo.position.z; }, r: 1.4, label: '🔍 Examine the robot vacuum', fn: () => bubClue('manual') });
-  INTERACTS.push({ x: 21, z: 26, r: 2.2, label: '🚪 Knock: Barb (HOA president)', fn: () => bubSuspect('barb') });
-  INTERACTS.push({ x: 21, z: 18, r: 2.2, label: '🚪 Knock: Dale (grill dad)', fn: () => bubSuspect('dale') });
-  INTERACTS.push({ x: 41, z: 18, r: 2.2, label: '🚪 Knock: Kevin (teenager)', fn: () => bubSuspect('kevin') }); }
+  INTERACTS.push({ x: D[0][0], z: D[0][1], r: 2.2, label: '🚪 Knock: Barb (HOA president)', fn: () => bubSuspect('barb') });
+  INTERACTS.push({ x: D[1][0], z: D[1][1], r: 2.2, label: '🚪 Knock: Dale (grill dad)', fn: () => bubSuspect('dale') });
+  INTERACTS.push({ x: D[2][0], z: D[2][1], r: 2.2, label: '🚪 Knock: Kevin (teenager)', fn: () => bubSuspect('kevin') }); }
 function bubClue(k) { const m = bubS().mur; if (m.clues[k]) { bubTalk('Clue', 'Your notes', [MUR_CLUES[k]]); return; } m.clues[k] = 1; markDirty(); SFX.quest(); toast('CLUE', `${Object.keys(m.clues).length} of 4 found`, 1.8); bubTalk('Clue found', 'Your notes', [MUR_CLUES[k]]); }
 function bubClam() { const m = bubS().mur;
   if (m.st === 2) return bubTalk('The Burbs', 'Detective Clam', ['Sir Sucks-a-Lot is in custody. He has not said a word. He is a vacuum.', 'Good work. The Burbs are safe again. Except from the HOA.']);
@@ -157,7 +158,7 @@ function bubTower() { const X = BAX, Z = BAZ, hall = toon('#8a6a7a'), carpet = t
   part(levelGroup, B(2.2, 2.6, 0.12), toon('#c9a43a'), X, 1.3, Z - BAL / 2 + 0.05); part(levelGroup, B(0.04, 2.6, 0.14), toon('#6a5a3a'), X, 1.3, Z - BAL / 2 + 0.06);
   INTERACTS.push({ x: X, z: Z - BAL / 2 + 1.2, r: 2, label: '🛗 Call the elevator', fn: bubElevator });
   part(levelGroup, B(1.6, 2.4, 0.12), toon('#3a5266'), X, 1.2, Z + BAL / 2 - 0.05);
-  INTERACTS.push({ x: X, z: Z + BAL / 2 - 1.1, r: 1.8, label: 'Street door (lobby only)', fn: () => { if (BUB.floor !== 1) { toast('CORAL HEIGHTS', 'Take the elevator down to the lobby', 1.6); return; } bubFade('Bubble City', () => { player.pos.set(-27 + 5 + 1.6, 0, 30); player.yaw = -Math.PI / 2; }); } });
+  INTERACTS.push({ x: X, z: Z + BAL / 2 - 1.1, r: 1.8, label: 'Street door (lobby only)', fn: () => { if (BUB.floor !== 1) { toast('CORAL HEIGHTS', 'Take the elevator down to the lobby', 1.6); return; } bubFade('Bubble City', () => { const e = BUB.towerExit || [-20.4, 30, -Math.PI / 2]; player.pos.set(e[0], 0, e[1]); player.yaw = e[2]; }); } });
   // floor plate signs, re-drawn on each floor
   const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const tex = new THREE.CanvasTexture(cv), pl = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), new THREE.MeshBasicMaterial({ map: tex }));
   pl.position.set(X, 2.9, Z - BAL / 2 + 0.15); levelGroup.add(pl);
@@ -172,7 +173,7 @@ function bubDoor(k) { const f = BUB.floor, r = BRES[f][k], s = bubS();
   if (f === 1 && k === 'B') return bubKrill();
   if (f === 4 && k === 'B') return bubMarisol();
   if (f === 6 && k === 'B') { if (s.apt) return bubFade('Home', () => { player.pos.set(BFLAT.x, 0, BFLAT.z + 1.5); player.yaw = 0; }); return bubTalk('Coral Heights', '6B', ['A brass plate: "FOR RENT · SEE MRS. KRILL IN THE LOBBY · 1 BED · HAS A PORTHOLE"']); }
-  if (f === 6 && k === 'C') return openSubShop('Coral Heights · 6C', 'Sketchy Lou', Object.keys(SUBS).filter(i => !SUBS[i].lab));
+  if (f === 6 && k === 'C') return openSubShop('Coral Heights · 6C', 'Sketchy Lou', ['focusfizz', 'stimpatch', 'irongum', 'voidspice', 'neondust']);
   const L = r[1].slice(); if (s.ham === 1) L.push(['"A hamster? Not ours. We had a goldfish once. It moved out."', '"Not mine. Try upstairs, they have a cage-y vibe."', '"Is that a HAMSTER? In THIS economy? Not mine."'][(f + ' ABCD'.indexOf(k)) % 3]);
   SFX.door(); bubTalk(`Coral Heights · ${f}${k}`, r[0], L); }
 function bubKrill() { const s = bubS();

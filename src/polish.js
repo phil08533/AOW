@@ -246,7 +246,14 @@ function settlePads(L) {
 { const _dl = detailLevel; detailLevel = function (L, id) { try { settlePads(L); } catch (e) { console.warn('pads', e); } return _dl(L, id); }; }
 { const _ll = loadLevel; loadLevel = function (id, o) { PADS.length = 0; return _ll(id, o); }; }
 // the HUD weapon line just shows ordnance charges now (Phil: no gun name)
-{ const _u = updateHud; updateHud = function () { _u(); if (!LEVEL.fly && !handMelee()) $('gunLbl').textContent = `◆ ${ordCharges} ordnance`; else if (!LEVEL.fly) $('gunLbl').textContent = `◆ ${ordCharges} ordnance`; }; }
+// the ammo box: rounds in the clip with what kind of ammo the gun takes, then the gun's name, then ordnance; no more "/ ∞"
+function ammoUnit(g) { if (!g) return ''; if (g.mana) return 'mana'; if (g.beam) return 'charge'; const k = g.kind || '', n = (g.name || '').toLowerCase();
+  if (k === 'rocket' || /rocket|launcher/.test(n)) return 'rockets'; if (k === 'crossbow' || /bow/.test(n)) return 'bolts'; if (k === 'scatter' || /shotgun|scatter/.test(n)) return 'shells';
+  if (k === 'plasma' || /blaster|plasma|laser|ray|pulse|ion|beam/.test(n)) return 'energy'; return 'rounds'; }
+{ const _u = updateHud; updateHud = function () { _u(); if (LEVEL.fly) return; const g = GUNS[S.gun];
+  if (!handMelee() && g) { const n = player.reloading > 0 ? '··' : player.ammo; $('ammoN').innerHTML = `${n}<small> ${ammoUnit(g)}</small>`; }
+  const nm = handMelee() ? MELEE[S.melee || 'knife'].name : g ? (player.reloading > 0 ? 'Reloading…' : g.name.replace(/^Lvl \d+ /, '').replace(/ · .*/, '')) : '';
+  const el = $('gunLbl'), html = `<b>${nm}</b> <span>◆${ordCharges}</span>`; if (el.innerHTML !== html) el.innerHTML = html; }; }
 // signs seen from behind used to read backwards: give each two-sided sign a proper back face instead
 // a sign merged into the static world mesh has its geometry in world space, so a back copy spun about its origin would land mirrored across the map
 function bakedMesh(o) { if (o.position.lengthSq() > 1e-6 || o.rotation.y) return false; o.geometry.computeBoundingSphere(); return o.geometry.boundingSphere.center.lengthSq() > 4; }

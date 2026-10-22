@@ -85,6 +85,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outl
 #ammo .n { font-family: var(--num); font-size: 38px; line-height: .9; }
 #ammo .n small { font-size: 20px; color: var(--dim); }
 #ammo .g { font-size: 12px; color: var(--gold); }
+#ammo .g { white-space: nowrap; } #ammo .g b { display: inline-block; vertical-align: bottom; max-width: 150px; overflow: hidden; text-overflow: ellipsis; color: #fff; }
 #log { position: absolute; left: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 100px); width: min(72vw, 340px); display: flex; flex-direction: column; gap: 1px; font-size: 14px; line-height: 1.2; }
 #log div { transition: opacity 1s; overflow-wrap: anywhere; text-shadow: 1px 1px 0 #000, -1px 0 0 #000, 0 -1px 0 #000; }
 #log .sys { color: #fff; }
@@ -349,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.44</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.45</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -13017,7 +13018,7 @@ const CITY_KITS = {
   mezar: ['stall', 'crates', 'honeypot', 'hivelamp', 'rug', 'cart', 'plant', 'lanterns', 'honeypot', 'awning'],
   capitone: ['campfire', 'crates', 'sled', 'icelamp', 'bench', 'woodpile', 'stall', 'lanterns', 'totem'],
   robot: ['hoload', 'vending', 'neonsign', 'crates', 'barrel', 'lamp', 'trash', 'cart', 'hoload', 'cables'],
-  ocean: ['net', 'boat', 'buoy', 'crates', 'barrel', 'stall', 'lamp', 'fishrack', 'lanterns'],
+  ocean: ['net', 'buoy', 'crates', 'barrel', 'stall', 'lamp', 'fishrack', 'lanterns'],
   moon: ['rover', 'o2tank', 'crates', 'lamp', 'bench', 'plant', 'hoload', 'antenna'],
   fort: ['crates', 'barrel', 'sandbags', 'tent', 'jeep', 'lamp', 'ammo', 'flag'],
   sky: ['windsock', 'crates', 'toolcart', 'lamp', 'barrel', 'flag', 'bench', 'plant'],
@@ -13105,7 +13106,7 @@ function cityLife(L, id) {
   const kit = CITY_KITS[C.style], cx = Zn.x, cz = Zn.z, R = Zn.r * (id === 'zeltac' ? 1.1 : 0.92);
   let placed = kit.length ? 0 : C.n;
   for (let i = 0; i < C.n * 8 && placed < C.n; i++) {
-    const a = Math.random() * 6.283, d = R * (0.28 + Math.random() * 0.7), x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
+    const a = Math.random() * 6.283, d = R * (id === 'ocean' ? 0.66 + Math.random() * 0.3 : 0.28 + Math.random() * 0.7), x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
     const kind = kit[placed % kit.length], pad = ['stall', 'boat', 'rover', 'tent', 'jeep', 'cart', 'campfire'].includes(kind) ? 2.0 : 1.2;
     if (!cityClear(x, z, pad, L)) continue;
     if (L.terrain && Math.abs(groundH(x + 1, z) - groundH(x - 1, z)) + Math.abs(groundH(x, z + 1) - groundH(x, z - 1)) > 1.4) continue;
@@ -13526,7 +13527,14 @@ function settlePads(L) {
 { const _dl = detailLevel; detailLevel = function (L, id) { try { settlePads(L); } catch (e) { console.warn('pads', e); } return _dl(L, id); }; }
 { const _ll = loadLevel; loadLevel = function (id, o) { PADS.length = 0; return _ll(id, o); }; }
 // the HUD weapon line just shows ordnance charges now (Phil: no gun name)
-{ const _u = updateHud; updateHud = function () { _u(); if (!LEVEL.fly && !handMelee()) $('gunLbl').textContent = `◆ ${ordCharges} ordnance`; else if (!LEVEL.fly) $('gunLbl').textContent = `◆ ${ordCharges} ordnance`; }; }
+// the ammo box: rounds in the clip with what kind of ammo the gun takes, then the gun's name, then ordnance; no more "/ ∞"
+function ammoUnit(g) { if (!g) return ''; if (g.mana) return 'mana'; if (g.beam) return 'charge'; const k = g.kind || '', n = (g.name || '').toLowerCase();
+  if (k === 'rocket' || /rocket|launcher/.test(n)) return 'rockets'; if (k === 'crossbow' || /bow/.test(n)) return 'bolts'; if (k === 'scatter' || /shotgun|scatter/.test(n)) return 'shells';
+  if (k === 'plasma' || /blaster|plasma|laser|ray|pulse|ion|beam/.test(n)) return 'energy'; return 'rounds'; }
+{ const _u = updateHud; updateHud = function () { _u(); if (LEVEL.fly) return; const g = GUNS[S.gun];
+  if (!handMelee() && g) { const n = player.reloading > 0 ? '··' : player.ammo; $('ammoN').innerHTML = `${n}<small> ${ammoUnit(g)}</small>`; }
+  const nm = handMelee() ? MELEE[S.melee || 'knife'].name : g ? (player.reloading > 0 ? 'Reloading…' : g.name.replace(/^Lvl \d+ /, '').replace(/ · .*/, '')) : '';
+  const el = $('gunLbl'), html = `<b>${nm}</b> <span>◆${ordCharges}</span>`; if (el.innerHTML !== html) el.innerHTML = html; }; }
 // signs seen from behind used to read backwards: give each two-sided sign a proper back face instead
 // a sign merged into the static world mesh has its geometry in world space, so a back copy spun about its origin would land mirrored across the map
 function bakedMesh(o) { if (o.position.lengthSq() > 1e-6 || o.rotation.y) return false; o.geometry.computeBoundingSphere(); return o.geometry.boundingSphere.center.lengthSq() > 4; }
@@ -16028,7 +16036,7 @@ LEVELS.ocean.npcs.push(
     idle: ["I built the first dome with my own two hands and a lot of glue. Mostly glue.", "Every crack in this city has a name. That one's Gerald.", "The Leviathan took Dome Six. We don't talk about Dome Six."] },
   { id: 'kelpa', name: 'Farmer Kelpa', role: 'Kelp farmer', rig: 'civ', make: () => makeCivilian('#4f6e2c', '#3a2a1a', '#a07850', '#2a1a10', '#8fae6a'), x: 0.8, z: 75.5, face: 0,
     idle: ["Grow lights, good water, and talking to them. Kelp loves gossip.", "This row is kelp. That row is also kelp. It's a kelp farm.", "Try the kelp chips at the market. Auntie Nacre stole my recipe, but she makes them well."] },
-  { id: 'pip', name: 'Pip', role: 'Dome kid', rig: 'civ', make: () => { const g = makeCivilian('#ff6aa8', '#2c2a38', '#e8c4a0', '#4a2a1a', null); g.scale.setScalar(0.7); return g; }, x: 22, z: 87, face: Math.PI,
+  { id: 'pip', name: 'Young Porkins', role: 'Dome kid', rig: 'civ', make: () => { const g = makeCivilian('#ff6aa8', '#2c2a38', '#f0c8a8', '#4a2a1a', null); const belly = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10), toon('#ff6aa8')); belly.scale.set(1.15, 1, 0.95); belly.position.set(0, 1.12, 0.06); g.add(belly); for (const s of [-1, 1]) { const ch = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), toon('#ffb0a0')); ch.position.set(0.11 * s, 1.68, 0.13); g.add(ch); } g.scale.set(0.9, 0.7, 0.88); return g; }, x: 22, z: 87, face: Math.PI,
     idle: ["Have you ever been ABOVE the water? Is it true there's no ceiling?", "I'm gonna be a sub pilot. Or a fish. Whichever pays more.", "Mayor Blub is my uncle. He isn't. But he lets me say it."] }
 );
 
@@ -18935,6 +18943,7 @@ const UPDATES = [
   { id: 207, title: '2.22.42 · Bubble City, the real city', items: ['Bubble City is now five glass domes on the seabed joined by glass tunnels with moving walkways.', 'Bubble Central: the plaza, the Founder Fishwick fountain, food carts, a transit map, and the way out.', 'The Low Tide: a neon street with a pawn shop, the Barnacle Bar, a tattoo parlour, an arcade, Rizzo\'s van full of TVs, steam vents and a burning barrel.', 'The Burbs: a cul-de-sac of houses with porches, fences, mailboxes, cars, a playground and sprinklers. And a murder.', 'Kelp Gardens: grow beds and Dome Control, a tower with a spinning radar. Coral Heights: three apartment towers, Reel Deal Tackle and the coral park.', 'Outside the glass: kelp forests, rocks, light shafts, fish schools and a whale drifting over the city.', 'People walk facing forward now, and street dealers only sell street drugs.'] },
   { id: 208, title: '2.22.43 · Proper seagulls', items: ['The spinning white blobs on the piers are now real seagulls perched on the posts. They look around now and then instead of spinning.'] },
   { id: 209, title: '2.22.44 · Bubble City glow-up, waders and the Solar Lance', items: ['Bubble City: sliding glass doors at every tunnel mouth, real textures on floors, walls and roofs (tile, brick, siding, shingles, grass, pavers, grates), new peaked roofs, and no more swimming floors', 'Night follows your real clock: the domes go dark and blue, and the lamp posts light pools on the ground', 'Signs have borders, rivets, glow and sub-lines. The Low Tide got awnings, AC units, cables, posters and trash, and Rizzo\'s van was rebuilt with its TVs facing the street', 'Apartments: the street door only shows in the lobby, the flat has wood floors and wallpaper, and the porthole looks out on the sea with kelp, fish and light rays', 'More life: a backyard BBQ, a dog running round the Burbs, a busker\'s guitar case in the plaza', 'Reel Deal Waders now look like waders (fish bite 40% faster) and the Pro Angler Vest is a real vest (rare fish 60% more likely)', 'The Solar Lance now sings the Staff of the Setting Sun\'s chord, held for as long as you fire', 'You can no longer walk through the small blue bridge consoles on your ship'] },
+  { id: 210, title: '2.22.45 · Rain on the water, jumping off docks', items: ['Pip, the kid in Bubble City, is now Young Porkins, and he is a lot rounder', 'The Solar Lance is now a smooth, bright light-ray tone instead of a buzzy chord', 'The ammo box shows the gun name and what it fires (rounds, shells, energy, charge, rockets, bolts) with no more "/ ∞"', 'Rain makes rings and spray on the ocean and on Velocity\\'s road', 'Jump off a dock and you fall, splash, sink a little and bob back up', 'Port Kelp: the nets are off the docks, the gulls perch on crates and decks instead of the rope rail, the middle of the island is clear, and the beached boats are now proper fishing boats out on the water with a fisher in each'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -23130,13 +23139,15 @@ function beamHum(on, st) { if (st && BEAM.oscs) { const k = st.hum / 55; BEAM.os
 { const _h = beamHum; beamHum = function (on, st) { const sun = st === BEAM_STYLES.solar || (!st && BEAM.sunOn);
     if (!sun) { if (BEAM.sunOn) sunHum(false); return _h(on, st); } _h(false, null); sunHum(on); }; }
 function sunHum(on) { BEAM.sunOn = on; try { if (!BEAM.ac) BEAM.ac = new (window.AudioContext || window.webkitAudioContext)(); const ac = BEAM.ac, t = ac.currentTime;
-    if (!BEAM.sg) { const gn = ac.createGain(), lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600; lp.Q.value = 0.7; gn.gain.value = 0; lp.connect(gn); gn.connect(ac.destination);
-      for (const [f, v, ty] of [[131, 0.5, 'sine'], [262, 0.28, 'sawtooth'], [392, 0.22, 'sawtooth'], [523, 0.2, 'sawtooth'], [659, 0.14, 'sawtooth'], [784, 0.12, 'sawtooth'], [1568, 0.06, 'sine']]) for (const dt of [-0.6, 0.6]) { const o = ac.createOscillator(), g = ac.createGain(); o.type = ty; o.frequency.value = f; o.detune.value = dt * 7; g.gain.value = v / 2; o.connect(g); g.connect(lp); o.start(); }
-      const sw = ac.createOscillator(), sg = ac.createGain(); sw.frequency.value = 0.35; sg.gain.value = 900; sw.connect(sg); sg.connect(lp.frequency); sw.start();
-      const tr = ac.createOscillator(), tg = ac.createGain(); tr.frequency.value = 6; tg.gain.value = 0.012; tr.connect(tg); tg.connect(gn.gain); tr.start(); BEAM.sg = gn; BEAM.slp = lp; }
-    if (ac.state !== 'running') ac.resume(); const vol = on && PREFS.sfx !== false ? 0.07 : 0; BEAM.sg.gain.cancelScheduledValues(t);
-    if (on) { BEAM.sg.gain.setTargetAtTime(vol, t, 0.06); BEAM.slp.frequency.setValueAtTime(900, t); BEAM.slp.frequency.linearRampToValueAtTime(2600, t + 0.6); try { SFX.shot(GUNS.w_100); } catch (_) {} }
-    else BEAM.sg.gain.setTargetAtTime(0, t, 0.35); } catch (_) {} }
+    if (!BEAM.sg) { const gn = ac.createGain(), bp = ac.createBiquadFilter(); bp.type = 'lowpass'; bp.frequency.value = 5000; gn.gain.value = 0; bp.connect(gn); gn.connect(ac.destination);
+      // a pure, bright tone: soft sines a fifth apart with a slow shimmer, over a thin band of airy hiss
+      const vib = ac.createOscillator(), vg = ac.createGain(); vib.frequency.value = 4.2; vg.gain.value = 5; vib.connect(vg); vib.start();
+      for (const [f, v] of [[440, 0.32], [660, 0.22], [880, 0.16], [1320, 0.07]]) for (const dt of [-4, 4]) { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = f; o.detune.value = dt; vg.connect(o.detune); g.gain.value = v / 2; o.connect(g); g.connect(bp); o.start(); }
+      const n = ac.createBufferSource(), nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = nb.getChannelData(0); for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1; n.buffer = nb; n.loop = true;
+      const nf = ac.createBiquadFilter(), ng = ac.createGain(); nf.type = 'bandpass'; nf.frequency.value = 3200; nf.Q.value = 2; ng.gain.value = 0.05; n.connect(nf); nf.connect(ng); ng.connect(bp); n.start(); BEAM.sg = gn; BEAM.sbp = bp; }
+    if (ac.state !== 'running') ac.resume(); const vol = on && PREFS.sfx !== false ? 0.09 : 0; BEAM.sg.gain.cancelScheduledValues(t);
+    if (on) { BEAM.sg.gain.setValueAtTime(BEAM.sg.gain.value, t); BEAM.sg.gain.linearRampToValueAtTime(vol, t + 0.12); BEAM.sbp.frequency.setValueAtTime(1200, t); BEAM.sbp.frequency.exponentialRampToValueAtTime(5000, t + 0.4); }
+    else { BEAM.sg.gain.setValueAtTime(BEAM.sg.gain.value, t); BEAM.sg.gain.linearRampToValueAtTime(0, t + 0.5); } } catch (_) {} }
 { const _f = fire; fire = function () { const g = gun(); if (!g || !g.beam || handMelee()) return _f.apply(this, arguments);
   const before = player.ammo, c0 = player.cool; BEAM.capture = true; BEAM.end = null; let r; const _s = SFX.shot; SFX.shot = () => {}; try { r = _f.apply(this, arguments); } finally { BEAM.capture = false; SFX.shot = _s; try { flash.visible = false; flashLight.intensity = 0; } catch (_) {} }
   if (player.ammo !== before || player.cool > c0) { BEAM.t = performance.now();
@@ -25423,7 +25434,6 @@ function ocPierDetails() { const y = ocDeck() + 0.11;
   OC2.piers.forEach((P, i) => { const g = new THREE.Group(); g.position.set(P.cx, 0, P.cz); g.rotation.y = P.ry; levelGroup.add(g); const L = P.len;
     part(g, B(0.7, 0.6, 0.7), toon('#8a6a44', 'wood'), 0.6, y + 0.3, -L / 2 + 3); part(g, B(0.6, 0.5, 0.6), toon('#7a5a3a', 'wood'), 0.7, y + 0.85, -L / 2 + 3.1, 0, 0.4, 0);
     part(g, Cy(0.2, 0.16, 0.4, 8), toon(['#4fd2ff', '#c8402f', '#ffd36a'][i]), -0.8, y + 0.2, -L / 2 + 5);
-    const net = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1), new THREE.MeshBasicMaterial({ color: '#d8c890', wireframe: true })); net.position.set(1.35, y + 0.5, 0); net.rotation.y = Math.PI / 2; g.add(net);
     if (i === 0) { part(g, B(1.2, 0.08, 0.6), toon('#9a7650', 'wood'), -0.7, y + 0.8, 1); for (const s of [-1, 1]) part(g, B(0.06, 0.8, 0.06), toon('#6a4f34', 'wood'), -0.7 + s * 0.5, y + 0.4, 1); part(g, B(0.4, 0.08, 0.15), toon('#ffb347'), -0.7, y + 0.88, 1); }
     // gulls perched on piling tops: a body, white head, grey folded wings, a yellow beak, legs; only the head looks around
     for (let k = 0; k < 2; k++) { const gull = new THREE.Group(), wh = toon('#f4f0e8'), gr = toon('#9aa1aa');
@@ -25431,7 +25441,7 @@ function ocPierDetails() { const y = ocDeck() + 0.11;
       for (const s of [-1, 1]) { part(gull, B(0.04, 0.15, 0.36), gr, s * 0.12, 0.25, 0.02); part(gull, B(0.03, 0.12, 0.03), toon('#ffb347'), s * 0.06, 0.06, 0); }
       const head = new THREE.Group(); part(head, B(0.16, 0.16, 0.18), wh, 0, 0, 0); part(head, B(0.05, 0.05, 0.14), toon('#ffd36a'), 0, -0.02, -0.15); for (const s of [-1, 1]) part(head, B(0.02, 0.03, 0.03), toon('#111'), s * 0.085, 0.03, -0.04);
       head.position.set(0, 0.4, -0.2); gull.add(head);
-      gull.position.set((k ? -1 : 1) * 1.4, y + 0.39, -L / 2 + 5 + k * 4); gull.rotation.y = k ? 0.6 : 2.4; g.add(gull);
+      if (k === 0) gull.position.set(0.7, y + 1.1, -L / 2 + 3.1); else gull.position.set(-0.3, y, L / 2 - 1.2); gull.rotation.y = k ? 0.6 : 2.4; g.add(gull);
       levelAnims.push(t => { const s = Math.sin(t * 0.7 + k * 3 + i); head.rotation.y = Math.abs(s) > 0.7 ? Math.sign(s) * 0.8 : 0; head.position.y = 0.4 + Math.max(0, Math.sin(t * 2.3 + k)) * 0.02; }); } });
   // drifting space-lily pads and a few floating buoys around the harbour
   for (let i = 0; i < 12; i++) { const a = i * 2.4, r = 14 + (i * 7) % 18, x = PORT[0] + Math.cos(a) * r, z = PORT[1] + 26 + Math.sin(a) * r * 0.6; if (groundH(x, z) > WATER_Y - 0.3) continue;
@@ -25443,6 +25453,24 @@ function ocPierDetails() { const y = ocDeck() + 0.11;
 function kayakCanExit() { for (const s of SURFACES) { const dx = player.pos.x - s.x, dz = player.pos.z - s.z, al = dx * s.ux + dz * s.uz, ac = dx * s.uz - dz * s.ux; if (Math.abs(al) < s.hl + 0.5 && Math.abs(ac) < s.hw + 3) return true; }
   for (let r = 1; r <= 4; r += 0.5) for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; if (groundH(player.pos.x + Math.cos(a) * r, player.pos.z + Math.sin(a) * r) > WATER_Y + 0.1) return true; } return false; }
 const OC_KAYAK_OUT = { r: 3, get x() { return S.kayak ? player.pos.x : 1e9; }, get z() { return player.pos.z; }, get label() { return kayakCanExit() ? '🛶 Climb out of the kayak' : '🛶 Paddle to a pier or shore to climb out'; }, fn: () => kayakToggle() };
+// little fishing boats bobbing out on the water, each with a fisher casting a line off the side
+function ocBoats() { const spots = []; for (let i = 0; i < 40 && spots.length < 5; i++) { const a = i * 1.37, r = 34 + (i * 11) % 40, x = PORT[0] + Math.cos(a) * r, z = PORT[1] + Math.sin(a) * r;
+    if (groundH(x, z) > WATER_Y - 2.5 || spots.some(([sx, sz]) => Math.hypot(x - sx, z - sz) < 18)) continue; if (Z.bubble && Math.hypot(x - Z.bubble.x, z - Z.bubble.z) < 30) continue; spots.push([x, z, a]); }
+  const shirts = ['#c8402f', '#ffd36a', '#3a5266', '#4f9a4a', '#ff9a8a'];
+  spots.forEach(([x, z, a], i) => { const g = new THREE.Group(), hullC = ['#f4f0e8', '#3a6a8a', '#c8402f', '#4f7a5a', '#e8c86a'][i], wood = toon('#8a6a44', 'wood');
+    // hull: a flat bottom, flared sides, a pointed bow, a painted stripe and a transom
+    part(g, B(1.5, 0.12, 3.6), toon('#5a4030', 'wood'), 0, 0.05, 0); for (const s of [-1, 1]) { part(g, B(0.1, 0.6, 3.6), toon(hullC, 'wood'), s * 0.8, 0.32, 0, 0, 0, s * 0.18); part(g, B(0.12, 0.08, 3.6), wood, s * 0.86, 0.64, 0); part(g, B(0.11, 0.1, 3.5), toon('#c9a43a'), s * 0.84, 0.42, 0, 0, 0, s * 0.18);
+      part(g, B(0.1, 0.6, 1.2), toon(hullC, 'wood'), s * 0.42, 0.32, 2.2, 0, s * 0.62, s * 0.12); }
+    part(g, B(1.6, 0.6, 0.1), toon(hullC, 'wood'), 0, 0.32, -1.8); part(g, B(0.15, 0.7, 0.15), wood, 0, 0.45, 2.65); for (const zz of [-0.9, 0.6]) part(g, B(1.5, 0.08, 0.35), wood, 0, 0.42, zz);
+    part(g, B(0.25, 0.4, 0.35), toon('#3a3d44'), 0, 0.45, -1.95); part(g, Cy(0.03, 0.03, 0.5, 4), toon('#2b2a2c'), 0, 0.2, -2.15); part(g, B(0.5, 0.3, 0.4), toon('#4fd2ff'), 0.4, 0.3, -1.2); part(g, Cy(0.25, 0.22, 0.3, 8), toon('#8a6a44', 'wood'), -0.4, 0.3, 1.2);
+    const lan = part(g, new THREE.SphereGeometry(0.1, 6, 4), glow('#ffd36a'), -0.6, 1.0, -1.6); part(g, Cy(0.02, 0.02, 0.6, 4), toon('#2b2a2c'), -0.6, 0.7, -1.6);
+    const npc = makeCivilian(shirts[i], '#2c2a28', ['#c58a64', '#8a5a3a', '#e0b892', '#6a4a2a', '#f0c8a8'][i], '#1e1a18', i % 2 ? '#e8e4dc' : null); npc.scale.setScalar(0.92); npc.position.set(0.2, 0.42, -0.5); npc.rotation.y = Math.PI / 2; g.add(npc);
+    const rod = new THREE.Group(); part(rod, Cy(0.015, 0.025, 2.4, 4), toon('#2b2a2c'), 0, 1.2, 0); rod.position.set(0.6, 1.2, -0.4); rod.rotation.z = -1.0; g.add(rod);
+    const line = part(g, B(0.01, 1.8, 0.01), new THREE.MeshBasicMaterial({ color: '#e8e4dc' }), 2.55, 1.15, -0.4); const bob = part(g, new THREE.SphereGeometry(0.07, 6, 4), toon('#ff3b2a'), 2.55, 0.15, -0.4);
+    const ry = a + Math.PI / 2 + i; g.position.set(x, WATER_Y - 0.15, z); g.rotation.y = ry; levelGroup.add(g); solid(x, z, 2);
+    levelAnims.push(t => { g.position.y = WATER_Y - 0.15 + Math.sin(t * 1.1 + i) * 0.08; g.rotation.z = Math.sin(t * 0.9 + i * 2) * 0.05; g.rotation.x = Math.sin(t * 0.7 + i) * 0.03; g.rotation.y = ry + Math.sin(t * 0.05 + i) * 0.4;
+      rod.rotation.z = -1.0 + Math.sin(t * 0.6 + i) * 0.06 + (Math.sin(t * 0.21 + i * 3) > 0.96 ? -0.25 : 0); bob.position.y = 0.15 + Math.sin(t * 2 + i) * 0.04; lan.visible = ENV.night > 0.3; }); }); }
+{ const orig = LEVELS.ocean.build; LEVELS.ocean.build = function () { orig.call(this); try { ocBoats(); } catch (e) { console.warn('ocean2 boats', e); } }; }
 
 // Bubble City, inside: the Burbs (and their murder), the Low Tide strip (drugs, a fence, a stolen TV), the control room,
 // Reel Deal Tackle, and Coral Heights, an apartment tower with an elevator, six floors of neighbours, a lost hamster and your own flat.
@@ -26087,6 +26115,35 @@ function bcLife() { const Bd = bcD('burbs'), H = bcD('hub');
   levelGroup.add(dog); levelAnims.push(t => { const a = t * 0.18, r = 10.5; dog.position.set(Bd.x + Math.cos(a) * r, 0, Bd.z + Math.sin(a) * r); dog.rotation.y = Math.atan2(-Math.sin(a), Math.cos(a)); legs.forEach((l, i) => { l.rotation.x = Math.sin(t * 12 + (i % 3 ? 0 : Math.PI)) * 0.6; }); });
   const cs = new THREE.Group(); part(cs, B(1.1, 0.12, 0.45), toonNS('#2b2a2c'), 0, 0.1, 0); part(cs, B(1.0, 0.04, 0.38), toonNS('#8a2a4a'), 0, 0.17, 0); for (let k = 0; k < 5; k++) part(cs, Cy(0.05, 0.05, 0.02, 8), toonNS('#c9a43a'), -0.3 + k * 0.14, 0.2, (k % 2) * 0.1 - 0.05);
   cs.position.set(H.x - 8, 0, H.z + 15); levelGroup.add(cs); }
+
+// rain hitting the surface: little rings spreading on the ocean and on Velocity's wet glass road, with a hop of spray where each drop lands
+const RFX = { rings: [], drops: [], lvl: null, acc: 0, t: performance.now() };
+function rfxBuild() { RFX.rings.length = RFX.drops.length = 0; RFX.lvl = levelGroup;
+  const rg = new THREE.RingGeometry(0.5, 0.62, 16).rotateX(-Math.PI / 2), dg = new THREE.PlaneGeometry(0.05, 0.28);
+  for (let i = 0; i < 70; i++) { const m = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ color: '#dff6ff', transparent: true, opacity: 0, depthWrite: false })); m.visible = false; m.renderOrder = 2; levelGroup.add(m); RFX.rings.push({ m, life: 0 }); }
+  for (let i = 0; i < 40; i++) { const m = new THREE.Mesh(dg, new THREE.MeshBasicMaterial({ color: '#e8f8ff', transparent: true, opacity: 0.6, depthWrite: false })); m.visible = false; levelGroup.add(m); RFX.drops.push({ m, life: 0, vy: 0 }); } }
+function rfxSurface(x, z) { if (LEVEL.id === 'speedway') return floorAt(x, z) + 0.04; if (LEVEL.ocean && floorAt(x, z) < WATER_Y - 0.05) return WATER_Y + 0.03; return null; }
+function rfxTick() { const now = performance.now(), dt = Math.min(0.05, (now - RFX.t) / 1000); RFX.t = now;
+  if (!LEVEL || !levelGroup || LEVEL.fly || state !== 'play') return; const on = LEVEL.id === 'speedway' ? 0.8 : LEVEL.ocean ? ENV.rain : 0;
+  if (on < 0.12 && !RFX.rings.some(r => r.life > 0) && !RFX.drops.some(p => p.life > 0)) return; if (RFX.lvl !== levelGroup) rfxBuild();
+  RFX.acc += dt * on * 110; while (RFX.acc > 1) { RFX.acc--; const a = Math.random() * 6.283, d = 1.5 + Math.random() * 16, x = camera.position.x + Math.cos(a) * d, z = camera.position.z + Math.sin(a) * d, y = rfxSurface(x, z); if (y == null) continue;
+    const r = RFX.rings.find(r => r.life <= 0); if (r) { r.life = 1; r.m.position.set(x, y, z); r.m.visible = true; r.s = 0.25 + Math.random() * 0.4; }
+    if (Math.random() < 0.5) { const p = RFX.drops.find(p => p.life <= 0); if (p) { p.life = 1; p.vy = 1.6 + Math.random(); p.m.position.set(x, y, z); p.m.visible = true; } } }
+  for (const r of RFX.rings) if (r.life > 0) { r.life -= dt * 1.6; const k = 1 - r.life; r.m.scale.setScalar(r.s * (0.3 + k * 1.8)); r.m.material.opacity = Math.max(0, r.life) * 0.85; if (r.life <= 0) r.m.visible = false; }
+  for (const p of RFX.drops) if (p.life > 0) { p.life -= dt * 4; p.vy -= 14 * dt; p.m.position.y += p.vy * dt; p.m.lookAt(camera.position.x, p.m.position.y, camera.position.z); p.m.material.opacity = Math.max(0, p.life) * 0.6; if (p.life <= 0) p.m.visible = false; } }
+{ const _u = updateEnv; updateEnv = function () { const r = _u.apply(this, arguments); try { rfxTick(); if (!(LEVEL && LEVEL.ocean && swimHere())) SWE.out = true; } catch (_) {} return r; }; }
+// jumping off a dock: you keep falling until you hit the water, splash, sink a couple of metres, then bob back up to swimming depth
+const SWE = { out: true, air: false, vy: 0, sink: 0 };
+{ const _sw = swimStep; swimStep = function (dt, mx, mz, sprint) { const now = performance.now(), top = WATER_Y - 1.15;
+  if (SWE.out) { SWE.out = false; SWE.vy = Math.min(0, player.vy || 0); SWE.air = player.pos.y > top + 0.3; SWE.sink = 0; if (!SWE.air && SWE.vy < -4) SWE.sink = Math.max(-9, SWE.vy * 0.5); }
+  if (SWE.air) { const y0 = player.pos.y; _sw(dt, mx, mz, sprint); SWE.vy -= 22 * dt; player.pos.y = y0 + SWE.vy * dt; player.onGround = false;
+    if (player.pos.y <= top) { SWE.air = false; SWE.sink = Math.max(-9, Math.min(-2.2, SWE.vy * 0.45)); try { SFX.splash(); SFX.splash(); } catch (_) {} rfxSplash(player.pos.x, player.pos.z, Math.min(1.6, -SWE.vy / 8)); } return; }
+  if (SWE.sink < 0) { const y0 = player.pos.y; _sw(dt, mx, mz, sprint); SWE.sink += 7 * dt; player.pos.y = Math.max(groundH(player.pos.x, player.pos.z) + 0.3, y0 + SWE.sink * dt); if (SWE.sink >= 0) SWE.sink = 0; if (player.pos.y < top) player.pos.y = Math.min(top, player.pos.y); return; }
+  if (player.pos.y < top - 0.05) { const y0 = player.pos.y; _sw(dt, mx, mz, sprint); if (!(keys.KeyC || keys.ControlLeft)) player.pos.y = Math.min(top, y0 + 2.2 * dt + (player.pos.y - y0)); return; }
+  return _sw(dt, mx, mz, sprint); }; }
+function rfxSplash(x, z, k) { if (RFX.lvl !== levelGroup) rfxBuild(); const y = WATER_Y + 0.03;
+  for (let i = 0; i < 6; i++) { const r = RFX.rings.find(r => r.life <= 0); if (!r) break; r.life = 1 + i * 0.15; r.m.position.set(x, y, z); r.m.visible = true; r.s = (0.8 + i * 0.5) * k; }
+  for (let i = 0; i < 16; i++) { const p = RFX.drops.find(p => p.life <= 0); if (!p) break; const a = Math.random() * 6.283, d = Math.random() * 0.8; p.life = 1.4; p.vy = 3 + Math.random() * 4 * k; p.m.position.set(x + Math.cos(a) * d, y, z + Math.sin(a) * d); p.m.visible = true; } }
 
 
 // =================== STATE + SAVE ===================

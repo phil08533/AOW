@@ -19,7 +19,7 @@ const CITY_KITS = {
   mezar: ['stall', 'crates', 'honeypot', 'hivelamp', 'rug', 'cart', 'plant', 'lanterns', 'honeypot', 'awning'],
   capitone: ['campfire', 'crates', 'sled', 'icelamp', 'bench', 'woodpile', 'stall', 'lanterns', 'totem'],
   robot: ['hoload', 'vending', 'neonsign', 'crates', 'barrel', 'lamp', 'trash', 'cart', 'hoload', 'cables'],
-  ocean: ['net', 'boat', 'buoy', 'crates', 'barrel', 'stall', 'lamp', 'fishrack', 'lanterns'],
+  ocean: ['net', 'buoy', 'crates', 'barrel', 'stall', 'lamp', 'fishrack', 'lanterns'],
   moon: ['rover', 'o2tank', 'crates', 'lamp', 'bench', 'plant', 'hoload', 'antenna'],
   fort: ['crates', 'barrel', 'sandbags', 'tent', 'jeep', 'lamp', 'ammo', 'flag'],
   sky: ['windsock', 'crates', 'toolcart', 'lamp', 'barrel', 'flag', 'bench', 'plant'],
@@ -107,7 +107,7 @@ function cityLife(L, id) {
   const kit = CITY_KITS[C.style], cx = Zn.x, cz = Zn.z, R = Zn.r * (id === 'zeltac' ? 1.1 : 0.92);
   let placed = kit.length ? 0 : C.n;
   for (let i = 0; i < C.n * 8 && placed < C.n; i++) {
-    const a = Math.random() * 6.283, d = R * (0.28 + Math.random() * 0.7), x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
+    const a = Math.random() * 6.283, d = R * (id === 'ocean' ? 0.66 + Math.random() * 0.3 : 0.28 + Math.random() * 0.7), x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
     const kind = kit[placed % kit.length], pad = ['stall', 'boat', 'rover', 'tent', 'jeep', 'cart', 'campfire'].includes(kind) ? 2.0 : 1.2;
     if (!cityClear(x, z, pad, L)) continue;
     if (L.terrain && Math.abs(groundH(x + 1, z) - groundH(x - 1, z)) + Math.abs(groundH(x, z + 1) - groundH(x, z - 1)) > 1.4) continue;

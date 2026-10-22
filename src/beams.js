@@ -60,13 +60,15 @@ function beamHum(on, st) { if (st && BEAM.oscs) { const k = st.hum / 55; BEAM.os
 { const _h = beamHum; beamHum = function (on, st) { const sun = st === BEAM_STYLES.solar || (!st && BEAM.sunOn);
     if (!sun) { if (BEAM.sunOn) sunHum(false); return _h(on, st); } _h(false, null); sunHum(on); }; }
 function sunHum(on) { BEAM.sunOn = on; try { if (!BEAM.ac) BEAM.ac = new (window.AudioContext || window.webkitAudioContext)(); const ac = BEAM.ac, t = ac.currentTime;
-    if (!BEAM.sg) { const gn = ac.createGain(), lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600; lp.Q.value = 0.7; gn.gain.value = 0; lp.connect(gn); gn.connect(ac.destination);
-      for (const [f, v, ty] of [[131, 0.5, 'sine'], [262, 0.28, 'sawtooth'], [392, 0.22, 'sawtooth'], [523, 0.2, 'sawtooth'], [659, 0.14, 'sawtooth'], [784, 0.12, 'sawtooth'], [1568, 0.06, 'sine']]) for (const dt of [-0.6, 0.6]) { const o = ac.createOscillator(), g = ac.createGain(); o.type = ty; o.frequency.value = f; o.detune.value = dt * 7; g.gain.value = v / 2; o.connect(g); g.connect(lp); o.start(); }
-      const sw = ac.createOscillator(), sg = ac.createGain(); sw.frequency.value = 0.35; sg.gain.value = 900; sw.connect(sg); sg.connect(lp.frequency); sw.start();
-      const tr = ac.createOscillator(), tg = ac.createGain(); tr.frequency.value = 6; tg.gain.value = 0.012; tr.connect(tg); tg.connect(gn.gain); tr.start(); BEAM.sg = gn; BEAM.slp = lp; }
-    if (ac.state !== 'running') ac.resume(); const vol = on && PREFS.sfx !== false ? 0.07 : 0; BEAM.sg.gain.cancelScheduledValues(t);
-    if (on) { BEAM.sg.gain.setTargetAtTime(vol, t, 0.06); BEAM.slp.frequency.setValueAtTime(900, t); BEAM.slp.frequency.linearRampToValueAtTime(2600, t + 0.6); try { SFX.shot(GUNS.w_100); } catch (_) {} }
-    else BEAM.sg.gain.setTargetAtTime(0, t, 0.35); } catch (_) {} }
+    if (!BEAM.sg) { const gn = ac.createGain(), bp = ac.createBiquadFilter(); bp.type = 'lowpass'; bp.frequency.value = 5000; gn.gain.value = 0; bp.connect(gn); gn.connect(ac.destination);
+      // a pure, bright tone: soft sines a fifth apart with a slow shimmer, over a thin band of airy hiss
+      const vib = ac.createOscillator(), vg = ac.createGain(); vib.frequency.value = 4.2; vg.gain.value = 5; vib.connect(vg); vib.start();
+      for (const [f, v] of [[440, 0.32], [660, 0.22], [880, 0.16], [1320, 0.07]]) for (const dt of [-4, 4]) { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = f; o.detune.value = dt; vg.connect(o.detune); g.gain.value = v / 2; o.connect(g); g.connect(bp); o.start(); }
+      const n = ac.createBufferSource(), nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = nb.getChannelData(0); for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1; n.buffer = nb; n.loop = true;
+      const nf = ac.createBiquadFilter(), ng = ac.createGain(); nf.type = 'bandpass'; nf.frequency.value = 3200; nf.Q.value = 2; ng.gain.value = 0.05; n.connect(nf); nf.connect(ng); ng.connect(bp); n.start(); BEAM.sg = gn; BEAM.sbp = bp; }
+    if (ac.state !== 'running') ac.resume(); const vol = on && PREFS.sfx !== false ? 0.09 : 0; BEAM.sg.gain.cancelScheduledValues(t);
+    if (on) { BEAM.sg.gain.setValueAtTime(BEAM.sg.gain.value, t); BEAM.sg.gain.linearRampToValueAtTime(vol, t + 0.12); BEAM.sbp.frequency.setValueAtTime(1200, t); BEAM.sbp.frequency.exponentialRampToValueAtTime(5000, t + 0.4); }
+    else { BEAM.sg.gain.setValueAtTime(BEAM.sg.gain.value, t); BEAM.sg.gain.linearRampToValueAtTime(0, t + 0.5); } } catch (_) {} }
 { const _f = fire; fire = function () { const g = gun(); if (!g || !g.beam || handMelee()) return _f.apply(this, arguments);
   const before = player.ammo, c0 = player.cool; BEAM.capture = true; BEAM.end = null; let r; const _s = SFX.shot; SFX.shot = () => {}; try { r = _f.apply(this, arguments); } finally { BEAM.capture = false; SFX.shot = _s; try { flash.visible = false; flashLight.intensity = 0; } catch (_) {} }
   if (player.ammo !== before || player.cool > c0) { BEAM.t = performance.now();

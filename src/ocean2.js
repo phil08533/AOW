@@ -269,7 +269,6 @@ function ocPierDetails() { const y = ocDeck() + 0.11;
   OC2.piers.forEach((P, i) => { const g = new THREE.Group(); g.position.set(P.cx, 0, P.cz); g.rotation.y = P.ry; levelGroup.add(g); const L = P.len;
     part(g, B(0.7, 0.6, 0.7), toon('#8a6a44', 'wood'), 0.6, y + 0.3, -L / 2 + 3); part(g, B(0.6, 0.5, 0.6), toon('#7a5a3a', 'wood'), 0.7, y + 0.85, -L / 2 + 3.1, 0, 0.4, 0);
     part(g, Cy(0.2, 0.16, 0.4, 8), toon(['#4fd2ff', '#c8402f', '#ffd36a'][i]), -0.8, y + 0.2, -L / 2 + 5);
-    const net = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1), new THREE.MeshBasicMaterial({ color: '#d8c890', wireframe: true })); net.position.set(1.35, y + 0.5, 0); net.rotation.y = Math.PI / 2; g.add(net);
     if (i === 0) { part(g, B(1.2, 0.08, 0.6), toon('#9a7650', 'wood'), -0.7, y + 0.8, 1); for (const s of [-1, 1]) part(g, B(0.06, 0.8, 0.06), toon('#6a4f34', 'wood'), -0.7 + s * 0.5, y + 0.4, 1); part(g, B(0.4, 0.08, 0.15), toon('#ffb347'), -0.7, y + 0.88, 1); }
     // gulls perched on piling tops: a body, white head, grey folded wings, a yellow beak, legs; only the head looks around
     for (let k = 0; k < 2; k++) { const gull = new THREE.Group(), wh = toon('#f4f0e8'), gr = toon('#9aa1aa');
@@ -277,7 +276,7 @@ function ocPierDetails() { const y = ocDeck() + 0.11;
       for (const s of [-1, 1]) { part(gull, B(0.04, 0.15, 0.36), gr, s * 0.12, 0.25, 0.02); part(gull, B(0.03, 0.12, 0.03), toon('#ffb347'), s * 0.06, 0.06, 0); }
       const head = new THREE.Group(); part(head, B(0.16, 0.16, 0.18), wh, 0, 0, 0); part(head, B(0.05, 0.05, 0.14), toon('#ffd36a'), 0, -0.02, -0.15); for (const s of [-1, 1]) part(head, B(0.02, 0.03, 0.03), toon('#111'), s * 0.085, 0.03, -0.04);
       head.position.set(0, 0.4, -0.2); gull.add(head);
-      gull.position.set((k ? -1 : 1) * 1.4, y + 0.39, -L / 2 + 5 + k * 4); gull.rotation.y = k ? 0.6 : 2.4; g.add(gull);
+      if (k === 0) gull.position.set(0.7, y + 1.1, -L / 2 + 3.1); else gull.position.set(-0.3, y, L / 2 - 1.2); gull.rotation.y = k ? 0.6 : 2.4; g.add(gull);
       levelAnims.push(t => { const s = Math.sin(t * 0.7 + k * 3 + i); head.rotation.y = Math.abs(s) > 0.7 ? Math.sign(s) * 0.8 : 0; head.position.y = 0.4 + Math.max(0, Math.sin(t * 2.3 + k)) * 0.02; }); } });
   // drifting space-lily pads and a few floating buoys around the harbour
   for (let i = 0; i < 12; i++) { const a = i * 2.4, r = 14 + (i * 7) % 18, x = PORT[0] + Math.cos(a) * r, z = PORT[1] + 26 + Math.sin(a) * r * 0.6; if (groundH(x, z) > WATER_Y - 0.3) continue;
@@ -289,3 +288,21 @@ function ocPierDetails() { const y = ocDeck() + 0.11;
 function kayakCanExit() { for (const s of SURFACES) { const dx = player.pos.x - s.x, dz = player.pos.z - s.z, al = dx * s.ux + dz * s.uz, ac = dx * s.uz - dz * s.ux; if (Math.abs(al) < s.hl + 0.5 && Math.abs(ac) < s.hw + 3) return true; }
   for (let r = 1; r <= 4; r += 0.5) for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; if (groundH(player.pos.x + Math.cos(a) * r, player.pos.z + Math.sin(a) * r) > WATER_Y + 0.1) return true; } return false; }
 const OC_KAYAK_OUT = { r: 3, get x() { return S.kayak ? player.pos.x : 1e9; }, get z() { return player.pos.z; }, get label() { return kayakCanExit() ? '🛶 Climb out of the kayak' : '🛶 Paddle to a pier or shore to climb out'; }, fn: () => kayakToggle() };
+// little fishing boats bobbing out on the water, each with a fisher casting a line off the side
+function ocBoats() { const spots = []; for (let i = 0; i < 40 && spots.length < 5; i++) { const a = i * 1.37, r = 34 + (i * 11) % 40, x = PORT[0] + Math.cos(a) * r, z = PORT[1] + Math.sin(a) * r;
+    if (groundH(x, z) > WATER_Y - 2.5 || spots.some(([sx, sz]) => Math.hypot(x - sx, z - sz) < 18)) continue; if (Z.bubble && Math.hypot(x - Z.bubble.x, z - Z.bubble.z) < 30) continue; spots.push([x, z, a]); }
+  const shirts = ['#c8402f', '#ffd36a', '#3a5266', '#4f9a4a', '#ff9a8a'];
+  spots.forEach(([x, z, a], i) => { const g = new THREE.Group(), hullC = ['#f4f0e8', '#3a6a8a', '#c8402f', '#4f7a5a', '#e8c86a'][i], wood = toon('#8a6a44', 'wood');
+    // hull: a flat bottom, flared sides, a pointed bow, a painted stripe and a transom
+    part(g, B(1.5, 0.12, 3.6), toon('#5a4030', 'wood'), 0, 0.05, 0); for (const s of [-1, 1]) { part(g, B(0.1, 0.6, 3.6), toon(hullC, 'wood'), s * 0.8, 0.32, 0, 0, 0, s * 0.18); part(g, B(0.12, 0.08, 3.6), wood, s * 0.86, 0.64, 0); part(g, B(0.11, 0.1, 3.5), toon('#c9a43a'), s * 0.84, 0.42, 0, 0, 0, s * 0.18);
+      part(g, B(0.1, 0.6, 1.2), toon(hullC, 'wood'), s * 0.42, 0.32, 2.2, 0, s * 0.62, s * 0.12); }
+    part(g, B(1.6, 0.6, 0.1), toon(hullC, 'wood'), 0, 0.32, -1.8); part(g, B(0.15, 0.7, 0.15), wood, 0, 0.45, 2.65); for (const zz of [-0.9, 0.6]) part(g, B(1.5, 0.08, 0.35), wood, 0, 0.42, zz);
+    part(g, B(0.25, 0.4, 0.35), toon('#3a3d44'), 0, 0.45, -1.95); part(g, Cy(0.03, 0.03, 0.5, 4), toon('#2b2a2c'), 0, 0.2, -2.15); part(g, B(0.5, 0.3, 0.4), toon('#4fd2ff'), 0.4, 0.3, -1.2); part(g, Cy(0.25, 0.22, 0.3, 8), toon('#8a6a44', 'wood'), -0.4, 0.3, 1.2);
+    const lan = part(g, new THREE.SphereGeometry(0.1, 6, 4), glow('#ffd36a'), -0.6, 1.0, -1.6); part(g, Cy(0.02, 0.02, 0.6, 4), toon('#2b2a2c'), -0.6, 0.7, -1.6);
+    const npc = makeCivilian(shirts[i], '#2c2a28', ['#c58a64', '#8a5a3a', '#e0b892', '#6a4a2a', '#f0c8a8'][i], '#1e1a18', i % 2 ? '#e8e4dc' : null); npc.scale.setScalar(0.92); npc.position.set(0.2, 0.42, -0.5); npc.rotation.y = Math.PI / 2; g.add(npc);
+    const rod = new THREE.Group(); part(rod, Cy(0.015, 0.025, 2.4, 4), toon('#2b2a2c'), 0, 1.2, 0); rod.position.set(0.6, 1.2, -0.4); rod.rotation.z = -1.0; g.add(rod);
+    const line = part(g, B(0.01, 1.8, 0.01), new THREE.MeshBasicMaterial({ color: '#e8e4dc' }), 2.55, 1.15, -0.4); const bob = part(g, new THREE.SphereGeometry(0.07, 6, 4), toon('#ff3b2a'), 2.55, 0.15, -0.4);
+    const ry = a + Math.PI / 2 + i; g.position.set(x, WATER_Y - 0.15, z); g.rotation.y = ry; levelGroup.add(g); solid(x, z, 2);
+    levelAnims.push(t => { g.position.y = WATER_Y - 0.15 + Math.sin(t * 1.1 + i) * 0.08; g.rotation.z = Math.sin(t * 0.9 + i * 2) * 0.05; g.rotation.x = Math.sin(t * 0.7 + i) * 0.03; g.rotation.y = ry + Math.sin(t * 0.05 + i) * 0.4;
+      rod.rotation.z = -1.0 + Math.sin(t * 0.6 + i) * 0.06 + (Math.sin(t * 0.21 + i * 3) > 0.96 ? -0.25 : 0); bob.position.y = 0.15 + Math.sin(t * 2 + i) * 0.04; lan.visible = ENV.night > 0.3; }); }); }
+{ const orig = LEVELS.ocean.build; LEVELS.ocean.build = function () { orig.call(this); try { ocBoats(); } catch (e) { console.warn('ocean2 boats', e); } }; }

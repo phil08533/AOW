@@ -84,7 +84,7 @@ LEVELS.ocean.npcs.push(
     idle: ["I built the first dome with my own two hands and a lot of glue. Mostly glue.", "Every crack in this city has a name. That one's Gerald.", "The Leviathan took Dome Six. We don't talk about Dome Six."] },
   { id: 'kelpa', name: 'Farmer Kelpa', role: 'Kelp farmer', rig: 'civ', make: () => makeCivilian('#4f6e2c', '#3a2a1a', '#a07850', '#2a1a10', '#8fae6a'), x: 0.8, z: 75.5, face: 0,
     idle: ["Grow lights, good water, and talking to them. Kelp loves gossip.", "This row is kelp. That row is also kelp. It's a kelp farm.", "Try the kelp chips at the market. Auntie Nacre stole my recipe, but she makes them well."] },
-  { id: 'pip', name: 'Pip', role: 'Dome kid', rig: 'civ', make: () => { const g = makeCivilian('#ff6aa8', '#2c2a38', '#e8c4a0', '#4a2a1a', null); g.scale.setScalar(0.7); return g; }, x: 22, z: 87, face: Math.PI,
+  { id: 'pip', name: 'Young Porkins', role: 'Dome kid', rig: 'civ', make: () => { const g = makeCivilian('#ff6aa8', '#2c2a38', '#f0c8a8', '#4a2a1a', null); const belly = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10), toon('#ff6aa8')); belly.scale.set(1.15, 1, 0.95); belly.position.set(0, 1.12, 0.06); g.add(belly); for (const s of [-1, 1]) { const ch = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), toon('#ffb0a0')); ch.position.set(0.11 * s, 1.68, 0.13); g.add(ch); } g.scale.set(0.9, 0.7, 0.88); return g; }, x: 22, z: 87, face: Math.PI,
     idle: ["Have you ever been ABOVE the water? Is it true there's no ceiling?", "I'm gonna be a sub pilot. Or a fish. Whichever pays more.", "Mayor Blub is my uncle. He isn't. But he lets me say it."] }
 );
 

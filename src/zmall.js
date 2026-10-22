@@ -77,7 +77,10 @@ function zMallCivic() {
   part(props, Cy(0.3, 0.3, 0.2, 12), gold, 0, 2.6, -18.85, Math.PI / 2);
   part(props, B(7, 1.1, 0.8), toon('#5a4030', 'wood'), 0, 0.55, -12.8); part(props, B(7.2, 0.08, 1.0), toon('#2c2f36'), 0, 1.14, -12.8); box(0, -12.8, 3.5, 0.4);
   for (let i = 0; i < 4; i++) { const g = new THREE.Mesh(B(1.6, 1.0, 0.05), new THREE.MeshLambertMaterial({ color: '#9fd8ff', transparent: true, opacity: 0.25, depthWrite: false })); g.position.set(-2.55 + i * 1.7, 1.7, -12.8); props.add(g); part(props, B(0.06, 1.0, 0.06), gold, -3.4 + i * 1.7, 1.7, -12.8); }
-  part(props, B(4.5, 0.02, 2.4), toon('#7a1e1e'), 0, 0.012, -10.8); for (const x of [-4, 4]) { part(props, Cy(0.05, 0.05, 1.0, 6), gold, x, 0.5, -11.4); } part(props, B(8, 0.04, 0.04), toon('#7a1e1e'), 0, 0.95, -11.4);
+  part(props, B(4.5, 0.02, 2.4), toon('#7a1e1e'), 0, 0.012, -10.8); for (const x of [-4, -2, 2, 4]) { part(props, B(0.36, 0.06, 0.36), gold, x, 0.03, -11.4); part(props, Cy(0.04, 0.04, 0.95, 8), gold, x, 0.5, -11.4); part(props, new THREE.SphereGeometry(0.08, 10, 8), gold, x, 1.0, -11.4); }
+  // velvet ropes sag between the posts, with the walkway to the doors left open in the middle
+  for (const [a, c] of [[-4, -2], [2, 4]]) { const cv = new THREE.QuadraticBezierCurve3(new THREE.Vector3(a, 0.95, -11.4), new THREE.Vector3((a + c) / 2, 0.62, -11.4), new THREE.Vector3(c, 0.95, -11.4));
+    props.add(new THREE.Mesh(new THREE.TubeGeometry(cv, 16, 0.035, 6), toon('#9a1e2a'))); }
   // MISSION CENTER: a raised platform with a holographic job board, two consoles and a railing
   const mx = -10, mz = -10;
   part(props, Cy(3.6, 3.8, 0.06, 24), toon('#3a3d44', 'panel'), mx, 0.03, mz); part(props, Cy(3.5, 3.5, 0.02, 24), toon('#2a3a5a'), mx, 0.065, mz); part(props, B(0.3, 0.03, 7), glow('#4fd2ff'), mx + 3.55, 0.07, mz);

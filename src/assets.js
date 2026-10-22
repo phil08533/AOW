@@ -311,18 +311,21 @@ function makeSpearman() {
   g.add(body);
 
   // 1. Grounded Legs & Feet (Lowest point lands at y = 0.0)
+  // each leg hangs from a hip pivot so it can swing when he walks
+  const legs = [];
   for (const s of [-1, 1]) {
-    chain(body, [
-      [0.08 * s, 0.60, 0],
-      [0.085 * s, 0.30, 0.01],
-      [0.09 * s, 0.03, 0]
+    const leg = new THREE.Group(); leg.position.set(0.08 * s, 0.62, 0); body.add(leg); legs.push(leg);
+    chain(leg, [
+      [0, -0.02, 0],
+      [0.005 * s, -0.32, 0.01],
+      [0.01 * s, -0.59, 0]
     ], 0.034, gr, 0.026, true);
 
     // Sole touches y = 0
-    E(body, dk, 0.09 * s, 0.02, 0.04, 0.045, 0.02, 0.075);
-    E(body, dk, 0.09 * s, 0.015, 0.09, 0.035, 0.015, 0.035);
+    E(leg, dk, 0.01 * s, -0.60, 0.04, 0.045, 0.02, 0.075);
+    E(leg, dk, 0.01 * s, -0.605, 0.09, 0.035, 0.015, 0.035);
 
-    part(body, new THREE.TorusGeometry(0.032, 0.007, 4, 10), leather, 0.09 * s, 0.05, 0, Math.PI / 2);
+    part(leg, new THREE.TorusGeometry(0.032, 0.007, 4, 10), leather, 0.01 * s, -0.57, 0, Math.PI / 2);
   }
 
   // 2. Torso (Bobs gently while feet stay planted)
@@ -426,6 +429,11 @@ function makeSpearman() {
     head.rotation.y = Math.sin(time * 1.2) * 0.15;
     shield.rotation.y = -0.35 + Math.sin(time * 2.0) * 0.04;
     spear.rotation.z = Math.sin(time * 2.0) * 0.02;
+    // walk cycle from how far he actually moved since the last frame
+    const w = new THREE.Vector3(); g.getWorldPosition(w); const st = g.userData.wk || (g.userData.wk = { x: w.x, z: w.z, t, ph: 0, mv: 0 });
+    const dt = Math.max(1e-3, Math.min(0.1, t - st.t)), sp = Math.hypot(w.x - st.x, w.z - st.z) / dt; st.x = w.x; st.z = w.z; st.t = t;
+    st.mv += ((sp > 0.3 && sp < 30 ? 1 : 0) - st.mv) * Math.min(1, dt * 8); st.ph += dt * (4 + Math.min(sp, 8) * 2.2);
+    const sw = Math.sin(st.ph) * 0.6 * st.mv; legs[0].rotation.x = sw; legs[1].rotation.x = -sw; body.position.y = Math.abs(Math.cos(st.ph)) * 0.03 * st.mv;
   };
 
   return g;

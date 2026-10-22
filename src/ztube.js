@@ -36,7 +36,7 @@ for (const lv of ['zfloor', 'zeltac']) { const _b = LEVELS[lv].build; LEVELS[lv]
 function zAirlock() {
   const slab = props.children.find(o => zIsBox(o, 8, 6, 0.4)), gl = props.children.find(o => zIsBox(o, 6, 5, 0.3)); if (!slab) return; const Zw = slab.position.z - 0.2; props.remove(slab); if (gl) props.remove(gl);
   BOXES.push([slab.position.x, Zw + 0.3, 5.6, 0.6]);
-  { const gm = new THREE.MeshLambertMaterial({ color: '#9fdcff', transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }); const pane = new THREE.Mesh(B(9.4, 8, 0.06), gm); pane.position.set(0, 4, Zw + 0.75); levelGroup.add(pane); } // glass seal behind the blast doors
+  { const gm = new THREE.MeshLambertMaterial({ color: '#9fdcff', transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }); const pane = new THREE.Mesh(B(9.4, 8, 0.06), gm); pane.position.set(0, 4, Zw + 0.75); levelGroup.add(pane);  for (const sx of [-1, 1]) { const side = new THREE.Mesh(B(2.8, 8, 0.08), gm); side.position.set(sx * 6.8, 4, Zw); levelGroup.add(side); part(props, B(2.9, 0.15, 0.25), toon('#6a707a', 'panel'), sx * 6.8, 0.08, Zw); part(props, B(0.15, 8, 0.25), toon('#6a707a', 'panel'), sx * 8.15, 4, Zw); BOXES.push([sx * 6.8, Zw, 1.6, 0.6]); } } // glass seal behind the blast doors
   const dark = toon('#2a2d34', 'panel'), steel = toon('#6a707a', 'panel'), chrome = toon('#b8bec8'), hz = new THREE.MeshLambertMaterial({ map: zHazardTex() });
   // deep frame and an arched lintel
   for (const s of [-1, 1]) { part(props, B(1.6, 6.4, 1.4), dark, s * 4.6, 3.2, Zw); part(props, B(0.3, 5.6, 1.42), hz, s * 3.95, 2.8, Zw); for (let k = 0; k < 5; k++) part(props, B(0.12, 0.12, 0.12), glow(k % 2 ? '#ff8a2a' : '#ffd36a'), s * 4.6, 0.8 + k * 1.1, Zw - 0.72); }

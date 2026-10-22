@@ -95,8 +95,8 @@ function ucdStageMore() {
   // fog machines puff along the floor at the lip
   for (const a of [0.25, Q - 0.25]) { const [x, z] = at(7.9, a); part(props, B(0.5, 0.3, 0.4), black, x, 0.15, z, 0, a); levelAnims.push(() => { if (Math.random() < 0.1) burst(V(x + Math.sin(a) * 0.4, 0.25, z + Math.cos(a) * 0.4), ['#c86aff', '#ff6ad8', '#e8d8ff'][randi(0, 2)], 2, 0.6); }); }
   // neon name sign up in the corner, string lights along the curtain tops
-  const ns = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.9), new THREE.MeshBasicMaterial({ map: signTex('VIXEN GLIPPO', '#14060e', '#ff4fa8'), transparent: true })); const [nx, nz] = at(0.9, Q / 2); ns.position.set(nx + 0.4, 5.3, nz + 0.4); ns.rotation.y = Q / 2; levelGroup.add(ns);
-  const sl = new THREE.PointLight(0xff4fa8, 1.0, 8, 1.6); sl.position.set(nx + 1.2, 5.0, nz + 1.2); levelGroup.add(sl);
+  const ns = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.9), new THREE.MeshBasicMaterial({ map: signTex('VIXEN GLIPPO', '#14060e', '#ff4fa8'), transparent: true })); const [nx, nz] = at(3.4, Q / 2); ns.position.set(nx, 5.7, nz); ns.rotation.y = Q / 2; levelGroup.add(ns);
+  const sl = new THREE.PointLight(0xff4fa8, 1.0, 8, 1.6); sl.position.set(nx + 0.8, 5.2, nz + 0.8); levelGroup.add(sl);
   const bulbs = []; for (let i = 0; i < 24; i++) { const f = i / 23, x = i < 12 ? OX + 0.45 : OX + 0.45 + (f - 0.5) * 2 * 7.4, z = i < 12 ? OZ + 0.45 + f * 2 * 7.2 : OZ + 0.45; bulbs.push(part(props, new THREE.SphereGeometry(0.06, 6, 4), glow(['#ffd36a', '#ff6ad8', '#7fe8ff'][i % 3]), x, 4.75 - Math.abs(Math.sin(f * Math.PI * 6)) * 0.18, z)); }
   // speaker stacks on the floor either side, monitor wedges at the lip, a cable snake
   for (const a of [-0.05, Q + 0.05]) { const [x, z] = at(8.4, a); for (let k = 0; k < 2; k++) { part(props, B(1.1, 1.0, 0.8), black, x, 0.5 + k * 1.02, z, 0, a); part(props, Cy(0.34, 0.34, 0.03, 14), toon('#2a2a2e'), x + Math.sin(a) * 0.41, 0.5 + k * 1.02, z + Math.cos(a) * 0.41, Math.PI / 2, a, 0); } part(props, B(1.12, 0.06, 0.06), glow('#ff4a6a'), x, 2.08, z, 0, a); box(x, z, 0.6, 0.6); }

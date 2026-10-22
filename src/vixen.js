@@ -4,7 +4,9 @@
 // and he stays on his floor for good. After that Vixen can be romanced like the lounge regulars (she stays in the Undercroft).
 // Save field: S.vixen { st: 0 none, 1 job taken, 2 done }.
 function makeVixen() {
-  const pink = '#f29ac0', red = '#c8102e', g = makeCivilian(pink, pink, pink, '#9a4ae0', null), dress = toon(red, 'cloth'), skin = toon(pink);
+  const pink = '#f29ac0', red = '#c8102e', g = makeCivilian(pink, pink, pink, '#9a4ae0', null), dress = toon(red, 'cloth'), skin = new THREE.MeshLambertMaterial({ color: pink });
+  // smooth skin: the base body's pink parts get a plain soft material instead of the textured one
+  g.children.forEach(o => { const c = o.isMesh && o.material && o.material.color; if (c && c.r > c.g && c.r > c.b && c.b > c.g) o.material = skin; });
   // the red dress: a fitted bodice with a sweetheart line, thin straps, a flared skirt with a slit, a sparkle belt
   part(g, B(0.5, 0.42, 0.28), dress, 0, 1.15, 0); for (const s of [-1, 1]) { part(g, new THREE.SphereGeometry(0.1, 10, 8), dress, s * 0.09, 1.36, 0.08); part(g, B(0.025, 0.2, 0.02), dress, s * 0.15, 1.46, 0.1); }
   part(g, new THREE.CylinderGeometry(0.25, 0.4, 0.82, 18, 1, true), new THREE.MeshLambertMaterial({ color: red, side: THREE.DoubleSide }), 0, 0.53, 0);
@@ -25,6 +27,7 @@ function makeVixen() {
     const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.032 - (i % 2) * 0.006, 5, false), i % 4 ? hm : hm2); g.add(m);
     if (i % 2 === 0) { const sp = part(g, new THREE.OctahedronGeometry(0.012, 0), glow('#ffffff'), pts[4 + (i % 4)].x * 1.15, pts[4 + (i % 4)].y, pts[4 + (i % 4)].z * 1.15); sparks.push(sp); } }
   for (const s of [-1, 1]) { const pts = []; for (let k = 0; k <= 6; k++) { const f = k / 6; pts.push(new THREE.Vector3(s * (0.03 + f * 0.11), 1.9 - f * 0.17, 0.12 - f * 0.02 + Math.sin(f * 5) * 0.01)); } g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 10, 0.03, 5, false), hm)); }
+  // smooth skin: swap the textured pink for a plain soft material
   g.userData.vixSparks = sparks; return g;
 }
 // sparkles in her hair twinkle

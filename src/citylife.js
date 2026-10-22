@@ -30,7 +30,7 @@ const CITY_KITS = {
 };
 const CITY_FOLK = {
   earth: () => makeCivilian(pickC(['#c8402f', '#3b4f7a', '#5a6a3a', '#8a6fc4', '#c9a43a', '#2a5a7a', '#e8e4dc']), pickC(['#2c2a28', '#3d3a36', '#5a4a3a']), pickC(['#e0b892', '#c58a64', '#8a5a3a', '#5a3a24']), pickC(['#1e1a18', '#5a3a22', '#c9a43a', '#cfcac0', '#c8402f'])),
-  mezar: () => recolor(makeBugHybrid(), { '#5f8a3a': pickC(['#c9a46a', '#8a6a3a', '#a07a4a', '#7a8a3a']) }),
+  mezar: () => npcDisarm(recolor(makeBugHybrid(), { '#5f8a3a': pickC(['#c9a46a', '#8a6a3a', '#a07a4a', '#7a8a3a']) })),
   capitone: () => makeCivilian(pickC(['#6a8aa8', '#e8e4dc', '#3a5a4a', '#8a3a2e']), '#3d3a36', pickC(['#e0b892', '#c58a64', '#9fe8ff']), '#e8e4dc', '#bfe6f2'),
   robot: () => recolor(makeXR17(), { '#9aa1aa': pickC(['#9aa1aa', '#c8402f', '#4fd2ff', '#c9a43a', '#5d636c']) }),
   ocean: () => makeCivilian(pickC(['#2a5a7a', '#e8e4dc', '#c8402f', '#ffd36a']), '#3d3a36', pickC(['#c58a64', '#8a5a3a', '#4fd2ff']), '#1e1a18', '#ffb347'),

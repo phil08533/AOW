@@ -260,6 +260,8 @@ function makeBugMaster() {
 }
 
 // Bug Hybrid Warrior: tall green beetle soldier, pale shell belly, banner staff
+// townsfolk and shopkeepers leave their spears, shields and staves at home (enemies keep theirs)
+function npcDisarm(g) { const rm = []; g.traverse(o => { if (o.userData && o.userData.weapon) rm.push(o); }); rm.forEach(o => o.parent && o.parent.remove(o)); return g; }
 function makeBugHybrid() {
   const g = new THREE.Group(), gr = '#5f8a3a', pale = '#e2dfb2', dk = '#3e5e26';
   for (const s of [-1, 1]) {
@@ -270,7 +272,7 @@ function makeBugHybrid() {
   E(g, pale, 0, 1.3, 0.04, 0.22, 0.52, 0.17);      // pale belly
   for (let i = 0; i < 4; i++) part(g, B(0.3, 0.012, 0.02), '#b9b58a', 0, 1.05 + i * 0.16, 0.2);
   for (const s of [-1, 1]) chain(g, [[0.2 * s, 1.62, 0], [0.36 * s, 1.35, 0.06], [0.34 * s, 1.05, 0.14]], 0.035, gr, 0.025, true);
-  const staff = new THREE.Group(); staff.position.set(0.34, 1.05, 0.15); g.add(staff);
+  const staff = new THREE.Group(); staff.userData.weapon = 1; staff.position.set(0.34, 1.05, 0.15); g.add(staff);
   part(staff, Cy(0.018, 0.018, 2.0, 6), '#4a3a2c', 0, 0.05, 0);
   part(staff, B(0.02, 0.22, 0.2), glow('#f2c23a'), 0, 0.85, 0.11);
   part(staff, new THREE.ConeGeometry(0.03, 0.14, 4), C.steel, 0, 1.12, 0);
@@ -376,7 +378,7 @@ function makeSpearman() {
     [-0.22, 0.80, 0.20]
   ], 0.03, gr, 0.024, true);
 
-  const shield = new THREE.Group();
+  const shield = new THREE.Group(); shield.userData.weapon = 1;
   shield.position.set(-0.26, 0.85, 0.28);
   shield.rotation.y = -0.35;
   torso.add(shield);
@@ -404,7 +406,7 @@ function makeSpearman() {
     [0.24, 0.72, 0.18]
   ], 0.03, gr, 0.024, true);
 
-  const spear = new THREE.Group();
+  const spear = new THREE.Group(); spear.userData.weapon = 1;
   spear.position.set(0.25, 0.95, 0.18);
   torso.add(spear);
 

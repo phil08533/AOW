@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.53</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.54</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -879,7 +879,7 @@ function drawPlate(s, name, sub, col, hpFrac, mark) {
 // =================== NPCs ===================
 const npcObjs = {};
 function makeNpc(n, base) {
-  const o = buildChar(n.make, n.rig); blob(o, 0.55); const x = base[0] + n.x, z = base[1] + n.z;
+  const o = buildChar(() => npcDisarm(n.make()), n.rig); blob(o, 0.55); const x = base[0] + n.x, z = base[1] + n.z;
   o.position.set(x, floorAt(x, z), z); o.rotation.y = n.face != null ? n.face : 0; levelGroup.add(o);
   const plate = labelSprite(512, 112); plate.scale.set(2.2, 0.48, 1); plate.position.y = 2.45; o.add(plate);
   npcObjs[n.id] = { def: n, obj: o, plate, mark: null };

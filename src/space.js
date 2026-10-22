@@ -399,13 +399,16 @@ function shipFire() {
   _e.set(player.pitch, player.yaw, 0); _q.setFromEuler(_e); shipFwd.set(0, 0, -1).applyQuaternion(_q); shipRight.set(1, 0, 0).applyQuaternion(_q);
   let focus = player.pos.clone().addScaledVector(shipFwd, 160), bestA = 0.1;
   for (const r of F.raiders) { if (r.dead) continue; const to = r.obj.position.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = r.obj.position.clone(); } }
+  for (const X of F.extra || []) { if (X.dead) continue; const p = X.pos(), to = p.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = p; } }
   for (const side of [-1, 1]) {
     const from = player.pos.clone().addScaledVector(shipRight, 4.4 * side).addScaledVector(shipFwd, -1), dir = focus.clone().sub(from).normalize();
-    let hit = null, ht = 420, rock = -1;
-    for (const r of F.raiders) { if (r.dead) continue; const tt = raySphere(from, dir, r.obj.position, 5); if (tt > 0 && tt < ht) { ht = tt; hit = r; rock = -1; } }
-    F.rockData.forEach((R, i) => { if (R.dead) return; const tt = raySphere(from, dir, R.p, R.s); if (tt > 0 && tt < ht) { ht = tt; hit = null; rock = i; } });
+    let hit = null, ht = 420, rock = -1, ext = null;
+    for (const X of F.extra || []) { if (X.dead) continue; const tt = raySphere(from, dir, X.pos(), X.r); if (tt > 0 && tt < ht) { ht = tt; ext = X; } }
+    for (const r of F.raiders) { if (r.dead) continue; const tt = raySphere(from, dir, r.obj.position, 5); if (tt > 0 && tt < ht) { ht = tt; hit = r; rock = -1; ext = null; } }
+    F.rockData.forEach((R, i) => { if (R.dead) return; const tt = raySphere(from, dir, R.p, R.s); if (tt > 0 && tt < ht) { ht = tt; hit = null; rock = i; ext = null; } });
     const end = from.clone().addScaledVector(dir, ht); tracer(from, end, '#6fdc5a');
-    if (hit) { hit.hp -= dmg / 2; hit.aggro = true; burst(end, '#ffd36a', 6, 12); hitmark(false); if (hit.hp <= 0) killRaider(hit); else drawPlate(hit.plate, (hit.def && hit.def.name) || 'Drome Raider', 'Lv ' + hit.lv, hpColor(hit.lv), hit.hp / hit.max); }
+    if (ext) ext.hit(dmg / 2, end);
+    else if (hit) { hit.hp -= dmg / 2; hit.aggro = true; burst(end, '#ffd36a', 6, 12); hitmark(false); if (hit.hp <= 0) killRaider(hit); else drawPlate(hit.plate, (hit.def && hit.def.name) || 'Drome Raider', 'Lv ' + hit.lv, hpColor(hit.lv), hit.hp / hit.max); }
     else if (rock >= 0) { const R = F.rockData[rock]; R.hp -= dmg / 2 * shipMineMul(); burst(end, '#b8a07a', 4, 10);
       if (R.hp <= 0) { R.dead = 0.001; F.dm.position.copy(R.p); F.dm.scale.setScalar(0.0001); F.dm.updateMatrix(); F.rocks.setMatrixAt(rock, F.dm.matrix); F.rocks.instanceMatrix.needsUpdate = true; burst(R.p, '#b8a07a', 24, 30); SFX.crack();
         const n = Math.max(1, Math.round(R.s / 4 * shipOreMul())); for (let k = 0; k < n; k++) spaceDrop(R.p, 'item', 'ore', 1); if (R.crystal || Math.random() < 0.1) spaceDrop(R.p, 'item', 'starcrystal', 1); if (R.drug) { if (R.glow) R.glow.visible = false; const ks = Object.keys(BQ_ING).filter(k => !BQ_ING[k].rare); for (let k = 0; k < 2 + randi(0, 2); k++) spaceDrop(R.p, 'item', ks[randi(0, ks.length - 1)], 1); if (Math.random() < 0.08) spaceDrop(R.p, 'item', 'starnectar', 1); } questProgressKill('asteroid'); } }

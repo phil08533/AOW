@@ -174,5 +174,5 @@ function makeSalvageCrate(big) {
       levelAnims.push(t => { if (!c.parent) return; c.rotation.y = t * 0.5; c.rotation.x = t * 0.3; if (player.pos.distanceTo(c.position) < 14) { levelGroup.remove(c); burst(c.position.clone(), '#4fd2ff', 30, 20); scavenge('drifting in space'); } }); } }
   return r; }; }
 // customizer on the ship bridge and at the Zeltac shipwright
-{ const ob = LEVELS.ship.build; LEVELS.ship.build = function () { ob.call(this); if (typeof bridgeConsole === 'function') { bridgeConsole(5, -7, 0, '#ff8a2a', 1.3, 0.95); bridgeConsole(3.7, -7.6, -0.35, '#4fd2ff', 0.9, 0.8); } solid(5, -7, 0.7); box(3.7, -7.6, 0.5, 0.45); INTERACTS.push({ x: 5, z: -6.4, r: 1.6, label: 'Ship customizer', fn: openShipMods }); }; }
-{ const z = (LEVELS.zeltac.npcs || []).find(n => n.id === 'brakka'); if (z) z.custom = [...(z.custom || []), ['Ship paint & parts', () => openShipMods()]]; }
+{ const ob = LEVELS.ship.build; LEVELS.ship.build = function () { ob.call(this); if (typeof bridgeConsole === 'function') { bridgeConsole(5, -7, 0, '#ff8a2a', 1.3, 0.95); bridgeConsole(3.7, -7.6, -0.35, '#4fd2ff', 0.9, 0.8); } solid(5, -7, 0.7); box(3.7, -7.6, 0.5, 0.45); INTERACTS.push({ x: 5, z: -6.4, r: 1.6, label: 'Shipyard: buy and tune ships', fn: openShipMods }); }; }
+{ const z = (LEVELS.zeltac.npcs || []).find(n => n.id === 'brakka'); if (z) z.custom = [...(z.custom || []), ['Shipyard: buy and tune ships', () => openShipMods()]]; }

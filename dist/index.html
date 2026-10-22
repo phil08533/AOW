@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.60</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.61</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -7635,13 +7635,16 @@ function shipFire() {
   _e.set(player.pitch, player.yaw, 0); _q.setFromEuler(_e); shipFwd.set(0, 0, -1).applyQuaternion(_q); shipRight.set(1, 0, 0).applyQuaternion(_q);
   let focus = player.pos.clone().addScaledVector(shipFwd, 160), bestA = 0.1;
   for (const r of F.raiders) { if (r.dead) continue; const to = r.obj.position.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = r.obj.position.clone(); } }
+  for (const X of F.extra || []) { if (X.dead) continue; const p = X.pos(), to = p.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = p; } }
   for (const side of [-1, 1]) {
     const from = player.pos.clone().addScaledVector(shipRight, 4.4 * side).addScaledVector(shipFwd, -1), dir = focus.clone().sub(from).normalize();
-    let hit = null, ht = 420, rock = -1;
-    for (const r of F.raiders) { if (r.dead) continue; const tt = raySphere(from, dir, r.obj.position, 5); if (tt > 0 && tt < ht) { ht = tt; hit = r; rock = -1; } }
-    F.rockData.forEach((R, i) => { if (R.dead) return; const tt = raySphere(from, dir, R.p, R.s); if (tt > 0 && tt < ht) { ht = tt; hit = null; rock = i; } });
+    let hit = null, ht = 420, rock = -1, ext = null;
+    for (const X of F.extra || []) { if (X.dead) continue; const tt = raySphere(from, dir, X.pos(), X.r); if (tt > 0 && tt < ht) { ht = tt; ext = X; } }
+    for (const r of F.raiders) { if (r.dead) continue; const tt = raySphere(from, dir, r.obj.position, 5); if (tt > 0 && tt < ht) { ht = tt; hit = r; rock = -1; ext = null; } }
+    F.rockData.forEach((R, i) => { if (R.dead) return; const tt = raySphere(from, dir, R.p, R.s); if (tt > 0 && tt < ht) { ht = tt; hit = null; rock = i; ext = null; } });
     const end = from.clone().addScaledVector(dir, ht); tracer(from, end, '#6fdc5a');
-    if (hit) { hit.hp -= dmg / 2; hit.aggro = true; burst(end, '#ffd36a', 6, 12); hitmark(false); if (hit.hp <= 0) killRaider(hit); else drawPlate(hit.plate, (hit.def && hit.def.name) || 'Drome Raider', 'Lv ' + hit.lv, hpColor(hit.lv), hit.hp / hit.max); }
+    if (ext) ext.hit(dmg / 2, end);
+    else if (hit) { hit.hp -= dmg / 2; hit.aggro = true; burst(end, '#ffd36a', 6, 12); hitmark(false); if (hit.hp <= 0) killRaider(hit); else drawPlate(hit.plate, (hit.def && hit.def.name) || 'Drome Raider', 'Lv ' + hit.lv, hpColor(hit.lv), hit.hp / hit.max); }
     else if (rock >= 0) { const R = F.rockData[rock]; R.hp -= dmg / 2 * shipMineMul(); burst(end, '#b8a07a', 4, 10);
       if (R.hp <= 0) { R.dead = 0.001; F.dm.position.copy(R.p); F.dm.scale.setScalar(0.0001); F.dm.updateMatrix(); F.rocks.setMatrixAt(rock, F.dm.matrix); F.rocks.instanceMatrix.needsUpdate = true; burst(R.p, '#b8a07a', 24, 30); SFX.crack();
         const n = Math.max(1, Math.round(R.s / 4 * shipOreMul())); for (let k = 0; k < n; k++) spaceDrop(R.p, 'item', 'ore', 1); if (R.crystal || Math.random() < 0.1) spaceDrop(R.p, 'item', 'starcrystal', 1); if (R.drug) { if (R.glow) R.glow.visible = false; const ks = Object.keys(BQ_ING).filter(k => !BQ_ING[k].rare); for (let k = 0; k < 2 + randi(0, 2); k++) spaceDrop(R.p, 'item', ks[randi(0, ks.length - 1)], 1); if (Math.random() < 0.08) spaceDrop(R.p, 'item', 'starnectar', 1); } questProgressKill('asteroid'); } }
@@ -12957,8 +12960,8 @@ function makeSalvageCrate(big) {
       levelAnims.push(t => { if (!c.parent) return; c.rotation.y = t * 0.5; c.rotation.x = t * 0.3; if (player.pos.distanceTo(c.position) < 14) { levelGroup.remove(c); burst(c.position.clone(), '#4fd2ff', 30, 20); scavenge('drifting in space'); } }); } }
   return r; }; }
 // customizer on the ship bridge and at the Zeltac shipwright
-{ const ob = LEVELS.ship.build; LEVELS.ship.build = function () { ob.call(this); if (typeof bridgeConsole === 'function') { bridgeConsole(5, -7, 0, '#ff8a2a', 1.3, 0.95); bridgeConsole(3.7, -7.6, -0.35, '#4fd2ff', 0.9, 0.8); } solid(5, -7, 0.7); box(3.7, -7.6, 0.5, 0.45); INTERACTS.push({ x: 5, z: -6.4, r: 1.6, label: 'Ship customizer', fn: openShipMods }); }; }
-{ const z = (LEVELS.zeltac.npcs || []).find(n => n.id === 'brakka'); if (z) z.custom = [...(z.custom || []), ['Ship paint & parts', () => openShipMods()]]; }
+{ const ob = LEVELS.ship.build; LEVELS.ship.build = function () { ob.call(this); if (typeof bridgeConsole === 'function') { bridgeConsole(5, -7, 0, '#ff8a2a', 1.3, 0.95); bridgeConsole(3.7, -7.6, -0.35, '#4fd2ff', 0.9, 0.8); } solid(5, -7, 0.7); box(3.7, -7.6, 0.5, 0.45); INTERACTS.push({ x: 5, z: -6.4, r: 1.6, label: 'Shipyard: buy and tune ships', fn: openShipMods }); }; }
+{ const z = (LEVELS.zeltac.npcs || []).find(n => n.id === 'brakka'); if (z) z.custom = [...(z.custom || []), ['Shipyard: buy and tune ships', () => openShipMods()]]; }
 
 // =================== GALAXY MAP: a top-down chart of the whole galaxy; tap a world to travel ===================
 const GM_SUB = { earth: [['New Jamestown', 'earth'], ['Forest of Life', 'forestlife'], ['Super Swift Arena', 'swift']], ocean: [['Ocean World', 'ocean'], ['Bubble City', 'bubblecity']] };
@@ -13760,7 +13763,7 @@ function droneStep(dt) {
   if (o.distanceTo(goal) > 20) o.copy(goal); else o.lerp(goal, Math.min(1, dt * 5));
   // target: nearest enemy that is fighting you
   let tg = null, td = 1e9; const range = droneRange(D.gun || 1), safe = inSafe(player.pos);
-  if (!safe) for (const e of enemies) { if (e.dead || e.gone || !e.obj.visible || !(e.aggro || e.sp.board)) continue; const d = e.obj.position.distanceTo(o); if (d < range && d < td) { td = d; tg = e; } }
+  if (!safe) for (const e of enemies) { if (e.dead || e.gone || !e.obj.visible || !(e.aggro || e.sp.board)) continue; const d = e.obj.position.distanceTo(o); if (d < range && d < td && lineOfSight(o, e.obj.position.clone().add(V(0, e.def.hy * e.sc, 0)))) { td = d; tg = e; } }
   if (tg) { const tp = tg.obj.position; DR.obj.rotation.y = Math.atan2(tp.x - o.x, tp.z - o.z); } else DR.obj.rotation.y += (player.yaw + Math.PI - DR.obj.rotation.y) * Math.min(1, dt * 3);
   const hitE = (e, dmg) => { if (e.dead) return; e.hp -= dmg; e.hitT = 0.1; e.aggro = true; e.lastHit = gameTime; if (e.hp <= 0) kill(e); else updatePlate(e); };
   DR.cd -= dt; DR.ocd -= dt; DR.ecd -= dt;
@@ -13783,6 +13786,7 @@ function droneMissile(from, tg, dmg, rad, hitE) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 4), glow('#ff9a3c')); m.position.copy(from); scene.add(m); let life = 3;
   const tick = dt => { life -= dt; const to = tg.dead ? m.position.clone().add(V(0, -1, 0)) : tg.obj.position.clone().add(V(0, tg.def.hy * tg.sc, 0)), d = m.position.distanceTo(to);
     if (Math.random() < 0.7) burst(m.position.clone(), '#ffd36a', 1, 0.5);
+    if (blockedAt(m.position.x, m.position.y, m.position.z)) life = 0;
     if (d < 0.6 || life <= 0) { scene.remove(m); burst(m.position.clone(), '#ff6a1a', 18, 7); burst(m.position.clone(), '#ffd36a', 8, 4); if (SFX.boom) SFX.boom(); for (const e of enemies) { if (e.dead) continue; const dd = e.obj.position.distanceTo(m.position); if (dd < rad + e.def.r * e.sc) hitE(e, dmg * (1 - 0.5 * dd / (rad + 1))); } return true; }
     m.position.addScaledVector(to.sub(m.position).normalize(), Math.min(d, 22 * dt)); return false; };
   DR.missiles = DR.missiles || []; DR.missiles.push(tick);
@@ -18982,6 +18986,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 226, title: '2.22.61 · Boarding, rebuilt', items: ['Ship turrets can be shot down now. Each one drops credits and XP', 'Boarded ships are fully rebuilt inside: grated decks, ribbed and riveted walls, pipes and cable trays, hazard-striped door frames with lit room signs', 'Eight kinds of rooms: cargo, quarters, mess, armory, comms, med bay, engine room with a pulsing reactor, and a brig', 'A proper captain\'s bridge at the bow and a round airlock hatch at the stern', 'Enemies no longer spot you through walls, and your drone no longer shoots or fires missiles through them', 'The Shipyard is labeled on the bridge console and at Brakka'] },
   { id: 225, title: '2.22.60 · Raid ships, contracts and the mining cockpit', items: ['Raidable ships got a big upgrade: bridge towers, lit windows, armor panels, faction markings, three-bell engines and blinking running lights', 'Pirate and Drome ships now have gun turrets that track you and shoot when you get close', 'More ships to raid, spread over the bigger map', 'Rell on the Zeltac has new repeatable jobs: Raid Contracts if you are an outlaw, Hostage Rescues if you are not. The target ship gets a big marker', 'Hostage Rescue: clear the guards and cut three captives loose', 'The Bulldog Miner has its own cockpit: hazard trim, window grilles, a drill and ore hopper screen, and a spinning amber beacon'] },
   { id: 224, title: '2.22.59 · Fighter and Miner', items: ['Two new ships at the Shipyard (bridge console or Brakka): the Viper Fighter (25k) and the Bulldog Miner (20k). Switch any time', 'Garage for each ship: 9 paint styles (stripes, flames, camo, hazard, checker, tiger, carbon...), paint, accent, exhaust, and swappable wings, engines, noses, guns, body kits, drills, armor, cargo and lights', 'Fighter: side thrusters fire as you strafe, climb (Space) and drop (Ctrl/X), and stop on a dime', 'Miner: huge hull, takes 45% less damage, breaks rocks 2.5x faster and gets more ore', 'New Thrusters upgrade in Ship Systems: from floaty to on a dime', 'Space is twice as big, and raider packs are now spread all over it'] },
   { id: 223, title: '2.22.58 · Busier cockpit', items: ['More cockpit gadgets: two banks of flip switches with status lights, little scope screens on both sides, extra dials with moving needles, blinking button grids and a red digital clock'] },
@@ -26846,6 +26851,93 @@ function scGarage(k) {
 }
 function shipModOf(k, stat) { const c = scS().cur; scS().cur = k; const v = shipMod(stat); scS().cur = c; return v; }
 
+// =================== BOARDING 2: detailed ship interiors. Grated decks, ribbed walls, pipes, and themed rooms ===================
+const BTEX = {};
+function bTex(key, draw, rx, ry) {
+  if (!BTEX[key]) { const c = document.createElement('canvas'); c.width = c.height = 128; draw(c.getContext('2d')); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.NearestFilter; t.wrapS = t.wrapT = THREE.RepeatWrapping; BTEX[key] = t; }
+  const t = BTEX[key].clone(); t.needsUpdate = true; t.repeat.set(rx || 1, ry || 1); const m = toon('#ffffff', 'panel').clone(); m.map = t; m.color.set('#ffffff'); return m;
+}
+const shade = (hex, k) => { const c = new THREE.Color(hex); c.multiplyScalar(k); return '#' + c.getHexString(); };
+// deck grating: diamond plate with drain slots
+const texGrate = (col) => x => { x.fillStyle = shade(col, 0.9); x.fillRect(0, 0, 128, 128); for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) { x.fillStyle = (i + j) % 2 ? shade(col, 1.25) : shade(col, 0.7); x.fillRect(i * 8 + 2, j * 8 + 3, 4, 2); }
+  x.fillStyle = shade(col, 0.45); for (let k = 0; k < 4; k++) x.fillRect(0, k * 32, 128, 2); x.fillRect(62, 0, 4, 128); x.fillStyle = 'rgba(0,0,0,.25)'; for (let i = 0; i < 30; i++) x.fillRect((i * 53) % 128, (i * 37) % 128, 3 + i % 5, 2); };
+// wall panels: ribs, rivets, a vent and grime
+const texWall = (col, neon) => x => { x.fillStyle = col; x.fillRect(0, 0, 128, 128); x.fillStyle = shade(col, 0.6); x.fillRect(0, 0, 6, 128); x.fillRect(122, 0, 6, 128); x.fillRect(0, 60, 128, 5); x.fillStyle = shade(col, 1.35); x.fillRect(6, 0, 2, 128); x.fillRect(0, 65, 128, 1);
+  x.fillStyle = shade(col, 0.5); for (const [a, b] of [[14, 8], [114, 8], [14, 54], [114, 54], [14, 74], [114, 74], [14, 120], [114, 120]]) { x.beginPath(); x.arc(a, b, 2.2, 0, 7); x.fill(); }
+  x.fillStyle = shade(col, 0.4); x.fillRect(40, 84, 48, 22); x.fillStyle = shade(col, 0.8); for (let i = 0; i < 5; i++) x.fillRect(42, 86 + i * 4, 44, 2);
+  x.fillStyle = neon; x.fillRect(24, 20, 6, 24); x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(0, 108, 128, 20); for (let i = 0; i < 12; i++) x.fillRect((i * 41) % 120, 110 + (i % 3) * 5, 8, 3); };
+const texCeil = x => { x.fillStyle = '#1a1c22'; x.fillRect(0, 0, 128, 128); x.fillStyle = '#2a2d34'; for (let i = 0; i < 4; i++) x.fillRect(0, i * 32 + 2, 128, 26); x.fillStyle = '#111'; for (let i = 0; i < 8; i++) x.fillRect(i * 16, 0, 2, 128); };
+const texHaz = x => { x.fillStyle = '#ffd36a'; x.fillRect(0, 0, 128, 128); x.fillStyle = '#16181c'; for (let i = -128; i < 256; i += 32) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 16, 0); x.lineTo(i + 144, 128); x.lineTo(i + 128, 128); x.fill(); } };
+const texScreen = (col) => x => { x.fillStyle = '#04080c'; x.fillRect(0, 0, 128, 128); x.strokeStyle = col; x.lineWidth = 2; x.beginPath(); for (let i = 0; i < 128; i += 4) x.lineTo(i, 64 + Math.sin(i * 0.12) * 22); x.stroke(); x.fillStyle = col; for (let i = 0; i < 6; i++) x.fillRect(8 + i * 19, 100 - (i * 13 % 30), 12, 20 + (i * 13 % 30)); x.font = '12px monospace'; x.fillText('SYS OK', 8, 16); x.fillText('HULL 71%', 64, 16); };
+
+const ROOM_KINDS = ['armory', 'quarters', 'mess', 'cargo', 'comms', 'med', 'engine', 'brig'];
+LEVELS.boarding.build = function () {
+  const C = BOARD.cur || { type: 'derelict' }, T = HULK_TYPES[C.type], H = 5, W = 14, D = 34, seed = (C.id ? C.id.length * 7 + C.lv : 3);
+  const rnd = i => (Math.sin(seed * 17.3 + i * 12.9) + 1) / 2;
+  const floorM = bTex('fl' + T.floor, texGrate(T.floor), W, D), wallM = bTex('wa' + T.wall + T.neon, texWall(T.wall, T.neon), 1, 1), haz = bTex('haz', texHaz, 1, 1), ceilM = bTex('ce', texCeil, W / 2, D / 2);
+  const fl = new THREE.PlaneGeometry(W * 2, D * 2); fl.rotateX(-Math.PI / 2); props.add(new THREE.Mesh(fl, floorM)); const ce = new THREE.Mesh(fl.clone(), ceilM); ce.rotation.x = Math.PI; ce.position.y = H; props.add(ce);
+  // walls get their texture repeated by length so the panels stay square
+  const wall = (x, z, w, d) => { const m = wallM.clone(); m.map = wallM.map.clone(); m.map.needsUpdate = true; m.map.repeat.set(Math.max(w, d) / 2.5, H / 2.5); part(props, B(w, H, d), m, x, H / 2, z); box(x, z, w / 2, d / 2); };
+  wall(0, -D, W * 2, 0.6); wall(0, D, W * 2, 0.6); wall(-W, 0, 0.6, D * 2); wall(W, 0, 0.6, D * 2);
+  const roomZ = [-25.5, -8.5, 8.5, 25.5];
+  for (const sx of [-1, 1]) {
+    let z0 = -D; for (const rz of roomZ) { const a = rz - 1.8, len = a - z0; if (len > 0.2) wall(sx * 3, z0 + len / 2, 0.4, len); z0 = rz + 1.8; }
+    wall(sx * 3, (z0 + D) / 2, 0.4, D - z0);
+    for (const zd of [-17, 0, 17]) wall(sx * 8.5, zd, 11, 0.4);
+    // door frames: hazard-striped jambs, a lintel with a lit sign, and the slid-open door leaf
+    roomZ.forEach((rz, ri) => { for (const k of [-1, 1]) part(props, B(0.5, H, 0.3), haz, sx * 3, H / 2, rz + k * 1.95); part(props, B(0.5, 0.8, 4.2), toon(shade(T.wall, 0.6), 'panel'), sx * 3, H - 0.4, rz);
+      part(props, B(0.1, 0.3, 3.4), glow(T.neon), sx * 2.74, H - 0.95, rz); part(props, B(0.25, 3.2, 1.6), toon(shade(T.wall, 0.8), 'panel'), sx * 3, 1.6, rz + 2.8);
+      const kind = ROOM_KINDS[(ri * 2 + (sx > 0 ? 1 : 0) + seed) % ROOM_KINDS.length];
+      const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.4), new THREE.MeshBasicMaterial({ map: signTex(kind.toUpperCase(), '#0b0d11', T.neon) })); sg.position.set(sx * 2.72, H - 0.55, rz); sg.rotation.y = -sx * Math.PI / 2; props.add(sg);
+      dressRoom(kind, sx * 8.5, rz, sx, T, rnd, ri * 2 + (sx > 0 ? 1 : 0)); });
+  }
+  // the corridor: pipes, cable trays, wall lights, floor strip lights and a central grate
+  for (const sx of [-1, 1]) { part(props, Cy(0.15, 0.15, D * 2, 6), '#5d636c', sx * 2.2, H - 0.5, 0, Math.PI / 2); part(props, Cy(0.09, 0.09, D * 2, 6), '#8a5a3a', sx * 2.5, H - 0.8, 0, Math.PI / 2); part(props, B(0.5, 0.08, D * 2), '#2a2c32', sx * 1.6, H - 0.25, 0);
+    for (let z = -D + 4; z < D; z += 8) { part(props, B(0.12, 0.6, 0.12), '#3a3d44', sx * 2.15, H - 0.9, z); if (!roomZ.some(rz => Math.abs(rz - z) < 2.4)) { part(props, B(0.1, 0.5, 1.1), glow(T.neon), sx * 2.78, 2.8, z); part(props, B(0.15, 0.7, 1.3), toon('#26282e', 'panel'), sx * 2.84, 2.8, z); } } }
+  for (let z = -D + 3; z < D; z += 6) { part(props, B(1.2, 0.08, 0.4), glow(T.neon), 0, H - 0.05, z); for (const sx of [-1, 1]) part(props, B(0.1, 0.03, 0.6), glow(shade(T.neon, 0.7)), sx * 2.6, 0.02, z); }
+  part(props, B(0.8, 0.02, D * 2 - 4), toon('#3a3d44', 'panel'), 0, 0.01, 0);
+  // emergency lights
+  for (const z of [-24, 0, 24]) { const l = new THREE.PointLight(new THREE.Color(T.light), 1.3, 24); l.position.set(0, H - 1, z); levelGroup.add(l); if (C.type === 'derelict') levelAnims.push(t => { l.intensity = Math.sin(t * 9 + z) > 0.7 ? 0.2 : 1.3; }); }
+  // the airlock home: a round hatch in a hazard frame
+  part(props, B(5.4, 4.8, 0.4), haz, 0, 2.4, D - 0.4); part(props, B(4.4, 4, 0.3), '#3a3d44', 0, 2.2, D - 0.55); part(props, new THREE.CircleGeometry(1.7, 20), glow('#4fd2ff'), 0, 2, D - 0.72, 0, Math.PI); part(props, new THREE.TorusGeometry(1.75, 0.12, 6, 20), '#9aa1aa', 0, 2, D - 0.72);
+  for (let i = 0; i < 6; i++) part(props, B(0.2, 0.5, 0.15), '#9aa1aa', Math.cos(i * 1.05) * 1.75, 2 + Math.sin(i * 1.05) * 1.75, D - 0.8, 0, 0, i * 1.05);
+  const sg = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.6), new THREE.MeshBasicMaterial({ map: signTex('AIRLOCK', '#0f1757', '#ffd75e') })); sg.position.set(0, 4.5, D - 0.75); sg.rotation.y = Math.PI; props.add(sg);
+  INTERACTS.push({ x: 0, z: D - 2.5, r: 3.2, label: 'Airlock: back to your ship', fn: leaveBoarding });
+  // the captain's bridge at the bow: a raised dais, a chair, wraparound screens
+  part(props, B(10, 0.3, 6), toon(shade(T.floor, 1.2), 'panel'), 0, 0.15, -D + 3.4); part(props, B(10, 0.08, 0.2), haz, 0, 0.32, -D + 6.3);
+  part(props, B(4, 1.2, 1.4), toon(T.trim, 'panel'), 0, 0.6, -D + 1.6); box(0, -D + 1.6, 2, 0.7);
+  for (let i = -2; i <= 2; i++) { const s = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.1), new THREE.MeshBasicMaterial({ map: (BTEX['sc' + T.neon] || (bTex('sc' + T.neon, texScreen(T.neon)), BTEX['sc' + T.neon])) })); s.position.set(i * 2, 2.6, -D + 0.35 + Math.abs(i) * 0.25); s.rotation.y = -i * 0.18; props.add(s); }
+  part(props, Cy(0.15, 0.2, 0.6, 8), '#2a2c32', 0, 0.6, -D + 4); part(props, B(1.1, 0.25, 1), toon(T.trim, 'cloth'), 0, 1.0, -D + 4); part(props, B(1.1, 1.3, 0.2), toon(T.trim, 'cloth'), 0, 1.7, -D + 4.5); solid(0, -D + 4, 0.6);
+  if (C.type === 'flagship') part(props, new THREE.CircleGeometry(2, 20), glow('#b3262c'), 0, 3.8, -D + 0.32);
+  levelAnims.push(t => boardTick(t));
+};
+// furniture for each kind of room; kept against the walls so the middle of each room stays open for fights
+function dressRoom(kind, cx, cz, sx, T, rnd, k) {
+  const H = 5, out = cx + sx * 4.6, inn = cx - sx * 4.2, steel = '#5d636c', dk = '#2a2c32';
+  const crate = (x, z, s, col) => { part(props, B(s, s, s), toon(col || '#6a5a3a', 'wood'), x, s / 2, z, 0, rnd(x + z) * 0.5); part(props, B(s * 1.02, s * 0.12, s * 1.02), toon(steel, 'panel'), x, s * 0.85, z, 0, rnd(x + z) * 0.5); box(x, z, s / 2, s / 2); };
+  const barrel = (x, z, col) => { part(props, Cy(0.4, 0.4, 1.1, 10), toon(col, 'panel'), x, 0.55, z); part(props, Cy(0.42, 0.42, 0.08, 10), dk, x, 0.8, z); solid(x, z, 0.42); };
+  const light = col => { part(props, B(2.4, 0.06, 0.6), glow(col), cx, 4.95, cz); };
+  if (kind === 'cargo') { for (let i = 0; i < 4; i++) crate(out - sx * (i % 2) * 1.3, cz - 5.5 + i * 1.2 + (i > 1 ? 7.6 : 0), 1.1 + rnd(k * 9 + i) * 0.4, ['#6a5a3a', '#3a6cb8', '#6f7a3e', '#c8402f'][i]); crate(out, cz - 5.5, 1.0, '#7a6a4a'); part(props, B(1.2, 0.1, 1.2), toon('#8a6a3a', 'wood'), out, 2.4, cz + 1.5); for (let i = 0; i < 3; i++) barrel(inn + sx * i * 0.95, cz + 6, ['#c8402f', '#3a6cb8', '#c9a43a'][i]); light('#ffe7a8'); }
+  else if (kind === 'quarters') { for (const z of [cz - 4.5, cz + 4.5]) { part(props, B(2.2, 0.5, 1.2), toon(dk, 'panel'), out - sx * 0.6, 0.5, z); part(props, B(2.0, 0.2, 1.0), toon('#8a8f9a', 'cloth'), out - sx * 0.6, 0.85, z); part(props, B(2.2, 0.15, 1.2), toon(dk, 'panel'), out - sx * 0.6, 2.2, z); part(props, B(2.0, 0.2, 1.0), toon('#6a4a8a', 'cloth'), out - sx * 0.6, 2.4, z); box(out - sx * 0.6, z, 1.1, 0.6); }
+    for (let i = 0; i < 3; i++) { part(props, B(0.9, 2.4, 0.6), toon(steel, 'panel'), inn + sx * i * 0.95, 1.2, cz - 6.3); part(props, B(0.05, 0.4, 0.05), '#c9a43a', inn + sx * (i * 0.95 + 0.3), 1.4, cz - 5.98); } box(inn + sx * 0.95, cz - 6.3, 1.5, 0.3); light('#ffcf8a'); }
+  else if (kind === 'mess') { part(props, B(2.2, 0.15, 5), toon('#8a6a3a', 'wood'), out - sx * 1.4, 1.0, cz); part(props, B(0.2, 1, 0.2), dk, out - sx * 1.4, 0.5, cz - 2); part(props, B(0.2, 1, 0.2), dk, out - sx * 1.4, 0.5, cz + 2); box(out - sx * 1.4, cz, 1.1, 2.5);
+    for (let i = 0; i < 3; i++) { part(props, Cy(0.15, 0.15, 0.04, 8), '#e8eef2', out - sx * 1.4, 1.1, cz - 1.6 + i * 1.6); part(props, Cy(0.08, 0.06, 0.25, 6), '#c8402f', out - sx * 1.0, 1.2, cz - 1.2 + i * 1.6); }
+    part(props, B(1.2, 2.2, 0.9), toon('#c8ccd4', 'panel'), inn, 1.1, cz - 6); part(props, B(0.6, 0.4, 0.05), glow('#4fd2ff'), inn, 1.6, cz - 5.54); box(inn, cz - 6, 0.6, 0.45); light('#fff6d0'); }
+  else if (kind === 'armory') { for (let i = 0; i < 4; i++) { part(props, B(0.3, 2.6, 1.2), toon(dk, 'panel'), out, 1.3, cz - 4.5 + i * 3); for (let j = 0; j < 3; j++) part(props, B(0.12, 0.12, 1.0), toon(steel, 'panel'), out - sx * 0.25, 0.8 + j * 0.6, cz - 4.5 + i * 3); box(out, cz - 4.5 + i * 3, 0.2, 0.6); }
+    crate(inn, cz + 5.6, 1.0, '#3a3d44'); part(props, B(1, 0.06, 0.6), glow('#ff3a2a'), inn, 1.02, cz + 5.6); light('#ff8a6a'); }
+  else if (kind === 'comms') { part(props, B(1.2, 1.1, 6), toon(dk, 'panel'), out, 0.55, cz); box(out, cz, 0.6, 3); for (let i = 0; i < 3; i++) { const s = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.0), new THREE.MeshBasicMaterial({ map: (bTex('sc' + T.neon, texScreen(T.neon)), BTEX['sc' + T.neon]) })); s.position.set(out + sx * 0.3 - sx * 0.0, 2.0, cz - 2 + i * 2); s.rotation.y = -sx * Math.PI / 2; props.add(s); }
+    for (let i = 0; i < 12; i++) part(props, B(0.08, 0.05, 0.08), glow(['#6fdc5a', '#ff3a2a', '#ffd36a'][i % 3]), out - sx * 0.62, 1.12, cz - 2.6 + i * 0.45); part(props, Cy(0.05, 0.05, 1.6, 4), steel, out, 4.0, cz + 4); part(props, new THREE.SphereGeometry(0.4, 10, 6, 0, 6.3, 0, 1.3), steel, out - sx * 0.3, 4.3, cz + 4); light('#8fd0ff'); }
+  else if (kind === 'med') { for (const z of [cz - 4, cz + 4]) { part(props, B(2.2, 0.6, 1.0), toon('#e8eef2', 'panel'), out - sx * 0.8, 0.7, z); part(props, B(0.1, 1.6, 0.1), steel, out - sx * 0.1, 1.2, z - 0.6); part(props, B(0.5, 0.3, 0.05), glow('#6fdc5a'), out - sx * 0.1, 2.0, z - 0.6); box(out - sx * 0.8, z, 1.1, 0.5); }
+    part(props, B(1.6, 1.8, 0.5), toon('#e8eef2', 'panel'), inn, 0.9, cz - 6.3); part(props, B(0.6, 0.6, 0.06), glow('#ff3a2a'), inn, 1.5, cz - 6.02); part(props, B(0.2, 0.6, 0.06), toon('#ffffff', 'panel'), inn, 1.5, cz - 5.98); box(inn, cz - 6.3, 0.8, 0.3); light('#e8f4ff'); }
+  else if (kind === 'engine') { const core = part(props, Cy(1.1, 1.1, 4.6, 12), glow(T.neon), out - sx * 1.2, 2.3, cz); part(props, Cy(1.4, 1.4, 0.4, 12), toon(dk, 'panel'), out - sx * 1.2, 0.2, cz); part(props, Cy(1.4, 1.4, 0.4, 12), toon(dk, 'panel'), out - sx * 1.2, 4.6, cz); for (let i = 0; i < 4; i++) part(props, B(0.15, 4.6, 0.15), steel, out - sx * 1.2 + Math.cos(i * 1.57) * 1.25, 2.3, cz + Math.sin(i * 1.57) * 1.25); solid(out - sx * 1.2, cz, 1.5);
+    levelAnims.push(t => { core.scale.set(1 + Math.sin(t * 6) * 0.05, 1, 1 + Math.sin(t * 6) * 0.05); });
+    for (let i = 0; i < 4; i++) part(props, Cy(0.18, 0.18, 7, 6), ['#8a5a3a', '#5d636c'][i % 2], out - sx * (0.2 + i * 0.25), 4.2 - i * 0.25, cz, Math.PI / 2); barrel(inn, cz + 5.8, '#c9a43a'); barrel(inn + sx, cz + 5.8, '#c9a43a'); light(T.neon); }
+  else if (kind === 'brig') { for (let i = 0; i < 9; i++) part(props, Cy(0.05, 0.05, H, 4), steel, out - sx * 2.2, H / 2, cz - 4 + i); box(out - sx * 2.2, cz, 0.1, 4.5); part(props, B(1.8, 0.4, 1), toon(dk, 'panel'), out - sx * 0.4, 0.4, cz + 2.5); box(out - sx * 0.4, cz + 2.5, 0.9, 0.5); part(props, B(0.5, 0.5, 0.5), toon(steel, 'panel'), out - sx * 0.6, 0.25, cz - 3); light('#ff6a5a'); }
+  // every room: a wall console with a lit strip and a vent
+  part(props, B(2.2, 1, 0.8), dk, cx + sx * 4.5, 0.5, cz + (kind === 'cargo' ? -2.2 : 0) + (kind === 'quarters' || kind === 'mess' ? 0 : 0), 0, Math.PI / 2); part(props, B(1.8, 0.05, 0.5), glow(k % 2 ? '#4fd2ff' : T.neon), cx + sx * 4.4, 1.05, cz + (kind === 'cargo' ? -2.2 : 0), 0, Math.PI / 2 + sx * 0.3);
+  part(props, B(0.1, 0.7, 1.2), toon('#16181c', 'panel'), cx + sx * 5.1, 3.6, cz + 2.5);
+}
+
 // =================== SHIPYARD 2: detailed raid ships with turrets, Zeltac raid and rescue contracts, the mining cockpit ===================
 // ---------- raid ships: much more hull detail, faction marks, gun turrets ----------
 const HULK_MARK = {};
@@ -26917,12 +27009,16 @@ function ensureMissionWreck() {
   const r = _ll(id, o);
   if (id === 'space' && BOARD.wrecks) for (const W of BOARD.wrecks) { const m = W.obj; if (!m || !m.parent) continue; const U = m.userData;
     if (W.mission) { const sp = labelSprite(768, 72); levelGroup.add(sp); const bc = glowSprite('#ffd36a', 16); m.add(bc); bc.position.y = 16; W.mk = sp; }
+    if (fly) { fly.extra = fly.extra || []; for (const T of U.turrets) { T.hp = T.max = 140 + W.lv * 14; T.dead = false;
+      fly.extra.push({ r: 2.4 * (HULK_TYPES[W.type].big ? 2.6 : 1), get dead() { return T.dead || !m.parent; }, pos: () => T.head.getWorldPosition(V(0, 0, 0)), hit: (dmg, at) => { if (T.dead) return; T.hp -= dmg; burst(at, '#ffd36a', 6, 10); hitmark(false); T.flash = 0.12;
+        if (T.hp <= 0) { T.dead = true; const p = T.head.getWorldPosition(V(0, 0, 0)); T.head.visible = false; burst(p, '#ff9a3c', 30, 25); burst(p, '#3a3d44', 20, 12); SFX.boom(); hitmark(true); spaceDrop(p, 'cr', null, Math.round(30 + W.lv * 6)); if (Math.random() < 0.5) spaceDrop(p, 'item', 'circuit', 1); gainXp(Math.round(40 + W.lv * 8)); questProgressKill('turret');
+          const sm = glowSprite('rgba(60,60,60,0.8)', 6 * (HULK_TYPES[W.type].big ? 2.6 : 1)); sm.position.copy(T.head.parent.position); m.add(sm); } } }); } }
     levelAnims.push(t => { if (!m.parent) return; const d = player.pos.distanceTo(m.position);
       U.blink.forEach((b, i) => { b.visible = Math.sin(t * 3 + i * 0.7) > -0.4; });
       if (W.mk) { W.mk.position.copy(m.position).add(V(0, 20 + d * 0.06, 0)); W.mk.scale.set(d * 0.75, d * 0.07, 1); W.mk.visible = d > 90; if (((t * 2) | 0) !== W.mkT) { W.mkT = (t * 2) | 0; drawPlate(W.mk, W.mission === 'raid' ? 'CONTRACT: raid this ship' : 'RESCUE: hostages aboard', (d > 999 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m'), '#ffd36a', null); } }
       // turrets track you and open fire when you get close
       if (!fly || !player.alive || d > 420 || dlgOpen) return;
-      for (const T of U.turrets) { const wp = T.head.getWorldPosition(V(0, 0, 0)); T.head.lookAt(player.pos); T.cd -= 1 / 60;
+      for (const T of U.turrets) { if (T.dead) continue; const wp = T.head.getWorldPosition(V(0, 0, 0)); T.head.lookAt(player.pos); T.cd -= 1 / 60;
         if (d < 320 && T.cd <= 0) { T.cd = 1.2 + Math.random() * 1.2; const b = new THREE.Mesh(boltGeo, glow('#ff2a3a')); b.scale.setScalar(4); b.position.copy(wp); levelGroup.add(b);
           const lead = player.pos.clone().addScaledVector(fly.vel, wp.distanceTo(player.pos) / 160); fly.bolts.push({ m: b, v: lead.sub(wp).normalize().multiplyScalar(160), life: 3, dmg: 4 + W.lv * 0.5 }); if (d < 200) SFX.zap(); } } }); }
   return r;
@@ -28040,7 +28136,7 @@ function fire() {
     const end = o.clone().addScaledVector(dirV, ht);
     if (projOf() !== 'plasma' || g.elem) tracer(vmGun.localToWorld(V(0, 0.05, 0.38)), end, g.elem ? g.col : projColor(g));
     const hitOne = (e, dmg) => { e.hp -= dmg * (hasGear('hvisor') && (e.def.elite || e.def.boss) ? 1.2 : 1); e.hitT = 0.12; e.aggro = true; e.lastHit = gameTime; e.anim.hit = 0.14; any = true;
-      for (const f of enemies) if (!f.dead && f !== e && f.zone === e.zone && f.obj.position.distanceTo(e.obj.position) < 8) f.aggro = true;
+      for (const f of enemies) if (!f.dead && f !== e && f.zone === e.zone && f.obj.position.distanceTo(e.obj.position) < 8 && lineOfSight(f.obj.position.clone().add(V(0, 1, 0)), e.obj.position.clone().add(V(0, 1, 0)))) f.aggro = true;
       if (e.hp <= 0) { kill(e); killed = true; } else updatePlate(e); };
     if (g.splash && mysticArea(g, end, dmg0, hitOne)) { SFX.boom(); }
     else if (g.splash) {
@@ -28187,7 +28283,7 @@ function step(dt) {
     const px0 = o.position.x, pz0 = o.position.z;
     const dx = player.pos.x - o.position.x, dz = player.pos.z - o.position.z, d = Math.hypot(dx, dz) || 1e-3;
     const home = Math.hypot(o.position.x - e.zone.x, o.position.z - e.zone.z);
-    if (!e.aggro && !def.passive && d < (def.boss ? 16 : 12) && !pSafe && player.alive) e.aggro = true;
+    if (!e.aggro && !def.passive && d < (def.boss ? 16 : 12) && !pSafe && player.alive) { e.seeT = (e.seeT || 0) - dt; if (e.seeT <= 0) { e.seeT = 0.35; if (lineOfSight(o.position.clone().add(V(0, def.hy * e.sc * 1.2, 0)), player.pos.clone().add(V(0, 1.3, 0)))) e.aggro = true; } }
     const leash = e.zone.r + (def.boss || def.elite ? 45 : 20);
     if (e.aggro && (home > leash || !player.alive)) { e.aggro = false; e.wander = V(e.zone.x, 0, e.zone.z); }
     if (!e.aggro && e.hp < e.max && gameTime - e.lastHit > (def.boss || def.elite ? 45 : 15) && (d > 30 || !player.alive)) { e.hp = Math.min(e.max, e.hp + e.max * 0.02 * dt); updatePlate(e); }

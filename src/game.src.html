@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.60</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.61</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1493,7 +1493,7 @@ function fire() {
     const end = o.clone().addScaledVector(dirV, ht);
     if (projOf() !== 'plasma' || g.elem) tracer(vmGun.localToWorld(V(0, 0.05, 0.38)), end, g.elem ? g.col : projColor(g));
     const hitOne = (e, dmg) => { e.hp -= dmg * (hasGear('hvisor') && (e.def.elite || e.def.boss) ? 1.2 : 1); e.hitT = 0.12; e.aggro = true; e.lastHit = gameTime; e.anim.hit = 0.14; any = true;
-      for (const f of enemies) if (!f.dead && f !== e && f.zone === e.zone && f.obj.position.distanceTo(e.obj.position) < 8) f.aggro = true;
+      for (const f of enemies) if (!f.dead && f !== e && f.zone === e.zone && f.obj.position.distanceTo(e.obj.position) < 8 && lineOfSight(f.obj.position.clone().add(V(0, 1, 0)), e.obj.position.clone().add(V(0, 1, 0)))) f.aggro = true;
       if (e.hp <= 0) { kill(e); killed = true; } else updatePlate(e); };
     if (g.splash && mysticArea(g, end, dmg0, hitOne)) { SFX.boom(); }
     else if (g.splash) {
@@ -1640,7 +1640,7 @@ function step(dt) {
     const px0 = o.position.x, pz0 = o.position.z;
     const dx = player.pos.x - o.position.x, dz = player.pos.z - o.position.z, d = Math.hypot(dx, dz) || 1e-3;
     const home = Math.hypot(o.position.x - e.zone.x, o.position.z - e.zone.z);
-    if (!e.aggro && !def.passive && d < (def.boss ? 16 : 12) && !pSafe && player.alive) e.aggro = true;
+    if (!e.aggro && !def.passive && d < (def.boss ? 16 : 12) && !pSafe && player.alive) { e.seeT = (e.seeT || 0) - dt; if (e.seeT <= 0) { e.seeT = 0.35; if (lineOfSight(o.position.clone().add(V(0, def.hy * e.sc * 1.2, 0)), player.pos.clone().add(V(0, 1.3, 0)))) e.aggro = true; } }
     const leash = e.zone.r + (def.boss || def.elite ? 45 : 20);
     if (e.aggro && (home > leash || !player.alive)) { e.aggro = false; e.wander = V(e.zone.x, 0, e.zone.z); }
     if (!e.aggro && e.hp < e.max && gameTime - e.lastHit > (def.boss || def.elite ? 45 : 15) && (d > 30 || !player.alive)) { e.hp = Math.min(e.max, e.hp + e.max * 0.02 * dt); updatePlate(e); }

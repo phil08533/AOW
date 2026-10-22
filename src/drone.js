@@ -35,7 +35,7 @@ function droneStep(dt) {
   if (o.distanceTo(goal) > 20) o.copy(goal); else o.lerp(goal, Math.min(1, dt * 5));
   // target: nearest enemy that is fighting you
   let tg = null, td = 1e9; const range = droneRange(D.gun || 1), safe = inSafe(player.pos);
-  if (!safe) for (const e of enemies) { if (e.dead || e.gone || !e.obj.visible || !(e.aggro || e.sp.board)) continue; const d = e.obj.position.distanceTo(o); if (d < range && d < td) { td = d; tg = e; } }
+  if (!safe) for (const e of enemies) { if (e.dead || e.gone || !e.obj.visible || !(e.aggro || e.sp.board)) continue; const d = e.obj.position.distanceTo(o); if (d < range && d < td && lineOfSight(o, e.obj.position.clone().add(V(0, e.def.hy * e.sc, 0)))) { td = d; tg = e; } }
   if (tg) { const tp = tg.obj.position; DR.obj.rotation.y = Math.atan2(tp.x - o.x, tp.z - o.z); } else DR.obj.rotation.y += (player.yaw + Math.PI - DR.obj.rotation.y) * Math.min(1, dt * 3);
   const hitE = (e, dmg) => { if (e.dead) return; e.hp -= dmg; e.hitT = 0.1; e.aggro = true; e.lastHit = gameTime; if (e.hp <= 0) kill(e); else updatePlate(e); };
   DR.cd -= dt; DR.ocd -= dt; DR.ecd -= dt;
@@ -58,6 +58,7 @@ function droneMissile(from, tg, dmg, rad, hitE) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 4), glow('#ff9a3c')); m.position.copy(from); scene.add(m); let life = 3;
   const tick = dt => { life -= dt; const to = tg.dead ? m.position.clone().add(V(0, -1, 0)) : tg.obj.position.clone().add(V(0, tg.def.hy * tg.sc, 0)), d = m.position.distanceTo(to);
     if (Math.random() < 0.7) burst(m.position.clone(), '#ffd36a', 1, 0.5);
+    if (blockedAt(m.position.x, m.position.y, m.position.z)) life = 0;
     if (d < 0.6 || life <= 0) { scene.remove(m); burst(m.position.clone(), '#ff6a1a', 18, 7); burst(m.position.clone(), '#ffd36a', 8, 4); if (SFX.boom) SFX.boom(); for (const e of enemies) { if (e.dead) continue; const dd = e.obj.position.distanceTo(m.position); if (dd < rad + e.def.r * e.sc) hitE(e, dmg * (1 - 0.5 * dd / (rad + 1))); } return true; }
     m.position.addScaledVector(to.sub(m.position).normalize(), Math.min(d, 22 * dt)); return false; };
   DR.missiles = DR.missiles || []; DR.missiles.push(tick);

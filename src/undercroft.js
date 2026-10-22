@@ -49,9 +49,9 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
   for (const sx of [-1, 1]) { part(props, B(0.12, 2.2, D * 2 - 1), rust, sx * (W - 0.36), 1.1, 0); part(props, B(0.14, 0.12, D * 2 - 1), metal, sx * (W - 0.38), 2.22, 0); for (let i = 0; i < 5; i++) part(props, B(0.14, 0.9 + (i % 2) * 0.5, 1.4), i % 2 ? dark : rust, sx * (W - 0.4), 3.6 + (i % 3) * 0.5, -20 + i * 10 + sx * 2, 0, 0, (i - 2) * 0.05); }
   // shady booths along the right wall: hooded types doing quiet business
   const hood = (shirt, eye) => () => { const g = makeCivilian(shirt, '#14120f', '#2a2430', '#14120f', shirt); part(g, new THREE.ConeGeometry(0.34, 0.62, 8), toon(shirt, 'cloth'), 0, 1.86, -0.02); part(g, B(0.42, 0.5, 0.4), toon(shirt, 'cloth'), 0, 1.62, -0.04); for (const s of [-1, 1]) part(g, B(0.06, 0.03, 0.02), glow(eye), s * 0.07, 1.7, 0.21); return g; };
-  for (const [z, n] of [[-1, 2], [6, 1], [13, 2]]) { part(props, B(1.4, 1.1, 3.8), toon('#3a1e1a', 'cloth'), W - 1.2, 0.55, z); part(props, B(0.4, 2.0, 3.8), toon('#3a1e1a', 'cloth'), W - 0.6, 1.0, z); part(props, B(1.2, 0.08, 1.6), wood, W - 3.2, 0.85, z); part(props, Cy(0.08, 0.1, 0.8, 6), dark, W - 3.2, 0.42, z); box(W - 2, z, 2, 1.9);
-    part(props, Cy(0.05, 0.05, 0.12, 6), glow('#7fff6a'), W - 3.0, 0.95, z + 0.3);
-    for (let k = 0; k < n; k++) { const o = ucChar(hood(['#2a2a30', '#3a2a1e', '#1e2a2a'][(k + z + 30) % 3], ['#ff3b2a', '#7fff6a', '#ffd36a'][(k + z + 30) % 3]), 'civ', W - 1.9, z + (n > 1 ? (k ? 0.9 : -0.9) : 0), -Math.PI / 2, ucChat(-Math.PI / 2)); if (k) ucSmoke(o); } }
+  for (const [z, n] of [[-1, 2], [6, 1], [13, 2]]) { part(props, B(1.4, 0.5, 3.8), toon('#3a1e1a', 'cloth'), W - 1.2, 0.25, z); part(props, B(0.4, 2.0, 3.8), toon('#3a1e1a', 'cloth'), W - 0.6, 1.0, z); part(props, B(1.2, 0.08, 1.6), wood, W - 2.7, 0.75, z); part(props, Cy(0.08, 0.1, 0.72, 6), dark, W - 2.7, 0.37, z); box(W - 2, z, 2, 1.9);
+    part(props, Cy(0.05, 0.05, 0.12, 6), glow('#7fff6a'), W - 2.5, 0.85, z + 0.3);
+    for (let k = 0; k < n; k++) { const o = ucChar(hood(['#2a2a30', '#3a2a1e', '#1e2a2a'][(k + z + 30) % 3], ['#ff3b2a', '#7fff6a', '#ffd36a'][(k + z + 30) % 3]), 'civ', W - 1.3, z + (n > 1 ? (k ? 0.9 : -0.9) : 0), -Math.PI / 2, ucChat(-Math.PI / 2)); const R = o.userData.rig; o.position.y = 0.5 - (R ? R.spec.hip : 0.95) + 0.07; sitChar(o, 0.5); if (k) ucSmoke(o, 1.2); } }
   // a jukebox nobody is allowed to touch
   { part(props, B(1.4, 2.0, 0.9), toon('#5a1e2a'), -W + 0.9, 1.0, 6); const jb = part(props, Cy(0.6, 0.6, 0.92, 16, 1, false, 0, Math.PI), new THREE.MeshBasicMaterial({ color: '#ffb347' }), -W + 0.9, 2.0, 6, Math.PI / 2, 0, Math.PI / 2); props.remove(jb); levelGroup.add(jb);
     for (let i = 0; i < 4; i++) part(props, B(0.06, 1.3, 0.05), glow(['#ff6aa8', '#4fd2ff', '#7fff6a', '#ffd36a'][i]), -W + 1.62, 1.0, 5.6 + i * 0.27); box(-W + 0.9, 6, 0.7, 0.5);
@@ -61,7 +61,14 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
   part(props, B(18, 4.2, 0.4), dark, 0, 2.1, -D + 0.6);
   for (let r = 0; r < 3; r++) { part(props, B(16, 0.08, 0.5), rust, 0, 1.6 + r * 0.9, -D + 0.9); for (let i = 0; i < 16; i++) part(props, Cy(0.08, 0.08, 0.42 + (i % 3) * 0.08, 6), glow(['#5a8a3a', '#8a5a2a', '#6a2a1e', '#c8a03a'][(i * 3 + r) % 4]), -7.4 + i * 0.95, 1.86 + r * 0.9, -D + 0.9); }
   const rv = new THREE.Mesh(new THREE.PlaneGeometry(6, 0.9), new THREE.MeshBasicMaterial({ map: signTex("GRUB'S BAR", '#06121a', '#7fe8ff') })); rv.position.set(0, 3.2, -19.2); rv.rotation.x = 0; levelGroup.add(rv); part(props, B(0.05, 1.4, 0.05), metal, -2.6, 4.3, -19.2); part(props, B(0.05, 1.4, 0.05), metal, 2.6, 4.3, -19.2);
-  levelAnims.push(t => { rv.visible = !(Math.sin(t * 13) > 0.93 && Math.sin(t * 1.7) > 0.4); });
+  // only the tired letters flicker: the board stays lit and the second B sputters, the S now and then
+  { const cv = document.createElement('canvas'); cv.width = 512; cv.height = 77; const cx = cv.getContext('2d'), tx = new THREE.CanvasTexture(cv), txt = "GRUB'S BAR";
+    const draw = dim => { cx.fillStyle = '#06121a'; cx.fillRect(0, 0, 512, 77); cx.strokeStyle = '#7fe8ff'; cx.lineWidth = 4; cx.strokeRect(4, 4, 504, 69); cx.font = 'bold 50px monospace'; cx.textBaseline = 'middle';
+      const w = cx.measureText(txt).width; let x = 256 - w / 2;
+      for (let i = 0; i < txt.length; i++) { const off = dim.includes(i); cx.fillStyle = off ? '#1c3a44' : '#7fe8ff'; cx.shadowColor = '#7fe8ff'; cx.shadowBlur = off ? 0 : 14; cx.fillText(txt[i], x, 40); x += cx.measureText(txt[i]).width; }
+      cx.shadowBlur = 0; tx.needsUpdate = true; };
+    draw([]); rv.material.map = tx; rv.material.needsUpdate = true; let last = '';
+    levelAnims.push(t => { const d = []; if (Math.sin(t * 13) > 0.7 && Math.sin(t * 1.7) > 0.2) d.push(7); if (Math.sin(t * 9.3 + 1) > 0.95 && Math.sin(t * 0.9) > 0.6) d.push(4); const k = d.join(); if (k !== last) { last = k; draw(d); } }); }
   const nb = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.6), new THREE.MeshBasicMaterial({ map: signTex('NO BLASTERS', '#1e1410', '#d9c79a') })); nb.position.set(7.4, 2.6, -D + 0.85); props.add(nb);
   for (let i = 0; i < 7; i++) { const x = -6 + i * 2; part(props, Cy(0.26, 0.26, 0.08, 8), toon('#4a2a1e', 'cloth'), x, 0.78, -18.4); part(props, Cy(0.04, 0.04, 0.75, 5), metal, x, 0.39, -18.4); }
   for (let i = 0; i < 9; i++) part(props, Cy(0.05, 0.06, 0.24, 6), glow(['#5a8a3a', '#8a5a2a', '#c8a03a'][i % 3]), -7 + i * 1.7 + (i % 2) * 0.4, 1.32, -19.8 + (i % 3) * 0.2);

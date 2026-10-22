@@ -12,6 +12,8 @@ const TRL_VO = [ // [time in seconds, line]
   [90.0, 'Yes… war is an art.', 10], [104.5, 'And only those who find this art…', 11], [121.5, '…will live.', 12]
 ];
 const TRL_END = 134;
+// jump cuts (2.22.51): skip the long quiet stretches between narration lines, keeping the scene dip, the white-out into space and the title
+const TRL_CUTS = [[8.6, 12.2], [17.8, 20.3], [27, 29.2], [35.6, 40], [45.8, 54], [64, 70], [76, 89], [94, 103.5], [112, 120.5], [124.5, 129.5]];
 const TRL = { on: false };
 // ---- music and narration ----
 // cutscenes play the soundtrack even when the game music is set to Ambient or Beep boop (only Off keeps them silent)
@@ -364,7 +366,7 @@ function playTrailer(opts) {
   const tick = () => { if (done) return; requestAnimationFrame(tick);
     const now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
     // follow the song when it's playing, so the cuts land on the music
-    const m = MUS.cur, onSong = m && MUS.list === 'trailer' && !m.paused && m.currentTime > 0.2 && m.currentTime > clock - 1; if (m && MUS.list === 'trailer') m.loop = false; clock = onSong ? m.currentTime : clock + dt; if (TRL.seek != null) { clock = TRL.seek; TRL.seek = null; if (onSong) m.currentTime = clock; } const T = clock;
+    const m = MUS.cur, onSong = m && MUS.list === 'trailer' && !m.paused && m.currentTime > 0.2 && m.currentTime > clock - 1; if (m && MUS.list === 'trailer') m.loop = false; clock = onSong ? m.currentTime : clock + dt; for (const [ca, cb] of TRL_CUTS) if (clock >= ca && clock < cb && TRL.seek == null) TRL.seek = cb; if (TRL.seek != null) { clock = TRL.seek; TRL.seek = null; if (onSong) m.currentTime = clock; } const T = clock;
     if (T > 4 && skip.hidden) { skip.hidden = false; requestAnimationFrame(() => { skip.style.opacity = 1; }); }
     C.aspect = camera.aspect; C.updateProjectionMatrix(); grain.style.transform = `translate(${(Math.random() * 40) | 0}px,${(Math.random() * 40) | 0}px)`;
     // fades: from black at the start, a dip between scenes 1 and 2, white into space, black at the end

@@ -470,6 +470,6 @@ defQuest('ss1', { ch: 'Earth · Super Swift Arena', title: 'Swift Glory', giver:
 { const _po = planetOpen; planetOpen = function (id) { if (id === 'forestlife' || id === 'swift') return true; return _po(id); }; }
 // signposts in Earth town
 { const ob = LEVELS.earth.build; LEVELS.earth.build = function () { ob.call(this);
-  const mk = (x, z, text, fn, label) => { const sg = new THREE.Group(); part(sg, B(0.2, 2.6, 0.2), toon('#6a4a2e', 'wood'), 0, 1.3, 0); const p = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.6), new THREE.MeshBasicMaterial({ map: signTex(text, '#3a2a1e', '#ffd36a'), side: THREE.DoubleSide })); p.position.y = 2.3; sg.add(p); at(sg, x, z); solid(x, z, 0.3); INTERACTS.push({ x, z, r: 2.6, label, fn }); };
+  const mk = (x, z, text, fn, label) => { if (typeof warpGate === 'function') { INTERACTS.push({ x, z: z - 1.2, r: 2.6, label, fn }); return; } const sg = new THREE.Group(); part(sg, B(0.2, 2.6, 0.2), toon('#6a4a2e', 'wood'), 0, 1.3, 0); const p = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.6), new THREE.MeshBasicMaterial({ map: signTex(text, '#3a2a1e', '#ffd36a'), side: THREE.DoubleSide })); p.position.y = 2.3; sg.add(p); at(sg, x, z); solid(x, z, 0.3); INTERACTS.push({ x, z, r: 2.6, label, fn }); };
   mk(TOWN.x + 9, TOWN.z + 39, 'FOREST OF LIFE', () => loadLevel('forestlife'), 'Trail to the Forest of Life');
   mk(TOWN.x - 9, TOWN.z + 39, 'SUPER SWIFT ARENA', () => loadLevel('swift'), 'Shuttle to the Super Swift Arena'); }; }

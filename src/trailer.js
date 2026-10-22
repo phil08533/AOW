@@ -2,8 +2,8 @@
 // A war film built from the game's own models, played the first time a character starts (and from Codex → Cinema).
 // It runs in its own little world (TRL.ground, then TRL.space) so nothing in the real game is touched.
 // The timeline follows the song "Art of War: Rising Sun" (2:12). Narration cues live in TRL_VO; shots in trlShot().
-TRACKS.risingsun = 'music/risingsun.mp3'; TRACKS.eventhorizon = 'music/eventhorizon.mp3';
-PLAYLISTS.trailer = ['risingsun']; PLAYLISTS.eyeboss = ['eventhorizon'];
+TRACKS.risingsun = 'music/risingsun.mp3'; TRACKS.risingsuncut = 'music/risingsun_cut.mp3'; TRACKS.eventhorizon = 'music/eventhorizon.mp3';
+PLAYLISTS.trailer = ['risingsuncut']; PLAYLISTS.eyeboss = ['eventhorizon'];
 const TRL_VO = [ // [time in seconds, line]
   [3.0, 'Hidden deep in the evil of war… is an art.', 1], [13.2, 'An art that few will ever find.', 2],
   [23.0, 'Generals are artists.', 3], [30.2, 'They command the field. They control the action.', 4],
@@ -13,7 +13,12 @@ const TRL_VO = [ // [time in seconds, line]
 ];
 const TRL_END = 134;
 // jump cuts (2.22.51): skip the long quiet stretches between narration lines, keeping the scene dip, the white-out into space and the title
-const TRL_CUTS = [[8.6, 12.2], [17.8, 20.3], [27, 29.2], [35.6, 40], [45.8, 54], [64, 70], [76, 89], [94, 103.5], [112, 120.5], [124.5, 129.5]];
+const TRL_CUTS = [[8.6, 13.0], [17.8, 20.3], [27, 29.2], [35.6, 40], [45.8, 54], [64, 70], [76, 89], [94, 103.5], [112, 120.5], [124.5, 129.5]];
+// 2.22.53: the song itself is re-cut to match (music/risingsun_cut.mp3, the kept stretches joined with 0.3 s crossfades), so it never jumps.
+// TRL_SEGS maps the edited song's time back onto the original timeline the shots are written against.
+const TRL_XF = 0.3, TRL_SEGS = (() => { const S = []; let a = 0, e = 0; for (const [ca, cb] of TRL_CUTS.concat([[TRL_END, 1e9]])) { if (ca > a) { S.push([e, a, ca]); e += ca - a - TRL_XF; } a = cb; } return S; })();
+const trlMap = e => { let k = TRL_SEGS[0]; for (const g of TRL_SEGS) if (e >= g[0]) k = g; return k[1] + (e - k[0]); };
+const trlUnmap = T => { for (const g of TRL_SEGS) if (T >= g[1] && T < g[2]) return g[0] + (T - g[1]); return T; };
 const TRL = { on: false };
 // ---- music and narration ----
 // cutscenes play the soundtrack even when the game music is set to Ambient or Beep boop (only Off keeps them silent)
@@ -366,7 +371,7 @@ function playTrailer(opts) {
   const tick = () => { if (done) return; requestAnimationFrame(tick);
     const now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
     // follow the song when it's playing, so the cuts land on the music
-    const m = MUS.cur, onSong = m && MUS.list === 'trailer' && !m.paused && m.currentTime > 0.2 && m.currentTime > clock - 1; if (m && MUS.list === 'trailer') m.loop = false; clock = onSong ? m.currentTime : clock + dt; for (const [ca, cb] of TRL_CUTS) if (clock >= ca && clock < cb && TRL.seek == null) TRL.seek = cb; if (TRL.seek != null) { clock = TRL.seek; TRL.seek = null; if (onSong) m.currentTime = clock; } const T = clock;
+    const m = MUS.cur, onSong = m && MUS.list === 'trailer' && !m.paused && m.currentTime > 0.2 && trlMap(m.currentTime) > clock - 1; if (m && MUS.list === 'trailer') m.loop = false; clock = onSong ? trlMap(m.currentTime) : clock + dt; if (!onSong) for (const [ca, cb] of TRL_CUTS) if (clock >= ca && clock < cb && TRL.seek == null) TRL.seek = cb; if (TRL.seek != null) { clock = TRL.seek; TRL.seek = null; if (onSong) m.currentTime = trlUnmap(clock); } const T = clock;
     if (T > 4 && skip.hidden) { skip.hidden = false; requestAnimationFrame(() => { skip.style.opacity = 1; }); }
     C.aspect = camera.aspect; C.updateProjectionMatrix(); grain.style.transform = `translate(${(Math.random() * 40) | 0}px,${(Math.random() * 40) | 0}px)`;
     // fades: from black at the start, a dip between scenes 1 and 2, white into space, black at the end

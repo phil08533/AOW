@@ -70,7 +70,7 @@ function bubCity() { const S2 = bubS();
   bubMurderScene();
   // the lost hamster, running laps in the coral park (until you pick him up)
   if (!S2.ham) { const h = bubHamster(); h.position.set(22, 0, 34); levelGroup.add(h); BUB.ham = h; const hx = 22, hz = 34;
-    levelAnims.push(t => { if (bubS().ham) return; h.position.set(hx + Math.cos(t * 1.7) * 1.2, 0, hz + Math.sin(t * 1.7) * 1.2); h.rotation.y = -t * 1.7; });
+    levelAnims.push(t => { if (bubS().ham) return; h.position.set(hx + Math.cos(t * 1.7) * 1.2, 0, hz + Math.sin(t * 1.7) * 1.2); h.rotation.y = Math.PI - t * 1.7; });
     INTERACTS.push({ get x() { return bubS().ham ? 1e9 : h.position.x; }, get z() { return h.position.z; }, r: 1.8, label: '🐹 Pick up the tiny hamster', fn: bubPickHam }); }
   if (S2.ham === 1) bubFollower();
 }
@@ -157,7 +157,7 @@ function bubPickHam() { const s = bubS(); if (s.ham) return; s.ham = 1; markDirt
   bubFollower(); setTimeout(() => burpSay('That is a hamster. It is very small, even for here. It probably belongs to someone in the Coral Heights apartments.'), 600); }
 function bubFollower() { const h = bubHamster(); levelGroup.add(h); const p = new THREE.Vector3(player.pos.x, 0, player.pos.z);
   levelAnims.push(t => { if (bubS().ham !== 1) { h.visible = false; return; } const fx = player.pos.x + Math.sin(player.yaw) * 1.1, fz = player.pos.z + Math.cos(player.yaw) * 1.1; const d = Math.hypot(fx - p.x, fz - p.z);
-    if (d > 8) p.set(fx, 0, fz); else { p.x += (fx - p.x) * 0.08; p.z += (fz - p.z) * 0.08; } h.position.set(p.x, player.pos.y + Math.abs(Math.sin(t * 14)) * 0.06 * Math.min(1, d), p.z); h.rotation.y = Math.atan2(-(fx - p.x), -(fz - p.z)) + Math.PI; }); }
+    if (d > 8) p.set(fx, 0, fz); else { p.x += (fx - p.x) * 0.08; p.z += (fz - p.z) * 0.08; } h.position.set(p.x, player.pos.y + Math.abs(Math.sin(t * 14)) * 0.06 * Math.min(1, d), p.z); if (d > 0.05) h.rotation.y = Math.atan2(-(fx - p.x), -(fz - p.z)); }); }
 
 // ---------------- Coral Heights: lobby, elevator, six floors ----------------
 const BRES = {

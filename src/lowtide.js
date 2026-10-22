@@ -6,7 +6,7 @@ const LT_SHOPS = [
   { id: 'bar', name: 'THE BARNACLE BAR', col: '#4fffe0', wall: '#6a4a3a', floor: '#4a3a2a' },
   { id: 'ink', name: 'INK SQUID TATTOO', col: '#ff3bd2', wall: '#4a2a4a', floor: '#3a3a3a' },
   { id: 'arc', name: 'FISH FRY ARCADE', col: '#7fff6a', wall: '#2a2a50', floor: '#2a2a44' },
-  { id: 'mart', name: '24/7 SHELLMART', col: '#ff6a3a', wall: '#e8e4dc', floor: '#c8c4bc' },
+  { id: 'mart', name: '24/7 SHELLMART', col: '#ff6a3a', wall: '#8a8478', floor: '#7a766e' },
   { id: 'kar', name: 'KARAOKE CLAM', col: '#c86aff', wall: '#4a2a6a', floor: '#3a2448' }
 ];
 const ltCr = n => { if (S.cr < n) { $('dlgLine').textContent = `"That's ${n} cr. You've got ${S.cr}. Maths is hard down here, but not that hard."`; SFX.ui(); return false; } S.cr -= n; SFX.coin(); markDirty(); return true; };
@@ -18,7 +18,7 @@ function ltRoom(S0, k) { const X = 150, Zc = -32 - k * 14, W = 9, L = 10, wall =
   part(g, B(W, 0.1, L), bcMat(S0.id === 'mart' ? 'tile' : S0.id === 'bar' || S0.id === 'pawn' ? 'wood' : 'carpet', 4, 5, S0.floor), X, 0.05, Zc); part(g, B(W, 0.1, L), toonNS('#4a4450'), X, 3.4, Zc);
   for (const s of [-1, 1]) { part(g, B(0.2, 3.4, L), S0.id === 'bar' || S0.id === 'pawn' ? bcMat('brick', 4, 2, S0.wall) : wall, X + s * (W / 2 + 0.1), 1.7, Zc); box(X + s * (W / 2 + 0.3), Zc, 0.3, L / 2);
     part(g, B(W, 3.4, 0.2), S0.id === 'bar' || S0.id === 'pawn' ? bcMat('brick', 4, 2, S0.wall) : wall, X, 1.7, Zc + s * (L / 2 + 0.1)); box(X, Zc + s * (L / 2 + 0.3), W / 2, 0.3); }
-  for (let i = 0; i < 3; i++) { const pl = new THREE.PointLight(new THREE.Color(i === 1 ? S0.col : '#ffe0c0'), i === 1 ? 1.2 : 1.6, 12); pl.position.set(X + [-1.5, 2.5, 0][i], 3, Zc + [1, -2, 3.5][i]); g.add(pl); }
+  for (let i = 0; i < 3; i++) { const pl = new THREE.PointLight(new THREE.Color(i === 1 ? S0.col : '#ffe0c0'), (i === 1 ? 1.2 : 1.6) * (S0.id === 'mart' ? 0.45 : 1), 12); pl.position.set(X + [-1.5, 2.5, 0][i], 3, Zc + [1, -2, 3.5][i]); g.add(pl); }
   for (const zz of [-2.5, 1.5]) part(g, B(1.6, 0.06, 0.5), glow('#fff4e0'), X, 3.33, Zc + zz);
   part(g, B(W - 0.4, 0.1, 0.1), glow(S0.col), X, 3.3, Zc - L / 2 + 0.06); part(g, B(W - 0.4, 0.1, 0.1), glow(S0.col), X, 3.3, Zc + L / 2 - 0.06);
   // the door back out, with an exit sign
@@ -73,8 +73,8 @@ function ltDress() {
     levelAnims.push(t => { crab.position.x = Math.sin(t * 0.8) * 0.35; crab.rotation.y = Math.sin(t * 1.3) * 0.8; });
     keeper('arc', ['#7fff6a', '#2c2a38', '#c58a64', '#1e1a18'], '🎟 Talk to Token Tony', () => bubTalk('Fish Fry Arcade', 'Token Tony', [`High score on Fish Fry: ${S.flags.ffHi || 0}. ${S.flags.ffHi > 40 ? 'That one\'s yours. AAA is furious.' : 'Nobody beats AAA. Prove me wrong.'}`, 'The claw machine has a real crab in it. He wins every time. Fish Fry is the cabinet on the left.'])); }
   // 24/7 Shellmart: aisles, a fridge wall, a slushie machine
-  { const r = R('mart'); for (const xo of [-2.2, 2.2]) { part(levelGroup, B(0.9, 1.5, 4.5), toonNS('#c8ccd4'), r.x + xo, 0.75, r.z + 0.8); for (let k = 0; k < 3; k++) for (let j = 0; j < 8; j++) for (const s of [-1, 1]) part(levelGroup, B(0.12, 0.28, 0.35), toonNS(['#ff6a3a', '#ffd36a', '#4fd2ff', '#7fff6a', '#ff6aa8'][(j + k + (xo > 0 ? 2 : 0)) % 5]), r.x + xo + s * 0.5, 0.45 + k * 0.45, r.z - 1.1 + j * 0.52); box(r.x + xo, r.z + 0.8, 0.5, 2.3); }
-    for (let j = 0; j < 4; j++) { part(levelGroup, B(0.9, 2.2, 0.1), new THREE.MeshLambertMaterial({ color: '#cfefff', transparent: true, opacity: 0.45 }), r.x - r.W / 2 + 0.4, 1.1, r.z - 3 + j * 1.0, 0, Math.PI / 2, 0); part(levelGroup, B(0.05, 2.1, 0.9), glow('#e8f8ff'), r.x - r.W / 2 + 0.25, 1.1, r.z - 3 + j * 1.0); }
+  { const r = R('mart'); for (const xo of [-2.2, 2.2]) { part(levelGroup, B(0.9, 1.5, 4.5), toonNS('#5a5e68'), r.x + xo, 0.75, r.z + 0.8); for (let k = 0; k < 3; k++) for (let j = 0; j < 8; j++) for (const s of [-1, 1]) part(levelGroup, B(0.12, 0.28, 0.35), toonNS(['#a8482a', '#a88a3a', '#2f7a9a', '#4a8a3a', '#9a3a6a'][(j + k + (xo > 0 ? 2 : 0)) % 5]), r.x + xo + s * 0.5, 0.45 + k * 0.45, r.z - 1.1 + j * 0.52); box(r.x + xo, r.z + 0.8, 0.5, 2.3); }
+    for (let j = 0; j < 4; j++) { part(levelGroup, B(0.9, 2.2, 0.1), new THREE.MeshLambertMaterial({ color: '#cfefff', transparent: true, opacity: 0.45 }), r.x - r.W / 2 + 0.4, 1.1, r.z - 3 + j * 1.0, 0, Math.PI / 2, 0); part(levelGroup, B(0.05, 2.1, 0.9), glow('#6a8a9a'), r.x - r.W / 2 + 0.25, 1.1, r.z - 3 + j * 1.0); }
     part(levelGroup, B(0.7, 1.6, 0.6), toonNS('#3a3d44'), r.x + 3.6, 0.8, r.z - 3); for (const s of [-1, 1]) { const sl = part(levelGroup, Cy(0.18, 0.18, 0.4, 10), new THREE.MeshLambertMaterial({ color: s > 0 ? '#4fd2ff' : '#ff3b6a', transparent: true, opacity: 0.8 }), r.x + 3.6 + s * 0.17, 1.4, r.z - 2.85); }
     keeper('mart', ['#ff6a3a', '#2c2a38', '#e0b892', '#3a2a1a'], '🛒 Buy snacks and supplies', ltMart); }
   // Karaoke Clam: a stage, a mic stand, a spinning disco ball, booths

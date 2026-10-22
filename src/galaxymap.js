@@ -1,5 +1,5 @@
 // =================== GALAXY MAP: a top-down chart of the whole galaxy; tap a world to travel ===================
-const GM_SUB = { earth: [['New Jamestown', 'earth'], ['Forest of Life', 'forestlife'], ['Super Swift Arena', 'swift']] };
+const GM_SUB = { earth: [['New Jamestown', 'earth'], ['Forest of Life', 'forestlife'], ['Super Swift Arena', 'swift']], ocean: [['Ocean World', 'ocean'], ['Bubble City', 'bubblecity']] };
 openGalaxy = function () {
   openDlg('Navigation', 'Galaxy map');
   $('dlgLine').textContent = 'Tap a world to select it. Autopilot takes you straight there; or fly there yourself.';
@@ -45,7 +45,7 @@ openGalaxy = function () {
     const P = SPACE_BODIES[sel], L = LEVELS[sel], open = !!L && planetOpen(sel);
     info.innerHTML = ''; const h = document.createElement('div'); h.innerHTML = `<b style="color:var(--gold)">${L && !P.survey ? L.name : P.survey || sel}</b> · ${L ? L.tag + ' · ' + L.lvls : (P.note || 'Uncharted')}${open ? '' : ' · <span style="color:#ff8a80">Locked: ' + planetLockHint(sel) + '</span>'}`; info.appendChild(h);
     const subs = GM_SUB[sel] || [[L ? L.name : sel, sel]], list = [];
-    if (open) subs.forEach(([nm, lid], i) => list.push([sel === 'earth' && subs.length > 1 ? `Go: ${nm}` : `Autopilot to ${nm}`, () => { S.orbit = sel; closeDlg(); travel(lid); }, i === 0]));
+    if (open) subs.forEach(([nm, lid], i) => list.push([GM_SUB[sel] && subs.length > 1 ? `Go: ${nm}` : `Autopilot to ${nm}`, () => { S.orbit = sel; closeDlg(); travel(lid); }, i === 0]));
     if (open && shipUnlocked()) list.push(['Fly there yourself', () => { S.orbit = sel; closeDlg(); enterSpace(sel); }]);
     list.push(['Close', closeDlg]); acts(list);
   };

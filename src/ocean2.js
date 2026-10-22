@@ -296,7 +296,7 @@ function ocHullGeo(w, L, h, inset) { const sh = new THREE.Shape(), pt = (k) => {
 const OCB = [], OCSIT = { g: null };
 // sitting in a boat: you ride on the front bench facing the fisher, free to look around; Use again to hop back in the water
 function ocSit(g) { if (OCSIT.g) { const o = OCSIT.g; OCSIT.g = null; const w = new THREE.Vector3(1.8, 0, 0.7); o.localToWorld(w); player.pos.set(w.x, WATER_Y - 1.15, w.z); try { SFX.splash(); } catch (_) {} return; }
-  OCSIT.g = g; player.vy = 0; player.yaw = g.rotation.y + Math.PI; toast('IN THE BOAT', 'Use again to get up', 1.6); }
+  OCSIT.g = g; player.vy = 0; player.yaw = g.rotation.y + Math.PI; OCSIT.t = performance.now(); toast('IN THE BOAT', 'Press E to fish. Move or jump to hop out.', 2.2); }
 function ocBoats() { OCB.length = 0; OCSIT.g = null; const spots = []; for (let i = 0; i < 40 && spots.length < 5; i++) { const a = i * 1.37, r = 34 + (i * 11) % 40, x = PORT[0] + Math.cos(a) * r, z = PORT[1] + Math.sin(a) * r;
     if (groundH(x, z) > WATER_Y - 2.5 || spots.some(([sx, sz]) => Math.hypot(x - sx, z - sz) < 18)) continue; if (Z.bubble && Math.hypot(x - Z.bubble.x, z - Z.bubble.z) < 30) continue; spots.push([x, z, a]); }
   const shirts = ['#c8402f', '#ffd36a', '#3a5266', '#4f9a4a', '#ff9a8a'], fishC = ['#ffb347', '#7fe8ff', '#c8d8e0', '#ff6aa8', '#9aff7a'];
@@ -320,7 +320,7 @@ function ocBoats() { OCB.length = 0; OCSIT.g = null; const spots = []; for (let 
     const fish = new THREE.Group(); part(fish, B(0.12, 0.2, 0.42), toon(fishC[i]), 0, 0, 0); part(fish, B(0.04, 0.2, 0.14), toon(fishC[i]), 0, 0, -0.26); fish.visible = false; levelGroup.add(fish);
     const ry = a + Math.PI / 2 + i; g.position.set(x, WATER_Y - 0.06, z); g.rotation.y = ry; g.userData.boat = 1; levelGroup.add(g); solid(x, z, 2);
     const V = new THREE.Vector3(), W = new THREE.Vector3(); let next = 6 + i * 3, catchT = -1;
-    OCB.push(g); INTERACTS.push({ x, z, r: 3.2, get label() { return OCSIT.g === g ? '🪑 Get up (back into the water)' : '🪑 Sit in the boat'; }, fn: () => ocSit(g) });
+    OCB.push(g); INTERACTS.push({ x, z, r: 3.2, get label() { return OCSIT.g === g ? '🎣 Fish off the side' : '🪑 Sit in the boat'; }, fn: () => OCSIT.g === g ? startFishing('Out on the boat', 'sea') : ocSit(g) });
     levelAnims.push(t => { g.position.y = WATER_Y - 0.06 + Math.sin(t * 1.1 + i) * 0.05; g.rotation.z = Math.sin(t * 0.9 + i * 2) * 0.04; g.rotation.x = Math.sin(t * 0.7 + i) * 0.025; g.rotation.y = ry + Math.sin(t * 0.05 + i) * 0.4; lan.visible = ENV.night > 0.3;
       if (t > next && catchT < 0) catchT = t; let k = catchT < 0 ? -1 : t - catchT;
       rod.rotation.x = k < 0 ? 0.95 + Math.sin(t * 0.6 + i) * 0.04 + (Math.sin(t * 3 + i) > 0.97 ? 0.08 : 0) : k < 0.6 ? 0.95 + Math.sin(t * 30) * 0.06 : k < 1.0 ? 0.95 - (k - 0.6) * 1.8 : k < 2.2 ? 0.23 : 0.23 + Math.min(1, (k - 2.2) * 1.2) * 0.72;

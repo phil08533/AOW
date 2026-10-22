@@ -317,7 +317,7 @@ function bcCoralHeights() { const D = bcD('coral'), X = D.x, Z = D.z;
   for (let i = 0; i < 28; i++) { const a = bcR(i + 200) * Math.PI * 2, r = 5 + bcR(i + 300) * 8, x = X - 12 + Math.cos(a) * r, z = Z - 8 + Math.sin(a) * r * 0.8; if (Math.hypot(x - (X - 12), z - (Z - 10)) < 4.4 || Math.hypot(x - X, z - Z) > D.r - 3) continue; bcCoral(x, z, 0.9 + bcR(i) * 0.6, i); }
   for (let i = 0; i < 5; i++) bcLamp(X - 6 + i * 3, Z - 2 + Math.sin(i) * 2, '#ffd0a0');
   if (!bubS().ham) { const h = bubHamster(); levelGroup.add(h); BUB.ham = h; const hx = X - 7, hz = Z - 14;
-    levelAnims.push(t => { if (bubS().ham) return; h.position.set(hx + Math.cos(t * 1.7) * 1.2, 0, hz + Math.sin(t * 1.7) * 1.2); h.rotation.y = -t * 1.7; });
+    levelAnims.push(t => { if (bubS().ham) return; h.position.set(hx + Math.cos(t * 1.7) * 1.2, 0, hz + Math.sin(t * 1.7) * 1.2); h.rotation.y = Math.PI - t * 1.7; });
     INTERACTS.push({ get x() { return bubS().ham ? 1e9 : h.position.x; }, get z() { return h.position.z; }, r: 1.8, label: '🐹 Pick up the tiny hamster', fn: bubPickHam }); }
   if (bubS().ham === 1) bubFollower();
   bcWalkers(D, 7, 'mix', 130); }

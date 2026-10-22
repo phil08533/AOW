@@ -4,7 +4,7 @@
 const UCD_ON = () => LEVEL && LEVEL.id === 'zfloor' && typeof ZF !== 'undefined' && zTheme(ZF.floor) === 'under';
 { const _ue = updateEnv; updateEnv = function (a, b) { _ue(a, b); if (!UCD_ON()) return;
   scene.fog.color.set('#0c0807').convertSRGBToLinear(); scene.fog.near = 5; scene.fog.far = 30; sun.intensity = 0.1; hemi.intensity = 0.26; hemi.color.set('#b89a80'); fill.intensity = 0.06; }; }
-{ const _b = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _b.apply(this, arguments); if (zTheme(ZF.floor) !== 'under') return; try { ucdBand(); ucdHaze(); } catch (e) { console.warn('ucdank', e); } }; }
+{ const _b = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _b.apply(this, arguments); if (zTheme(ZF.floor) !== 'under') return; try { ucdBand(); ucdHaze(); ucdStageMore(); } catch (e) { console.warn('ucdank', e); } }; }
 function ucdHaze() {
   const N = 260, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), c = new THREE.Color(), sp = [];
   for (let i = 0; i < N; i++) { pos.set([(Math.random() - 0.5) * 38, 0.6 + Math.random() * 4.5, (Math.random() - 0.5) * 38], i * 3); c.setHSL(0.07 + Math.random() * 0.05, 0.25, 0.32 + Math.random() * 0.12); col.set([c.r, c.g, c.b], i * 3); sp.push(Math.random() * 6); }
@@ -79,4 +79,38 @@ function ucdBand() {
     mus(['#1e3a2a', '#14120f', '#c58a64', '#ffd36a', '#7fff6a'], 4.0, a, (o, R, t) => { if (!R) return; if (R.armL) R.armL.rotation.x = -0.9 + Math.sin(t * 6) * 0.12; if (R.armR) R.armR.rotation.x = -0.9 + Math.sin(t * 6 + 2) * 0.12; if (R.head) R.head.rotation.z = Math.sin(t * 2.15) * 0.2; }); }
   // the singer's mic stand, front and centre
   { const [x, z] = at(6.7, Q / 2); part(props, Cy(0.02, 0.02, 1.5, 5), chrome, x, 1.25, z); part(props, Cy(0.2, 0.22, 0.04, 10), black, x, 0.52, z); part(props, Cy(0.05, 0.035, 0.14, 8), toon('#2a2a2e'), x, 2.0, z, 0.9); }
+}
+
+// more stage detail: coloured haze rolling off the stage, a fog machine, a neon name sign, string lights, speaker stacks,
+// monitor wedges and cables, café tables with candles out front, and the players get shades and hats
+function ucdStageMore() {
+  const OX = -21, OZ = -19.6, Q = Math.PI / 2, at = (r, a) => [OX + r * Math.sin(a), OZ + r * Math.cos(a)];
+  const black = toon('#141218'), chrome = toon('#a8aeb8'), gold = toon('#c9a43a');
+  // haze: pink and violet clouds that hang over the stage and spill off the lip
+  const N = 140, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), c = new THREE.Color(), sp = [];
+  for (let i = 0; i < N; i++) { const r = Math.sqrt(Math.random()) * 9.5, a = Math.random() * Q, [x, z] = at(r, a); pos.set([x, 0.5 + Math.random() * (r < 7.4 ? 3.2 : 1.2), z], i * 3); c.setHSL(0.78 + Math.random() * 0.17, 0.75, 0.5 + Math.random() * 0.15); col.set([c.r, c.g, c.b], i * 3); sp.push([a, r, Math.random() * 6]); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const hz = new THREE.Points(g, new THREE.PointsMaterial({ size: 2.3, map: hbHazeTex(), vertexColors: true, transparent: true, opacity: 0.14, depthWrite: false })); hz.frustumCulled = false; levelGroup.add(hz);
+  levelAnims.push(t => { for (let i = 0; i < N; i++) { const [a, r, ph] = sp[i], rr = r + Math.sin(t * 0.15 + ph) * 0.6, aa = a + Math.sin(t * 0.1 + ph) * 0.08; pos[i * 3] = OX + rr * Math.sin(aa); pos[i * 3 + 2] = OZ + rr * Math.cos(aa); pos[i * 3 + 1] += Math.sin(t * 0.3 + ph) * 0.002; } g.attributes.position.needsUpdate = true; hz.material.opacity = 0.12 + Math.sin(t * 0.7) * 0.03; });
+  // fog machines puff along the floor at the lip
+  for (const a of [0.25, Q - 0.25]) { const [x, z] = at(7.9, a); part(props, B(0.5, 0.3, 0.4), black, x, 0.15, z, 0, a); levelAnims.push(() => { if (Math.random() < 0.1) burst(V(x + Math.sin(a) * 0.4, 0.25, z + Math.cos(a) * 0.4), ['#c86aff', '#ff6ad8', '#e8d8ff'][randi(0, 2)], 2, 0.6); }); }
+  // neon name sign up in the corner, string lights along the curtain tops
+  const ns = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.9), new THREE.MeshBasicMaterial({ map: signTex('VIXEN GLIPPO', '#14060e', '#ff4fa8'), transparent: true })); const [nx, nz] = at(0.9, Q / 2); ns.position.set(nx + 0.4, 5.3, nz + 0.4); ns.rotation.y = Q / 2; levelGroup.add(ns);
+  const sl = new THREE.PointLight(0xff4fa8, 1.0, 8, 1.6); sl.position.set(nx + 1.2, 5.0, nz + 1.2); levelGroup.add(sl);
+  const bulbs = []; for (let i = 0; i < 24; i++) { const f = i / 23, x = i < 12 ? OX + 0.45 : OX + 0.45 + (f - 0.5) * 2 * 7.4, z = i < 12 ? OZ + 0.45 + f * 2 * 7.2 : OZ + 0.45; bulbs.push(part(props, new THREE.SphereGeometry(0.06, 6, 4), glow(['#ffd36a', '#ff6ad8', '#7fe8ff'][i % 3]), x, 4.75 - Math.abs(Math.sin(f * Math.PI * 6)) * 0.18, z)); }
+  // speaker stacks on the floor either side, monitor wedges at the lip, a cable snake
+  for (const a of [-0.05, Q + 0.05]) { const [x, z] = at(8.4, a); for (let k = 0; k < 2; k++) { part(props, B(1.1, 1.0, 0.8), black, x, 0.5 + k * 1.02, z, 0, a); part(props, Cy(0.34, 0.34, 0.03, 14), toon('#2a2a2e'), x + Math.sin(a) * 0.41, 0.5 + k * 1.02, z + Math.cos(a) * 0.41, Math.PI / 2, a, 0); } part(props, B(1.12, 0.06, 0.06), glow('#ff4a6a'), x, 2.08, z, 0, a); box(x, z, 0.6, 0.6); }
+  for (const a of [0.45, Q / 2, Q - 0.45]) { const [x, z] = at(6.6, a); part(props, B(0.7, 0.3, 0.4), black, x, 0.62, z, -0.5, a); }
+  for (let i = 0; i < 6; i++) { const [x, z] = at(3 + i * 0.6, 0.5 + Math.sin(i) * 0.1); part(props, Cy(0.025, 0.025, 0.6, 4), toon('#0c0a0c'), x, 0.53, z, Math.PI / 2, i * 0.4, 0); }
+  // little café tables out front with candles and chairs
+  for (const a of [0.35, Q / 2, Q - 0.35]) { const [x, z] = at(10.4, a); part(props, Cy(0.5, 0.5, 0.05, 16), toon('#2a1a12', 'wood'), x, 0.78, z); part(props, Cy(0.05, 0.08, 0.76, 8), chrome, x, 0.38, z); solid(x, z, 0.55);
+    part(props, Cy(0.05, 0.05, 0.1, 8), toon('#e8e0d0'), x, 0.86, z); const fl = part(props, new THREE.ConeGeometry(0.025, 0.06, 6), glow('#ffb347'), x, 0.94, z); levelAnims.push(t => { fl.scale.y = 0.8 + Math.sin(t * 13 + x) * 0.25; });
+    for (const s of [-1, 1]) { const cx = x + Math.cos(a) * 0.7 * s, cz = z - Math.sin(a) * 0.7 * s; part(props, Cy(0.2, 0.2, 0.05, 10), toon('#5a1018', 'cloth'), cx, 0.48, cz); part(props, Cy(0.025, 0.025, 0.46, 5), chrome, cx, 0.23, cz); } }
+  // the players dress up: shades all round, a fedora or a beret
+  let k = 0; for (const o of levelGroup.children) { const R = o.userData && o.userData.rig; if (!R || !R.head || Math.hypot(o.position.x - OX, o.position.z - OZ) > 7.4 || o.position.y < 0.4) continue;
+    const y = 1.78 - R.spec.neck; part(R.head, B(0.24, 0.045, 0.02), toon('#0c0a10'), 0, y, 0.135); part(R.head, B(0.06, 0.03, 0.02), glow(['#ff6ad8', '#7fe8ff', '#ffd36a'][k % 3]), 0.06, y + 0.005, 0.146);
+    if (k % 2 === 0) { part(R.head, Cy(0.13, 0.15, 0.12, 12), toon('#1a1418', 'cloth'), 0, y + 0.16, -0.01); part(R.head, Cy(0.24, 0.24, 0.015, 16), toon('#1a1418', 'cloth'), 0, y + 0.1, -0.01); part(R.head, Cy(0.151, 0.151, 0.03, 12), toon('#8a1e2a'), 0, y + 0.12, -0.01); }
+    else part(R.head, Cy(0.17, 0.15, 0.06, 14), toon('#5a1e8a', 'cloth'), 0.02, y + 0.12, -0.01, 0, 0, 0.2); k++; }
+  // the drummer's bass drum gets the band name
+  const [dx, dz] = at(2.6, Q / 2), dn = new THREE.Mesh(new THREE.CircleGeometry(0.36, 20), new THREE.MeshBasicMaterial({ map: signTex('GLIPPO', '#1a0a12', '#ffd36a') })); dn.position.set(dx + Math.sin(Q / 2) * 0.82, 1.22, dz + Math.cos(Q / 2) * 0.82); dn.rotation.y = Q / 2; levelGroup.add(dn);
 }

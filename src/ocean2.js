@@ -263,8 +263,14 @@ function ocPierDetails() { const y = ocDeck() + 0.11;
     part(g, Cy(0.2, 0.16, 0.4, 8), toon(['#4fd2ff', '#c8402f', '#ffd36a'][i]), -0.8, y + 0.2, -L / 2 + 5);
     const net = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1), new THREE.MeshBasicMaterial({ color: '#d8c890', wireframe: true })); net.position.set(1.35, y + 0.5, 0); net.rotation.y = Math.PI / 2; g.add(net);
     if (i === 0) { part(g, B(1.2, 0.08, 0.6), toon('#9a7650', 'wood'), -0.7, y + 0.8, 1); for (const s of [-1, 1]) part(g, B(0.06, 0.8, 0.06), toon('#6a4f34', 'wood'), -0.7 + s * 0.5, y + 0.4, 1); part(g, B(0.4, 0.08, 0.15), toon('#ffb347'), -0.7, y + 0.88, 1); }
-    for (let k = 0; k < 2; k++) { const gull = new THREE.Group(); part(gull, new THREE.SphereGeometry(0.14, 8, 6), toon('#f4f0e8'), 0, 0, 0); part(gull, B(0.4, 0.03, 0.12), toon('#c8c0b0'), 0, 0.02, 0); part(gull, B(0.06, 0.04, 0.12), toon('#ffb347'), 0, 0.02, -0.16);
-      gull.position.set((k ? -1 : 1) * 1.4, y + 0.55, -L / 2 + 6 + k * 4); g.add(gull); levelAnims.push(t => { gull.rotation.y = Math.sin(t * 0.6 + k * 3 + i) * 1.2; }); } });
+    // gulls perched on piling tops: a body, white head, grey folded wings, a yellow beak, legs; only the head looks around
+    for (let k = 0; k < 2; k++) { const gull = new THREE.Group(), wh = toon('#f4f0e8'), gr = toon('#9aa1aa');
+      part(gull, B(0.22, 0.2, 0.42), wh, 0, 0.22, 0); part(gull, B(0.08, 0.12, 0.18), gr, 0, 0.26, 0.26, -0.3, 0, 0);
+      for (const s of [-1, 1]) { part(gull, B(0.04, 0.15, 0.36), gr, s * 0.12, 0.25, 0.02); part(gull, B(0.03, 0.12, 0.03), toon('#ffb347'), s * 0.06, 0.06, 0); }
+      const head = new THREE.Group(); part(head, B(0.16, 0.16, 0.18), wh, 0, 0, 0); part(head, B(0.05, 0.05, 0.14), toon('#ffd36a'), 0, -0.02, -0.15); for (const s of [-1, 1]) part(head, B(0.02, 0.03, 0.03), toon('#111'), s * 0.085, 0.03, -0.04);
+      head.position.set(0, 0.4, -0.2); gull.add(head);
+      gull.position.set((k ? -1 : 1) * 1.4, y + 0.39, -L / 2 + 5 + k * 4); gull.rotation.y = k ? 0.6 : 2.4; g.add(gull);
+      levelAnims.push(t => { const s = Math.sin(t * 0.7 + k * 3 + i); head.rotation.y = Math.abs(s) > 0.7 ? Math.sign(s) * 0.8 : 0; head.position.y = 0.4 + Math.max(0, Math.sin(t * 2.3 + k)) * 0.02; }); } });
   // drifting space-lily pads and a few floating buoys around the harbour
   for (let i = 0; i < 12; i++) { const a = i * 2.4, r = 14 + (i * 7) % 18, x = PORT[0] + Math.cos(a) * r, z = PORT[1] + 26 + Math.sin(a) * r * 0.6; if (groundH(x, z) > WATER_Y - 0.3) continue;
     const pad = new THREE.Mesh(new THREE.CircleGeometry(0.6 + (i % 3) * 0.2, 10), toon('#4f9a4a')); pad.rotation.x = -Math.PI / 2; pad.position.set(x, WATER_Y + 0.04, z); levelGroup.add(pad);

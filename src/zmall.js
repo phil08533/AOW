@@ -34,7 +34,8 @@ function zMall() {
     part(props, B(1.2, 0.6, 1.2), toon('#5d636c', 'panel'), x, 0.3, z); part(props, B(1.1, 0.1, 1.1), toon('#3a2a1a'), x, 0.62, z);
     part(props, Cy(0.07, 0.09, 1.0, 6), toon('#5a4030', 'wood'), x, 1.1, z); part(props, new THREE.IcosahedronGeometry(0.6, 0), toon('#4f8a3a', 'leaves'), x, 1.8, z); solid(x, z, 0.8);
     const b = Math.PI / 4 + i * Math.PI / 2 + Math.PI / 4, bx = Math.cos(b) * 8.5, bz = Math.sin(b) * 8.5;
-    if (Math.hypot(bx - 0, bz - 6) > 2 && Math.hypot(bx + 5, bz - 12) > 2) { part(props, B(2.2, 0.12, 0.6), toon('#8a6a44', 'wood'), bx, 0.5, bz, 0, -b); part(props, B(2.2, 0.5, 0.1), toon('#8a6a44', 'wood'), bx + Math.cos(b) * 0.3, 0.8, bz + Math.sin(b) * 0.3, 0, -b); } }
+    if (Math.hypot(bx - 0, bz - 6) > 2 && Math.hypot(bx + 5, bz - 12) > 2) { const r = Math.PI / 2 - b; part(props, B(2.2, 0.12, 0.6), toon('#8a6a44', 'wood'), bx, 0.5, bz, 0, r); part(props, B(2.2, 0.5, 0.1), toon('#8a6a44', 'wood'), bx + Math.cos(b) * 0.3, 0.8, bz + Math.sin(b) * 0.3, 0, r);
+      for (const e of [-0.9, 0.9]) part(props, B(0.12, 0.44, 0.5), '#5d636c', bx + Math.sin(b) * e, 0.22, bz - Math.cos(b) * e, 0, r); solid(bx, bz, 0.8); } }
   // kiosks out on the concourse
   const kiosk = (x, z, label, col) => { part(props, B(1.6, 1.0, 1.6), toon('#2c2f36'), x, 0.5, z); part(props, B(1.8, 0.08, 1.8), toon(col), x, 1.04, z);
     for (const [ox, oz] of [[-0.8, -0.8], [0.8, -0.8], [-0.8, 0.8], [0.8, 0.8]]) part(props, Cy(0.04, 0.04, 1.6, 5), '#9aa0a8', x + ox, 1.85, z + oz);

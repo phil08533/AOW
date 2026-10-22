@@ -2,8 +2,8 @@
 // A war film built from the game's own models, played the first time a character starts (and from Codex → Cinema).
 // It runs in its own little world (TRL.ground, then TRL.space) so nothing in the real game is touched.
 // The timeline follows the song "Art of War: Rising Sun" (2:12). Narration cues live in TRL_VO; shots in trlShot().
-TRACKS.risingsun = 'music/risingsun.mp3'; TRACKS.risingsuncut = 'music/risingsun_cut.mp3'; TRACKS.eventhorizon = 'music/eventhorizon.mp3';
-PLAYLISTS.trailer = ['risingsuncut']; PLAYLISTS.eyeboss = ['eventhorizon'];
+TRACKS.risingsun = 'music/risingsun.mp3'; TRACKS.eventhorizon = 'music/eventhorizon.mp3';
+PLAYLISTS.trailer = ['risingsun']; PLAYLISTS.eyeboss = ['eventhorizon'];
 const TRL_VO = [ // [time in seconds, line]
   [3.0, 'Hidden deep in the evil of war… is an art.', 1], [13.2, 'An art that few will ever find.', 2],
   [23.0, 'Generals are artists.', 3], [30.2, 'They command the field. They control the action.', 4],
@@ -14,9 +14,9 @@ const TRL_VO = [ // [time in seconds, line]
 const TRL_END = 134;
 // jump cuts (2.22.51): skip the long quiet stretches between narration lines, keeping the scene dip, the white-out into space and the title
 const TRL_CUTS = [[8.6, 13.0], [17.8, 20.3], [27, 29.2], [35.6, 40], [45.8, 54], [64, 70], [76, 89], [94, 103.5], [112, 120.5], [124.5, 129.5]];
-// 2.22.53: the song itself is re-cut to match (music/risingsun_cut.mp3, the kept stretches joined with 0.3 s crossfades), so it never jumps.
-// TRL_SEGS maps the edited song's time back onto the original timeline the shots are written against.
-const TRL_XF = 0.3, TRL_SEGS = (() => { const S = []; let a = 0, e = 0; for (const [ca, cb] of TRL_CUTS.concat([[TRL_END, 1e9]])) { if (ca > a) { S.push([e, a, ca]); e += ca - a - TRL_XF; } a = cb; } return S; })();
+// 2.22.53: the song plays straight through, untouched; only the pictures jump. TRL_SEGS maps time into the song onto the
+// shot timeline (the kept stretches back to back), so the trailer ends when the shots run out and the song fades with it.
+const TRL_XF = 0, TRL_SEGS = (() => { const S = []; let a = 0, e = 0; for (const [ca, cb] of TRL_CUTS.concat([[TRL_END, 1e9]])) { if (ca > a) { S.push([e, a, ca]); e += ca - a - TRL_XF; } a = cb; } return S; })();
 const trlMap = e => { let k = TRL_SEGS[0]; for (const g of TRL_SEGS) if (e >= g[0]) k = g; return k[1] + (e - k[0]); };
 const trlUnmap = T => { for (const g of TRL_SEGS) if (T >= g[1] && T < g[2]) return g[0] + (T - g[1]); return T; };
 const TRL = { on: false };

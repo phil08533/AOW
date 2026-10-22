@@ -71,12 +71,12 @@ function angTankFill() {
   angTank().slice(0, angTier()[1]).forEach((id, i) => { if (!ITEMS[id]) return; let f; try { f = makeFishModel(id); } catch (_) { return; }
     const b = new THREE.Box3().setFromObject(f), sz = b.getSize(new THREE.Vector3()), k = 0.26 / Math.max(sz.x, sz.z, 0.05), c = b.getCenter(new THREE.Vector3()).multiplyScalar(k);
     f.scale.setScalar(k); f.position.sub(c); const w = new THREE.Group(), turn = new THREE.Group(); turn.add(f); w.add(turn); L.add(w);
-    const sp = 0.09 + (i % 5) * 0.02, ph = i * 2.39, y0 = 0.95 + (i % 4) * 0.15, sx = sz.x >= sz.z; w.userData = { sp, ph, y0, sx, turn }; });
+    const sp = (0.04 + (i * 0.618 % 1) * 0.04) * (i % 3 === 1 ? -1 : 1), ph = i * 2.39, y0 = 0.95 + (i % 4) * 0.15, sx = sz.x >= sz.z, fx = 1.2 + (i * 0.73 % 1) * 1.4, fy = 1.5 + (i * 0.41 % 1) * 2; w.userData = { sp, ph, y0, sx, turn, fx, fy }; });
 }
 // swim: lazy figure-eights inside the glass, turning to face where they go
 setInterval(() => { try { const L = ANG.live; if (!L || !L.parent || !L.parent.parent) return; const t = performance.now() / 1000;
-  for (const w of L.children) { const { sp, ph, y0, sx, turn } = w.userData, a = t * sp + ph, rz = (ANG.rz || 1) * 1.0, x = Math.sin(a * 1.7) * 0.28, z = Math.sin(a) * rz, y = y0 + Math.sin(a * 2.3) * 0.07;
-    const dx = Math.cos(a * 1.7) * 1.7 * 0.28, dz = Math.cos(a) * rz; w.position.set(x, y, z); turn.rotation.y = Math.atan2(dz, dx) * -1 + (sx ? 0 : Math.PI / 2); turn.rotation.z = Math.sin(t * 3 + ph) * 0.06; } } catch (_) {} }, 33);
+  for (const w of L.children) { const { sp, ph, y0, sx, turn, fx, fy } = w.userData, a = t * sp + ph, rz = (ANG.rz || 1) * 1.0, x = Math.sin(a * fx) * 0.28, z = Math.sin(a) * rz, y = y0 + Math.sin(a * fy) * 0.07;
+    const dx = Math.cos(a * fx) * fx * 0.28 * Math.sign(sp), dz = Math.cos(a) * rz * Math.sign(sp); w.position.set(x, y, z); turn.rotation.y = Math.atan2(dz, dx) * -1 + (sx ? 0 : Math.PI / 2); turn.rotation.z = Math.sin(t * 3 + ph) * 0.06; } } catch (_) {} }, 33);
 function openAngTank() {
   openDlg("Angler's Den", 'The aquarium'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   const fishSet = angFish();

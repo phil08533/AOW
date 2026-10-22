@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.58</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.59</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -4392,7 +4392,7 @@ function loadLevel(id, opts) {
   for (const n of L.npcs) makeNpc(n, L.npcBase);
   for (const sp of L.spawns) for (let i = 0; i < sp.n; i++) makeEnemy(sp);
   if (!L.ocean) S.inSub = false; if (typeof RC !== 'undefined') { if (RC.ai) RC.ai.forEach(A => A.obj.parent && A.obj.parent.remove(A.obj)); RC = { on: false }; }
-  camera.near = L.fly ? 0.5 : 0.03; camera.far = L.fly ? 7000 : 300; camera.updateProjectionMatrix(); if (!L.fly) fly = null;
+  camera.near = L.fly ? 0.5 : 0.03; camera.far = L.fly ? 14000 : 300; camera.updateProjectionMatrix(); if (!L.fly) fly = null;
   if (L.fly) { if (player.groundHp == null) player.groundHp = player.hp; } else if (player.groundHp != null) { player.hp = player.groundHp; player.groundHp = null; }
   if (['earth', 'mezar', 'capitone', 'zeltac', 'arena', 'robot', 'ocean', 'moon', 'speedway'].includes(id)) S.orbit = id;
   const sp = opts.at || L.spawn; player.pos.set(sp.x, sp.y != null ? sp.y : floorAt(sp.x, sp.z), sp.z); player.yaw = sp.yaw != null ? sp.yaw : player.yaw; player.pitch = 0; player.vy = 0;
@@ -7466,7 +7466,7 @@ const SPACE_BODIES = {
   zarlich: { pos: V(1500, -220, 800), r: 150, col: '#c86aff', survey: 'Zarlich', note: 'Violet storms, unknown life', ring: true },
   vector: { pos: V(-1550, 260, 600), r: 170, col: '#5a2a6a', survey: 'Vector', note: 'The dark world. Something watches back.' }
 };
-const SPACE_SPREAD = 1.45; // worlds sit further apart
+const SPACE_SPREAD = 2.9; // worlds sit further apart
 Object.values(SPACE_BODIES).forEach(b => b.pos.multiplyScalar(SPACE_SPREAD));
 const SHIP_SYS = {
   laser: { name: 'Lasers', lv: [{ dmg: 30 }, { dmg: 48, cost: { cr: 800, ore: 10 } }, { dmg: 75, cost: { cr: 2200, ore: 20, starcrystal: 2 } }, { dmg: 115, cost: { cr: 6000, ore: 35, starcrystal: 6 } }] },
@@ -7479,7 +7479,7 @@ let fly = null; // flight state while in space
 const F_markers = [];
 const bodyName = (id) => SPACE_BODIES[id].survey || (LEVELS[id] ? LEVELS[id].name : id === 'robot' ? 'Robot City' : id);
 LEVELS.space = {
-  id: 'space', name: 'Open space', tag: 'Fly the Setting Sun', size: 120, center: [0, 0], radius: 3000, water: -99, sky: 'space', weather: 'none', fly: true,
+  id: 'space', name: 'Open space', tag: 'Fly the Setting Sun', size: 120, center: [0, 0], radius: 6000, water: -99, sky: 'space', weather: 'none', fly: true,
   terrain: null, palette: { grass: '#0a0f26' }, zones: [], paths: [], river: [], pools: [], lava: [], safes: [], npcs: [], spawns: [], npcBase: [0, 0],
   spawn: { x: 0, z: -680, yaw: 0 }, menu: { x: 0, z: -680, r: 30, h: 8 },
   build() {
@@ -7494,14 +7494,14 @@ LEVELS.space = {
       const atm = new THREE.Mesh(new THREE.SphereGeometry(P.r * 1.04, 20, 12), new THREE.MeshBasicMaterial({ color: P.col, transparent: true, opacity: 0.18, side: THREE.BackSide, depthWrite: false })); atm.position.copy(P.pos); levelGroup.add(atm);
       if (P.ring) { const ring = new THREE.Mesh(new THREE.RingGeometry(P.r * 1.35, P.r * 2.1, 48), new THREE.MeshBasicMaterial({ color: '#f2d6a8', transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false })); ring.position.copy(P.pos); ring.rotation.set(-1.2, 0.3, 0); levelGroup.add(ring); }
     }
-    const sunM = new THREE.Mesh(new THREE.SphereGeometry(260, 20, 12), new THREE.MeshBasicMaterial({ color: '#ffd38a', fog: false })); sunM.position.set(-2600, 700, 1800); levelGroup.add(sunM);
+    const sunM = new THREE.Mesh(new THREE.SphereGeometry(260, 20, 12), new THREE.MeshBasicMaterial({ color: '#ffd38a', fog: false })); sunM.position.set(-5200, 1400, 3600); levelGroup.add(sunM);
     const sunL = new THREE.DirectionalLight(0xfff0d8, 1.1); sunL.position.copy(sunM.position); levelGroup.add(sunL); levelGroup.add(sunL.target);
     // asteroid belt between the worlds
-    const N = 220, geo = new THREE.IcosahedronGeometry(1, 0), rocks = new THREE.InstancedMesh(geo, psx(new THREE.MeshLambertMaterial({ map: TEX.stone, color: '#ffffff' })), N);
+    const N = 420, geo = new THREE.IcosahedronGeometry(1, 0), rocks = new THREE.InstancedMesh(geo, psx(new THREE.MeshLambertMaterial({ map: TEX.stone, color: '#ffffff' })), N);
     const dm = new THREE.Object3D();
     for (let i = 0; i < N; i++) {
-      const a = (i / N) * Math.PI * 2 + Math.sin(i * 7.3) * 0.08, d = 760 + Math.sin(i * 3.1) * 90 + (i % 5) * 14, s = 3 + (i * 37 % 11) * 1.4 + (i % 13 === 0 ? 10 : 0);
-      const p = V(Math.cos(a) * d, Math.sin(i * 1.7) * 40, Math.sin(a) * d * 0.7 + 90), crystal = i % 9 === 0, drug = i % 9 === 4;
+      const a = (i / N) * Math.PI * 2 + Math.sin(i * 7.3) * 0.08, d = 1520 + Math.sin(i * 3.1) * 180 + (i % 5) * 28, s = 3 + (i * 37 % 11) * 1.4 + (i % 13 === 0 ? 10 : 0);
+      const p = V(Math.cos(a) * d, Math.sin(i * 1.7) * 80, Math.sin(a) * d * 0.7 + 180), crystal = i % 9 === 0, drug = i % 9 === 4;
       fly.rockData.push({ p, s, hp: s * 12, max: s * 12, crystal, drug, dead: 0, spin: V(Math.sin(i), Math.cos(i * 2), Math.sin(i * 3)).multiplyScalar(0.2) });
       dm.position.copy(p); dm.scale.setScalar(s); dm.rotation.set(i, i * 2, i * 3); dm.updateMatrix(); rocks.setMatrixAt(i, dm.matrix);
       rocks.setColorAt(i, new THREE.Color(crystal ? '#ffe070' : drug ? '#6aff7a' : ['#ffffff', '#d8c8b8', '#b8b0a8'][i % 3]));
@@ -7510,7 +7510,9 @@ LEVELS.space = {
     // drug rocks: a soft green glow around each one, so you can spot them across the belt
     for (const R of fly.rockData) if (R.drug) { const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: FLASH_TEX, color: '#3aff5a', transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); gl.position.copy(R.p); gl.scale.setScalar(R.s * 3.2); levelGroup.add(gl); R.glow = gl; }
     // raider packs
-    for (const [cx, cy, cz, n, lv] of [[450, 20, -420, 4, 12], [-480, 0, -480, 5, 18], [520, 10, 300, 5, 24], [-300, 30, 480, 4, 28], [80, 0, 520, 3, 20]]) for (let i = 0; i < n; i++) spawnRaider(V(cx + rand(-60, 60), cy + rand(-30, 30), cz + rand(-60, 60)), lv);
+    // raider packs scattered all over the map: tougher the further out you fly
+    for (let i = 0; i < 18; i++) { const a = i * 2.39 + 0.5, d = 700 + (i * 977 % 3600), lv = Math.round(10 + d / 4300 * 30 + (i % 3) * 2), cx = Math.cos(a) * d, cz = Math.sin(a) * d, cy = Math.sin(i * 1.3) * 140;
+      for (let k = 0, n = 3 + i % 3; k < n; k++) spawnRaider(V(cx + rand(-70, 70), cy + rand(-35, 35), cz + rand(-70, 70)), lv); }
     // name markers you can see from anywhere
     F_markers.length = 0;
     for (const id in SPACE_BODIES) { const P = SPACE_BODIES[id], sp = labelSprite(768, 72); levelGroup.add(sp); F_markers.push({ id, P, sp, t: 0 }); }
@@ -7533,6 +7535,11 @@ function enterSpace(near) {
 }
 function leaveSpace(to) { closeDlg(); travel(to || 'ship'); }
 const shipFwd = V(0, 0, 0), shipUp = V(0, 0, 0), shipRight = V(0, 0, 0), _q = new THREE.Quaternion(), _e = new THREE.Euler(0, 0, 0, 'YXZ');
+function shipGrip() { return 1.6; }
+function shipStrafe() { return 0.4; }
+function shipLift() { return 0; }
+function shipMineMul() { return 1; }
+function shipOreMul() { return 1; }
 function spaceStep(dt, t) {
   const F = fly; if (!F) return;
   const frozen = dlgOpen || chatOpen();
@@ -7543,8 +7550,8 @@ function spaceStep(dt, t) {
   F.cruise = thIn > 0.9 && nearSurf > 260 && !frozen ? Math.min(5, (F.cruise || 1) + dt * 0.9) : Math.max(1, (F.cruise || 1) - dt * 3);
   const maxSp = SHIP_SYS.engine.lv[sysLv('engine')].sp * F.cruise * (typeof shipMod === 'function' ? shipMod('sp') : 1), boost = (keys.ShiftLeft || keys.ShiftRight) ? 1.8 : 1;
   const th = frozen ? 0 : clamp((keys.KeyW ? 1 : 0) - (keys.KeyS ? 0.6 : 0) + move.y, -0.6, 1), st = frozen ? 0 : clamp((keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x, -1, 1);
-  const want = shipFwd.clone().multiplyScalar(th * maxSp * boost).addScaledVector(shipRight, st * maxSp * 0.4);
-  F.vel.lerp(want, Math.min(1, dt * 1.6 * (gameTime - (F.rockBumpT || -9) < 0.45 ? 0.15 : 1))); SFX.engine(0.4 + Math.abs(th) * 0.6, F.vel.length() / 200);
+  const want = shipFwd.clone().multiplyScalar(th * maxSp * boost).addScaledVector(shipRight, st * maxSp * shipStrafe()).addScaledVector(shipUp, (frozen ? 0 : shipLift()) * maxSp * shipStrafe());
+  F.vel.lerp(want, Math.min(1, dt * shipGrip() * (gameTime - (F.rockBumpT || -9) < 0.45 ? 0.15 : 1))); SFX.engine(0.4 + Math.abs(th) * 0.6, F.vel.length() / 200);
   player.pos.addScaledVector(F.vel, dt);
   // keep out of planets and rocks
   for (const id in SPACE_BODIES) { const P = SPACE_BODIES[id], d = player.pos.distanceTo(P.pos), m = P.r + (P.station ? 45 : 30);
@@ -7556,7 +7563,7 @@ function spaceStep(dt, t) {
       if (!F.bumpT || gameTime - F.bumpT > 3) { F.bumpT = gameTime; SFX.block(); log(!L ? `${bodyName(id)} has no landing site yet. Scan it with E when you're close.` : `${L.name} is locked. Keep following the story to open it.`); }
     } }
   for (const R of F.rockData) { if (R.dead) continue; const d = player.pos.distanceTo(R.p), m = R.s + 3; if (d < m) { const out = d > 0.01 ? player.pos.clone().sub(R.p).normalize() : V(0, 1, 0); player.pos.copy(R.p).addScaledVector(out, m + 1.5); const vn = F.vel.dot(out); if (vn < 0) { if (-vn > 30 && (!F.rockHitT || gameTime - F.rockHitT > 1)) { F.rockHitT = gameTime; hurt(-vn * 0.15); F.shake = 0.4; } F.vel.addScaledVector(out, -vn * 1.6); } F.vel.addScaledVector(out, 12); F.rockBumpT = gameTime; } }
-  if (player.pos.length() > 3200) player.pos.setLength(3200);
+  if (player.pos.length() > 6400) player.pos.setLength(6400);
   F.mkT = (F.mkT || 0) - dt;
   for (const M of F_markers) { const d = player.pos.distanceTo(M.P.pos), surf = Math.max(0, d - M.P.r);
     M.sp.position.copy(M.P.pos).add(V(0, M.P.r * 1.08 + d * 0.06, 0)); M.sp.scale.set(d * 0.75, d * 0.07, 1); M.sp.visible = surf > 60 && !!PREFS.planetTags;
@@ -7635,9 +7642,9 @@ function shipFire() {
     F.rockData.forEach((R, i) => { if (R.dead) return; const tt = raySphere(from, dir, R.p, R.s); if (tt > 0 && tt < ht) { ht = tt; hit = null; rock = i; } });
     const end = from.clone().addScaledVector(dir, ht); tracer(from, end, '#6fdc5a');
     if (hit) { hit.hp -= dmg / 2; hit.aggro = true; burst(end, '#ffd36a', 6, 12); hitmark(false); if (hit.hp <= 0) killRaider(hit); else drawPlate(hit.plate, (hit.def && hit.def.name) || 'Drome Raider', 'Lv ' + hit.lv, hpColor(hit.lv), hit.hp / hit.max); }
-    else if (rock >= 0) { const R = F.rockData[rock]; R.hp -= dmg / 2; burst(end, '#b8a07a', 4, 10);
+    else if (rock >= 0) { const R = F.rockData[rock]; R.hp -= dmg / 2 * shipMineMul(); burst(end, '#b8a07a', 4, 10);
       if (R.hp <= 0) { R.dead = 0.001; F.dm.position.copy(R.p); F.dm.scale.setScalar(0.0001); F.dm.updateMatrix(); F.rocks.setMatrixAt(rock, F.dm.matrix); F.rocks.instanceMatrix.needsUpdate = true; burst(R.p, '#b8a07a', 24, 30); SFX.crack();
-        const n = Math.max(1, Math.round(R.s / 4)); for (let k = 0; k < n; k++) spaceDrop(R.p, 'item', 'ore', 1); if (R.crystal || Math.random() < 0.1) spaceDrop(R.p, 'item', 'starcrystal', 1); if (R.drug) { if (R.glow) R.glow.visible = false; const ks = Object.keys(BQ_ING).filter(k => !BQ_ING[k].rare); for (let k = 0; k < 2 + randi(0, 2); k++) spaceDrop(R.p, 'item', ks[randi(0, ks.length - 1)], 1); if (Math.random() < 0.08) spaceDrop(R.p, 'item', 'starnectar', 1); } questProgressKill('asteroid'); } }
+        const n = Math.max(1, Math.round(R.s / 4 * shipOreMul())); for (let k = 0; k < n; k++) spaceDrop(R.p, 'item', 'ore', 1); if (R.crystal || Math.random() < 0.1) spaceDrop(R.p, 'item', 'starcrystal', 1); if (R.drug) { if (R.glow) R.glow.visible = false; const ks = Object.keys(BQ_ING).filter(k => !BQ_ING[k].rare); for (let k = 0; k < 2 + randi(0, 2); k++) spaceDrop(R.p, 'item', ks[randi(0, ks.length - 1)], 1); if (Math.random() < 0.08) spaceDrop(R.p, 'item', 'starnectar', 1); } questProgressKill('asteroid'); } }
   }
 }
 function killRaider(r) {
@@ -7736,7 +7743,7 @@ function openShipSystems(who) {
   const render = () => { rows.textContent = ''; $('dlgLine').textContent = `Upgrade the Setting Sun for space. ${S.cr} cr · ${S.inv.ore || 0} ore · ${S.inv.starcrystal || 0} star crystals.`;
     for (const k in SHIP_SYS) { const sys = SHIP_SYS[k], l = sysLv(k), nx = sys.lv[l + 1], r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = ['#9aa1aa', '#6fdc5a', '#4fa8ff', '#c86aff', '#ffd36a'][l] || '#ffd36a';
-      const cur = sys.lv[l], nm = document.createElement('span'); nm.textContent = `${sys.name} ${'★'.repeat(l)} · ${cur.dmg ? cur.dmg + ' dmg' : cur.hp ? cur.hp + ' hull' : cur.sp + ' speed'}`;
+      const cur = sys.lv[l], nm = document.createElement('span'); nm.textContent = `${sys.name} ${'★'.repeat(l)} · ${cur.dmg ? cur.dmg + ' dmg' : cur.hp ? cur.hp + ' hull' : cur.grip ? sys.lbl[l] : cur.sp + ' speed'}`;
       const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = nx ? costLabel(nx.cost) : 'Maxed';
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = 'Upgrade'; b.disabled = !nx || !costOk(nx.cost);
       b.addEventListener('click', () => { costPay(nx.cost); S.ship.sys = S.ship.sys || {}; S.ship.sys[k] = l + 1; SFX.level(); log(`${sys.name} upgraded`, 'loot'); markDirty(); render(); });
@@ -18975,6 +18982,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 224, title: '2.22.59 · Fighter and Miner', items: ['Two new ships at the Shipyard (bridge console or Brakka): the Viper Fighter (25k) and the Bulldog Miner (20k). Switch any time', 'Garage for each ship: 9 paint styles (stripes, flames, camo, hazard, checker, tiger, carbon...), paint, accent, exhaust, and swappable wings, engines, noses, guns, body kits, drills, armor, cargo and lights', 'Fighter: side thrusters fire as you strafe, climb (Space) and drop (Ctrl/X), and stop on a dime', 'Miner: huge hull, takes 45% less damage, breaks rocks 2.5x faster and gets more ore', 'New Thrusters upgrade in Ship Systems: from floaty to on a dime', 'Space is twice as big, and raider packs are now spread all over it'] },
   { id: 223, title: '2.22.58 · Busier cockpit', items: ['More cockpit gadgets: two banks of flip switches with status lights, little scope screens on both sides, extra dials with moving needles, blinking button grids and a red digital clock'] },
   { id: 222, title: '2.22.57 · A proper cockpit', items: ['The ship cockpit gets riveted trim, corner plates, live gauges, glowing meters, toggle switches and a blinking warning lamp', 'Phones: the Menu tab is now a metal console tab with rivets and a glowing label'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
@@ -26648,6 +26656,194 @@ setInterval(() => { try { if (state === 'play' && !LEVEL.fly && !handMelee() && 
     tick();
   };
 })();
+
+// =================== SHIP CLASSES: buy a Fighter or a Miner, tune them in the garage, Need for Speed style ===================
+// Room to grow: a new class is one entry in SHIP_CLASSES (stats, flight feel, slots) plus a builder in SC_BUILD.
+const PAINT_STYLES = [['Solid', 0], ['Two-tone', 0], ['Racing stripes', 2500], ['Flames', 4000], ['Camo', 3000], ['Hazard', 2000], ['Checker', 3500], ['Tiger', 4500], ['Carbon', 5000]];
+const SHIP_CLASSES = {
+  starter: { name: 'Setting Sun', blurb: 'Your trusty starter. Balanced, a bit floaty.', cost: 0, stat: {}, grip: 1, strafe: 0.4 },
+  fighter: { name: 'Viper Fighter', blurb: 'Built to dogfight. Side thrusters let it strafe, climb and stop on a dime.', cost: 25000, stat: { sp: 0.15, laser: 0.3 }, grip: 1.4, strafe: 1, lift: true, rcs: true,
+    slots: {
+      wing: ['Wings', [['Swept blades', 0, {}], ['Forward-swept', 3000, { sp: 0.04 }], ['Delta', 4000, { sp: 0.03, hull: 0.04 }], ['Quad X-wing', 7000, { laser: 0.08 }]]],
+      eng: ['Engines', [['Twin afterburners', 0, {}], ['Single pulse', 3500, { sp: 0.06 }], ['Quad cluster', 6000, { sp: 0.1, hull: -0.04 }]]],
+      nose: ['Nose', [['Needle', 0, {}], ['Shark mouth', 2500, { hull: 0.04 }], ['Twin prong', 3500, { laser: 0.05 }]]],
+      wpn: ['Guns', [['Twin cannons', 0, {}], ['Gatling pods', 5000, { laser: 0.1 }], ['Missile racks', 6500, { laser: 0.14, sp: -0.02 }]]],
+      kit: ['Body kit', [['Stock', 0, {}], ['Spoiler fins', 2000, { sp: 0.02 }], ['Side skirts', 2000, { hull: 0.04 }], ['Canards', 3000, { sp: 0.03 }]]]
+    } },
+  miner: { name: 'Bulldog Miner', blurb: 'A flying bunker. Huge hull, shrugs off fire, tears through asteroids for extra ore.', cost: 20000, stat: { hull: 0.8, sp: -0.15, laser: -0.1 }, grip: 0.8, strafe: 0.6, lift: true, mine: 2.5, ore: 1.5, armor: 0.45,
+    slots: {
+      drill: ['Drills', [['Twin drills', 0, {}], ['Big auger', 4000, { mine: 0.6 }], ['Claw arms', 3000, { ore: 0.3 }]]],
+      armor: ['Armor', [['Plated', 0, {}], ['Heavy slab', 4500, { hull: 0.25, sp: -0.05 }], ['Cage frame', 3000, { hull: 0.1, sp: 0.03 }]]],
+      eng: ['Engines', [['Hauler twins', 0, {}], ['Quad thrusters', 4000, { sp: 0.1 }]]],
+      hopper: ['Cargo', [['Ore bins', 0, {}], ['Tank pods', 3000, { ore: 0.2 }], ['Container rack', 5000, { ore: 0.35, sp: -0.03 }]]],
+      lights: ['Lights', [['Floodlights', 0, {}], ['Light bar', 1500, {}], ['Lights off', 0, {}]]]
+    } }
+};
+function scS() { S.scl = S.scl || { cur: 'starter', own: { starter: 1 }, cfg: {} }; const Q = S.scl; Q.own = Q.own || { starter: 1 }; Q.cfg = Q.cfg || {};
+  for (const k in SHIP_CLASSES) if (k !== 'starter' && !Q.cfg[k]) { const c = { p: k === 'miner' ? 5 : 3, a: k === 'miner' ? 3 : 1, st: k === 'miner' ? 5 : 2, x: 0, own: {} }; for (const s in SHIP_CLASSES[k].slots) c[s] = 0; Q.cfg[k] = c; }
+  if (!SHIP_CLASSES[Q.cur] || !Q.own[Q.cur]) Q.cur = 'starter'; return Q; }
+const shipCls = () => scS().cur, shipClsDef = () => SHIP_CLASSES[shipCls()];
+function scPartStat(cls, cfg, stat) { const D = SHIP_CLASSES[cls]; let m = (D.stat[stat] || 0); for (const s in D.slots || {}) { const P = D.slots[s][1][cfg[s] || 0]; if (P && P[2][stat]) m += P[2][stat]; } return m; }
+// stats: class + its fitted parts. The starter keeps the old customizer's bonuses.
+{ const _sm = shipMod; shipMod = function (stat) { const c = shipCls(); if (c === 'starter') return _sm(stat); return Math.max(0.3, 1 + scPartStat(c, scS().cfg[c], stat)); }; }
+shipGrip = () => 1.6 * SHIP_SYS.thrust.lv[sysLv('thrust')].grip * shipClsDef().grip;
+shipStrafe = () => shipClsDef().strafe;
+shipLift = () => !shipClsDef().lift ? 0 : clamp((keys.Space || (typeof jetHeld !== 'undefined' && jetHeld) ? 1 : 0) - (keys.ControlLeft || keys.KeyX ? 1 : 0), -1, 1);
+shipMineMul = () => { const c = shipCls(), D = SHIP_CLASSES[c]; return (D.mine || 1) + (c !== 'starter' ? scPartStat(c, scS().cfg[c], 'mine') : 0); };
+shipOreMul = () => { const c = shipCls(), D = SHIP_CLASSES[c]; return (D.ore || 1) + (c !== 'starter' ? scPartStat(c, scS().cfg[c], 'ore') : 0); };
+SHIP_SYS.thrust = { name: 'Thrusters', lbl: ['floaty', 'responsive', 'snappy', 'tight', 'on a dime'], lv: [{ grip: 1 }, { grip: 1.7, cost: { cr: 1500, circuit: 4 } }, { grip: 2.8, cost: { cr: 4000, circuit: 8, ore: 15 } }, { grip: 4.5, cost: { cr: 9000, circuit: 14, starcrystal: 3 } }, { grip: 7.5, cost: { cr: 18000, circuit: 20, starcrystal: 6 } }] };
+// the miner's armor: less damage in space
+{ const _h = hurt; hurt = function (dmg, src) { if (LEVEL && LEVEL.fly && SHIP_CLASSES[shipCls()].armor) dmg *= 1 - SHIP_CLASSES[shipCls()].armor; return _h(dmg, src); }; }
+
+// ---------- paint jobs: a canvas texture per (base, accent, style) ----------
+const SC_TEX = {};
+function scPaintMat(base, acc, st) {
+  const key = base + acc + st; if (SC_TEX[key]) return SC_TEX[key];
+  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = base; x.fillRect(0, 0, 128, 128); x.fillStyle = acc;
+  const name = PAINT_STYLES[st][0];
+  if (name === 'Two-tone') x.fillRect(0, 64, 128, 64);
+  else if (name === 'Racing stripes') { x.fillRect(44, 0, 14, 128); x.fillRect(70, 0, 14, 128); }
+  else if (name === 'Flames') { x.beginPath(); x.moveTo(0, 128); for (let i = 0; i <= 8; i++) { x.quadraticCurveTo(i * 16 + 8, 128 - 40 - (i % 2) * 30, i * 16 + 16, 128 - (i % 3) * 10 - 20); } x.lineTo(128, 128); x.fill(); x.fillStyle = '#ffd36a'; x.beginPath(); x.moveTo(0, 128); for (let i = 0; i <= 8; i++) x.quadraticCurveTo(i * 16 + 8, 128 - 18 - (i % 2) * 14, i * 16 + 16, 118); x.lineTo(128, 128); x.fill(); }
+  else if (name === 'Camo') { let s = 7; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280; for (let i = 0; i < 26; i++) { x.fillStyle = i % 2 ? acc : 'rgba(0,0,0,.35)'; x.beginPath(); x.ellipse(r() * 128, r() * 128, 8 + r() * 14, 5 + r() * 9, r() * 3, 0, 7); x.fill(); } }
+  else if (name === 'Hazard') { x.fillStyle = '#ffd36a'; x.fillRect(0, 0, 128, 128); x.fillStyle = '#16181c'; for (let i = -128; i < 256; i += 32) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 16, 0); x.lineTo(i + 16 + 128, 128); x.lineTo(i + 128, 128); x.fill(); } x.fillStyle = base; x.fillRect(0, 32, 128, 64); }
+  else if (name === 'Checker') { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if ((i + j) % 2) x.fillRect(i * 16, j * 16, 16, 16); }
+  else if (name === 'Tiger') { for (let i = 0; i < 9; i++) { x.beginPath(); const y = i * 15; x.moveTo(0, y); x.quadraticCurveTo(40, y + 10, 64, y + 2); x.quadraticCurveTo(90, y - 6, 128, y + 6); x.lineTo(128, y + 10); x.quadraticCurveTo(80, y + 2, 64, y + 7); x.quadraticCurveTo(30, y + 14, 0, y + 5); x.fill(); } }
+  else if (name === 'Carbon') { x.fillStyle = '#1a1c20'; x.fillRect(0, 0, 128, 128); for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) { x.fillStyle = (i + j) % 2 ? '#2a2d33' : '#14161a'; x.fillRect(i * 8, j * 8, 8, 8); } x.fillStyle = acc; x.fillRect(0, 58, 128, 12); }
+  // panel lines on top of every style
+  x.strokeStyle = 'rgba(0,0,0,.28)'; x.lineWidth = 1; for (let i = 32; i < 128; i += 32) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, 128); x.stroke(); x.beginPath(); x.moveTo(0, i); x.lineTo(128, i); x.stroke(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.NearestFilter;
+  const m = toon('#ffffff', 'panel').clone(); m.map = t; m.color.set('#ffffff'); return SC_TEX[key] = m;
+}
+
+// ---------- the two ships ----------
+const SC_BUILD = {
+  fighter(g, C, hull, acc, dk, eg) {
+    const glass = glow('#8fd0ff'), steel = '#cfd3d8', rcs = [];
+    // fuselage: a long wedge with a raised spine
+    part(g, B(1.5, 0.8, 5.6), hull, 0, 0, 0.2); const top = part(g, B(1.0, 0.5, 4.2), hull, 0, 0.55, 0.6); part(g, B(0.3, 0.12, 4.6), acc, 0, 0.84, 0.6);
+    part(g, B(0.9, 0.45, 1.4), glass, 0, 0.7, -1.7, 0.18); part(g, B(1.0, 0.08, 1.5), dk, 0, 0.94, -1.6, 0.18);
+    for (const s of [-1, 1]) { part(g, B(0.35, 0.5, 1.6), dk, 0.85 * s, -0.05, -0.4); part(g, B(0.3, 0.42, 0.08), '#111', 0.86 * s, -0.05, -1.22); }
+    // nose
+    if (C.nose === 1) { part(g, B(1.3, 0.5, 1.6), hull, 0, -0.1, -3.2, 0.12); for (let i = 0; i < 6; i++) part(g, new THREE.ConeGeometry(0.06, 0.2, 3), '#ffffff', -0.5 + i * 0.2, -0.32, -3.9, Math.PI); E(g, glow('#ff2a3a'), 0.45, 0.1, -3.4, 0.08, 0.08, 0.08); E(g, glow('#ff2a3a'), -0.45, 0.1, -3.4, 0.08, 0.08, 0.08); }
+    else if (C.nose === 2) for (const s of [-1, 1]) part(g, new THREE.ConeGeometry(0.22, 2.4, 6), hull, 0.45 * s, 0, -3.6, -Math.PI / 2);
+    else { part(g, new THREE.ConeGeometry(0.75, 3.2, 4), hull, 0, 0, -4.0, -Math.PI / 2, Math.PI / 4); part(g, Cy(0.03, 0.03, 1.2, 4), steel, 0, 0, -6.0, Math.PI / 2); }
+    for (const s of [-1, 1]) {
+      // wings
+      if (C.wing === 1) { const w = part(g, B(3.6, 0.14, 1.4), hull, 2.1 * s, -0.1, 0.2, 0, -0.4 * s, 0); part(g, B(0.9, 0.16, 1.5), acc, 3.6 * s, -0.1, -0.4, 0, -0.4 * s, 0); }
+      else if (C.wing === 2) { const sh = new THREE.Shape(); sh.moveTo(0, -1.6); sh.lineTo(4.2, 2.2); sh.lineTo(0.6, 2.4); sh.lineTo(0, -1.6); const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.16, bevelEnabled: false }); geo.rotateX(Math.PI / 2); const w = part(g, geo, hull, 0.6 * s, 0, 0.2); w.scale.x = s; part(g, B(3.2, 0.18, 0.18), acc, 2.4 * s, 0.01, 1.8, 0, -0.62 * s, 0); }
+      else if (C.wing === 3) for (const y of [-1, 1]) { const w = part(g, B(3.4, 0.12, 1.2), hull, 2.1 * s, 0.25 * y, 1.2, 0, 0, 0.32 * y * s); part(g, Cy(0.12, 0.12, 1.4, 6), dk, 3.6 * s, 0.25 * y + 0.48 * y, 1.0, Math.PI / 2); part(g, B(0.8, 0.14, 1.25), acc, 3.4 * s, 0.25 * y + 0.4 * y, 1.2, 0, 0, 0.32 * y * s); }
+      else { const w = part(g, B(3.8, 0.14, 1.5), hull, 2.2 * s, -0.1, 1.2, 0, 0.5 * s, -0.06 * s); part(g, B(1.1, 0.16, 1.6), acc, 3.8 * s, -0.22, 2.0, 0, 0.5 * s, -0.06 * s); part(g, B(0.1, 0.5, 0.9), hull, 3.9 * s, 0.1, 2.0); }
+      // guns
+      if (C.wpn === 1) { part(g, Cy(0.22, 0.22, 1.4, 8), dk, 1.4 * s, -0.5, -0.8, Math.PI / 2); for (let k = 0; k < 4; k++) part(g, Cy(0.04, 0.04, 1.2, 4), steel, 1.4 * s + Math.cos(k * 1.57) * 0.11, -0.5 + Math.sin(k * 1.57) * 0.11, -1.9, Math.PI / 2); }
+      else if (C.wpn === 2) { part(g, B(0.5, 0.35, 1.8), dk, 1.5 * s, -0.45, 0.2); for (let k = 0; k < 4; k++) part(g, new THREE.ConeGeometry(0.08, 0.35, 6), '#c8402f', 1.38 * s + (k % 2) * 0.24 * s, -0.36 - (k > 1 ? 0.18 : 0), -0.85, -Math.PI / 2); }
+      else { part(g, Cy(0.08, 0.1, 3.0, 6), dk, 1.2 * s, -0.35, -1.6, Math.PI / 2); part(g, Cy(0.05, 0.05, 0.4, 6), glow('#ff6a3a'), 1.2 * s, -0.35, -3.1, Math.PI / 2); }
+      // engines
+      if (C.eng === 2) for (const y of [-0.35, 0.35]) { part(g, Cy(0.32, 0.38, 1.8, 8), dk, 0.6 * s, y, 3.2, Math.PI / 2); part(g, Cy(0.26, 0.26, 0.1, 8), glow(eg), 0.6 * s, y, 4.12, Math.PI / 2); }
+      else if (C.eng === 1) { if (s > 0) { part(g, Cy(0.7, 0.85, 2.2, 10), dk, 0, 0, 3.4, Math.PI / 2); part(g, Cy(0.62, 0.62, 0.1, 10), glow(eg), 0, 0, 4.52, Math.PI / 2); part(g, new THREE.TorusGeometry(0.75, 0.06, 4, 14), acc, 0, 0, 4.4); } }
+      else { part(g, Cy(0.42, 0.5, 2.0, 8), dk, 0.65 * s, 0, 3.3, Math.PI / 2); part(g, Cy(0.36, 0.36, 0.1, 8), glow(eg), 0.65 * s, 0, 4.32, Math.PI / 2); part(g, Cy(0.44, 0.44, 0.12, 8), steel, 0.65 * s, 0, 4.25, Math.PI / 2); }
+      // body kit
+      if (C.kit === 1) { const f = part(g, B(0.1, 1.0, 1.0), hull, 0.55 * s, 1.0, 2.8, 0, 0, -0.35 * s); part(g, B(1.6, 0.08, 0.5), acc, 0, 1.45, 3.1); }
+      else if (C.kit === 2) part(g, B(0.12, 0.3, 4.4), acc, 0.8 * s, -0.42, 0.2);
+      else if (C.kit === 3) { part(g, B(1.2, 0.08, 0.5), hull, 0.9 * s, 0.1, -2.6, 0, 0.4 * s); part(g, B(0.4, 0.09, 0.5), acc, 1.4 * s, 0.1, -2.7, 0, 0.4 * s); }
+      // side thruster pods (RCS): nozzles point out to each side, up and down, fore and aft
+      for (const z of [-2.2, 2.4]) { part(g, B(0.3, 0.3, 0.4), dk, 0.85 * s, 0.25, z); part(g, B(0.32, 0.06, 0.42), acc, 0.86 * s, 0.42, z);
+        for (const d of [V(s, 0, 0), V(0, 1, 0), V(0, -1, 0), V(0, 0, z < 0 ? -1 : 1)]) { const fl = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.7, 6), glow('#bfe8ff')); fl.material = fl.material.clone(); fl.material.transparent = true; fl.material.opacity = 0.85; fl.material.blending = THREE.AdditiveBlending; fl.material.depthWrite = false;
+          fl.position.set(0.85 * s + d.x * 0.3, 0.25 + d.y * 0.3, z + d.z * 0.3); fl.quaternion.setFromUnitVectors(V(0, -1, 0), d); fl.geometry = fl.geometry.clone().translate(0, -0.35, 0); fl.scale.setScalar(0.001); g.add(fl); rcs.push({ m: fl, d }); } }
+    }
+    // little details: antenna, lights
+    part(g, Cy(0.02, 0.02, 0.8, 4), dk, 0.3, 1.2, 1.8); E(g, glow('#ff3a2a'), 0, 0.92, 3.0, 0.07, 0.07, 0.07);
+    g.userData.rcs = rcs;
+  },
+  miner(g, C, hull, acc, dk, eg) {
+    const steel = '#9aa1aa', y = '#ffd36a';
+    // a chunky box body with a cab up front
+    part(g, B(2.6, 1.8, 5.4), hull, 0, 0, 0.6); part(g, B(2.0, 1.2, 1.6), hull, 0, 0.4, -2.6); part(g, B(1.7, 0.7, 0.1), glow('#8fd0ff'), 0, 0.6, -3.42, 0.2);
+    for (let i = 0; i < 3; i++) part(g, B(1.8, 0.06, 0.12), dk, 0, 0.35 + i * 0.22, -3.47);
+    // armor
+    if (C.armor === 1) for (const s of [-1, 1]) { part(g, B(0.4, 2.2, 5.8), dk, 1.45 * s, 0, 0.6); for (let k = 0; k < 4; k++) part(g, B(0.42, 0.08, 0.08), y, 1.46 * s, 0.8, -1.6 + k * 1.4); }
+    else if (C.armor === 2) for (const s of [-1, 1]) { for (let k = 0; k < 5; k++) part(g, B(0.08, 2.0, 0.08), steel, 1.4 * s, 0, -1.6 + k * 1.1); for (const yy of [-0.9, 0.9]) part(g, B(0.08, 0.08, 5.0), steel, 1.4 * s, yy, 0.6); }
+    else for (const s of [-1, 1]) { part(g, B(0.2, 1.4, 4.6), dk, 1.38 * s, 0, 0.6); for (let k = 0; k < 6; k++) E(g, steel, 1.5 * s, 0.55 * (k % 2 ? 1 : -1), -1.2 + Math.floor(k / 2) * 1.8, 0.06, 0.06, 0.06); }
+    // drills on the nose
+    const spin = [];
+    if (C.drill === 1) { const d = new THREE.Group(); d.position.set(0, -0.3, -3.6); g.add(d); part(d, new THREE.ConeGeometry(0.8, 2.6, 8), steel, 0, 0, -1.3, -Math.PI / 2); for (let k = 0; k < 4; k++) { const r = part(d, new THREE.TorusGeometry(0.62 - k * 0.14, 0.06, 4, 10), y, 0, 0, -0.4 - k * 0.55); } spin.push(d); part(g, Cy(0.9, 0.9, 0.4, 10), dk, 0, -0.3, -3.5, Math.PI / 2); }
+    else if (C.drill === 2) for (const s of [-1, 1]) { part(g, B(0.25, 0.25, 2.2), dk, 1.0 * s, -0.6, -3.4); for (const k of [-1, 1]) part(g, B(0.12, 0.12, 0.8), steel, 1.0 * s + k * 0.18, -0.6, -4.7, 0, -k * s * 0.4); E(g, glow('#ff8a3a'), 1.0 * s, -0.6, -4.4, 0.1, 0.1, 0.1); }
+    else for (const s of [-1, 1]) { part(g, B(0.3, 0.3, 1.8), dk, 0.9 * s, -0.5, -3.3); const d = new THREE.Group(); d.position.set(0.9 * s, -0.5, -4.3); g.add(d); part(d, new THREE.ConeGeometry(0.38, 1.6, 6), steel, 0, 0, -0.6, -Math.PI / 2); part(d, new THREE.TorusGeometry(0.3, 0.05, 4, 8), y, 0, 0, -0.1); spin.push(d); }
+    // mining laser dish underneath
+    part(g, Cy(0.5, 0.2, 0.3, 10), dk, 0, -1.05, -1.6); E(g, glow('#6fdc5a'), 0, -1.2, -1.6, 0.16, 0.08, 0.16);
+    // cargo
+    if (C.hopper === 1) for (const s of [-1, 1]) { part(g, Cy(0.55, 0.55, 3.4, 10), steel, 0.8 * s, 1.35, 1.2, Math.PI / 2); part(g, Cy(0.57, 0.57, 0.1, 10), y, 0.8 * s, 1.35, 0.0, Math.PI / 2); }
+    else if (C.hopper === 2) { part(g, B(2.4, 0.15, 3.6), dk, 0, 1.0, 1.2); for (let k = 0; k < 3; k++) part(g, B(2.0, 0.9, 1.0), ['#c8402f', '#3a6cb8', '#6f7a3e'][k], 0, 1.55, 0.0 + k * 1.15); }
+    else for (let k = 0; k < 2; k++) { part(g, B(1.0, 0.8, 1.4), dk, (k ? 0.6 : -0.6), 1.3, 1.6); part(g, B(0.9, 0.2, 1.3), '#7a6a5a', (k ? 0.6 : -0.6), 1.62, 1.6); }
+    // lights
+    if (C.lights === 0) for (const s of [-1, 1]) { part(g, B(0.4, 0.3, 0.2), dk, 0.75 * s, 1.1, -2.9); part(g, B(0.3, 0.2, 0.05), glow('#fff6d0'), 0.75 * s, 1.1, -3.02); }
+    else if (C.lights === 1) { part(g, B(1.9, 0.18, 0.2), dk, 0, 1.12, -2.6); for (let k = 0; k < 6; k++) part(g, B(0.22, 0.12, 0.05), glow(k % 2 ? '#fff6d0' : '#ffb347'), -0.75 + k * 0.3, 1.12, -2.72); }
+    E(g, glow('#ffb347'), 0, 1.1, 2.6, 0.14, 0.14, 0.14);
+    // engines
+    for (const s of [-1, 1]) { const ys = C.eng === 1 ? [-0.45, 0.45] : [0]; for (const yy of ys) { const r = C.eng === 1 ? 0.38 : 0.6; part(g, Cy(r, r + 0.1, 1.4, 8), dk, 0.85 * s, yy, 3.8, Math.PI / 2); part(g, Cy(r - 0.06, r - 0.06, 0.1, 8), glow(eg), 0.85 * s, yy, 4.52, Math.PI / 2); } }
+    g.userData.spin = spin;
+  }
+};
+function makeClassShip(cls, C, col) {
+  const g = new THREE.Group(), base = (SHIP_PAINTS[C.p] || SHIP_PAINTS[0])[1], acc = (SHIP_ACCENTS[C.a] || SHIP_ACCENTS[0])[1] || col || '#ff8a2a', ex = (SHIP_EXHAUST[C.x | 0] || SHIP_EXHAUST[0])[1], eg = ex === 'rainbow' ? '#ff9a3c' : ex;
+  SC_BUILD[cls](g, C, scPaintMat(base, acc, C.st | 0), acc, '#2a2d33', eg);
+  g.userData.engines = g.children.filter(m => m.material === glow(eg)); g.userData.cls = cls;
+  return g;
+}
+{ const _mk = makeStarship; makeStarship = function (col, cfgIn) {
+  if (cfgIn && cfgIn.cls) return cfgIn.cls === 'starter' ? _mk(col, cfgIn.sm) : makeClassShip(cfgIn.cls, cfgIn, col);
+  const c = shipCls(); if (!cfgIn && c !== 'starter') return makeClassShip(c, scS().cfg[c], col);
+  return _mk(col, cfgIn); }; }
+
+// ---------- flight fx: side thrusters puff against your acceleration; drills spin ----------
+const _rv = V(0, 0, 0), _ra = V(0, 0, 0), _rq = new THREE.Quaternion();
+{ const _ss = spaceStep; spaceStep = function (dt, t) {
+  const F = fly; const pv = F ? _rv.copy(F.vel) : null; _ss(dt, t); if (!F || !F.ship) return;
+  const U = F.ship.userData;
+  if (U.spin) U.spin.forEach((d, i) => { d.rotation.z += dt * (6 + i); });
+  if (U.rcs && dt > 0) { _ra.copy(F.vel).sub(pv).divideScalar(dt); _rq.copy(_q).invert(); _ra.applyQuaternion(_rq);
+    const want = (keys.KeyW || keys.KeyS || keys.KeyA || keys.KeyD || Math.abs(move.x) + Math.abs(move.y) > 0.1 || shipLift() !== 0), mag = Math.max(45, F.vel.length() * 0.4);
+    for (const R of U.rcs) { const k = clamp(-R.d.dot(_ra) / mag, 0, 1.6), s = k > 0.08 ? (0.5 + k) * (0.85 + Math.random() * 0.3) : 0.001; R.m.scale.setScalar(R.m.scale.x + (s - R.m.scale.x) * Math.min(1, dt * 18)); }
+    if (want && _ra.length() > 25 && (F.rcsT = (F.rcsT || 0) - dt) <= 0) { F.rcsT = 0.12; try { SFX.engine(0.25, 0.5); } catch (_) {} } }
+}; }
+
+// ---------- the garage ----------
+function scBuy(k) { const D = SHIP_CLASSES[k]; if (S.cr < D.cost) { toast('NOT ENOUGH CREDITS', `${D.name} costs ${D.cost.toLocaleString()} cr`, 1.6); return; } S.cr -= D.cost; scS().own[k] = 1; scS().cur = k; SFX.level(); toast('NEW SHIP', D.name, 2.2); markDirty(); scRefit(); }
+function scRefit() { if (LEVEL.fly && fly && fly.ship) { const old = fly.ship, nw = makeStarship(S.col); nw.position.copy(old.position); nw.quaternion.copy(old.quaternion); levelGroup.remove(old); levelGroup.add(nw); fly.ship = nw; fly.sternD = null; } if (typeof sendPresence === 'function') sendPresence(true); }
+const _origShipMods = openShipMods;
+openShipMods = function () { const Q = scS(); openDlg('Shipyard', 'Your hangar');
+  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
+  const render = () => { rows.textContent = ''; $('dlgLine').textContent = `Buy a hull, fly it, then tune it in the garage. ${S.cr.toLocaleString()} cr.`;
+    for (const k in SHIP_CLASSES) { const D = SHIP_CLASSES[k], own = Q.own[k], on = Q.cur === k, r = document.createElement('div'); r.className = 'rowi';
+      const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = on ? '#6fdc5a' : own ? '#4fd2ff' : '#9aa1aa';
+      const nm = document.createElement('span'); nm.textContent = `${D.name} · ${D.blurb}`; const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '13px'; mt.textContent = on ? 'Flying' : own ? 'Owned' : D.cost.toLocaleString() + ' cr';
+      const b1 = document.createElement('button'); b1.className = 'pbtn'; b1.style.padding = '5px 10px'; b1.textContent = own ? (on ? 'Garage' : 'Fly') : 'Buy';
+      b1.addEventListener('click', () => { if (!own) { scBuy(k); render(); return; } if (!on) { Q.cur = k; markDirty(); SFX.item(); scRefit(); render(); pv(); return; } closeDlg(); k === 'starter' ? _origShipMods() : scGarage(k); });
+      r.style.cursor = 'pointer'; r.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') return; setPreview(() => { const g = makeStarship(S.col, k === 'starter' ? { cls: 'starter' } : Object.assign({ cls: k }, Q.cfg[k])); g.rotation.set(0.4, Math.PI * 0.75, 0); return g; }, D.name, 1.5) });
+      r.append(dot, nm, mt, b1); rows.appendChild(r); } };
+  const pv = () => setPreview(() => { const g = makeStarship(S.col); g.rotation.set(0.4, Math.PI * 0.75, 0); return g; }, SHIP_CLASSES[Q.cur].name, 1.5)
+  $('dlgActs').before(rows); acts([['Garage', () => { closeDlg(); Q.cur === 'starter' ? _origShipMods() : scGarage(Q.cur); }, true], ['Done', closeDlg]]); render(); showPreviewIn(rows); pv(); };
+function scGarage(k) {
+  const D = SHIP_CLASSES[k], C = scS().cfg[k]; C.own = C.own || {}; openDlg('Garage', D.name);
+  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; let tab = 'st';
+  const tabs = [['st', 'Style'], ['p', 'Paint'], ['a', 'Accent'], ['x', 'Exhaust'], ...Object.entries(D.slots).map(([s, v]) => [s, v[0]])];
+  const listOf = t => t === 'st' ? PAINT_STYLES.map(s => [s[0], s[1], {}]) : t === 'p' ? SHIP_PAINTS : t === 'a' ? SHIP_ACCENTS : t === 'x' ? SHIP_EXHAUST : D.slots[t][1];
+  const owned = (t, i) => (t === 'p' || t === 'a' || t === 'x') ? smOwn(t, i) : !listOf(t)[i][1] || !!C.own[t + i];
+  const statTxt = st => Object.entries(st || {}).map(([s, v]) => `${v > 0 ? '+' : ''}${Math.round(v * 100)}% ${s === 'sp' ? 'speed' : s}`).join(', ');
+  const pv = (over, lbl) => setPreview(() => { const g = makeStarship(S.col, Object.assign({ cls: k }, C, over || {})); g.rotation.set(0.4, Math.PI * 0.75, 0); return g; }, lbl || D.name, 1.5)
+  const render = () => { rows.textContent = '';
+    $('dlgLine').textContent = `${S.cr.toLocaleString()} cr · speed ${Math.round(shipModOf(k, 'sp') * 100)}% · hull ${Math.round(shipModOf(k, 'hull') * 100)}% · guns ${Math.round(shipModOf(k, 'laser') * 100)}%`;
+    listOf(tab).forEach((it, i) => { const own = owned(tab, i), on = (C[tab] | 0) === i, cost = (tab === 'p' || tab === 'a' || tab === 'x') ? 0 : it[1], r = document.createElement('div'); r.className = 'rowi';
+      const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = (tab === 'p' || tab === 'a' || tab === 'x') ? (it[1] === 'rainbow' ? 'linear-gradient(90deg,#ff2a3a,#ffd36a,#7fff6a)' : it[1] || S.col) : on ? '#6fdc5a' : '#9aa1aa';
+      const nm = document.createElement('span'); nm.textContent = it[0] + (statTxt(it[2]) ? ` · ${statTxt(it[2])}` : '');
+      const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '13px'; mt.textContent = on ? 'Fitted' : own ? 'Owned' : cost ? cost.toLocaleString() + ' cr' : 'Scavenge';
+      const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = on ? '✓' : own ? 'Fit' : cost ? 'Buy' : '🔒'; b.disabled = on || (!own && !cost);
+      b.addEventListener('click', () => { if (!own) { if (S.cr < cost) { toast('NOT ENOUGH CREDITS', `${cost.toLocaleString()} cr`, 1.4); return; } S.cr -= cost; C.own[tab + i] = 1; SFX.coin(); }
+        C[tab] = i; markDirty(); SFX.item(); if (shipCls() === k) scRefit(); render(); pv(); });
+      r.style.cursor = 'pointer'; r.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') return; pv({ [tab]: i }, it[0]); });
+      r.append(dot, nm, mt, b); rows.appendChild(r); }); };
+  $('dlgActs').before(rows); acts([...tabs.map(([t, n], j) => [n, () => { tab = t; render(); }, j === 0]), ['Back', () => { closeDlg(); openShipMods(); }], ['Done', closeDlg]]); render(); showPreviewIn(rows); pv();
+}
+function shipModOf(k, stat) { const c = scS().cur; scS().cur = k; const v = shipMod(stat); scS().cur = c; return v; }
 
 
 // =================== STATE + SAVE ===================

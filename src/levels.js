@@ -577,7 +577,7 @@ function loadLevel(id, opts) {
   for (const n of L.npcs) makeNpc(n, L.npcBase);
   for (const sp of L.spawns) for (let i = 0; i < sp.n; i++) makeEnemy(sp);
   if (!L.ocean) S.inSub = false; if (typeof RC !== 'undefined') { if (RC.ai) RC.ai.forEach(A => A.obj.parent && A.obj.parent.remove(A.obj)); RC = { on: false }; }
-  camera.near = L.fly ? 0.5 : 0.03; camera.far = L.fly ? 7000 : 300; camera.updateProjectionMatrix(); if (!L.fly) fly = null;
+  camera.near = L.fly ? 0.5 : 0.03; camera.far = L.fly ? 14000 : 300; camera.updateProjectionMatrix(); if (!L.fly) fly = null;
   if (L.fly) { if (player.groundHp == null) player.groundHp = player.hp; } else if (player.groundHp != null) { player.hp = player.groundHp; player.groundHp = null; }
   if (['earth', 'mezar', 'capitone', 'zeltac', 'arena', 'robot', 'ocean', 'moon', 'speedway'].includes(id)) S.orbit = id;
   const sp = opts.at || L.spawn; player.pos.set(sp.x, sp.y != null ? sp.y : floorAt(sp.x, sp.z), sp.z); player.yaw = sp.yaw != null ? sp.yaw : player.yaw; player.pitch = 0; player.vy = 0;

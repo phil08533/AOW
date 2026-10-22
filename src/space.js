@@ -230,7 +230,7 @@ const SPACE_BODIES = {
   zarlich: { pos: V(1500, -220, 800), r: 150, col: '#c86aff', survey: 'Zarlich', note: 'Violet storms, unknown life', ring: true },
   vector: { pos: V(-1550, 260, 600), r: 170, col: '#5a2a6a', survey: 'Vector', note: 'The dark world. Something watches back.' }
 };
-const SPACE_SPREAD = 1.45; // worlds sit further apart
+const SPACE_SPREAD = 2.9; // worlds sit further apart
 Object.values(SPACE_BODIES).forEach(b => b.pos.multiplyScalar(SPACE_SPREAD));
 const SHIP_SYS = {
   laser: { name: 'Lasers', lv: [{ dmg: 30 }, { dmg: 48, cost: { cr: 800, ore: 10 } }, { dmg: 75, cost: { cr: 2200, ore: 20, starcrystal: 2 } }, { dmg: 115, cost: { cr: 6000, ore: 35, starcrystal: 6 } }] },
@@ -243,7 +243,7 @@ let fly = null; // flight state while in space
 const F_markers = [];
 const bodyName = (id) => SPACE_BODIES[id].survey || (LEVELS[id] ? LEVELS[id].name : id === 'robot' ? 'Robot City' : id);
 LEVELS.space = {
-  id: 'space', name: 'Open space', tag: 'Fly the Setting Sun', size: 120, center: [0, 0], radius: 3000, water: -99, sky: 'space', weather: 'none', fly: true,
+  id: 'space', name: 'Open space', tag: 'Fly the Setting Sun', size: 120, center: [0, 0], radius: 6000, water: -99, sky: 'space', weather: 'none', fly: true,
   terrain: null, palette: { grass: '#0a0f26' }, zones: [], paths: [], river: [], pools: [], lava: [], safes: [], npcs: [], spawns: [], npcBase: [0, 0],
   spawn: { x: 0, z: -680, yaw: 0 }, menu: { x: 0, z: -680, r: 30, h: 8 },
   build() {
@@ -258,14 +258,14 @@ LEVELS.space = {
       const atm = new THREE.Mesh(new THREE.SphereGeometry(P.r * 1.04, 20, 12), new THREE.MeshBasicMaterial({ color: P.col, transparent: true, opacity: 0.18, side: THREE.BackSide, depthWrite: false })); atm.position.copy(P.pos); levelGroup.add(atm);
       if (P.ring) { const ring = new THREE.Mesh(new THREE.RingGeometry(P.r * 1.35, P.r * 2.1, 48), new THREE.MeshBasicMaterial({ color: '#f2d6a8', transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false })); ring.position.copy(P.pos); ring.rotation.set(-1.2, 0.3, 0); levelGroup.add(ring); }
     }
-    const sunM = new THREE.Mesh(new THREE.SphereGeometry(260, 20, 12), new THREE.MeshBasicMaterial({ color: '#ffd38a', fog: false })); sunM.position.set(-2600, 700, 1800); levelGroup.add(sunM);
+    const sunM = new THREE.Mesh(new THREE.SphereGeometry(260, 20, 12), new THREE.MeshBasicMaterial({ color: '#ffd38a', fog: false })); sunM.position.set(-5200, 1400, 3600); levelGroup.add(sunM);
     const sunL = new THREE.DirectionalLight(0xfff0d8, 1.1); sunL.position.copy(sunM.position); levelGroup.add(sunL); levelGroup.add(sunL.target);
     // asteroid belt between the worlds
-    const N = 220, geo = new THREE.IcosahedronGeometry(1, 0), rocks = new THREE.InstancedMesh(geo, psx(new THREE.MeshLambertMaterial({ map: TEX.stone, color: '#ffffff' })), N);
+    const N = 420, geo = new THREE.IcosahedronGeometry(1, 0), rocks = new THREE.InstancedMesh(geo, psx(new THREE.MeshLambertMaterial({ map: TEX.stone, color: '#ffffff' })), N);
     const dm = new THREE.Object3D();
     for (let i = 0; i < N; i++) {
-      const a = (i / N) * Math.PI * 2 + Math.sin(i * 7.3) * 0.08, d = 760 + Math.sin(i * 3.1) * 90 + (i % 5) * 14, s = 3 + (i * 37 % 11) * 1.4 + (i % 13 === 0 ? 10 : 0);
-      const p = V(Math.cos(a) * d, Math.sin(i * 1.7) * 40, Math.sin(a) * d * 0.7 + 90), crystal = i % 9 === 0, drug = i % 9 === 4;
+      const a = (i / N) * Math.PI * 2 + Math.sin(i * 7.3) * 0.08, d = 1520 + Math.sin(i * 3.1) * 180 + (i % 5) * 28, s = 3 + (i * 37 % 11) * 1.4 + (i % 13 === 0 ? 10 : 0);
+      const p = V(Math.cos(a) * d, Math.sin(i * 1.7) * 80, Math.sin(a) * d * 0.7 + 180), crystal = i % 9 === 0, drug = i % 9 === 4;
       fly.rockData.push({ p, s, hp: s * 12, max: s * 12, crystal, drug, dead: 0, spin: V(Math.sin(i), Math.cos(i * 2), Math.sin(i * 3)).multiplyScalar(0.2) });
       dm.position.copy(p); dm.scale.setScalar(s); dm.rotation.set(i, i * 2, i * 3); dm.updateMatrix(); rocks.setMatrixAt(i, dm.matrix);
       rocks.setColorAt(i, new THREE.Color(crystal ? '#ffe070' : drug ? '#6aff7a' : ['#ffffff', '#d8c8b8', '#b8b0a8'][i % 3]));
@@ -274,7 +274,9 @@ LEVELS.space = {
     // drug rocks: a soft green glow around each one, so you can spot them across the belt
     for (const R of fly.rockData) if (R.drug) { const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: FLASH_TEX, color: '#3aff5a', transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); gl.position.copy(R.p); gl.scale.setScalar(R.s * 3.2); levelGroup.add(gl); R.glow = gl; }
     // raider packs
-    for (const [cx, cy, cz, n, lv] of [[450, 20, -420, 4, 12], [-480, 0, -480, 5, 18], [520, 10, 300, 5, 24], [-300, 30, 480, 4, 28], [80, 0, 520, 3, 20]]) for (let i = 0; i < n; i++) spawnRaider(V(cx + rand(-60, 60), cy + rand(-30, 30), cz + rand(-60, 60)), lv);
+    // raider packs scattered all over the map: tougher the further out you fly
+    for (let i = 0; i < 18; i++) { const a = i * 2.39 + 0.5, d = 700 + (i * 977 % 3600), lv = Math.round(10 + d / 4300 * 30 + (i % 3) * 2), cx = Math.cos(a) * d, cz = Math.sin(a) * d, cy = Math.sin(i * 1.3) * 140;
+      for (let k = 0, n = 3 + i % 3; k < n; k++) spawnRaider(V(cx + rand(-70, 70), cy + rand(-35, 35), cz + rand(-70, 70)), lv); }
     // name markers you can see from anywhere
     F_markers.length = 0;
     for (const id in SPACE_BODIES) { const P = SPACE_BODIES[id], sp = labelSprite(768, 72); levelGroup.add(sp); F_markers.push({ id, P, sp, t: 0 }); }
@@ -297,6 +299,9 @@ function enterSpace(near) {
 }
 function leaveSpace(to) { closeDlg(); travel(to || 'ship'); }
 const shipFwd = V(0, 0, 0), shipUp = V(0, 0, 0), shipRight = V(0, 0, 0), _q = new THREE.Quaternion(), _e = new THREE.Euler(0, 0, 0, 'YXZ');
+function shipGrip() { return 1.6; }
+function shipStrafe() { return 0.4; }
+function shipLift() { return 0; }
 function spaceStep(dt, t) {
   const F = fly; if (!F) return;
   const frozen = dlgOpen || chatOpen();
@@ -307,8 +312,8 @@ function spaceStep(dt, t) {
   F.cruise = thIn > 0.9 && nearSurf > 260 && !frozen ? Math.min(5, (F.cruise || 1) + dt * 0.9) : Math.max(1, (F.cruise || 1) - dt * 3);
   const maxSp = SHIP_SYS.engine.lv[sysLv('engine')].sp * F.cruise * (typeof shipMod === 'function' ? shipMod('sp') : 1), boost = (keys.ShiftLeft || keys.ShiftRight) ? 1.8 : 1;
   const th = frozen ? 0 : clamp((keys.KeyW ? 1 : 0) - (keys.KeyS ? 0.6 : 0) + move.y, -0.6, 1), st = frozen ? 0 : clamp((keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x, -1, 1);
-  const want = shipFwd.clone().multiplyScalar(th * maxSp * boost).addScaledVector(shipRight, st * maxSp * 0.4);
-  F.vel.lerp(want, Math.min(1, dt * 1.6 * (gameTime - (F.rockBumpT || -9) < 0.45 ? 0.15 : 1))); SFX.engine(0.4 + Math.abs(th) * 0.6, F.vel.length() / 200);
+  const want = shipFwd.clone().multiplyScalar(th * maxSp * boost).addScaledVector(shipRight, st * maxSp * shipStrafe()).addScaledVector(shipUp, (frozen ? 0 : shipLift()) * maxSp * shipStrafe());
+  F.vel.lerp(want, Math.min(1, dt * shipGrip() * (gameTime - (F.rockBumpT || -9) < 0.45 ? 0.15 : 1))); SFX.engine(0.4 + Math.abs(th) * 0.6, F.vel.length() / 200);
   player.pos.addScaledVector(F.vel, dt);
   // keep out of planets and rocks
   for (const id in SPACE_BODIES) { const P = SPACE_BODIES[id], d = player.pos.distanceTo(P.pos), m = P.r + (P.station ? 45 : 30);
@@ -320,7 +325,7 @@ function spaceStep(dt, t) {
       if (!F.bumpT || gameTime - F.bumpT > 3) { F.bumpT = gameTime; SFX.block(); log(!L ? `${bodyName(id)} has no landing site yet. Scan it with E when you're close.` : `${L.name} is locked. Keep following the story to open it.`); }
     } }
   for (const R of F.rockData) { if (R.dead) continue; const d = player.pos.distanceTo(R.p), m = R.s + 3; if (d < m) { const out = d > 0.01 ? player.pos.clone().sub(R.p).normalize() : V(0, 1, 0); player.pos.copy(R.p).addScaledVector(out, m + 1.5); const vn = F.vel.dot(out); if (vn < 0) { if (-vn > 30 && (!F.rockHitT || gameTime - F.rockHitT > 1)) { F.rockHitT = gameTime; hurt(-vn * 0.15); F.shake = 0.4; } F.vel.addScaledVector(out, -vn * 1.6); } F.vel.addScaledVector(out, 12); F.rockBumpT = gameTime; } }
-  if (player.pos.length() > 3200) player.pos.setLength(3200);
+  if (player.pos.length() > 6400) player.pos.setLength(6400);
   F.mkT = (F.mkT || 0) - dt;
   for (const M of F_markers) { const d = player.pos.distanceTo(M.P.pos), surf = Math.max(0, d - M.P.r);
     M.sp.position.copy(M.P.pos).add(V(0, M.P.r * 1.08 + d * 0.06, 0)); M.sp.scale.set(d * 0.75, d * 0.07, 1); M.sp.visible = surf > 60 && !!PREFS.planetTags;
@@ -500,7 +505,7 @@ function openShipSystems(who) {
   const render = () => { rows.textContent = ''; $('dlgLine').textContent = `Upgrade the Setting Sun for space. ${S.cr} cr · ${S.inv.ore || 0} ore · ${S.inv.starcrystal || 0} star crystals.`;
     for (const k in SHIP_SYS) { const sys = SHIP_SYS[k], l = sysLv(k), nx = sys.lv[l + 1], r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = ['#9aa1aa', '#6fdc5a', '#4fa8ff', '#c86aff', '#ffd36a'][l] || '#ffd36a';
-      const cur = sys.lv[l], nm = document.createElement('span'); nm.textContent = `${sys.name} ${'★'.repeat(l)} · ${cur.dmg ? cur.dmg + ' dmg' : cur.hp ? cur.hp + ' hull' : cur.sp + ' speed'}`;
+      const cur = sys.lv[l], nm = document.createElement('span'); nm.textContent = `${sys.name} ${'★'.repeat(l)} · ${cur.dmg ? cur.dmg + ' dmg' : cur.hp ? cur.hp + ' hull' : cur.grip ? sys.lbl[l] : cur.sp + ' speed'}`;
       const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = nx ? costLabel(nx.cost) : 'Maxed';
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = 'Upgrade'; b.disabled = !nx || !costOk(nx.cost);
       b.addEventListener('click', () => { costPay(nx.cost); S.ship.sys = S.ship.sys || {}; S.ship.sys[k] = l + 1; SFX.level(); log(`${sys.name} upgraded`, 'loot'); markDirty(); render(); });

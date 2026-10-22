@@ -50,10 +50,12 @@ function bcDome(D) { const g = new THREE.Group(), R = D.r;
   const fl = new THREE.Mesh(new THREE.CircleGeometry(R + 0.5, 48).rotateX(-Math.PI / 2), bcMat({hub:'tile',kelp:'soil',burbs:'grass',low:'asphalt',coral:'pavers'}[D.id], Math.round(D.r/2), Math.round(D.r/2), D.floor)); fl.position.y = 0.07; g.add(fl);
   const glass = new THREE.Mesh(new THREE.SphereGeometry(R, 40, 18, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: D.glass, transparent: true, opacity: 0.13, side: THREE.DoubleSide, depthWrite: false }));
   g.add(glass);
-  for (let i = 0; i < 10; i++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(R, 0.22, 5, 32, Math.PI), toonNS('#7a808a')); rib.rotation.y = i / 10 * Math.PI; g.add(rib); }
+  for (let i = 0; i < 10; i++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(R, 0.22, 5, 32, Math.PI), toonNS('#7a808a')); rib.rotation.y = (i + 0.5) / 10 * Math.PI; g.add(rib); }
   for (const h of [0.35, 0.7]) { const ring = new THREE.Mesh(new THREE.TorusGeometry(R * Math.cos(Math.asin(h)), 0.16, 5, 48), toonNS('#7a808a')); ring.rotation.x = Math.PI / 2; ring.position.y = R * h; g.add(ring); }
-  const base = new THREE.Mesh(new THREE.TorusGeometry(R, 0.5, 6, 48), toonNS('#4a4f58', 'panel')); base.rotation.x = Math.PI / 2; base.position.y = 0.25; g.add(base);
-  const strip = new THREE.Mesh(new THREE.TorusGeometry(R - 0.6, 0.07, 4, 48), glow(D.id === 'low' ? '#ff3bd2' : '#7fe8ff')); strip.rotation.x = Math.PI / 2; strip.position.y = 0.1; g.add(strip);
+  // the base ring and glow strip leave gaps where the tunnels come in, so nothing crosses a walkway
+  const gaps = BC.domes.filter(o => o !== D && (o.id === 'hub' || D.id === 'hub')).map(o => Math.atan2(o.z - D.z, o.x - D.x)).sort((a, b) => a - b), gw = Math.asin(Math.min(1, 3.4 / R));
+  const arcs = gaps.length ? gaps.map((a, k) => { const b = k + 1 < gaps.length ? gaps[k + 1] : gaps[0] + Math.PI * 2; return [a + gw, b - gw - (a + gw)]; }) : [[0, Math.PI * 2]];
+  for (const [a0, len] of arcs) if (len > 0.02) { for (const [rr, tr, m, y] of [[R, 0.5, toonNS('#4a4f58', 'panel'), 0.25], [R - 0.6, 0.07, glow(D.id === 'low' ? '#ff3bd2' : '#7fe8ff'), 0.1]]) { const geo = new THREE.TorusGeometry(rr, tr, 6, Math.max(4, Math.round(len * 8)), len); geo.rotateZ(a0); geo.rotateX(Math.PI / 2); const ms = new THREE.Mesh(geo, m); ms.position.y = y; g.add(ms); } }
   // a crown light at the top of every dome
   part(g, Cy(1.2, 1.6, 0.6, 12), toonNS('#4a4f58', 'panel'), 0, R - 0.2, 0); part(g, new THREE.SphereGeometry(0.5, 10, 8), glow('#ffe9a0'), 0, R + 0.4, 0);
   g.position.set(D.x, 0, D.z); levelGroup.add(g);
@@ -163,8 +165,8 @@ function bcHub() { const D = bcD('hub'), X = D.x, Z = D.z;
   c.strokeStyle = '#7fe8ff'; c.lineWidth = 6; for (const d of BC.domes) { if (d.id === 'hub') continue; c.beginPath(); c.moveTo(128, 128); c.lineTo(128 + d.x * 1.1, 128 + d.z * 1.1); c.stroke(); }
   c.font = 'bold 13px monospace'; c.textAlign = 'center'; for (const d of BC.domes) { c.fillStyle = d.glass; c.beginPath(); c.arc(128 + d.x * 1.1, 128 + d.z * 1.1, d.r * 0.7, 0, 7); c.fill(); c.fillStyle = '#0c1a24'; c.fillText(d.name.replace('THE ', ''), 128 + d.x * 1.1, 132 + d.z * 1.1); }
   c.fillStyle = '#ffd36a'; c.fillText('YOU ARE HERE', 128, 112);
-  const board = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) })); board.position.set(X + 9, 2.2, Z + 9); board.rotation.y = Math.PI * 0.25; board.position.set(X + 8.95, 2.2, Z + 8.95); levelGroup.add(board);
-  part(levelGroup, B(2.9, 2.9, 0.2), toonNS('#3a3d44', 'panel'), X + 9.07, 2.2, Z + 9.07, 0, Math.PI * 0.75, 0); part(levelGroup, B(0.2, 0.8, 0.2), toonNS('#3a3d44'), X + 9.07, 0.4, Z + 9.07); box(X + 9.07, Z + 9.07, 1, 1);
+  const board = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) })); board.position.set(X + 9, 2.2, Z + 9); board.rotation.y = Math.PI * 1.25; board.position.set(X + 8.93, 2.2, Z + 8.93); levelGroup.add(board);
+  part(levelGroup, B(2.9, 2.9, 0.2), toonNS('#3a3d44', 'panel'), X + 9.07, 2.2, Z + 9.07, 0, Math.PI * 0.25, 0); part(levelGroup, B(0.2, 0.8, 0.2), toonNS('#3a3d44'), X + 9.07, 0.4, Z + 9.07); box(X + 9.07, Z + 9.07, 1, 1);
   // food carts, kelp trees, benches, lamps, flags
   const cart = (x, z, ry, name, col) => { const g = new THREE.Group(); part(g, B(2.2, 1.0, 1.2), toonNS(col), 0, 0.7, 0); for (const [a, b] of [[-0.8, -0.6], [0.8, -0.6], [-0.8, 0.6], [0.8, 0.6]]) part(g, Cy(0.22, 0.22, 0.1, 10), toonNS('#2b2a2c'), a, 0.22, b, Math.PI / 2, 0, 0);
     for (let k = 0; k < 4; k++) part(g, B(0.6, 0.08, 1.6), toonNS(k % 2 ? '#ffffff' : col), -0.9 + k * 0.6, 2.4, 0, 0.2); for (const s of [-1, 1]) part(g, Cy(0.04, 0.04, 1.3, 4), toonNS('#2b2a2c'), s * 1.0, 1.85, 0.5);
@@ -228,12 +230,8 @@ function bcLow() { const D = bcD('low'), X = D.x, Z = D.z;
   part(van, B(0.1, 1.5, 3.0), dark, 1.13, 1.3, -0.75); part(van, B(0.9, 0.06, 3.0), toonNS('#5a3a2a', 'wood'), 1.55, 0.6, -0.75); for (const z of [-2.1, 0.6]) part(van, B(0.06, 0.6, 0.06), dark, 1.95, 0.3, z);
   van.position.set(X + 13, 0, Z + 4.6); van.rotation.y = Math.PI / 2; levelGroup.add(van); box(X + 13, Z + 4.6, 2.4, 1.2);
   // the people of the strip
-  bubNpc(BC.low.pawn[0], BC.low.pawn[1], BC.low.pawn[1] > Z ? 0 : Math.PI, ['#c8402f', '#3a3d44', '#ff8a6a', '#e8e4dc'], '🦀 Crabby\'s Pawn', bubPawn);
   bubNpc(X - 2, Z + 2.3, Math.PI, ['#2b2a2c', '#1e1a18', '#c58a64', '#111'], '💊 Dregs (dealer)', () => openSubShop('Low Tide dealer', 'Dregs', BUB_STREET));
   bubNpc(X + 11, Z + 2.4, Math.PI, ['#6a3a8a', '#2c2a38', '#8a5a3a', '#1e1a18'], '📺 Talk to Rizzo', bubRizzo);
-  bubNpc(BC.low.bar[0], BC.low.bar[1], BC.low.bar[1] > Z ? 0 : Math.PI, ['#4fffe0', '#2c2a38', '#9fe8ff', '#3a2a1a'], '🍺 The Barnacle Bar', () => bubTalk('The Barnacle Bar', 'Shelly the bartender', ['We serve two drinks: Salt and Saltier. Both are water.', 'If you\'re looking for trouble, Dregs is under the lamp. If you\'re looking for more trouble, Rizzo\'s by the van.']));
-  bubNpc(BC.low.ink[0], BC.low.ink[1], BC.low.ink[1] > Z ? 0 : Math.PI, ['#1e1a18', '#3a3d44', '#e0b892', '#ff3bd2'], '🦑 Ink Squid Tattoo', () => bubTalk('Ink Squid Tattoo', 'Inky', ['Eight arms, eight needles, zero waiting. Today\'s special: your mum\'s name, spelled almost right.', 'Come back when you\'ve got skin and a bad idea. You\'ve got skin.']));
-  bubNpc(BC.low.arc[0], BC.low.arc[1], BC.low.arc[1] > Z ? 0 : Math.PI, ['#7fff6a', '#2c2a38', '#c58a64', '#1e1a18'], '🕹 Fish Fry Arcade', () => bubTalk('Fish Fry Arcade', 'Token Tony', ['High score on Fish Fry is held by "AAA". Nobody knows who AAA is. AAA haunts us.', 'The claw machine has a real crab in it. He wins every time.']));
   bubNeon('THE LOW TIDE', '#ff3bd2', X + D.r - 2.5, 5.2, Z, -Math.PI / 2, 4);
   bcLamp(X - 2, Z + 3.2, '#ff6ad2'); bcLamp(X + 8, Z - 3.2, '#4fffe0');
   bcWalkers(D, 6, 'civ', 40); }

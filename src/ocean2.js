@@ -288,21 +288,40 @@ function ocPierDetails() { const y = ocDeck() + 0.11;
 function kayakCanExit() { for (const s of SURFACES) { const dx = player.pos.x - s.x, dz = player.pos.z - s.z, al = dx * s.ux + dz * s.uz, ac = dx * s.uz - dz * s.ux; if (Math.abs(al) < s.hl + 0.5 && Math.abs(ac) < s.hw + 3) return true; }
   for (let r = 1; r <= 4; r += 0.5) for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; if (groundH(player.pos.x + Math.cos(a) * r, player.pos.z + Math.sin(a) * r) > WATER_Y + 0.1) return true; } return false; }
 const OC_KAYAK_OUT = { r: 3, get x() { return S.kayak ? player.pos.x : 1e9; }, get z() { return player.pos.z; }, get label() { return kayakCanExit() ? '🛶 Climb out of the kayak' : '🛶 Paddle to a pier or shore to climb out'; }, fn: () => kayakToggle() };
-// little fishing boats bobbing out on the water, each with a fisher casting a line off the side
+// little fishing boats bobbing out on the water, each with a fisher who casts, waits, and now and then hauls a fish into the boat
+function ocHullGeo(w, L, h, inset) { const sh = new THREE.Shape(), pt = (k) => { const hw = w / 2 - k, l = L / 2 - k; return [[-hw * 0.85, -l], [hw * 0.85, -l], [hw, l * 0.25], [hw * 0.55, l * 0.75], [0, l], [-hw * 0.55, l * 0.75], [-hw, l * 0.25]]; };
+  const o = pt(0); sh.moveTo(o[0][0], o[0][1]); for (const [x, z] of o.slice(1)) sh.lineTo(x, z); sh.closePath();
+  if (inset) { const hp = new THREE.Path(), q = pt(inset); hp.moveTo(q[0][0], q[0][1]); for (const [x, z] of q.slice(1)) hp.lineTo(x, z); hp.closePath(); sh.holes.push(hp); }
+  const g = new THREE.ExtrudeGeometry(sh, { depth: h, bevelEnabled: false }); g.rotateX(Math.PI / 2); g.translate(0, h, 0); return g; }
 function ocBoats() { const spots = []; for (let i = 0; i < 40 && spots.length < 5; i++) { const a = i * 1.37, r = 34 + (i * 11) % 40, x = PORT[0] + Math.cos(a) * r, z = PORT[1] + Math.sin(a) * r;
     if (groundH(x, z) > WATER_Y - 2.5 || spots.some(([sx, sz]) => Math.hypot(x - sx, z - sz) < 18)) continue; if (Z.bubble && Math.hypot(x - Z.bubble.x, z - Z.bubble.z) < 30) continue; spots.push([x, z, a]); }
-  const shirts = ['#c8402f', '#ffd36a', '#3a5266', '#4f9a4a', '#ff9a8a'];
+  const shirts = ['#c8402f', '#ffd36a', '#3a5266', '#4f9a4a', '#ff9a8a'], fishC = ['#ffb347', '#7fe8ff', '#c8d8e0', '#ff6aa8', '#9aff7a'];
   spots.forEach(([x, z, a], i) => { const g = new THREE.Group(), hullC = ['#f4f0e8', '#3a6a8a', '#c8402f', '#4f7a5a', '#e8c86a'][i], wood = toon('#8a6a44', 'wood');
-    // hull: a flat bottom, flared sides, a pointed bow, a painted stripe and a transom
-    part(g, B(1.5, 0.12, 3.6), toon('#5a4030', 'wood'), 0, 0.05, 0); for (const s of [-1, 1]) { part(g, B(0.1, 0.6, 3.6), toon(hullC, 'wood'), s * 0.8, 0.32, 0, 0, 0, s * 0.18); part(g, B(0.12, 0.08, 3.6), wood, s * 0.86, 0.64, 0); part(g, B(0.11, 0.1, 3.5), toon('#c9a43a'), s * 0.84, 0.42, 0, 0, 0, s * 0.18);
-      part(g, B(0.1, 0.6, 1.2), toon(hullC, 'wood'), s * 0.42, 0.32, 2.2, 0, s * 0.62, s * 0.12); }
-    part(g, B(1.6, 0.6, 0.1), toon(hullC, 'wood'), 0, 0.32, -1.8); part(g, B(0.15, 0.7, 0.15), wood, 0, 0.45, 2.65); for (const zz of [-0.9, 0.6]) part(g, B(1.5, 0.08, 0.35), wood, 0, 0.42, zz);
-    part(g, B(0.25, 0.4, 0.35), toon('#3a3d44'), 0, 0.45, -1.95); part(g, Cy(0.03, 0.03, 0.5, 4), toon('#2b2a2c'), 0, 0.2, -2.15); part(g, B(0.5, 0.3, 0.4), toon('#4fd2ff'), 0.4, 0.3, -1.2); part(g, Cy(0.25, 0.22, 0.3, 8), toon('#8a6a44', 'wood'), -0.4, 0.3, 1.2);
-    const lan = part(g, new THREE.SphereGeometry(0.1, 6, 4), glow('#ffd36a'), -0.6, 1.0, -1.6); part(g, Cy(0.02, 0.02, 0.6, 4), toon('#2b2a2c'), -0.6, 0.7, -1.6);
-    const npc = makeCivilian(shirts[i], '#2c2a28', ['#c58a64', '#8a5a3a', '#e0b892', '#6a4a2a', '#f0c8a8'][i], '#1e1a18', i % 2 ? '#e8e4dc' : null); npc.scale.setScalar(0.92); npc.position.set(0.2, 0.42, -0.5); npc.rotation.y = Math.PI / 2; g.add(npc);
-    const rod = new THREE.Group(); part(rod, Cy(0.015, 0.025, 2.4, 4), toon('#2b2a2c'), 0, 1.2, 0); rod.position.set(0.6, 1.2, -0.4); rod.rotation.z = -1.0; g.add(rod);
-    const line = part(g, B(0.01, 1.8, 0.01), new THREE.MeshBasicMaterial({ color: '#e8e4dc' }), 2.55, 1.15, -0.4); const bob = part(g, new THREE.SphereGeometry(0.07, 6, 4), toon('#ff3b2a'), 2.55, 0.15, -0.4);
-    const ry = a + Math.PI / 2 + i; g.position.set(x, WATER_Y - 0.15, z); g.rotation.y = ry; levelGroup.add(g); solid(x, z, 2);
-    levelAnims.push(t => { g.position.y = WATER_Y - 0.15 + Math.sin(t * 1.1 + i) * 0.08; g.rotation.z = Math.sin(t * 0.9 + i * 2) * 0.05; g.rotation.x = Math.sin(t * 0.7 + i) * 0.03; g.rotation.y = ry + Math.sin(t * 0.05 + i) * 0.4;
-      rod.rotation.z = -1.0 + Math.sin(t * 0.6 + i) * 0.06 + (Math.sin(t * 0.21 + i * 3) > 0.96 ? -0.25 : 0); bob.position.y = 0.15 + Math.sin(t * 2 + i) * 0.04; lan.visible = ENV.night > 0.3; }); }); }
+    const hull = new THREE.Mesh(ocHullGeo(1.7, 4, 0.6, 0.12), toon(hullC, 'wood')); g.add(hull);
+    const bottom = new THREE.Mesh(ocHullGeo(1.6, 3.9, 0.1, 0), toon('#5a4030', 'wood')); bottom.position.y = -0.02; g.add(bottom);
+    const stripe = new THREE.Mesh(ocHullGeo(1.74, 4.04, 0.1, 0.03), toon('#c9a43a')); stripe.position.y = 0.28; g.add(stripe);
+    const rim = new THREE.Mesh(ocHullGeo(1.78, 4.08, 0.07, 0.16), wood); rim.position.y = 0.58; g.add(rim);
+    for (const zz of [-1.0, 0.7]) part(g, B(1.45, 0.07, 0.32), wood, 0, 0.38, zz); part(g, B(0.3, 0.35, 0.4), toon('#3a3d44'), 0, 0.4, -2.0); part(g, Cy(0.03, 0.03, 0.5, 4), toon('#2b2a2c'), 0, 0.1, -2.15);
+    part(g, B(0.5, 0.3, 0.4), toon('#4fd2ff'), -0.35, 0.25, -1.4); part(g, Cy(0.22, 0.2, 0.3, 8), wood, 0.4, 0.25, 1.3);
+    const lan = part(g, new THREE.SphereGeometry(0.09, 6, 4), glow('#ffd36a'), -0.55, 1.0, -1.7); part(g, Cy(0.02, 0.02, 0.6, 4), toon('#2b2a2c'), -0.55, 0.7, -1.7);
+    // the fisher sits on the back bench facing over the side, rod gripped in both hands
+    const npc = makeCivilian(shirts[i], '#2c2a28', ['#c58a64', '#8a5a3a', '#e0b892', '#6a4a2a', '#f0c8a8'][i], '#1e1a18', i % 2 ? '#e8e4dc' : null); npc.scale.setScalar(0.9); npc.position.set(0, -0.05, -1.0); npc.rotation.y = Math.PI / 2; g.add(npc);
+    const rod = new THREE.Group(); part(rod, Cy(0.012, 0.03, 2.6, 5), toon('#2b2a2c'), 0, 1.3, 0); part(rod, Cy(0.05, 0.05, 0.08, 8), toon('#c9a43a'), 0.04, 0.25, 0, 0, 0, Math.PI / 2);
+    rod.position.set(0.05, 0.95, 0.28); rod.rotation.x = 0.95; npc.add(rod);
+    for (const s of [-1, 1]) part(npc, B(0.1, 0.1, 0.36), toon(shirts[i]), 0.2 * s, 1.0, 0.2, -0.3, 0, 0);
+    const tip = new THREE.Object3D(); tip.position.set(0, 2.6, 0); rod.add(tip);
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: '#e8e4dc' })); levelGroup.add(line);
+    const bob = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), toon('#ff3b2a')); levelGroup.add(bob);
+    const fish = new THREE.Group(); part(fish, B(0.12, 0.2, 0.42), toon(fishC[i]), 0, 0, 0); part(fish, B(0.04, 0.2, 0.14), toon(fishC[i]), 0, 0, -0.26); fish.visible = false; levelGroup.add(fish);
+    const ry = a + Math.PI / 2 + i; g.position.set(x, WATER_Y - 0.25, z); g.rotation.y = ry; g.userData.boat = 1; levelGroup.add(g); solid(x, z, 2);
+    const V = new THREE.Vector3(), W = new THREE.Vector3(); let next = 6 + i * 3, catchT = -1;
+    levelAnims.push(t => { g.position.y = WATER_Y - 0.25 + Math.sin(t * 1.1 + i) * 0.07; g.rotation.z = Math.sin(t * 0.9 + i * 2) * 0.04; g.rotation.x = Math.sin(t * 0.7 + i) * 0.025; g.rotation.y = ry + Math.sin(t * 0.05 + i) * 0.4; lan.visible = ENV.night > 0.3;
+      if (t > next && catchT < 0) catchT = t; let k = catchT < 0 ? -1 : t - catchT;
+      rod.rotation.x = k < 0 ? 0.95 + Math.sin(t * 0.6 + i) * 0.04 + (Math.sin(t * 3 + i) > 0.97 ? 0.08 : 0) : k < 0.6 ? 0.95 + Math.sin(t * 30) * 0.06 : k < 1.0 ? 0.95 - (k - 0.6) * 1.8 : k < 2.2 ? 0.23 : 0.23 + Math.min(1, (k - 2.2) * 1.2) * 0.72;
+      g.updateMatrixWorld(); tip.getWorldPosition(V); npc.localToWorld(W.set(0.05, 0, 2.4)); W.y = WATER_Y + 0.02 + Math.sin(t * 2 + i) * 0.03;
+      if (k >= 0.6 && k < 2.2) { const u = Math.min(1, (k - 0.6) / 1.0); npc.localToWorld(W.set(0, 1.2, 0.8)); fish.visible = true; fish.position.copy(V).lerp(W, u * 0.6); fish.position.y -= 0.6 - u * 0.2; fish.rotation.z = Math.sin(t * 25) * 0.6; fish.rotation.y = t * 3; bob.visible = false;
+        if (k > 0.6 && k < 0.66 && typeof rfxSplash === 'function') { const w = new THREE.Vector3(); npc.localToWorld(w.set(0.05, 0, 2.4)); rfxSplash(w.x, w.z, 0.4); } }
+      else { fish.visible = false; bob.visible = k < 0 || k > 2.6; bob.position.copy(W); }
+      if (k > 3.2) { catchT = -1; next = t + 14 + ((i * 7 + Math.floor(t)) % 11); }
+      const P = line.geometry.attributes.position; P.setXYZ(0, V.x, V.y, V.z); const e = fish.visible ? fish.position : bob.position; P.setXYZ(1, e.x, e.y, e.z); P.needsUpdate = true; }); }); }
 { const orig = LEVELS.ocean.build; LEVELS.ocean.build = function () { orig.call(this); try { ocBoats(); } catch (e) { console.warn('ocean2 boats', e); } }; }

@@ -4,12 +4,8 @@ const VOICE_READY = [];
 const prologueVoiced = L => typeof narrIds === 'function' && narrIds().has(burpHash(L.text)); // Vega's narrator clips (2.14.3)
 const PROLOGUE = [
   { id: 'p1', shot: 'galaxy', text: 'Long before you were born, the galaxy was a quiet place. A dozen worlds, turning in the light of one old sun.' },
-  { id: 'p2', shot: 'earth', text: 'Earth was the heart of it. Humans and aliens, traders and troopers, all living under the same sky.' },
-  { id: 'p3', shot: 'worlds', text: 'Out past the Moon, the worlds grew strange. The bug hives of Mezar. The frozen forests of Capitone. The endless streets of Robot City.' },
-  { id: 'p4', shot: 'zeltac', text: 'And between them all sailed the Zeltac, a city that flies, carrying anyone brave enough to leave home.' },
   { id: 'p5', shot: 'fleet', text: 'Then the sun began to set. A warlord named Drome rose out of nowhere, with an army of machines and a promise.' },
   { id: 'p6', shot: 'burn', text: '"Every world," he said, "will burn red." And one by one, the lights began to go out.' },
-  { id: 'p7', shot: 'eye', text: 'The Masters went quiet. The Safe Zones hid behind their walls. And far past the edge of the map, something in the dark opened its eye.' },
   { id: 'p8', shot: 'launch', text: "But Earth still had one thing Drome didn't count on. A battered old transport, held together with hope and duct tape..." },
   { id: 'p9', shot: 'flyby', text: '...and a trooper crazy enough to fly it.' },
   { id: 'p10', shot: 'shoulder', text: 'This is your ship now, Captain. Her name is the Setting Sun.' },
@@ -78,15 +74,15 @@ shipIntro = function (replay) {
   const voice = new Audio(); voice.preload = 'auto';
   let li = -1, lineT0 = performance.now(), lineDur = 6, done = false; const t0 = performance.now(), MIN_LOCK = 12, cap = ov.querySelector('#cutcap'), title = ov.querySelector('#cuttitle');
   const startLine = i => { li = i; const L = PROLOGUE[i]; lineT0 = performance.now(); lineDur = lineSecs(L); cap.style.opacity = 0; setTimeout(() => { if (!done) { cap.textContent = L.text; cap.style.opacity = 1; } }, 250); prologueTint(ov, L.shot);
-    voice.pause(); if (prologueVoiced(L) && PREFS.voice !== false && PREFS.sfx) { voice.src = `voice/narrator/${burpHash(L.text)}.mp3`; voice.volume = 1; voice.play().then(() => { if (isFinite(voice.duration)) lineDur = voice.duration + 0.8; }).catch(() => {}); if (MUS.cur) musFade(MUS.cur, musVol() * 0.35, 0.6); } };
+    voice.pause(); if (prologueVoiced(L) && PREFS.voice !== false && PREFS.sfx) { voice.src = `voice/narrator/${burpHash(L.text)}.mp3`; voice.volume = 1; voice.play().then(() => { if (isFinite(voice.duration)) lineDur = voice.duration + 0.2; }).catch(() => {}); if (MUS.cur) musFade(MUS.cur, musVol() * 0.35, 0.6); } };
   const end = () => { if (done) return; done = true; stars.visible = starsVis; hidPts.forEach(o => { o.visible = true; }); window.__cutscene_done = true; const cd = document.createElement('div'); cd.id = 'cutscene_done'; document.body.appendChild(cd); voice.pause(); musRelease('cutscene'); levelGroup.remove(D.g); levelGroup.remove(me); ov.remove(); skip.remove(); if (!replay) { S.flags.prologue1 = 1; S.flags.shipIntro = 1; markDirty(); } camera.far = far0; camera.updateProjectionMatrix(); CUT.on = false; setState(prevState); player.pos.set(0, 0, -4); player.yaw = 0; vm.visible = true; if (!replay) toast('THE SETTING SUN', 'Welcome aboard, Captain', 3); };
   skip.addEventListener('click', end);
   setTimeout(() => { title.style.opacity = 1; setTimeout(() => { title.style.opacity = 0; }, 2600); }, 400);
-  const lead = 4;
+  const lead = 1.5;
   const tick = () => { if (done) return; const el = (performance.now() - t0) / 1000;
     if (el > MIN_LOCK && skip.hidden) { skip.hidden = false; requestAnimationFrame(() => { skip.style.opacity = 1; }); }
     if (el < lead) { prologueShot(D, 'galaxy', el, el / (lead + lineSecs(PROLOGUE[0])) ); }
-    else { if (li < 0) startLine(0); const lt = (performance.now() - lineT0) / 1000; if (lt > lineDur && !(prologueVoiced(PROLOGUE[li]) && voice.src && !voice.paused && !voice.ended && lt < lineDur + 15)) { if (li + 1 < PROLOGUE.length) startLine(li + 1); else if (lt > lineDur + 2) return end(); }
+    else { if (li < 0) startLine(0); const lt = (performance.now() - lineT0) / 1000; if ((lt > lineDur || (voice.ended && lt > 0.6)) && !(prologueVoiced(PROLOGUE[li]) && voice.src && !voice.paused && !voice.ended && lt < lineDur + 15)) { if (li + 1 < PROLOGUE.length) startLine(li + 1); else if (lt > lineDur + 2) return end(); }
       const L = PROLOGUE[li], k = Math.min(1, ((performance.now() - lineT0) / 1000) / lineDur); prologueShot(D, L.shot, (performance.now() - lineT0) / 1000 + (li === 0 ? lead : 0), li === 0 ? Math.min(1, (el) / (lead + lineDur)) : k); }
     requestAnimationFrame(tick); };
   tick();

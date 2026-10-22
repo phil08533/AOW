@@ -55,7 +55,8 @@ function mckRoom() {
   const { x: X, z: Z } = MCKR, W = 14, D = 11, H = 4.6, g = new THREE.Group(); g.userData.mck = 1; const SB = (w, h, d) => new THREE.BoxGeometry(w, h, d, Math.ceil(w / 1.2), Math.ceil(h / 1.2), Math.ceil(d / 1.2)), red = toon('#c8402f'), yel = toon('#ffd36a'), wht = toon('#f4f0e8');
   const sign = (txt, bg, fg, w, h, x, y, z, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: signTex(txt, bg, fg) })); m.position.set(x, y, z); m.rotation.y = ry || 0; g.add(m); return m; };
   // shell: checker floor, red and yellow walls, ceiling with light panels
-  part(g, SB(W * 2, 0.1, D * 2), wht, X, 0.0, Z); for (let i = 0; i < 14; i++) for (let j = 0; j < 11; j++) if ((i + j) % 2) part(g, B(2, 0.11, 2), red, X - W + 1 + i * 2, 0.005, Z - D + 1 + j * 2);
+  { const c = document.createElement('canvas'); c.width = c.height = 64; const x2 = c.getContext('2d'); x2.fillStyle = '#f4f0e8'; x2.fillRect(0, 0, 64, 64); x2.fillStyle = '#c8402f'; x2.fillRect(0, 0, 32, 32); x2.fillRect(32, 32, 32, 32);
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(W / 2, D / 2); t.magFilter = THREE.NearestFilter; const fl = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, D * 2, 14, 11), new THREE.MeshLambertMaterial({ map: t })); fl.rotation.x = -Math.PI / 2; fl.position.set(X, 0.02, Z); g.add(fl); }
   part(g, SB(W * 2, 0.2, D * 2), toon('#e8e0d0'), X, H, Z); for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) part(g, B(2.4, 0.05, 1.2), glow('#fff4d8'), X - 10 + i * 6, H - 0.12, Z - 7 + j * 6);
   for (const [x, z, w, d] of [[X, Z - D, W * 2, 0.3], [X, Z + D, W * 2, 0.3], [X - W, Z, 0.3, D * 2], [X + W, Z, 0.3, D * 2]]) { part(g, SB(w, H, d), yel, x, H / 2, z); part(g, SB(w - 0.4, 1.1, d + 0.1), red, x, 0.55, z); box(x, z, w / 2, d / 2); }
   part(g, B(2.4, 3.2, 0.1), toon('#3a2a1a'), X, 1.6, Z + D - 0.2); sign('EXIT · ZELTAC MALL', '#0c0d14', '#7fff6a', 2.6, 0.4, X, 3.5, Z + D - 0.2, Math.PI);
@@ -74,26 +75,49 @@ function mckRoom() {
     if ((n * 7) % 5 < 3) sitAt(() => makeCivilian(...looks[n % 5]), tx + (n % 2 ? 0.3 : -0.3), tz + (n % 2 ? 0.95 : -0.95), n % 2 ? Math.PI : 0); n++; }
   // the play place: tubes, a slide, a ball pit, kids and Lulu
   const P = { x: X + 8.5, z: Z + 6 };
-  part(g, SB(9, 0.5, 7), toon('#4fa8ff'), P.x, 0.25, P.z); box(P.x - 3.2, P.z, 1.2, 3.5);
-  const ball = ['#ff6aa8', '#ffd36a', '#4fd2ff', '#7fff6a', '#ff8a2a', '#c86aff']; for (let i = 0; i < 90; i++) part(g, new THREE.SphereGeometry(0.16, 6, 4), toon(ball[i % 6]), P.x - 4 + mckR(i) * 8, 0.55 + mckR(i + 3) * 0.12, P.z - 3 + mckR(i + 7) * 6);
-  for (const [x, z] of [[-3.5, -2.8], [3.5, -2.8], [-3.5, 2.8], [3.5, 2.8]]) part(g, Cy(0.12, 0.12, 3.6, 8), toon('#ffd36a'), P.x + x, 1.8, P.z + z);
-  part(g, B(4, 0.15, 3), toon('#ff6aa8'), P.x + 1.5, 2.4, P.z - 1.5); part(g, Cy(0.7, 0.7, 4.2, 12, 1, true), toon('#7fff6a'), P.x - 1, 3.0, P.z - 1.5, 0, 0, Math.PI / 2);
-  part(g, B(1.2, 0.12, 4.2), toon('#ffd36a'), P.x + 2.6, 1.25, P.z + 1.2, 0.55); part(g, Cy(0.4, 0.4, 0.4, 8), toon('#4fd2ff'), P.x + 3.5, 2.6, P.z - 1.5);
+  // ball pit (right) with a padded rim; climbing frame with a roof, ladder and a slide down into the pit (left)
+  const pit = { x: P.x + 1.6, z: P.z, w: 5, d: 6 };
+  part(g, SB(pit.w, 0.12, pit.d), toon('#4fa8ff'), pit.x, 0.07, pit.z);
+  for (const [x, z, w, d] of [[pit.x, pit.z - pit.d / 2, pit.w + 0.4, 0.3], [pit.x, pit.z + pit.d / 2, pit.w + 0.4, 0.3], [pit.x - pit.w / 2, pit.z, 0.3, pit.d], [pit.x + pit.w / 2, pit.z, 0.3, pit.d]]) part(g, SB(w, 0.65, d), toon('#ff6aa8'), x, 0.33, z);
+  box(pit.x, pit.z, pit.w / 2 + 0.2, pit.d / 2 + 0.2);
+  const ball = ['#ff6aa8', '#ffd36a', '#4fd2ff', '#7fff6a', '#ff8a2a', '#c86aff']; for (let i = 0; i < 110; i++) part(g, new THREE.SphereGeometry(0.16, 6, 4), toon(ball[i % 6]), pit.x - pit.w / 2 + 0.35 + mckR(i) * (pit.w - 0.7), 0.25 + mckR(i + 3) * 0.25, pit.z - pit.d / 2 + 0.35 + mckR(i + 7) * (pit.d - 0.7));
+  const fr = { x: P.x - 2.6, z: P.z - 1.2 }, py = 1.6;
+  for (const [x, z] of [[-1.3, -1.3], [1.3, -1.3], [-1.3, 1.3], [1.3, 1.3]]) part(g, Cy(0.1, 0.1, 3.0, 8), toon('#ffd36a'), fr.x + x, 1.5, fr.z + z);
+  part(g, B(2.7, 0.15, 2.7), toon('#c8402f'), fr.x, py, fr.z);
+  for (const [x, z, w, d] of [[0, -1.3, 2.6, 0.06], [-1.3, 0, 0.06, 2.6], [0, 1.3, 2.6, 0.06]]) part(g, B(w, 0.6, d), toon('#4fd2ff'), fr.x + x, py + 0.38, fr.z + z);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(2.1, 1.0, 4), toon('#ff6aa8')); roof.position.set(fr.x, 3.5, fr.z); roof.rotation.y = Math.PI / 4; g.add(roof);
+  for (const s2 of [-1, 1]) part(g, B(0.08, py + 0.1, 0.08), toon('#ffd36a'), fr.x - 0.4 + s2 * 0.35, (py + 0.1) / 2, fr.z + 1.45); for (let r = 0; r < 4; r++) part(g, B(0.7, 0.06, 0.08), toon('#ffd36a'), fr.x - 0.4, 0.35 + r * 0.4, fr.z + 1.45);
+  { const x0 = fr.x + 1.35, y0 = py, x1 = pit.x - 0.6, y1 = 0.45, len = Math.hypot(x1 - x0, y1 - y0), a = Math.atan2(y1 - y0, x1 - x0), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    part(g, B(len, 0.08, 0.9), toon('#7fff6a'), cx, cy, fr.z, 0, 0, a); for (const s2 of [-1, 1]) part(g, B(len, 0.25, 0.06), toon('#3fbf4a'), cx, cy + 0.12, fr.z + s2 * 0.47, 0, 0, a); }
+  box(fr.x, fr.z, 1.45, 1.45);
   sign('KLUNKY\'S FUN ZONE', '#ff6aa8', '#ffffff', 4, 0.6, P.x, 3.9, P.z - 3.4); sign('NO ADULTS IN THE BALL PIT. WE MEAN IT, GARY.', '#ffffff', '#c8402f', 3.2, 0.35, P.x - 4.4, 1.5, P.z, Math.PI / 2);
   for (let i = 0; i < 4; i++) { const kid = buildChar(() => makeCivilian(ball[i], '#2c2a28', looks[i][2], '#1e1a18'), 'civ'); kid.scale.setScalar(0.55); levelGroup.add(kid); const st = {};
-    levelAnims.push(t => { const a = t * (0.6 + i * 0.15) + i * 1.6; kid.position.set(P.x + Math.cos(a) * 2.6, 0.45 + Math.abs(Math.sin(t * 5 + i)) * 0.35, P.z + Math.sin(a) * 1.8); kid.rotation.y = -a; animRig(kid, st, 1 / 60, t); }); }
+    levelAnims.push(t => { const a = t * (0.6 + i * 0.15) + i * 1.6; kid.position.set(P.x + 1.6 + Math.cos(a) * 1.5, 0.3 + Math.abs(Math.sin(t * 5 + i)) * 0.35, P.z + Math.sin(a) * 2.0); kid.rotation.y = -a; animRig(kid, st, 1 / 60, t); }); }
   const lulu = buildChar(ROMANCE.lulu.make, 'civ'); lulu.position.set(P.x - 5.2, 0, P.z - 1); lulu.rotation.y = Math.PI / 2; levelGroup.add(lulu); solid(P.x - 5.2, P.z - 1, 0.4);
   INTERACTS.push({ x: P.x - 5.2, z: P.z - 1, r: 2.2, label: '💗 Talk to Lulu', fn: () => openRomance('lulu') });
   // the Don's corner: walled off at the back, dark wood, one low red lamp, smoke
   const C = { x: X + 9, z: Z - 6.5 };
-  part(g, SB(10, H, 0.3), toon('#2a1a14', 'wood'), C.x, H / 2, Z - 1.5); box(C.x + 1, Z - 1.5, 4, 0.15);
-  part(g, SB(0.3, H, 9.4), toon('#2a1a14', 'wood'), X + 3.6, H / 2, Z - 6.2); box(X + 3.6, Z - 7.4, 0.15, 3.6);
+  // walls of the den: solid, with a doorway near the front of the side wall; painted McKlunkies murals outside
+  const dw = toon('#c8402f');
+  part(g, SB(10.4, H, 0.3), dw, X + 8.8, H / 2, Z - 1.5); box(X + 8.8, Z - 1.5, 5.2, 0.2);
+  part(g, SB(0.3, H, 7.6), dw, X + 3.6, H / 2, Z - 7.2); box(X + 3.6, Z - 7.2, 0.2, 3.8);
+  part(g, SB(0.3, H, 0.5), dw, X + 3.6, H / 2, Z - 1.75); part(g, B(0.3, H - 2.5, 1.4), dw, X + 3.6, 2.5 + (H - 2.5) / 2, Z - 2.7);
+  for (const z of [Z - 3.4, Z - 2.0]) part(g, B(0.4, 2.5, 0.12), toon('#c9a43a'), X + 3.6, 1.25, z); part(g, B(0.4, 0.12, 1.5), toon('#c9a43a'), X + 3.6, 2.5, Z - 2.7);
+  { const dr = new THREE.Group(); part(dr, B(0.08, 2.4, 1.3), toon('#3a2014', 'wood'), 0, 1.2, -0.65); part(dr, new THREE.SphereGeometry(0.06, 6, 4), toon('#c9a43a'), 0.08, 1.1, -1.15); dr.position.set(X + 3.6, 0, Z - 2.05); dr.rotation.y = -1.3; g.add(dr); }
+  const mural = (w, h, draw) => { const c = document.createElement('canvas'); c.width = 256; c.height = Math.round(256 * h / w); const x2 = c.getContext('2d'); draw(x2, c.width, c.height); return new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(c) }); };
+  const paint = (x2, w, h, n) => { x2.fillStyle = '#ffd36a'; x2.fillRect(0, 0, w, h); x2.fillStyle = '#c8402f'; x2.fillRect(0, h * 0.78, w, h * 0.22); x2.fillStyle = '#ffffff'; for (let i = 0; i < w; i += 16) x2.fillRect(i, h * 0.76, 8, 4);
+    for (let i = 0; i < n; i++) { const cx = w * (i + 0.5) / n, cy = h * 0.42, r = Math.min(w / n, h) * 0.28; x2.fillStyle = '#d89a40'; x2.beginPath(); x2.arc(cx, cy - r * 0.2, r, Math.PI, 0); x2.fill(); x2.fillStyle = '#6fce4a'; x2.fillRect(cx - r, cy - r * 0.2, r * 2, r * 0.18); x2.fillStyle = '#5a2a1a'; x2.fillRect(cx - r, cy, r * 2, r * 0.3); x2.fillStyle = '#d89a40'; x2.fillRect(cx - r * 0.95, cy + r * 0.3, r * 1.9, r * 0.35);
+      x2.fillStyle = '#fff'; x2.beginPath(); x2.arc(cx - r * 0.4, cy - r * 0.55, r * 0.2, 0, 7); x2.arc(cx + r * 0.4, cy - r * 0.55, r * 0.2, 0, 7); x2.fill(); x2.fillStyle = '#000'; x2.beginPath(); x2.arc(cx - r * 0.36, cy - r * 0.5, r * 0.09, 0, 7); x2.arc(cx + r * 0.44, cy - r * 0.5, r * 0.09, 0, 7); x2.fill(); }
+    x2.fillStyle = '#c8402f'; x2.font = 'bold ' + Math.round(h * 0.12) + 'px monospace'; x2.textAlign = 'center'; x2.fillText('HOME OF THE KLUNK', w / 2, h * 0.14); };
+  { const m = new THREE.Mesh(new THREE.PlaneGeometry(9.8, H - 0.4), mural(9.8, H - 0.4, (x2, w, h) => paint(x2, w, h, 3))); m.position.set(X + 8.8, H / 2, Z - 1.5 + 0.17); g.add(m);
+    const m2 = new THREE.Mesh(new THREE.PlaneGeometry(7.2, H - 0.4), mural(7.2, H - 0.4, (x2, w, h) => paint(x2, w, h, 2))); m2.position.set(X + 3.6 - 0.17, H / 2, Z - 7.2); m2.rotation.y = -Math.PI / 2; g.add(m2); }
   part(g, SB(10, 0.12, 9.6), toon('#4a2a1a', 'wood'), C.x, 0.06, C.z); part(g, SB(10, 0.1, 9.6), toon('#2a1814'), C.x, H - 0.15, C.z);
   // velvet walls over the yellow, wainscot, a rug, sconces, a painting of the Don, a bar cart and cigar smoke
   const vel = toon('#5a0e18', 'cloth'), wd = toon('#3a2014', 'wood');
-  part(g, SB(10, H - 0.3, 0.08), vel, C.x, H / 2, Z - D + 0.2); part(g, SB(0.08, H - 0.3, 9.4), vel, X + W - 0.2, H / 2, C.z); part(g, SB(10, H - 0.3, 0.08), vel, C.x, H / 2, Z - 1.68); part(g, SB(0.08, H - 0.3, 9.4), vel, X + 3.78, H / 2, C.z);
-  for (const [x, z, w, d] of [[C.x, Z - D + 0.26, 10, 0.08], [X + W - 0.26, C.z, 0.08, 9.4], [C.x, Z - 1.74, 10, 0.08], [X + 3.84, C.z, 0.08, 9.4]]) { part(g, SB(w, 1.1, d), wd, x, 0.6, z); part(g, B(w + (w > 1 ? 0 : 0.06), 0.08, d + (d > 1 ? 0 : 0.06)), toon('#c9a43a'), x, 1.18, z); }
-  part(g, SB(5.5, 0.03, 4.5), toon('#7a1a1a', 'cloth'), C.x + 2.2, 0.13, C.z - 0.5); part(g, SB(5.1, 0.035, 4.1), toon('#c9a43a'), C.x + 2.2, 0.13, C.z - 0.5); part(g, SB(4.9, 0.04, 3.9), toon('#5a0e14', 'cloth'), C.x + 2.2, 0.13, C.z - 0.5);
+  part(g, SB(10, H - 0.3, 0.08), vel, C.x, H / 2, Z - D + 0.2); part(g, SB(0.08, H - 0.3, 9.4), vel, X + W - 0.2, H / 2, C.z); part(g, SB(10, H - 0.3, 0.08), vel, C.x, H / 2, Z - 1.68); part(g, SB(0.08, H - 0.3, 7.4), vel, X + 3.78, H / 2, Z - 7.2);
+  for (const [x, z, w, d] of [[C.x, Z - D + 0.26, 10, 0.08], [X + W - 0.26, C.z, 0.08, 9.4], [C.x, Z - 1.74, 10, 0.08], [X + 3.84, Z - 7.2, 0.08, 7.4]]) { part(g, SB(w, 1.1, d), wd, x, 0.6, z); part(g, B(w + (w > 1 ? 0 : 0.06), 0.08, d + (d > 1 ? 0 : 0.06)), toon('#c9a43a'), x, 1.18, z); }
+  { const c = document.createElement('canvas'); c.width = 128; c.height = 104; const x2 = c.getContext('2d'); x2.fillStyle = '#7a1a1a'; x2.fillRect(0, 0, 128, 104); x2.fillStyle = '#c9a43a'; x2.fillRect(6, 6, 116, 92); x2.fillStyle = '#5a0e14'; x2.fillRect(10, 10, 108, 84); x2.strokeStyle = '#c9a43a'; x2.lineWidth = 2; x2.strokeRect(30, 26, 68, 52);
+    const rug = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 4.5), new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(c) })); rug.rotation.x = -Math.PI / 2; rug.position.set(C.x + 2.2, 0.16, C.z - 0.5); g.add(rug); }
   for (const [x, z, ry] of [[C.x - 2, Z - D + 0.3, 0], [C.x + 2, Z - D + 0.3, 0], [X + W - 0.3, C.z + 1.5, -Math.PI / 2]]) { const sc = new THREE.Group(); part(sc, B(0.12, 0.3, 0.1), toon('#c9a43a'), 0, 0, 0); part(sc, new THREE.ConeGeometry(0.18, 0.25, 8, 1, true), toon('#c8892a'), 0, 0.22, 0.12); part(sc, new THREE.SphereGeometry(0.06, 6, 4), glow('#ffb86a'), 0, 0.18, 0.12); sc.position.set(x, 2.7, z); sc.rotation.y = ry; g.add(sc);
     const L = new THREE.PointLight(0xffa04a, 0.7, 4.5, 2); L.position.set(x + (ry ? -0.5 : 0), 2.8, z + (ry ? 0 : 0.5)); g.add(L); }
   part(g, B(2.0, 1.5, 0.06), toon('#c9a43a'), C.x, 2.6, Z - D + 0.3); { const pc = document.createElement('canvas'); pc.width = 128; pc.height = 96; const x2 = pc.getContext('2d'); x2.fillStyle = '#2a1408'; x2.fillRect(0, 0, 128, 96); x2.fillStyle = '#d8a07a'; x2.beginPath(); x2.arc(64, 44, 22, 0, 7); x2.fill(); x2.fillStyle = '#1e1c22'; x2.fillRect(42, 18, 44, 12); x2.fillStyle = '#f4f0e8'; x2.fillRect(34, 66, 60, 30); x2.fillStyle = '#c8402f'; x2.fillRect(56, 66, 16, 30); x2.fillStyle = '#000'; x2.fillRect(54, 40, 5, 4); x2.fillRect(69, 40, 5, 4); x2.fillRect(56, 54, 16, 2);
@@ -104,7 +128,7 @@ function mckRoom() {
   const lampY = 2.6, lx = C.x + 3, lz = C.z - 2.5; part(g, Cy(0.01, 0.01, H - lampY, 4), toon('#111111'), lx, (H + lampY) / 2, lz); part(g, new THREE.ConeGeometry(0.45, 0.35, 12, 1, true), toon('#5a0e14'), lx, lampY, lz); part(g, new THREE.SphereGeometry(0.1, 8, 6), glow('#ff6a3a'), lx, lampY - 0.1, lz);
   const pl = new THREE.PointLight(0xff5a2a, 1.4, 6, 2); pl.position.set(lx, lampY - 0.3, lz); g.add(pl);
   part(g, Cy(0.28, 0.28, 0.22, 10), toon('#c8892a'), lx - 0.2, 0.92, lz); part(g, B(0.12, 0.3, 0.12), toon('#3a5a2a'), lx + 0.4, 0.97, lz); // Mega Klunk and a bottle
-  sign('PRIVATE · FAMILY ONLY', '#1a0e0c', '#c9a43a', 2.4, 0.35, X + 3.75, 2.6, Z - 3, Math.PI / 2);
+  sign('PRIVATE · FAMILY ONLY', '#1a0e0c', '#c9a43a', 1.4, 0.3, X + 3.4, 2.85, Z - 2.7, -Math.PI / 2);
   levelGroup.add(g);
   sitAt(() => makeCivilian('#f4f0e8', '#2a2a30', '#d8a07a', '#1e1c22', '#c8402f'), lx, lz - 0.95, 0);
   for (const [x, z, ry] of [[C.x - 0.4, C.z - 2.5, -1.2], [C.x + 0.2, C.z + 0.6, -2.2]]) { const o = buildChar(() => makeCivilian('#1e1c22', '#1e1c22', '#c58a64', '#1e1c22', '#3a3d44'), 'civ'); o.position.set(x, 0, z); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.4); }

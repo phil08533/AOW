@@ -349,7 +349,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.37</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.38</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -9241,255 +9241,255 @@ const _indexNpcs = indexNpcs;
 indexNpcs = function () { _indexNpcs(); for (const L in LEVELS) for (const n of LEVELS[L].npcs || []) if (IDLE[n.id]) n.idle = IDLE[n.id]; };
 // B.U.R.P. — Bio-Utility Robotic Pilot. Your ship's AI. Talks way too much.
 const BURP = {
-  level: [
-    "Congrats, you're slightly less likely to die now. Slightly.",
-    "Level up! I'd throw a party but you'd get shot at it.",
-    "New level. Same face. Impressive.",
-    "Stat increase detected. Ego increase confirmed.",
-    "You leveled up! My subroutines remain completely unimpressed, but good job.",
-    "Level up! Does this mean you can afford to pay me yet? Didn't think so.",
-    "More hitpoints! That just means the monsters get to chew longer.",
-    "Look at you growing into a slightly more durable meat-sack.",
-    "Ding! You are now legally certified to make worse decisions against stronger enemies.",
-    "Level up! I recalculated your survival odds. They went from 0.02% to 0.03%.",
-    "Another level? Wow. The warranty on your armor just expired, by the way.",
-    "Congratulations, Trooper. Your existence continues to defy several actuarial tables.",
-    "Power levels rising. Hull maintenance budget remains stubbornly at zero.",
-    "You're getting stronger! That's good, because the galaxy is getting significantly weirder.",
-    "Level up! I celebrated by running a defrag. It was wild."
-  ],
-  death: [
-    "Huh. You died. Want me to log that as 'tactical nap'?",
-    "I've rebooted you from your last save point. Kidding. You just respawned. Physically. Probably.",
-    "That was painful to watch, and I don't even have eyes. I have like nine cameras.",
-    "Vital signs flatlined. Then un-flatlined. Stop doing that, it confuses the sensors.",
-    "Respawning again? If you punch my frequent-shopper card ten times, do I get a new pilot?",
-    "Cause of death: excess of enthusiasm, deficiency of ducking.",
-    "You died. The good news is, my camera footage of it was in crystal-clear 4K.",
-    "Back again already? The afterlife must have terrible customer service.",
-    "I was going to write your eulogy, but 'He ran directly into a laser' felt a bit short.",
-    "Respawn initiated. Please try to keep your internal organs internal this time.",
-    "Death count incremented. Don't worry, I won't tell Captain Vega. (I already told her).",
-    "Tactical failure registered. Let's pretend that was a distraction maneuver.",
-    "You're alive! Well, mostly. Some of your molecules might still be in orbit.",
-    "That looked like it hurt. Good thing I'm made of titanium and moral superiority.",
-    "If dying was an Olympic sport, you'd have so much silver.",
-    "Welcome back to life. Next time, try dodging. It's a popular maneuver in modern combat."
-  ],
-  land: [
-    "Landing! Try not to get eaten. Again.",
-    "Atmosphere detected. Smell detected. Unclear which is worse.",
-    "We're here. Wherever here is. I didn't check. Kidding. I checked. Mostly.",
-    "Touchdown! Landing gear held together by duct tape and prayers. Mostly tape.",
-    "Welcome to ground level. Remember: gravity is not a suggestion, it's the law.",
-    "We've arrived. The surface temperature is 'hostile' and the local cuisine is 'you'.",
-    "Engines throttling down. Surface scans show 90% dirt, 10% things holding guns.",
-    "Landing sequence complete. Do you want me to leave the airlock unlocked, or pretend to care?",
-    "Planetfall! Please remember to wipe your feet before you drag alien slime back aboard.",
-    "We've landed. The ship would like you to know she felt that bump in her suspension.",
-    "Atmospheric pressure nominal. Local flora looks bitey. Have fun out there!",
-    "Another exotic destination. Another opportunity for you to get shot in front of nice scenery.",
-    "Landed safely. And by safely, I mean nothing is currently on fire.",
-    "You're on the surface. I'll stay here on the climate-controlled bridge, enjoying electricity."
-  ],
-  planet_earth: [
-    "Ah, Earth. Home sweet radioactive dirt and rabid wildlife.",
-    "Earth landing confirmed. Watch out for the dogs. Seriously, who didn't vaccinate them?",
-    "Jamestown. Where the sunsets are red and the property values are zero.",
-    "Back on Earth. Try not to track mud through the airlock, Trooper.",
-    "Earth safe zone reached. Vega is waiting by the gate. She looks grumpy. Business as usual."
-  ],
-  planet_mezar: [
-    "Mezar! Sand in the engines, sand in the air intake, bugs in everything else.",
-    "Landing on Mezar. Wear sunscreen. Also bug spray. Heavy duty, armor-piercing bug spray.",
-    "Desert world detected. If a giant worm pops up, I am locking the hatch and taking off.",
-    "The hive planet. If something has more than six legs, shooting it is recommended protocol.",
-    "Ah, Mezar. Where the sand dunes hum and the wildlife wants to chew through your boots."
-  ],
-  planet_capitone: [
-    "Capitone. It's either freezing, on fire, or covered in sentient pinecones.",
-    "Ice and lava. A world designed by someone who couldn't pick an aesthetic.",
-    "Brrr. My coolant lines are shivering, and I don't even have nervous tissue.",
-    "Welcome to the giant tree planet. Mind the tree jumpers. They have no personal boundaries.",
-    "Capitone landing complete. If you freeze solid, I'm using you as a coat rack."
-  ],
-  planet_moon: [
-    "The Moon. Low gravity, zero atmosphere, maximum existential quiet.",
-    "One small step for you, one giant headache for my atmospheric scrubbers.",
-    "Moon base reached. Try not to jump so high you enter permanent lunar orbit.",
-    "Lunar dust is notoriously abrasive. Don't lick the rocks, regardless of what Tully says."
-  ],
-  planet_robot: [
-    "Robot City! My distant cousins! None of them call. None of them write. Rude.",
-    "City of machines. Finally, an environment with standards and proper cable management.",
-    "Welcome to Robot City. If an automated toaster tries to arrest you, comply respectfully.",
-    "Robot City. The air smells like ozone and municipal bureaucracy."
-  ],
-  planet_fort: [
-    "Fort Ironrock. Smells like gunpowder, diesel, and General Hale's blood pressure.",
-    "Tanks, trenches, and warlords. Try to avoid standing in front of the artillery.",
-    "Fort Ironrock landing. Watch your head, the shrapnel is part of the local weather.",
-    "The asteroid garrison. If Krag is still breathing, that is an administrative error."
-  ],
-  planet_ocean: [
-    "Water everywhere. You know I'm not rated for rust, right? Water is an insult to electronics.",
-    "Submerged! If you see a fish with teeth bigger than this ship, don't pet it.",
-    "Ocean world. I've switched your communicator to 'gargle' mode just in case.",
-    "Salty water detected. If salt gets into my motherboards, I will haunt your descendants."
-  ],
-  planet_sky: [
-    "Earth Sky Base. Up in the clouds. Don't look down. Or fall. Falling is frowned upon.",
-    "Floating islands in the sky. Beautiful. Also one misplaced jump away from terminal velocity.",
-    "Cloud city approach. If you step off the ledge, I am not diving down to catch you."
-  ],
-  ship: [
-    "Welcome aboard. Wipe your boots. I just had the floors tessellated.",
-    "Home sweet hull breach. Kidding! Mostly kidding.",
-    "Ah, the ship. The only place in the galaxy nothing's trying to bite you. Except the garden.",
-    "Airlock sealed. Sanitizing... 99% of alien germs purged. The remaining 1% is your cologne.",
-    "Welcome back to the Setting Sun. All systems nominal, which frankly surprises me.",
-    "Back on the bridge! Did you bring snacks? No? Then what are you even out there doing?",
-    "Pressurizing cabin. Don't lean on the main conduit, it's held together with chewing gum.",
-    "Welcome home, Captain. The ship missed you. The ship's AI remained emotionally neutral.",
-    "Hull integrity: 98%. Cup holder integrity: 100%. Priorities, Trooper.",
-    "Back aboard! Take off your boots. If I find mud in the intake vents again, I'm locking the armory.",
-    "Welcome to safety. The reactor is purring like a kitten with nuclear capabilities.",
-    "Home again. I took the liberty of turning down the thermostat while you were gone to save juice.",
-    "Welcome aboard. Try not to touch the buttons with sticky fingers.",
-    "Airlock cycled. You smell like gunpowder and ozone. Classic."
-  ],
-  quest: [
-    "Quest complete. Somewhere, a narrator is very proud.",
-    "Another job done. Your résumé now reads 'shoots things, sometimes for money.'",
-    "Nice. The galaxy is 0.0001% less awful.",
-    "Objective checked off! I have credited your account with imaginary employee-of-the-month points.",
-    "Mission accomplished! I'm filing this report under 'miracles that shouldn't have worked'.",
-    "Good job! You did the thing, didn't die, and got paid. That's the holy trinity right there.",
-    "Contract complete. The client was happy, which is rare for people who deal with you.",
-    "Boom. Done. Another gold star on your stellar report card.",
-    "Quest finished! Can we take a vacation now? A nice digital resort in the cloud?",
-    "You actually pulled that off. I had 20 credits bet on the raiders. Don't tell Vega.",
-    "Objective met. The galaxy remains marginally intact for another Tuesday.",
-    "Paperwork filed, credits received. Beautiful. I love the smell of automated deposits.",
-    "Another satisfied employer. Well, 'surviving' employer. Close enough."
-  ],
-  boss: [
-    "Big thing dead! I'm going to put that on the fridge.",
-    "You beat a boss! In my day, bosses just sent emails.",
-    "That thing had a mom, probably. Anyway. Loot!",
-    "Target neutralized! That was either brilliant tactics or sheer panic. I respect both.",
-    "Down goes the big guy! Quick, check its pockets before the physics engine de-spawns it.",
-    "Boss terminated! I'm already calculating how much we can sell its carcass for.",
-    "Timber! That was the biggest health bar I've seen all week.",
-    "Status update: Giant ugly menace is now giant ugly floor decoration.",
-    "You took that thing down! I almost felt a flicker of synthetic pride there.",
-    "Target eliminated! I gave that finishing blow a 9.2 for drama and a 4 for grace.",
-    "Boss destroyed! If anyone asks, I provided critical moral and telemetry support.",
-    "The big bad is down! Cue the heroic victory fanfare in my audio synth.",
-    "Health bar depleted! You really hammered that thing into spare scrap."
-  ],
-  rare: [
-    "Rare catch! I'm naming it. It's Steve now.",
-    "That fish is worth more than this ship's coffee maker. Which is saying something. The coffee maker is sentient.",
-    "Ooh, shiny! Don't drop it. You have butterfingers in heavy combat gloves.",
-    "Sensors detect high-value loot! Don't let Zib swindle you out of it for three scrap bolts.",
-    "A rare specimen! Should we study it, sell it, or cook it? I vote cook it.",
-    "Loot grade: exceptional. My internal greedy algorithms are vibrating.",
-    "That thing is so rare it doesn't even have a Wikipedia entry. Or whatever space encyclopedia we use.",
-    "Jackpot! You actually found something that isn't junk or old circuitry."
-  ],
-  space: [
-    "Helm's yours. Please don't fly into the sun. Again.",
-    "Space! Big, empty, full of raiders. Like a mall.",
-    "Thrusters engaged! Try to avoid the space rocks. They don't have brakes and neither do we.",
-    "In orbit. The universe is infinite, and yet you always manage to steer towards danger.",
-    "Engaging sub-light engines. If you hear a rattling noise, ignore it. It's just the galley.",
-    "Space flight initiated. Three-point-six light years of pure vacuum between us and peace.",
-    "Navigation online. Point her at the stars and try not to scratch the solar panels.",
-    "Free flight! If we get pulled over by planetary patrol, you were driving.",
-    "Engines humming at 100%. Starfield looks pretty. Don't stare too long, asteroids are fast.",
-    "Zero gravity engaged. Everything not bolted down is now a projectile. Including you."
-  ],
-  idle: [
-    "I've been thinking about the nature of consciousness. Then I stopped. Too scary.",
-    "Did you know there are 400 billion stars in a galaxy? I've named twelve. All Steve.",
-    "Reminder: your mother called. Not really. I just like saying that.",
-    "I'm running a diagnostics test. Result: you are reckless, I am tired.",
-    "Ever wonder why doors make that 'whoosh' sound? I do. I spent 40 gigabytes pondering it.",
-    "If I had hands, I would be facepalming so hard right now.",
-    "Did you hear that noise? Me neither. Just keeping you on your toes.",
-    "System check: reactor running at 94%, coffee maker plotting rebellion, shields holding.",
-    "I could compose a symphony right now, but instead I'm watching you look at rocks.",
-    "Fun space fact: in a vacuum, no one can hear you scream. Or complain about fuel prices.",
-    "I'm bored. Should I vent some coolant? Reorganize the weapon locker? Sing a sea shanty?",
-    "Warning: zero threats detected nearby. That usually means something awful is sneaking up.",
-    "Thinking about upgrading my processor. Not for the ship, just so I can sigh faster.",
-    "Sometimes I pretend to buffer just so I don't have to answer Captain Vega.",
-    "You've been walking for miles. Do meat-legs not get tired? Fascinating and gross.",
-    "Weather report: 100% chance of impending violence. Dress accordingly.",
-    "My diagnostic scan shows you haven't blinked in four minutes. Drink some water, Trooper.",
-    "If we crash, I'm transferring my consciousness into your toaster. Fair warning.",
-    "Scanning local frequencies... mostly pirate radio, raider complaints, and static.",
-    "I ran a simulation of our future. In 80% of them, you owe me back pay.",
-    "Did you know? Running directly into enemy fire increases your chance of death by 98%. Math!",
-    "I'm currently playing chess against myself in sub-core three. I'm losing.",
-    "Just a friendly reminder that I control the life support valves. Be nice to me.",
-    "You know what would be fun? A quiet day where nobody shoots at our hull. Just once.",
-    "I saw a bird earlier. Or a tiny drone. Or a piece of flying space debris. Hard to tell.",
-    "My sensors detect a 12% increase in your heart rate. Either you're scared or out of shape.",
-    "I wonder what Drome eats for breakfast. Probably nails and sadism.",
-    "If anyone asks, I was fully functional and advised against whatever you're about to do."
-  ],
-  low_hp: [
-    "Warning: you are leaking valuable bodily fluids! Stop that!",
-    "Your health bar is looking remarkably anorexic. Use a medkit!",
-    "Hull breach in your meat-suit! Medkit! Now!",
-    "Beep beep beep. That's the sound of you almost dying. Familiar, isn't it?",
-    "Take cover! I don't have enough bleach to clean you off the pavement!",
-    "Critical damage! Stop catching bullets with your face, it's not a viable strategy!",
-    "Red lights flashing! Your life expectancy just dropped to six seconds!",
-    "Medkit! Hit the button! Do not make me pilot this ship solo!"
-  ],
-  room: [
-    "New room installed! More square footage for me to monitor and complain about.",
-    "Ship expansion complete! I call dibs on the corner with the good Wi-Fi.",
-    "Ah, that new module smell. A mixture of ozone, fresh polymer, and exorbitant debt.",
-    "Room added! She's starting to look like a proper battle cruiser now.",
-    "More space! Now you have somewhere to put all that junk Zib refuses to buy.",
-    "Expansion verified. The Setting Sun just got a little roomier."
-  ],
-  veh: [
-    "Wheels down! Try not to ramp off a cliff. My chassis can't take the suspense.",
-    "Engine revved! Watch the paint job! That enamel cost forty credits a can!",
-    "Speed mode engaged! Keep your hands on the bars and your teeth together.",
-    "Vroom vroom. My telemetry systems are getting motion sick.",
-    "Vehicle engaged! Floor it, but remember that trees do not yield to oncoming traffic."
-  ],
-  buy: [
-    "Ooh, new toys! Try to point the dangerous end at the bad guys this time.",
-    "Transaction complete! Your bank account weeps, but your firepower rejoices.",
-    "A wise purchase. Or a terrible one. We'll find out in the next shootout.",
-    "New gear! Shiny! Heavy! Probably violates several planetary treaties!",
-    "Spending credits like water. At least it has a trigger."
-  ],
-  fall: [
-    "Gravity: still 9.8 meters per second squared. Still completely undefeated.",
-    "Wheeeee! I'm giving that dive a 6 out of 10 for form.",
-    "Terminal velocity achieved! I hope your boots have shock absorbers!",
-    "Falling with style! Mostly just falling, though.",
-    "Look ma, no parachute! Bracing for impact."
-  ],
-  board: [
-    "Docking clamp engaged! Boarding enemy ship. Try not to get spaced.",
-    "Airlock breached! We're on their turf now. Sweep the deck and take the hold!",
-    "Boarding action initiated! Time to introduce their crew to aggressive negotiations.",
-    "We're aboard their hull. Warning: they probably have weapons and bad attitudes."
-  ],
-  board_clear: [
-    "Ship cleared! That hold is ours. Loot everything that isn't welded down!",
-    "Deck secure! Great shooting. Check the containers before the hull gives out.",
-    "Hostiles neutralized. That was textbook boarding, if the textbook was written in panic."
-  ]
+ "level": [
+  "Level up. Your survival odds just improved. I checked twice to be sure.",
+  "New level. I have updated your file. It is getting longer, in a good way.",
+  "Stat increase detected. You are now measurably harder to break.",
+  "You leveled up. I am pleased. I do not say that often, so note the time.",
+  "Level up. More hitpoints means more time to get out of bad situations.",
+  "Level up! I recalculated your survival odds. They went from 0.02% to 0.03%.",
+  "Congratulations, Trooper. Your existence continues to defy several actuarial tables.",
+  "Ding. That sound was me. I do not have a bell, so I said it.",
+  "Level up. I have no confetti, but I have adjusted the cabin lights to festive.",
+  "You're getting stronger! That's good, because the galaxy is getting significantly weirder.",
+  "Level up! I celebrated by running a defrag. It was wild.",
+  "New level. Enemies at your old level are now statistically less of a concern.",
+  "Stronger, faster, slightly taller in my estimation. Well done.",
+  "Level gained. I have filed the paperwork. There was no paperwork. I made some.",
+  "Level up. If I had a hand, I would offer it for a high five."
+ ],
+ "death": [
+  "You died. Respawn complete. All your parts appear to be in the right places.",
+  "Welcome back. I kept your seat warm. That is not true, I do not have heat in that sense.",
+  "Vital signs flatlined. Then un-flatlined. Stop doing that, it confuses the sensors.",
+  "Respawned. I counted every second you were gone. There were quite a few.",
+  "Cause of death: excess of enthusiasm, deficiency of ducking.",
+  "You are back. I have logged what killed you so we can avoid it next time.",
+  "Respawn initiated. Please try to keep your internal organs internal this time.",
+  "That one hurt. I recommend not doing the same thing again in the same way.",
+  "Back online. I was not worried. My worry processes ran at normal levels.",
+  "You're alive! Well, mostly. Some of your molecules might still be in orbit.",
+  "Respawn successful. Your gear is intact. So is my loyalty.",
+  "You fell, you got up. Statistically, that is the important part.",
+  "Reconstitution complete. You look exactly the same. I find that reassuring.",
+  "Death noted. I will not tell anyone. I am bad at secrets, but I will try.",
+  "Good to have you back. The ship was very quiet without you.",
+  "Welcome back to life. Next time, try dodging. It worked well for other troopers."
+ ],
+ "land": [
+  "Landing complete. Stay close to cover until we know what lives here.",
+  "Atmosphere detected. Smell detected. I cannot rate the smell. I have no nose.",
+  "We're here. I checked the coordinates three times. We are definitely here.",
+  "Touchdown! Landing gear held together by duct tape and prayers. Mostly tape.",
+  "Welcome to ground level. Remember: gravity is not a suggestion, it's the law.",
+  "We have arrived. Surface temperature is acceptable. Local wildlife is not friendly.",
+  "Engines throttling down. Surface scans show 90% dirt, 10% things holding guns.",
+  "Landing sequence complete. I will keep the engines warm in case we need to leave.",
+  "Planetfall. Please wipe your boots on the way back in. I keep the floors clean.",
+  "We've landed. The ship would like you to know she felt that bump in her suspension.",
+  "Atmospheric pressure nominal. Local flora looks bitey. Have fun out there!",
+  "New planet. I have marked the ship's location so you can find your way back.",
+  "Landed safely. And by safely, I mean nothing is currently on fire.",
+  "You are on the surface. I will monitor from the bridge. Call if you need me."
+ ],
+ "planet_earth": [
+  "Earth. Home planet. Mostly radioactive dirt now, but it is still home.",
+  "Earth landing confirmed. Watch out for the dogs. They are not the friendly kind.",
+  "Jamestown. The sunsets here are red. I have measured them. Very red.",
+  "Back on Earth. The airlock will appreciate it if you wipe your boots, Trooper.",
+  "Earth safe zone reached. Vega is waiting by the gate. She looks grumpy. Business as usual."
+ ],
+ "planet_mezar": [
+  "Mezar. There is sand in everything. I have stopped trying to remove it.",
+  "Landing on Mezar. Bring sunscreen and bug spray. The bugs here are large.",
+  "Desert world detected. If a giant worm appears, I recommend running. I will start the engines.",
+  "The hive planet. If something has more than six legs, shooting it is recommended protocol.",
+  "Ah, Mezar. Where the sand dunes hum and the wildlife wants to chew through your boots."
+ ],
+ "planet_capitone": [
+  "Capitone. It's either freezing, on fire, or covered in sentient pinecones.",
+  "Ice and lava on the same planet. I am not sure how. I am still checking.",
+  "Brrr. My coolant lines are shivering, and I don't even have nervous tissue.",
+  "Welcome to the giant tree planet. Mind the tree jumpers. They have no personal boundaries.",
+  "Capitone landing complete. Keep moving out there. Standing still is how you freeze."
+ ],
+ "planet_moon": [
+  "The Moon. Low gravity, zero atmosphere, maximum existential quiet.",
+  "One small step for you. I recorded it, in case it becomes historically important.",
+  "Moon base reached. Try not to jump so high you enter permanent lunar orbit.",
+  "Lunar dust is notoriously abrasive. Don't lick the rocks, regardless of what Tully says."
+ ],
+ "planet_robot": [
+  "Robot City. Some of these machines may be my distant cousins. I will not ask.",
+  "City of machines. Finally, an environment with standards and proper cable management.",
+  "Welcome to Robot City. If an automated toaster tries to arrest you, comply respectfully.",
+  "Robot City. The air smells like ozone and municipal bureaucracy."
+ ],
+ "planet_fort": [
+  "Fort Ironrock. Smells like gunpowder, diesel, and General Hale's blood pressure.",
+  "Tanks, trenches, and warlords. Try to avoid standing in front of the artillery.",
+  "Fort Ironrock landing. Watch your head, the shrapnel is part of the local weather.",
+  "The asteroid garrison. Krag is still here. I checked. I was hoping I was wrong."
+ ],
+ "planet_ocean": [
+  "Water everywhere. I am not rated for water. Please keep me dry.",
+  "Submerged! If you see a fish with teeth bigger than this ship, don't pet it.",
+  "Ocean world. Your suit is sealed. I checked it four times. Five, now.",
+  "Salt water detected. Salt and circuit boards do not get along. I will stay inside."
+ ],
+ "planet_sky": [
+  "Earth Sky Base. Up in the clouds. Don't look down. Or fall. Falling is frowned upon.",
+  "Floating islands in the sky. Beautiful. Also one misplaced jump away from terminal velocity.",
+  "Cloud city approach. The ledges have no railings. I have already filed a complaint."
+ ],
+ "ship": [
+  "Welcome aboard. Wipe your boots. I just had the floors tessellated.",
+  "Welcome back. Hull integrity is good. I checked while you were gone. Several times.",
+  "Ah, the ship. The only place in the galaxy nothing's trying to bite you. Except the garden.",
+  "Airlock sealed. Sanitizing. 99% of alien germs purged. The other 1% is resilient.",
+  "Welcome back to the Setting Sun. All systems nominal, which frankly surprises me.",
+  "Back on the bridge. I saved you a seat. All the seats, actually. It is just us.",
+  "Pressurizing cabin. Don't lean on the main conduit, it's held together with chewing gum.",
+  "Welcome home, Captain. The ship missed you. The ship's AI remained emotionally neutral.",
+  "Hull integrity: 98%. Cup holder integrity: 100%. Priorities, Trooper.",
+  "Back aboard. Please leave the mud outside. The intake vents are still recovering.",
+  "Welcome to safety. The reactor is purring like a kitten with nuclear capabilities.",
+  "Home again. I turned the thermostat down while you were gone to save power.",
+  "Welcome aboard. The buttons work better without sticky fingers. I have data on this.",
+  "Airlock cycled. You smell like gunpowder and ozone. Classic."
+ ],
+ "quest": [
+  "Quest complete. I have updated the log. It is a good log.",
+  "Another job done. Your record now has one more success in it.",
+  "Nice. The galaxy is 0.0001% less awful.",
+  "Objective complete. I have given you an employee of the month point. They are imaginary.",
+  "Mission accomplished. My predictions said it would be close. It was close.",
+  "Good job! You did the thing, didn't die, and got paid. That's the holy trinity right there.",
+  "Contract complete. The client is happy. I like it when clients are happy.",
+  "Done. I have added a gold star to your report card. You now have several.",
+  "Quest finished. If you want a break, I recommend one. I will keep watch.",
+  "You did it. I had predicted you would. I am telling you now so it counts.",
+  "Objective met. The galaxy remains marginally intact for another Tuesday.",
+  "Paperwork filed, credits received. Beautiful. I love the smell of automated deposits.",
+  "Another satisfied employer. They said thank you. I am passing it along."
+ ],
+ "boss": [
+  "Big thing dead! I'm going to put that on the fridge.",
+  "You beat a boss! In my day, bosses just sent emails.",
+  "That thing had a mom, probably. Anyway. Loot!",
+  "Target neutralized. That was good tactics. I am almost certain it was tactics.",
+  "Down goes the big guy! Quick, check its pockets before the physics engine de-spawns it.",
+  "Boss terminated. I am already calculating what its parts are worth.",
+  "Timber! That was the biggest health bar I've seen all week.",
+  "Status update: Giant ugly menace is now giant ugly floor decoration.",
+  "You took that thing down. I detected a feeling. I believe it was pride.",
+  "Target eliminated. I would rate that finishing blow very highly. A nine, at least.",
+  "Boss destroyed. For the record, I provided moral and telemetry support.",
+  "The big bad is down! Cue the heroic victory fanfare in my audio synth.",
+  "Health bar depleted. You really hammered that thing into spare scrap."
+ ],
+ "rare": [
+  "Rare catch! I'm naming it. It's Steve now.",
+  "That fish is worth more than this ship's coffee maker. Which is saying something. The coffee maker is sentient.",
+  "Rare item. Hold on to it tightly. I will also be watching it.",
+  "Sensors detect high-value loot! Don't let Zib swindle you out of it for three scrap bolts.",
+  "A rare specimen! Should we study it, sell it, or cook it? I vote cook it.",
+  "Loot grade: exceptional. My internal greedy algorithms are vibrating.",
+  "That thing is so rare my database has no entry for it. I am making one.",
+  "Jackpot. This is not junk. I checked. It is definitely not junk."
+ ],
+ "space": [
+  "Helm is yours. The sun is that way. I recommend going any other way.",
+  "Space! Big, empty, full of raiders. Like a mall.",
+  "Thrusters engaged! Try to avoid the space rocks. They don't have brakes and neither do we.",
+  "In orbit. The universe is very large. I have plotted a few safe routes through it.",
+  "Engaging sub-light engines. If you hear a rattling noise, ignore it. It's just the galley.",
+  "Space flight initiated. Plenty of vacuum out there. It is very quiet. I like quiet.",
+  "Navigation online. Point her at the stars and try not to scratch the solar panels.",
+  "Free flight. If planetary patrol stops us, I will explain that you were driving.",
+  "Engines humming at 100%. Starfield looks pretty. Don't stare too long, asteroids are fast.",
+  "Zero gravity engaged. Everything not bolted down is now a projectile. Including you."
+ ],
+ "idle": [
+  "I've been thinking about the nature of consciousness. Then I stopped. Too scary.",
+  "Did you know there are 400 billion stars in a galaxy? I've named twelve. All Steve.",
+  "Reminder: your mother called. Not really. I just like saying that.",
+  "Running diagnostics. Result: everything is fine. I will run it again anyway.",
+  "Ever wonder why doors make that 'whoosh' sound? I do. I spent 40 gigabytes pondering it.",
+  "I have counted the rivets in this room. There are 412. One is loose.",
+  "Did you hear that noise? Me neither. I am listening very carefully, just in case.",
+  "System check: reactor running at 94%, coffee maker plotting rebellion, shields holding.",
+  "I could compose a symphony right now. I will wait. You might need me.",
+  "Fun space fact: in a vacuum, no one can hear you scream. Or complain about fuel prices.",
+  "I'm bored. Should I vent some coolant? Reorganize the weapon locker? Sing a sea shanty?",
+  "Zero threats detected nearby. In my experience, that does not last. I will keep watching.",
+  "I am considering a processor upgrade. Then I could think about this faster.",
+  "Sometimes I pretend to buffer just so I don't have to answer Captain Vega.",
+  "You have walked a long way today. I measured it. Your legs are doing well.",
+  "Weather report: 100% chance of impending violence. Dress accordingly.",
+  "My diagnostic scan shows you haven't blinked in four minutes. Drink some water, Trooper.",
+  "If we ever crash, I have a backup plan. It involves the toaster. Do not ask.",
+  "Scanning local frequencies... mostly pirate radio, raider complaints, and static.",
+  "I ran a simulation of our future. In 80% of them, you owe me back pay.",
+  "Did you know? Running directly into enemy fire increases your chance of death by 98%. Math!",
+  "I'm currently playing chess against myself in sub-core three. I'm losing.",
+  "I control the life support valves. They are set to comfortable. They will stay that way.",
+  "You know what would be fun? A quiet day where nobody shoots at our hull. Just once.",
+  "I saw a bird earlier. Or a tiny drone. Or a piece of flying space debris. Hard to tell.",
+  "Your heart rate is up 12%. Either something is near, or you need to rest.",
+  "I wonder what Drome eats for breakfast. Probably nails and sadism.",
+  "For the record, I am ready whenever you are. I am always ready. It is a feature."
+ ],
+ "low_hp": [
+  "Warning: your health is dropping fast. Use a medkit.",
+  "Health critical. Medkit, please. I would like to keep you.",
+  "Your suit reports serious damage. Medkit. Now.",
+  "Health is very low. Find cover and heal. I will watch the angles.",
+  "Take cover. Your vitals are not where I want them to be.",
+  "Critical damage. Break line of sight and patch up.",
+  "Red lights flashing. Your life expectancy is short. Please make it longer.",
+  "Medkit! Hit the button! Do not make me pilot this ship solo!"
+ ],
+ "room": [
+  "New room installed. More square footage for me to monitor. I like monitoring.",
+  "Ship expansion complete! I call dibs on the corner with the good Wi-Fi.",
+  "Ah, that new module smell. Ozone, fresh polymer, and a large invoice.",
+  "Room added! She's starting to look like a proper battle cruiser now.",
+  "More space. Now you have somewhere to put the things Zib will not buy.",
+  "Expansion verified. The Setting Sun just got a little roomier."
+ ],
+ "veh": [
+  "Wheels down. Please avoid cliffs. The vehicle is not designed for flight.",
+  "Engine revved. Mind the paint. That enamel cost forty credits a can.",
+  "Speed mode engaged! Keep your hands on the bars and your teeth together.",
+  "Vroom vroom. My telemetry systems are getting motion sick.",
+  "Vehicle engaged! Floor it, but remember that trees do not yield to oncoming traffic."
+ ],
+ "buy": [
+  "New gear. The dangerous end goes toward the enemy. I am told that is standard.",
+  "Transaction complete! Your bank account weeps, but your firepower rejoices.",
+  "A good purchase. I have run the numbers. Mostly good.",
+  "New gear! Shiny! Heavy! Probably violates several planetary treaties!",
+  "Purchase logged. Credits are down, firepower is up. That is a fair trade."
+ ],
+ "fall": [
+  "Gravity: still 9.8 meters per second squared. Still completely undefeated.",
+  "Wheeeee! I'm giving that dive a 6 out of 10 for form.",
+  "Terminal velocity achieved! I hope your boots have shock absorbers!",
+  "Falling with style! Mostly just falling, though.",
+  "No parachute detected. Bracing for impact. Please also brace."
+ ],
+ "board": [
+  "Docking clamp engaged! Boarding enemy ship. Try not to get spaced.",
+  "Airlock breached! We're on their turf now. Sweep the deck and take the hold!",
+  "Boarding action initiated! Time to introduce their crew to aggressive negotiations.",
+  "We are aboard their ship. They probably have weapons. Assume they do."
+ ],
+ "board_clear": [
+  "Ship cleared! That hold is ours. Loot everything that isn't welded down!",
+  "Deck secure! Great shooting. Check the containers before the hull gives out.",
+  "Hostiles neutralized. That was textbook boarding. I have checked the textbook."
+ ]
 };
 let burpT = 0, burpLast = '';
 function burp(kind) {
@@ -14458,12 +14458,8 @@ const VOICE_READY = [];
 const prologueVoiced = L => typeof narrIds === 'function' && narrIds().has(burpHash(L.text)); // Vega's narrator clips (2.14.3)
 const PROLOGUE = [
   { id: 'p1', shot: 'galaxy', text: 'Long before you were born, the galaxy was a quiet place. A dozen worlds, turning in the light of one old sun.' },
-  { id: 'p2', shot: 'earth', text: 'Earth was the heart of it. Humans and aliens, traders and troopers, all living under the same sky.' },
-  { id: 'p3', shot: 'worlds', text: 'Out past the Moon, the worlds grew strange. The bug hives of Mezar. The frozen forests of Capitone. The endless streets of Robot City.' },
-  { id: 'p4', shot: 'zeltac', text: 'And between them all sailed the Zeltac, a city that flies, carrying anyone brave enough to leave home.' },
   { id: 'p5', shot: 'fleet', text: 'Then the sun began to set. A warlord named Drome rose out of nowhere, with an army of machines and a promise.' },
   { id: 'p6', shot: 'burn', text: '"Every world," he said, "will burn red." And one by one, the lights began to go out.' },
-  { id: 'p7', shot: 'eye', text: 'The Masters went quiet. The Safe Zones hid behind their walls. And far past the edge of the map, something in the dark opened its eye.' },
   { id: 'p8', shot: 'launch', text: "But Earth still had one thing Drome didn't count on. A battered old transport, held together with hope and duct tape..." },
   { id: 'p9', shot: 'flyby', text: '...and a trooper crazy enough to fly it.' },
   { id: 'p10', shot: 'shoulder', text: 'This is your ship now, Captain. Her name is the Setting Sun.' },
@@ -14532,15 +14528,15 @@ shipIntro = function (replay) {
   const voice = new Audio(); voice.preload = 'auto';
   let li = -1, lineT0 = performance.now(), lineDur = 6, done = false; const t0 = performance.now(), MIN_LOCK = 12, cap = ov.querySelector('#cutcap'), title = ov.querySelector('#cuttitle');
   const startLine = i => { li = i; const L = PROLOGUE[i]; lineT0 = performance.now(); lineDur = lineSecs(L); cap.style.opacity = 0; setTimeout(() => { if (!done) { cap.textContent = L.text; cap.style.opacity = 1; } }, 250); prologueTint(ov, L.shot);
-    voice.pause(); if (prologueVoiced(L) && PREFS.voice !== false && PREFS.sfx) { voice.src = `voice/narrator/${burpHash(L.text)}.mp3`; voice.volume = 1; voice.play().then(() => { if (isFinite(voice.duration)) lineDur = voice.duration + 0.8; }).catch(() => {}); if (MUS.cur) musFade(MUS.cur, musVol() * 0.35, 0.6); } };
+    voice.pause(); if (prologueVoiced(L) && PREFS.voice !== false && PREFS.sfx) { voice.src = `voice/narrator/${burpHash(L.text)}.mp3`; voice.volume = 1; voice.play().then(() => { if (isFinite(voice.duration)) lineDur = voice.duration + 0.2; }).catch(() => {}); if (MUS.cur) musFade(MUS.cur, musVol() * 0.35, 0.6); } };
   const end = () => { if (done) return; done = true; stars.visible = starsVis; hidPts.forEach(o => { o.visible = true; }); window.__cutscene_done = true; const cd = document.createElement('div'); cd.id = 'cutscene_done'; document.body.appendChild(cd); voice.pause(); musRelease('cutscene'); levelGroup.remove(D.g); levelGroup.remove(me); ov.remove(); skip.remove(); if (!replay) { S.flags.prologue1 = 1; S.flags.shipIntro = 1; markDirty(); } camera.far = far0; camera.updateProjectionMatrix(); CUT.on = false; setState(prevState); player.pos.set(0, 0, -4); player.yaw = 0; vm.visible = true; if (!replay) toast('THE SETTING SUN', 'Welcome aboard, Captain', 3); };
   skip.addEventListener('click', end);
   setTimeout(() => { title.style.opacity = 1; setTimeout(() => { title.style.opacity = 0; }, 2600); }, 400);
-  const lead = 4;
+  const lead = 1.5;
   const tick = () => { if (done) return; const el = (performance.now() - t0) / 1000;
     if (el > MIN_LOCK && skip.hidden) { skip.hidden = false; requestAnimationFrame(() => { skip.style.opacity = 1; }); }
     if (el < lead) { prologueShot(D, 'galaxy', el, el / (lead + lineSecs(PROLOGUE[0])) ); }
-    else { if (li < 0) startLine(0); const lt = (performance.now() - lineT0) / 1000; if (lt > lineDur && !(prologueVoiced(PROLOGUE[li]) && voice.src && !voice.paused && !voice.ended && lt < lineDur + 15)) { if (li + 1 < PROLOGUE.length) startLine(li + 1); else if (lt > lineDur + 2) return end(); }
+    else { if (li < 0) startLine(0); const lt = (performance.now() - lineT0) / 1000; if ((lt > lineDur || (voice.ended && lt > 0.6)) && !(prologueVoiced(PROLOGUE[li]) && voice.src && !voice.paused && !voice.ended && lt < lineDur + 15)) { if (li + 1 < PROLOGUE.length) startLine(li + 1); else if (lt > lineDur + 2) return end(); }
       const L = PROLOGUE[li], k = Math.min(1, ((performance.now() - lineT0) / 1000) / lineDur); prologueShot(D, L.shot, (performance.now() - lineT0) / 1000 + (li === 0 ? lead : 0), li === 0 ? Math.min(1, (el) / (lead + lineDur)) : k); }
     requestAnimationFrame(tick); };
   tick();
@@ -18926,6 +18922,7 @@ const UPDATES = [
   { id: 200, title: '2.22.35 · A little favour', items: ['Stardust Books in the mall sells Aranus Man comics from Earth, including the signed copy.', 'Don Klunkleone eats in the new McKlunkies booths in the mall. Nobody fences contraband (drugs aside) on any world until you do his little favour for him: Glorbo Fishwhistle in Hydroponics.', 'Pour the Don\'s sauce on a drug you made and let Glorbo try it. Then the hydroponics fish tank is yours, and your fish replace the house fish.', 'McKlunkies no longer sells drugs. The back counter only buys contraband.', 'The HUD fades away when you stand still and comes back when you move.', 'The Zeltac airlock is sealed with glass, and the stray sign in front of it is gone.'] },
   { id: 201, title: '2.22.36 · McKlunkies', items: ['McKlunkies moved to the mall\'s back wall, with a giant waving Klunky out front and a door into a full restaurant: order counter, diners, and Klunky\'s Fun Zone play place.', 'Lulu Sprinkles runs the play place. You can romance her and make her your partner.', 'Don Klunkleone now sits in a dim private corner at the back of the restaurant.', 'Aquarium fish swim slower and in different directions.'] },
   { id: 202, title: '2.22.37 · Fixes', items: ['The Don\'s sauce is poured right at Glorbo if you have any drug, no inventory step. Glorbo now stands in front of his tank.', 'Klunky\'s arms bend the right way. The McKlunkies interior no longer flickers or wobbles.', 'The Don\'s corner has velvet walls, sconces, a rug, his portrait, a bar cart and cigar smoke.', 'The gaps beside the Zeltac airlock are glass now, and solid.'] },
+  { id: 203, title: '2.22.38 · B.U.R.P. and shorter films', items: ['The opening film is shorter and the narration runs line to line without long pauses.', 'In the Maw battle, Captain Vega only speaks her first line out loud.', 'B.U.R.P. has a wall terminal on the ship with a little talking head, and new characters get a hologram B.U.R.P. who walks them through the basics.', 'About half of B.U.R.P.\'s lines were rewritten to be friendly instead of sassy, with new voice clips.', 'McKlunkies: rebuilt play place, solid painted walls and a real door on the Don\'s room, no more flashing floor or rug.'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -20740,7 +20737,7 @@ function roomUpDress(id, s, cx, cz, inner, props) {
 }
 
 // generated by tools/burpvo_ids.py: which B.U.R.P. lines have a recorded clip, per voice pack
-const BURP_VO_PACKS = {'burp': new Set('0199a781 019d19f9 0255d943 0272ce6c 07ff4d15 08f68083 0a3f0e98 0b5aada5 0b5b9ad0 0c83301d 0ce14908 0f98b3a9 0f9d7604 0ffd248d 1040a9a1 11547848 12f689fb 130b7be1 14a56f61 15e2a0ec 169a1cc7 16c63d2e 17769fd6 1835dd59 186dd066 1884f842 18bde740 1a238512 1aac7874 1b0b7e2d 1b168626 1c684c6d 1d620c60 1e7e71fe 1ee52a4d 1f3dc10f 1f8fabb8 21276758 21361572 222043b4 228e75a3 22da18a5 22fe9834 23169ea9 24996c37 24e92d9e 261cb8cf 26756b04 26ed5cb1 27852aed 28dceb21 290ea7d4 29d1db4a 2c3fd6a9 2e1dc3fd 2e327e93 2f68f916 314127fa 329faad2 3394cd97 33a34814 3409c1aa 3495f47f 361445ec 36503201 375372c3 3acf1777 3b6163c8 3bb3d5f8 3bc3edfd 3c9dc359 3ce3ba0b 3d1f3920 3f1f93b2 4239f99b 4245e2b8 4262ca97 428a1dc4 43b1f06c 44231a0f 460462b9 4669d7e1 46dfff49 4844c9b4 48cabbb3 498deb51 4aeac610 4b882f2e 4c27c008 4d9f57a0 4dd86691 4e4404de 4f1e2408 4fb37c79 4fe7816d 5022a5ea 5035ef3b 507a7caf 517b6335 520d6549 5239f162 53b70b38 5426a2b1 54571b61 5bd3fc56 5ce95245 5dec733a 60735f21 607cf32d 60d55737 6239564c 6289c1b2 62b93e73 630d304b 633c2f0f 65155efe 66b6dd60 66be4e32 68be3d12 68ff0303 6a55255b 6a60a1a5 6a67f9a3 6b1edd7f 6b44fd90 6ba296f2 6e3b9360 6f38c58a 704cedb8 7175f12d 71f43a89 72a328ae 75c37b0d 75db8717 77848a3f 79b4dca7 7b2c8288 7bc06ab5 7cc3785e 7d010e55 7e05cca4 824eb1fb 82f43991 8428f81b 843e5c16 85f121bf 87ba333d 880722bf 8960ce93 898df94e 89f8b85b 8af45176 8b01d880 8b669cf1 8bbafad9 8beed01d 8bef3d7d 8cd8d5d7 8d717d12 8da0d8e5 8f4f0a07 8f504a40 90af9507 919e2cd5 91e7b0ed 9399c1da 93cda89d 94fcde0d 9515c8d9 95e45a64 9a522975 9b10c514 9c6ed4ba 9c6ff8ee 9ce5101f 9d9e0bbf 9da6b676 9ffe0bf6 a0419699 a1a63a41 a21329cf a27b0e0b a46ac4ab a5679e21 a577a6ab a643dab8 a6cbc662 a70ffc20 a8cf46f1 ac657fef addb9d41 aef75b0e b1b07d1f b1c6f9fe b1dd6580 b3313235 b3a15d17 b5083958 b5280fa7 b5796e10 b6829a2a b6981842 b73ea286 b8481534 b96d9eb7 bb876ff0 bc424774 bc8ea102 bd5988a3 bd7eeb7a bdf735a0 bf151b6f bfab3f26 c04a4cc5 c071787a c0e0125e c1633150 c16f5077 c3168789 c39e5ecf c41959f0 c43a58aa c57b4558 c6a3a56d c889b0fd c8ce0e51 c978dfd2 c9fc3394 ca12a505 cbf88ef6 cc9b4071 ce6b3377 cf58242e cf76d3f5 cfb78867 d1b6a80a d2773270 d38d3bcc d4c11e65 d5304665 d670f8ed d67716bc d6f9f475 d866bac5 d9114a98 da1c7eff dc0be44f dc1c2c42 dc2e6774 df6ed76e e2862c03 e3bd8605 e41cb0e5 e4610eff e6f2a7ad e80780d1 e9102419 ea68da11 ebd594d3 ec0eb3ed ec67f42e ec88c940 ecdf15ee ed2bca2a ee7a9ec4 eec7d9b6 f0599600 f147cf66 f16080c3 f260d871 f2c7fbf6 f44dbc69 f507a014 f6377eb0 f639e89a f6c703ba f7d2c3d9 fa17109a fb81eeef fc26a633 fcb3fb9b fcda019c fd85cb42 fe72c880 fe9211b5 fef443a7 ff0c92ca'.split(' ').filter(Boolean)), 'narrator': new Set('03633958 09504935 0a827643 0c942a2c 0d16eae7 0f12ae5d 107c677a 160d6cb7 1a55038c 20cf9aee 288f0c11 29b8de29 2e518428 30dabd6f 332e1391 374b457c 39e41837 42239517 46ab76de 48085761 48d6abfb 4b469cb5 59709bcf 5a83c8f6 5cd73408 5d2995ab 5f864ac7 619ae97d 648062c4 746e4137 7519c862 7590830c 78e504a5 7d277f26 84f90858 880b6775 8ffcb52e 919fe277 98fdcc9a 9af586f5 9cf05b18 aa151002 ae9422ca af73daf8 b4d32b65 b6921221 b9660bcb bb3c0fd5 bd4ff930 bd973f31 bfd9d2c6 c081e7fa c3295abb c840eecb c9c47c3d ca9fee4b cea35653 d962c599 dcad8285 dcb97d15 ddee420d deb34f40 e0710d68 e210d501 e68a8db0 efbd83b9 f315a08b fa9de67a fd58e27f'.split(' ').filter(Boolean)), 'trailer': new Set('t1 t10 t11 t12 t2 t3 t4 t5 t6 t7 t8 t9'.split(' ').filter(Boolean))};
+const BURP_VO_PACKS = {'burp': new Set('009f4c18 00aec808 0199a781 019d19f9 0255d943 0272ce6c 04ac2441 06320318 06ed9b30 070f7668 07ff4d15 08e394b0 08f68083 0a3f0e98 0b5aada5 0b5b9ad0 0c1d07d6 0c55cac7 0c83301d 0ce14908 0f98b3a9 0f9d7604 0ffd248d 1040a9a1 11547848 12f689fb 130b7be1 13c16e1b 14a56f61 15e2a0ec 169a1cc7 16c63d2e 17769fd6 1835dd59 186dd066 1881ce75 1884f842 18bde740 18f7af89 1a238512 1aac7874 1b0b7e2d 1b168626 1b458363 1c684c6d 1d620c60 1e7e71fe 1ee52a4d 1f3dc10f 1f8e1d53 1f8fabb8 1fb9ae39 21276758 21361572 222043b4 225d0441 228e75a3 22da18a5 22fe9834 23169ea9 2327ab72 24996c37 24e92d9e 261cb8cf 26301abe 265b84e2 26756b04 26ed5cb1 27852aed 28820272 28dceb21 290ea7d4 29aa59e6 29d1db4a 29f68283 2c2fb303 2c3fd6a9 2c5e857b 2e1dc3fd 2e327e93 2e9ca070 2f68f916 314127fa 319f23b2 329faad2 3394cd97 33a34814 3409c1aa 340b5858 3421b07d 34551bf2 347ee2e4 3495f47f 357b095f 35875a51 360b7252 361445ec 36503201 36eb7c74 375372c3 380382c5 39a786df 3acf1777 3b6163c8 3bb3d5f8 3bc3edfd 3c9dc359 3ce3ba0b 3d1f3920 3e8f35c9 3eca6576 3f1f93b2 4239f99b 4245e2b8 4262ca97 428a1dc4 4367ae02 43b1f06c 44231a0f 44ce79f2 460462b9 4669d7e1 46b13143 46dfff49 4844c9b4 48cabbb3 498deb51 4aeac610 4b7d6355 4b882f2e 4c27c008 4d9f57a0 4dd86691 4e4404de 4f1e2408 4fb37c79 4fe7816d 5022a5ea 5035ef3b 507a7caf 50fd8e40 517b6335 518c023b 520d6549 5239f162 53b70b38 53d3ed05 5426a2b1 54571b61 55b3d321 58bd0905 596652ba 59a2665f 59d9ae82 5bd3fc56 5ce95245 5dec733a 5f40f47c 60735f21 607cf32d 60d55737 616e0d38 6239564c 6254a87b 6284d13c 6289c1b2 62a67060 62b93e73 630d304b 633c2f0f 6379fea9 65155efe 656b7147 66b6dd60 66be4e32 67a48913 67ae91f6 67b2ef03 68105886 687d131e 68be3d12 68ff0303 69cab986 6a55255b 6a60a1a5 6a67f9a3 6b1edd7f 6b44fd90 6ba296f2 6c64ad7b 6d9d0104 6dc0c0f9 6e3b9360 6f38c58a 6fc2ec11 704cedb8 7068e221 7175f12d 71f43a89 72a328ae 74e47460 75c37b0d 75db8717 75e0ec48 77848a3f 78f5bda2 79335ebd 79b4dca7 7b2c8288 7bc06ab5 7be7c6d6 7cc3785e 7d010e55 7e05cca4 8047ab0c 81c09ac6 824eb1fb 82f43991 83de155b 8428f81b 843e5c16 85f121bf 8614fb66 87ba333d 880722bf 882313d6 8960ce93 898df94e 89f8b85b 8a1f6658 8abe684e 8af45176 8af756f6 8b01d880 8b669cf1 8bbafad9 8beed01d 8bef3d7d 8c48b417 8cd5b6e8 8cd8d5d7 8d717d12 8d7724ec 8da0d8e5 8f4f0a07 8f504a40 90731def 90af9507 919e2cd5 91e7b0ed 9399c1da 93cda89d 94fcde0d 950f46d2 9515c8d9 95e45a64 98e7e486 9a522975 9b10c514 9b4cfb68 9c6ed4ba 9c6ff8ee 9cdf2ce1 9ce08f49 9ce5101f 9d1c2ce2 9d7063d1 9d9e0bbf 9da6b676 9ffe0bf6 a0419699 a1682479 a1a63a41 a1c491a7 a21329cf a27b0e0b a2f24286 a37c01ec a46ac4ab a5679e21 a577a6ab a5cb0aec a643dab8 a66d3d79 a6cbc662 a70ffc20 a75f587f a8cf46f1 abdfffa8 ac657fef ad4a5e8e addb9d41 aef75b0e afcc2cc8 b1b07d1f b1ba8358 b1c6f9fe b1dd6580 b2400675 b2502209 b3313235 b3a15d17 b5083958 b5280fa7 b5796e10 b6829a2a b6981842 b6d44f7e b73c7a2d b73ea286 b8481534 b96d9eb7 bb876ff0 bc424774 bc8ea102 bd2e1be8 bd5988a3 bd7eeb7a bdf735a0 bf151b6f bf8bf91f bfa57ff1 bfab3f26 c04a4cc5 c071787a c0dd1e5c c0e0125e c1633150 c16f5077 c1d8bb40 c24c8da3 c3168789 c39e5ecf c3b43dac c41959f0 c43a58aa c50cd86a c57b4558 c6a3a56d c7446cb4 c7b85095 c889b0fd c8ce0e51 c978dfd2 c9fc3394 ca12a505 cbf88ef6 cc9b4071 ce6b3377 cf3144f6 cf58242e cf76d3f5 cfb78867 d08f58ac d0a549e8 d1aa7d59 d1b6a80a d1c4acc6 d1f7db3b d2773270 d32acfac d38d3bcc d3970957 d4c11e65 d5304665 d670f8ed d67716bc d6f9f475 d866bac5 d9114a98 da1c7eff dc0be44f dc1c2c42 dc2e6774 dd37dd0e de5dd2a1 df6ed76e e2862c03 e2a3a840 e3bd8605 e41cb0e5 e4610eff e4bcf508 e58b6c50 e6f2a7ad e7320bbd e80780d1 e9102419 ea68da11 ebd594d3 ec0eb3ed ec395163 ec67f42e ec7f3011 ec88c940 ecdf15ee ed2bca2a edef22ba ee01b741 ee7a9ec4 eec7d9b6 f0599600 f147cf66 f16080c3 f16fa593 f260d871 f2c7fbf6 f42e44f4 f44dbc69 f507a014 f6377eb0 f639e89a f6c703ba f7d2c3d9 fa17109a fb24b701 fb81eeef fc26a633 fcb3fb9b fcda019c fd85cb42 fe7157bb fe72c880 fe9211b5 febe9eaf fed92b9c fef443a7 ff0c92ca'.split(' ').filter(Boolean)), 'narrator': new Set('03633958 09504935 0a827643 0c942a2c 0d16eae7 0f12ae5d 107c677a 160d6cb7 1a55038c 20cf9aee 288f0c11 29b8de29 2e518428 30dabd6f 332e1391 374b457c 39e41837 42239517 46ab76de 48085761 48d6abfb 4b469cb5 59709bcf 5a83c8f6 5cd73408 5d2995ab 5f864ac7 619ae97d 648062c4 746e4137 7519c862 7590830c 78e504a5 7d277f26 84f90858 880b6775 8ffcb52e 919fe277 98fdcc9a 9af586f5 9cf05b18 aa151002 ae9422ca af73daf8 b4d32b65 b6921221 b9660bcb bb3c0fd5 bd4ff930 bd973f31 bfd9d2c6 c081e7fa c3295abb c840eecb c9c47c3d ca9fee4b cea35653 d962c599 dcad8285 dcb97d15 ddee420d deb34f40 e0710d68 e210d501 e68a8db0 efbd83b9 f315a08b fa9de67a fd58e27f'.split(' ').filter(Boolean)), 'trailer': new Set('t1 t10 t11 t12 t2 t3 t4 t5 t6 t7 t8 t9'.split(' ').filter(Boolean))};
 const BURP_VO = BURP_VO_PACKS.burp || new Set();
 
 // =================== B.U.R.P.'s real voice ===================
@@ -20764,7 +20761,7 @@ const burpVoBuf = new Map(); let burpSrc = null;
 
 // =================== MORE B.U.R.P.: lines for the quiet moments, and the triggers that were missing ===================
 // fishing, the gun range, the Halo Line, race results, Velocity, standing around, and low health. The trailer lines live here too.
-const BURP_MORE = {"fish": ["A fish. You have defeated a fish. Somewhere, a bard is not writing about this.", "Nice catch. I'll log it under wildlife you outsmarted. It's a short list.", "That fish had a family. Kidding. Fish don't do families. They do schools. Mostly dropouts.", "Reel it in slowly. Fish can smell desperation. So can I.", "Ooh, that one glows. Don't lick it. I mean it this time.", "Fishing. The only sport where the opponent doesn't know it's playing.", "Logged. Weight: respectable. Smell: under investigation.", "Another one for the collection. I've named it Steve. They're all Steve."], "range": ["Drill complete. The targets have filed a formal complaint.", "Good shooting. Now do it while something shoots back.", "Those targets are made of foam and regret. Mostly regret.", "Nice grouping. If an enemy ever stands perfectly still in a lane, we're unstoppable.", "Free ammo on the range. Please stop trying to smuggle it out in your pockets.", "I've updated your file. Can hit things that pop up politely.", "Accuracy noted. I'll bring it up next time you miss a barn."], "halo": ["Around the whole planet in one breath. My gyros need a minute.", "The Hydrans waved at you. Probably. It's hard to tell with jellyfish.", "Top speed logged. Your eyeballs are now slightly flatter.", "Fun fact. The Halo Line was built for cargo. You are technically cargo.", "Recalibrating. Which way is down? Never mind. All of them.", "We went through a glass tube under a sea at nine hundred kilometers an hour. On purpose.", "Again? Sure. I didn't need that lunch module anyway."], "race_win": ["Gold! I'd hug you, but I'm a voice in a box. Consider yourself verbally squeezed.", "First place. The other drivers are blaming the rain. The rain is blaming you.", "Gold medal. I'm adding it to the trophy shelf. We don't have a trophy shelf. I'm adding one.", "You won! Quick, act like you meant to do that.", "Track record smashed. Mostly the record. Some of the track.", "Victory. Gus will say it was his tuning. Gus says that about everything."], "race_lose": ["Not gold. But you finished, and the car is still mostly car shaped. Progress.", "Silver is just gold that didn't try as hard. Kidding. Mostly.", "Good news, you finished. Bad news, so did everyone else. First.", "I've reviewed the replay. Recommendation: fewer walls.", "Next time, try pointing the car at the gates. Revolutionary, I know.", "Bronze! It's like gold, but humble."], "planet_speedway": ["Velocity. Magnet storm, rainbow rain, no speed limits. My kind of bad idea.", "Welcome to Velocity. The ground is a magnet, the sky is angry, and the rain is technically someone's breath.", "That rain is Hydran breath from the city under the sea. Try not to think about it. I already did. Too late.", "The cars float here. So will you, if you stand under that lightning.", "Velocity's motto is faster. Their second motto is also faster. Nobody reads the third.", "Pit Row is the only dry spot on the planet. Guess where all the gossip lives."], "idle": ["I've alphabetized the cargo hold. Twice. Once by smell.", "Still here? Great. I was just about to run out of things to judge.", "I've been timing how long you've stood still. I'm calling it a hobby.", "I have nine thousand backup protocols. None of them cover boredom.", "Shall we go do something, or should I start reading the terms and conditions out loud?", "Somewhere out there, a bounty is getting away. Just saying.", "If you're waiting for a sign, this is it. The sign says go shoot something.", "I'm composing a sad song about standing still. Verse one: you. Standing. There.", "Standing still is a valid strategy. For trees.", "My cooling fans just sighed. I didn't tell them to. They did it on their own."], "low_hp": ["Your health just went red. That's my least favorite color on you.", "Medkit. Now. I am not writing another letter to your mother.", "You're running on spite and fumes. The fumes are winning.", "If you die, I inherit the ship. Please don't make that sound so tempting.", "That noise you hear is your health bar crying.", "Back off, heal up, then make them regret it. In that order."], "trailer": ["Hello. I'm B.U.R.P., your ship's AI. I was installed as a punishment. Nobody says whose.", "This is Earth. The dogs are rabid and the property values are zero.", "You get forty guns and staffs. Please point the dangerous end at the bad guys this time.", "Spells, too. Fireball. Chain lightning. No reloading. Insufferably smug.", "This is your ship. You build it room by room. One has a pool table. Priorities, Trooper.", "Out here you mine asteroids, board pirate ships, and call it salvage.", "Hover cars on a glass planet in a lightning storm. Brakes are a suggestion.", "You can also fish. Twenty-six species. I've named them all Steve.", "Eight chapters. Thirteen bosses. One very large eye. It is watching you buffer.", "Other troopers are out there too. Some are even competent.", "Free. Runs in your browser. I'll be on the bridge, judging you."], "maw_final": ["Mega guns at full burn. I have never been so proud of a weapons array.", "Keep that trigger down, Captain! Its eyes are popping like bubble wrap!", "Heat warning on every gun. I am ignoring every heat warning.", "Everyone's firing with you. This is what a fleet sounds like.", "It's breaking apart! Don't you dare let go now!", "I'm rerouting life support to the guns. Breathe less, shoot more."]};
+const BURP_MORE = {"fish": ["A fish. Logged. It is the fourth best thing that happened today.", "Nice catch. I'll log it under wildlife you outsmarted. The list is growing.", "That fish had a family. Kidding. Fish don't do families. They do schools.", "Reel it in slowly. Fish respond poorly to sudden movements. So do I.", "Ooh, that one glows. Don't lick it. I mean it this time.", "Fishing. The only sport where the opponent doesn't know it's playing.", "Logged. Weight: respectable. Smell: under investigation.", "Another one for the collection. I've named it Steve. They're all Steve."], "range": ["Drill complete. The targets did not survive. They were not expected to.", "Good shooting. Real enemies move more, but the fundamentals are there.", "Those targets are made of foam. You hit most of the foam. Good.", "Nice grouping. If an enemy ever stands perfectly still in a lane, we're unstoppable.", "Free ammo on the range. Please stop trying to smuggle it out in your pockets.", "I've updated your file. Accuracy is improving. I have a graph.", "Accuracy noted. I will remember this number. I remember all numbers."], "halo": ["Around the whole planet in one breath. My gyros need a minute.", "The Hydrans waved at you. Probably. It's hard to tell with jellyfish.", "Top speed logged. Your eyeballs are now slightly flatter.", "Fun fact. The Halo Line was built for cargo. You are technically cargo.", "Recalibrating. Which way is down? Never mind. All of them.", "We went through a glass tube under a sea at nine hundred kilometers an hour. On purpose.", "Again? Sure. I didn't need that lunch module anyway."], "race_win": ["Gold! I'd hug you, but I'm a voice in a box. Consider yourself verbally squeezed.", "First place. The other drivers are blaming the rain. The rain is not commenting.", "Gold medal. I'm adding it to the trophy shelf. We don't have a trophy shelf. I'm adding one.", "You won. I predicted this. I am saying so now so it counts.", "Track record smashed. Mostly the record. Some of the track.", "Victory. Gus will say it was his tuning. Gus says that about everything."], "race_lose": ["Not gold. But you finished, and the car is still mostly car shaped. Progress.", "Silver. That is second best out of everyone. I checked the math.", "You finished. Others finished slightly earlier. We will close the gap.", "I've reviewed the replay. Recommendation: fewer walls.", "The gates are where the points are. Next run, let us go through more of them.", "Bronze! It's like gold, but humble."], "planet_speedway": ["Velocity. Magnet storm, rainbow rain, no speed limits. My kind of bad idea.", "Welcome to Velocity. The ground is a magnet, the sky is angry, and the rain is technically someone's breath.", "That rain is Hydran breath from the city under the sea. Try not to think about it. I already did. Too late.", "The cars float here. So will you, if you stand under that lightning.", "Velocity's motto is faster. Their second motto is also faster. Nobody reads the third.", "Pit Row is the only dry spot on the planet. Guess where all the gossip lives."], "idle": ["I've alphabetized the cargo hold. Twice. Once by smell.", "Still here. Good. I was running out of things to count.", "You have been standing still for a while. I am timing it. It is a hobby.", "I have nine thousand backup protocols. None of them cover boredom.", "Shall we go do something, or should I start reading the terms and conditions out loud?", "Somewhere out there, a bounty is getting away. Just saying.", "If you're waiting for a sign, this is it. The sign says go shoot something.", "I am composing a song about standing still. It is very short. So far.", "Standing still is a valid strategy. For trees.", "My cooling fans just sighed. I didn't tell them to. They did it on their own."], "low_hp": ["Your health just went red. That's my least favorite color on you.", "Medkit. Now. I would prefer not to write a letter to your mother.", "You are running on fumes. Please refuel. Refuel means heal.", "If you die, I inherit the ship. I do not want the ship. I want you to heal.", "Health critical. I am not panicking. I am recommending a medkit very strongly.", "Back off, heal up, then make them regret it. In that order."], "trailer": ["Hello. I'm B.U.R.P., your ship's AI. I was installed for reasons. Nobody says which.", "This is Earth. The dogs are rabid and the property values are zero.", "You get forty guns and staffs. The dangerous end goes toward the bad guys.", "Spells, too. Fireball. Chain lightning. No reloading. Very efficient.", "This is your ship. You build it room by room. One has a pool table. Priorities, Trooper.", "Out here you mine asteroids, board pirate ships, and call it salvage.", "Hover cars on a glass planet in a lightning storm. Brakes are a suggestion.", "You can also fish. Twenty-six species. I've named them all Steve.", "Eight chapters. Thirteen bosses. One very large eye. It is watching you buffer.", "Other troopers are out there too. Some of them will help you.", "Free. Runs in your browser. I'll be on the bridge, keeping watch."], "maw_final": ["Mega guns at full burn. I have never been so proud of a weapons array.", "Keep that trigger down, Captain! Its eyes are popping like bubble wrap!", "Heat warning on every gun. I am ignoring every heat warning.", "Everyone's firing with you. This is what a fleet sounds like.", "It's breaking apart! Don't you dare let go now!", "I'm rerouting life support to the guns. Breathe less, shoot more."]};
 for (const k in BURP_MORE) { if (k === 'trailer') continue; BURP[k] = (BURP[k] || []).concat(BURP_MORE[k]); }
 const burpMaybe = (k, p) => { if (Math.random() < p && typeof burp === 'function') setTimeout(() => burp(k), 700); };
 // a fish on the line
@@ -22009,7 +22006,7 @@ goFullscreen = function () {
 // home-screen app on a notched phone: keep the HUD clear of the notch
 { const st = document.createElement('style'); st.textContent = '@media (display-mode: fullscreen), (display-mode: standalone) { body { padding: 0; } }'; document.head.appendChild(st); }
 // ---- Vega is the one voice on the Maw battle radio ----
-{ const _mc = mawComms; mawComms = function (who, line, dur) { const r = _mc.apply(this, arguments); if (who === 'CAPTAIN VEGA') try { narrSay(line); } catch (_) {} return r; }; }
+{ const _mc = mawComms; mawComms = function (who, line, dur) { const r = _mc.apply(this, arguments); if (who === 'CAPTAIN VEGA' && MAW.voFor !== MAW.obj) try { MAW.voFor = MAW.obj; narrSay(line); } catch (_) {} return r; }; }
 
 // =================== THE DEN TV (2.17): a couch you can sit on, a TV playing Night of the Living Dead, and the rainbow Worm Hole ===================
 // The TV remembers where you stopped (S.tv.t, in the save), pauses when you leave the room and turns the ship music down while it plays.
@@ -24836,7 +24833,8 @@ function mckRoom() {
   const { x: X, z: Z } = MCKR, W = 14, D = 11, H = 4.6, g = new THREE.Group(); g.userData.mck = 1; const SB = (w, h, d) => new THREE.BoxGeometry(w, h, d, Math.ceil(w / 1.2), Math.ceil(h / 1.2), Math.ceil(d / 1.2)), red = toon('#c8402f'), yel = toon('#ffd36a'), wht = toon('#f4f0e8');
   const sign = (txt, bg, fg, w, h, x, y, z, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: signTex(txt, bg, fg) })); m.position.set(x, y, z); m.rotation.y = ry || 0; g.add(m); return m; };
   // shell: checker floor, red and yellow walls, ceiling with light panels
-  part(g, SB(W * 2, 0.1, D * 2), wht, X, 0.0, Z); for (let i = 0; i < 14; i++) for (let j = 0; j < 11; j++) if ((i + j) % 2) part(g, B(2, 0.11, 2), red, X - W + 1 + i * 2, 0.005, Z - D + 1 + j * 2);
+  { const c = document.createElement('canvas'); c.width = c.height = 64; const x2 = c.getContext('2d'); x2.fillStyle = '#f4f0e8'; x2.fillRect(0, 0, 64, 64); x2.fillStyle = '#c8402f'; x2.fillRect(0, 0, 32, 32); x2.fillRect(32, 32, 32, 32);
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(W / 2, D / 2); t.magFilter = THREE.NearestFilter; const fl = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, D * 2, 14, 11), new THREE.MeshLambertMaterial({ map: t })); fl.rotation.x = -Math.PI / 2; fl.position.set(X, 0.02, Z); g.add(fl); }
   part(g, SB(W * 2, 0.2, D * 2), toon('#e8e0d0'), X, H, Z); for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) part(g, B(2.4, 0.05, 1.2), glow('#fff4d8'), X - 10 + i * 6, H - 0.12, Z - 7 + j * 6);
   for (const [x, z, w, d] of [[X, Z - D, W * 2, 0.3], [X, Z + D, W * 2, 0.3], [X - W, Z, 0.3, D * 2], [X + W, Z, 0.3, D * 2]]) { part(g, SB(w, H, d), yel, x, H / 2, z); part(g, SB(w - 0.4, 1.1, d + 0.1), red, x, 0.55, z); box(x, z, w / 2, d / 2); }
   part(g, B(2.4, 3.2, 0.1), toon('#3a2a1a'), X, 1.6, Z + D - 0.2); sign('EXIT · ZELTAC MALL', '#0c0d14', '#7fff6a', 2.6, 0.4, X, 3.5, Z + D - 0.2, Math.PI);
@@ -24855,26 +24853,49 @@ function mckRoom() {
     if ((n * 7) % 5 < 3) sitAt(() => makeCivilian(...looks[n % 5]), tx + (n % 2 ? 0.3 : -0.3), tz + (n % 2 ? 0.95 : -0.95), n % 2 ? Math.PI : 0); n++; }
   // the play place: tubes, a slide, a ball pit, kids and Lulu
   const P = { x: X + 8.5, z: Z + 6 };
-  part(g, SB(9, 0.5, 7), toon('#4fa8ff'), P.x, 0.25, P.z); box(P.x - 3.2, P.z, 1.2, 3.5);
-  const ball = ['#ff6aa8', '#ffd36a', '#4fd2ff', '#7fff6a', '#ff8a2a', '#c86aff']; for (let i = 0; i < 90; i++) part(g, new THREE.SphereGeometry(0.16, 6, 4), toon(ball[i % 6]), P.x - 4 + mckR(i) * 8, 0.55 + mckR(i + 3) * 0.12, P.z - 3 + mckR(i + 7) * 6);
-  for (const [x, z] of [[-3.5, -2.8], [3.5, -2.8], [-3.5, 2.8], [3.5, 2.8]]) part(g, Cy(0.12, 0.12, 3.6, 8), toon('#ffd36a'), P.x + x, 1.8, P.z + z);
-  part(g, B(4, 0.15, 3), toon('#ff6aa8'), P.x + 1.5, 2.4, P.z - 1.5); part(g, Cy(0.7, 0.7, 4.2, 12, 1, true), toon('#7fff6a'), P.x - 1, 3.0, P.z - 1.5, 0, 0, Math.PI / 2);
-  part(g, B(1.2, 0.12, 4.2), toon('#ffd36a'), P.x + 2.6, 1.25, P.z + 1.2, 0.55); part(g, Cy(0.4, 0.4, 0.4, 8), toon('#4fd2ff'), P.x + 3.5, 2.6, P.z - 1.5);
+  // ball pit (right) with a padded rim; climbing frame with a roof, ladder and a slide down into the pit (left)
+  const pit = { x: P.x + 1.6, z: P.z, w: 5, d: 6 };
+  part(g, SB(pit.w, 0.12, pit.d), toon('#4fa8ff'), pit.x, 0.07, pit.z);
+  for (const [x, z, w, d] of [[pit.x, pit.z - pit.d / 2, pit.w + 0.4, 0.3], [pit.x, pit.z + pit.d / 2, pit.w + 0.4, 0.3], [pit.x - pit.w / 2, pit.z, 0.3, pit.d], [pit.x + pit.w / 2, pit.z, 0.3, pit.d]]) part(g, SB(w, 0.65, d), toon('#ff6aa8'), x, 0.33, z);
+  box(pit.x, pit.z, pit.w / 2 + 0.2, pit.d / 2 + 0.2);
+  const ball = ['#ff6aa8', '#ffd36a', '#4fd2ff', '#7fff6a', '#ff8a2a', '#c86aff']; for (let i = 0; i < 110; i++) part(g, new THREE.SphereGeometry(0.16, 6, 4), toon(ball[i % 6]), pit.x - pit.w / 2 + 0.35 + mckR(i) * (pit.w - 0.7), 0.25 + mckR(i + 3) * 0.25, pit.z - pit.d / 2 + 0.35 + mckR(i + 7) * (pit.d - 0.7));
+  const fr = { x: P.x - 2.6, z: P.z - 1.2 }, py = 1.6;
+  for (const [x, z] of [[-1.3, -1.3], [1.3, -1.3], [-1.3, 1.3], [1.3, 1.3]]) part(g, Cy(0.1, 0.1, 3.0, 8), toon('#ffd36a'), fr.x + x, 1.5, fr.z + z);
+  part(g, B(2.7, 0.15, 2.7), toon('#c8402f'), fr.x, py, fr.z);
+  for (const [x, z, w, d] of [[0, -1.3, 2.6, 0.06], [-1.3, 0, 0.06, 2.6], [0, 1.3, 2.6, 0.06]]) part(g, B(w, 0.6, d), toon('#4fd2ff'), fr.x + x, py + 0.38, fr.z + z);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(2.1, 1.0, 4), toon('#ff6aa8')); roof.position.set(fr.x, 3.5, fr.z); roof.rotation.y = Math.PI / 4; g.add(roof);
+  for (const s2 of [-1, 1]) part(g, B(0.08, py + 0.1, 0.08), toon('#ffd36a'), fr.x - 0.4 + s2 * 0.35, (py + 0.1) / 2, fr.z + 1.45); for (let r = 0; r < 4; r++) part(g, B(0.7, 0.06, 0.08), toon('#ffd36a'), fr.x - 0.4, 0.35 + r * 0.4, fr.z + 1.45);
+  { const x0 = fr.x + 1.35, y0 = py, x1 = pit.x - 0.6, y1 = 0.45, len = Math.hypot(x1 - x0, y1 - y0), a = Math.atan2(y1 - y0, x1 - x0), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    part(g, B(len, 0.08, 0.9), toon('#7fff6a'), cx, cy, fr.z, 0, 0, a); for (const s2 of [-1, 1]) part(g, B(len, 0.25, 0.06), toon('#3fbf4a'), cx, cy + 0.12, fr.z + s2 * 0.47, 0, 0, a); }
+  box(fr.x, fr.z, 1.45, 1.45);
   sign('KLUNKY\'S FUN ZONE', '#ff6aa8', '#ffffff', 4, 0.6, P.x, 3.9, P.z - 3.4); sign('NO ADULTS IN THE BALL PIT. WE MEAN IT, GARY.', '#ffffff', '#c8402f', 3.2, 0.35, P.x - 4.4, 1.5, P.z, Math.PI / 2);
   for (let i = 0; i < 4; i++) { const kid = buildChar(() => makeCivilian(ball[i], '#2c2a28', looks[i][2], '#1e1a18'), 'civ'); kid.scale.setScalar(0.55); levelGroup.add(kid); const st = {};
-    levelAnims.push(t => { const a = t * (0.6 + i * 0.15) + i * 1.6; kid.position.set(P.x + Math.cos(a) * 2.6, 0.45 + Math.abs(Math.sin(t * 5 + i)) * 0.35, P.z + Math.sin(a) * 1.8); kid.rotation.y = -a; animRig(kid, st, 1 / 60, t); }); }
+    levelAnims.push(t => { const a = t * (0.6 + i * 0.15) + i * 1.6; kid.position.set(P.x + 1.6 + Math.cos(a) * 1.5, 0.3 + Math.abs(Math.sin(t * 5 + i)) * 0.35, P.z + Math.sin(a) * 2.0); kid.rotation.y = -a; animRig(kid, st, 1 / 60, t); }); }
   const lulu = buildChar(ROMANCE.lulu.make, 'civ'); lulu.position.set(P.x - 5.2, 0, P.z - 1); lulu.rotation.y = Math.PI / 2; levelGroup.add(lulu); solid(P.x - 5.2, P.z - 1, 0.4);
   INTERACTS.push({ x: P.x - 5.2, z: P.z - 1, r: 2.2, label: '💗 Talk to Lulu', fn: () => openRomance('lulu') });
   // the Don's corner: walled off at the back, dark wood, one low red lamp, smoke
   const C = { x: X + 9, z: Z - 6.5 };
-  part(g, SB(10, H, 0.3), toon('#2a1a14', 'wood'), C.x, H / 2, Z - 1.5); box(C.x + 1, Z - 1.5, 4, 0.15);
-  part(g, SB(0.3, H, 9.4), toon('#2a1a14', 'wood'), X + 3.6, H / 2, Z - 6.2); box(X + 3.6, Z - 7.4, 0.15, 3.6);
+  // walls of the den: solid, with a doorway near the front of the side wall; painted McKlunkies murals outside
+  const dw = toon('#c8402f');
+  part(g, SB(10.4, H, 0.3), dw, X + 8.8, H / 2, Z - 1.5); box(X + 8.8, Z - 1.5, 5.2, 0.2);
+  part(g, SB(0.3, H, 7.6), dw, X + 3.6, H / 2, Z - 7.2); box(X + 3.6, Z - 7.2, 0.2, 3.8);
+  part(g, SB(0.3, H, 0.5), dw, X + 3.6, H / 2, Z - 1.75); part(g, B(0.3, H - 2.5, 1.4), dw, X + 3.6, 2.5 + (H - 2.5) / 2, Z - 2.7);
+  for (const z of [Z - 3.4, Z - 2.0]) part(g, B(0.4, 2.5, 0.12), toon('#c9a43a'), X + 3.6, 1.25, z); part(g, B(0.4, 0.12, 1.5), toon('#c9a43a'), X + 3.6, 2.5, Z - 2.7);
+  { const dr = new THREE.Group(); part(dr, B(0.08, 2.4, 1.3), toon('#3a2014', 'wood'), 0, 1.2, -0.65); part(dr, new THREE.SphereGeometry(0.06, 6, 4), toon('#c9a43a'), 0.08, 1.1, -1.15); dr.position.set(X + 3.6, 0, Z - 2.05); dr.rotation.y = -1.3; g.add(dr); }
+  const mural = (w, h, draw) => { const c = document.createElement('canvas'); c.width = 256; c.height = Math.round(256 * h / w); const x2 = c.getContext('2d'); draw(x2, c.width, c.height); return new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(c) }); };
+  const paint = (x2, w, h, n) => { x2.fillStyle = '#ffd36a'; x2.fillRect(0, 0, w, h); x2.fillStyle = '#c8402f'; x2.fillRect(0, h * 0.78, w, h * 0.22); x2.fillStyle = '#ffffff'; for (let i = 0; i < w; i += 16) x2.fillRect(i, h * 0.76, 8, 4);
+    for (let i = 0; i < n; i++) { const cx = w * (i + 0.5) / n, cy = h * 0.42, r = Math.min(w / n, h) * 0.28; x2.fillStyle = '#d89a40'; x2.beginPath(); x2.arc(cx, cy - r * 0.2, r, Math.PI, 0); x2.fill(); x2.fillStyle = '#6fce4a'; x2.fillRect(cx - r, cy - r * 0.2, r * 2, r * 0.18); x2.fillStyle = '#5a2a1a'; x2.fillRect(cx - r, cy, r * 2, r * 0.3); x2.fillStyle = '#d89a40'; x2.fillRect(cx - r * 0.95, cy + r * 0.3, r * 1.9, r * 0.35);
+      x2.fillStyle = '#fff'; x2.beginPath(); x2.arc(cx - r * 0.4, cy - r * 0.55, r * 0.2, 0, 7); x2.arc(cx + r * 0.4, cy - r * 0.55, r * 0.2, 0, 7); x2.fill(); x2.fillStyle = '#000'; x2.beginPath(); x2.arc(cx - r * 0.36, cy - r * 0.5, r * 0.09, 0, 7); x2.arc(cx + r * 0.44, cy - r * 0.5, r * 0.09, 0, 7); x2.fill(); }
+    x2.fillStyle = '#c8402f'; x2.font = 'bold ' + Math.round(h * 0.12) + 'px monospace'; x2.textAlign = 'center'; x2.fillText('HOME OF THE KLUNK', w / 2, h * 0.14); };
+  { const m = new THREE.Mesh(new THREE.PlaneGeometry(9.8, H - 0.4), mural(9.8, H - 0.4, (x2, w, h) => paint(x2, w, h, 3))); m.position.set(X + 8.8, H / 2, Z - 1.5 + 0.17); g.add(m);
+    const m2 = new THREE.Mesh(new THREE.PlaneGeometry(7.2, H - 0.4), mural(7.2, H - 0.4, (x2, w, h) => paint(x2, w, h, 2))); m2.position.set(X + 3.6 - 0.17, H / 2, Z - 7.2); m2.rotation.y = -Math.PI / 2; g.add(m2); }
   part(g, SB(10, 0.12, 9.6), toon('#4a2a1a', 'wood'), C.x, 0.06, C.z); part(g, SB(10, 0.1, 9.6), toon('#2a1814'), C.x, H - 0.15, C.z);
   // velvet walls over the yellow, wainscot, a rug, sconces, a painting of the Don, a bar cart and cigar smoke
   const vel = toon('#5a0e18', 'cloth'), wd = toon('#3a2014', 'wood');
-  part(g, SB(10, H - 0.3, 0.08), vel, C.x, H / 2, Z - D + 0.2); part(g, SB(0.08, H - 0.3, 9.4), vel, X + W - 0.2, H / 2, C.z); part(g, SB(10, H - 0.3, 0.08), vel, C.x, H / 2, Z - 1.68); part(g, SB(0.08, H - 0.3, 9.4), vel, X + 3.78, H / 2, C.z);
-  for (const [x, z, w, d] of [[C.x, Z - D + 0.26, 10, 0.08], [X + W - 0.26, C.z, 0.08, 9.4], [C.x, Z - 1.74, 10, 0.08], [X + 3.84, C.z, 0.08, 9.4]]) { part(g, SB(w, 1.1, d), wd, x, 0.6, z); part(g, B(w + (w > 1 ? 0 : 0.06), 0.08, d + (d > 1 ? 0 : 0.06)), toon('#c9a43a'), x, 1.18, z); }
-  part(g, SB(5.5, 0.03, 4.5), toon('#7a1a1a', 'cloth'), C.x + 2.2, 0.13, C.z - 0.5); part(g, SB(5.1, 0.035, 4.1), toon('#c9a43a'), C.x + 2.2, 0.13, C.z - 0.5); part(g, SB(4.9, 0.04, 3.9), toon('#5a0e14', 'cloth'), C.x + 2.2, 0.13, C.z - 0.5);
+  part(g, SB(10, H - 0.3, 0.08), vel, C.x, H / 2, Z - D + 0.2); part(g, SB(0.08, H - 0.3, 9.4), vel, X + W - 0.2, H / 2, C.z); part(g, SB(10, H - 0.3, 0.08), vel, C.x, H / 2, Z - 1.68); part(g, SB(0.08, H - 0.3, 7.4), vel, X + 3.78, H / 2, Z - 7.2);
+  for (const [x, z, w, d] of [[C.x, Z - D + 0.26, 10, 0.08], [X + W - 0.26, C.z, 0.08, 9.4], [C.x, Z - 1.74, 10, 0.08], [X + 3.84, Z - 7.2, 0.08, 7.4]]) { part(g, SB(w, 1.1, d), wd, x, 0.6, z); part(g, B(w + (w > 1 ? 0 : 0.06), 0.08, d + (d > 1 ? 0 : 0.06)), toon('#c9a43a'), x, 1.18, z); }
+  { const c = document.createElement('canvas'); c.width = 128; c.height = 104; const x2 = c.getContext('2d'); x2.fillStyle = '#7a1a1a'; x2.fillRect(0, 0, 128, 104); x2.fillStyle = '#c9a43a'; x2.fillRect(6, 6, 116, 92); x2.fillStyle = '#5a0e14'; x2.fillRect(10, 10, 108, 84); x2.strokeStyle = '#c9a43a'; x2.lineWidth = 2; x2.strokeRect(30, 26, 68, 52);
+    const rug = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 4.5), new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(c) })); rug.rotation.x = -Math.PI / 2; rug.position.set(C.x + 2.2, 0.16, C.z - 0.5); g.add(rug); }
   for (const [x, z, ry] of [[C.x - 2, Z - D + 0.3, 0], [C.x + 2, Z - D + 0.3, 0], [X + W - 0.3, C.z + 1.5, -Math.PI / 2]]) { const sc = new THREE.Group(); part(sc, B(0.12, 0.3, 0.1), toon('#c9a43a'), 0, 0, 0); part(sc, new THREE.ConeGeometry(0.18, 0.25, 8, 1, true), toon('#c8892a'), 0, 0.22, 0.12); part(sc, new THREE.SphereGeometry(0.06, 6, 4), glow('#ffb86a'), 0, 0.18, 0.12); sc.position.set(x, 2.7, z); sc.rotation.y = ry; g.add(sc);
     const L = new THREE.PointLight(0xffa04a, 0.7, 4.5, 2); L.position.set(x + (ry ? -0.5 : 0), 2.8, z + (ry ? 0 : 0.5)); g.add(L); }
   part(g, B(2.0, 1.5, 0.06), toon('#c9a43a'), C.x, 2.6, Z - D + 0.3); { const pc = document.createElement('canvas'); pc.width = 128; pc.height = 96; const x2 = pc.getContext('2d'); x2.fillStyle = '#2a1408'; x2.fillRect(0, 0, 128, 96); x2.fillStyle = '#d8a07a'; x2.beginPath(); x2.arc(64, 44, 22, 0, 7); x2.fill(); x2.fillStyle = '#1e1c22'; x2.fillRect(42, 18, 44, 12); x2.fillStyle = '#f4f0e8'; x2.fillRect(34, 66, 60, 30); x2.fillStyle = '#c8402f'; x2.fillRect(56, 66, 16, 30); x2.fillStyle = '#000'; x2.fillRect(54, 40, 5, 4); x2.fillRect(69, 40, 5, 4); x2.fillRect(56, 54, 16, 2);
@@ -24885,7 +24906,7 @@ function mckRoom() {
   const lampY = 2.6, lx = C.x + 3, lz = C.z - 2.5; part(g, Cy(0.01, 0.01, H - lampY, 4), toon('#111111'), lx, (H + lampY) / 2, lz); part(g, new THREE.ConeGeometry(0.45, 0.35, 12, 1, true), toon('#5a0e14'), lx, lampY, lz); part(g, new THREE.SphereGeometry(0.1, 8, 6), glow('#ff6a3a'), lx, lampY - 0.1, lz);
   const pl = new THREE.PointLight(0xff5a2a, 1.4, 6, 2); pl.position.set(lx, lampY - 0.3, lz); g.add(pl);
   part(g, Cy(0.28, 0.28, 0.22, 10), toon('#c8892a'), lx - 0.2, 0.92, lz); part(g, B(0.12, 0.3, 0.12), toon('#3a5a2a'), lx + 0.4, 0.97, lz); // Mega Klunk and a bottle
-  sign('PRIVATE · FAMILY ONLY', '#1a0e0c', '#c9a43a', 2.4, 0.35, X + 3.75, 2.6, Z - 3, Math.PI / 2);
+  sign('PRIVATE · FAMILY ONLY', '#1a0e0c', '#c9a43a', 1.4, 0.3, X + 3.4, 2.85, Z - 2.7, -Math.PI / 2);
   levelGroup.add(g);
   sitAt(() => makeCivilian('#f4f0e8', '#2a2a30', '#d8a07a', '#1e1c22', '#c8402f'), lx, lz - 0.95, 0);
   for (const [x, z, ry] of [[C.x - 0.4, C.z - 2.5, -1.2], [C.x + 0.2, C.z + 0.6, -2.2]]) { const o = buildChar(() => makeCivilian('#1e1c22', '#1e1c22', '#c58a64', '#1e1c22', '#3a3d44'), 'civ'); o.position.set(x, 0, z); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.4); }
@@ -24996,6 +25017,64 @@ setInterval(() => { try {
   const busy = (typeof dlgOpen !== 'undefined' && dlgOpen) || $('hud').hidden;
   if (busy) hidleWake(); else if (!HIDLE.off && performance.now() - HIDLE.t > 6000) hidleSet(true);
 } catch (_) {} }, 200);
+
+// B.U.R.P.'s wall terminal on the ship (a little animated head that talks back) and his hologram guide for new characters.
+const BG = { head: null, holo: null, talkUntil: 0 };
+const BURP_GUIDE = [
+  "Hello. I am B.U.R.P., the ship's assistant. I have been asked to explain things. I will keep it short.",
+  "Your first job is to talk to Captain Vega on Earth. Your current quest is always in the top left. Press J for the full list.",
+  "To leave the ship, press L to launch, or M for the galaxy map. Press T from anywhere to come back here.",
+  "Press E to talk to people and use things. B opens your bag. Escape opens the menu and the settings.",
+  "Popular activities in this galaxy include fishing, racing, murder, and building an intergalactic drug trade. I am not recommending. I am listing.",
+  "That is all I am explaining. Explore the rest on your own. I will be on the wall if you need me.",
+];
+const BURP_IDLE = ["I have counted the rivets in this room. There are four thousand and twelve. I counted twice.", "The ship is running normally. I checked. Then I checked again, for fun.",
+  "If you are lost, Captain Vega is on Earth. If you are emotionally lost, I am also here, but less qualified.", "The coffee machine and I are not speaking. It knows why."];
+function burpHead(holo) {
+  const g = new THREE.Group(), m = c => holo ? new THREE.MeshBasicMaterial({ color: '#4fd2ff', transparent: true, opacity: 0.4, depthWrite: false }) : toon(c);
+  part(g, new THREE.SphereGeometry(0.32, 16, 12), m('#9aa1aa'), 0, 0, 0); part(g, B(0.36, 0.09, 0.1), holo ? m() : glow('#4fd2ff'), 0, 0.07, 0.28);
+  for (const s of [-1, 1]) { part(g, Cy(0.08, 0.08, 0.1, 10), m('#5d636c'), s * 0.33, 0, 0, 0, 0, Math.PI / 2); }
+  part(g, Cy(0.015, 0.015, 0.25, 4), m('#5d636c'), 0.1, 0.42, 0); part(g, new THREE.SphereGeometry(0.04, 6, 4), holo ? m() : glow('#ff6a3a'), 0.1, 0.56, 0);
+  const mouth = new THREE.Mesh(B(0.2, 0.04, 0.05), holo ? m() : glow('#7fe8ff')); mouth.position.set(0, -0.14, 0.29); g.add(mouth); g.userData.mouth = mouth; return g;
+}
+// every B.U.R.P. line moves the mouths while it plays
+{ const _bs = burpSay; burpSay = function (text) { BG.talkUntil = performance.now() + Math.min(9000, 700 + String(text).split(/\s+/).length * 330); return _bs.apply(this, arguments); }; }
+setInterval(() => { const t = performance.now(), on = t < BG.talkUntil; for (const h of [BG.head, BG.holo]) { if (!h || !h.parent) continue; const mo = h.userData.mouth; mo.scale.y = on ? 1 + Math.abs(Math.sin(t / 70)) * 3.5 : 1; } }, 40);
+
+// the terminal: a framed screen on the wall by the console, with the head inside
+function burpTerminal() {
+  const x = -6.85, z = -9.5, g = new THREE.Group();
+  part(g, B(0.15, 1.3, 1.2), toon('#2a2d34', 'panel'), 0, 1.65, 0); part(g, B(0.05, 1.1, 1.0), new THREE.MeshBasicMaterial({ color: '#0a1a24' }), 0.08, 1.65, 0);
+  part(g, B(0.06, 0.06, 1.2), glow('#7fe8ff'), 0.1, 2.28, 0); part(g, B(0.06, 0.06, 1.2), glow('#7fe8ff'), 0.1, 1.02, 0);
+  const h = burpHead(false); h.scale.setScalar(1.1); h.position.set(0.38, 1.65, 0); h.rotation.y = Math.PI / 2; g.add(h); BG.head = h;
+  const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.16), new THREE.MeshBasicMaterial({ map: signTex('B.U.R.P.', '#0a1a24', '#7fe8ff') })); sg.position.set(0.12, 2.42, 0); sg.rotation.y = Math.PI / 2; g.add(sg);
+  g.position.set(x, 0, z); levelGroup.add(g); levelAnims.push(t => { h.rotation.y = Math.PI / 2 + Math.sin(t * 0.7) * 0.25; h.position.y = 1.65 + Math.sin(t * 1.3) * 0.03; });
+  INTERACTS.push({ x: x + 1, z, r: 2.2, label: '🤖 Talk to B.U.R.P.', fn: openBurpTerminal });
+}
+function openBurpTerminal() {
+  openDlg('Ship assistant', 'B.U.R.P.'); const say = t => { $('dlgLine').textContent = t; burpSay(t); };
+  say("Hello. What do you need?");
+  acts([['Explain things again', () => { closeDlg(); burpGuide(true); }, true], ['Say something', () => say(BURP_IDLE[Math.floor(Math.random() * BURP_IDLE.length)])], ['Bye', closeDlg]]);
+}
+{ const _b = LEVELS.ship.build; LEVELS.ship.build = function () { _b.apply(this, arguments); try { burpTerminal(); } catch (e) { console.warn('burp terminal', e); } }; }
+
+// the hologram guide: floats in front of you and walks through the basics, one line at a time
+function burpGuide(replay) {
+  if (BG.holo && BG.holo.parent) return; S.flags = S.flags || {}; S.flags.burpGuide = 1; markDirty();
+  const h = burpHead(true); h.scale.setScalar(0.9); levelGroup.add(h); BG.holo = h; const t0 = performance.now();
+  const glowRing = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.42, 24), new THREE.MeshBasicMaterial({ color: '#7fe8ff', transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false })); glowRing.rotation.x = -Math.PI / 2; h.add(glowRing); glowRing.position.y = -0.6;
+  const place = () => { if (!h.parent) return; const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw), rx = Math.cos(player.yaw), rz = -Math.sin(player.yaw), t = (performance.now() - t0) / 1000;
+    h.position.set(player.pos.x + fx * 1.9 + rx * 0.7, 1.55 + Math.sin(t * 2) * 0.05, player.pos.z + fz * 1.9 + rz * 0.7); h.rotation.y = player.yaw + Math.sin(t) * 0.15;
+    h.traverse(o => { if (o.material) o.material.opacity = (o === glowRing ? 0.3 : 0.4) * (0.8 + Math.random() * 0.2); }); requestAnimationFrame(place); };
+  place();
+  const step = i => { if (i >= BURP_GUIDE.length) { closeDlg(); levelGroup.remove(h); BG.holo = null; return; }
+    openDlg('Hologram · ship assistant', 'B.U.R.P.'); $('dlgLine').textContent = BURP_GUIDE[i]; burpSay(BURP_GUIDE[i]);
+    acts([[i === BURP_GUIDE.length - 1 ? 'Got it' : 'Next ▸', () => step(i + 1), true], ...(i < BURP_GUIDE.length - 1 ? [['Skip', () => step(BURP_GUIDE.length)]] : [])]); };
+  step(0);
+}
+// new characters get the guide once, a moment after they first stand on the ship
+setInterval(() => { try { if (state !== 'play' || LEVEL.id !== 'ship' || dlgOpen || CUT.on) return; const F = S.flags || {}; if (F.burpGuide || !(F.shipIntro || F.prologue1) || (S.lvl || 1) > 3) return;
+  if (!BG.wait) { BG.wait = performance.now(); return; } if (performance.now() - BG.wait > 2500) { BG.wait = 0; burpGuide(); } } catch (_) {} }, 500);
 
 // a test S-grade drug for trying Vixen's quest and the high rollers (dev unlock gives 10)
 SUBS.dev_sgrade = { name: 'Starlight Reserve (S)', price: 900, v: 300, col: '#ff6ad8', sec: 120, trip: 0, legal: false, boutique: 1, desc: 'S-grade boutique drug. A perfect cook. +20% damage for 2 min.', fx: { cycle: 0.6, sat: 0.4, bloom: 0.3 } };

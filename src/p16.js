@@ -44,4 +44,4 @@ goFullscreen = function () {
 // home-screen app on a notched phone: keep the HUD clear of the notch
 { const st = document.createElement('style'); st.textContent = '@media (display-mode: fullscreen), (display-mode: standalone) { body { padding: 0; } }'; document.head.appendChild(st); }
 // ---- Vega is the one voice on the Maw battle radio ----
-{ const _mc = mawComms; mawComms = function (who, line, dur) { const r = _mc.apply(this, arguments); if (who === 'CAPTAIN VEGA') try { narrSay(line); } catch (_) {} return r; }; }
+{ const _mc = mawComms; mawComms = function (who, line, dur) { const r = _mc.apply(this, arguments); if (who === 'CAPTAIN VEGA' && MAW.voFor !== MAW.obj) try { MAW.voFor = MAW.obj; narrSay(line); } catch (_) {} return r; }; }

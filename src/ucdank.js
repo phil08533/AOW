@@ -66,10 +66,15 @@ function ucdBand() {
     levelAnims.push(t => { if (!o.parent) return; animRig(o, st, 1 / 60, t); anim(o, o.userData.rig, t, a); }); return o; };
   // the horn section: a space sax (curved brass with glowing keys) and a space trumpet (bell flares in neon)
   const blow = (o, R, t, a) => { if (!R) return; if (R.armL) R.armL.rotation.x = -1.25 + Math.sin(t * 4.3) * 0.05; if (R.armR) R.armR.rotation.x = -1.1 + Math.sin(t * 4.3 + 1) * 0.05; if (R.torso) R.torso.rotation.x = -0.12 - Math.max(0, Math.sin(t * 2.15)) * 0.18; o.rotation.y = a + Math.sin(t * 1.07) * 0.25; };
-  { const o = mus(['#2a2a30', '#14120f', '#e0b892', '#1e1a18', '#4fd2ff'], 4.6, 0.32, blow), g = new THREE.Group();
+  // the sax is held diagonally across the body, mouthpiece at the lips and bell by the right hip; both hands on the keys
+  const saxPose = (o, R, t, a) => { if (!R) return; const tw = Math.sin(t * 4.3) * 0.04;
+    for (const [arm, up] of [[R.armL, 1], [R.armR, 0]]) { if (!arm) continue; const inward = arm.position.x > 0 ? -1 : 1, hi = arm.position.x < 0;
+      arm.rotation.x = (hi ? -1.05 : -0.55) + tw; arm.rotation.z = inward * (hi ? 0.55 : 0.35); }
+    if (R.torso) R.torso.rotation.x = -0.08 - Math.max(0, Math.sin(t * 2.15)) * 0.14; if (R.head) R.head.rotation.x = 0.12; o.rotation.y = a + Math.sin(t * 1.07) * 0.2; };
+  { const o = mus(['#2a2a30', '#14120f', '#e0b892', '#1e1a18', '#4fd2ff'], 4.6, 0.32, saxPose), g = new THREE.Group();
     part(g, Cy(0.06, 0.08, 0.7, 10), brass, 0, 0, 0); part(g, new THREE.TorusGeometry(0.14, 0.07, 8, 12, Math.PI), brass, 0.14, -0.35, 0, 0, 0, Math.PI); part(g, Cy(0.2, 0.08, 0.32, 12), brass, 0.3, -0.2, 0, 0, 0, -0.3);
     part(g, Cy(0.21, 0.21, 0.02, 12), glow('#4fd2ff'), 0.36, -0.04, 0, 0, 0, -0.3); for (let i = 0; i < 5; i++) part(g, new THREE.SphereGeometry(0.025, 6, 4), glow('#7fe8ff'), -0.06, 0.2 - i * 0.1, 0.04);
-    part(g, Cy(0.02, 0.025, 0.25, 6), toon('#14120f'), -0.05, 0.45, 0.06, 0.8); g.position.set(0, 1.15, 0.28); g.rotation.z = 0.2; o.add(g); }
+    part(g, Cy(0.02, 0.025, 0.25, 6), toon('#14120f'), -0.05, 0.45, 0.06, 0.8); g.position.set(0.12, 1.18, 0.36); g.rotation.set(-0.28, 0, 0.32); o.add(g); }
   { const o = mus(['#4a1e5a', '#14120f', '#8a5a3a', '#e8e4dc', '#ffd36a'], 4.6, Q - 0.32, blow), g = new THREE.Group();
     part(g, Cy(0.03, 0.03, 0.5, 8), brass, 0, 0, 0, Math.PI / 2); part(g, Cy(0.16, 0.035, 0.24, 12), brass, 0, 0, 0.36, Math.PI / 2); part(g, Cy(0.17, 0.17, 0.02, 12), glow('#ff6aa8'), 0, 0, 0.48, Math.PI / 2);
     part(g, B(0.08, 0.14, 0.24), brass, 0, -0.08, -0.02); for (let i = 0; i < 3; i++) part(g, Cy(0.018, 0.018, 0.08, 6), glow('#ffd36a'), 0, 0.05, -0.08 + i * 0.07); g.position.set(0, 1.55, 0.3); o.add(g); }

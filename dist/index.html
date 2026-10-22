@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.51</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.52</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18955,6 +18955,7 @@ const UPDATES = [
   { id: 214, title: '2.22.49 · Marisol works for you', items: ['Marisol no longer follows you around. Ask her to sell for you and she joins your ship crew as your Dealer, working the Lab: she takes doses off the shelf and sells them, and you get the credits', 'She starts at three stars and is Loyal'] },
   { id: 215, title: '2.22.50 · Clear hallways', items: ['Coral Heights: the lobby desk no longer appears on every floor in front of the doors. It stays in the lobby, out of the way'] },
   { id: 216, title: '2.22.51 · Warp gates and a tighter intro', items: ['The opening trailer cuts the long quiet stretches between Captain Vega\'s lines', 'New Jamestown: the Forest of Life and Super Swift Arena signposts are now warp gates, with swirling portals, glowing runes and a flash as you step through', 'The Phantom car has a sleek nose and headlights instead of a giant pyramid', 'Settings: the Filter (PS1 Glow, Crisp Toon, Neon Night, Golden Hour...) now also tints the HD Stylized and Semi-Realistic looks, not just the PS1 ones'] },
+  { id: 217, title: '2.22.52 · Steam, a sax and a victory lap', items: ['Energy and beam guns now burn their charge even with the Unlimited Clip, and reload on their own when empty with a tssshh of venting steam', 'The Unlimited Clip shows ∞ on the guns it still covers', 'Phones: the Reload button is gone (it still turns into Block with a melee weapon)', 'Vixen Glippo: the 9C door sat inside the wall. It is a proper door on the wall now, with a pink lamp', 'After you knock out Krenn Vosh you can piss on him', 'The Undercroft sax player holds his sax properly: mouthpiece at his lips, hands on the keys'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
   { id: 136, title: "2.19.5 · Signs and town fixes", items: ["Every sign in the game is now a pixel-art plaque with a bevelled frame, rivets, a pixel font and a drop shadow, and it is painted to the shape of its board so text is never squashed or stretched", "Fixed mirrored copies of two-sided signs (like the notice board and the arcade marquees) floating in the fields outside town", "The Roxy now faces West Avenue, so the park pond is behind it instead of at the door", "Houses no longer poke through the city wall: the apartments moved inward, two small houses were trimmed and three that could not fit were removed", "Town Hall columns stand out from the facade instead of inside it", "Street trees moved off the curb onto the sidewalk"] },
@@ -24547,10 +24548,15 @@ function ucdBand() {
     levelAnims.push(t => { if (!o.parent) return; animRig(o, st, 1 / 60, t); anim(o, o.userData.rig, t, a); }); return o; };
   // the horn section: a space sax (curved brass with glowing keys) and a space trumpet (bell flares in neon)
   const blow = (o, R, t, a) => { if (!R) return; if (R.armL) R.armL.rotation.x = -1.25 + Math.sin(t * 4.3) * 0.05; if (R.armR) R.armR.rotation.x = -1.1 + Math.sin(t * 4.3 + 1) * 0.05; if (R.torso) R.torso.rotation.x = -0.12 - Math.max(0, Math.sin(t * 2.15)) * 0.18; o.rotation.y = a + Math.sin(t * 1.07) * 0.25; };
-  { const o = mus(['#2a2a30', '#14120f', '#e0b892', '#1e1a18', '#4fd2ff'], 4.6, 0.32, blow), g = new THREE.Group();
+  // the sax is held diagonally across the body, mouthpiece at the lips and bell by the right hip; both hands on the keys
+  const saxPose = (o, R, t, a) => { if (!R) return; const tw = Math.sin(t * 4.3) * 0.04;
+    for (const [arm, up] of [[R.armL, 1], [R.armR, 0]]) { if (!arm) continue; const inward = arm.position.x > 0 ? -1 : 1, hi = arm.position.x < 0;
+      arm.rotation.x = (hi ? -1.05 : -0.55) + tw; arm.rotation.z = inward * (hi ? 0.55 : 0.35); }
+    if (R.torso) R.torso.rotation.x = -0.08 - Math.max(0, Math.sin(t * 2.15)) * 0.14; if (R.head) R.head.rotation.x = 0.12; o.rotation.y = a + Math.sin(t * 1.07) * 0.2; };
+  { const o = mus(['#2a2a30', '#14120f', '#e0b892', '#1e1a18', '#4fd2ff'], 4.6, 0.32, saxPose), g = new THREE.Group();
     part(g, Cy(0.06, 0.08, 0.7, 10), brass, 0, 0, 0); part(g, new THREE.TorusGeometry(0.14, 0.07, 8, 12, Math.PI), brass, 0.14, -0.35, 0, 0, 0, Math.PI); part(g, Cy(0.2, 0.08, 0.32, 12), brass, 0.3, -0.2, 0, 0, 0, -0.3);
     part(g, Cy(0.21, 0.21, 0.02, 12), glow('#4fd2ff'), 0.36, -0.04, 0, 0, 0, -0.3); for (let i = 0; i < 5; i++) part(g, new THREE.SphereGeometry(0.025, 6, 4), glow('#7fe8ff'), -0.06, 0.2 - i * 0.1, 0.04);
-    part(g, Cy(0.02, 0.025, 0.25, 6), toon('#14120f'), -0.05, 0.45, 0.06, 0.8); g.position.set(0, 1.15, 0.28); g.rotation.z = 0.2; o.add(g); }
+    part(g, Cy(0.02, 0.025, 0.25, 6), toon('#14120f'), -0.05, 0.45, 0.06, 0.8); g.position.set(0.12, 1.18, 0.36); g.rotation.set(-0.28, 0, 0.32); o.add(g); }
   { const o = mus(['#4a1e5a', '#14120f', '#8a5a3a', '#e8e4dc', '#ffd36a'], 4.6, Q - 0.32, blow), g = new THREE.Group();
     part(g, Cy(0.03, 0.03, 0.5, 8), brass, 0, 0, 0, Math.PI / 2); part(g, Cy(0.16, 0.035, 0.24, 12), brass, 0, 0, 0.36, Math.PI / 2); part(g, Cy(0.17, 0.17, 0.02, 12), glow('#ff6aa8'), 0, 0, 0.48, Math.PI / 2);
     part(g, B(0.08, 0.14, 0.24), brass, 0, -0.08, -0.02); for (let i = 0; i < 3; i++) part(g, Cy(0.018, 0.018, 0.08, 6), glow('#ffd36a'), 0, 0.05, -0.08 + i * 0.07); g.position.set(0, 1.55, 0.3); o.add(g); }
@@ -24686,13 +24692,30 @@ function vixDrone(back) { const D = droneS(); if (!back) { VX.drone = D.on; D.on
 function vixBlack(on, txt) { let el = $('vixBlack'); if (!el) { el = document.createElement('div'); el.id = 'vixBlack'; el.style.cssText = 'position:fixed;inset:0;background:#000;z-index:60;pointer-events:none;opacity:0;transition:opacity 1.6s;display:flex;align-items:center;justify-content:center;color:#cfc8d8;font:20px monospace;letter-spacing:2px'; document.body.appendChild(el); }
   el.textContent = txt || ''; el.style.opacity = on ? '1' : '0'; }
 function vixKO(x, z) { const o = buildChar(() => makeCivilian('#5a3a1e', '#1e1c22', '#7a8a5a', '#1e1a18', '#c8402f'), 'civ'); o.rotation.set(-Math.PI / 2, 0, 0.3); o.position.set(x, 0.18, z); levelGroup.add(o);
-  levelAnims.push(t => { if (o.parent && Math.random() < 0.012) burst(V(x, 0.7, z + 0.6), '#cfe8ff', 1, 0.15); }); }
+  levelAnims.push(t => { if (o.parent && Math.random() < 0.012) burst(V(x, 0.7, z + 0.6), '#cfe8ff', 1, 0.15); });
+  INTERACTS.push({ get x() { return o.parent && !VX.fight && !VX.scene && !VX.piss ? x : 1e9; }, z, r: 1.8, label: '💦 Piss on Krenn', fn: () => vixPiss(x, z) }); }
+// the victory lap: stand over him and let it go. A yellow arc, a growing puddle, a hiss, and Krenn mumbling in his sleep
+function vixPiss(x, z) { if (VX.piss) return; VX.piss = 1; const d = Math.hypot(player.pos.x - x, player.pos.z - z) || 1;
+  player.yaw = Math.atan2(-(x - player.pos.x), -(z - player.pos.z)); player.pitch = -0.75; vm.visible = false;
+  const g = new THREE.Group(); levelGroup.add(g); const mat = new THREE.MeshBasicMaterial({ color: '#f2d33a', transparent: true, opacity: 0.85 });
+  const drops = []; for (let i = 0; i < 40; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.035, 5, 4), mat); g.add(m); drops.push([m, i / 40]); }
+  const pud = new THREE.Mesh(new THREE.CircleGeometry(1, 20), new THREE.MeshBasicMaterial({ color: '#d8b830', transparent: true, opacity: 0.6, depthWrite: false })); pud.rotation.x = -Math.PI / 2; pud.position.set(x, 0.03, z + 0.2); pud.scale.setScalar(0.01); levelGroup.add(pud);
+  const t0 = performance.now(), dur = 5200; let hiss = 0;
+  const lines = ['Ahhh. That\'s the stuff.', 'Krenn (asleep): "...is it raining, Vixen?"', 'You write your initials. Most of them.'];
+  lines.forEach((l, i) => setTimeout(() => toast(i === 1 ? 'KRENN VOSH' : '💦', l, 1.8), 400 + i * 1600));
+  const anim = () => { const k = (performance.now() - t0) / dur; if (k >= 1 || !g.parent) { levelGroup.remove(g); VX.piss = 0; vm.visible = true; player.pitch = -0.2; toast('RELIEVED', 'Krenn will wake up smelling like a decision he made.', 2.6); return; } requestAnimationFrame(anim);
+    const sx = player.pos.x + Math.sin(player.yaw) * -0.35, sz = player.pos.z + Math.cos(player.yaw) * -0.35, sy = player.pos.y + 0.95, flow = Math.min(1, k * 6, (1 - k) * 6);
+    const tx = x + Math.sin(performance.now() / 300) * 0.25, tz = z + Math.cos(performance.now() / 410) * 0.3;
+    for (const [m, ph] of drops) { const u = ((performance.now() / 600) + ph) % 1; m.visible = flow > ph * 0.8; m.position.set(sx + (tx - sx) * u, sy + (0.35 - sy) * u + Math.sin(u * Math.PI) * 0.55, sz + (tz - sz) * u); }
+    pud.scale.setScalar(0.1 + k * 0.9); player.pitch = -0.75;
+    if (performance.now() - hiss > 260) { hiss = performance.now(); if (typeof sfxHiss === 'function') sfxHiss(0.32, 0.12, 1800); if (Math.random() < 0.6) burst(V(tx, 0.4, tz), '#f2d33a', 2, 0.6); } };
+  anim(); }
 { const _b = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _b.apply(this, arguments); if (zTheme(ZF.floor) !== 'under') return; try { vixBuild(); } catch (e) { console.warn('vixen', e); } }; }
 function vixBuild() {
   VX.fight = null; const [hx, hz] = VX.home, [fx, fz] = VX.flat;
   // the door on the Undercroft's left wall
-  part(props, B(0.2, 2.6, 1.4), toon('#3a2a1e', 'wood'), hx - 1.3, 1.3, hz); part(props, B(0.22, 0.12, 0.12), toon('#c9a43a'), hx - 1.2, 1.25, hz + 0.45);
-  const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.36), new THREE.MeshBasicMaterial({ map: signTex('9C', '#140806', '#ffd36a') })); sg.position.set(hx - 1.18, 2.85, hz); sg.rotation.y = Math.PI / 2; levelGroup.add(sg);
+  bcDoor(levelGroup, hx - 0.95, 0, hz, Math.PI / 2, '#5a2a3a', '9C', 1.2, 2.4); { const lamp = part(levelGroup, new THREE.SphereGeometry(0.13, 8, 6), glow('#ff6aa8'), hx - 0.9, 2.75, hz + 0.95); const pl = new THREE.PointLight('#ff6aa8', 1.2, 5); pl.position.set(hx - 0.6, 2.6, hz); levelGroup.add(pl); }
+  const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.36), new THREE.MeshBasicMaterial({ map: signTex('9C', '#140806', '#ffd36a') })); sg.position.set(hx - 0.88, 2.85, hz); sg.visible = false; sg.rotation.y = Math.PI / 2; levelGroup.add(sg);
   INTERACTS.push({ x: hx, z: hz, r: 1.8, label: 'Apartment 9C', fn: () => vixDoor() });
   // the flat itself
   const W = 5, D = 4, wall = toon('#4a3a30', 'panel'), floor = toon('#2a201a', 'wood');
@@ -26507,6 +26530,32 @@ function warpGate(x, z, lbl, title, kind) { const F = kind === 'forest', C1 = F 
   // stepping through: a green flash before the jump
   if (it) { const f0 = it.fn; it.fn = () => { try { SFX.zap && SFX.zap(); } catch (_) {} const o = document.createElement('div'); o.style.cssText = 'position:fixed;inset:0;z-index:60;pointer-events:none;background:radial-gradient(circle,#ffffff,' + C1 + ' 40%,#000);opacity:0;transition:opacity .45s'; document.body.appendChild(o); requestAnimationFrame(() => o.style.opacity = 1); setTimeout(() => { f0(); o.style.opacity = 0; setTimeout(() => o.remove(), 600); }, 480); }; }
 }
+
+// =================== HOT GUNS (2.22.52): energy and beam guns use their charge even with the Unlimited Clip, and vent steam when they reload ===================
+// A noisy hiss, shared: steam vents ("tssshh"), and anything else that needs a spray sound.
+function sfxHiss(dur, vol, freq) { if (!PREFS.sfx) return; try { if (!window.__hissAc) window.__hissAc = new (window.AudioContext || window.webkitAudioContext)(); const ac = window.__hissAc, t = ac.currentTime;
+  const n = ac.createBufferSource(), b = ac.createBuffer(1, Math.ceil(ac.sampleRate * dur), ac.sampleRate), d = b.getChannelData(0); for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1; n.buffer = b;
+  const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(freq || 5200, t); f.frequency.exponentialRampToValueAtTime((freq || 5200) * 0.55, t + dur); f.Q.value = 0.7;
+  const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol || 0.35, t + 0.03); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  n.connect(f); f.connect(g); g.connect(ac.destination); n.start(t); n.stop(t + dur); } catch (_) {} }
+const gunHot = g => !!g && !g.mana && (!!g.beam || ['energy', 'charge'].includes(ammoUnit(g)));
+// the Unlimited Clip still covers bullets, shells, bolts and rockets; energy guns run on their charge and have to cool down
+{ const _f = fire; fire = function () { const g = gun(); if (!S.clip || handMelee() || !gunHot(g)) return _f.apply(this, arguments); S.clip = false; try { return _f.apply(this, arguments); } finally { S.clip = true; } }; }
+{ const _r = reload; reload = function () { const g = gun(), hot = !handMelee() && gunHot(g), was = player.reloading; let r; if (S.clip && hot) { S.clip = false; try { r = _r.apply(this, arguments); } finally { S.clip = true; } } else r = _r.apply(this, arguments);
+    if (hot && was <= 0 && player.reloading > 0) gunVent(g); return r; }; }
+// the vent: a "tssshh" and white steam pouring off the gun for the length of the reload
+function gunVent(g) { sfxHiss(Math.min(1.4, (g.reload || 1) * 0.8), 0.32, 5600); setTimeout(() => sfxHiss(0.5, 0.18, 3800), 380);
+  const t0 = performance.now(), dur = Math.max(600, (g.reload || 1) * 900), d = V(0, 0, 0), r = V(0, 0, 0);
+  const puff = () => { if (performance.now() - t0 > dur || state !== 'play') return; requestAnimationFrame(puff); if (Math.random() < 0.35) return;
+    const o = camera.getWorldPosition(V(0, 0, 0)); camera.getWorldDirection(d); r.crossVectors(d, V(0, 1, 0)).normalize();
+    const p = o.addScaledVector(d, 0.7).addScaledVector(r, 0.28 + Math.random() * 0.1); p.y -= 0.18; try { burst(p, Math.random() < 0.5 ? '#f4f8ff' : '#cfd8e8', 5, 1.3); } catch (_) {} };
+  puff(); }
+// HUD: the Unlimited Clip shows ∞ on guns it covers, and phones lose the Reload button (guns reload on their own when they run dry)
+{ const _u = updateHud; updateHud = function () { _u(); if (LEVEL.fly) return; const g = GUNS[S.gun];
+    if (S.clip && g && !handMelee() && !g.mana && !gunHot(g) && player.reloading <= 0) { const el = $('ammoN'), h = `∞<small> ${ammoUnit(g)}</small>`; if (el.innerHTML !== h) el.innerHTML = h; }
+    const rb = $('tReload'); if (rb && TOUCH) rb.style.display = handMelee() ? '' : 'none'; }; }
+// an empty hot gun reloads by itself the moment you let go of the trigger
+setInterval(() => { try { if (state === 'play' && !LEVEL.fly && !handMelee() && gunHot(gun()) && player.ammo <= 0 && player.reloading <= 0) reload(); } catch (_) {} }, 250);
 
 
 // =================== STATE + SAVE ===================

@@ -88,13 +88,30 @@ function vixDrone(back) { const D = droneS(); if (!back) { VX.drone = D.on; D.on
 function vixBlack(on, txt) { let el = $('vixBlack'); if (!el) { el = document.createElement('div'); el.id = 'vixBlack'; el.style.cssText = 'position:fixed;inset:0;background:#000;z-index:60;pointer-events:none;opacity:0;transition:opacity 1.6s;display:flex;align-items:center;justify-content:center;color:#cfc8d8;font:20px monospace;letter-spacing:2px'; document.body.appendChild(el); }
   el.textContent = txt || ''; el.style.opacity = on ? '1' : '0'; }
 function vixKO(x, z) { const o = buildChar(() => makeCivilian('#5a3a1e', '#1e1c22', '#7a8a5a', '#1e1a18', '#c8402f'), 'civ'); o.rotation.set(-Math.PI / 2, 0, 0.3); o.position.set(x, 0.18, z); levelGroup.add(o);
-  levelAnims.push(t => { if (o.parent && Math.random() < 0.012) burst(V(x, 0.7, z + 0.6), '#cfe8ff', 1, 0.15); }); }
+  levelAnims.push(t => { if (o.parent && Math.random() < 0.012) burst(V(x, 0.7, z + 0.6), '#cfe8ff', 1, 0.15); });
+  INTERACTS.push({ get x() { return o.parent && !VX.fight && !VX.scene && !VX.piss ? x : 1e9; }, z, r: 1.8, label: '💦 Piss on Krenn', fn: () => vixPiss(x, z) }); }
+// the victory lap: stand over him and let it go. A yellow arc, a growing puddle, a hiss, and Krenn mumbling in his sleep
+function vixPiss(x, z) { if (VX.piss) return; VX.piss = 1; const d = Math.hypot(player.pos.x - x, player.pos.z - z) || 1;
+  player.yaw = Math.atan2(-(x - player.pos.x), -(z - player.pos.z)); player.pitch = -0.75; vm.visible = false;
+  const g = new THREE.Group(); levelGroup.add(g); const mat = new THREE.MeshBasicMaterial({ color: '#f2d33a', transparent: true, opacity: 0.85 });
+  const drops = []; for (let i = 0; i < 40; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.035, 5, 4), mat); g.add(m); drops.push([m, i / 40]); }
+  const pud = new THREE.Mesh(new THREE.CircleGeometry(1, 20), new THREE.MeshBasicMaterial({ color: '#d8b830', transparent: true, opacity: 0.6, depthWrite: false })); pud.rotation.x = -Math.PI / 2; pud.position.set(x, 0.03, z + 0.2); pud.scale.setScalar(0.01); levelGroup.add(pud);
+  const t0 = performance.now(), dur = 5200; let hiss = 0;
+  const lines = ['Ahhh. That\'s the stuff.', 'Krenn (asleep): "...is it raining, Vixen?"', 'You write your initials. Most of them.'];
+  lines.forEach((l, i) => setTimeout(() => toast(i === 1 ? 'KRENN VOSH' : '💦', l, 1.8), 400 + i * 1600));
+  const anim = () => { const k = (performance.now() - t0) / dur; if (k >= 1 || !g.parent) { levelGroup.remove(g); VX.piss = 0; vm.visible = true; player.pitch = -0.2; toast('RELIEVED', 'Krenn will wake up smelling like a decision he made.', 2.6); return; } requestAnimationFrame(anim);
+    const sx = player.pos.x + Math.sin(player.yaw) * -0.35, sz = player.pos.z + Math.cos(player.yaw) * -0.35, sy = player.pos.y + 0.95, flow = Math.min(1, k * 6, (1 - k) * 6);
+    const tx = x + Math.sin(performance.now() / 300) * 0.25, tz = z + Math.cos(performance.now() / 410) * 0.3;
+    for (const [m, ph] of drops) { const u = ((performance.now() / 600) + ph) % 1; m.visible = flow > ph * 0.8; m.position.set(sx + (tx - sx) * u, sy + (0.35 - sy) * u + Math.sin(u * Math.PI) * 0.55, sz + (tz - sz) * u); }
+    pud.scale.setScalar(0.1 + k * 0.9); player.pitch = -0.75;
+    if (performance.now() - hiss > 260) { hiss = performance.now(); if (typeof sfxHiss === 'function') sfxHiss(0.32, 0.12, 1800); if (Math.random() < 0.6) burst(V(tx, 0.4, tz), '#f2d33a', 2, 0.6); } };
+  anim(); }
 { const _b = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _b.apply(this, arguments); if (zTheme(ZF.floor) !== 'under') return; try { vixBuild(); } catch (e) { console.warn('vixen', e); } }; }
 function vixBuild() {
   VX.fight = null; const [hx, hz] = VX.home, [fx, fz] = VX.flat;
   // the door on the Undercroft's left wall
-  part(props, B(0.2, 2.6, 1.4), toon('#3a2a1e', 'wood'), hx - 1.3, 1.3, hz); part(props, B(0.22, 0.12, 0.12), toon('#c9a43a'), hx - 1.2, 1.25, hz + 0.45);
-  const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.36), new THREE.MeshBasicMaterial({ map: signTex('9C', '#140806', '#ffd36a') })); sg.position.set(hx - 1.18, 2.85, hz); sg.rotation.y = Math.PI / 2; levelGroup.add(sg);
+  bcDoor(levelGroup, hx - 0.95, 0, hz, Math.PI / 2, '#5a2a3a', '9C', 1.2, 2.4); { const lamp = part(levelGroup, new THREE.SphereGeometry(0.13, 8, 6), glow('#ff6aa8'), hx - 0.9, 2.75, hz + 0.95); const pl = new THREE.PointLight('#ff6aa8', 1.2, 5); pl.position.set(hx - 0.6, 2.6, hz); levelGroup.add(pl); }
+  const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.36), new THREE.MeshBasicMaterial({ map: signTex('9C', '#140806', '#ffd36a') })); sg.position.set(hx - 0.88, 2.85, hz); sg.visible = false; sg.rotation.y = Math.PI / 2; levelGroup.add(sg);
   INTERACTS.push({ x: hx, z: hz, r: 1.8, label: 'Apartment 9C', fn: () => vixDoor() });
   // the flat itself
   const W = 5, D = 4, wall = toon('#4a3a30', 'panel'), floor = toon('#2a201a', 'wood');

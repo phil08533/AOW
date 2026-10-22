@@ -163,7 +163,7 @@ function openPets(shopName) {
   openDlg(shopName ? 'Pet shop' : 'Companions', shopName || 'Your pets');
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   const render = () => { rows.textContent = ''; $('dlgLine').textContent = `Pets follow you and fight beside you. ${S.cr} cr.`;
-    for (const id in PETS) { const P = PETS[id], own = petOwned(id), on = S.pet === id, r = document.createElement('div'); r.className = 'rowi';
+    for (const id in PETS) { const P = PETS[id], own = petOwned(id), on = S.pet === id, r = document.createElement('div'); r.className = 'rowi'; if (P.secret && !own) continue;
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = own ? '#6fdc5a' : '#9aa1aa';
       const nm = document.createElement('span'); nm.textContent = `${P.name}${P.ranged ? ' · shoots' : ' · bites'}${P.grows ? ' · grows' : ''}`;
       const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = own ? (on ? 'With you' : 'Owned') : P.quest ? `Finish “${QDEFS[P.quest].title}”` : `${P.price} cr`;

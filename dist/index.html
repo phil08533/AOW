@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.57</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.58</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18975,6 +18975,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 223, title: '2.22.58 · Retro leather cockpit', items: ['The cockpit gets burgundy tufted leather wings, a stitched leather dash pad, 80s sunset pinstripes, chrome screen bezels and a little red digital clock'] },
   { id: 222, title: '2.22.57 · A proper cockpit', items: ['The ship cockpit gets riveted trim, corner plates, live gauges, glowing meters, toggle switches and a blinking warning lamp', 'Phones: the Menu tab is now a metal console tab with rivets and a glowing label'] },
   { id: 138, title: "2.19.7 · Roxy entrance and arcade fixes", items: ["The Roxy's doors and posters sit on the building front, with the marquee canopy and red carpet reaching out over the sidewalk", "The grey apartments behind the arcade turned to face the alley and moved back so they no longer press against the arcade", "Arcade cabinet side art no longer flickers as you walk past"] },
   { id: 137, title: "2.19.6 · Hand-painted town and plant textures", items: ["New pixel textures: brick for shops and the garage, stucco for homes and Town Hall, shingle roofs, and bark on tree trunks", "Building textures now tile at real size instead of one tile stretched across a whole wall", "New leaf and grass textures for every tree, bush and field in the game, with pixel clumps, highlights and tufts instead of blurry blobs"] },
@@ -26607,11 +26608,36 @@ setInterval(() => { try { if (state === 'play' && !LEVEL.fly && !handMelee() && 
       const n = new THREE.Group(); n.position.set(x, -0.3, -0.6); g.add(n); add.push(n); part(n, B(0.003, 0.036, 0.002), L('#ff3a2a'), 0, 0.016, 0); part(n, new THREE.CircleGeometry(0.006, 10), M('#c8ccd4'), 0, 0, 0.001); SCOCK.needles.push(n); }
     // warning lamp
     SCOCK.warn = P(new THREE.SphereGeometry(0.014, 10, 8), L('#ff3a2a'), 0.17, -0.19, -0.68);
+    // retro leather: tufted burgundy rolls with stitching, a tan dash pad and an 80s sunset stripe
+    const lt = (base, hi, rows) => { const c = document.createElement('canvas'); c.width = 128; c.height = 128; const x = c.getContext('2d');
+      x.fillStyle = base; x.fillRect(0, 0, 128, 128); const h = 128 / rows;
+      for (let r = 0; r < rows; r++) { const gr = x.createLinearGradient(0, r * h, 0, r * h + h); gr.addColorStop(0, hi); gr.addColorStop(0.5, base); gr.addColorStop(1, 'rgba(0,0,0,.45)'); x.fillStyle = gr; x.fillRect(0, r * h + 1, 128, h - 2);
+        x.strokeStyle = 'rgba(255,220,170,.35)'; x.setLineDash([3, 3]); x.beginPath(); x.moveTo(0, r * h + 3); x.lineTo(128, r * h + 3); x.stroke(); }
+      for (let i = 0; i < 400; i++) { x.fillStyle = `rgba(0,0,0,${Math.random() * 0.12})`; x.fillRect(Math.random() * 128, Math.random() * 128, 2, 2); }
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.NearestFilter; return new THREE.MeshBasicMaterial({ map: t, fog: false }); };
+    const burg = lt('#2e0c10', '#4e1c20', 5), tan = lt('#6a4a34', '#8a6448', 2);
+    for (const s of [-1, 1]) { const sp = P(new THREE.PlaneGeometry(0.88, 0.48), burg, s * 0.705, -0.32, -0.45); sp.rotation.y = -s * Math.PI / 2;
+      for (const [w, c, y] of [[0.012, '#ff3a5a', -0.1], [0.008, '#ff8a3a', -0.08], [0.006, '#ffd36a', -0.064]]) { const st = P(B(0.004, w, 0.88), L(c), s * 0.703, y, -0.45); }
+      const wing = P(new THREE.PlaneGeometry(0.34, 0.2), burg, s * 0.66, -0.1, -0.64); wing.rotation.y = -s * 0.45;
+      for (const [c, y] of [['#ff3a5a', -0.03], ['#ff8a3a', -0.042], ['#ffd36a', -0.052]]) { const st = P(B(0.34, 0.007, 0.004), L(c), s * 0.66, y, -0.638); st.rotation.y = -s * 0.45; }
+      const arm = P(B(0.12, 0.05, 0.5), tan, s * 0.65, -0.5, -0.4); }
+    const pad = P(B(1.62, 0.035, 0.08), tan, 0, -0.19, -0.7); pad.rotation.x = 0.15;
+    for (const [c, y] of [['#ff3a5a', -0.505], ['#ff8a3a', -0.518], ['#ffd36a', -0.528]]) P(B(1.6, 0.007, 0.006), L(c), 0, y, -0.618);
+    const lowP = P(new THREE.PlaneGeometry(1.2, 0.12), burg, 0, -0.58, -0.62);
+    // chrome bezels around the three screens
+    const chrome = M('#a8b0bc');
+    for (const [sx, w] of [[-0.42, 0.26], [0, 0.22], [0.42, 0.26]]) { const h = w * 0.69, z = -0.616 + Math.abs(sx) * 0.08; for (const [bw, bh, bx, by] of [[w + 0.02, 0.008, 0, h / 2 + 0.004], [w + 0.02, 0.008, 0, -h / 2 - 0.004], [0.008, h, -w / 2 - 0.004, 0], [0.008, h, w / 2 + 0.004, 0]]) { const b = P(B(bw, bh, 0.006), chrome, sx + bx, -0.315 + by, z); b.rotation.y = sx > 0 ? -0.28 : sx < 0 ? 0.28 : 0; } }
+    // little digital clock and rocker buttons, very 80s
+    const ck = document.createElement('canvas'); ck.width = 96; ck.height = 32; const cx = ck.getContext('2d'); const ckT = new THREE.CanvasTexture(ck);
+    P(B(0.1, 0.035, 0.01), edge, 0, -0.455, -0.616); const ckM = P(new THREE.PlaneGeometry(0.09, 0.028), new THREE.MeshBasicMaterial({ map: ckT, fog: false, toneMapped: false }), 0, -0.455, -0.61);
+    SCOCK.clk = () => { cx.fillStyle = '#100808'; cx.fillRect(0, 0, 96, 32); cx.fillStyle = '#ff5a3a'; cx.font = 'bold 24px monospace'; cx.textAlign = 'center'; const d = new Date(); cx.fillText(String(d.getHours()).padStart(2, '0') + (d.getSeconds() % 2 ? ':' : ' ') + String(d.getMinutes()).padStart(2, '0'), 48, 25); ckT.needsUpdate = true; };
+    for (let k = 0; k < 6; k++) P(B(0.028, 0.016, 0.01), M(k % 3 ? '#2a2f3a' : '#6a2a2c'), -0.2 + k * 0.08 - (k > 2 ? -0.0 : 0) + (k > 2 ? 0.0 : 0), -0.38, -0.616);
     // edge piping on the dash
     P(B(1.6, 0.012, 0.012), edge, 0, -0.215, -0.615);
     add.forEach(o => o.traverse(c => { c.renderOrder = 5; }));
     g.scale.setScalar(s0);
     const tick = () => { if (g.visible) { const t = performance.now() / 1000; SCOCK.needles.forEach((n, i) => { n.rotation.z = -(Math.sin(t * (0.7 + i * 0.5)) * 1.4 + Math.sin(t * 3.1 + i) * 0.15); });
+      if ((t * 2 | 0) !== SCOCK._ct) { SCOCK._ct = t * 2 | 0; SCOCK.clk(); }
       SCOCK.warn.material.color.setHSL(0, 1, Math.sin(t * 4) > 0.3 ? 0.55 : 0.12);
       g.children.forEach(o => { if (o.userData.meter != null) { const v = 0.35 + 0.6 * Math.abs(Math.sin(t * (0.6 + o.userData.meter * 0.23) + o.userData.meter)); o.scale.y = v; o.position.y = -0.405 + 0.075 * v; } }); }
       requestAnimationFrame(tick); };

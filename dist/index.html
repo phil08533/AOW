@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.62</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.63</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18986,6 +18986,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 228, title: '2.22.63 · What you missed', items: ['Returning players get a one-time "What you missed this week" popup with the biggest new things, and a button to open the full update log'] },
   { id: 227, title: '2.22.62 · Ship polish and fixes', items: ['Other pilots now see your real ship: Fighter or Miner, with your paint job and parts (they used to see the starter)', 'Fixed: ship turrets were pointing their barrels away from you while shooting', 'Fixed: turret fire rate no longer depends on your frame rate', 'Fighter: drop is now X only, so Ctrl+W can no longer close the browser tab', 'More detail on all three ships: wingtip nav lights, panel seams, vents, canopy frames, antennas; the Miner gets rivets, a side hatch, ladder rungs and a cable spool'] },
   { id: 226, title: '2.22.61 · Boarding, rebuilt', items: ['Ship turrets can be shot down now. Each one drops credits and XP', 'Boarded ships are fully rebuilt inside: grated decks, ribbed and riveted walls, pipes and cable trays, hazard-striped door frames with lit room signs', 'Eight kinds of rooms: cargo, quarters, mess, armory, comms, med bay, engine room with a pulsing reactor, and a brig', 'A proper captain\'s bridge at the bow and a round airlock hatch at the stern', 'Enemies no longer spot you through walls, and your drone no longer shoots or fires missiles through them', 'The Shipyard is labeled on the bridge console and at Brakka'] },
   { id: 225, title: '2.22.60 · Raid ships, contracts and the mining cockpit', items: ['Raidable ships got a big upgrade: bridge towers, lit windows, armor panels, faction markings, three-bell engines and blinking running lights', 'Pirate and Drome ships now have gun turrets that track you and shoot when you get close', 'More ships to raid, spread over the bigger map', 'Rell on the Zeltac has new repeatable jobs: Raid Contracts if you are an outlaw, Hostage Rescues if you are not. The target ship gets a big marker', 'Hostage Rescue: clear the guards and cut three captives loose', 'The Bulldog Miner has its own cockpit: hazard trim, window grilles, a drill and ore hopper screen, and a spinning amber beacon'] },
@@ -19056,9 +19057,33 @@ function openUpdates(missedOnly) {
   updateRows(list); acts([['Got it', () => { S.seenUpd = UPDATES_LATEST; markDirty(); closeDlg(); }, true]]);
   S.seenUpd = UPDATES_LATEST; markDirty(); return true;
 }
+// the weekly "What you missed" recap: a short, curated highlight reel shown once to returning players
+const RECAP = { key: 'wk-2026-10-22', title: 'What you missed this week', items: [
+  ['🚀', 'Two new ships', 'Buy the Viper Fighter or the Bulldog Miner at the Shipyard, then trick them out in the garage: 9 paint styles, wings, guns, drills and more.'],
+  ['🎯', 'Zero-g dogfights', 'The Fighter strafes, climbs and stops on a dime with side thrusters. Upgrade Thrusters to make it razor tight.'],
+  ['🌌', 'Space, twice as big', 'Raider packs everywhere, a bigger asteroid belt, and pirate ships with turrets you can shoot down.'],
+  ['🏴‍☠️', 'Raids and rescues', 'Rell on the Zeltac has Raid Contracts for outlaws and Hostage Rescues for everyone else. Boarded ships are fully rebuilt inside.'],
+  ['🫧', 'Bubble City and Ocean World', 'A real underwater city, the Low Tide bar, boats you can sit and fish from, rain on the water and proper seagulls.'],
+  ['🐹', 'Marisol and Peanut', 'Find the lost hamster, visit Marisol\'s flat, and hire her as your ship\'s dealer.'],
+  ['🛍️', 'The Zeltac Mall and Undercroft', 'A new mall, the Hotbox, McKlunkies, Vixen Glippo\'s club, pet fish tanks and a darker Undercroft.'],
+  ['🌀', 'Warp gates', 'Glowing gates in town warp you straight to the Forest of Life and the Super Swift Arena.'],
+  ['🔫', 'Better combat', 'Smooth melee, two-handed weapons, one sound per gun, and energy guns that vent steam instead of reloading.'],
+  ['🛸', 'A real cockpit', 'Gauges, switches, scopes and blinking lights in your ship, plus a mining rig cockpit for the Miner.']
+] };
+function openRecap() {
+  openDlg('B.U.R.P. says', RECAP.title); $('dlgLine').textContent = `Welcome back, ${S.nick || 'Trooper'}! Here are the big ones:`;
+  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.maxHeight = '50vh'; rows.style.overflowY = 'auto';
+  for (const [ic, t, line] of RECAP.items) { const d = document.createElement('div'); d.className = 'row'; d.style.cssText = 'display:flex;gap:12px;align-items:flex-start;padding:8px 6px';
+    const e = document.createElement('span'); e.textContent = ic; e.style.cssText = 'font-size:26px;line-height:1;min-width:34px;text-align:center';
+    const b = document.createElement('div'); const h = document.createElement('b'); h.textContent = t; h.style.color = '#ffd36a'; const p = document.createElement('div'); p.textContent = line; p.style.cssText = 'opacity:.88;font-size:.92em;margin-top:2px'; b.append(h, p); d.append(e, b); rows.appendChild(d); }
+  $('dlgActs').before(rows); const done = () => { S.seenRecap = RECAP.key; S.seenUpd = UPDATES_LATEST; markDirty(); };
+  acts([["Let's go", () => { done(); closeDlg(); }, true], ['Full update log', () => { done(); closeDlg(); openUpdates(false); }]]); done(); SFX.quest && SFX.quest(); return true;
+}
+window.openRecap = openRecap;
 // call on login: veterans see what they missed; brand-new players start caught up
 function updatesOnLogin(isNew) {
-  if (isNew) { S.seenUpd = UPDATES_LATEST; markDirty(); return; }
+  if (isNew) { S.seenUpd = UPDATES_LATEST; S.seenRecap = RECAP.key; markDirty(); return; }
+  if (S.seenRecap !== RECAP.key) { setTimeout(() => { if (state === 'play' && !dlgOpen) openRecap(); }, 1200); return; }
   if ((S.seenUpd || 0) < UPDATES_LATEST) setTimeout(() => { if (state === 'play' && !dlgOpen) openUpdates(true); }, 1200);
 }
 // tester unlock wins over every world's own gate

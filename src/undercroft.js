@@ -93,8 +93,8 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
   for (let i = 0; i < 9; i++) { const a = i * 0.7; part(props, Cy(0.09, 0.09, 0.04 + (i % 3) * 0.05, 10), toon(['#c8402f', '#e8e4dc', '#3b4f7a'][i % 3]), 20 + Math.cos(a) * 0.5, 0.94, -18.6 + Math.sin(a) * 0.5); }
   for (let i = 0; i < 4; i++) part(props, B(0.18, 0.01, 0.26), toon('#e8e4dc'), 19.2 + i * 0.5, 0.92, -17.8 + (i % 2) * 0.2, 0, i * 0.4);
   part(props, Cy(0.04, 0.04, 0.12, 6), glow('#c8a03a'), 21, 0.97, -18.2);
-  ucChar(() => makeCivilian('#2a3a4a', '#1e1c22', '#9fe8ff', '#cfcac0', '#c9a43a'), 'civ', 21.9, -18.6, -Math.PI / 2, ucChat(-Math.PI / 2));
-  { const o = ucChar(() => recolor(makeStagrone(), {}), 'stagrone', 18.1, -18.4, Math.PI / 2, ucChat(Math.PI / 2)); ucSmoke(o, 2.0); }
+  ucChar(() => makeCivilian('#2a3a4a', '#1e1c22', '#9fe8ff', '#cfcac0', '#c9a43a'), 'civ', 22.5, -18.6, -Math.PI / 2, ucChat(-Math.PI / 2));
+  { const o = ucChar(() => recolor(makeStagrone(), {}), 'stagrone', 17.3, -18.5, Math.PI / 2, ucChat(Math.PI / 2)); ucSmoke(o, 2.0); }
   ucChar(() => makeCivilian('#6a2a4a', '#1e1c22', '#e0b892', '#5a3a22', '#c86aff'), 'civ', 20, -16.4, Math.PI, ucChat(Math.PI));
   const bulb = new THREE.PointLight(0xffb347, 1.2, 9, 1.8); bulb.position.set(20, 3.2, -18.6); levelGroup.add(bulb); part(props, Cy(0.02, 0.02, 3.4, 4), dark, 20, H - 1.9, -18.6); const shade = part(props, new THREE.ConeGeometry(0.7, 0.45, 12, 1, true), toon('#3a5a3a'), 20, 3.5, -18.6); props.remove(shade); levelGroup.add(shade);
   const bm = part(props, new THREE.SphereGeometry(0.12, 8, 6), new THREE.MeshBasicMaterial({ color: '#ffd38a' }), 20, 3.25, -18.6); props.remove(bm); levelGroup.add(bm);

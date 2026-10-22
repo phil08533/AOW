@@ -1,6 +1,6 @@
 // =================== SOUNDTRACK: real music per place and moment, with clean crossfades ===================
-const TRACKS = { hymn: 'music/hymn.mp3', wistful: 'music/wistful.mp3', mushroom: 'music/mushroom.mp3', nebula: 'music/nebula.mp3', neon: 'music/neon.mp3', wakeup: 'music/wakeup.mp3', dancing: 'music/dancing.mp3', apocalyptic: 'music/apocalyptic.mp3', enchanted: 'music/enchanted.mp3', low: 'music/low.mp3', overture: 'music/overture.mp3', tidal: 'music/tidal.mp3', iloveyou: 'music/iloveyou.mp3', c4po: 'music/c4po.mp3', glinky: 'music/glinky.mp3', clarinet: 'music/clarinet.mp3' };
-const PLAYLISTS = { cutscene: ['hymn'], romance: ['iloveyou'], boss: ['apocalyptic'], battle: ['low'], lounge: ['nebula', 'neon', 'wakeup', 'dancing'], ship: ['mushroom', 'hymn', 'wistful'], earth: ['enchanted'], speedway: ['overture'], fort: ['tidal'], other: ['c4po'], cantina: ['glinky', 'clarinet'] };
+const TRACKS = { awzil: 'music/awzil.mp3', hymn: 'music/hymn.mp3', wistful: 'music/wistful.mp3', mushroom: 'music/mushroom.mp3', nebula: 'music/nebula.mp3', neon: 'music/neon.mp3', wakeup: 'music/wakeup.mp3', dancing: 'music/dancing.mp3', apocalyptic: 'music/apocalyptic.mp3', enchanted: 'music/enchanted.mp3', low: 'music/low.mp3', overture: 'music/overture.mp3', tidal: 'music/tidal.mp3', iloveyou: 'music/iloveyou.mp3', c4po: 'music/c4po.mp3', glinky: 'music/glinky.mp3', clarinet: 'music/clarinet.mp3' };
+const PLAYLISTS = { undercroft: ['awzil'], cutscene: ['hymn'], romance: ['iloveyou'], boss: ['apocalyptic'], battle: ['low'], lounge: ['nebula', 'neon', 'wakeup', 'dancing'], ship: ['mushroom', 'hymn', 'wistful'], earth: ['enchanted'], speedway: ['overture'], fort: ['tidal'], other: ['c4po'], cantina: ['glinky', 'clarinet'] };
 MUSIC_NAMES[3] = 'Soundtrack';
 if (!PREFS.musicV2) { PREFS.musicV2 = 1; PREFS.music = 3; if (PREFS.musicVol == null) PREFS.musicVol = 0.7; try { savePrefs(); } catch (_) {} }
 if (PREFS.musicVol == null) PREFS.musicVol = 0.7;
@@ -24,7 +24,7 @@ function musUnlock() { if (MUS.unlocked) return; MUS.unlocked = true; MUS.a = mu
 // in the lounge the music comes out of the DJ's speakers: louder near them, panned toward them, muffled far away
 const LOUNGE_SPK = [[-3.2, 21.6], [3.2, 21.6]];
 function musSpace() { if (!MUS.ac) return; const now = MUS.ac.currentTime, set = (p, v) => p.setTargetAtTime(v, now, 0.12);
-  const SPK = MUS.list === 'lounge' && LEVEL.id === 'zfloor' ? LOUNGE_SPK : MUS.list === 'cantina' && LEVEL.id === 'underworld' && window.UW_SPK ? UW_SPK : null;
+  const SPK = MUS.list === 'lounge' && LEVEL.id === 'zfloor' ? LOUNGE_SPK : MUS.list === 'cantina' && LEVEL.id === 'underworld' && window.UW_SPK ? UW_SPK : MUS.list === 'undercroft' && LEVEL.id === 'zfloor' && window.UC_SPK ? UC_SPK : null;
   if (SPK) { let best = 1e9, sx = 0, sz = 0; for (const [x, z] of SPK) { const d = Math.hypot(player.pos.x - x, player.pos.z - z); if (d < best) best = d; sx += x / 2; sz += z / 2; }
     const dx = sx - player.pos.x, dz = sz - player.pos.z, dl = Math.hypot(dx, dz) || 1, right = [Math.cos(player.yaw), -Math.sin(player.yaw)], fwd = [-Math.sin(player.yaw), -Math.cos(player.yaw)];
     const p = (dx * right[0] + dz * right[1]) / dl, behind = (dx * fwd[0] + dz * fwd[1]) / dl < 0;
@@ -48,6 +48,7 @@ function musContext(dt) {
   } else if (LEVEL.fly && fly && fly.raiders && fly.raiders.some(r => !r.dead && r.obj.position.distanceTo(player.pos) < 160)) return 'battle';
   const id = LEVEL.id;
   if (id === 'zfloor' && typeof ZF !== 'undefined' && zTheme(ZF.floor) === 'bar') return 'lounge';
+  if (id === 'zfloor' && typeof ZF !== 'undefined' && zTheme(ZF.floor) === 'under') return 'undercroft';
   if (id === 'underworld') return 'cantina';
   if (id === 'ship') return 'ship';
   if (id === 'earth') return 'earth';

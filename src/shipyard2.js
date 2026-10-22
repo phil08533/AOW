@@ -34,8 +34,8 @@ function hulkMark(type) {
     // turrets on the hostile ships
     if (['raider', 'drome', 'flagship'].includes(type)) for (const [x, y, z] of [[-3, 3.1, -9], [3, 3.1, -9], [-3, 3.1, 2], [3, 3.1, 2], ...(T.big ? [[0, 9.6, 6], [-3, -3.2, -4], [3, -3.2, -4]] : [])]) {
       const tg = new THREE.Group(); tg.position.set(x * s, y * s, z * s); g.add(tg); part(tg, Cy(0.9 * s, 1.1 * s, 0.6 * s, 10), dk, 0, y < 0 ? -0.3 * s : 0.3 * s, 0);
-      const head = new THREE.Group(); head.position.y = (y < 0 ? -0.8 : 0.8) * s; tg.add(head); part(head, B(1.2 * s, 0.8 * s, 1.4 * s), T.hull, 0, 0, 0); for (const b of [-0.25, 0.25]) part(head, Cy(0.1 * s, 0.12 * s, 2.2 * s, 6), '#9aa1aa', b * s, 0.05 * s, -1.4 * s, Math.PI / 2);
-      part(head, B(0.5 * s, 0.2 * s, 0.1 * s), glow('#ff2a3a'), 0, 0.2 * s, -0.71 * s); turrets.push({ head, cd: Math.random() * 2 }); }
+      const head = new THREE.Group(); head.position.y = (y < 0 ? -0.8 : 0.8) * s; tg.add(head); part(head, B(1.2 * s, 0.8 * s, 1.4 * s), T.hull, 0, 0, 0); for (const b of [-0.25, 0.25]) part(head, Cy(0.1 * s, 0.12 * s, 2.2 * s, 6), '#9aa1aa', b * s, 0.05 * s, 1.4 * s, Math.PI / 2);
+      part(head, B(0.5 * s, 0.2 * s, 0.1 * s), glow('#ff2a3a'), 0, 0.2 * s, 0.71 * s); turrets.push({ head, cd: Math.random() * 2 }); }
   }
   g.userData.turrets = turrets; g.userData.blink = blink; return g;
 }; }
@@ -78,7 +78,7 @@ function ensureMissionWreck() {
       if (W.mk) { W.mk.position.copy(m.position).add(V(0, 20 + d * 0.06, 0)); W.mk.scale.set(d * 0.75, d * 0.07, 1); W.mk.visible = d > 90; if (((t * 2) | 0) !== W.mkT) { W.mkT = (t * 2) | 0; drawPlate(W.mk, W.mission === 'raid' ? 'CONTRACT: raid this ship' : 'RESCUE: hostages aboard', (d > 999 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m'), '#ffd36a', null); } }
       // turrets track you and open fire when you get close
       if (!fly || !player.alive || d > 420 || dlgOpen) return;
-      for (const T of U.turrets) { if (T.dead) continue; const wp = T.head.getWorldPosition(V(0, 0, 0)); T.head.lookAt(player.pos); T.cd -= 1 / 60;
+      const tdt = Math.min(0.1, t - (U.lt || t)); U.lt = t; for (const T of U.turrets) { if (T.dead) continue; const wp = T.head.getWorldPosition(V(0, 0, 0)); T.head.lookAt(player.pos); T.cd -= tdt;
         if (d < 320 && T.cd <= 0) { T.cd = 1.2 + Math.random() * 1.2; const b = new THREE.Mesh(boltGeo, glow('#ff2a3a')); b.scale.setScalar(4); b.position.copy(wp); levelGroup.add(b);
           const lead = player.pos.clone().addScaledVector(fly.vel, wp.distanceTo(player.pos) / 160); fly.bolts.push({ m: b, v: lead.sub(wp).normalize().multiplyScalar(160), life: 3, dmg: 4 + W.lv * 0.5 }); if (d < 200) SFX.zap(); } } }); }
   return r;

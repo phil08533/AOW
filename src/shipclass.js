@@ -29,7 +29,7 @@ function scPartStat(cls, cfg, stat) { const D = SHIP_CLASSES[cls]; let m = (D.st
 { const _sm = shipMod; shipMod = function (stat) { const c = shipCls(); if (c === 'starter') return _sm(stat); return Math.max(0.3, 1 + scPartStat(c, scS().cfg[c], stat)); }; }
 shipGrip = () => 1.6 * SHIP_SYS.thrust.lv[sysLv('thrust')].grip * shipClsDef().grip;
 shipStrafe = () => shipClsDef().strafe;
-shipLift = () => !shipClsDef().lift ? 0 : clamp((keys.Space || (typeof jetHeld !== 'undefined' && jetHeld) ? 1 : 0) - (keys.ControlLeft || keys.KeyX ? 1 : 0), -1, 1);
+shipLift = () => !shipClsDef().lift ? 0 : clamp((keys.Space || (typeof jetHeld !== 'undefined' && jetHeld) ? 1 : 0) - (keys.KeyX ? 1 : 0), -1, 1);
 shipMineMul = () => { const c = shipCls(), D = SHIP_CLASSES[c]; return (D.mine || 1) + (c !== 'starter' ? scPartStat(c, scS().cfg[c], 'mine') : 0); };
 shipOreMul = () => { const c = shipCls(), D = SHIP_CLASSES[c]; return (D.ore || 1) + (c !== 'starter' ? scPartStat(c, scS().cfg[c], 'ore') : 0); };
 SHIP_SYS.thrust = { name: 'Thrusters', lbl: ['floaty', 'responsive', 'snappy', 'tight', 'on a dime'], lv: [{ grip: 1 }, { grip: 1.7, cost: { cr: 1500, circuit: 4 } }, { grip: 2.8, cost: { cr: 4000, circuit: 8, ore: 15 } }, { grip: 4.5, cost: { cr: 9000, circuit: 14, starcrystal: 3 } }, { grip: 7.5, cost: { cr: 18000, circuit: 20, starcrystal: 6 } }] };
@@ -91,6 +91,10 @@ const SC_BUILD = {
         for (const d of [V(s, 0, 0), V(0, 1, 0), V(0, -1, 0), V(0, 0, z < 0 ? -1 : 1)]) { const fl = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.7, 6), glow('#bfe8ff')); fl.material = fl.material.clone(); fl.material.transparent = true; fl.material.opacity = 0.85; fl.material.blending = THREE.AdditiveBlending; fl.material.depthWrite = false;
           fl.position.set(0.85 * s + d.x * 0.3, 0.25 + d.y * 0.3, z + d.z * 0.3); fl.quaternion.setFromUnitVectors(V(0, -1, 0), d); fl.geometry = fl.geometry.clone().translate(0, -0.35, 0); fl.scale.setScalar(0.001); g.add(fl); rcs.push({ m: fl, d }); } }
     }
+    // detail pass: wingtip nav lights, panel greebles, intake glow, canopy frame, vents
+    for (const s of [-1, 1]) { E(g, glow(s < 0 ? '#ff3a2a' : '#6fdc5a'), 3.9 * s, 0.05, 1.6, 0.1, 0.1, 0.1); part(g, B(0.28, 0.3, 0.06), glow('#ff8a3a'), 0.86 * s, -0.05, -1.25);
+      for (let i = 0; i < 4; i++) part(g, B(0.18, 0.06, 0.4), dk, 0.45 * s, 0.82, -0.6 + i * 0.9); for (let i = 0; i < 3; i++) part(g, B(0.05, 0.22, 0.5), '#16181c', 0.76 * s, 0.1, 1.4 + i * 0.6); part(g, B(0.06, 0.06, 1.6), steel, 0.48 * s, 0.94, -1.6, 0.18); }
+    part(g, B(1.0, 0.06, 0.06), steel, 0, 0.98, -1.0); part(g, B(0.5, 0.25, 0.8), dk, 0, -0.5, 1.2); E(g, glow('#4fd2ff'), 0, -0.64, 1.2, 0.18, 0.05, 0.3);
     // little details: antenna, lights
     part(g, Cy(0.02, 0.02, 0.8, 4), dk, 0.3, 1.2, 1.8); E(g, glow('#ff3a2a'), 0, 0.92, 3.0, 0.07, 0.07, 0.07);
     g.userData.rcs = rcs;
@@ -119,6 +123,10 @@ const SC_BUILD = {
     if (C.lights === 0) for (const s of [-1, 1]) { part(g, B(0.4, 0.3, 0.2), dk, 0.75 * s, 1.1, -2.9); part(g, B(0.3, 0.2, 0.05), glow('#fff6d0'), 0.75 * s, 1.1, -3.02); }
     else if (C.lights === 1) { part(g, B(1.9, 0.18, 0.2), dk, 0, 1.12, -2.6); for (let k = 0; k < 6; k++) part(g, B(0.22, 0.12, 0.05), glow(k % 2 ? '#fff6d0' : '#ffb347'), -0.75 + k * 0.3, 1.12, -2.72); }
     E(g, glow('#ffb347'), 0, 1.1, 2.6, 0.14, 0.14, 0.14);
+    // detail pass: rivet rows, a side hatch, ladder rungs, beacons and a cable spool
+    for (const s of [-1, 1]) { for (let i = 0; i < 8; i++) E(g, steel, 1.32 * s, -0.75, -1.8 + i * 0.75, 0.05, 0.05, 0.05); part(g, B(0.06, 1.1, 0.9), '#3a3d44', 1.32 * s, 0.05, 2.4); part(g, B(0.07, 0.12, 0.5), y, 1.33 * s, 0.7, 2.4);
+      for (let i = 0; i < 4; i++) part(g, B(0.05, 0.05, 0.4), steel, 1.34 * s, -0.6 + i * 0.3, 1.4); E(g, glow(s < 0 ? '#ff3a2a' : '#6fdc5a'), 1.35 * s, 0.95, -1.9, 0.09, 0.09, 0.09); }
+    part(g, Cy(0.35, 0.35, 0.6, 10), '#3a3d44', 0, 1.0, 3.2, 0, 0, Math.PI / 2); part(g, new THREE.TorusGeometry(0.36, 0.08, 4, 10), y, 0, 1.0, 3.2, 0, Math.PI / 2); part(g, B(2.2, 0.1, 0.1), y, 0, 0.92, -1.75);
     // engines
     for (const s of [-1, 1]) { const ys = C.eng === 1 ? [-0.45, 0.45] : [0]; for (const yy of ys) { const r = C.eng === 1 ? 0.38 : 0.6; part(g, Cy(r, r + 0.1, 1.4, 8), dk, 0.85 * s, yy, 3.8, Math.PI / 2); part(g, Cy(r - 0.06, r - 0.06, 0.1, 8), glow(eg), 0.85 * s, yy, 4.52, Math.PI / 2); } }
     g.userData.spin = spin;
@@ -131,9 +139,15 @@ function makeClassShip(cls, C, col) {
   return g;
 }
 { const _mk = makeStarship; makeStarship = function (col, cfgIn) {
-  if (cfgIn && cfgIn.cls) return cfgIn.cls === 'starter' ? _mk(col, cfgIn.sm) : makeClassShip(cfgIn.cls, cfgIn, col);
+  if (cfgIn && cfgIn.cls) return cfgIn.cls === 'starter' ? scStarterDetail(_mk(col, cfgIn.sm)) : makeClassShip(cfgIn.cls, cfgIn, col);
   const c = shipCls(); if (!cfgIn && c !== 'starter') return makeClassShip(c, scS().cfg[c], col);
-  return _mk(col, cfgIn); }; }
+  return scStarterDetail(_mk(col, cfgIn)); }; }
+// the starter gets a detail pass too: nav lights, panel seams, vents, a canopy frame and an antenna
+function scStarterDetail(g) { const dk = '#2a2d33';
+  for (const s of [-1, 1]) { E(g, glow(s < 0 ? '#ff3a2a' : '#6fdc5a'), 4.6 * s, -0.1, 1.2, 0.12, 0.12, 0.12); for (let i = 0; i < 5; i++) part(g, B(0.04, 0.6, 0.04), dk, 0.81 * s, 0, -2.2 + i * 1.1);
+    for (let i = 0; i < 3; i++) part(g, B(0.05, 0.25, 0.6), '#16181c', 0.81 * s, -0.2, 1.4 + i * 0.7); part(g, B(0.06, 0.06, 1.5), '#cfd3d8', 0.5 * s, 0.86, -2.6, 0.25); }
+  part(g, B(1.1, 0.06, 0.06), '#cfd3d8', 0, 0.9, -2.0); part(g, Cy(0.02, 0.02, 1.0, 4), dk, 0.4, 1.1, 1.6); E(g, glow('#ff3a2a'), 0.4, 1.6, 1.6, 0.06, 0.06, 0.06);
+  for (let i = 0; i < 4; i++) part(g, B(1.62, 0.03, 0.04), dk, 0, 0.5, -2.2 + i * 1.6); return g; }
 
 // ---------- flight fx: side thrusters puff against your acceleration; drills spin ----------
 const _rv = V(0, 0, 0), _ra = V(0, 0, 0), _rq = new THREE.Quaternion();
@@ -185,3 +199,9 @@ function scGarage(k) {
   $('dlgActs').before(rows); acts([...tabs.map(([t, n], j) => [n, () => { tab = t; render(); }, j === 0]), ['Back', () => { closeDlg(); openShipMods(); }], ['Done', closeDlg]]); render(); showPreviewIn(rows); pv();
 }
 function shipModOf(k, stat) { const c = scS().cur; scS().cur = k; const v = shipMod(stat); scS().cur = c; return v; }
+
+// other pilots see your real ship: the class rides along in the presence look code
+{ const _c = smCode, _p = smParse;
+  smCode = M => { const c = shipCls(); if (c === 'starter') return _c(M); const C = scS().cfg[c]; return 'c:' + c + ':' + ['p', 'a', 'st', 'x', ...Object.keys(SHIP_CLASSES[c].slots)].map(k => C[k] | 0).join('.'); };
+  smParse = code => { const s = String(code || ''); if (!s.startsWith('c:')) return _p(s); const [, c, v] = s.split(':'); if (!SHIP_CLASSES[c] || c === 'starter') return _p(''); const n = (v || '').split('.').map(Number), o = { cls: c };
+    ['p', 'a', 'st', 'x', ...Object.keys(SHIP_CLASSES[c].slots)].forEach((k, i) => { const max = k === 'st' ? PAINT_STYLES.length : k === 'p' ? SHIP_PAINTS.length : k === 'a' ? SHIP_ACCENTS.length : k === 'x' ? SHIP_EXHAUST.length : SHIP_CLASSES[c].slots[k][1].length; o[k] = clamp(n[i] | 0, 0, max - 1); }); return o; }; }

@@ -13,8 +13,8 @@ const SM_SLOTS = [['wing', 'Wings'], ['eng', 'Engines'], ['nose', 'Nose'], ['fin
 const smS = () => { S.sm = S.sm || { p: 0, a: 0, x: 0, wing: 0, eng: 0, nose: 0, fin: 0, pod: 0, own: {} }; S.sm.own = S.sm.own || {}; return S.sm; };
 const smOwn = (k, i) => { const T = k === 'p' ? SHIP_PAINTS : k === 'a' ? SHIP_ACCENTS : k === 'x' ? SHIP_EXHAUST : SHIP_PARTS[k]; return !!(T[i] && (T[i][T === SHIP_PAINTS || T === SHIP_ACCENTS || T === SHIP_EXHAUST ? 2 : 1] || smS().own[k + i])); };
 function shipMod(stat) { const M = smS(); let m = 1; for (const [k] of SM_SLOTS) { const P = SHIP_PARTS[k][M[k]]; if (P && P[2][stat]) m += P[2][stat]; } if (stat === 'laser' && typeof romPerk === 'function' && romPerk('laser')) m += 0.15; return m; }
-const smCode = M => [M.p, M.a, M.wing, M.eng, M.nose, M.fin, M.pod].join('.');
-const smParse = c => { const p = String(c || '').split('.').map(Number); return { p: p[0] || 0, a: p[1] || 0, wing: p[2] || 0, eng: p[3] || 0, nose: p[4] || 0, fin: p[5] || 0, pod: p[6] || 0 }; };
+let smCode = M => [M.p, M.a, M.wing, M.eng, M.nose, M.fin, M.pod].join('.');
+let smParse = c => { const p = String(c || '').split('.').map(Number); return { p: p[0] || 0, a: p[1] || 0, wing: p[2] || 0, eng: p[3] || 0, nose: p[4] || 0, fin: p[5] || 0, pod: p[6] || 0 }; };
 makeStarship = function (col, cfgIn) {
   const M = cfgIn || smS(), g = new THREE.Group(), hull = (SHIP_PAINTS[M.p] || SHIP_PAINTS[0])[1], dk = '#3a3d44', acc = (SHIP_ACCENTS[M.a] || SHIP_ACCENTS[0])[1] || col || C.gunAcc, eg = M.eng === 2 ? '#4fd2ff' : '#ff9a3c';
   part(g, B(1.6, 1.0, 6.0), hull, 0, 0, 0); part(g, B(1.2, 0.8, 1.6), hull, 0, 0, -3.6);

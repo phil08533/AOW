@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.61</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.62</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -12799,8 +12799,8 @@ const SM_SLOTS = [['wing', 'Wings'], ['eng', 'Engines'], ['nose', 'Nose'], ['fin
 const smS = () => { S.sm = S.sm || { p: 0, a: 0, x: 0, wing: 0, eng: 0, nose: 0, fin: 0, pod: 0, own: {} }; S.sm.own = S.sm.own || {}; return S.sm; };
 const smOwn = (k, i) => { const T = k === 'p' ? SHIP_PAINTS : k === 'a' ? SHIP_ACCENTS : k === 'x' ? SHIP_EXHAUST : SHIP_PARTS[k]; return !!(T[i] && (T[i][T === SHIP_PAINTS || T === SHIP_ACCENTS || T === SHIP_EXHAUST ? 2 : 1] || smS().own[k + i])); };
 function shipMod(stat) { const M = smS(); let m = 1; for (const [k] of SM_SLOTS) { const P = SHIP_PARTS[k][M[k]]; if (P && P[2][stat]) m += P[2][stat]; } if (stat === 'laser' && typeof romPerk === 'function' && romPerk('laser')) m += 0.15; return m; }
-const smCode = M => [M.p, M.a, M.wing, M.eng, M.nose, M.fin, M.pod].join('.');
-const smParse = c => { const p = String(c || '').split('.').map(Number); return { p: p[0] || 0, a: p[1] || 0, wing: p[2] || 0, eng: p[3] || 0, nose: p[4] || 0, fin: p[5] || 0, pod: p[6] || 0 }; };
+let smCode = M => [M.p, M.a, M.wing, M.eng, M.nose, M.fin, M.pod].join('.');
+let smParse = c => { const p = String(c || '').split('.').map(Number); return { p: p[0] || 0, a: p[1] || 0, wing: p[2] || 0, eng: p[3] || 0, nose: p[4] || 0, fin: p[5] || 0, pod: p[6] || 0 }; };
 makeStarship = function (col, cfgIn) {
   const M = cfgIn || smS(), g = new THREE.Group(), hull = (SHIP_PAINTS[M.p] || SHIP_PAINTS[0])[1], dk = '#3a3d44', acc = (SHIP_ACCENTS[M.a] || SHIP_ACCENTS[0])[1] || col || C.gunAcc, eg = M.eng === 2 ? '#4fd2ff' : '#ff9a3c';
   part(g, B(1.6, 1.0, 6.0), hull, 0, 0, 0); part(g, B(1.2, 0.8, 1.6), hull, 0, 0, -3.6);
@@ -18986,6 +18986,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 227, title: '2.22.62 · Ship polish and fixes', items: ['Other pilots now see your real ship: Fighter or Miner, with your paint job and parts (they used to see the starter)', 'Fixed: ship turrets were pointing their barrels away from you while shooting', 'Fixed: turret fire rate no longer depends on your frame rate', 'Fighter: drop is now X only, so Ctrl+W can no longer close the browser tab', 'More detail on all three ships: wingtip nav lights, panel seams, vents, canopy frames, antennas; the Miner gets rivets, a side hatch, ladder rungs and a cable spool'] },
   { id: 226, title: '2.22.61 · Boarding, rebuilt', items: ['Ship turrets can be shot down now. Each one drops credits and XP', 'Boarded ships are fully rebuilt inside: grated decks, ribbed and riveted walls, pipes and cable trays, hazard-striped door frames with lit room signs', 'Eight kinds of rooms: cargo, quarters, mess, armory, comms, med bay, engine room with a pulsing reactor, and a brig', 'A proper captain\'s bridge at the bow and a round airlock hatch at the stern', 'Enemies no longer spot you through walls, and your drone no longer shoots or fires missiles through them', 'The Shipyard is labeled on the bridge console and at Brakka'] },
   { id: 225, title: '2.22.60 · Raid ships, contracts and the mining cockpit', items: ['Raidable ships got a big upgrade: bridge towers, lit windows, armor panels, faction markings, three-bell engines and blinking running lights', 'Pirate and Drome ships now have gun turrets that track you and shoot when you get close', 'More ships to raid, spread over the bigger map', 'Rell on the Zeltac has new repeatable jobs: Raid Contracts if you are an outlaw, Hostage Rescues if you are not. The target ship gets a big marker', 'Hostage Rescue: clear the guards and cut three captives loose', 'The Bulldog Miner has its own cockpit: hazard trim, window grilles, a drill and ore hopper screen, and a spinning amber beacon'] },
   { id: 224, title: '2.22.59 · Fighter and Miner', items: ['Two new ships at the Shipyard (bridge console or Brakka): the Viper Fighter (25k) and the Bulldog Miner (20k). Switch any time', 'Garage for each ship: 9 paint styles (stripes, flames, camo, hazard, checker, tiger, carbon...), paint, accent, exhaust, and swappable wings, engines, noses, guns, body kits, drills, armor, cargo and lights', 'Fighter: side thrusters fire as you strafe, climb (Space) and drop (Ctrl/X), and stop on a dime', 'Miner: huge hull, takes 45% less damage, breaks rocks 2.5x faster and gets more ore', 'New Thrusters upgrade in Ship Systems: from floaty to on a dime', 'Space is twice as big, and raider packs are now spread all over it'] },
@@ -26694,7 +26695,7 @@ function scPartStat(cls, cfg, stat) { const D = SHIP_CLASSES[cls]; let m = (D.st
 { const _sm = shipMod; shipMod = function (stat) { const c = shipCls(); if (c === 'starter') return _sm(stat); return Math.max(0.3, 1 + scPartStat(c, scS().cfg[c], stat)); }; }
 shipGrip = () => 1.6 * SHIP_SYS.thrust.lv[sysLv('thrust')].grip * shipClsDef().grip;
 shipStrafe = () => shipClsDef().strafe;
-shipLift = () => !shipClsDef().lift ? 0 : clamp((keys.Space || (typeof jetHeld !== 'undefined' && jetHeld) ? 1 : 0) - (keys.ControlLeft || keys.KeyX ? 1 : 0), -1, 1);
+shipLift = () => !shipClsDef().lift ? 0 : clamp((keys.Space || (typeof jetHeld !== 'undefined' && jetHeld) ? 1 : 0) - (keys.KeyX ? 1 : 0), -1, 1);
 shipMineMul = () => { const c = shipCls(), D = SHIP_CLASSES[c]; return (D.mine || 1) + (c !== 'starter' ? scPartStat(c, scS().cfg[c], 'mine') : 0); };
 shipOreMul = () => { const c = shipCls(), D = SHIP_CLASSES[c]; return (D.ore || 1) + (c !== 'starter' ? scPartStat(c, scS().cfg[c], 'ore') : 0); };
 SHIP_SYS.thrust = { name: 'Thrusters', lbl: ['floaty', 'responsive', 'snappy', 'tight', 'on a dime'], lv: [{ grip: 1 }, { grip: 1.7, cost: { cr: 1500, circuit: 4 } }, { grip: 2.8, cost: { cr: 4000, circuit: 8, ore: 15 } }, { grip: 4.5, cost: { cr: 9000, circuit: 14, starcrystal: 3 } }, { grip: 7.5, cost: { cr: 18000, circuit: 20, starcrystal: 6 } }] };
@@ -26756,6 +26757,10 @@ const SC_BUILD = {
         for (const d of [V(s, 0, 0), V(0, 1, 0), V(0, -1, 0), V(0, 0, z < 0 ? -1 : 1)]) { const fl = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.7, 6), glow('#bfe8ff')); fl.material = fl.material.clone(); fl.material.transparent = true; fl.material.opacity = 0.85; fl.material.blending = THREE.AdditiveBlending; fl.material.depthWrite = false;
           fl.position.set(0.85 * s + d.x * 0.3, 0.25 + d.y * 0.3, z + d.z * 0.3); fl.quaternion.setFromUnitVectors(V(0, -1, 0), d); fl.geometry = fl.geometry.clone().translate(0, -0.35, 0); fl.scale.setScalar(0.001); g.add(fl); rcs.push({ m: fl, d }); } }
     }
+    // detail pass: wingtip nav lights, panel greebles, intake glow, canopy frame, vents
+    for (const s of [-1, 1]) { E(g, glow(s < 0 ? '#ff3a2a' : '#6fdc5a'), 3.9 * s, 0.05, 1.6, 0.1, 0.1, 0.1); part(g, B(0.28, 0.3, 0.06), glow('#ff8a3a'), 0.86 * s, -0.05, -1.25);
+      for (let i = 0; i < 4; i++) part(g, B(0.18, 0.06, 0.4), dk, 0.45 * s, 0.82, -0.6 + i * 0.9); for (let i = 0; i < 3; i++) part(g, B(0.05, 0.22, 0.5), '#16181c', 0.76 * s, 0.1, 1.4 + i * 0.6); part(g, B(0.06, 0.06, 1.6), steel, 0.48 * s, 0.94, -1.6, 0.18); }
+    part(g, B(1.0, 0.06, 0.06), steel, 0, 0.98, -1.0); part(g, B(0.5, 0.25, 0.8), dk, 0, -0.5, 1.2); E(g, glow('#4fd2ff'), 0, -0.64, 1.2, 0.18, 0.05, 0.3);
     // little details: antenna, lights
     part(g, Cy(0.02, 0.02, 0.8, 4), dk, 0.3, 1.2, 1.8); E(g, glow('#ff3a2a'), 0, 0.92, 3.0, 0.07, 0.07, 0.07);
     g.userData.rcs = rcs;
@@ -26784,6 +26789,10 @@ const SC_BUILD = {
     if (C.lights === 0) for (const s of [-1, 1]) { part(g, B(0.4, 0.3, 0.2), dk, 0.75 * s, 1.1, -2.9); part(g, B(0.3, 0.2, 0.05), glow('#fff6d0'), 0.75 * s, 1.1, -3.02); }
     else if (C.lights === 1) { part(g, B(1.9, 0.18, 0.2), dk, 0, 1.12, -2.6); for (let k = 0; k < 6; k++) part(g, B(0.22, 0.12, 0.05), glow(k % 2 ? '#fff6d0' : '#ffb347'), -0.75 + k * 0.3, 1.12, -2.72); }
     E(g, glow('#ffb347'), 0, 1.1, 2.6, 0.14, 0.14, 0.14);
+    // detail pass: rivet rows, a side hatch, ladder rungs, beacons and a cable spool
+    for (const s of [-1, 1]) { for (let i = 0; i < 8; i++) E(g, steel, 1.32 * s, -0.75, -1.8 + i * 0.75, 0.05, 0.05, 0.05); part(g, B(0.06, 1.1, 0.9), '#3a3d44', 1.32 * s, 0.05, 2.4); part(g, B(0.07, 0.12, 0.5), y, 1.33 * s, 0.7, 2.4);
+      for (let i = 0; i < 4; i++) part(g, B(0.05, 0.05, 0.4), steel, 1.34 * s, -0.6 + i * 0.3, 1.4); E(g, glow(s < 0 ? '#ff3a2a' : '#6fdc5a'), 1.35 * s, 0.95, -1.9, 0.09, 0.09, 0.09); }
+    part(g, Cy(0.35, 0.35, 0.6, 10), '#3a3d44', 0, 1.0, 3.2, 0, 0, Math.PI / 2); part(g, new THREE.TorusGeometry(0.36, 0.08, 4, 10), y, 0, 1.0, 3.2, 0, Math.PI / 2); part(g, B(2.2, 0.1, 0.1), y, 0, 0.92, -1.75);
     // engines
     for (const s of [-1, 1]) { const ys = C.eng === 1 ? [-0.45, 0.45] : [0]; for (const yy of ys) { const r = C.eng === 1 ? 0.38 : 0.6; part(g, Cy(r, r + 0.1, 1.4, 8), dk, 0.85 * s, yy, 3.8, Math.PI / 2); part(g, Cy(r - 0.06, r - 0.06, 0.1, 8), glow(eg), 0.85 * s, yy, 4.52, Math.PI / 2); } }
     g.userData.spin = spin;
@@ -26796,9 +26805,15 @@ function makeClassShip(cls, C, col) {
   return g;
 }
 { const _mk = makeStarship; makeStarship = function (col, cfgIn) {
-  if (cfgIn && cfgIn.cls) return cfgIn.cls === 'starter' ? _mk(col, cfgIn.sm) : makeClassShip(cfgIn.cls, cfgIn, col);
+  if (cfgIn && cfgIn.cls) return cfgIn.cls === 'starter' ? scStarterDetail(_mk(col, cfgIn.sm)) : makeClassShip(cfgIn.cls, cfgIn, col);
   const c = shipCls(); if (!cfgIn && c !== 'starter') return makeClassShip(c, scS().cfg[c], col);
-  return _mk(col, cfgIn); }; }
+  return scStarterDetail(_mk(col, cfgIn)); }; }
+// the starter gets a detail pass too: nav lights, panel seams, vents, a canopy frame and an antenna
+function scStarterDetail(g) { const dk = '#2a2d33';
+  for (const s of [-1, 1]) { E(g, glow(s < 0 ? '#ff3a2a' : '#6fdc5a'), 4.6 * s, -0.1, 1.2, 0.12, 0.12, 0.12); for (let i = 0; i < 5; i++) part(g, B(0.04, 0.6, 0.04), dk, 0.81 * s, 0, -2.2 + i * 1.1);
+    for (let i = 0; i < 3; i++) part(g, B(0.05, 0.25, 0.6), '#16181c', 0.81 * s, -0.2, 1.4 + i * 0.7); part(g, B(0.06, 0.06, 1.5), '#cfd3d8', 0.5 * s, 0.86, -2.6, 0.25); }
+  part(g, B(1.1, 0.06, 0.06), '#cfd3d8', 0, 0.9, -2.0); part(g, Cy(0.02, 0.02, 1.0, 4), dk, 0.4, 1.1, 1.6); E(g, glow('#ff3a2a'), 0.4, 1.6, 1.6, 0.06, 0.06, 0.06);
+  for (let i = 0; i < 4; i++) part(g, B(1.62, 0.03, 0.04), dk, 0, 0.5, -2.2 + i * 1.6); return g; }
 
 // ---------- flight fx: side thrusters puff against your acceleration; drills spin ----------
 const _rv = V(0, 0, 0), _ra = V(0, 0, 0), _rq = new THREE.Quaternion();
@@ -26850,6 +26865,12 @@ function scGarage(k) {
   $('dlgActs').before(rows); acts([...tabs.map(([t, n], j) => [n, () => { tab = t; render(); }, j === 0]), ['Back', () => { closeDlg(); openShipMods(); }], ['Done', closeDlg]]); render(); showPreviewIn(rows); pv();
 }
 function shipModOf(k, stat) { const c = scS().cur; scS().cur = k; const v = shipMod(stat); scS().cur = c; return v; }
+
+// other pilots see your real ship: the class rides along in the presence look code
+{ const _c = smCode, _p = smParse;
+  smCode = M => { const c = shipCls(); if (c === 'starter') return _c(M); const C = scS().cfg[c]; return 'c:' + c + ':' + ['p', 'a', 'st', 'x', ...Object.keys(SHIP_CLASSES[c].slots)].map(k => C[k] | 0).join('.'); };
+  smParse = code => { const s = String(code || ''); if (!s.startsWith('c:')) return _p(s); const [, c, v] = s.split(':'); if (!SHIP_CLASSES[c] || c === 'starter') return _p(''); const n = (v || '').split('.').map(Number), o = { cls: c };
+    ['p', 'a', 'st', 'x', ...Object.keys(SHIP_CLASSES[c].slots)].forEach((k, i) => { const max = k === 'st' ? PAINT_STYLES.length : k === 'p' ? SHIP_PAINTS.length : k === 'a' ? SHIP_ACCENTS.length : k === 'x' ? SHIP_EXHAUST.length : SHIP_CLASSES[c].slots[k][1].length; o[k] = clamp(n[i] | 0, 0, max - 1); }); return o; }; }
 
 // =================== BOARDING 2: detailed ship interiors. Grated decks, ribbed walls, pipes, and themed rooms ===================
 const BTEX = {};
@@ -26974,8 +26995,8 @@ function hulkMark(type) {
     // turrets on the hostile ships
     if (['raider', 'drome', 'flagship'].includes(type)) for (const [x, y, z] of [[-3, 3.1, -9], [3, 3.1, -9], [-3, 3.1, 2], [3, 3.1, 2], ...(T.big ? [[0, 9.6, 6], [-3, -3.2, -4], [3, -3.2, -4]] : [])]) {
       const tg = new THREE.Group(); tg.position.set(x * s, y * s, z * s); g.add(tg); part(tg, Cy(0.9 * s, 1.1 * s, 0.6 * s, 10), dk, 0, y < 0 ? -0.3 * s : 0.3 * s, 0);
-      const head = new THREE.Group(); head.position.y = (y < 0 ? -0.8 : 0.8) * s; tg.add(head); part(head, B(1.2 * s, 0.8 * s, 1.4 * s), T.hull, 0, 0, 0); for (const b of [-0.25, 0.25]) part(head, Cy(0.1 * s, 0.12 * s, 2.2 * s, 6), '#9aa1aa', b * s, 0.05 * s, -1.4 * s, Math.PI / 2);
-      part(head, B(0.5 * s, 0.2 * s, 0.1 * s), glow('#ff2a3a'), 0, 0.2 * s, -0.71 * s); turrets.push({ head, cd: Math.random() * 2 }); }
+      const head = new THREE.Group(); head.position.y = (y < 0 ? -0.8 : 0.8) * s; tg.add(head); part(head, B(1.2 * s, 0.8 * s, 1.4 * s), T.hull, 0, 0, 0); for (const b of [-0.25, 0.25]) part(head, Cy(0.1 * s, 0.12 * s, 2.2 * s, 6), '#9aa1aa', b * s, 0.05 * s, 1.4 * s, Math.PI / 2);
+      part(head, B(0.5 * s, 0.2 * s, 0.1 * s), glow('#ff2a3a'), 0, 0.2 * s, 0.71 * s); turrets.push({ head, cd: Math.random() * 2 }); }
   }
   g.userData.turrets = turrets; g.userData.blink = blink; return g;
 }; }
@@ -27018,7 +27039,7 @@ function ensureMissionWreck() {
       if (W.mk) { W.mk.position.copy(m.position).add(V(0, 20 + d * 0.06, 0)); W.mk.scale.set(d * 0.75, d * 0.07, 1); W.mk.visible = d > 90; if (((t * 2) | 0) !== W.mkT) { W.mkT = (t * 2) | 0; drawPlate(W.mk, W.mission === 'raid' ? 'CONTRACT: raid this ship' : 'RESCUE: hostages aboard', (d > 999 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m'), '#ffd36a', null); } }
       // turrets track you and open fire when you get close
       if (!fly || !player.alive || d > 420 || dlgOpen) return;
-      for (const T of U.turrets) { if (T.dead) continue; const wp = T.head.getWorldPosition(V(0, 0, 0)); T.head.lookAt(player.pos); T.cd -= 1 / 60;
+      const tdt = Math.min(0.1, t - (U.lt || t)); U.lt = t; for (const T of U.turrets) { if (T.dead) continue; const wp = T.head.getWorldPosition(V(0, 0, 0)); T.head.lookAt(player.pos); T.cd -= tdt;
         if (d < 320 && T.cd <= 0) { T.cd = 1.2 + Math.random() * 1.2; const b = new THREE.Mesh(boltGeo, glow('#ff2a3a')); b.scale.setScalar(4); b.position.copy(wp); levelGroup.add(b);
           const lead = player.pos.clone().addScaledVector(fly.vel, wp.distanceTo(player.pos) / 160); fly.bolts.push({ m: b, v: lead.sub(wp).normalize().multiplyScalar(160), life: 3, dmg: 4 + W.lv * 0.5 }); if (d < 200) SFX.zap(); } } }); }
   return r;

@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.72</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.73</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18992,6 +18992,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 238, title: '2.22.73 · Steadier ship screens', items: ['Terminal screens on the ship no longer flicker when you look at them from a distance or an angle.'] },
   { id: 237, title: '2.22.72 · Playtest fixes', items: ['Fixed a broken wall in the Zeltac mob hideout that could glitch the level.', 'Cleaned up material warnings in Bubble City, the Underworld, Marisol and the ship.', 'Full sweep of every world, the marshal path and the Kade fight.'] },
   { id: 236, title: '2.22.71 · The Galactic Marshals (part 2)', items: ['A Marshal board on your bridge, next to the bounty terminal. Your badge spins in, the stars fill, and a PROMOTED stamp lands when you rank up.', 'Marshal missions: hostage rescue, Drome Cutter sweeps, raider barge sweeps and manhunts for named fugitives on other worlds.', 'Random busts: crimes in progress show up near you with a red beacon. Flash your badge to arrest them, or chase them down if they run.', 'The Marshal armory (Lawgiver Pistol, Marshal Armor, Star Marshal Coat, Peacekeeper Rifle) and, at Senior Marshal, the Lawbringer Interceptor with a spinning light bar.', 'The Maw finale: Vega and her squadron fight beside your side, Marshals or outlaws, led by Rook or Kade.'] },
   { id: 235, title: '2.22.70 · The Galactic Marshals (part 1)', items: ['New story quest after Chapter 4: The Long Arm. Marshal Rook explains the choice between crime and the law, before Kade shows up.', 'After Kade teaches you to cook, Rook calls your ship and asks for his location. Turn him in and you can take the badge. Already past it? Ask Rook, or tap your record chip.', 'Marshals get a rank instead of an outlaw rating, and can flash their badge (N, or the BADGE button) for clout.', 'Marshals have no Lab, substances, fences, black market, hits or Don, and can\'t kill civilians. Turning in your badge is your call, from your Marshal card.'] },
@@ -27496,6 +27497,11 @@ SCENES.push(['worlds', '🪐 World intros', () => Object.keys(WORLD_INTRO).some(
   const beacon = new THREE.PointLight('#ff2a3a', 2, 60); beacon.position.set(0, 42, 0); G.add(beacon);
   levelAnims.push(t => { beams.forEach((b, i) => { b.rotation.y = t * 0.35 + i * Math.PI / 2; b.rotation.x = 0.5 + Math.sin(t * 0.4 + i) * 0.15; }); beacon.intensity = 1.2 + Math.sin(t * 2.2) * 1; });
 } catch (err) { console.warn('tower lights', err); } return r; }; }
+
+// ---------- ship screens: pull glowing panels a hair toward the camera so they stop z-fighting the consoles ----------
+function shipScreenFix() { if (!LEVEL || LEVEL.id !== 'ship') return; levelGroup.traverse(o => { const m = o.material; if (!o.isMesh || !m || Array.isArray(m) || m.transparent) return;
+  if (m.isMeshBasicMaterial || (m.emissive && m.emissive.getHex() > 0) || m.map && m.map.isCanvasTexture) { m.polygonOffset = true; m.polygonOffsetFactor = -1; m.polygonOffsetUnits = -4; } }); }
+{ const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); if (id === 'ship') { shipScreenFix(); setTimeout(shipScreenFix, 1500); } return r; }; }
 
 // =================== THE MARSHALS: an alternative to the outlaw path (step 1: story, badge, rank, lockouts, badge flash) ===================
 // Save: S.marshal = { on, xp, clout, busts, offered, t } (missing on old saves). Taking the badge zeroes outlaw rep and closes the

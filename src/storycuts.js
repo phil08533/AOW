@@ -74,3 +74,8 @@ SCENES.push(['worlds', '🪐 World intros', () => Object.keys(WORLD_INTRO).some(
   const beacon = new THREE.PointLight('#ff2a3a', 2, 60); beacon.position.set(0, 42, 0); G.add(beacon);
   levelAnims.push(t => { beams.forEach((b, i) => { b.rotation.y = t * 0.35 + i * Math.PI / 2; b.rotation.x = 0.5 + Math.sin(t * 0.4 + i) * 0.15; }); beacon.intensity = 1.2 + Math.sin(t * 2.2) * 1; });
 } catch (err) { console.warn('tower lights', err); } return r; }; }
+
+// ---------- ship screens: pull glowing panels a hair toward the camera so they stop z-fighting the consoles ----------
+function shipScreenFix() { if (!LEVEL || LEVEL.id !== 'ship') return; levelGroup.traverse(o => { const m = o.material; if (!o.isMesh || !m || Array.isArray(m) || m.transparent) return;
+  if (m.isMeshBasicMaterial || (m.emissive && m.emissive.getHex() > 0) || m.map && m.map.isCanvasTexture) { m.polygonOffset = true; m.polygonOffsetFactor = -1; m.polygonOffsetUnits = -4; } }); }
+{ const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); if (id === 'ship') { shipScreenFix(); setTimeout(shipScreenFix, 1500); } return r; }; }

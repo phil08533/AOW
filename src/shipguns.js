@@ -3,9 +3,11 @@ const laserCol = () => { const C = scS().cfg[shipCls()]; return LASER_COLS[(C &&
 const boltSpeed = () => [260, 380, 560][(scS().cfg.fighter.bolt) | 0] || 260;
 // aim assist: lock onto whatever is near your crosshair. Settings can turn it off
 function shipAimFocus(F) {
-  let focus = player.pos.clone().addScaledVector(shipFwd, 160), bestA = PREFS.shipAim === false ? -1 : 0.1;
+  let focus = player.pos.clone().addScaledVector(shipFwd, 160), mn = shipCls() === 'miner', bestA = PREFS.shipAim === false ? -1 : mn ? 0.32 : 0.1;
   for (const r of F.raiders) { if (r.dead) continue; const to = r.obj.position.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = r.obj.position.clone(); } }
   for (const X of F.extra || []) { if (X.dead) continue; const p = X.pos(), to = p.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = p; } }
+  // the miner also locks onto asteroids, so the beams stay on the rock you're carving
+  if (mn && bestA > 0) for (const R of F.rockData) { if (R.dead) continue; const to = R.p.clone().sub(player.pos), d = to.length() - R.s; if (d > 300) continue; const a = to.normalize().angleTo(shipFwd) - Math.min(0.2, R.s / Math.max(30, d) * 0.5); if (a < bestA) { bestA = a; focus = R.p.clone(); } }
   return focus;
 }
 function shipMuzzle(side) { const go = shipGunOff(side); return player.pos.clone().addScaledVector(shipRight, go.x).addScaledVector(V(0, 1, 0).applyQuaternion(_q), go.y).addScaledVector(shipFwd, -go.z); }

@@ -14,7 +14,19 @@
     const P = (geo, m, x, y, z) => { const o = part(g, geo, m, x, y, z); add.push(o); return o; };
     // riveted canopy bar and corner plates
     for (let i = -7; i <= 7; i++) P(B(0.012, 0.012, 0.01), rivet, i * 0.11, -0.228, -0.61);
-    for (const s of [-1, 1]) { const c = P(B(0.22, 0.16, 0.02), plate, s * 0.78, 0.12, -0.6); c.rotation.z = s * 0.5; for (const [dx, dy] of [[-0.08, 0.05], [0.08, 0.05], [-0.08, -0.05], [0.08, -0.05]]) { const r = part(c, B(0.012, 0.012, 0.01), rivet, dx, dy, 0.012); }
+    // thin canopy struts, dressed: a lit inner strip, rivets, a cable run and clamp bands
+    for (const st of SCOCK.struts || []) { const pr = st.geometry.parameters, long = pr.width > pr.height, Lw = long ? pr.width : pr.height, ax = (o, v) => long ? o.position.setX(v) : o.position.setY(v);
+      const strip = part(st, long ? B(Lw * 0.96, 0.006, 0.004) : B(0.006, Lw * 0.96, 0.004), L('#4fd2ff'), 0, 0, pr.depth / 2 + 0.002); add.push(strip);
+      const cab = part(st, long ? new THREE.CylinderGeometry(0.005, 0.005, Lw * 0.9, 6) : new THREE.CylinderGeometry(0.005, 0.005, Lw * 0.9, 6), M('#1a1c22'), long ? 0 : pr.width / 2 + 0.006, long ? -pr.height / 2 - 0.006 : 0, 0); if (long) cab.rotation.z = Math.PI / 2;
+      const n = Math.max(3, Math.round(Lw / 0.1)); for (let i = 0; i < n; i++) { const v = -Lw / 2 + (i + 0.5) * Lw / n, r = part(st, B(0.008, 0.008, 0.006), rivet, 0, 0, pr.depth / 2 + 0.003); ax(r, v); if (long) r.position.y = pr.height * 0.3; else r.position.x = pr.width * 0.3;
+        if (i % 3 === 1) { const band = part(st, long ? B(0.012, pr.height + 0.012, pr.depth + 0.012) : B(pr.width + 0.012, 0.012, pr.depth + 0.012), M('#5a6070'), 0, 0, 0); ax(band, v); } } }
+    // a pine-tree air freshener hanging off the canopy spine
+    { const fr = new THREE.Group(); fr.position.set(0.28, 0.425, -0.62); g.add(fr); add.push(fr); part(fr, new THREE.CylinderGeometry(0.0012, 0.0012, 0.09, 4), M('#e8e4dc'), 0, -0.045, 0);
+      const tree = new THREE.Group(); tree.position.y = -0.09; fr.add(tree); const grn = M('#2f9a4a');
+      for (const [w, y] of [[0.05, -0.012], [0.04, -0.03], [0.03, -0.046]]) { const t = part(tree, new THREE.CircleGeometry(w / 2, 3), grn, 0, y, 0); t.rotation.z = -Math.PI / 2; }
+      part(tree, B(0.008, 0.014, 0.002), M('#6a4a2a'), 0, -0.062, 0); part(tree, B(0.026, 0.008, 0.0025), M('#ffd36a'), 0, -0.03, 0.001);
+      SCOCK.fresh = fr; }
+    for (const s of [-1, 1]) {
       // vertical glowing meters on the side panels
       for (let k = 0; k < 3; k++) { P(B(0.022, 0.16, 0.01), edge, s * (0.62 + k * 0.035), -0.33, -0.615); const bar = P(B(0.016, 0.15, 0.012), L(['#6fdc5a', '#ffd36a', '#4fd2ff'][k]), s * (0.62 + k * 0.035), -0.33, -0.612); bar.userData.meter = k + (s > 0 ? 3 : 0); }
       // toggle switch row
@@ -33,7 +45,7 @@
     const dial = (x, y, z, ry, r, col) => { const d = P(new THREE.CircleGeometry(r + 0.005, 18), plate, x, y, z); d.rotation.y = ry; const f = P(new THREE.CircleGeometry(r, 18), M('#0e1418'), x, y, z + 0.001); f.rotation.y = ry;
       const n = new THREE.Group(); n.position.set(x, y, z + 0.003); n.rotation.y = ry; g.add(n); add.push(n); part(n, B(0.002, r * 0.85, 0.001), L(col), 0, r * 0.4, 0); SCOCK.needles.push(n); };
     for (const s of [-1, 1]) { const ry = -s * 0.45;
-      for (const [yy, zz] of [[-0.08, -0.66], [0.02, -0.68]]) { const pl = P(B(0.13, 0.07, 0.008), plate, s * 0.6, yy, zz); pl.rotation.y = ry; }
+      
       for (let k = 0; k < 3; k++) dial(s * (0.71 + k * 0.0), -0.04 + k * 0.0 - k * 0.055, -0.6 + k * 0.0, ry, 0.022, ['#ff3a2a', '#6fdc5a', '#4fd2ff'][k]);
       for (let r = 0; r < 2; r++) for (let k = 0; k < 4; k++) { const b = P(B(0.018, 0.014, 0.01), L(['#ff6a3a', '#6fdc5a', '#4fd2ff', '#ffd36a'][(r + k) % 4]), s * (0.53 + k * 0.026), -0.15 - r * 0.022, -0.635); b.rotation.y = ry; b.userData.blink = r * 4 + k + (s > 0 ? 8 : 0); }
     }
@@ -54,7 +66,7 @@
     P(B(1.6, 0.012, 0.012), edge, 0, -0.215, -0.615);
     add.forEach(o => o.traverse(c => { c.renderOrder = 5; }));
     g.scale.setScalar(s0);
-    const tick = () => { if (g.visible) { const t = performance.now() / 1000; SCOCK.needles.forEach((n, i) => { n.rotation.z = -(Math.sin(t * (0.7 + i * 0.5)) * 1.4 + Math.sin(t * 3.1 + i) * 0.15); });
+    const tick = () => { if (g.visible) { const t = performance.now() / 1000; if (SCOCK.fresh) { const yv = fly && fly.vel ? fly.vel.dot(shipRight) * 0.004 : 0; SCOCK.fresh.userData.a = (SCOCK.fresh.userData.a || 0) * 0.96 + yv * 0.04; SCOCK.fresh.rotation.z = Math.sin(t * 1.9) * 0.12 + SCOCK.fresh.userData.a * 8; SCOCK.fresh.rotation.y = Math.sin(t * 0.7) * 0.6; } SCOCK.needles.forEach((n, i) => { n.rotation.z = -(Math.sin(t * (0.7 + i * 0.5)) * 1.4 + Math.sin(t * 3.1 + i) * 0.15); });
       if ((t * 2 | 0) !== SCOCK._ct) { SCOCK._ct = t * 2 | 0; SCOCK.clk(); }
       if ((t * 12 | 0) !== SCOCK._mt) { SCOCK._mt = t * 12 | 0; SCOCK.minis.forEach(m => { const x = m.x; x.fillStyle = '#041008'; x.fillRect(0, 0, 96, 64); x.strokeStyle = ['#6fdc5a', '#4fd2ff', '#ffd36a', '#ff6a3a'][m.k % 4]; x.lineWidth = 2; x.beginPath();
         if (m.k % 2) for (let i = 0; i < 96; i += 3) x.lineTo(i, 32 + Math.sin(i * 0.15 + t * 5 + m.k) * 18 * Math.sin(t + m.k)); else for (let i = 0; i < 8; i++) { const h = 10 + Math.abs(Math.sin(t * 2 + i + m.k)) * 46; x.rect(4 + i * 11, 62 - h, 8, h); }

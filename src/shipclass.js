@@ -7,7 +7,7 @@ const LASER_OPTS = LASER_COLS.map((c, i) => [c[0], [0, 0, 1500, 1500, 3000, 5000
 const SHIP_CLASSES = {
   fighter: { name: 'Setting Sun', blurb: 'Your fighter. Wingtip laser pods, and side thrusters that strafe, climb and stop on a dime.', cost: 0, stat: { sp: 0.1, laser: 0.15 }, grip: 1.3, strafe: 1, lift: true, rcs: true,
     slots: {
-      wing: ['Wings', [['Swept wings', 0, {}], ['Forward-swept', 3000, { sp: 0.04 }], ['Delta', 4000, { sp: 0.03, hull: 0.04 }], ['Quad X-wing', 7000, { laser: 0.08 }]]],
+      wing: ['Wings', [['Swept wings', 0, {}], ['Forward-swept', 3000, { sp: 0.04 }], ['Delta', 4000, { sp: 0.03, hull: 0.04 }], ['Quad X-wing', 7000, { laser: 0.08 }], ['Halo ring', 12000, { hull: 0.08, rcs: 0.1 }], ['Gull wings', 6000, { sp: 0.05 }], ['Twin blades', 9000, { sp: 0.03, laser: 0.05 }]]],
       eng: ['Engines', [['Twin thrusters', 0, {}], ['Single pulse', 3500, { sp: 0.06 }], ['Quad cluster', 6000, { sp: 0.1, hull: -0.04 }]]],
       nose: ['Nose', [['Wedge', 0, {}], ['Shark mouth', 2500, { hull: 0.04 }], ['Twin prong', 3500, { laser: 0.05 }], ['Hammerhead', 4000, { hull: 0.06 }], ['Needle lance', 4500, { sp: 0.05 }], ['Armored ram', 5000, { hull: 0.12, sp: -0.03 }], ['Split jaw', 5500, { laser: 0.08 }]]],
       lc: ['Laser color', LASER_OPTS],
@@ -15,7 +15,7 @@ const SHIP_CLASSES = {
       wpn: ['Guns', [['Laser pods', 0, {}], ['Gatling pods', 5000, { laser: 0.1 }], ['Missile racks', 6500, { laser: 0.14, sp: -0.02 }]]],
       kit: ['Body kit', [['Stock', 0, {}], ['Spoiler fins', 2000, { sp: 0.02 }], ['Side skirts', 2000, { hull: 0.04 }], ['Canards', 3000, { sp: 0.03 }]]]
     } },
-  miner: { name: 'Bulldog Miner', blurb: 'A flying hauler. Huge hull, shrugs off fire, and its blue mining lasers carve asteroids fast (but hit ships softer).', cost: 20000, stat: { hull: 0.8, sp: -0.15, laser: -0.4 }, grip: 0.8, strafe: 0.6, lift: true, mine: 2.5, ore: 1.5, armor: 0.45,
+  miner: { name: 'Bulldog Miner', blurb: 'A flying hauler. Huge hull, shrugs off fire, and its blue mining lasers carve asteroids fast (but hit ships softer).', cost: 20000, stat: { hull: 6.2, sp: -0.15, laser: -0.4 }, grip: 0.8, strafe: 0.6, lift: true, mine: 2.5, ore: 1.5, armor: 0.45,
     slots: {
       drill: ['Mining gear', [['Twin mining lasers', 0, {}], ['Big auger', 4000, { mine: 0.6 }], ['Claw arms', 3000, { ore: 0.3 }]]],
       armor: ['Armor', [['Plated', 0, {}], ['Heavy slab', 4500, { hull: 0.25, sp: -0.05 }], ['Cage frame', 3000, { hull: 0.1, sp: 0.03 }]]],
@@ -73,6 +73,33 @@ function SC_HAZ() { if (SC_HAZM) return SC_HAZM; const c = document.createElemen
 shipGunOff = side => { const G = fly && fly.ship && fly.ship.userData.guns; if (G && G.length) { const v = G[side < 0 ? 0 : G.length - 1]; return V(v.x, v.y, v.z); } return V(4.4 * side, 0, -1); };
 shipTracer = () => shipCls() === 'miner' ? '#3ff4ff' : '#4fd2ff';
 // ---------- the two ships ----------
+// extra Setting Sun wings: 4 halo ring (a short split cylinder around the hull), 5 gull wings, 6 twin blades
+function scWingX(g, W, s, m) {
+  const red = glow('#ff3a2a'), cy = glow('#4fd2ff');
+  if (W === 4) {
+    if (s > 0) { const R = 2.05, len = 1.9, gap = 0.75, t0 = Math.PI + gap / 2, tl = Math.PI * 2 - gap, ring = new THREE.Group(); ring.position.set(0, 0.2, 0.9); g.add(ring);
+      const shell = (r, mat) => { const geo = new THREE.CylinderGeometry(r, r, len, 40, 1, true, t0, tl); geo.rotateX(Math.PI / 2); const mm = typeof mat === 'string' ? toon(mat).clone() : mat.clone(); mm.side = THREE.DoubleSide; ring.add(new THREE.Mesh(geo, mm)); };
+      shell(R, m.grey); shell(R - 0.16, m.dk);
+      for (const z of [-len / 2, len / 2]) { const rim = new THREE.Mesh(new THREE.TorusGeometry(R - 0.08, 0.1, 6, 40, tl), typeof (z < 0 ? m.hull : m.lg) === 'string' ? toon(z < 0 ? m.hull : m.lg) : (z < 0 ? m.hull : m.lg)); rim.rotation.z = Math.PI / 2 + gap / 2; rim.position.z = z; ring.add(rim); }
+      const band = new THREE.Mesh(new THREE.TorusGeometry(R + 0.02, 0.035, 4, 40, tl), cy); band.rotation.z = Math.PI / 2 + gap / 2; ring.add(band);
+      // the split: two armored lips with hazard caps and red marker lights
+      for (const k of [-1, 1]) { const a = Math.PI / 2 + k * gap / 2, x = Math.cos(a) * (R - 0.08), y = Math.sin(a) * (R - 0.08); part(ring, B(0.24, 0.3, len + 0.06), m.hull, x, y, 0, 0, 0, a - Math.PI / 2); part(ring, B(0.26, 0.12, 0.5), m.haz, x, y + 0.12, -len / 2 + 0.3, 0, 0, a - Math.PI / 2); part(ring, B(0.1, 0.1, 0.1), red, x, y + 0.2, len / 2 - 0.1); }
+      for (let i = 0; i < 10; i++) { const a = Math.PI / 2 + gap / 2 + 0.25 + i * (tl - 0.5) / 9; part(ring, B(0.05, 0.05, len * 0.8), m.lg, Math.cos(a) * (R + 0.03), Math.sin(a) * (R + 0.03), 0, 0, 0, a); } }
+    // struts tie the ring to the hull
+    for (const y of [-0.35, 0.65]) { part(g, B(1.0, 0.14, 0.5), m.grey, 1.5 * s, y, 0.9, 0, 0, s * (y < 0 ? 0.3 : -0.3)); part(g, B(0.9, 0.05, 0.08), cy, 1.5 * s, y + 0.09, 0.66, 0, 0, s * (y < 0 ? 0.3 : -0.3)); }
+    return;
+  }
+  if (W === 5) { // gull: up from the hull, then down to the pods
+    const a = part(g, B(1.4, 0.18, 1.9), m.grey, 1.62 * s, 0.13, 1.0, 0, 0.35 * s, 0.42 * s); part(g, B(1.4, 0.07, 0.4), m.hull, 1.62 * s, 0.25, 0.35, 0, 0.35 * s, 0.42 * s);
+    const b = part(g, B(1.45, 0.16, 1.7), m.grey, 2.78 * s, 0.17, 0.75, 0, 0.35 * s, -0.42 * s); part(g, B(0.5, 0.06, 0.16), m.haz, 2.75 * s, 0.27, 1.55, 0, 0.35 * s, -0.42 * s);
+    part(g, B(0.3, 0.3, 0.3), m.lg, 2.22 * s, 0.42, 0.85); part(g, B(0.12, 0.12, 0.12), red, 2.22 * s, 0.6, 0.85); part(g, B(1.2, 0.03, 0.05), cy, 1.62 * s, 0.24, 1.95, 0, 0, 0.42 * s);
+    return;
+  }
+  if (W === 6) { // twin blades: two thin swept wings joined by an end plate
+    for (const [y, l] of [[-0.32, 2.3], [0.5, 1.9]]) { part(g, B(l, 0.1, 1.5), m.grey, (1.0 + l / 2) * s, y, 1.1, 0, 0.5 * s, 0); part(g, B(l, 0.05, 0.3), m.hull, (1.0 + l / 2) * s, y + 0.06, 0.55, 0, 0.5 * s, 0); part(g, B(l * 0.9, 0.02, 0.04), cy, (1.0 + l / 2) * s, y + 0.07, 1.85, 0, 0.5 * s, 0); }
+    part(g, B(0.1, 1.05, 1.2), m.grey, 3.0 * s, 0.1, 1.55); part(g, B(0.12, 0.3, 0.6), m.haz, 3.0 * s, 0.55, 1.75); part(g, B(0.08, 0.08, 0.08), red, 3.02 * s, 0.62, 1.2);
+  }
+}
 const SC_BUILD = {
   fighter(g, C, hull, acc, dk, eg) {
     // the Setting Sun: a grey wedge hull with orange trim, a white canopy, laser pods on the wingtips
@@ -101,12 +128,14 @@ const SC_BUILD = {
     for (const s of [-1, 1]) { const big = C.kit === 1 ? 1.4 : 1; const f = part(g, B(0.14, 1.0 * big, 1.2), grey, 0.55 * s, 1.25 + (big - 1) * 0.3, 2.6, -0.35, 0, -0.45 * s); part(g, B(0.16, 0.3, 0.6), haz, 0.55 * s + s * 0.28 * big, 1.75 + (big - 1) * 0.6, 2.85, -0.35, 0, -0.45 * s); }
     for (const s of [-1, 1]) {
       // wings
-      const ws = C.wing === 1 ? -0.35 : C.wing === 2 ? 0.7 : 0.4, wl = C.wing === 2 ? 2.4 : 2.2;
+      const ws = C.wing === 1 ? -0.35 : C.wing === 2 ? 0.7 : 0.4, wl = C.wing === 2 || C.wing === 5 ? 2.4 : C.wing === 4 ? 1.1 : 2.2;
+      if ((C.wing | 0) < 4) {
       const w = part(g, B(wl, 0.2, 2.0), grey, (1.0 + wl / 2) * s, -0.15, 1.0, 0, ws * s, 0); part(g, B(wl, 0.08, 0.4), hull, (1.0 + wl / 2) * s, -0.02, 0.2 + (C.wing === 1 ? -0.3 : 0.3), 0, ws * s, 0);
       part(g, B(0.4, 0.06, 0.15), haz, 2.4 * s, -0.02, 1.9); part(g, B(0.35, 0.18, 0.5), lg, 1.7 * s, 0.03, 0.7); part(g, B(0.12, 0.12, 0.12), glow('#ff3a2a'), 1.55 * s, 0.1, 0.45); part(g, B(0.12, 0.12, 0.12), glow('#ff3a2a'), 1.72 * s, 0.1, 0.45);
       if (C.wing === 3) { const w2 = part(g, B(2.2, 0.16, 1.6), grey, 2.1 * s, 0.5, 1.2, 0, 0.3 * s, 0.35 * s); }
+      } else scWingX(g, C.wing, s, { grey, hull, lg, haz, dk });
       // wingtip pods: orange barrels, grey collars, glowing cyan laser faces
-      const px = (1.0 + wl) * s + (C.wing === 2 ? 0 : 0.1 * s), pz = C.wing === 1 ? 0.6 : 0.2;
+      const px = C.wing === 4 ? 2.45 * s : (1.0 + wl) * s + (C.wing === 2 || C.wing === 5 ? 0 : 0.1 * s), pz = C.wing === 1 ? 0.6 : C.wing === 4 ? 0.9 : 0.2, py = C.wing === 5 ? -0.55 : 0;
       part(g, B(0.75, 0.7, 2.4), hull, px, -0.1, pz); for (const z of [pz - 0.6, pz + 0.7]) part(g, B(0.8, 0.75, 0.15), lg, px, -0.1, z); part(g, B(0.4, 0.15, 0.6), lg, px, 0.3, pz + 0.2); part(g, B(0.22, 0.22, 0.06), lg, px + 0.39 * s, -0.1, pz + 0.3);
       part(g, B(0.6, 0.55, 0.5), lg, px, -0.1, pz - 1.45);
       if (C.wpn === 1) for (let k = 0; k < 4; k++) part(g, Cy(0.05, 0.05, 0.8, 4), lg, px + Math.cos(k * 1.57) * 0.13, -0.1 + Math.sin(k * 1.57) * 0.13, pz - 2.0, Math.PI / 2);

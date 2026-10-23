@@ -7,9 +7,9 @@ function scockBuild() {
   const g = new THREE.Group(), M = h => new THREE.MeshBasicMaterial({ color: new THREE.Color(h).convertSRGBToLinear(), fog: false }), L = h => new THREE.MeshBasicMaterial({ color: new THREE.Color(h), fog: false });
   const hull = M('#2a2f3a'), dark = M('#14171d'), panel = M('#1d2129'), metal = M('#5a6070'), trim = M('#3a404c');
   // canopy: a heavy frame with a center spine and angled struts
-  part(g, B(1.7, 0.06, 0.12), hull, 0, 0.44, -0.62);
-  for (const s of [-1, 1]) { const a = part(g, B(0.07, 0.9, 0.08), hull, s * 0.8, 0.05, -0.62); a.rotation.z = s * 0.5; a.rotation.x = -0.2; const b = part(g, B(0.04, 0.6, 0.05), trim, s * 0.42, 0.42, -0.9); b.rotation.z = s * 1.05; b.rotation.x = -0.5;
-    part(g, B(0.3, 0.5, 0.9), panel, s * 0.86, -0.32, -0.45); }
+  SCOCK.struts = [part(g, B(1.7, 0.03, 0.06), hull, 0, 0.44, -0.62)];
+  for (const s of [-1, 1]) { const a = part(g, B(0.036, 0.9, 0.045), hull, s * 0.8, 0.05, -0.62); SCOCK.struts.push(a); a.rotation.z = s * 0.5; a.rotation.x = -0.2; const b = part(g, B(0.022, 0.6, 0.03), trim, s * 0.42, 0.42, -0.9); SCOCK.struts.push(b); b.rotation.z = s * 1.05; b.rotation.x = -0.5;
+    }
   // the dash: a wide console, three screens and switch rows
   const top = part(g, B(1.6, 0.04, 0.14), dark, 0, -0.205, -0.7); top.rotation.x = 0.15;
   part(g, B(1.6, 0.3, 0.05), panel, 0, -0.36, -0.645);

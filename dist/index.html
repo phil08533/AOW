@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.68</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.69</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18992,6 +18992,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 234, title: '2.22.69 · New wings and a cleaner cockpit', items: ['Three new Setting Sun wings: the Halo ring (a short cylinder around the hull, split at the top), Gull wings and Twin blades.', 'Cockpit: the blank grey boxes are gone, and the canopy struts are thinner, with lit strips, rivets, cables and clamp bands.', 'A pine tree air freshener now swings from the canopy.', 'The Bulldog Miner has four times the hull, and its auto aim locks onto asteroids from much wider.'] },
   { id: 233, title: '2.22.68 · Boss intros, world intros and the Tower of Death', items: ['Every big boss gets a short intro cutscene the first time you see it, with its name and a line or two.', 'Landing on a world for the first time plays a short flyover with what the place is about. Replay them from the Codex.', 'The Tower of Death lights up at night: red and amber windows, four sweeping searchlights on the roof and a pulsing red beacon.', 'Story scenes: Skip in Settings skips all of these.'] },
   { id: 232, title: '2.22.67 · Story fixes', items: ['The bounty hunter is now Kade, so he no longer shares a name with Admiral Sable in Chapter 5.', 'Tower of Death no longer ends with "Chapter 5 is being written". Ada warns you about the price on your head instead.'] },
   { id: 231, title: '2.22.66 · Kade, the bounty hunter', items: ['Kade, a crystal-headed bounty hunter, comes for you between Chapter 4 and Chapter 5. Ada has the lead: Price on Your Head.', 'A cutscene in the Arena Prime ring, then a boss fight. He blinks around the ring and throws a device that fills the floor with lasers. Jetpack up to dodge them.', 'Beat him and he invites you aboard the Glass Wake, a stolen Drome ship he repainted, and teaches you to cook.', 'The Lab can only be built after Kade shows you how. Anyone who already owns one keeps it.'] },
@@ -21248,9 +21249,9 @@ function scockBuild() {
   const g = new THREE.Group(), M = h => new THREE.MeshBasicMaterial({ color: new THREE.Color(h).convertSRGBToLinear(), fog: false }), L = h => new THREE.MeshBasicMaterial({ color: new THREE.Color(h), fog: false });
   const hull = M('#2a2f3a'), dark = M('#14171d'), panel = M('#1d2129'), metal = M('#5a6070'), trim = M('#3a404c');
   // canopy: a heavy frame with a center spine and angled struts
-  part(g, B(1.7, 0.06, 0.12), hull, 0, 0.44, -0.62);
-  for (const s of [-1, 1]) { const a = part(g, B(0.07, 0.9, 0.08), hull, s * 0.8, 0.05, -0.62); a.rotation.z = s * 0.5; a.rotation.x = -0.2; const b = part(g, B(0.04, 0.6, 0.05), trim, s * 0.42, 0.42, -0.9); b.rotation.z = s * 1.05; b.rotation.x = -0.5;
-    part(g, B(0.3, 0.5, 0.9), panel, s * 0.86, -0.32, -0.45); }
+  SCOCK.struts = [part(g, B(1.7, 0.03, 0.06), hull, 0, 0.44, -0.62)];
+  for (const s of [-1, 1]) { const a = part(g, B(0.036, 0.9, 0.045), hull, s * 0.8, 0.05, -0.62); SCOCK.struts.push(a); a.rotation.z = s * 0.5; a.rotation.x = -0.2; const b = part(g, B(0.022, 0.6, 0.03), trim, s * 0.42, 0.42, -0.9); SCOCK.struts.push(b); b.rotation.z = s * 1.05; b.rotation.x = -0.5;
+    }
   // the dash: a wide console, three screens and switch rows
   const top = part(g, B(1.6, 0.04, 0.14), dark, 0, -0.205, -0.7); top.rotation.x = 0.15;
   part(g, B(1.6, 0.3, 0.05), panel, 0, -0.36, -0.645);
@@ -26647,7 +26648,19 @@ setInterval(() => { try { if (state === 'play' && !LEVEL.fly && !handMelee() && 
     const P = (geo, m, x, y, z) => { const o = part(g, geo, m, x, y, z); add.push(o); return o; };
     // riveted canopy bar and corner plates
     for (let i = -7; i <= 7; i++) P(B(0.012, 0.012, 0.01), rivet, i * 0.11, -0.228, -0.61);
-    for (const s of [-1, 1]) { const c = P(B(0.22, 0.16, 0.02), plate, s * 0.78, 0.12, -0.6); c.rotation.z = s * 0.5; for (const [dx, dy] of [[-0.08, 0.05], [0.08, 0.05], [-0.08, -0.05], [0.08, -0.05]]) { const r = part(c, B(0.012, 0.012, 0.01), rivet, dx, dy, 0.012); }
+    // thin canopy struts, dressed: a lit inner strip, rivets, a cable run and clamp bands
+    for (const st of SCOCK.struts || []) { const pr = st.geometry.parameters, long = pr.width > pr.height, Lw = long ? pr.width : pr.height, ax = (o, v) => long ? o.position.setX(v) : o.position.setY(v);
+      const strip = part(st, long ? B(Lw * 0.96, 0.006, 0.004) : B(0.006, Lw * 0.96, 0.004), L('#4fd2ff'), 0, 0, pr.depth / 2 + 0.002); add.push(strip);
+      const cab = part(st, long ? new THREE.CylinderGeometry(0.005, 0.005, Lw * 0.9, 6) : new THREE.CylinderGeometry(0.005, 0.005, Lw * 0.9, 6), M('#1a1c22'), long ? 0 : pr.width / 2 + 0.006, long ? -pr.height / 2 - 0.006 : 0, 0); if (long) cab.rotation.z = Math.PI / 2;
+      const n = Math.max(3, Math.round(Lw / 0.1)); for (let i = 0; i < n; i++) { const v = -Lw / 2 + (i + 0.5) * Lw / n, r = part(st, B(0.008, 0.008, 0.006), rivet, 0, 0, pr.depth / 2 + 0.003); ax(r, v); if (long) r.position.y = pr.height * 0.3; else r.position.x = pr.width * 0.3;
+        if (i % 3 === 1) { const band = part(st, long ? B(0.012, pr.height + 0.012, pr.depth + 0.012) : B(pr.width + 0.012, 0.012, pr.depth + 0.012), M('#5a6070'), 0, 0, 0); ax(band, v); } } }
+    // a pine-tree air freshener hanging off the canopy spine
+    { const fr = new THREE.Group(); fr.position.set(0.28, 0.425, -0.62); g.add(fr); add.push(fr); part(fr, new THREE.CylinderGeometry(0.0012, 0.0012, 0.09, 4), M('#e8e4dc'), 0, -0.045, 0);
+      const tree = new THREE.Group(); tree.position.y = -0.09; fr.add(tree); const grn = M('#2f9a4a');
+      for (const [w, y] of [[0.05, -0.012], [0.04, -0.03], [0.03, -0.046]]) { const t = part(tree, new THREE.CircleGeometry(w / 2, 3), grn, 0, y, 0); t.rotation.z = -Math.PI / 2; }
+      part(tree, B(0.008, 0.014, 0.002), M('#6a4a2a'), 0, -0.062, 0); part(tree, B(0.026, 0.008, 0.0025), M('#ffd36a'), 0, -0.03, 0.001);
+      SCOCK.fresh = fr; }
+    for (const s of [-1, 1]) {
       // vertical glowing meters on the side panels
       for (let k = 0; k < 3; k++) { P(B(0.022, 0.16, 0.01), edge, s * (0.62 + k * 0.035), -0.33, -0.615); const bar = P(B(0.016, 0.15, 0.012), L(['#6fdc5a', '#ffd36a', '#4fd2ff'][k]), s * (0.62 + k * 0.035), -0.33, -0.612); bar.userData.meter = k + (s > 0 ? 3 : 0); }
       // toggle switch row
@@ -26666,7 +26679,7 @@ setInterval(() => { try { if (state === 'play' && !LEVEL.fly && !handMelee() && 
     const dial = (x, y, z, ry, r, col) => { const d = P(new THREE.CircleGeometry(r + 0.005, 18), plate, x, y, z); d.rotation.y = ry; const f = P(new THREE.CircleGeometry(r, 18), M('#0e1418'), x, y, z + 0.001); f.rotation.y = ry;
       const n = new THREE.Group(); n.position.set(x, y, z + 0.003); n.rotation.y = ry; g.add(n); add.push(n); part(n, B(0.002, r * 0.85, 0.001), L(col), 0, r * 0.4, 0); SCOCK.needles.push(n); };
     for (const s of [-1, 1]) { const ry = -s * 0.45;
-      for (const [yy, zz] of [[-0.08, -0.66], [0.02, -0.68]]) { const pl = P(B(0.13, 0.07, 0.008), plate, s * 0.6, yy, zz); pl.rotation.y = ry; }
+      
       for (let k = 0; k < 3; k++) dial(s * (0.71 + k * 0.0), -0.04 + k * 0.0 - k * 0.055, -0.6 + k * 0.0, ry, 0.022, ['#ff3a2a', '#6fdc5a', '#4fd2ff'][k]);
       for (let r = 0; r < 2; r++) for (let k = 0; k < 4; k++) { const b = P(B(0.018, 0.014, 0.01), L(['#ff6a3a', '#6fdc5a', '#4fd2ff', '#ffd36a'][(r + k) % 4]), s * (0.53 + k * 0.026), -0.15 - r * 0.022, -0.635); b.rotation.y = ry; b.userData.blink = r * 4 + k + (s > 0 ? 8 : 0); }
     }
@@ -26687,7 +26700,7 @@ setInterval(() => { try { if (state === 'play' && !LEVEL.fly && !handMelee() && 
     P(B(1.6, 0.012, 0.012), edge, 0, -0.215, -0.615);
     add.forEach(o => o.traverse(c => { c.renderOrder = 5; }));
     g.scale.setScalar(s0);
-    const tick = () => { if (g.visible) { const t = performance.now() / 1000; SCOCK.needles.forEach((n, i) => { n.rotation.z = -(Math.sin(t * (0.7 + i * 0.5)) * 1.4 + Math.sin(t * 3.1 + i) * 0.15); });
+    const tick = () => { if (g.visible) { const t = performance.now() / 1000; if (SCOCK.fresh) { const yv = fly && fly.vel ? fly.vel.dot(shipRight) * 0.004 : 0; SCOCK.fresh.userData.a = (SCOCK.fresh.userData.a || 0) * 0.96 + yv * 0.04; SCOCK.fresh.rotation.z = Math.sin(t * 1.9) * 0.12 + SCOCK.fresh.userData.a * 8; SCOCK.fresh.rotation.y = Math.sin(t * 0.7) * 0.6; } SCOCK.needles.forEach((n, i) => { n.rotation.z = -(Math.sin(t * (0.7 + i * 0.5)) * 1.4 + Math.sin(t * 3.1 + i) * 0.15); });
       if ((t * 2 | 0) !== SCOCK._ct) { SCOCK._ct = t * 2 | 0; SCOCK.clk(); }
       if ((t * 12 | 0) !== SCOCK._mt) { SCOCK._mt = t * 12 | 0; SCOCK.minis.forEach(m => { const x = m.x; x.fillStyle = '#041008'; x.fillRect(0, 0, 96, 64); x.strokeStyle = ['#6fdc5a', '#4fd2ff', '#ffd36a', '#ff6a3a'][m.k % 4]; x.lineWidth = 2; x.beginPath();
         if (m.k % 2) for (let i = 0; i < 96; i += 3) x.lineTo(i, 32 + Math.sin(i * 0.15 + t * 5 + m.k) * 18 * Math.sin(t + m.k)); else for (let i = 0; i < 8; i++) { const h = 10 + Math.abs(Math.sin(t * 2 + i + m.k)) * 46; x.rect(4 + i * 11, 62 - h, 8, h); }
@@ -26709,7 +26722,7 @@ const LASER_OPTS = LASER_COLS.map((c, i) => [c[0], [0, 0, 1500, 1500, 3000, 5000
 const SHIP_CLASSES = {
   fighter: { name: 'Setting Sun', blurb: 'Your fighter. Wingtip laser pods, and side thrusters that strafe, climb and stop on a dime.', cost: 0, stat: { sp: 0.1, laser: 0.15 }, grip: 1.3, strafe: 1, lift: true, rcs: true,
     slots: {
-      wing: ['Wings', [['Swept wings', 0, {}], ['Forward-swept', 3000, { sp: 0.04 }], ['Delta', 4000, { sp: 0.03, hull: 0.04 }], ['Quad X-wing', 7000, { laser: 0.08 }]]],
+      wing: ['Wings', [['Swept wings', 0, {}], ['Forward-swept', 3000, { sp: 0.04 }], ['Delta', 4000, { sp: 0.03, hull: 0.04 }], ['Quad X-wing', 7000, { laser: 0.08 }], ['Halo ring', 12000, { hull: 0.08, rcs: 0.1 }], ['Gull wings', 6000, { sp: 0.05 }], ['Twin blades', 9000, { sp: 0.03, laser: 0.05 }]]],
       eng: ['Engines', [['Twin thrusters', 0, {}], ['Single pulse', 3500, { sp: 0.06 }], ['Quad cluster', 6000, { sp: 0.1, hull: -0.04 }]]],
       nose: ['Nose', [['Wedge', 0, {}], ['Shark mouth', 2500, { hull: 0.04 }], ['Twin prong', 3500, { laser: 0.05 }], ['Hammerhead', 4000, { hull: 0.06 }], ['Needle lance', 4500, { sp: 0.05 }], ['Armored ram', 5000, { hull: 0.12, sp: -0.03 }], ['Split jaw', 5500, { laser: 0.08 }]]],
       lc: ['Laser color', LASER_OPTS],
@@ -26717,7 +26730,7 @@ const SHIP_CLASSES = {
       wpn: ['Guns', [['Laser pods', 0, {}], ['Gatling pods', 5000, { laser: 0.1 }], ['Missile racks', 6500, { laser: 0.14, sp: -0.02 }]]],
       kit: ['Body kit', [['Stock', 0, {}], ['Spoiler fins', 2000, { sp: 0.02 }], ['Side skirts', 2000, { hull: 0.04 }], ['Canards', 3000, { sp: 0.03 }]]]
     } },
-  miner: { name: 'Bulldog Miner', blurb: 'A flying hauler. Huge hull, shrugs off fire, and its blue mining lasers carve asteroids fast (but hit ships softer).', cost: 20000, stat: { hull: 0.8, sp: -0.15, laser: -0.4 }, grip: 0.8, strafe: 0.6, lift: true, mine: 2.5, ore: 1.5, armor: 0.45,
+  miner: { name: 'Bulldog Miner', blurb: 'A flying hauler. Huge hull, shrugs off fire, and its blue mining lasers carve asteroids fast (but hit ships softer).', cost: 20000, stat: { hull: 6.2, sp: -0.15, laser: -0.4 }, grip: 0.8, strafe: 0.6, lift: true, mine: 2.5, ore: 1.5, armor: 0.45,
     slots: {
       drill: ['Mining gear', [['Twin mining lasers', 0, {}], ['Big auger', 4000, { mine: 0.6 }], ['Claw arms', 3000, { ore: 0.3 }]]],
       armor: ['Armor', [['Plated', 0, {}], ['Heavy slab', 4500, { hull: 0.25, sp: -0.05 }], ['Cage frame', 3000, { hull: 0.1, sp: 0.03 }]]],
@@ -26775,6 +26788,33 @@ function SC_HAZ() { if (SC_HAZM) return SC_HAZM; const c = document.createElemen
 shipGunOff = side => { const G = fly && fly.ship && fly.ship.userData.guns; if (G && G.length) { const v = G[side < 0 ? 0 : G.length - 1]; return V(v.x, v.y, v.z); } return V(4.4 * side, 0, -1); };
 shipTracer = () => shipCls() === 'miner' ? '#3ff4ff' : '#4fd2ff';
 // ---------- the two ships ----------
+// extra Setting Sun wings: 4 halo ring (a short split cylinder around the hull), 5 gull wings, 6 twin blades
+function scWingX(g, W, s, m) {
+  const red = glow('#ff3a2a'), cy = glow('#4fd2ff');
+  if (W === 4) {
+    if (s > 0) { const R = 2.05, len = 1.9, gap = 0.75, t0 = Math.PI + gap / 2, tl = Math.PI * 2 - gap, ring = new THREE.Group(); ring.position.set(0, 0.2, 0.9); g.add(ring);
+      const shell = (r, mat) => { const geo = new THREE.CylinderGeometry(r, r, len, 40, 1, true, t0, tl); geo.rotateX(Math.PI / 2); const mm = typeof mat === 'string' ? toon(mat).clone() : mat.clone(); mm.side = THREE.DoubleSide; ring.add(new THREE.Mesh(geo, mm)); };
+      shell(R, m.grey); shell(R - 0.16, m.dk);
+      for (const z of [-len / 2, len / 2]) { const rim = new THREE.Mesh(new THREE.TorusGeometry(R - 0.08, 0.1, 6, 40, tl), typeof (z < 0 ? m.hull : m.lg) === 'string' ? toon(z < 0 ? m.hull : m.lg) : (z < 0 ? m.hull : m.lg)); rim.rotation.z = Math.PI / 2 + gap / 2; rim.position.z = z; ring.add(rim); }
+      const band = new THREE.Mesh(new THREE.TorusGeometry(R + 0.02, 0.035, 4, 40, tl), cy); band.rotation.z = Math.PI / 2 + gap / 2; ring.add(band);
+      // the split: two armored lips with hazard caps and red marker lights
+      for (const k of [-1, 1]) { const a = Math.PI / 2 + k * gap / 2, x = Math.cos(a) * (R - 0.08), y = Math.sin(a) * (R - 0.08); part(ring, B(0.24, 0.3, len + 0.06), m.hull, x, y, 0, 0, 0, a - Math.PI / 2); part(ring, B(0.26, 0.12, 0.5), m.haz, x, y + 0.12, -len / 2 + 0.3, 0, 0, a - Math.PI / 2); part(ring, B(0.1, 0.1, 0.1), red, x, y + 0.2, len / 2 - 0.1); }
+      for (let i = 0; i < 10; i++) { const a = Math.PI / 2 + gap / 2 + 0.25 + i * (tl - 0.5) / 9; part(ring, B(0.05, 0.05, len * 0.8), m.lg, Math.cos(a) * (R + 0.03), Math.sin(a) * (R + 0.03), 0, 0, 0, a); } }
+    // struts tie the ring to the hull
+    for (const y of [-0.35, 0.65]) { part(g, B(1.0, 0.14, 0.5), m.grey, 1.5 * s, y, 0.9, 0, 0, s * (y < 0 ? 0.3 : -0.3)); part(g, B(0.9, 0.05, 0.08), cy, 1.5 * s, y + 0.09, 0.66, 0, 0, s * (y < 0 ? 0.3 : -0.3)); }
+    return;
+  }
+  if (W === 5) { // gull: up from the hull, then down to the pods
+    const a = part(g, B(1.4, 0.18, 1.9), m.grey, 1.62 * s, 0.13, 1.0, 0, 0.35 * s, 0.42 * s); part(g, B(1.4, 0.07, 0.4), m.hull, 1.62 * s, 0.25, 0.35, 0, 0.35 * s, 0.42 * s);
+    const b = part(g, B(1.45, 0.16, 1.7), m.grey, 2.78 * s, 0.17, 0.75, 0, 0.35 * s, -0.42 * s); part(g, B(0.5, 0.06, 0.16), m.haz, 2.75 * s, 0.27, 1.55, 0, 0.35 * s, -0.42 * s);
+    part(g, B(0.3, 0.3, 0.3), m.lg, 2.22 * s, 0.42, 0.85); part(g, B(0.12, 0.12, 0.12), red, 2.22 * s, 0.6, 0.85); part(g, B(1.2, 0.03, 0.05), cy, 1.62 * s, 0.24, 1.95, 0, 0, 0.42 * s);
+    return;
+  }
+  if (W === 6) { // twin blades: two thin swept wings joined by an end plate
+    for (const [y, l] of [[-0.32, 2.3], [0.5, 1.9]]) { part(g, B(l, 0.1, 1.5), m.grey, (1.0 + l / 2) * s, y, 1.1, 0, 0.5 * s, 0); part(g, B(l, 0.05, 0.3), m.hull, (1.0 + l / 2) * s, y + 0.06, 0.55, 0, 0.5 * s, 0); part(g, B(l * 0.9, 0.02, 0.04), cy, (1.0 + l / 2) * s, y + 0.07, 1.85, 0, 0.5 * s, 0); }
+    part(g, B(0.1, 1.05, 1.2), m.grey, 3.0 * s, 0.1, 1.55); part(g, B(0.12, 0.3, 0.6), m.haz, 3.0 * s, 0.55, 1.75); part(g, B(0.08, 0.08, 0.08), red, 3.02 * s, 0.62, 1.2);
+  }
+}
 const SC_BUILD = {
   fighter(g, C, hull, acc, dk, eg) {
     // the Setting Sun: a grey wedge hull with orange trim, a white canopy, laser pods on the wingtips
@@ -26803,12 +26843,14 @@ const SC_BUILD = {
     for (const s of [-1, 1]) { const big = C.kit === 1 ? 1.4 : 1; const f = part(g, B(0.14, 1.0 * big, 1.2), grey, 0.55 * s, 1.25 + (big - 1) * 0.3, 2.6, -0.35, 0, -0.45 * s); part(g, B(0.16, 0.3, 0.6), haz, 0.55 * s + s * 0.28 * big, 1.75 + (big - 1) * 0.6, 2.85, -0.35, 0, -0.45 * s); }
     for (const s of [-1, 1]) {
       // wings
-      const ws = C.wing === 1 ? -0.35 : C.wing === 2 ? 0.7 : 0.4, wl = C.wing === 2 ? 2.4 : 2.2;
+      const ws = C.wing === 1 ? -0.35 : C.wing === 2 ? 0.7 : 0.4, wl = C.wing === 2 || C.wing === 5 ? 2.4 : C.wing === 4 ? 1.1 : 2.2;
+      if ((C.wing | 0) < 4) {
       const w = part(g, B(wl, 0.2, 2.0), grey, (1.0 + wl / 2) * s, -0.15, 1.0, 0, ws * s, 0); part(g, B(wl, 0.08, 0.4), hull, (1.0 + wl / 2) * s, -0.02, 0.2 + (C.wing === 1 ? -0.3 : 0.3), 0, ws * s, 0);
       part(g, B(0.4, 0.06, 0.15), haz, 2.4 * s, -0.02, 1.9); part(g, B(0.35, 0.18, 0.5), lg, 1.7 * s, 0.03, 0.7); part(g, B(0.12, 0.12, 0.12), glow('#ff3a2a'), 1.55 * s, 0.1, 0.45); part(g, B(0.12, 0.12, 0.12), glow('#ff3a2a'), 1.72 * s, 0.1, 0.45);
       if (C.wing === 3) { const w2 = part(g, B(2.2, 0.16, 1.6), grey, 2.1 * s, 0.5, 1.2, 0, 0.3 * s, 0.35 * s); }
+      } else scWingX(g, C.wing, s, { grey, hull, lg, haz, dk });
       // wingtip pods: orange barrels, grey collars, glowing cyan laser faces
-      const px = (1.0 + wl) * s + (C.wing === 2 ? 0 : 0.1 * s), pz = C.wing === 1 ? 0.6 : 0.2;
+      const px = C.wing === 4 ? 2.45 * s : (1.0 + wl) * s + (C.wing === 2 || C.wing === 5 ? 0 : 0.1 * s), pz = C.wing === 1 ? 0.6 : C.wing === 4 ? 0.9 : 0.2, py = C.wing === 5 ? -0.55 : 0;
       part(g, B(0.75, 0.7, 2.4), hull, px, -0.1, pz); for (const z of [pz - 0.6, pz + 0.7]) part(g, B(0.8, 0.75, 0.15), lg, px, -0.1, z); part(g, B(0.4, 0.15, 0.6), lg, px, 0.3, pz + 0.2); part(g, B(0.22, 0.22, 0.06), lg, px + 0.39 * s, -0.1, pz + 0.3);
       part(g, B(0.6, 0.55, 0.5), lg, px, -0.1, pz - 1.45);
       if (C.wpn === 1) for (let k = 0; k < 4; k++) part(g, Cy(0.05, 0.05, 0.8, 4), lg, px + Math.cos(k * 1.57) * 0.13, -0.1 + Math.sin(k * 1.57) * 0.13, pz - 2.0, Math.PI / 2);
@@ -27160,9 +27202,11 @@ const laserCol = () => { const C = scS().cfg[shipCls()]; return LASER_COLS[(C &&
 const boltSpeed = () => [260, 380, 560][(scS().cfg.fighter.bolt) | 0] || 260;
 // aim assist: lock onto whatever is near your crosshair. Settings can turn it off
 function shipAimFocus(F) {
-  let focus = player.pos.clone().addScaledVector(shipFwd, 160), bestA = PREFS.shipAim === false ? -1 : 0.1;
+  let focus = player.pos.clone().addScaledVector(shipFwd, 160), mn = shipCls() === 'miner', bestA = PREFS.shipAim === false ? -1 : mn ? 0.32 : 0.1;
   for (const r of F.raiders) { if (r.dead) continue; const to = r.obj.position.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = r.obj.position.clone(); } }
   for (const X of F.extra || []) { if (X.dead) continue; const p = X.pos(), to = p.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = p; } }
+  // the miner also locks onto asteroids, so the beams stay on the rock you're carving
+  if (mn && bestA > 0) for (const R of F.rockData) { if (R.dead) continue; const to = R.p.clone().sub(player.pos), d = to.length() - R.s; if (d > 300) continue; const a = to.normalize().angleTo(shipFwd) - Math.min(0.2, R.s / Math.max(30, d) * 0.5); if (a < bestA) { bestA = a; focus = R.p.clone(); } }
   return focus;
 }
 function shipMuzzle(side) { const go = shipGunOff(side); return player.pos.clone().addScaledVector(shipRight, go.x).addScaledVector(V(0, 1, 0).applyQuaternion(_q), go.y).addScaledVector(shipFwd, -go.z); }

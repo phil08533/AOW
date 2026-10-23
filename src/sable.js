@@ -155,3 +155,6 @@ function bhStep(dt) {
   }
 }
 { const _b = LEVELS.arena.build; LEVELS.arena.build = function () { const r = _b.apply(this, arguments); BH.fight = null; let last = null; levelAnims.push(t => { const dt = last == null ? 0 : Math.min(0.1, t - last); last = t; try { bhStep(dt); } catch (err) { console.warn('sable', err); } }); return r; }; }
+// Dead Air picks up straight after Kade (the bh1 outro already sends you on), instead of waiting on a trip back to Ada-9
+{ const _cq = completeQuest; completeQuest = function (id) { const r = _cq.apply(this, arguments); if (id === 'bh1' && !S.qst.d1 && qAvailable('d1')) setTimeout(() => { if (!S.qst.d1 && qAvailable('d1')) { startQuest('d1'); } }, 600); return r; }; }
+setTimeout(() => { try { if (!S.qst.d1 && qAvailable('d1')) startQuest('d1', true); } catch (_) {} }, 3200);

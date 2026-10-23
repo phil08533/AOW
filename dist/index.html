@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.97</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.98</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -5254,16 +5254,16 @@ function openQuestLog() {
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   const render = () => {
     rows.textContent = '';
-    const act = QORDER.filter(id => S.qst[id] && S.qst[id].st !== 'done'), avail = QORDER.filter(qAvailable), done = QORDER.filter(qDone).length;
+    const mainFirst = a => a.filter(id => QDEFS[id].main).concat(a.filter(id => !QDEFS[id].main)); const act = mainFirst(QORDER.filter(id => S.qst[id] && S.qst[id].st !== 'done')), avail = mainFirst(QORDER.filter(qAvailable)), done = QORDER.filter(qDone).length;
     $('dlgLine').textContent = `${act.length} in progress · ${done} done. Tracked quest shows on screen and on the compass.`;
     const row = (id, meta, btn) => { const q = QDEFS[id], r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = q.main ? '#ffd75e' : '#8fe3ff';
-      const nm = document.createElement('span'); nm.textContent = `${q.title} · ${q.ch}`;
+      const nm = document.createElement('span'); nm.textContent = `${q.main ? '★ MAIN · ' : ''}${q.title} · ${q.ch}`;
       const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = meta;
       r.append(dot, nm, mt); if (btn) r.appendChild(btn); else r.appendChild(document.createElement('span')); rows.appendChild(r); };
     if (S.bh && S.bh.active) { const a = S.bh.active, b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = S.track === 'bounty' ? 'Tracked' : 'Track'; b.disabled = S.track === 'bounty'; b.addEventListener('click', () => { S.track = 'bounty'; markDirty(); renderQuest(); render(); }); const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = '#ffd36a'; const nm = document.createElement('span'); nm.textContent = `BOUNTY: ${a.name} · ${a.planet === 'space' ? 'Open space' : LEVELS[a.planet].name}`; const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = a.reward + ' cr'; r.append(dot, nm, mt, b); rows.appendChild(r); }
     act.forEach(id => { const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; const tr = trackedQuest() === id; b.textContent = tr ? 'Tracked' : 'Track'; b.disabled = tr; b.addEventListener('click', () => { S.track = id; markDirty(); renderQuest(); render(); }); row(id, S.qst[id].st === 'ready' ? 'Turn in' : 'Active', b); });
-    avail.forEach(id => row(id, 'See ' + npcName(QDEFS[id].giver)));
+    avail.forEach(id => { const lv = npcHome(QDEFS[id].giver); row(id, 'See ' + npcName(QDEFS[id].giver) + (lv ? ` (${LEVELS[lv].name})` : '')); });
     if (!act.length && !avail.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'No open quests. Look for people with a ! over their heads, or explore.'; rows.appendChild(e); }
     if ((S.gear || []).length) { const g = document.createElement('div'); g.className = 'empty'; g.textContent = 'Master gear: ' + S.gear.map(k => `${GEAR[k].name} (${GEAR[k].desc})`).join(' · '); rows.appendChild(g); }
   };
@@ -19013,6 +19013,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 263, title: '2.22.98 · Main story in the journal', items: ['Main story quests are listed first in the journal, marked ★ MAIN, with where to find the quest giver', 'Dead Air (Chapter 5) starts right after Kade, so the main story never goes missing'] },
   { id: 262, title: '2.22.97 · Fixes from playtest', items: ['The Long Arm starts as soon as Robot City is freed and points you straight to Marshal Rook on the Zeltac', 'Kade\'s ship is no longer swallowed by fog in the cutscene', 'Arena Prime intro stays over the arena instead of showing the edge of the world', 'The betting bar only shows when you are at the Betting Pit', 'The crowd cheers during fights in the big ring', 'Galaxy map labels no longer cover each other, and Earth Sky sits beside Earth', 'The Marshal armory list no longer sticks around in other menus'] },
   { id: 261, title: '2.22.96 · Quest tracker', items: ['Quests you have not picked up yet now say which world the quest giver is on (like Ada-9 in Robot City)'] },
   { id: 260, title: '2.22.95 · Intro and Undercroft fixes', items: ['World intro flyovers no longer show striped floors', 'The Zeltac intro now flies through the plaza instead of showing the ship as a box in space', 'The Undercroft tip jar sits on the stage instead of floating in front of Vixen'] },
@@ -27467,6 +27468,9 @@ function bhStep(dt) {
   }
 }
 { const _b = LEVELS.arena.build; LEVELS.arena.build = function () { const r = _b.apply(this, arguments); BH.fight = null; let last = null; levelAnims.push(t => { const dt = last == null ? 0 : Math.min(0.1, t - last); last = t; try { bhStep(dt); } catch (err) { console.warn('sable', err); } }); return r; }; }
+// Dead Air picks up straight after Kade (the bh1 outro already sends you on), instead of waiting on a trip back to Ada-9
+{ const _cq = completeQuest; completeQuest = function (id) { const r = _cq.apply(this, arguments); if (id === 'bh1' && !S.qst.d1 && qAvailable('d1')) setTimeout(() => { if (!S.qst.d1 && qAvailable('d1')) { startQuest('d1'); } }, 600); return r; }; }
+setTimeout(() => { try { if (!S.qst.d1 && qAvailable('d1')) startQuest('d1', true); } catch (_) {} }, 3200);
 
 // =================== STORY CUTS: boss intros, first-landing intros for each world, and a lit-up Tower of Death ===================
 // Save: S.flags['bi_<enemy type>'] once a boss intro has played, S.flags['wi_<level id>'] once a world intro has played.

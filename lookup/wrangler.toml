@@ -1,0 +1,8 @@
+name = "glopdrop-lookup"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "glopdrop"
+database_id = "REPLACE_WITH_D1_ID"

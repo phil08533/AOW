@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.79</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.80</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18992,6 +18992,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 245, title: '2.22.80 · Server list', items: ['Multiplayer now shows public servers with search, and you can join with a 6-letter code.'] },
   { id: 244, title: '2.22.79 · Server preview fix', items: ['Server preview now works when the game is opened from a secure link.'] },
   { id: 243, title: '2.22.78 · Intro fix', items: ['Fixed an error box that could pop up over the title screen.'] },
   { id: 242, title: '2.22.77 · Blork Studios', items: ['The studio is now Blork Studios, with a new intro card.'] },
@@ -27774,7 +27775,7 @@ function cleanName(s, fb) { return badName(s) ? fb : s; }
 
 // =================== SERVERS: browse, search, preview and join player-hosted Blork servers ===================
 // Joining stores {url, pass} in sessionStorage and reloads; joinRoom() in the page then connects to that server instead of the built-in room.
-const LOOKUP = ''; // the Cloudflare Worker address, e.g. https://blork-lookup.NAME.workers.dev
+const LOOKUP = 'https://blork-lookup.philip08533gonzales.workers.dev'; // the Cloudflare Worker address, e.g. https://blork-lookup.NAME.workers.dev
 const RULE_LABEL = { pvp: ['PvP', v => ({ off: 'Off', on: 'On', zones: 'Zones only' })[v] || v], friendlyFire: ['Friendly fire', v => v ? 'On' : 'Off'], difficulty: ['Difficulty', v => v + 'x'], xpMult: ['XP', v => v + 'x'], lootMult: ['Loot', v => v + 'x'], paths: ['Paths', v => ({ both: 'Outlaw + Marshal', outlaw: 'Outlaw only', marshal: 'Marshal only' })[v] || v], civilians: ['Killing civilians', v => v ? 'Allowed' : 'Off'], startWorld: ['Start', v => v], devGear: ['Test gear', v => v ? 'Allowed' : 'Off'] };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 function srvAddr(s) { s = String(s || '').trim(); if (!s) return null; if (/^wss?:\/\//.test(s)) return s; const m = s.match(/^([\w.\-]+|\[[0-9a-f:]+\])(?::(\d+))?$/i); return m ? `ws://${m[1]}:${m[2] || 7777}` : null; }

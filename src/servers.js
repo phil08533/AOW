@@ -1,6 +1,6 @@
 // =================== SERVERS: browse, search, preview and join player-hosted Blork servers ===================
 // Joining stores {url, pass} in sessionStorage and reloads; joinRoom() in the page then connects to that server instead of the built-in room.
-const LOOKUP = ''; // the Cloudflare Worker address, e.g. https://blork-lookup.NAME.workers.dev
+const LOOKUP = 'https://blork-lookup.philip08533gonzales.workers.dev'; // the Cloudflare Worker address, e.g. https://blork-lookup.NAME.workers.dev
 const RULE_LABEL = { pvp: ['PvP', v => ({ off: 'Off', on: 'On', zones: 'Zones only' })[v] || v], friendlyFire: ['Friendly fire', v => v ? 'On' : 'Off'], difficulty: ['Difficulty', v => v + 'x'], xpMult: ['XP', v => v + 'x'], lootMult: ['Loot', v => v + 'x'], paths: ['Paths', v => ({ both: 'Outlaw + Marshal', outlaw: 'Outlaw only', marshal: 'Marshal only' })[v] || v], civilians: ['Killing civilians', v => v ? 'Allowed' : 'Off'], startWorld: ['Start', v => v], devGear: ['Test gear', v => v ? 'Allowed' : 'Off'] };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 function srvAddr(s) { s = String(s || '').trim(); if (!s) return null; if (/^wss?:\/\//.test(s)) return s; const m = s.match(/^([\w.\-]+|\[[0-9a-f:]+\])(?::(\d+))?$/i); return m ? `ws://${m[1]}:${m[2] || 7777}` : null; }

@@ -10,7 +10,7 @@ const DEFAULTS = { name: 'My Art of War Server', desc: '', public: true, maxPlay
   pass: null, // { salt, hash } — never the plain password
   rules: { pvp: 'off', friendlyFire: false, difficulty: 1, xpMult: 1, lootMult: 1, paths: 'both', civilians: true, startWorld: 'earth', devGear: false },
   bans: [], adminToken: null,
-  lookup: 'https://blork-lookup.REPLACE.workers.dev', listKey: null, code: null };
+  lookup: 'https://blork-lookup.philip08533gonzales.workers.dev', listKey: null, code: null };
 const cfg = Object.assign({}, DEFAULTS, fs.existsSync(CFG_PATH) ? JSON.parse(fs.readFileSync(CFG_PATH, 'utf8')) : {});
 cfg.rules = Object.assign({}, DEFAULTS.rules, cfg.rules);
 if (!cfg.adminToken) cfg.adminToken = crypto.randomBytes(24).toString('hex');

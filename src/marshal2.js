@@ -117,7 +117,12 @@ function officeReady() { const O = officeS(); return Math.min(3, Math.floor((Dat
 function openEvidence() { const n = officeReady(), O = officeS(), pay = officePay();
   openDlg('Evidence locker', 'Seized goods, logged and sold at auction');
   $('dlgLine').textContent = n ? `${n} payout${n > 1 ? 's' : ''} waiting: ${n * pay} CR.` : `Nothing yet. A payout of ${pay} CR lands every 20 minutes (holds 3). Next in ${Math.ceil((OFFICE_EVERY - (Date.now() - O.t) % OFFICE_EVERY) / 60000)} min.`;
-  acts([[n ? `Collect ${n * pay} CR` : 'Collect', () => { if (!n) return; S.cr += n * pay; O.t = n >= 3 ? Date.now() : O.t + n * OFFICE_EVERY; SFX.coin(); log(`Evidence locker: +${n * pay} CR`, 'loot'); markDirty(); closeDlg(); }, true, !n], ['Close', closeDlg]]); }
+  acts([[n ? `Collect ${n * pay} CR` : 'Collect', () => { if (!n) return; S.cr += n * pay; O.t = n >= 3 ? Date.now() : O.t + n * OFFICE_EVERY; SFX.coin(); log(`Evidence locker: +${n * pay} CR`, 'loot'); markDirty(); closeDlg(); }, true, !n], ...(officeSeize().length ? [[`Turn in seized drugs (${officeSeizeVal()} CR)`, officeTurnIn]] : []), ['Close', closeDlg]]); }
+// seized contraband in your pack can be logged as evidence for a reward (half street value) and a little Marshal XP
+const officeSeize = () => Object.keys(S.inv || {}).filter(k => S.inv[k] > 0 && typeof SUBS !== 'undefined' && SUBS[k] && !SUBS[k].legal);
+const officeSeizeVal = () => officeSeize().reduce((a, k) => a + Math.round(dealBase(k) * 0.5) * S.inv[k], 0);
+function officeTurnIn() { const v = officeSeizeVal(); let n = 0; for (const k of officeSeize()) { n += S.inv[k]; delete S.inv[k]; }
+  S.cr += v; try { mGain(5 * n); } catch (_) {} SFX.coin(); log(`Evidence logged: ${n} item${n > 1 ? 's' : ''}, +${v} CR`, 'loot'); markDirty(); closeDlg(); }
 function officePerks(cx, cz, inner, outer) { const sd = Math.sign(outer - cx);
   // locker: tall steel cabinet with a gold star
   const L = new THREE.Group(); part(L, B(1.0, 2.0, 0.6), '#3a3f4a', 0, 1.0, 0); part(L, B(0.02, 1.9, 0.02), '#1a1d24', 0, 1.0, 0.31); part(L, B(0.9, 0.05, 0.02), toon('#e8c35a'), 0, 1.6, 0.31);

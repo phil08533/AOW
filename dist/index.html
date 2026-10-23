@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.91</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.92</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19006,6 +19006,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 257, title: '2.22.92 · Evidence and the badge button', items: ['Evidence locker: turn in drugs you find for half their street value plus Marshal XP', 'The BADGE button only shows once you are a Marshal (it was showing over the map on mobile)'] },
   { id: 256, title: '2.22.91 · Marshal Office', items: ['New ship room for Marshals: Marshal Office (500 CR)', 'One Marshal terminal: missions, bounty board, rank, armory (the extra bridge terminal is gone)', 'Evidence locker pays a stipend every 20 min', 'Holding cell with your arrest count', '+15% Marshal XP while you own the office'] },
   { id: 255, title: '2.22.90 · Shared world fallback', items: ['If a picked server can not be reached, the game drops back to the shared world everyone joins with Play.'] },
   { id: 254, title: '2.22.89 · Join through a tunnel', items: ['You can type or paste a tunnel address (like name.trycloudflare.com) into Multiplayer to join a server through it.'] },
@@ -27610,7 +27611,7 @@ function mBadgePop() { const d = document.createElement('div'); d.style.cssText 
 window.addEventListener('keydown', e => { if (e.code === 'KeyN' && state === 'play' && !dlgOpen && mOn() && !(document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName))) mFlash(); });
 const tBadge = document.createElement('button'); tBadge.className = 'tbtn tq'; tBadge.id = 'tBadge'; tBadge.innerHTML = '<i>★</i><small>BADGE</small>'; tBadge.hidden = true; { const t = document.getElementById('touch'); if (t) t.appendChild(tBadge); }
 tBadge.addEventListener('touchstart', e => { mFlash(); e.preventDefault(); }, { passive: false }); tBadge.addEventListener('click', () => mFlash());
-{ const st = document.createElement('style'); st.textContent = 'body #tBadge { right: 70px !important; } @media (pointer: coarse) and (max-height: 520px) { body #tBadge { right: 62px !important; } }'; document.head.appendChild(st); }
+{ const st = document.createElement('style'); st.textContent = 'body #tBadge[hidden] { display: none !important; } body #tBadge { right: 70px !important; } @media (pointer: coarse) and (max-height: 520px) { body #tBadge { right: 62px !important; } }'; document.head.appendChild(st); }
 function mTouch() { tBadge.hidden = !mOn(); try { if (mOn()) tSub.hidden = true; } catch (_) {} }
 setInterval(mTouch, 2000);
 
@@ -27741,7 +27742,12 @@ function officeReady() { const O = officeS(); return Math.min(3, Math.floor((Dat
 function openEvidence() { const n = officeReady(), O = officeS(), pay = officePay();
   openDlg('Evidence locker', 'Seized goods, logged and sold at auction');
   $('dlgLine').textContent = n ? `${n} payout${n > 1 ? 's' : ''} waiting: ${n * pay} CR.` : `Nothing yet. A payout of ${pay} CR lands every 20 minutes (holds 3). Next in ${Math.ceil((OFFICE_EVERY - (Date.now() - O.t) % OFFICE_EVERY) / 60000)} min.`;
-  acts([[n ? `Collect ${n * pay} CR` : 'Collect', () => { if (!n) return; S.cr += n * pay; O.t = n >= 3 ? Date.now() : O.t + n * OFFICE_EVERY; SFX.coin(); log(`Evidence locker: +${n * pay} CR`, 'loot'); markDirty(); closeDlg(); }, true, !n], ['Close', closeDlg]]); }
+  acts([[n ? `Collect ${n * pay} CR` : 'Collect', () => { if (!n) return; S.cr += n * pay; O.t = n >= 3 ? Date.now() : O.t + n * OFFICE_EVERY; SFX.coin(); log(`Evidence locker: +${n * pay} CR`, 'loot'); markDirty(); closeDlg(); }, true, !n], ...(officeSeize().length ? [[`Turn in seized drugs (${officeSeizeVal()} CR)`, officeTurnIn]] : []), ['Close', closeDlg]]); }
+// seized contraband in your pack can be logged as evidence for a reward (half street value) and a little Marshal XP
+const officeSeize = () => Object.keys(S.inv || {}).filter(k => S.inv[k] > 0 && typeof SUBS !== 'undefined' && SUBS[k] && !SUBS[k].legal);
+const officeSeizeVal = () => officeSeize().reduce((a, k) => a + Math.round(dealBase(k) * 0.5) * S.inv[k], 0);
+function officeTurnIn() { const v = officeSeizeVal(); let n = 0; for (const k of officeSeize()) { n += S.inv[k]; delete S.inv[k]; }
+  S.cr += v; try { mGain(5 * n); } catch (_) {} SFX.coin(); log(`Evidence logged: ${n} item${n > 1 ? 's' : ''}, +${v} CR`, 'loot'); markDirty(); closeDlg(); }
 function officePerks(cx, cz, inner, outer) { const sd = Math.sign(outer - cx);
   // locker: tall steel cabinet with a gold star
   const L = new THREE.Group(); part(L, B(1.0, 2.0, 0.6), '#3a3f4a', 0, 1.0, 0); part(L, B(0.02, 1.9, 0.02), '#1a1d24', 0, 1.0, 0.31); part(L, B(0.9, 0.05, 0.02), toon('#e8c35a'), 0, 1.6, 0.31);

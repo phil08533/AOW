@@ -73,7 +73,7 @@ function mBadgePop() { const d = document.createElement('div'); d.style.cssText 
 window.addEventListener('keydown', e => { if (e.code === 'KeyN' && state === 'play' && !dlgOpen && mOn() && !(document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName))) mFlash(); });
 const tBadge = document.createElement('button'); tBadge.className = 'tbtn tq'; tBadge.id = 'tBadge'; tBadge.innerHTML = '<i>★</i><small>BADGE</small>'; tBadge.hidden = true; { const t = document.getElementById('touch'); if (t) t.appendChild(tBadge); }
 tBadge.addEventListener('touchstart', e => { mFlash(); e.preventDefault(); }, { passive: false }); tBadge.addEventListener('click', () => mFlash());
-{ const st = document.createElement('style'); st.textContent = 'body #tBadge { right: 70px !important; } @media (pointer: coarse) and (max-height: 520px) { body #tBadge { right: 62px !important; } }'; document.head.appendChild(st); }
+{ const st = document.createElement('style'); st.textContent = 'body #tBadge[hidden] { display: none !important; } body #tBadge { right: 70px !important; } @media (pointer: coarse) and (max-height: 520px) { body #tBadge { right: 62px !important; } }'; document.head.appendChild(st); }
 function mTouch() { tBadge.hidden = !mOn(); try { if (mOn()) tSub.hidden = true; } catch (_) {} }
 setInterval(mTouch, 2000);
 

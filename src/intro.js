@@ -1,0 +1,73 @@
+// =================== INTRO: studio card, game title, legal ===================
+// Plays once per page load before the start screen. Tap or any key skips a card. S is not loaded yet, so the accepted-terms flag lives in localStorage.
+const STUDIO = { name: 'Glop Drop Studio', video: null }; // swap in the logo/video when Phil sends them
+const LEGAL_VER = 1;
+const LEGAL = {
+  terms: ['Terms of Service', [
+    'By playing Art of War: Setting Sun you agree to these terms. If you do not agree, do not play.',
+    'Age. You must be at least 13 years old, or the minimum age to use online services where you live. If you are under 18, a parent or guardian should review these terms with you.',
+    'Conduct. Do not harass, threaten or impersonate other players. Do not use hateful, sexual or offensive names, chat or server names. Do not cheat, exploit bugs on purpose, or attack servers or other players\' devices.',
+    'Player servers. Servers are run by players, not by Glop Drop Studio. Hosts set their own rules and are responsible for what happens on their server. We may remove any public listing that breaks these terms.',
+    'Your content. You keep what you make. By sharing names, chat or builds in multiplayer you let other players see them while playing.',
+    'Virtual items. Credits, gear and other in-game items have no real-world value and cannot be sold or exchanged for money.',
+    'Enforcement. We may limit or block access for anyone who breaks these terms.',
+    'No warranty. The game is provided as is. Saves can be lost, servers can go down. To the extent the law allows, Glop Drop Studio is not liable for losses from using the game.',
+    'Changes. We may update these terms. Continuing to play after an update means you accept it.']],
+  privacy: ['Privacy', [
+    'Saves. Your characters and progress are stored on your device. Clearing your browser data deletes them.',
+    'Multiplayer. When you play online, other players on the same server see your callsign, character, position and chat. Server hosts can see who joined.',
+    'We do not sell your data and we do not run ads that track you.',
+    'Children. We do not knowingly collect personal information from children under 13.',
+    'Questions or removal requests: contact Glop Drop Studio.']],
+  eula: ['License', [
+    'Glop Drop Studio grants you a personal, non-exclusive license to play the game. You may not resell, redistribute or claim the game as your own.',
+    'Art of War: Setting Sun, its characters, art and code are owned by Glop Drop Studio. All rights reserved.']],
+  credits: ['Credits', ['A Glop Drop Studio game.', 'Created by Phil and Caleb.', 'Built with three.js (MIT license).']]
+};
+function legalOpen(k) { const L = LEGAL[k], d = document.createElement('div'); d.className = 'introLegal';
+  d.innerHTML = `<div class="ilBox"><h2>${L[0]}</h2>${L[1].map(p => `<p>${p}</p>`).join('')}<button class="cta win">Close</button></div>`;
+  d.querySelector('button').onclick = () => d.remove(); document.body.appendChild(d); }
+// bad-word filter for callsigns, chat and server names
+const BAD_WORDS = ['fuck', 'shit', 'cunt', 'nigg', 'fag', 'retard', 'rape', 'nazi', 'hitler', 'whore', 'slut', 'bitch', 'dick', 'cock', 'pussy', 'porn', 'kkk', 'chink', 'spic', 'kike'];
+function badName(s) { const n = String(s || '').toLowerCase().replace(/[0@]/g, 'o').replace(/[1!|]/g, 'i').replace(/3/g, 'e').replace(/[4]/g, 'a').replace(/[5$]/g, 's').replace(/7/g, 't').replace(/[^a-z]/g, ''); return BAD_WORDS.some(w => n.includes(w)); }
+function cleanName(s, fb) { return badName(s) ? fb : s; }
+(function introRun() {
+  const css = document.createElement('style'); css.textContent = `
+#introCov{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;transition:opacity .8s}
+#introCov .ic{opacity:0;transition:opacity 1s;text-align:center;color:#fff;font-family:inherit}
+#introCov .ic.on{opacity:1}
+#introCov .studio{font-size:clamp(28px,6vw,56px);font-weight:900;letter-spacing:.04em;color:#7dff6a;text-shadow:0 0 30px #3aff2a88}
+#introCov .studio small{display:block;font-size:.3em;letter-spacing:.5em;color:#cfe;margin-top:10px;font-weight:600}
+#introCov .drop{width:46px;height:60px;margin:0 auto 18px;background:#7dff6a;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;box-shadow:0 0 30px #3aff2a;animation:icd 1.4s ease-in}
+@keyframes icd{0%{transform:translateY(-60vh) scaleY(1.4)}70%{transform:translateY(0) scaleY(1.2)}85%{transform:scale(1.3,.6)}100%{transform:none}}
+#introCov .gt{font-size:clamp(34px,8vw,84px);font-weight:900;color:#fff;letter-spacing:.06em;line-height:1}
+#introCov .gt span{color:#ff5a3a}#introCov .gs{color:#ff8a4a;letter-spacing:.6em;font-size:clamp(12px,2vw,18px);margin-top:12px}
+#introCov .pk{margin-top:40px;font-size:14px;letter-spacing:.3em;color:#ccd;animation:icp 1.6s infinite}@keyframes icp{50%{opacity:.25}}
+#introCov .sun{position:absolute;left:50%;top:62%;width:60vmin;height:60vmin;margin-left:-30vmin;border-radius:50%;background:radial-gradient(circle,#ff6a2a,#c0202000 70%);opacity:.0;transition:opacity 2s}
+#introCov .sun.on{opacity:.55}
+.introLegal{position:fixed;inset:0;z-index:10000;background:#000c;display:flex;align-items:center;justify-content:center;padding:16px}
+.introLegal .ilBox{max-width:620px;max-height:85vh;overflow:auto;background:#12141a;border:1px solid #333;border-radius:10px;padding:20px;color:#dde;font-size:14px;line-height:1.5}
+.introLegal h2{margin:0 0 10px}#legalRow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;font-size:12px;margin-top:6px}
+#legalRow a{color:#9ab;cursor:pointer;text-decoration:underline}#tosRow{font-size:12px;display:flex;gap:8px;align-items:center;justify-content:center}`;
+  document.head.appendChild(css);
+  const cov = document.createElement('div'); cov.id = 'introCov';
+  cov.innerHTML = `<div class="sun"></div><div class="ic" id="ic1"><div class="drop"></div><div class="studio">${STUDIO.name.toUpperCase().replace(' STUDIO', '')}<small>STUDIO</small></div></div>`;
+  document.body.appendChild(cov);
+  let step = 0, tm = 0, lockT = 0; const c1 = () => cov.querySelector('#ic1');
+  const next = (ev) => { if (ev && (performance.now() < lockT || !ev.isTrusted)) return; clearTimeout(tm); step++; lockT = performance.now() + 1200;
+    if (step === 1) { requestAnimationFrame(() => c1().classList.add('on')); tm = setTimeout(next, 3200); }
+    else if (step === 2) { c1().classList.remove('on'); tm = setTimeout(() => { c1().remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; cov.appendChild(g); requestAnimationFrame(() => { g.classList.add('on'); cov.querySelector('.sun').classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); }
+    else { cov.style.opacity = 0; setTimeout(() => cov.remove(), 800); removeEventListener('keydown', next); } };
+  cov.addEventListener('click', e => { if (step >= 1) next(e); }); addEventListener('keydown', e => { if (document.getElementById('introCov') && step >= 1) next(e); });
+  if (document.readyState === 'complete') next(); else addEventListener('load', () => next());
+  // legal links + terms acceptance on the start screen
+  const pb = document.getElementById('playBtn'); if (!pb) return;
+  let ok = false; try { ok = +localStorage.getItem('aow-tos') >= LEGAL_VER; } catch (_) {}
+  const row = document.createElement('div'); row.id = 'legalRow'; row.innerHTML = Object.keys(LEGAL).map(k => `<a data-k="${k}">${LEGAL[k][0]}</a>`).join('') + `<span style="color:#667">© ${new Date().getFullYear()} ${STUDIO.name}</span>`;
+  row.onclick = e => { const k = e.target.dataset && e.target.dataset.k; if (k) legalOpen(k); };
+  pb.after(row);
+  if (!ok) { const t = document.createElement('label'); t.id = 'tosRow'; t.innerHTML = `<input type="checkbox" id="tosChk"> I am 13 or older and agree to the <a style="color:#9cf;text-decoration:underline" data-k="terms">Terms</a> and <a style="color:#9cf;text-decoration:underline" data-k="privacy">Privacy</a>`;
+    t.onclick = e => { const k = e.target.dataset && e.target.dataset.k; if (k) { e.preventDefault(); legalOpen(k); } }; pb.before(t);
+    pb.addEventListener('click', e => { if (!document.getElementById('tosChk').checked) { e.stopImmediatePropagation(); t.style.color = '#ff6a5a'; return; } try { localStorage.setItem('aow-tos', LEGAL_VER); } catch (_) {} t.remove(); }, true); }
+  const ni = document.getElementById('nickIn'); if (ni) ni.addEventListener('change', () => { if (badName(ni.value)) { ni.value = ''; ni.placeholder = 'Pick a different callsign'; } });
+})();

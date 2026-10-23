@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.90</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.91</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -9679,12 +9679,16 @@ function bountyOnLoad() { bountyEnemy = null; if (LEVEL && LEVEL.id === (bhState
 // bridge terminal + saber mod station on your ship
 { const orig = LEVELS.ship.build;
   LEVELS.ship.build = function () { orig.call(this);
+    // a marshal with an office takes this terminal there (marshal2.js)
+    const termHere = !(typeof mOn === 'function' && mOn() && roomLvl('office'));
+    if (termHere) {
     if (window.bridgeConsole) bridgeConsole(5, -10, 0, '#ffd36a', 1.3, 0.95);
     { const g = new THREE.Group(); part(g, B(1.3, 1.2, 0.1), '#2a2e36', 0, 1.75, -0.32); part(g, B(1.15, 1.0, 0.04), '#0a0d14', 0, 1.75, -0.26); part(g, B(1.05, 0.06, 0.03), glow('#ffd36a'), 0, 2.2, -0.24);
       const star = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.03, 5), glow('#ffd36a')); star.rotation.x = Math.PI / 2; star.position.set(0, 1.78, -0.23); g.add(star);
       for (let k = 0; k < 4; k++) part(g, B(0.3, 0.05, 0.02), glow(k === 0 ? '#ff5a4a' : '#8a7a4a'), 0.38, 1.5 - k * 0.09, -0.23); for (let k = 0; k < 4; k++) part(g, B(0.3, 0.05, 0.02), glow('#8a7a4a'), -0.38, 1.5 - k * 0.09, -0.23);
       at(g, 5, -10, 0); } box(5, -10, 0.65, 0.3);
-    INTERACTS.push({ x: 5, z: -9.2, r: 2, label: 'Bounty terminal (Galactic Marshals)', fn: () => openBountyBoard('Ship terminal') });
+    INTERACTS.push({ x: 5, z: -9.2, r: 2, get label() { return typeof mOn === 'function' && mOn() ? '⭐ Marshal terminal (missions, bounties, rank, armory)' : 'Bounty terminal (Galactic Marshals)'; }, fn: () => typeof mOn === 'function' && mOn() ? openMarshalBoard() : openBountyBoard('Ship terminal') });
+    }
     const st = new THREE.Group(); part(st, Cy(0.5, 0.6, 0.9, 8), '#3a3d44', 0, 0.45, 0); part(st, Cy(0.55, 0.55, 0.04, 16), glow('#4fa8ff'), 0, 0.92, 0);
     const holo = makeSaberModel(saberCfg()); holo.scale.setScalar(1.4); holo.position.set(0, 1.6, 0); holo.rotation.z = 0.3; st.add(holo); st.position.set(5, 0, -4.5); levelGroup.add(st); solid(5, -4.5, 0.6);
     levelAnims.push(t => { holo.rotation.y = t * 0.8; holo.position.y = 1.6 + Math.sin(t * 1.5) * 0.05; });
@@ -19002,6 +19006,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 256, title: '2.22.91 · Marshal Office', items: ['New ship room for Marshals: Marshal Office (500 CR)', 'One Marshal terminal: missions, bounty board, rank, armory (the extra bridge terminal is gone)', 'Evidence locker pays a stipend every 20 min', 'Holding cell with your arrest count', '+15% Marshal XP while you own the office'] },
   { id: 255, title: '2.22.90 · Shared world fallback', items: ['If a picked server can not be reached, the game drops back to the shared world everyone joins with Play.'] },
   { id: 254, title: '2.22.89 · Join through a tunnel', items: ['You can type or paste a tunnel address (like name.trycloudflare.com) into Multiplayer to join a server through it.'] },
   { id: 253, title: '2.22.88 · Character delete', items: ['Characters list has a delete button (asks first).', 'New character keeps the callsign you typed.'] },
@@ -27674,16 +27679,24 @@ function openMarshalBoard() {
   const list = [];
   for (const [id, name, xp] of M_MISSIONS) { const s = S.qst[id], q = QDEFS[id]; if (!q) continue; const done = s && (s.st === 'ready' || (s.st === 'active' && q.obj.every((o, k) => objDone(o, s.p[k]))));
     if (done) list.push([`✅ Report in: ${name}`, () => mReport(id, xp), true]); else if (s && s.st === 'active') list.push([`… ${name} (in progress)`, () => { S.track = id; renderQuest(); closeDlg(); toast('TRACKING', name, 2); }]); else list.push([`▶ ${name}`, () => mStart(id)]); }
-  list.push(['🛡 Armory', mArmory], ['Close', closeDlg]); acts(list);
+  list.push(['🎯 Bounty board', () => openBountyBoard('Marshal terminal')], ['🛡 Armory', mArmory], ['Close', closeDlg]); acts(list);
 }
-{ const _b = LEVELS.ship.build; LEVELS.ship.build = function () { const r = _b.apply(this, arguments); try {
-  const X = 3.0, Z = -10.36, G = new THREE.Group(); G.position.set(X, 0, Z); props.add(G);
-  part(G, B(1.7, 1.15, 0.08), toon('#1a2240'), 0, 1.75, 0); part(G, B(1.8, 0.06, 0.1), toon('#e8c35a'), 0, 2.34, 0); part(G, B(1.8, 0.06, 0.1), toon('#e8c35a'), 0, 1.16, 0);
-  const tex = document.createElement('canvas'); tex.width = 256; tex.height = 160; const x = tex.getContext('2d'); x.fillStyle = '#0c1430'; x.fillRect(0, 0, 256, 160); x.fillStyle = '#e8c35a'; x.font = '700 22px sans-serif'; x.textAlign = 'center'; x.fillText('GALACTIC MARSHALS', 128, 34); x.font = '600 16px sans-serif'; x.fillStyle = '#9fb0d8'; ['Missions', 'Rank', 'Armory'].forEach((t, i) => x.fillText('▸ ' + t, 128, 70 + i * 26));
-  const T = new THREE.CanvasTexture(tex); part(G, new THREE.PlaneGeometry(1.5, 0.94), new THREE.MeshBasicMaterial({ map: T }), 0, 1.75, 0.05);
-  const star = part(G, new THREE.OctahedronGeometry(0.12, 0), glow('#ffd36a'), 0.95, 2.15, 0.08); levelAnims.push(t => { star.rotation.y = t * 1.5; });
-  INTERACTS.push({ x: X, z: Z + 1.0, r: 1.6, get label() { return mOn() ? '⭐ Marshal board (missions, rank, armory)' : 'Marshal board (locked)'; }, fn: openMarshalBoard });
-} catch (err) { console.warn('marshal board', err); } return r; }; }
+// ---- the Marshal Office: a ship room only marshals can build; the marshal terminal lives here once it's built ----
+ROOMS.office = { name: 'Marshal Office', cost: { cr: 500 }, desc: 'Your marshal terminal: missions, bounties, rank and the armory, with your badge on the wall.', hide: () => !mOn() };
+function marshalTerminal(x, z, ry) { const g = new THREE.Group();
+  part(g, B(1.3, 1.0, 0.7), '#2a2e36', 0, 0.5, 0); part(g, B(1.35, 0.06, 0.75), toon('#e8c35a'), 0, 1.02, 0);
+  part(g, B(1.3, 1.2, 0.1), '#2a2e36', 0, 1.75, -0.32); part(g, B(1.15, 1.0, 0.04), '#0a0d14', 0, 1.75, -0.26); part(g, B(1.05, 0.06, 0.03), glow('#ffd36a'), 0, 2.2, -0.24);
+  const tex = document.createElement('canvas'); tex.width = 256; tex.height = 200; const c = tex.getContext('2d'); c.fillStyle = '#0c1430'; c.fillRect(0, 0, 256, 200); c.fillStyle = '#e8c35a'; c.font = '700 24px sans-serif'; c.textAlign = 'center'; c.fillText('GALACTIC MARSHALS', 128, 40); c.font = '18px sans-serif'; c.fillStyle = '#cfd8ff'; ['Missions', 'Bounties', 'Rank', 'Armory'].forEach((t, k) => c.fillText('• ' + t, 128, 84 + k * 28));
+  part(g, new THREE.PlaneGeometry(1.05, 0.82), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(tex) }), 0, 1.75, -0.235);
+  const star = part(g, new THREE.OctahedronGeometry(0.12, 0), glow('#ffd36a'), 0.55, 2.35, -0.25); levelAnims.push(t => { star.rotation.y = t * 1.5; });
+  g.position.set(x, 0, z); g.rotation.y = ry; props.add(g); box(x, z, 0.7, 0.4);
+  const fx = x + Math.sin(ry) * 1.0, fz = z + Math.cos(ry) * 1.0;
+  INTERACTS.push({ x: fx, z: fz, r: 1.8, label: '⭐ Marshal terminal (missions, bounties, rank, armory)', fn: openMarshalBoard }); }
+{ const _rd = roomUpDress; roomUpDress = function (id, s, cx, cz, inner, props) { const r = _rd.apply(this, arguments);
+  if (id === 'office') try { const outer = 2 * cx - inner, x = cx + (outer - cx) * 0.55, ry = Math.atan2(inner - outer, 0); marshalTerminal(x, cz, ry);
+    part(props, B(2.2, 0.04, 3.2), toonNS('#1a2240', 'carpet'), cx, 0.02, cz); part(props, B(0.05, 0.9, 0.9), toon('#e8c35a'), outer - Math.sign(outer - cx) * 0.06, 2.0, cz - 2.2);
+    officePerks(cx, cz, inner, outer); } catch (err) { console.warn('office', err); }
+  return r; }; }
 // ---- manhunt spawns and random busts ----
 function mRandSpot(min, max) { for (let n = 0; n < 20; n++) { const a = Math.random() * 6.283, d = min + Math.random() * (max - min), x = player.pos.x + Math.sin(a) * d, z = player.pos.z + Math.cos(a) * d; if (Math.hypot(x - LEVEL.center[0], z - LEVEL.center[1]) > LEVEL.radius - 6) continue; if (typeof inSafe === 'function' && inSafe(V(x, 0, z))) continue; return { x, z }; } return null; }
 function mMarker(e, col) { const m = part(e.obj, Cy(0.08, 0.08, 6, 6), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending }), 0, 4.5, 0); return m; }
@@ -27699,7 +27712,7 @@ function mDrop(e) { const k = INTERACTS.indexOf(e.mAct); if (k >= 0) INTERACTS.s
 function mArrest(e, a) { if (e.dead) return mDrop(e); mBadgePop(); const M = mS();
   if (!e.ran && Math.random() < 0.6) { e.dead = 3; e.gone = true; scene.remove(e.obj); const k = enemies.indexOf(e); if (k >= 0) enemies.splice(k, 1); mDrop(e); M.busts = (M.busts || 0) + 1; const cr = 120 + S.lvl * 12; S.cr += cr; mGain(40 + mRank() * 10, 'Arrest'); toast('ARRESTED', `Contraband seized · +${cr} cr`, 3); SFX.quest && SFX.quest(); markDirty(); M.bustT = Date.now() + (150 + Math.random() * 120) * 1000; }
   else { e.ran = true; e.def = Object.assign({}, e.def, { passive: false, speed: e.def.speed * 1.4 }); e.aggro = true; mDrop(e); toast('HE\'S RUNNING', 'Take him down', 2.5); } }
-{ const _k = kill; kill = function (e) { const r = _k.apply(this, arguments); try { if (e.sp && e.sp.mBust) { mDrop(e); const M = mS(); M.busts = (M.busts || 0) + 1; mGain(15, 'Suspect down'); M.bustT = Date.now() + (150 + Math.random() * 120) * 1000; } if (e.sp && e.sp.mHunt) toast('FUGITIVE DOWN', 'Report in at the Marshal board on your ship', 3.5); } catch (_) {} return r; }; }
+{ const _k = kill; kill = function (e) { const r = _k.apply(this, arguments); try { if (e.sp && e.sp.mBust) { mDrop(e); const M = mS(); M.busts = (M.busts || 0) + 1; mGain(15, 'Suspect down'); M.bustT = Date.now() + (150 + Math.random() * 120) * 1000; } if (e.sp && e.sp.mHunt) toast('FUGITIVE DOWN', 'Report in at the Marshal terminal on your ship', 3.5); } catch (_) {} return r; }; }
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll.apply(this, arguments); if (mOn()) { mHuntSet(); setTimeout(() => { try { mSpawnHunt(); } catch (err) { console.warn('hunt', err); } }, 2500); } return r; }; }
 setInterval(() => { try { if (!mOn() || state !== 'play' || CUT.on || !LEVEL) return; const M = mS(); if (!M.bustT) M.bustT = Date.now() + 60000; if (Date.now() > M.bustT) { M.bustT = Date.now() + 60000; mSpawnBust(); } } catch (err) { console.warn('bust', err); } }, 5000);
 setTimeout(() => { try { if (mOn()) mHuntSet(); } catch (_) {} }, 2000);
@@ -27717,6 +27730,30 @@ setTimeout(() => { try { if (mOn()) mHuntSet(); } catch (_) {} }, 2000);
       setTimeout(() => { try { mawComms(mOn() ? 'MARSHAL ROOK' : 'KADE', side.in, 6); } catch (_) {} }, 4000);
       return r; }
     return _ar.apply(this, arguments); }; }
+
+// ---- office perks ----
+// Evidence locker: seized goods turn into a stipend every 20 minutes (bigger with rank), holds 3 payouts.
+// Holding cell: shows your arrest record (busts). Owning the office also gives +15% Marshal XP.
+const OFFICE_EVERY = 20 * 60000;
+function officeS() { const M = mS(); M.office = M.office || { t: Date.now() }; return M.office; }
+const officePay = () => 150 + 150 * mRank();
+function officeReady() { const O = officeS(); return Math.min(3, Math.floor((Date.now() - O.t) / OFFICE_EVERY)); }
+function openEvidence() { const n = officeReady(), O = officeS(), pay = officePay();
+  openDlg('Evidence locker', 'Seized goods, logged and sold at auction');
+  $('dlgLine').textContent = n ? `${n} payout${n > 1 ? 's' : ''} waiting: ${n * pay} CR.` : `Nothing yet. A payout of ${pay} CR lands every 20 minutes (holds 3). Next in ${Math.ceil((OFFICE_EVERY - (Date.now() - O.t) % OFFICE_EVERY) / 60000)} min.`;
+  acts([[n ? `Collect ${n * pay} CR` : 'Collect', () => { if (!n) return; S.cr += n * pay; O.t = n >= 3 ? Date.now() : O.t + n * OFFICE_EVERY; SFX.coin(); log(`Evidence locker: +${n * pay} CR`, 'loot'); markDirty(); closeDlg(); }, true, !n], ['Close', closeDlg]]); }
+function officePerks(cx, cz, inner, outer) { const sd = Math.sign(outer - cx);
+  // locker: tall steel cabinet with a gold star
+  const L = new THREE.Group(); part(L, B(1.0, 2.0, 0.6), '#3a3f4a', 0, 1.0, 0); part(L, B(0.02, 1.9, 0.02), '#1a1d24', 0, 1.0, 0.31); part(L, B(0.9, 0.05, 0.02), toon('#e8c35a'), 0, 1.6, 0.31);
+  const lamp = part(L, B(0.12, 0.12, 0.03), glow('#7dff6a'), 0.35, 1.85, 0.31); L.position.set(cx, 0, cz + 2.6); L.rotation.y = Math.PI; props.add(L); box(cx, cz + 2.6, 0.55, 0.35);
+  levelAnims.push(() => { lamp.material = glow(officeReady() ? '#7dff6a' : '#5a2a2a'); });
+  INTERACTS.push({ x: cx, z: cz + 1.8, r: 1.4, get label() { const n = officeReady(); return n ? `Evidence locker (${n * officePay()} CR ready)` : 'Evidence locker'; }, fn: openEvidence });
+  // holding cell bars along the inner corner, with the arrest count above
+  const C = new THREE.Group(); for (let i = 0; i < 9; i++) part(C, Cy(0.03, 0.03, 2.2, 6), toon('#8a8f9a'), -0.8 + i * 0.2, 1.1, 0); part(C, B(1.8, 0.08, 0.08), toon('#5a5e66'), 0, 2.2, 0); part(C, B(1.8, 0.08, 0.08), toon('#5a5e66'), 0, 0.05, 0);
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const T = new THREE.CanvasTexture(cv), sign = part(C, new THREE.PlaneGeometry(1.4, 0.35), new THREE.MeshBasicMaterial({ map: T }), 0, 2.5, 0.02);
+  let shown = -1; levelAnims.push(() => { const n = mS().busts || 0; if (n === shown) return; shown = n; const x = cv.getContext('2d'); x.fillStyle = '#0c1430'; x.fillRect(0, 0, 256, 64); x.fillStyle = '#e8c35a'; x.font = '700 26px sans-serif'; x.textAlign = 'center'; x.fillText(`ARRESTS: ${n}`, 128, 42); T.needsUpdate = true; });
+  C.position.set(cx, 0, cz - 2.9); props.add(C); box(cx, cz - 2.9, 0.9, 0.12); }
+{ const _mg = mGain; mGain = function (n, why) { if (mOn() && roomLvl('office') && n > 0) n = Math.round(n * 1.15); return _mg.call(this, n, why); }; }
 
 // =================== INTRO: studio card, game title, legal ===================
 // Plays once per page load before the start screen. Tap or any key skips a card. S is not loaded yet, so the accepted-terms flag lives in localStorage.

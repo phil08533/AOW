@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.73</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.74</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -15895,8 +15895,8 @@ function netReset() {
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll.apply(this, arguments); try { netReset(); } catch (_) {} return r; }; }
 { const _re = resetEnemy; resetEnemy = function (e) { _re(e); if (e.netI != null && !e.netRemote) e.gen = (e.gen || 0) + 1; e.myDmg = 0; e.rewarded = false; e.netShown = e.hp; e.netDeadT = 0; }; }
 // a monster you hurt: count the damage (any weapon, pet, drone or burn) so the runner gets it
-function netTrackDamage(e) { if (e.netI == null) return; if (e.hp < e.netShown - 1e-3 && !e.dead) { const d = e.netShown - e.hp; e.myDmg += d; if (e.netRemote) { const k = e.netI + '.' + e.gen; NET.mine[k] = (NET.mine[k] || 0) + d; e.netHitAt = gameTime; } } e.netShown = e.hp; if (e.netRemote && e.hp <= 0 && !e.dead) kill(e); }
-{ const _k = kill; kill = function (e) { e.rewarded = true; return _k.apply(this, arguments); }; }
+function netTrackDamage(e) { if (e.netI == null) return; if (e.hp < e.netShown - 1e-3 && (!e.dead || e.netRemote)) { const d = e.netShown - Math.max(0, e.hp); e.myDmg += d; if (e.netRemote) { const k = e.netI + '.' + e.gen; NET.mine[k] = (NET.mine[k] || 0) + d; e.netHitAt = gameTime; } } e.netShown = e.hp; if (e.netRemote && e.hp <= 0 && !e.dead) kill(e); }
+{ const _k = kill; kill = function (e) { if (e && e.netRemote && !e.dead && !e._nk) { e._nk = 1; netTrackDamage(e); e._nk = 0; if (e.dead) return; } e.rewarded = true; return _k.apply(this, arguments); }; }
 function silentKill(e) { if (e.dead) return; e.dead = 0.001; e.hp = 0; e.plate.material.opacity = 0; burst(e.obj.position.clone().add(V(0, e.def.hy, 0)), '#f6b56a', 10, 5); }
 // the per-frame stand-in for a monster someone else runs: follow their copy, never attack
 function netEnemyStep(e, dt, t) {
@@ -15928,7 +15928,7 @@ function netApply(e, a) {
     e.hp = e.max; e.myDmg = 0; e.rewarded = false; e.obj.position.set(st.x, floorAt(st.x, st.z), st.z); e.netShown = e.hp; }
   const ownerHp = clamp(hp, 0, 1000) / 1000 * e.max;
   if (fl & 1) { if (!e.dead) { if (e.myDmg > 0 && !e.rewarded) kill(e); else silentKill(e); } return; }
-  if (e.dead && gen === e.gen) { e.netDeadT = (e.netDeadT || 0) + 1; if (e.netDeadT > 12) { e.dead = 0; e.obj.rotation.x = 0; e.obj.visible = true; e.plate.material.opacity = 1; e.hp = ownerHp; e.netDeadT = 0; } return; }
+  if (e.dead && gen === e.gen) { e.netDeadT = (e.netDeadT || 0) + 1; if (e.netDeadT > 32) { e.dead = 0; e.obj.rotation.x = 0; e.obj.visible = true; e.plate.material.opacity = 1; e.hp = ownerHp; e.netDeadT = 0; } return; }
   const fresh = gameTime - (e.netHitAt || -99) < 1.5; const want = fresh ? Math.min(ownerHp, e.hp) : ownerHp;
   if (Math.abs(want - e.hp) > 0.5) { e.hp = want; updatePlate(e); } e.netShown = e.hp; e.aggro = !!(fl & 2);
 }
@@ -18992,6 +18992,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 239, title: '2.22.74 · Co-op kill fix', items: ['Finishing off a monster another player was fighting now counts for both of you, so it no longer pops back to life.'] },
   { id: 238, title: '2.22.73 · Steadier ship screens', items: ['Terminal screens on the ship no longer flicker when you look at them from a distance or an angle.'] },
   { id: 237, title: '2.22.72 · Playtest fixes', items: ['Fixed a broken wall in the Zeltac mob hideout that could glitch the level.', 'Cleaned up material warnings in Bubble City, the Underworld, Marisol and the ship.', 'Full sweep of every world, the marshal path and the Kade fight.'] },
   { id: 236, title: '2.22.71 · The Galactic Marshals (part 2)', items: ['A Marshal board on your bridge, next to the bounty terminal. Your badge spins in, the stars fill, and a PROMOTED stamp lands when you rank up.', 'Marshal missions: hostage rescue, Drome Cutter sweeps, raider barge sweeps and manhunts for named fugitives on other worlds.', 'Random busts: crimes in progress show up near you with a red beacon. Flash your badge to arrest them, or chase them down if they run.', 'The Marshal armory (Lawgiver Pistol, Marshal Armor, Star Marshal Coat, Peacekeeper Rifle) and, at Senior Marshal, the Lawbringer Interceptor with a spinning light bar.', 'The Maw finale: Vega and her squadron fight beside your side, Marshals or outlaws, led by Rook or Kade.'] },

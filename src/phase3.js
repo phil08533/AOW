@@ -44,8 +44,8 @@ function netReset() {
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll.apply(this, arguments); try { netReset(); } catch (_) {} return r; }; }
 { const _re = resetEnemy; resetEnemy = function (e) { _re(e); if (e.netI != null && !e.netRemote) e.gen = (e.gen || 0) + 1; e.myDmg = 0; e.rewarded = false; e.netShown = e.hp; e.netDeadT = 0; }; }
 // a monster you hurt: count the damage (any weapon, pet, drone or burn) so the runner gets it
-function netTrackDamage(e) { if (e.netI == null) return; if (e.hp < e.netShown - 1e-3 && !e.dead) { const d = e.netShown - e.hp; e.myDmg += d; if (e.netRemote) { const k = e.netI + '.' + e.gen; NET.mine[k] = (NET.mine[k] || 0) + d; e.netHitAt = gameTime; } } e.netShown = e.hp; if (e.netRemote && e.hp <= 0 && !e.dead) kill(e); }
-{ const _k = kill; kill = function (e) { e.rewarded = true; return _k.apply(this, arguments); }; }
+function netTrackDamage(e) { if (e.netI == null) return; if (e.hp < e.netShown - 1e-3 && (!e.dead || e.netRemote)) { const d = e.netShown - Math.max(0, e.hp); e.myDmg += d; if (e.netRemote) { const k = e.netI + '.' + e.gen; NET.mine[k] = (NET.mine[k] || 0) + d; e.netHitAt = gameTime; } } e.netShown = e.hp; if (e.netRemote && e.hp <= 0 && !e.dead) kill(e); }
+{ const _k = kill; kill = function (e) { if (e && e.netRemote && !e.dead && !e._nk) { e._nk = 1; netTrackDamage(e); e._nk = 0; if (e.dead) return; } e.rewarded = true; return _k.apply(this, arguments); }; }
 function silentKill(e) { if (e.dead) return; e.dead = 0.001; e.hp = 0; e.plate.material.opacity = 0; burst(e.obj.position.clone().add(V(0, e.def.hy, 0)), '#f6b56a', 10, 5); }
 // the per-frame stand-in for a monster someone else runs: follow their copy, never attack
 function netEnemyStep(e, dt, t) {
@@ -77,7 +77,7 @@ function netApply(e, a) {
     e.hp = e.max; e.myDmg = 0; e.rewarded = false; e.obj.position.set(st.x, floorAt(st.x, st.z), st.z); e.netShown = e.hp; }
   const ownerHp = clamp(hp, 0, 1000) / 1000 * e.max;
   if (fl & 1) { if (!e.dead) { if (e.myDmg > 0 && !e.rewarded) kill(e); else silentKill(e); } return; }
-  if (e.dead && gen === e.gen) { e.netDeadT = (e.netDeadT || 0) + 1; if (e.netDeadT > 12) { e.dead = 0; e.obj.rotation.x = 0; e.obj.visible = true; e.plate.material.opacity = 1; e.hp = ownerHp; e.netDeadT = 0; } return; }
+  if (e.dead && gen === e.gen) { e.netDeadT = (e.netDeadT || 0) + 1; if (e.netDeadT > 32) { e.dead = 0; e.obj.rotation.x = 0; e.obj.visible = true; e.plate.material.opacity = 1; e.hp = ownerHp; e.netDeadT = 0; } return; }
   const fresh = gameTime - (e.netHitAt || -99) < 1.5; const want = fresh ? Math.min(ownerHp, e.hp) : ownerHp;
   if (Math.abs(want - e.hp) > 0.5) { e.hp = want; updatePlate(e); } e.netShown = e.hp; e.aggro = !!(fl & 2);
 }

@@ -158,3 +158,7 @@ function bhStep(dt) {
 // Dead Air picks up straight after Kade (the bh1 outro already sends you on), instead of waiting on a trip back to Ada-9
 { const _cq = completeQuest; completeQuest = function (id) { const r = _cq.apply(this, arguments); if (id === 'bh1' && !S.qst.d1 && qAvailable('d1')) setTimeout(() => { if (!S.qst.d1 && qAvailable('d1')) { startQuest('d1'); } }, 600); return r; }; }
 setTimeout(() => { try { if (!S.qst.d1 && qAvailable('d1')) startQuest('d1', true); } catch (_) {} }, 3200);
+// Kade only exists during his fight; sweep away any leftover copy (he was tagging along to other worlds after the quest)
+function bhSweep() { if (BH.fight && LEVEL && LEVEL.id === 'arena') return; for (let k = enemies.length - 1; k >= 0; k--) { const e = enemies[k]; if (e && e.sp && e.sp.type === 'sable') { e.dead = 3; e.gone = true; if (e.obj && e.obj.parent) e.obj.parent.remove(e.obj); if (e.plate && e.plate.parent) e.plate.parent.remove(e.plate); enemies.splice(k, 1); } } }
+{ const _ll = loadLevel; loadLevel = function () { const r = _ll.apply(this, arguments); try { bhSweep(); } catch (_) {} return r; }; }
+setInterval(() => { try { bhSweep(); } catch (_) {} }, 2000);

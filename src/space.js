@@ -303,6 +303,8 @@ function shipGrip() { return 1.6; }
 function shipStrafe() { return 0.4; }
 function shipLift() { return 0; }
 function shipMineMul() { return 1; }
+function shipGunOff(side) { return V(4.4 * side, 0, -1); }
+function shipTracer() { return '#6fdc5a'; }
 function shipOreMul() { return 1; }
 function spaceStep(dt, t) {
   const F = fly; if (!F) return;
@@ -401,12 +403,12 @@ function shipFire() {
   for (const r of F.raiders) { if (r.dead) continue; const to = r.obj.position.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = r.obj.position.clone(); } }
   for (const X of F.extra || []) { if (X.dead) continue; const p = X.pos(), to = p.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = p; } }
   for (const side of [-1, 1]) {
-    const from = player.pos.clone().addScaledVector(shipRight, 4.4 * side).addScaledVector(shipFwd, -1), dir = focus.clone().sub(from).normalize();
+    const go = shipGunOff(side), from = player.pos.clone().addScaledVector(shipRight, go.x).addScaledVector(shipUp.set(0, 1, 0).applyQuaternion(_q), go.y).addScaledVector(shipFwd, -go.z), dir = focus.clone().sub(from).normalize();
     let hit = null, ht = 420, rock = -1, ext = null;
     for (const X of F.extra || []) { if (X.dead) continue; const tt = raySphere(from, dir, X.pos(), X.r); if (tt > 0 && tt < ht) { ht = tt; ext = X; } }
     for (const r of F.raiders) { if (r.dead) continue; const tt = raySphere(from, dir, r.obj.position, 5); if (tt > 0 && tt < ht) { ht = tt; hit = r; rock = -1; ext = null; } }
     F.rockData.forEach((R, i) => { if (R.dead) return; const tt = raySphere(from, dir, R.p, R.s); if (tt > 0 && tt < ht) { ht = tt; hit = null; rock = i; ext = null; } });
-    const end = from.clone().addScaledVector(dir, ht); tracer(from, end, '#6fdc5a');
+    const end = from.clone().addScaledVector(dir, ht); tracer(from, end, shipTracer());
     if (ext) ext.hit(dmg / 2, end);
     else if (hit) { hit.hp -= dmg / 2; hit.aggro = true; burst(end, '#ffd36a', 6, 12); hitmark(false); if (hit.hp <= 0) killRaider(hit); else drawPlate(hit.plate, (hit.def && hit.def.name) || 'Drome Raider', 'Lv ' + hit.lv, hpColor(hit.lv), hit.hp / hit.max); }
     else if (rock >= 0) { const R = F.rockData[rock]; R.hp -= dmg / 2 * shipMineMul(); burst(end, '#b8a07a', 4, 10);

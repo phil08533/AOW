@@ -50,7 +50,8 @@ const server = http.createServer((req, res) => {
 });
 const wss = new WebSocketServer({ server, maxPayload: MAX_MSG });
 wss.on('connection', (ws, req) => {
-  const ip = req.socket.remoteAddress, p = { id: 'p_' + crypto.randomBytes(5).toString('hex'), ip, ok: false, bucket: RATE, last: Date.now() };
+  // behind a Cloudflare tunnel every player arrives from 127.0.0.1; the tunnel says who they really are
+  const sock = req.socket.remoteAddress, viaTunnel = !!req.headers['cf-connecting-ip'] && /^(::ffff:)?127\.0\.0\.1$|^::1$/.test(sock), ip = viaTunnel ? String(req.headers['cf-connecting-ip']).slice(0, 64) : sock, p = { id: 'p_' + crypto.randomBytes(5).toString('hex'), ip, ok: false, bucket: RATE, last: Date.now() };
   players.set(ws, p);
   const f = failed.get(ip); if (f && f.until > Date.now()) { ws.close(4003, 'Too many wrong passwords. Try again later.'); return; }
   const authT = setTimeout(() => { if (!p.ok) ws.close(4000, 'No join'); }, 30000);
@@ -60,7 +61,7 @@ wss.on('connection', (ws, req) => {
     let m; try { m = JSON.parse(raw.toString()); } catch (_) { return; } if (!m || typeof m !== 'object') return;
     if (!p.ok) { if (m.type === 'info') { p.peek = 1; return ws.send(JSON.stringify({ type: 'info', server: info() })); }
       // only the host's own PC gets the addresses and panel link
-      if (m.type === 'local') { p.peek = 1; if (!/^(::ffff:)?127\.0\.0\.1$|^::1$/.test(ip)) return; return ws.send(JSON.stringify({ type: 'local', port: cfg.port, code: cfg.code, lan: lanIps(), publicIp, panel: `http://127.0.0.1:${cfg.adminPort}/` })); } if (m.type !== 'join') return;
+      if (m.type === 'local') { p.peek = 1; if (viaTunnel || !/^(::ffff:)?127\.0\.0\.1$|^::1$/.test(ip)) return; return ws.send(JSON.stringify({ type: 'local', port: cfg.port, code: cfg.code, lan: lanIps(), publicIp, panel: `http://127.0.0.1:${cfg.adminPort}/` })); } if (m.type !== 'join') return;
       const pid = String(m.pid || '').slice(0, 64);
       if (cfg.bans.includes(pid) || cfg.bans.includes(ip)) return ws.close(4001, 'You are banned from this server.');
       if (!checkPassword(m.pass)) { const c = failed.get(ip) || { n: 0 }; c.n++; if (c.n >= 5) { c.until = now + 60000; c.n = 0; } failed.set(ip, c); return ws.close(4002, 'Wrong password.'); }

@@ -176,6 +176,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 261, title: '2.22.96 · Quest tracker', items: ['Quests you have not picked up yet now say which world the quest giver is on (like Ada-9 in Robot City)'] },
   { id: 260, title: '2.22.95 · Intro and Undercroft fixes', items: ['World intro flyovers no longer show striped floors', 'The Zeltac intro now flies through the plaza instead of showing the ship as a box in space', 'The Undercroft tip jar sits on the stage instead of floating in front of Vixen'] },
   { id: 259, title: '2.22.94 · Robot City', items: ['The old Hover Track is gone from Robot City, along with talk of the Hover Cup'] },
   { id: 258, title: '2.22.93 · Kayak respawn', items: ['Dying in a kayak now puts you back on foot when you respawn'] },

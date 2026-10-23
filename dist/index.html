@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.95</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.96</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -5242,11 +5242,13 @@ function renderQuest() {
   const q = QDEFS[id], s = S.qst[id];
   $('qCh').textContent = q.ch + (nAct > 1 ? ` · ${nAct} quests (J)` : '');
   $('qTitle').textContent = q.title;
-  if (!s) { add('Talk to ' + npcName(q.giver)); return; }
+  if (!s) { const lv = npcHome(q.giver); add('Talk to ' + npcName(q.giver) + (lv && (!LEVEL || LEVEL.id !== lv) ? ` (${LEVELS[lv].name})` : '')); return; }
   q.obj.forEach((o, k) => add(`${o.text}${o.n > 1 ? ` ${objHave(o, s.p[k])}/${o.n}` : ''}`, objDone(o, s.p[k])));
   if (s.st === 'ready') add('Return to ' + npcName(q.turnIn), true);
   const t = questTarget(); if (t && t.label && t.label.startsWith('Travel')) add(t.label);
 }
+// which level an NPC lives on, so a quest you haven't picked up yet still says where to go
+function npcHome(id) { for (const k in LEVELS) { const n = LEVELS[k].npcs; if (Array.isArray(n) && n.some(d => d && d.id === id)) return k; } return null; }
 function openQuestLog() {
   openDlg('Journal', 'Quests');
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
@@ -19003,6 +19005,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 261, title: '2.22.96 · Quest tracker', items: ['Quests you have not picked up yet now say which world the quest giver is on (like Ada-9 in Robot City)'] },
   { id: 260, title: '2.22.95 · Intro and Undercroft fixes', items: ['World intro flyovers no longer show striped floors', 'The Zeltac intro now flies through the plaza instead of showing the ship as a box in space', 'The Undercroft tip jar sits on the stage instead of floating in front of Vixen'] },
   { id: 259, title: '2.22.94 · Robot City', items: ['The old Hover Track is gone from Robot City, along with talk of the Hover Cup'] },
   { id: 258, title: '2.22.93 · Kayak respawn', items: ['Dying in a kayak now puts you back on foot when you respawn'] },

@@ -267,11 +267,13 @@ function renderQuest() {
   const q = QDEFS[id], s = S.qst[id];
   $('qCh').textContent = q.ch + (nAct > 1 ? ` · ${nAct} quests (J)` : '');
   $('qTitle').textContent = q.title;
-  if (!s) { add('Talk to ' + npcName(q.giver)); return; }
+  if (!s) { const lv = npcHome(q.giver); add('Talk to ' + npcName(q.giver) + (lv && (!LEVEL || LEVEL.id !== lv) ? ` (${LEVELS[lv].name})` : '')); return; }
   q.obj.forEach((o, k) => add(`${o.text}${o.n > 1 ? ` ${objHave(o, s.p[k])}/${o.n}` : ''}`, objDone(o, s.p[k])));
   if (s.st === 'ready') add('Return to ' + npcName(q.turnIn), true);
   const t = questTarget(); if (t && t.label && t.label.startsWith('Travel')) add(t.label);
 }
+// which level an NPC lives on, so a quest you haven't picked up yet still says where to go
+function npcHome(id) { for (const k in LEVELS) { const n = LEVELS[k].npcs; if (Array.isArray(n) && n.some(d => d && d.id === id)) return k; } return null; }
 function openQuestLog() {
   openDlg('Journal', 'Quests');
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';

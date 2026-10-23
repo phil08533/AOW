@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.94</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.95</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19003,6 +19003,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 260, title: '2.22.95 · Intro and Undercroft fixes', items: ['World intro flyovers no longer show striped floors', 'The Zeltac intro now flies through the plaza instead of showing the ship as a box in space', 'The Undercroft tip jar sits on the stage instead of floating in front of Vixen'] },
   { id: 259, title: '2.22.94 · Robot City', items: ['The old Hover Track is gone from Robot City, along with talk of the Hover Cup'] },
   { id: 258, title: '2.22.93 · Kayak respawn', items: ['Dying in a kayak now puts you back on foot when you respawn'] },
   { id: 257, title: '2.22.92 · Evidence and the badge button', items: ['Evidence locker: turn in drugs you find for half their street value plus Marshal XP', 'The BADGE button only shows once you are a Marshal (it was showing over the map on mobile)'] },
@@ -21913,7 +21914,7 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
   ucChar(() => recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a7a', '#3e5e26': '#2a3a5a' }), 'bughybrid', -26.2, -25.4, 0.3, (o, t, ph) => { o.position.y = 0.5 + Math.abs(Math.sin(t * 6)) * 0.05; const R = o.userData.rig; R.armL.rotation.x = -0.9 + Math.sin(t * 12) * 0.5; R.armR.rotation.x = -0.9 - Math.sin(t * 12) * 0.5; });
   { const o = ucChar(() => recolor(makeMaxurge(), {}), 'maxurge', -20.6, -24.6, -0.4, (o, t) => { o.position.y = 0.5 + Math.abs(Math.sin(t * 3)) * 0.06; o.rotation.z = Math.sin(t * 1.5) * 0.06; }); part(o, B(0.16, 1.1, 0.06), toon('#6a3a1e', 'wood'), 0.1, 1.2, 0.3, 0, 0, 0.8); }
   const spot = new THREE.PointLight(0xc86aff, 1.3, 14, 1.6); spot.position.set(-23, 4.5, -21); levelGroup.add(spot);
-  const jar = part(props, Cy(0.18, 0.15, 0.32, 10), new THREE.MeshLambertMaterial({ color: '#9ad8c8', transparent: true, opacity: 0.5 }), -20.4, 0.66, -20.6); jar.renderOrder = 2;
+  const jar = part(props, Cy(0.18, 0.15, 0.32, 10), new THREE.MeshLambertMaterial({ color: '#9ad8c8', transparent: true, opacity: 0.8 }), -20.4, 0.66, -21.3); jar.renderOrder = 2;
   // velma's spotlight bob is on the NPC itself (she sways a little)
   setTimeout(() => { const N = typeof npcObjs !== 'undefined' && npcObjs.velma; if (!N) return; const o = N.obj, y0 = o.position.y, r0 = o.rotation.y; levelAnims.push(t => { if (!o.parent) return; o.position.y = y0 + 0.5 + Math.abs(Math.sin(t * 2.2)) * 0.04; o.rotation.y = r0 + Math.sin(t * 0.8) * 0.4; }); }, 80);
   // ---- back-room poker, stage right ----
@@ -27507,10 +27508,12 @@ const WORLD_INTRO = {
 };
 function worldIntro(id, replay) {
   const L = LEVELS[id], sp = L.spawn || { x: 0, z: 0 }, zs = (L.zones || []).filter(z => !z.safe && z.r >= 8).slice(0, 6), pick = [zs[0], zs[Math.floor(zs.length / 2)]].filter((z, i, a) => z && a.indexOf(z) === i), fh = (x, z) => { try { return floorAt(x, z); } catch (_) { return 0; } };
-  const shots = [{ text: WORLD_INTRO[id], dur: 6.5, cam: (t, k) => { const a = 0.4 + k * 0.6, r = 70 - k * 20; camera.position.set(sp.x + Math.sin(a) * r, fh(sp.x, sp.z) + 38 - k * 12, sp.z + Math.cos(a) * r); camera.lookAt(sp.x, fh(sp.x, sp.z) + 2, sp.z); } }];
+  const inner = id === 'zeltac', R0 = inner ? 16 : 70, H0 = inner ? 7 : 38;
+  const shots = [{ text: WORLD_INTRO[id], dur: 6.5, cam: (t, k) => { const a = 0.4 + k * 0.6, r = R0 - k * (inner ? 4 : 20); camera.position.set((inner ? 0 : sp.x) + Math.sin(a) * r, fh(sp.x, sp.z) + H0 - k * (inner ? 2 : 12), (inner ? 0 : sp.z) + Math.cos(a) * r); camera.lookAt(inner ? 0 : sp.x, fh(sp.x, sp.z) + 2, inner ? 0 : sp.z); } }];
   for (const z of pick) shots.push({ text: `${z.name}${z.lvl ? ' · ' + z.lvl : ''}`, dur: 4, cam: (t, k) => { const a = t * 0.15 + 1, r = z.r * 1.4 + 8; camera.position.set(z.x + Math.sin(a) * r, fh(z.x, z.z) + 9 + z.r * 0.35, z.z + Math.cos(a) * r); camera.lookAt(z.x, fh(z.x, z.z) + 1.5, z.z); } });
   shots.push({ text: '', dur: 2, cam: (t, k) => { const p = player.pos; camera.position.set(p.x + Math.sin(player.yaw) * (6 - k * 6), p.y + 1.6 + 4 * (1 - k), p.z + Math.cos(player.yaw) * (6 - k * 6)); camera.lookAt(p.x - Math.sin(player.yaw) * 8, p.y + 1.4, p.z - Math.cos(player.yaw) * 8); } });
-  runCutscene({ lock: 3, replay, shots, onEnd: () => { if (!replay) { S.flags['wi_' + id] = 1; markDirty(); } } });
+  camera.near = 0.4; camera.updateProjectionMatrix(); // a deeper near plane stops the striped floors on high flyover shots
+  runCutscene({ lock: 3, replay, shots, onEnd: () => { camera.near = LEVEL.fly ? 0.5 : 0.03; camera.updateProjectionMatrix(); if (!replay) { S.flags['wi_' + id] = 1; markDirty(); } } });
 }
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); S.flags = S.flags || {};
   if (WORLD_INTRO[id] && !S.flags['wi_' + id]) setTimeout(() => { if (LEVEL.id === id && state === 'play' && !CUT.on && !dlgOpen && !S.flags['wi_' + id]) worldIntro(id); }, 1100);

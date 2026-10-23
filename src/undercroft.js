@@ -85,7 +85,7 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
   ucChar(() => recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a7a', '#3e5e26': '#2a3a5a' }), 'bughybrid', -26.2, -25.4, 0.3, (o, t, ph) => { o.position.y = 0.5 + Math.abs(Math.sin(t * 6)) * 0.05; const R = o.userData.rig; R.armL.rotation.x = -0.9 + Math.sin(t * 12) * 0.5; R.armR.rotation.x = -0.9 - Math.sin(t * 12) * 0.5; });
   { const o = ucChar(() => recolor(makeMaxurge(), {}), 'maxurge', -20.6, -24.6, -0.4, (o, t) => { o.position.y = 0.5 + Math.abs(Math.sin(t * 3)) * 0.06; o.rotation.z = Math.sin(t * 1.5) * 0.06; }); part(o, B(0.16, 1.1, 0.06), toon('#6a3a1e', 'wood'), 0.1, 1.2, 0.3, 0, 0, 0.8); }
   const spot = new THREE.PointLight(0xc86aff, 1.3, 14, 1.6); spot.position.set(-23, 4.5, -21); levelGroup.add(spot);
-  const jar = part(props, Cy(0.18, 0.15, 0.32, 10), new THREE.MeshLambertMaterial({ color: '#9ad8c8', transparent: true, opacity: 0.5 }), -20.4, 0.66, -20.6); jar.renderOrder = 2;
+  const jar = part(props, Cy(0.18, 0.15, 0.32, 10), new THREE.MeshLambertMaterial({ color: '#9ad8c8', transparent: true, opacity: 0.8 }), -20.4, 0.66, -21.3); jar.renderOrder = 2;
   // velma's spotlight bob is on the NPC itself (she sways a little)
   setTimeout(() => { const N = typeof npcObjs !== 'undefined' && npcObjs.velma; if (!N) return; const o = N.obj, y0 = o.position.y, r0 = o.rotation.y; levelAnims.push(t => { if (!o.parent) return; o.position.y = y0 + 0.5 + Math.abs(Math.sin(t * 2.2)) * 0.04; o.rotation.y = r0 + Math.sin(t * 0.8) * 0.4; }); }, 80);
   // ---- back-room poker, stage right ----

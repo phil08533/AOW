@@ -176,6 +176,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 252, title: '2.22.87 · Join your own server by code', items: ['Joining by code now works on the PC that is hosting the server.'] },
   { id: 251, title: '2.22.86 · One-click Join', items: ['The button next to the code box is now Join and takes you straight in; it asks for a password if the server has one. Click a server in the list to see its rules first.'] },
   { id: 250, title: '2.22.85 · Server list refresh', items: ['The server list has a Refresh button and updates itself every 15 seconds while open.'] },
   { id: 249, title: '2.22.84 · Host from the game', items: ['Multiplayer has a Host a server box: download link, one-click launcher steps, and Find my server, which shows your join code and addresses with Copy buttons, Join my server and the control panel.'] },

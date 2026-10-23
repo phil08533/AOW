@@ -35,7 +35,7 @@ const log = [], LOGN = 300; const say = s => { const l = `[${new Date().toISOStr
 const MAX_MSG = 48 * 1024, RATE = 40; // bytes per message, messages per second
 const failed = new Map(); // ip -> { n, until } — slows password guessing
 
-function info() { return { name: cfg.name, desc: cfg.desc, public: cfg.public, locked: !!cfg.pass, players: [...players.values()].filter(p => p.ok).map(p => p.nick), count: [...players.values()].filter(p => p.ok).length, max: cfg.maxPlayers, rules: cfg.rules, version: 1 }; }
+function info() { return { code: cfg.code, name: cfg.name, desc: cfg.desc, public: cfg.public, locked: !!cfg.pass, players: [...players.values()].filter(p => p.ok).map(p => p.nick), count: [...players.values()].filter(p => p.ok).length, max: cfg.maxPlayers, rules: cfg.rules, version: 1 }; }
 
 // only send each player the peers on their own world; batch at 20 Hz
 let dirty = false;

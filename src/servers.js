@@ -54,7 +54,10 @@ function openServers() {
       M.querySelectorAll('[data-cp]').forEach(b => b.onclick = () => { try { navigator.clipboard.writeText(b.dataset.cp); b.textContent = 'Copied'; } catch (_) {} });
       $q('srvJoinMine').onclick = () => { $q('srvAddr').value = '127.0.0.1:' + m.port; $q('srvPrev').click(); }; }; };
   $q('srvPrev').onclick = async () => { const raw = $q('srvAddr').value.trim(), go = !$q('srvAddr').dataset.peek;
-    if (LOOKUP && /^[A-Z0-9]{6}$/i.test(raw)) { try { const r = await (await fetch(LOOKUP + '/code/' + raw)).json(); if (r.error) throw r.error; return view(`ws://${r.host}:${r.port}`, raw.toUpperCase(), go); } catch (e) { $q('srvView').innerHTML = `<p style="color:#f87">${esc(typeof e === 'string' ? e : 'No server with that code is online.')}</p>`; return; } }
+    if (LOOKUP && /^[A-Z0-9]{6}$/i.test(raw)) { try { const r = await (await fetch(LOOKUP + '/code/' + raw)).json(); if (r.error) throw r.error; // the listed address is the host's internet address; from inside the host's own house that usually can't loop back, so try this PC too
+      const pub = `ws://${r.host}:${r.port}`, here = `ws://127.0.0.1:${r.port}`, code = raw.toUpperCase();
+      const mine = await srvInfo(here).then(i => i && i.code === code, () => false);
+      return view(mine ? here : pub, code, go); } catch (e) { $q('srvView').innerHTML = `<p style="color:#f87">${esc(typeof e === 'string' ? e : 'No server with that code is online.')}</p>`; return; } }
     const u = srvAddr(raw); if (!u) { $q('srvView').innerHTML = '<p style="color:#f87">That doesn\'t look like a server address.</p>'; return; } view(u, null, go); };
   if (LOOKUP) { let tm = 0; const load = async () => { const L = $q('srvList'); try { const rows = await (await fetch(LOOKUP + '/list?q=' + encodeURIComponent($q('srvQ').value))).json();
       L.innerHTML = rows.length ? rows.map(r => `<div class="srRow" data-c="${esc(r.code)}"><div style="flex:1"><b>${esc(r.name)}</b> ${r.locked ? '🔒' : ''}<div style="font-size:12px;color:#9ab">${esc(r.desc)}</div></div><div>${r.count}/${r.max}</div></div>`).join('') : '<p style="color:#9ab">No servers found.</p>';

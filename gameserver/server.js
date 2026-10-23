@@ -42,7 +42,8 @@ setInterval(() => { if (!dirty) return; dirty = false; const byLv = new Map();
   for (const [ws, p] of players) if (p.ok && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'peers', peers: byLv.get((p.presence && p.presence.lv) || '') || [] })); }, 50);
 
 const server = http.createServer((req, res) => {
-  if (req.method === 'GET' && req.url === '/info') { res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' }); return res.end(JSON.stringify(info())); }
+  if (req.method === 'OPTIONS') { res.writeHead(204, { 'access-control-allow-origin': '*', 'access-control-allow-private-network': 'true', 'access-control-allow-headers': '*' }); return res.end(); }
+  if (req.method === 'GET' && req.url === '/info') { res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*', 'access-control-allow-private-network': 'true' }); return res.end(JSON.stringify(info())); }
   res.writeHead(404); res.end();
 });
 const wss = new WebSocketServer({ server, maxPayload: MAX_MSG });
@@ -55,7 +56,7 @@ wss.on('connection', (ws, req) => {
     const now = Date.now(); p.bucket = Math.min(RATE, p.bucket + (now - p.last) / 1000 * RATE); p.last = now;
     if ((p.bucket -= 1) < 0) { if (p.bucket < -RATE) ws.close(4008, 'Flooding'); return; }
     let m; try { m = JSON.parse(raw.toString()); } catch (_) { return; } if (!m || typeof m !== 'object') return;
-    if (!p.ok) { if (m.type !== 'join') return;
+    if (!p.ok) { if (m.type === 'info') return ws.send(JSON.stringify({ type: 'info', server: info() })); if (m.type !== 'join') return;
       const pid = String(m.pid || '').slice(0, 64);
       if (cfg.bans.includes(pid) || cfg.bans.includes(ip)) return ws.close(4001, 'You are banned from this server.');
       if (!checkPassword(m.pass)) { const c = failed.get(ip) || { n: 0 }; c.n++; if (c.n >= 5) { c.until = now + 60000; c.n = 0; } failed.set(ip, c); return ws.close(4002, 'Wrong password.'); }

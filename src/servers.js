@@ -4,7 +4,12 @@ const LOOKUP = ''; // the Cloudflare Worker address, e.g. https://blork-lookup.N
 const RULE_LABEL = { pvp: ['PvP', v => ({ off: 'Off', on: 'On', zones: 'Zones only' })[v] || v], friendlyFire: ['Friendly fire', v => v ? 'On' : 'Off'], difficulty: ['Difficulty', v => v + 'x'], xpMult: ['XP', v => v + 'x'], lootMult: ['Loot', v => v + 'x'], paths: ['Paths', v => ({ both: 'Outlaw + Marshal', outlaw: 'Outlaw only', marshal: 'Marshal only' })[v] || v], civilians: ['Killing civilians', v => v ? 'Allowed' : 'Off'], startWorld: ['Start', v => v], devGear: ['Test gear', v => v ? 'Allowed' : 'Off'] };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 function srvAddr(s) { s = String(s || '').trim(); if (!s) return null; if (/^wss?:\/\//.test(s)) return s; const m = s.match(/^([\w.\-]+|\[[0-9a-f:]+\])(?::(\d+))?$/i); return m ? `ws://${m[1]}:${m[2] || 7777}` : null; }
-async function srvInfo(ws) { const r = await fetch(ws.replace(/^ws/, 'http') + '/info', { signal: AbortSignal.timeout(5000) }); return r.json(); }
+// ask over the WebSocket itself: works from https pages where a plain http fetch to the host's PC gets blocked
+function srvInfo(url) { return new Promise((res, rej) => { let w; try { w = new WebSocket(url); } catch (e) { return rej(e); }
+  const t = setTimeout(() => { try { w.close(); } catch (_) {} rej(new Error('timeout')); }, 5000);
+  w.onopen = () => w.send(JSON.stringify({ type: 'info' }));
+  w.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'info') { clearTimeout(t); w.close(); res(m.server); } } catch (_) {} };
+  w.onerror = () => { clearTimeout(t); rej(new Error('unreachable')); }; }); }
 function srvRules(r) { return Object.keys(RULE_LABEL).filter(k => r && k in r).map(k => `<span class="srR"><b>${RULE_LABEL[k][0]}</b> ${esc(RULE_LABEL[k][1](r[k]))}</span>`).join(''); }
 function openServers() {
   const d = document.createElement('div'); d.className = 'introLegal'; d.id = 'srvDlg';

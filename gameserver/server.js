@@ -58,7 +58,9 @@ wss.on('connection', (ws, req) => {
     const now = Date.now(); p.bucket = Math.min(RATE, p.bucket + (now - p.last) / 1000 * RATE); p.last = now;
     if ((p.bucket -= 1) < 0) { if (p.bucket < -RATE) ws.close(4008, 'Flooding'); return; }
     let m; try { m = JSON.parse(raw.toString()); } catch (_) { return; } if (!m || typeof m !== 'object') return;
-    if (!p.ok) { if (m.type === 'info') return ws.send(JSON.stringify({ type: 'info', server: info() })); if (m.type !== 'join') return;
+    if (!p.ok) { if (m.type === 'info') return ws.send(JSON.stringify({ type: 'info', server: info() }));
+      // only the host's own PC gets the addresses and panel link
+      if (m.type === 'local') { if (!/^(::ffff:)?127\.0\.0\.1$|^::1$/.test(ip)) return; return ws.send(JSON.stringify({ type: 'local', port: cfg.port, code: cfg.code, lan: lanIps(), publicIp, panel: `http://127.0.0.1:${cfg.adminPort}/` })); } if (m.type !== 'join') return;
       const pid = String(m.pid || '').slice(0, 64);
       if (cfg.bans.includes(pid) || cfg.bans.includes(ip)) return ws.close(4001, 'You are banned from this server.');
       if (!checkPassword(m.pass)) { const c = failed.get(ip) || { n: 0 }; c.n++; if (c.n >= 5) { c.until = now + 60000; c.n = 0; } failed.set(ip, c); return ws.close(4002, 'Wrong password.'); }

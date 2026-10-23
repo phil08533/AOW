@@ -16,6 +16,12 @@ function openServers() {
   d.innerHTML = `<div class="ilBox" style="max-width:720px;width:100%"><h2>Multiplayer</h2>
     ${LOOKUP ? `<input id="srvQ" placeholder="Search servers" style="width:100%;box-sizing:border-box;padding:8px;margin-bottom:8px"><div id="srvList" style="max-height:38vh;overflow:auto"></div>` : `<p style="color:#9ab">The public server list goes live once the lookup service is set up. You can still join by address.</p>`}
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><input id="srvAddr" placeholder="${LOOKUP ? 'Join code or address' : 'Address, like 192.168.1.5:7777'}" style="flex:1;min-width:180px;padding:8px"><button class="cta" id="srvPrev">Preview</button></div>
+    <div style="margin-top:12px;padding:10px;border:1px solid #2a3040;border-radius:8px"><b>Host a server</b>
+      <ol style="margin:6px 0 8px 18px;padding:0;font-size:13px;line-height:1.5">
+        <li><a href="https://github.com/phil08533/AOW/archive/refs/heads/main.zip" target="_blank" rel="noopener" style="color:#9cf">Download the game files</a> and unzip them (skip this if you already have them).</li>
+        <li>Open the <code>gameserver</code> folder and double-click <b>Host Server.bat</b> (Mac/Linux: <code>host-server.sh</code>). It sets itself up and opens a control panel.</li>
+        <li>Come back here and press <b>Find my server</b>.</li></ol>
+      <button class="cta" id="srvFind">Find my server</button><div id="srvMine" style="margin-top:8px;font-size:13px"></div></div>
     <details style="margin-top:10px;font-size:13px;line-height:1.5"><summary style="cursor:pointer;color:#9cf">How to join or host</summary>
       <p><b>Join a friend:</b> pick a server from the list, or type the 6-letter <b>join code</b> they give you. Then press Preview, then Join.</p>
       <p><b>Join by address:</b></p><ul style="margin:4px 0 8px 18px;padding:0">
@@ -35,6 +41,17 @@ function openServers() {
         <div style="display:flex;gap:8px">${i.locked ? '<input id="srvPass" type="password" placeholder="Password" maxlength="128" style="flex:1;padding:8px">' : ''}<button class="cta win" id="srvJoin" ${i.count >= i.max ? 'disabled' : ''}>${i.count >= i.max ? 'Full' : 'Join'}</button></div>`;
       $q('srvJoin').onclick = () => { sessionStorage.setItem('aow-server', JSON.stringify({ url, code, pass: i.locked ? $q('srvPass').value : '' })); location.reload(); };
     } catch (_) { v.innerHTML = `<p style="color:#f87">Couldn't reach that server. Check the address, or the host may be offline.</p>`; } };
+  $q('srvFind').onclick = () => { const M = $q('srvMine'); M.textContent = 'Looking for a server on this PC...';
+    let w; try { w = new WebSocket('ws://127.0.0.1:7777'); } catch (_) { M.innerHTML = '<span style="color:#f87">No server found. Start Host Server first.</span>'; return; }
+    const t = setTimeout(() => { try { w.close(); } catch (_) {} M.innerHTML = '<span style="color:#f87">No server found on this PC. Start Host Server, then press Find my server again.</span>'; }, 4000);
+    w.onopen = () => w.send(JSON.stringify({ type: 'local' }));
+    w.onerror = () => { clearTimeout(t); M.innerHTML = '<span style="color:#f87">No server found on this PC. Start Host Server, then press Find my server again.</span>'; };
+    w.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (_) { return; } if (m.type !== 'local') return; clearTimeout(t); w.close();
+      const rows = [['Join code', m.code || 'shows once the server list answers'], ['Same Wi-Fi', (m.lan || []).map(a => a + ':' + m.port).join(', ') || 'none found'], ['Internet', m.publicIp ? m.publicIp + ':' + m.port + ' (needs port ' + m.port + ' forwarded)' : 'unknown yet']];
+      M.innerHTML = `<div style="color:#7dff6a;margin-bottom:4px">Your server is running.</div>` + rows.map(([l, v]) => `<div style="display:flex;gap:8px;align-items:center;margin:3px 0"><span style="flex:0 0 90px;color:#9ab">${l}</span><code style="flex:1">${esc(v)}</code>${/:\d+$|^[A-Z0-9]{6}$/.test(v) ? `<button class="cta" data-cp="${esc(v)}" style="padding:2px 8px">Copy</button>` : ''}</div>`).join('') +
+        `<div style="display:flex;gap:8px;margin-top:8px"><button class="cta win" id="srvJoinMine">Join my server</button><a class="cta" href="${esc(m.panel)}" target="_blank" rel="noopener" style="text-decoration:none">Open control panel</a></div>`;
+      M.querySelectorAll('[data-cp]').forEach(b => b.onclick = () => { try { navigator.clipboard.writeText(b.dataset.cp); b.textContent = 'Copied'; } catch (_) {} });
+      $q('srvJoinMine').onclick = () => { $q('srvAddr').value = '127.0.0.1:' + m.port; $q('srvPrev').click(); }; }; };
   $q('srvPrev').onclick = async () => { const raw = $q('srvAddr').value.trim();
     if (LOOKUP && /^[A-Z0-9]{6}$/i.test(raw)) { try { const r = await (await fetch(LOOKUP + '/code/' + raw)).json(); if (r.error) throw r.error; return view(`ws://${r.host}:${r.port}`, raw.toUpperCase()); } catch (e) { $q('srvView').innerHTML = `<p style="color:#f87">${esc(typeof e === 'string' ? e : 'No server with that code is online.')}</p>`; return; } }
     const u = srvAddr(raw); if (!u) { $q('srvView').innerHTML = '<p style="color:#f87">That doesn\'t look like a server address.</p>'; return; } view(u); };

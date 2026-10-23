@@ -11,7 +11,14 @@ async function listChars() {
   return Object.values(all).filter(c => c.t).sort((a, b) => (b.t || 0) - (a.t || 0));
 }
 function playChar(c) { if (dirty) { try { flushSave(); } catch (_) {} } adopt(JSON.parse(JSON.stringify(c))); fillStart(); const w = resumeWhere(); if (w !== LEVEL.id) loadLevel(w); dirty = true; S.t = Date.now(); writeLocal(); renderChars(); toast('CHARACTER', `${S.nick} · ID ${shortId(S.cid)}`, 1.4); }
-function newChar() { if (S.t && dirty) { try { flushSave(); } catch (_) {} } S = fresh(); $('nickIn').value = ''; fillStart(); loadLevel(resumeWhere()); renderChars(); toast('NEW CHARACTER', 'Pick a callsign and armor color, then Press Start. Your other characters are kept.', 3); }
+function newChar() { const typed = ($('nickIn').value || '').trim(); if (S.t && dirty) { try { flushSave(); } catch (_) {} } const keep = typed && typed !== S.nick ? typed : ''; S = fresh(); if (keep) S.nick = keep.slice(0, 16); fillStart(); $('nickIn').value = keep; loadLevel(resumeWhere()); renderChars(); toast('NEW CHARACTER', 'Pick a callsign and armor color, then Press Start. Your other characters are kept.', 3); }
+// delete for good: this browser and the cloud copy. The one you're on is swapped for a fresh character.
+async function deleteChar(c) {
+  if (!confirm(`Delete ${c.nick || 'Trooper'} (Lv ${c.lvl}, ID ${shortId(c.cid)}) forever?\n\nThis can't be undone. Download the save first if you might want it back.`)) return;
+  try { const m = localChars(); delete m[c.cid]; localStorage.setItem(CHAR_LOCAL, JSON.stringify(m)); } catch (_) {}
+  if (db && uid) { try { await db.doc('data/users/' + uid + '/' + c.cid).delete(); } catch (_) {} }
+  if (c.cid === S.cid) { S = fresh(); $('nickIn').value = ''; fillStart(); if (db && uid) { try { await db.doc('data/users/' + uid + '/save').delete(); } catch (_) {} } }
+  SFX.ui(); toast('CHARACTER', `${c.nick || 'Trooper'} deleted`, 1.6); renderChars(); }
 // ---- start screen panel ----
 const charBox = document.createElement('div'); charBox.id = 'charBox'; charBox.hidden = true;
 const charBtn = document.createElement('button'); charBtn.className = 'pbtn'; charBtn.id = 'charBtn'; charBtn.textContent = '👥 Characters';
@@ -88,6 +95,8 @@ async function renderChars() {
     else { const b = document.createElement('button'); b.className = 'pbtn go'; b.textContent = 'Play'; b.addEventListener('click', () => { SFX.ui(); playChar(c); }); r.append(b); }
     const dl = document.createElement('button'); dl.className = 'pbtn'; dl.title = 'Download save (.json)'; dl.textContent = '💾'; dl.style.cssText = 'padding:4px 8px;min-width:0;'; dl.addEventListener('click', (e) => { e.stopPropagation(); SFX.ui(); downloadChar(c); });
     r.append(dl);
+    const del = document.createElement('button'); del.className = 'pbtn'; del.title = 'Delete character'; del.textContent = '🗑'; del.style.cssText = 'padding:4px 8px;min-width:0;'; del.addEventListener('click', e => { e.stopPropagation(); deleteChar(c); });
+    r.append(del);
     listWrap.appendChild(r);
   }
   const noMatch = document.createElement('div');

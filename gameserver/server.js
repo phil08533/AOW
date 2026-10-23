@@ -9,11 +9,13 @@ const CFG_PATH = process.env.GD_CONFIG || path.join(__dirname, 'server-config.js
 const DEFAULTS = { name: 'My Art of War Server', desc: '', public: true, maxPlayers: 16, port: 7777, adminPort: 7778,
   pass: null, // { salt, hash } — never the plain password
   rules: { pvp: 'off', friendlyFire: false, difficulty: 1, xpMult: 1, lootMult: 1, paths: 'both', civilians: true, startWorld: 'earth', devGear: false },
-  bans: [], adminToken: null };
+  bans: [], adminToken: null,
+  lookup: 'https://blork-lookup.REPLACE.workers.dev', listKey: null, code: null };
 const cfg = Object.assign({}, DEFAULTS, fs.existsSync(CFG_PATH) ? JSON.parse(fs.readFileSync(CFG_PATH, 'utf8')) : {});
 cfg.rules = Object.assign({}, DEFAULTS.rules, cfg.rules);
 if (!cfg.adminToken) cfg.adminToken = crypto.randomBytes(24).toString('hex');
 const save = () => fs.writeFileSync(CFG_PATH, JSON.stringify(cfg, null, 2));
+if (/REPLACE/.test(cfg.lookup || '')) cfg.lookup = DEFAULTS.lookup;
 save();
 
 // ---------- names ----------
@@ -87,9 +89,15 @@ const admin = http.createServer((req, res) => {
         if ('password' in b) setPassword(b.password); save(); return send(info());
       case '/admin/kick': case '/admin/ban': { const e = find(b.id); if (!e) return send({ ok: false }); const [ws, p] = e;
         if (req.url === '/admin/ban') { cfg.bans.push(...[p.pid, p.ip].filter(Boolean)); save(); } ws.close(4005, req.url === '/admin/ban' ? 'Banned by host.' : 'Kicked by host.'); say(`${p.nick} ${req.url === '/admin/ban' ? 'banned' : 'kicked'}`); return send({ ok: true }); }
-      case '/admin/stop': send({ ok: true }); say('Server stopping'); for (const ws of players.keys()) ws.close(1001, 'Server shutting down.'); return setTimeout(() => process.exit(0), 300);
+      case '/admin/stop': send({ ok: true }); say('Server stopping'); for (const ws of players.keys()) ws.close(1001, 'Server shutting down.'); return setTimeout(() => process.emit('SIGINT'), 300);
       default: res.writeHead(404); res.end(); } });
 });
+// ---------- list this server on the Blork lookup service (heartbeat every 2 minutes) ----------
+async function announce() { if (!cfg.lookup || /REPLACE/.test(cfg.lookup)) return; try {
+  const r = await fetch(cfg.lookup + '/announce', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key: cfg.listKey, name: cfg.name, desc: cfg.desc, port: cfg.port, public: cfg.public, locked: !!cfg.pass, count: info().count, max: cfg.maxPlayers, rules: cfg.rules }) });
+  const j = await r.json(); if (j.error) return say('Server list: ' + j.error); if (j.code !== cfg.code) say(`Join code: ${j.code}`); cfg.listKey = j.key; cfg.code = j.code; save(); } catch (e) { say('Server list unreachable'); } }
+setInterval(announce, 120000); setTimeout(announce, 1000);
+process.on('SIGINT', async () => { if (cfg.listKey && !/REPLACE/.test(cfg.lookup)) await fetch(cfg.lookup + '/remove', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key: cfg.listKey }) }).catch(() => {}); process.exit(0); });
 server.listen(cfg.port, () => say(`Blork Server "${cfg.name}" on port ${cfg.port}`));
 admin.listen(cfg.adminPort, '127.0.0.1');
 module.exports = { cfg, setPassword };

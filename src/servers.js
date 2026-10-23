@@ -14,7 +14,7 @@ function srvRules(r) { return Object.keys(RULE_LABEL).filter(k => r && k in r).m
 function openServers() {
   const d = document.createElement('div'); d.className = 'introLegal'; d.id = 'srvDlg';
   d.innerHTML = `<div class="ilBox" style="max-width:720px;width:100%"><h2>Multiplayer</h2>
-    ${LOOKUP ? `<input id="srvQ" placeholder="Search servers" style="width:100%;box-sizing:border-box;padding:8px;margin-bottom:8px"><div id="srvList" style="max-height:38vh;overflow:auto"></div>` : `<p style="color:#9ab">The public server list goes live once the lookup service is set up. You can still join by address.</p>`}
+    ${LOOKUP ? `<div style="display:flex;gap:8px;margin-bottom:8px"><input id="srvQ" placeholder="Search servers" style="flex:1;min-width:0;box-sizing:border-box;padding:8px"><button class="cta" id="srvRef" title="Refresh">⟳ Refresh</button></div><div id="srvList" style="max-height:38vh;overflow:auto"></div>` : `<p style="color:#9ab">The public server list goes live once the lookup service is set up. You can still join by address.</p>`}
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><input id="srvAddr" placeholder="${LOOKUP ? 'Join code or address' : 'Address, like 192.168.1.5:7777'}" style="flex:1;min-width:180px;padding:8px"><button class="cta" id="srvPrev">Preview</button></div>
     <div style="margin-top:12px;padding:10px;border:1px solid #2a3040;border-radius:8px"><b>Host a server</b>
       <ol style="margin:6px 0 8px 18px;padding:0;font-size:13px;line-height:1.5">
@@ -58,7 +58,8 @@ function openServers() {
   if (LOOKUP) { let tm = 0; const load = async () => { const L = $q('srvList'); try { const rows = await (await fetch(LOOKUP + '/list?q=' + encodeURIComponent($q('srvQ').value))).json();
       L.innerHTML = rows.length ? rows.map(r => `<div class="srRow" data-c="${esc(r.code)}"><div style="flex:1"><b>${esc(r.name)}</b> ${r.locked ? '🔒' : ''}<div style="font-size:12px;color:#9ab">${esc(r.desc)}</div></div><div>${r.count}/${r.max}</div></div>`).join('') : '<p style="color:#9ab">No servers found.</p>';
       L.querySelectorAll('.srRow').forEach(el => el.onclick = () => { $q('srvAddr').value = el.dataset.c; $q('srvPrev').click(); }); } catch (_) { L.innerHTML = '<p style="color:#f87">Server list is offline right now.</p>'; } };
-    $q('srvQ').oninput = () => { clearTimeout(tm); tm = setTimeout(load, 300); }; load(); }
+    $q('srvQ').oninput = () => { clearTimeout(tm); tm = setTimeout(load, 300); }; $q('srvRef').onclick = load; load();
+    const auto = setInterval(() => { if (!document.body.contains(d)) return clearInterval(auto); load(); }, 15000); }
 }
 (function () { const pb = document.getElementById('playBtn'); if (!pb) return; const b = document.createElement('button'); b.className = 'cta'; b.id = 'mpBtn';
   let cur = null; try { cur = JSON.parse(sessionStorage.getItem('aow-server') || 'null'); } catch (_) {}

@@ -176,6 +176,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 259, title: '2.22.94 · Robot City', items: ['The old Hover Track is gone from Robot City, along with talk of the Hover Cup'] },
   { id: 258, title: '2.22.93 · Kayak respawn', items: ['Dying in a kayak now puts you back on foot when you respawn'] },
   { id: 257, title: '2.22.92 · Evidence and the badge button', items: ['Evidence locker: turn in drugs you find for half their street value plus Marshal XP', 'The BADGE button only shows once you are a Marshal (it was showing over the map on mobile)'] },
   { id: 256, title: '2.22.91 · Marshal Office', items: ['New ship room for Marshals: Marshal Office (500 CR)', 'One Marshal terminal: missions, bounty board, rank, armory (the extra bridge terminal is gone)', 'Evidence locker pays a stipend every 20 min', 'Holding cell with your arrest count', '+15% Marshal XP while you own the office'] },

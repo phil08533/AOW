@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.93</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.94</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -8021,7 +8021,6 @@ LEVELS.robot = {
     { id: 'store', name: 'The Super Store', lvl: 'No fighting', x: STORE[0], z: STORE[1], r: 15, fr: 16, col: '#3a3d44', safe: true, h: 0.4 },
     { id: 'streets', name: 'Neon Streets', lvl: 'Lv 28–31', x: 0, z: 10, r: 20, fr: 14, col: '#2b2a2c', h: 0.5 },
     { id: 'grave', name: 'Robot Graveyard', lvl: 'Lv 30–33', x: -50, z: 8, r: 18, col: '#5a4a3a', h: 0.3 },
-    { id: 'track', name: 'Hover Track', lvl: 'Lv 31–34 · races', x: 48, z: 2, r: 20, col: '#2b2a2c', h: 0.4 },
     { id: 'factory', name: 'The Factory', lvl: 'Lv 33–36', x: 42, z: 58, r: 16, col: '#4a3a36', h: 0.6 },
     { id: 'tower', name: 'Tower of Death', lvl: 'Lv 36–40', x: -42, z: 66, r: 16, fr: 16, col: '#1e1c22', h: 0.6 }
   ],
@@ -8034,13 +8033,13 @@ LEVELS.robot = {
     { id: 'sparkplug', name: 'Sparkplug', role: 'Super Store · buys anything', rig: null, make: () => recolor(makeF162(), { '#6a7a6a': '#c9a43a' }), x: -7, z: 7, shop: 'store', idle: ["EVERYTHING MUST GO. Especially your loot. To me."] },
     { id: 'r731', name: 'R7-31', role: 'Gunsmith unit', rig: 'xr17', make: () => recolor(makeXR17(), { '#9aa1aa': '#5d636c', '#5d636c': '#c8402f' }), x: 7, z: 7, shop: 'guns', guns: ['r40', 'g45', 'x50', 'p35'], melee: ['staff', 'master', 'saber'], idle: ["WEAPONS. SALE. NOW.", "Bring Gear Cogs. I build better."] },
     { id: 'r733', name: 'R7-33', role: 'Repair unit · heals', rig: 'xr17', make: () => recolor(makeXR17(), { '#9aa1aa': '#e8e4dc', '#5d636c': '#c8402f' }), x: -8, z: -1, face: 1.4, heal: true, idle: ["Patching flesh is like patching chrome. Mostly."] },
-    { id: 'zip', name: 'Zip', role: 'Retired racer', rig: null, make: () => makeHoverBot(), x: 8, z: -1, face: -1.4, idle: ["The Hover Cup's done. All the real racers went to Velocity. Hover cars! Lightning! I'm jealous!", "Velocity's a magnet planet. Your car floats on the field. Mine just floats on hope."] },
+    { id: 'zip', name: 'Zip', role: 'Retired racer', rig: null, make: () => makeHoverBot(), x: 8, z: -1, face: -1.4, idle: ["All the real racers went to Velocity. Hover cars! Lightning! I'm jealous!", "Velocity's a magnet planet. Your car floats on the field. Mine just floats on hope."] },
     { id: 'coil', name: 'Coil', role: 'Coolant fisher · buys fish', rig: 'civ', make: () => makeCivilian('#5d636c', '#2c2a28', '#9fe8ff', '#1e1a18', '#ffd23a'), x: 13, z: 17, face: 0.8, shop: 'fish', rods: [1, 2, 3], idle: ["Fish in coolant? They adapted. Kinda."] }
   ],
   spawns: [
     { zone: 'streets', type: 'xgpolice', n: 6, lv: [28, 31] }, { zone: 'streets', type: 'hoverbot', n: 4, lv: [28, 30] },
     { zone: 'grave', type: 'zr306', n: 5, lv: [30, 33] }, { zone: 'grave', type: 'f162', n: 6, lv: [30, 32] }, { zone: 'grave', type: 'ghostbot', n: 2, lv: [32, 33] },
-    { zone: 'track', type: 'hoverbot', n: 3, lv: [31, 34] },
+    { zone: 'streets', type: 'hoverbot', n: 3, lv: [31, 34] },
     { zone: 'factory', type: 'k872', n: 6, lv: [33, 36] }, { zone: 'factory', type: 'krank', n: 1, lv: [37, 37], at: [0, 4] },
     { zone: 'tower', type: 'ghostbot', n: 5, lv: [36, 39] }, { zone: 'tower', type: 'overseer', n: 1, lv: [40, 40], at: [0, 2] }
   ],
@@ -8067,9 +8066,7 @@ LEVELS.robot = {
     { const g = makeXR17(); g.scale.setScalar(6); g.rotation.z = 1.4; at(g, Z.grave.x - 4, Z.grave.z + 12, 0.4, 1.2); solid(Z.grave.x - 4, Z.grave.z + 12, 3); }
     { const term = new THREE.Group(); part(term, B(0.8, 1.4, 0.5), '#3a3d44', 0, 0.7, 0); part(term, B(0.6, 0.4, 0.05), glow('#9fe8ff'), 0, 1.1, 0.26); at(term, Z.grave.x + 8, Z.grave.z - 8, 0.5); solid(Z.grave.x + 8, Z.grave.z - 8, 0.5);
       INTERACTS.push({ x: Z.grave.x + 8, z: Z.grave.z - 8, r: 2.6, label: 'Old terminal (ghost signal)', fn: () => foundQuest('rf1') }); }
-    // hover track: banked ring of glowing posts + checkpoints
-    for (let i = 0; i < 32; i++) { const a = i / 32 * Math.PI * 2; for (const rr of [13, 19]) { const x = Z.track.x + Math.cos(a) * rr, z = Z.track.z + Math.sin(a) * rr * 0.8; part(props, Cy(0.15, 0.15, 1.2, 6), glow(i % 2 ? '#ff3b6a' : '#ffd23a'), x, groundH(x, z) + 0.6, z); } }
-    RACE.cps = []; // the Hover Cup ring race was retired; racing lives on Velocity now
+    RACE.cps = [];
     // factory: smokestacks and conveyor
     for (let i = 0; i < 4; i++) { const x = Z.factory.x - 9 + i * 6, z = Z.factory.z - 9, g = new THREE.Group(); part(g, Cy(1, 1.3, 12, 8), '#4a3a36', 0, 6, 0); part(g, Cy(1.05, 1.05, 0.5, 8), glow('#ff6a1a'), 0, 11.5, 0); at(g, x, z); solid(x, z, 1.3); }
     part(props, B(14, 0.8, 2), '#2b2a2c', Z.factory.x, groundH(Z.factory.x, Z.factory.z + 8) + 0.4, Z.factory.z + 8); box(Z.factory.x, Z.factory.z + 8, 7, 1);
@@ -8079,7 +8076,7 @@ LEVELS.robot = {
     levelAnims.push(t => raceTick(t));
   }
 };
-// ---------------- the Hover Cup ----------------
+// ---------------- old ring race (unused) ----------------
 const RACE = { on: false, i: 0, t0: 0, cps: [], lastT: 0, now: 0 };
 function raceTick(t) {
   RACE.now = t; RACE.cps.forEach((c, k) => { c.ring.material = glow(RACE.on && k === RACE.i % 8 ? '#6fdc5a' : '#4fd2ff'); c.ring.scale.setScalar(RACE.on && k === RACE.i % 8 ? 1 + Math.sin(t * 8) * 0.08 : 1); });
@@ -8096,8 +8093,8 @@ function finishRace(el) {
   toast('FINISH!', `${el.toFixed(2)}s · +${cr} cr${el < best ? ' · NEW BEST' : ''}`, 4); SFX.level(); if (el < 45) questProgressKill('race45'); checkReady(); markDirty();
 }
 function openRacer() {
-  openDlg('Hover Cup', 'Zip');
-  $('dlgLine').textContent = `Two laps of the Hover Track, 16 glowing rings. Hover boots make you fast. Your best: ${S.race && S.race.best ? S.race.best + 's' : 'none yet'}. Under 45 seconds wins the cup.`;
+  openDlg('Race', 'Zip');
+  $('dlgLine').textContent = `Two laps, 16 glowing rings. Hover boots make you fast. Your best: ${S.race && S.race.best ? S.race.best + 's' : 'none yet'}. Under 45 seconds wins the cup.`;
   acts([['Race!', () => { closeDlg(); startRace(); }, true, RACE.on], ['Bye', closeDlg]]);
 }
 // ---------------- quests: Chapter 4 ----------------
@@ -8123,7 +8120,7 @@ defQuest('r5', { ch: 'Robot City · Chapter 4', title: 'Tower of Death', giver: 
   outro: ["His core is still warm. Listen... it's broadcasting.", "\"THE SETTING SUN RISES. ALL WORLDS WILL BURN RED.\"", "He's coming himself now. Whatever the Setting Sun is, we'll be ready. Thank you, gunner. Robot City is free.", "One more thing, gunner. Every channel in the city just lit up with your face. Somebody put a price on your head."],
   reward: { cr: 8000, xp: 20000, take: { overcore: 1 } } });
 defQuest('rs1', { ch: 'Robot City · Side job', title: 'Pit Row Calling', giver: 'zip', turnIn: 'vroom', req: ['r1'],
-  intro: ["The Hover Cup shut down. Everyone fast moved to Velocity, the magnet storm planet.", "Tell Vroom in Pit Row that Zip sent you. He owes me a tire. Several tires."],
+  intro: ["Everyone fast moved to Velocity, the magnet storm planet.", "Tell Vroom in Pit Row that Zip sent you. He owes me a tire. Several tires."],
   obj: [{ kind: 'reach', zone: 'pits', planet: 'speedway', n: 1, text: 'Fly to Velocity and reach Pit Row' }],
   outro: ["Zip sent you? Ha! Tell him the tires are in the mail. They are not in the mail.", "Grab a car and go. The flats are yours."], reward: { cr: 3000, xp: 6000, items: { cell: 2 } } });
 defQuest('rs2', { ch: 'Robot City · Side job', title: 'Trash Talk', giver: 'sparkplug', turnIn: 'sparkplug', req: ['r1'],
@@ -19006,6 +19003,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 259, title: '2.22.94 · Robot City', items: ['The old Hover Track is gone from Robot City, along with talk of the Hover Cup'] },
   { id: 258, title: '2.22.93 · Kayak respawn', items: ['Dying in a kayak now puts you back on foot when you respawn'] },
   { id: 257, title: '2.22.92 · Evidence and the badge button', items: ['Evidence locker: turn in drugs you find for half their street value plus Marshal XP', 'The BADGE button only shows once you are a Marshal (it was showing over the map on mobile)'] },
   { id: 256, title: '2.22.91 · Marshal Office', items: ['New ship room for Marshals: Marshal Office (500 CR)', 'One Marshal terminal: missions, bounty board, rank, armory (the extra bridge terminal is gone)', 'Evidence locker pays a stipend every 20 min', 'Holding cell with your arrest count', '+15% Marshal XP while you own the office'] },

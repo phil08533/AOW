@@ -43,6 +43,7 @@ function cleanName(s, fb) { return badName(s) ? fb : s; }
 @keyframes icd{0%{transform:translateY(-60vh) scaleY(1.4)}70%{transform:translateY(0) scaleY(1.2)}85%{transform:scale(1.3,.6)}100%{transform:none}}
 #introCov .gt{font-size:clamp(34px,8vw,84px);font-weight:900;color:#fff;letter-spacing:.06em;line-height:1}
 #introCov .gt span{color:#ff5a3a}#introCov .gs{color:#ff8a4a;letter-spacing:.6em;font-size:clamp(12px,2vw,18px);margin-top:12px}
+#bootLoad{z-index:10001}html:not(.ready) #introCov .pk{visibility:hidden}
 #introCov .pk{margin-top:40px;font-size:14px;letter-spacing:.3em;color:#ccd;animation:icp 1.6s infinite}@keyframes icp{50%{opacity:.25}}
 #introCov .sun{position:absolute;left:50%;top:62%;width:60vmin;height:60vmin;margin-left:-30vmin;border-radius:50%;background:radial-gradient(circle,#ff6a2a,#c0202000 70%);opacity:.0;transition:opacity 2s}
 #introCov .sun.on{opacity:.55}
@@ -56,13 +57,16 @@ function cleanName(s, fb) { return badName(s) ? fb : s; }
   if (!cov) { cov = document.createElement('div'); cov.id = 'introCov'; document.body.appendChild(cov); }
   if (!cov.querySelector('.sun')) cov.insertAdjacentHTML('afterbegin', '<div class="sun"></div>');
   if (!cov.querySelector('#ic1')) cov.insertAdjacentHTML('beforeend', `<div class="ic" id="ic1"><div class="drop"><i class="shades"></i></div><div class="studio">${STUDIO.name.toUpperCase().replace(/ STUDIOS?$/, '')}<small>STUDIOS</small></div></div>`);
-  let step = 0, tm = 0, lockT = 0; const c1 = () => cov.querySelector('#ic1');
-  const next = (ev) => { if (ev && (performance.now() < lockT || !ev.isTrusted)) return; clearTimeout(tm); step++; lockT = performance.now() + 1200;
-    if (step === 1) { requestAnimationFrame(() => { const c = c1(); if (c) c.classList.add('on'); }); tm = setTimeout(next, 3200); }
-    else if (step === 2) { const c = c1(); if (c) c.classList.remove('on'); tm = setTimeout(() => { if (c) c.remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; cov.appendChild(g); requestAnimationFrame(() => { g.classList.add('on'); const su = cov.querySelector('.sun'); if (su) su.classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); }
-    else { cov.style.opacity = 0; setTimeout(() => cov.remove(), 800); removeEventListener('keydown', next); } };
-  cov.addEventListener('click', e => { if (step >= 1) next(e); }); addEventListener('keydown', e => { if (document.getElementById('introCov') && step >= 1) next(e); });
-  requestAnimationFrame(() => next()); // start right away; waiting for the page's load event left a long black screen
+  // card -> title -> (player input, once the game is ready) -> start screen. Each stage runs once, whatever calls it.
+  const c1 = () => cov.querySelector('#ic1'), ready = () => document.documentElement.classList.contains('ready');
+  let stage = 'card', inputAt = 0;
+  const showTitle = () => { if (stage !== 'card') return; stage = 'title'; inputAt = performance.now() + 900; const c = c1(); if (c) c.classList.remove('on');
+    setTimeout(() => { if (c) c.remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; cov.appendChild(g);
+      requestAnimationFrame(() => { g.classList.add('on'); const su = cov.querySelector('.sun'); if (su) su.classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); };
+  const finish = () => { if (stage === 'done') return; stage = 'done'; cov.style.opacity = 0; setTimeout(() => cov.remove(), 800); };
+  const onInput = e => { if (!e.isTrusted || !document.getElementById('introCov')) return; if (stage === 'card') { if (performance.now() > 600) showTitle(); } else if (stage === 'title' && ready() && performance.now() > inputAt) finish(); };
+  cov.addEventListener('click', onInput); addEventListener('keydown', onInput);
+  { const c = c1(); if (c) c.classList.add('on'); } setTimeout(showTitle, 3200);
   // legal links + terms acceptance on the start screen
   const pb = document.getElementById('playBtn'); if (!pb) return;
   let ok = false; try { ok = +localStorage.getItem('aow-tos') >= LEGAL_VER; } catch (_) {}

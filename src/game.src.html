@@ -257,7 +257,7 @@ body.flying #tBoost { display: grid; }
 html:not(.ready) #start .sheet > .win.sheet { display: none; }
 html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block; text-align: center; margin-top: 18px; color: #ffd36a; letter-spacing: .2em; font-size: 14px; }
 /* a loading bar while the big game script parses (phones take a while); compositor-animated so it keeps moving */
-#bootLoad { position: fixed; left: 50%; bottom: 14%; width: min(320px, 70vw); transform: translateX(-50%); z-index: 90; font: 12px monospace; color: #ffd36a; letter-spacing: .2em; text-align: center; pointer-events: none; }
+#bootLoad { position: fixed; left: 50%; bottom: 14%; width: min(320px, 70vw); transform: translateX(-50%); z-index: 10001; font: 12px monospace; color: #ffd36a; letter-spacing: .2em; text-align: center; pointer-events: none; }
 #bootLoad b, #fadeBar { display: block; height: 10px; margin-top: 8px; background: #0c0d10; border: 2px solid #9aa0a8; box-shadow: 0 0 0 2px #07060a; overflow: hidden; }
 #bootLoad b i, #fadeBar i { display: block; height: 100%; background: repeating-linear-gradient(90deg, #ffd36a 0 8px, #e0a83a 8px 12px); transform-origin: left; transform: scaleX(0); }
 #bootLoad b i { animation: bootFill 9s cubic-bezier(.15,.75,.3,1) forwards; }
@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.82</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.83</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>

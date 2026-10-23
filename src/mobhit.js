@@ -58,7 +58,7 @@ function mckRoom() {
   { const c = document.createElement('canvas'); c.width = c.height = 64; const x2 = c.getContext('2d'); x2.fillStyle = '#f4f0e8'; x2.fillRect(0, 0, 64, 64); x2.fillStyle = '#c8402f'; x2.fillRect(0, 0, 32, 32); x2.fillRect(32, 32, 32, 32);
     const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(W / 2, D / 2); t.magFilter = THREE.NearestFilter; const fl = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, D * 2, 14, 11), new THREE.MeshLambertMaterial({ map: t })); fl.rotation.x = -Math.PI / 2; fl.position.set(X, 0.02, Z); g.add(fl); }
   part(g, SB(W * 2, 0.2, D * 2), toon('#e8e0d0'), X, H, Z); for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) part(g, B(2.4, 0.05, 1.2), glow('#fff4d8'), X - 10 + i * 6, H - 0.12, Z - 7 + j * 6);
-  for (const [x, z, w, d] of [[X, Z - D, W * 2, 0.3], [X, Z + D, W * 2, 0.3], [X - W, Z, 0.3, D * 2], [X + W, Z, 0.3, D * 2]]) { part(g, SB(w, H, d), yel, x, H / 2, z); part(g, SB(w - 0.4, 1.1, d + 0.1), red, x, 0.55, z); box(x, z, w / 2, d / 2); }
+  for (const [x, z, w, d] of [[X, Z - D, W * 2, 0.3], [X, Z + D, W * 2, 0.3], [X - W, Z, 0.3, D * 2], [X + W, Z, 0.3, D * 2]]) { part(g, SB(w, H, d), yel, x, H / 2, z); part(g, w > d ? SB(w - 0.4, 1.1, d + 0.1) : SB(w + 0.1, 1.1, d - 0.4), red, x, 0.55, z); box(x, z, w / 2, d / 2); }
   part(g, B(2.4, 3.2, 0.1), toon('#3a2a1a'), X, 1.6, Z + D - 0.2); sign('EXIT · ZELTAC MALL', '#0c0d14', '#7fff6a', 2.6, 0.4, X, 3.5, Z + D - 0.2, Math.PI);
   INTERACTS.push({ x: X, z: Z + D - 1.2, r: 2.0, label: 'Back to the mall', fn: mckOut });
   // counter, order-bot and the glowing menu board

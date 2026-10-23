@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.71</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.72</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -585,7 +585,7 @@ const TOON_RAMP = (() => { const d = new Uint8Array([90, 90, 90, 160, 160, 160, 
 // same look as toon() but without PS1 vertex snapping: for big interior surfaces seen up close, where snapping makes textures slide
 function toonNS(hex, tex) {
   if (RSTYLE !== 'retro') return toon(hex, tex);
-  const key = hex + tex + '_ns'; if (!matCache[key]) matCache[key] = new THREE.MeshLambertMaterial({ color: new THREE.Color(hex).convertSRGBToLinear(), map: TEX[tex] });
+  const key = hex + tex + '_ns'; if (!matCache[key]) matCache[key] = new THREE.MeshLambertMaterial({ color: new THREE.Color(hex).convertSRGBToLinear(), ...(TEX[tex] ? { map: TEX[tex] } : {}) });
   return matCache[key];
 }
 function toon(hex, tex) {
@@ -18992,6 +18992,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 237, title: '2.22.72 · Playtest fixes', items: ['Fixed a broken wall in the Zeltac mob hideout that could glitch the level.', 'Cleaned up material warnings in Bubble City, the Underworld, Marisol and the ship.', 'Full sweep of every world, the marshal path and the Kade fight.'] },
   { id: 236, title: '2.22.71 · The Galactic Marshals (part 2)', items: ['A Marshal board on your bridge, next to the bounty terminal. Your badge spins in, the stars fill, and a PROMOTED stamp lands when you rank up.', 'Marshal missions: hostage rescue, Drome Cutter sweeps, raider barge sweeps and manhunts for named fugitives on other worlds.', 'Random busts: crimes in progress show up near you with a red beacon. Flash your badge to arrest them, or chase them down if they run.', 'The Marshal armory (Lawgiver Pistol, Marshal Armor, Star Marshal Coat, Peacekeeper Rifle) and, at Senior Marshal, the Lawbringer Interceptor with a spinning light bar.', 'The Maw finale: Vega and her squadron fight beside your side, Marshals or outlaws, led by Rook or Kade.'] },
   { id: 235, title: '2.22.70 · The Galactic Marshals (part 1)', items: ['New story quest after Chapter 4: The Long Arm. Marshal Rook explains the choice between crime and the law, before Kade shows up.', 'After Kade teaches you to cook, Rook calls your ship and asks for his location. Turn him in and you can take the badge. Already past it? Ask Rook, or tap your record chip.', 'Marshals get a rank instead of an outlaw rating, and can flash their badge (N, or the BADGE button) for clout.', 'Marshals have no Lab, substances, fences, black market, hits or Don, and can\'t kill civilians. Turning in your badge is your call, from your Marshal card.'] },
   { id: 234, title: '2.22.69 · New wings and a cleaner cockpit', items: ['Three new Setting Sun wings: the Halo ring (a short cylinder around the hull, split at the top), Gull wings and Twin blades.', 'Cockpit: the blank grey boxes are gone, and the canopy struts are thinner, with lit strips, rivets, cables and clamp bands.', 'A pine tree air freshener now swings from the canopy.', 'The Bulldog Miner has four times the hull, and its auto aim locks onto asteroids from much wider.'] },
@@ -24979,7 +24980,7 @@ function mckRoom() {
   { const c = document.createElement('canvas'); c.width = c.height = 64; const x2 = c.getContext('2d'); x2.fillStyle = '#f4f0e8'; x2.fillRect(0, 0, 64, 64); x2.fillStyle = '#c8402f'; x2.fillRect(0, 0, 32, 32); x2.fillRect(32, 32, 32, 32);
     const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(W / 2, D / 2); t.magFilter = THREE.NearestFilter; const fl = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, D * 2, 14, 11), new THREE.MeshLambertMaterial({ map: t })); fl.rotation.x = -Math.PI / 2; fl.position.set(X, 0.02, Z); g.add(fl); }
   part(g, SB(W * 2, 0.2, D * 2), toon('#e8e0d0'), X, H, Z); for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) part(g, B(2.4, 0.05, 1.2), glow('#fff4d8'), X - 10 + i * 6, H - 0.12, Z - 7 + j * 6);
-  for (const [x, z, w, d] of [[X, Z - D, W * 2, 0.3], [X, Z + D, W * 2, 0.3], [X - W, Z, 0.3, D * 2], [X + W, Z, 0.3, D * 2]]) { part(g, SB(w, H, d), yel, x, H / 2, z); part(g, SB(w - 0.4, 1.1, d + 0.1), red, x, 0.55, z); box(x, z, w / 2, d / 2); }
+  for (const [x, z, w, d] of [[X, Z - D, W * 2, 0.3], [X, Z + D, W * 2, 0.3], [X - W, Z, 0.3, D * 2], [X + W, Z, 0.3, D * 2]]) { part(g, SB(w, H, d), yel, x, H / 2, z); part(g, w > d ? SB(w - 0.4, 1.1, d + 0.1) : SB(w + 0.1, 1.1, d - 0.4), red, x, 0.55, z); box(x, z, w / 2, d / 2); }
   part(g, B(2.4, 3.2, 0.1), toon('#3a2a1a'), X, 1.6, Z + D - 0.2); sign('EXIT · ZELTAC MALL', '#0c0d14', '#7fff6a', 2.6, 0.4, X, 3.5, Z + D - 0.2, Math.PI);
   INTERACTS.push({ x: X, z: Z + D - 1.2, r: 2.0, label: 'Back to the mall', fn: mckOut });
   // counter, order-bot and the glowing menu board
@@ -26332,7 +26333,7 @@ function ltDress() {
   // Karaoke Clam: a stage, a mic stand, a spinning disco ball, booths
   { const r = R('kar'); part(levelGroup, B(4, 0.3, 2.4), toonNS('#3a2448'), r.x, 0.15, r.z - r.L / 2 + 1.4); box(r.x, r.z - r.L / 2 + 1.4, 2, 1.2);
     part(levelGroup, Cy(0.03, 0.03, 1.4, 5), toonNS('#c8ccd4'), r.x, 1.0, r.z - r.L / 2 + 2.2); part(levelGroup, new THREE.SphereGeometry(0.07, 8, 6), toonNS('#2b2a2c'), r.x, 1.72, r.z - r.L / 2 + 2.2);
-    const ball = new THREE.Mesh(new THREE.IcosahedronGeometry(0.4, 1), new THREE.MeshLambertMaterial({ color: '#e8e8f0', flatShading: true, emissive: '#3a3a4a' })); ball.position.set(r.x, 2.9, r.z); levelGroup.add(ball);
+    const ball = new THREE.Mesh(new THREE.IcosahedronGeometry(0.4, 1), new THREE.MeshLambertMaterial({ color: '#e8e8f0', emissive: '#3a3a4a' })); ball.position.set(r.x, 2.9, r.z); levelGroup.add(ball);
     const spots = []; for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(new THREE.CircleGeometry(0.25, 8).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: ['#ff3bd2', '#4fd2ff', '#ffd36a'][i % 3], transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false })); levelGroup.add(m); spots.push(m); }
     levelAnims.push(t => { ball.rotation.y = t * 0.8; spots.forEach((m, i) => { const a = t * 0.8 + i * 1.05; m.position.set(r.x + Math.cos(a) * (2 + (i % 2)), 0.12, r.z + Math.sin(a) * (2 + (i % 2)) * 0.8); }); });
     const scr = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.2), new THREE.MeshBasicMaterial({ map: bubSignTex('♪ NOW SINGING · YOU, PROBABLY', '#14081e', '#c86aff', 2.6, 1.2) })); scr.position.set(r.x, 2.1, r.z - r.L / 2 + 0.13); levelGroup.add(scr);

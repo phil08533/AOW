@@ -150,7 +150,7 @@ const TOON_RAMP = (() => { const d = new Uint8Array([90, 90, 90, 160, 160, 160, 
 // same look as toon() but without PS1 vertex snapping: for big interior surfaces seen up close, where snapping makes textures slide
 function toonNS(hex, tex) {
   if (RSTYLE !== 'retro') return toon(hex, tex);
-  const key = hex + tex + '_ns'; if (!matCache[key]) matCache[key] = new THREE.MeshLambertMaterial({ color: new THREE.Color(hex).convertSRGBToLinear(), map: TEX[tex] });
+  const key = hex + tex + '_ns'; if (!matCache[key]) matCache[key] = new THREE.MeshLambertMaterial({ color: new THREE.Color(hex).convertSRGBToLinear(), ...(TEX[tex] ? { map: TEX[tex] } : {}) });
   return matCache[key];
 }
 function toon(hex, tex) {

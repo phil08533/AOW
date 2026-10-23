@@ -80,7 +80,7 @@ function ltDress() {
   // Karaoke Clam: a stage, a mic stand, a spinning disco ball, booths
   { const r = R('kar'); part(levelGroup, B(4, 0.3, 2.4), toonNS('#3a2448'), r.x, 0.15, r.z - r.L / 2 + 1.4); box(r.x, r.z - r.L / 2 + 1.4, 2, 1.2);
     part(levelGroup, Cy(0.03, 0.03, 1.4, 5), toonNS('#c8ccd4'), r.x, 1.0, r.z - r.L / 2 + 2.2); part(levelGroup, new THREE.SphereGeometry(0.07, 8, 6), toonNS('#2b2a2c'), r.x, 1.72, r.z - r.L / 2 + 2.2);
-    const ball = new THREE.Mesh(new THREE.IcosahedronGeometry(0.4, 1), new THREE.MeshLambertMaterial({ color: '#e8e8f0', flatShading: true, emissive: '#3a3a4a' })); ball.position.set(r.x, 2.9, r.z); levelGroup.add(ball);
+    const ball = new THREE.Mesh(new THREE.IcosahedronGeometry(0.4, 1), new THREE.MeshLambertMaterial({ color: '#e8e8f0', emissive: '#3a3a4a' })); ball.position.set(r.x, 2.9, r.z); levelGroup.add(ball);
     const spots = []; for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(new THREE.CircleGeometry(0.25, 8).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: ['#ff3bd2', '#4fd2ff', '#ffd36a'][i % 3], transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false })); levelGroup.add(m); spots.push(m); }
     levelAnims.push(t => { ball.rotation.y = t * 0.8; spots.forEach((m, i) => { const a = t * 0.8 + i * 1.05; m.position.set(r.x + Math.cos(a) * (2 + (i % 2)), 0.12, r.z + Math.sin(a) * (2 + (i % 2)) * 0.8); }); });
     const scr = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.2), new THREE.MeshBasicMaterial({ map: bubSignTex('♪ NOW SINGING · YOU, PROBABLY', '#14081e', '#c86aff', 2.6, 1.2) })); scr.position.set(r.x, 2.1, r.z - r.L / 2 + 0.13); levelGroup.add(scr);

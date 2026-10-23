@@ -176,6 +176,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 241, title: '2.22.76 · Multiplayer servers (early)', items: ['New Multiplayer button: preview a Glop Drop server by address, see its rules and players, and join.', 'Your character comes with you to any server.'] },
   { id: 240, title: '2.22.75 · Glop Drop intro', items: ['New Glop Drop Studio card and Art of War title screen when the game opens.', 'Terms of Service, Privacy, License and Credits on the start screen, with a one-time agree box.', 'Offensive callsigns are blocked.'] },
   { id: 239, title: '2.22.74 · Co-op kill fix', items: ['Finishing off a monster another player was fighting now counts for both of you, so it no longer pops back to life.'] },
   { id: 238, title: '2.22.73 · Steadier ship screens', items: ['Terminal screens on the ship no longer flicker when you look at them from a distance or an angle.'] },

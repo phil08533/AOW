@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.75</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.76</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1170,7 +1170,8 @@ function syncPeers(peers) {
   $('online').hidden = remotes.size === 0; $('online').textContent = `${remotes.size + 1} online`;
 }
 (async function joinRoom() {
-  if (window.claude && window.claude.use) {
+  let GD = null; try { GD = JSON.parse(sessionStorage.getItem('aow-server') || 'null'); } catch (_) {}
+  if (!GD && window.claude && window.claude.use) {
     try {
       room = await window.claude.use('room');
       if (room) {
@@ -1182,11 +1183,12 @@ function syncPeers(peers) {
   // Standalone / self-hosted room over WebSocket
   try {
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${proto}//${location.host}/ws`;
+    const wsUrl = GD ? GD.url : `${proto}//${location.host}/ws`;
     let ws = null, peerCbs = [], myId = 'p_' + Math.random().toString(36).slice(2, 9);
     function connect() {
       try { ws = new WebSocket(wsUrl); } catch (_) { setTimeout(connect, 3000); return; }
       ws.onopen = () => {
+        if (GD) ws.send(JSON.stringify({ type: 'join', pid: (S && S.cid) || myId, nick: (S && S.nick) || 'Trooper', pass: GD.pass || '' }));
         room = {
           onPeers: (cb) => { peerCbs.push(cb); },
           presence: async (p) => {
@@ -1235,7 +1237,7 @@ function syncPeers(peers) {
           }
         } catch (_) {}
       };
-      ws.onclose = () => { room = null; setTimeout(connect, 2500); };
+      ws.onclose = (ev) => { room = null; if (GD && ev.code >= 4000) { try { sessionStorage.removeItem('aow-server'); } catch (_) {} if (typeof toast === 'function') toast('SERVER', ev.reason || 'Disconnected', 4); return; } setTimeout(connect, 2500); };
       ws.onerror = () => { try { ws.close(); } catch (_) {} };
     }
     connect();

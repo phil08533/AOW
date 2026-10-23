@@ -50,8 +50,8 @@ wss.on('connection', (ws, req) => {
   const ip = req.socket.remoteAddress, p = { id: 'p_' + crypto.randomBytes(5).toString('hex'), ip, ok: false, bucket: RATE, last: Date.now() };
   players.set(ws, p);
   const f = failed.get(ip); if (f && f.until > Date.now()) { ws.close(4003, 'Too many wrong passwords. Try again later.'); return; }
-  const authT = setTimeout(() => { if (!p.ok) ws.close(4000, 'No join'); }, 10000);
-  ws.on('message', raw => {
+  const authT = setTimeout(() => { if (!p.ok) ws.close(4000, 'No join'); }, 30000);
+  ws.on('message', raw => { if (process.env.GD_DEBUG) say('msg ' + String(raw).slice(0, 80));
     const now = Date.now(); p.bucket = Math.min(RATE, p.bucket + (now - p.last) / 1000 * RATE); p.last = now;
     if ((p.bucket -= 1) < 0) { if (p.bucket < -RATE) ws.close(4008, 'Flooding'); return; }
     let m; try { m = JSON.parse(raw.toString()); } catch (_) { return; } if (!m || typeof m !== 'object') return;
@@ -62,9 +62,9 @@ wss.on('connection', (ws, req) => {
       if ([...players.values()].filter(q => q.ok).length >= cfg.maxPlayers) return ws.close(4004, 'Server is full.');
       clearTimeout(authT); p.ok = true; p.pid = pid; p.nick = cleanNick(m.nick); p.joined = now;
       ws.send(JSON.stringify({ type: 'welcome', peerId: p.id, server: info() })); say(`${p.nick} joined`); dirty = true; return; }
-    if (m.type === 'presence' && m.presence && typeof m.presence === 'object') { m.presence.nick = p.nick; if (typeof m.presence.msg === 'string' && badName(m.presence.msg)) m.presence.msg = '***'; p.presence = m.presence; dirty = true; }
+    if (m.type === 'presence' && m.presence && typeof m.presence === 'object') { { const n = cleanNick(m.presence.nick); if (n !== p.nick) { say(`${p.nick} is now ${n}`); p.nick = n; } m.presence.nick = p.nick; } if (typeof m.presence.msg === 'string' && badName(m.presence.msg)) m.presence.msg = '***'; p.presence = m.presence; dirty = true; }
   });
-  ws.on('close', () => { clearTimeout(authT); if (p.ok) say(`${p.nick} left`); players.delete(ws); dirty = true; });
+  ws.on('close', (code) => { clearTimeout(authT); if (p.ok) say(`${p.nick} left`); else say(`connection from ${ip} closed before joining (${code})`); players.delete(ws); dirty = true; });
   ws.on('error', () => {});
 });
 setInterval(() => { for (const ws of players.keys()) if (ws.readyState === WebSocket.OPEN) ws.ping(); }, 30000);

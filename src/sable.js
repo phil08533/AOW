@@ -25,12 +25,12 @@ function makeBountyHunter() {
   return g;
 }
 RIGS.bh = { type: 'biped', hip: 0.86, neck: 1.42, armX: 0.27, ax: 0.36, sh: 1.33, legX: 0.15 };
-ENEMY.sable = { rig: 'bh', name: 'Sable, the Glass Hunter', make: makeBountyHunter, hp: 2600, speed: 2.6, r: 0.5, hy: 1.0, xp: 2500, cr: [0, 0], boss: true, ranged: { dmg: 15, rate: 0.85, speed: 26, col: '#9a3aff', range: 44, keep: 12 }, drops: [] };
+ENEMY.sable = { rig: 'bh', name: 'Kade, the Glass Hunter', make: makeBountyHunter, hp: 2600, speed: 2.6, r: 0.5, hy: 1.0, xp: 2500, cr: [0, 0], boss: true, ranged: { dmg: 15, rate: 0.85, speed: 26, col: '#9a3aff', range: 44, keep: 12 }, drops: [] };
 
 defQuest('bh1', { ch: 'Interlude · The Bounty', title: 'Price on Your Head', giver: 'ada', turnIn: 'ada', req: ['r5'], main: true,
-  intro: ["Gunner, a message came through on every channel at once. Somebody put a bounty on you. A big one.", "The hunter who took it signs his name Sable. He says he'll be waiting in the ring at Arena Prime, and that he has never missed.", "Go deal with him before he comes to you."],
+  intro: ["Gunner, a message came through on every channel at once. Somebody put a bounty on you. A big one.", "The hunter who took it signs his name Kade. He says he'll be waiting in the ring at Arena Prime, and that he has never missed.", "Go deal with him before he comes to you."],
   obj: [{ kind: 'kill', t: 'sable', n: 1, text: 'Face the bounty hunter in the Arena Prime ring', zone: 'ring', planet: 'arena' }],
-  outro: ["You beat Sable? And he let you walk onto his ship? Gunner, you collect the strangest friends.", "Rell's been asking for you. Something about a dead signal."], reward: { cr: 6000, xp: 20000 } });
+  outro: ["You beat Kade? And he let you walk onto his ship? Gunner, you collect the strangest friends.", "Rell's been asking for you. Something about a dead signal."], reward: { cr: 6000, xp: 20000 } });
 if (QDEFS.d1 && !QDEFS.d1.req.includes('bh1')) QDEFS.d1.req.push('bh1');
 // the Lab can only be bought once Sable has shown you how (anyone who already owns one keeps it)
 { const h0 = ROOMS.lab.hide; ROOMS.lab.hide = () => (h0 && h0()) || !(S.flags && S.flags.bhLab) && !roomLvl('lab'); }
@@ -65,9 +65,9 @@ function bhArenaShot(c) { return (s, k, t) => {
   if (s === 'close') { camera.position.set(sz.x + 0.3, 1.75, sz.z + 3.2 - k * 1.2); look(sz.x, 1.6, sz.z); }
   if (s === 'low') { camera.position.set(sz.x + 2.4, 0.5, sz.z + 3.4); look(sz.x, 1.5, sz.z); }
 }; }
-const BH_PRE = [['Sable', "So you're the one the Drome keeps losing ships to. Smaller than the poster.", 'close'], ['You', "Who's asking?", 'me'], ['Sable', "Sable. I collect. Somebody paid a planet's worth of credits for your head, and I always collect.", 'over'], ['You', 'You picked a public place for a murder.', 'me'], ['Sable', 'I picked a stage. Every bounty I take gets a crowd. It makes the ending cleaner.', 'wide'], ['Sable', 'Nothing personal, Captain. Try to make it interesting.', 'low']];
-const BH_POST = [['Sable', "Hah... well. That's new.", 'close'], ['Sable', "Forty-one contracts, and nobody ever put me on the floor. Congratulations, Captain. Truly.", 'over'], ['You', 'So what now? You try again tomorrow?', 'me'], ['Sable', "Now I tear up the contract. A hunter who loses and doesn't keep his word is just a thug with a gun.", 'wide'], ['Sable', "I'll be around. Someone like you is going to need someone like me sooner or later.", 'close'], ['Sable', "Come aboard my ship, the Glass Wake. I'll show you how I really pay for all this.", 'low']];
-const BH_SHIP = [['Sable', "That's her, the Glass Wake. She used to fly for the Drome, until I borrowed her. Permanently.", 'outside'], ['Sable', 'New paint, new engines, and a little crystal where their red sun used to be.', 'outside2'], ['Sable', "Welcome aboard the Glass Wake. Don't touch anything that glows.", 'room'], ['Sable', 'Bounties pay late. Chemistry pays every day. Crystal, a few cave mushrooms, and the right heat.', 'bench'], ['You', 'You cook?', 'me'], ['Sable', "I cook the cleanest Blackout in four systems. Watch the temperature. Too hot and it's poison, too cold and it's soap.", 'bench'], ['Sable', "There. Now you know. Put a Lab on your ship and nobody at the shipyard will ask questions.", 'close'], ['Sable', 'One more thing, Captain. The Marshals will notice. They always notice. Try not to get caught.', 'room']];
+const BH_PRE = [['Kade', "So you're the one the Drome keeps losing ships to. Smaller than the poster.", 'close'], ['You', "Who's asking?", 'me'], ['Kade', "Kade. I collect. Somebody paid a planet's worth of credits for your head, and I always collect.", 'over'], ['You', 'You picked a public place for a murder.', 'me'], ['Kade', 'I picked a stage. Every bounty I take gets a crowd. It makes the ending cleaner.', 'wide'], ['Kade', 'Nothing personal, Captain. Try to make it interesting.', 'low']];
+const BH_POST = [['Kade', "Hah... well. That's new.", 'close'], ['Kade', "Forty-one contracts, and nobody ever put me on the floor. Congratulations, Captain. Truly.", 'over'], ['You', 'So what now? You try again tomorrow?', 'me'], ['Kade', "Now I tear up the contract. A hunter who loses and doesn't keep his word is just a thug with a gun.", 'wide'], ['Kade', "I'll be around. Someone like you is going to need someone like me sooner or later.", 'close'], ['Kade', "Come aboard my ship, the Glass Wake. I'll show you how I really pay for all this.", 'low']];
+const BH_SHIP = [['Kade', "That's her, the Glass Wake. She used to fly for the Drome, until I borrowed her. Permanently.", 'outside'], ['Kade', 'New paint, new engines, and a little crystal where their red sun used to be.', 'outside2'], ['Kade', "Welcome aboard the Glass Wake. Don't touch anything that glows.", 'room'], ['Kade', 'Bounties pay late. Chemistry pays every day. Crystal, a few cave mushrooms, and the right heat.', 'bench'], ['You', 'You cook?', 'me'], ['Kade', "I cook the cleanest Blackout in four systems. Watch the temperature. Too hot and it's poison, too cold and it's soap.", 'bench'], ['Kade', "There. Now you know. Put a Lab on your ship and nobody at the shipyard will ask questions.", 'close'], ['Kade', 'One more thing, Captain. The Marshals will notice. They always notice. Try not to get caught.', 'room']];
 function bhShipScene() {
   bhCut(BH_SHIP, () => {
     const R = new THREE.Group(), Y = -400; R.position.set(0, Y, 0); levelGroup.add(R);
@@ -101,7 +101,7 @@ function bhShipScene() {
       if (s === 'outside' || s === 'outside2') { const a = (s === 'outside' ? 0.6 : 2.4) + t * 0.05, d = ext * 1.15; camera.position.set(300 + Math.sin(a) * d, Y + ext * 0.35, Math.cos(a) * d); camera.lookAt(300, Y, 0); return; }
       if (s === 'room') camera.position.set(4.2 - k, Y + 2.6, 3.8); if (s === 'bench') camera.position.set(1.8, Y + 1.7, -0.6 + k * 0.4); if (s === 'me') camera.position.set(2.9, Y + 2.1, -3.6); if (s === 'close') camera.position.set(0.4, Y + 1.8, 0.8 - k * 0.6);
       if (s === 'me') camera.lookAt(-0.9, Y + 1.5, 0.6); else if (s === 'bench') camera.lookAt(0, Y + 1, -2.8); else camera.lookAt(1.4, Y + 1.6, -1.7); } };
-  }, () => { S.flags.bhLab = 1; if (S.qst.bh1 && S.qst.bh1.st !== 'done') { S.qst.bh1.st = 'ready'; completeQuest('bh1'); } toast('LAB UNLOCKED', 'Build one from the room menu on your ship', 5); log('Sable taught you to cook. You can now build a Lab on your ship.', 'loot'); markDirty(); });
+  }, () => { S.flags.bhLab = 1; if (S.qst.bh1 && S.qst.bh1.st !== 'done') { S.qst.bh1.st = 'ready'; completeQuest('bh1'); } toast('LAB UNLOCKED', 'Build one from the room menu on your ship', 5); log('Kade taught you to cook. You can now build a Lab on your ship.', 'loot'); markDirty(); });
 }
 function bhPost() { const at = { x: 0, z: 0 }; let c; bhCut(BH_POST, () => { c = bhActors(at); return { objs: [c.me, c.sb], shot: bhArenaShot(c) }; }, bhShipScene); }
 
@@ -116,7 +116,7 @@ function bhStartFight() {
   const grid = bhGridMesh(); levelGroup.add(grid);
   const disc = part(levelGroup, Cy(0.35, 0.35, 0.12, 10), glow('#ff2030'), 0, -9, 0); disc.visible = false;
   BH.fight = { e, grid, disc, tp: 3, dev: 6, ph: null, pt: 0, acc: 0, warned: false };
-  toast('SABLE', 'The Glass Hunter · he never misses', 3); SFX.quest && SFX.quest();
+  toast('KADE', 'The Glass Hunter · he never misses', 3); SFX.quest && SFX.quest();
 }
 function bhEndFight() { const F = BH.fight; if (!F) return; BH.fight = null; F.grid.parent && F.grid.parent.remove(F.grid); F.disc.parent && F.disc.parent.remove(F.disc); if (!F.e.dead) { F.e.dead = 3; F.e.gone = true; scene.remove(F.e.obj); } const k = enemies.indexOf(F.e); if (k >= 0) enemies.splice(k, 1); }
 function bhBlink(e) {
@@ -131,7 +131,7 @@ function bhStep(dt) {
     if (BH.cut || !player.alive || dlgOpen || state !== 'play') return;
     if (q && q.st === 'ready' && !S.flags.bhLab) return bhPost();
     if (q && q.st === 'active' && Math.hypot(player.pos.x, player.pos.z) < 19) {
-      if (S.flags.bhMet) { bhStartFight(); toast('SABLE', '"Round two, Captain."', 3); return; }
+      if (S.flags.bhMet) { bhStartFight(); toast('KADE', '"Round two, Captain."', 3); return; }
       S.flags.bhMet = 1; markDirty(); let c; bhCut(BH_PRE, () => { c = bhActors({ x: 0, z: 0 }); return { objs: [c.me, c.sb], shot: bhArenaShot(c) }; }, () => { player.pos.set(0, floorAt(0, 8), 8); player.yaw = 0; bhStartFight(); });
     }
     return;

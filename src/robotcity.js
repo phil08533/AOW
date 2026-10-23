@@ -133,7 +133,7 @@ defQuest('r4', { ch: 'Robot City · Chapter 4', title: 'The Factory Line', giver
 defQuest('r5', { ch: 'Robot City · Chapter 4', title: 'Tower of Death', giver: 'ada', turnIn: 'ada', req: ['r4'], main: true,
   intro: ["The Overseer waits at the foot of his tower, northwest. Ghosts of every robot he deleted guard him.", "End him, gunner. Bring me his core."],
   obj: [{ kind: 'item', t: 'overcore', n: 1, text: 'Defeat the Overseer and take his core', zone: 'tower' }],
-  outro: ["His core is still warm. Listen... it's broadcasting.", "\"THE SETTING SUN RISES. ALL WORLDS WILL BURN RED.\"", "He's coming himself now. Whatever the Setting Sun is, we'll be ready. Thank you, gunner. Robot City is free.", "(Chapter 5 is being written by Phil and Caleb. Stay tuned.)"],
+  outro: ["His core is still warm. Listen... it's broadcasting.", "\"THE SETTING SUN RISES. ALL WORLDS WILL BURN RED.\"", "He's coming himself now. Whatever the Setting Sun is, we'll be ready. Thank you, gunner. Robot City is free.", "One more thing, gunner. Every channel in the city just lit up with your face. Somebody put a price on your head."],
   reward: { cr: 8000, xp: 20000, take: { overcore: 1 } } });
 defQuest('rs1', { ch: 'Robot City · Side job', title: 'Pit Row Calling', giver: 'zip', turnIn: 'vroom', req: ['r1'],
   intro: ["The Hover Cup shut down. Everyone fast moved to Velocity, the magnet storm planet.", "Tell Vroom in Pit Row that Zip sent you. He owes me a tire. Several tires."],

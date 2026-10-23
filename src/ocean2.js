@@ -331,3 +331,4 @@ function ocBoats() { OCB.length = 0; OCSIT.g = null; const spots = []; for (let 
       if (k > 3.2) { catchT = -1; next = t + 14 + ((i * 7 + Math.floor(t)) % 11); }
       const P = line.geometry.attributes.position; P.setXYZ(0, V.x, V.y, V.z); const e = fish.visible ? fish.position : bob.position; P.setXYZ(1, e.x, e.y, e.z); P.needsUpdate = true; }); }); }
 { const orig = LEVELS.ocean.build; LEVELS.ocean.build = function () { orig.call(this); try { ocBoats(); } catch (e) { console.warn('ocean2 boats', e); } }; }
+{ const _rk = respawn; respawn = function () { if (S.kayak) kayakOff(); return _rk.apply(this, arguments); }; }

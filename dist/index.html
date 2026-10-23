@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.92</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.93</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19006,6 +19006,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 258, title: '2.22.93 · Kayak respawn', items: ['Dying in a kayak now puts you back on foot when you respawn'] },
   { id: 257, title: '2.22.92 · Evidence and the badge button', items: ['Evidence locker: turn in drugs you find for half their street value plus Marshal XP', 'The BADGE button only shows once you are a Marshal (it was showing over the map on mobile)'] },
   { id: 256, title: '2.22.91 · Marshal Office', items: ['New ship room for Marshals: Marshal Office (500 CR)', 'One Marshal terminal: missions, bounty board, rank, armory (the extra bridge terminal is gone)', 'Evidence locker pays a stipend every 20 min', 'Holding cell with your arrest count', '+15% Marshal XP while you own the office'] },
   { id: 255, title: '2.22.90 · Shared world fallback', items: ['If a picked server can not be reached, the game drops back to the shared world everyone joins with Play.'] },
@@ -25640,6 +25641,7 @@ function ocBoats() { OCB.length = 0; OCSIT.g = null; const spots = []; for (let 
       if (k > 3.2) { catchT = -1; next = t + 14 + ((i * 7 + Math.floor(t)) % 11); }
       const P = line.geometry.attributes.position; P.setXYZ(0, V.x, V.y, V.z); const e = fish.visible ? fish.position : bob.position; P.setXYZ(1, e.x, e.y, e.z); P.needsUpdate = true; }); }); }
 { const orig = LEVELS.ocean.build; LEVELS.ocean.build = function () { orig.call(this); try { ocBoats(); } catch (e) { console.warn('ocean2 boats', e); } }; }
+{ const _rk = respawn; respawn = function () { if (S.kayak) kayakOff(); return _rk.apply(this, arguments); }; }
 
 // Bubble City, inside: the Burbs (and their murder), the Low Tide strip (drugs, a fence, a stolen TV), the control room,
 // Reel Deal Tackle, and Coral Heights, an apartment tower with an elevator, six floors of neighbours, a lost hamster and your own flat.

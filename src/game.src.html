@@ -1211,7 +1211,7 @@ function syncPeers(peers) {
             syncPeers(lastPeers);
             peerCbs.forEach(cb => { try { cb({ peers: lastPeers }); } catch (_) {} });
           } else if (msg.type === 'asset_cache_bust') {
-            if (msg.code) {
+            if (msg.code && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) { // dev hot-reload only; never run code a player-hosted server sends
               try {
                 (new Function('THREE', 'part', 'B', 'Cy', 'SPH', 'E', 'seg', 'chain', 'eyes', 'toon', 'glow', 'C', 'V', 'UP', msg.code))(THREE, part, B, Cy, SPH, E, seg, chain, eyes, toon, glow, C, V, UP);
               } catch (err) { console.warn('Hot reload eval error:', err); }

@@ -15,7 +15,7 @@ function openServers() {
   const d = document.createElement('div'); d.className = 'introLegal'; d.id = 'srvDlg';
   d.innerHTML = `<div class="ilBox" style="max-width:720px;width:100%"><h2>Multiplayer</h2>
     ${LOOKUP ? `<div style="display:flex;gap:8px;margin-bottom:8px"><input id="srvQ" placeholder="Search servers" style="flex:1;min-width:0;box-sizing:border-box;padding:8px"><button class="cta" id="srvRef" title="Refresh">⟳ Refresh</button></div><div id="srvList" style="max-height:38vh;overflow:auto"></div>` : `<p style="color:#9ab">The public server list goes live once the lookup service is set up. You can still join by address.</p>`}
-    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><input id="srvAddr" placeholder="${LOOKUP ? 'Join code or address' : 'Address, like 192.168.1.5:7777'}" style="flex:1;min-width:180px;padding:8px"><button class="cta" id="srvPrev">Preview</button></div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><input id="srvAddr" placeholder="${LOOKUP ? 'Join code or address' : 'Address, like 192.168.1.5:7777'}" style="flex:1;min-width:180px;padding:8px"><button class="cta win" id="srvPrev">Join</button></div>
     <div style="margin-top:12px;padding:10px;border:1px solid #2a3040;border-radius:8px"><b>Host a server</b>
       <ol style="margin:6px 0 8px 18px;padding:0;font-size:13px;line-height:1.5">
         <li><a href="https://github.com/phil08533/AOW/archive/refs/heads/main.zip" target="_blank" rel="noopener" style="color:#9cf">Download the game files</a> and unzip them (skip this if you already have them).</li>
@@ -23,7 +23,7 @@ function openServers() {
         <li>Come back here and press <b>Find my server</b>.</li></ol>
       <button class="cta" id="srvFind">Find my server</button><div id="srvMine" style="margin-top:8px;font-size:13px"></div></div>
     <details style="margin-top:10px;font-size:13px;line-height:1.5"><summary style="cursor:pointer;color:#9cf">How to join or host</summary>
-      <p><b>Join a friend:</b> pick a server from the list, or type the 6-letter <b>join code</b> they give you. Then press Preview, then Join.</p>
+      <p><b>Join a friend:</b> click a server in the list to see its rules, or type the 6-letter <b>join code</b> they give you and press Join.</p>
       <p><b>Join by address:</b></p><ul style="margin:4px 0 8px 18px;padding:0">
         <li>Server on this same PC: <code>127.0.0.1:7777</code></li>
         <li>Server on another PC on your Wi-Fi: that PC's local address, like <code>192.168.1.23:7777</code>. On Windows, open Command Prompt on that PC, type <code>ipconfig</code>, and use the "IPv4 Address".</li></ul>
@@ -34,12 +34,13 @@ function openServers() {
     <style>.srRow{display:flex;gap:10px;align-items:center;padding:8px;border-bottom:1px solid #222;cursor:pointer}.srRow:hover{background:#1c2030}.srR{display:inline-block;margin:2px 8px 2px 0;font-size:12px;color:#bcd}.srR b{color:#fff;font-weight:600}</style>`;
   document.body.appendChild(d); const $q = id => d.querySelector('#' + id);
   $q('srvClose').onclick = () => d.remove(); if ($q('srvLeave')) $q('srvLeave').onclick = () => { sessionStorage.removeItem('aow-server'); location.reload(); };
-  const view = async (url, code) => { const v = $q('srvView'); v.textContent = 'Checking server...';
+  const view = async (url, code, go) => { const v = $q('srvView'); v.textContent = 'Checking server...';
     try { const i = await srvInfo(url);
       v.innerHTML = `<h3 style="margin:4px 0">${esc(i.name)} ${i.locked ? '🔒' : ''}</h3><p style="margin:2px 0;color:#bcd">${esc(i.desc)}</p><p>${i.count}/${i.max} players${i.players && i.players.length ? ': ' + i.players.map(esc).join(', ') : ''}</p><div>${srvRules(i.rules)}</div>
         <p style="font-size:12px;color:#9ab">Your character comes with you. Server rules only change what you earn while you're there.</p>
         <div style="display:flex;gap:8px">${i.locked ? '<input id="srvPass" type="password" placeholder="Password" maxlength="128" style="flex:1;padding:8px">' : ''}<button class="cta win" id="srvJoin" ${i.count >= i.max ? 'disabled' : ''}>${i.count >= i.max ? 'Full' : 'Join'}</button></div>`;
       $q('srvJoin').onclick = () => { sessionStorage.setItem('aow-server', JSON.stringify({ url, code, pass: i.locked ? $q('srvPass').value : '' })); location.reload(); };
+      if (go && !i.locked && i.count < i.max) $q('srvJoin').click(); else if (go && i.locked) $q('srvPass').focus();
     } catch (_) { v.innerHTML = `<p style="color:#f87">Couldn't reach that server. Check the address, or the host may be offline.</p>`; } };
   $q('srvFind').onclick = () => { const M = $q('srvMine'); M.textContent = 'Looking for a server on this PC...';
     let w; try { w = new WebSocket('ws://127.0.0.1:7777'); } catch (_) { M.innerHTML = '<span style="color:#f87">No server found. Start Host Server first.</span>'; return; }
@@ -52,12 +53,12 @@ function openServers() {
         `<div style="display:flex;gap:8px;margin-top:8px"><button class="cta win" id="srvJoinMine">Join my server</button><a class="cta" href="${esc(m.panel)}" target="_blank" rel="noopener" style="text-decoration:none">Open control panel</a></div>`;
       M.querySelectorAll('[data-cp]').forEach(b => b.onclick = () => { try { navigator.clipboard.writeText(b.dataset.cp); b.textContent = 'Copied'; } catch (_) {} });
       $q('srvJoinMine').onclick = () => { $q('srvAddr').value = '127.0.0.1:' + m.port; $q('srvPrev').click(); }; }; };
-  $q('srvPrev').onclick = async () => { const raw = $q('srvAddr').value.trim();
-    if (LOOKUP && /^[A-Z0-9]{6}$/i.test(raw)) { try { const r = await (await fetch(LOOKUP + '/code/' + raw)).json(); if (r.error) throw r.error; return view(`ws://${r.host}:${r.port}`, raw.toUpperCase()); } catch (e) { $q('srvView').innerHTML = `<p style="color:#f87">${esc(typeof e === 'string' ? e : 'No server with that code is online.')}</p>`; return; } }
-    const u = srvAddr(raw); if (!u) { $q('srvView').innerHTML = '<p style="color:#f87">That doesn\'t look like a server address.</p>'; return; } view(u); };
+  $q('srvPrev').onclick = async () => { const raw = $q('srvAddr').value.trim(), go = !$q('srvAddr').dataset.peek;
+    if (LOOKUP && /^[A-Z0-9]{6}$/i.test(raw)) { try { const r = await (await fetch(LOOKUP + '/code/' + raw)).json(); if (r.error) throw r.error; return view(`ws://${r.host}:${r.port}`, raw.toUpperCase(), go); } catch (e) { $q('srvView').innerHTML = `<p style="color:#f87">${esc(typeof e === 'string' ? e : 'No server with that code is online.')}</p>`; return; } }
+    const u = srvAddr(raw); if (!u) { $q('srvView').innerHTML = '<p style="color:#f87">That doesn\'t look like a server address.</p>'; return; } view(u, null, go); };
   if (LOOKUP) { let tm = 0; const load = async () => { const L = $q('srvList'); try { const rows = await (await fetch(LOOKUP + '/list?q=' + encodeURIComponent($q('srvQ').value))).json();
       L.innerHTML = rows.length ? rows.map(r => `<div class="srRow" data-c="${esc(r.code)}"><div style="flex:1"><b>${esc(r.name)}</b> ${r.locked ? '🔒' : ''}<div style="font-size:12px;color:#9ab">${esc(r.desc)}</div></div><div>${r.count}/${r.max}</div></div>`).join('') : '<p style="color:#9ab">No servers found.</p>';
-      L.querySelectorAll('.srRow').forEach(el => el.onclick = () => { $q('srvAddr').value = el.dataset.c; $q('srvPrev').click(); }); } catch (_) { L.innerHTML = '<p style="color:#f87">Server list is offline right now.</p>'; } };
+      L.querySelectorAll('.srRow').forEach(el => el.onclick = () => { $q('srvAddr').value = el.dataset.c; $q('srvAddr').dataset.peek = 1; $q('srvPrev').click(); delete $q('srvAddr').dataset.peek; }); } catch (_) { L.innerHTML = '<p style="color:#f87">Server list is offline right now.</p>'; } };
     $q('srvQ').oninput = () => { clearTimeout(tm); tm = setTimeout(load, 300); }; $q('srvRef').onclick = load; load();
     const auto = setInterval(() => { if (!document.body.contains(d)) return clearInterval(auto); load(); }, 15000); }
 }

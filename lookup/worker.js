@@ -13,6 +13,10 @@ const ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', rnd = n => [...crypto.getRandomV
 const hex = n => [...crypto.getRandomValues(new Uint8Array(n))].map(x => x.toString(16).padStart(2, '0')).join('');
 const FRESH = 5 * 60 * 1000;
 export default { async fetch(req, env) {
+  if (!env.DB) return J({ error: 'Database not connected. In the Worker: Settings > Bindings > Add > D1 database, variable name DB, database blork.' }, 500);
+  try { return await handle(req, env); } catch (e) { return J({ error: String(e && e.message || e) }, 500); }
+} };
+async function handle(req, env) {
   const u = new URL(req.url), ip = req.headers.get('cf-connecting-ip') || '', now = Date.now(), db = env.DB;
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
   if (req.method === 'GET' && u.pathname === '/list') {
@@ -40,4 +44,4 @@ export default { async fetch(req, env) {
   if (u.pathname === '/remove') { await db.prepare('DELETE FROM servers WHERE key=?1 AND ip=?2').bind(String(b.key || ''), ip).run(); return J({ ok: true }); }
   if (u.pathname === '/report') { await db.prepare('INSERT INTO reports(code,why,ip,t) VALUES(?1,?2,?3,?4)').bind(String(b.code || '').slice(0, 8), String(b.why || '').slice(0, 500), ip, now).run(); return J({ ok: true }); }
   return J({ error: 'not found' }, 404);
-} };
+}

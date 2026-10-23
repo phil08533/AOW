@@ -350,7 +350,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.80</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.81</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18992,6 +18992,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 246, title: '2.22.81 · Multiplayer help', items: ['Added a How to join or host guide to the Multiplayer screen.'] },
   { id: 245, title: '2.22.80 · Server list', items: ['Multiplayer now shows public servers with search, and you can join with a 6-letter code.'] },
   { id: 244, title: '2.22.79 · Server preview fix', items: ['Server preview now works when the game is opened from a secure link.'] },
   { id: 243, title: '2.22.78 · Intro fix', items: ['Fixed an error box that could pop up over the title screen.'] },
@@ -27789,8 +27790,15 @@ function srvRules(r) { return Object.keys(RULE_LABEL).filter(k => r && k in r).m
 function openServers() {
   const d = document.createElement('div'); d.className = 'introLegal'; d.id = 'srvDlg';
   d.innerHTML = `<div class="ilBox" style="max-width:720px;width:100%"><h2>Multiplayer</h2>
-    ${LOOKUP ? `<input id="srvQ" placeholder="Search servers" style="width:100%;padding:8px;margin-bottom:8px"><div id="srvList" style="max-height:38vh;overflow:auto"></div>` : `<p style="color:#9ab">The public server list goes live once the lookup service is set up. You can still join by address.</p>`}
+    ${LOOKUP ? `<input id="srvQ" placeholder="Search servers" style="width:100%;box-sizing:border-box;padding:8px;margin-bottom:8px"><div id="srvList" style="max-height:38vh;overflow:auto"></div>` : `<p style="color:#9ab">The public server list goes live once the lookup service is set up. You can still join by address.</p>`}
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><input id="srvAddr" placeholder="${LOOKUP ? 'Join code or address' : 'Address, like 192.168.1.5:7777'}" style="flex:1;min-width:180px;padding:8px"><button class="cta" id="srvPrev">Preview</button></div>
+    <details style="margin-top:10px;font-size:13px;line-height:1.5"><summary style="cursor:pointer;color:#9cf">How to join or host</summary>
+      <p><b>Join a friend:</b> pick a server from the list, or type the 6-letter <b>join code</b> they give you. Then press Preview, then Join.</p>
+      <p><b>Join by address:</b></p><ul style="margin:4px 0 8px 18px;padding:0">
+        <li>Server on this same PC: <code>127.0.0.1:7777</code></li>
+        <li>Server on another PC on your Wi-Fi: that PC's local address, like <code>192.168.1.23:7777</code>. On Windows, open Command Prompt on that PC, type <code>ipconfig</code>, and use the "IPv4 Address".</li></ul>
+      <p><b>Host your own server:</b> in the game folder, run <code>npm install ws</code> once, then <code>node gameserver/server.js</code>. Keep that window open. It prints a <b>Join code</b> to share. Change its name, password and rules in <code>gameserver/server-config.json</code>, then restart it.</p>
+      <p><b>Friends outside your home:</b> they join with your code, but your router must forward port <b>7777</b> to your PC first. Search "port forward" plus your router's brand for steps. If Windows asks to let Node through the firewall, click Allow.</p></details>
     <div id="srvView" style="margin-top:10px"></div>
     <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">${sessionStorage.getItem('aow-server') ? '<button class="cta" id="srvLeave">Leave server</button>' : ''}<button class="cta win" id="srvClose">Close</button></div></div>
     <style>.srRow{display:flex;gap:10px;align-items:center;padding:8px;border-bottom:1px solid #222;cursor:pointer}.srRow:hover{background:#1c2030}.srR{display:inline-block;margin:2px 8px 2px 0;font-size:12px;color:#bcd}.srR b{color:#fff;font-weight:600}</style>`;

@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.98</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.99</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19013,6 +19013,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 264, title: '2.22.99 · Marshals', items: ['Marshals can no longer raid merchant haulers in space'] },
   { id: 263, title: '2.22.98 · Main story in the journal', items: ['Main story quests are listed first in the journal, marked ★ MAIN, with where to find the quest giver', 'Dead Air (Chapter 5) starts right after Kade, so the main story never goes missing'] },
   { id: 262, title: '2.22.97 · Fixes from playtest', items: ['The Long Arm starts as soon as Robot City is freed and points you straight to Marshal Rook on the Zeltac', 'Kade\'s ship is no longer swallowed by fog in the cutscene', 'Arena Prime intro stays over the arena instead of showing the edge of the world', 'The betting bar only shows when you are at the Betting Pit', 'The crowd cheers during fights in the big ring', 'Galaxy map labels no longer cover each other, and Earth Sky sits beside Earth', 'The Marshal armory list no longer sticks around in other menus'] },
   { id: 261, title: '2.22.96 · Quest tracker', items: ['Quests you have not picked up yet now say which world the quest giver is on (like Ada-9 in Robot City)'] },
@@ -27645,6 +27646,8 @@ setTimeout(() => { try { outHud(); mTouch(); } catch (_) {} }, 3000);
 // The Long Arm starts on its own when Robot City is freed, so the tracker points straight at Rook instead of back at Ada-9
 { const _cq = completeQuest; completeQuest = function (id) { const r = _cq.apply(this, arguments); if (id === 'r5' && !S.qst.law1) setTimeout(() => { if (!S.qst.law1) startQuest('law1', true); }, 400); return r; }; }
 setTimeout(() => { try { if (S.qst && S.qst.r5 && S.qst.r5.st === 'done' && !S.qst.law1) startQuest('law1', true); } catch (_) {} }, 3000);
+// Marshals don't rob merchant haulers
+{ const _bp = boardPrompt; boardPrompt = function (W) { if (W && W.type === 'trader' && mOn()) { openDlg('Sensors', 'Merchant Hauler'); $('dlgLine').textContent = 'A merchant guild hauler on a peaceful run. Marshals protect these, they don\'t rob them.'; acts([['Fly on', closeDlg, true]]); return; } return _bp.apply(this, arguments); }; }
 
 // =================== THE MARSHALS part 2: the ship board (rank animation), missions, random busts, the armory, the Lawbringer ===================
 // Save adds to S.marshal: seenXp, hunt { lv, name }, bustT, buy {}.

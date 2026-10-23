@@ -87,3 +87,5 @@ setTimeout(() => { try { outHud(); mTouch(); } catch (_) {} }, 3000);
 // The Long Arm starts on its own when Robot City is freed, so the tracker points straight at Rook instead of back at Ada-9
 { const _cq = completeQuest; completeQuest = function (id) { const r = _cq.apply(this, arguments); if (id === 'r5' && !S.qst.law1) setTimeout(() => { if (!S.qst.law1) startQuest('law1', true); }, 400); return r; }; }
 setTimeout(() => { try { if (S.qst && S.qst.r5 && S.qst.r5.st === 'done' && !S.qst.law1) startQuest('law1', true); } catch (_) {} }, 3000);
+// Marshals don't rob merchant haulers
+{ const _bp = boardPrompt; boardPrompt = function (W) { if (W && W.type === 'trader' && mOn()) { openDlg('Sensors', 'Merchant Hauler'); $('dlgLine').textContent = 'A merchant guild hauler on a peaceful run. Marshals protect these, they don\'t rob them.'; acts([['Fly on', closeDlg, true]]); return; } return _bp.apply(this, arguments); }; }

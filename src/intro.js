@@ -56,8 +56,8 @@ function cleanName(s, fb) { return badName(s) ? fb : s; }
   document.body.appendChild(cov);
   let step = 0, tm = 0, lockT = 0; const c1 = () => cov.querySelector('#ic1');
   const next = (ev) => { if (ev && (performance.now() < lockT || !ev.isTrusted)) return; clearTimeout(tm); step++; lockT = performance.now() + 1200;
-    if (step === 1) { requestAnimationFrame(() => c1().classList.add('on')); tm = setTimeout(next, 3200); }
-    else if (step === 2) { c1().classList.remove('on'); tm = setTimeout(() => { c1().remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; cov.appendChild(g); requestAnimationFrame(() => { g.classList.add('on'); cov.querySelector('.sun').classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); }
+    if (step === 1) { requestAnimationFrame(() => { const c = c1(); if (c) c.classList.add('on'); }); tm = setTimeout(next, 3200); }
+    else if (step === 2) { const c = c1(); if (c) c.classList.remove('on'); tm = setTimeout(() => { if (c) c.remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; cov.appendChild(g); requestAnimationFrame(() => { g.classList.add('on'); const su = cov.querySelector('.sun'); if (su) su.classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); }
     else { cov.style.opacity = 0; setTimeout(() => cov.remove(), 800); removeEventListener('keydown', next); } };
   cov.addEventListener('click', e => { if (step >= 1) next(e); }); addEventListener('keydown', e => { if (document.getElementById('introCov') && step >= 1) next(e); });
   if (document.readyState === 'complete') next(); else addEventListener('load', () => next());

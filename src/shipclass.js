@@ -1,12 +1,17 @@
 // =================== SHIP CLASSES: buy a Fighter or a Miner, tune them in the garage, Need for Speed style ===================
 // Room to grow: a new class is one entry in SHIP_CLASSES (stats, flight feel, slots) plus a builder in SC_BUILD.
 const PAINT_STYLES = [['Solid', 0], ['Two-tone', 0], ['Racing stripes', 2500], ['Flames', 4000], ['Camo', 3000], ['Hazard', 2000], ['Checker', 3500], ['Tiger', 4500], ['Carbon', 5000]];
+// laser colors: the bolt color for the Setting Sun, the beam style for the Miner (borrowed from the beam guns)
+const LASER_COLS = [['Ice blue', '#4fd2ff', 'frost'], ['Solar', '#ffb02a', 'solar'], ['Venom', '#7fff6a', 'venom'], ['Crimson', '#ff3b3b', 'crimson'], ['Galaxy', '#a87aff', 'galaxy'], ['White dwarf', '#e8ecff', 'dark']];
+const LASER_OPTS = LASER_COLS.map((c, i) => [c[0], [0, 0, 1500, 1500, 3000, 5000][i], {}]);
 const SHIP_CLASSES = {
   fighter: { name: 'Setting Sun', blurb: 'Your fighter. Wingtip laser pods, and side thrusters that strafe, climb and stop on a dime.', cost: 0, stat: { sp: 0.1, laser: 0.15 }, grip: 1.3, strafe: 1, lift: true, rcs: true,
     slots: {
       wing: ['Wings', [['Swept wings', 0, {}], ['Forward-swept', 3000, { sp: 0.04 }], ['Delta', 4000, { sp: 0.03, hull: 0.04 }], ['Quad X-wing', 7000, { laser: 0.08 }]]],
       eng: ['Engines', [['Twin thrusters', 0, {}], ['Single pulse', 3500, { sp: 0.06 }], ['Quad cluster', 6000, { sp: 0.1, hull: -0.04 }]]],
-      nose: ['Nose', [['Wedge', 0, {}], ['Shark mouth', 2500, { hull: 0.04 }], ['Twin prong', 3500, { laser: 0.05 }]]],
+      nose: ['Nose', [['Wedge', 0, {}], ['Shark mouth', 2500, { hull: 0.04 }], ['Twin prong', 3500, { laser: 0.05 }], ['Hammerhead', 4000, { hull: 0.06 }], ['Needle lance', 4500, { sp: 0.05 }], ['Armored ram', 5000, { hull: 0.12, sp: -0.03 }], ['Split jaw', 5500, { laser: 0.08 }]]],
+      lc: ['Laser color', LASER_OPTS],
+      bolt: ['Bolt speed', [['Standard', 0, {}], ['Fast', 3000, {}], ['Hyper', 8000, {}]]],
       wpn: ['Guns', [['Laser pods', 0, {}], ['Gatling pods', 5000, { laser: 0.1 }], ['Missile racks', 6500, { laser: 0.14, sp: -0.02 }]]],
       kit: ['Body kit', [['Stock', 0, {}], ['Spoiler fins', 2000, { sp: 0.02 }], ['Side skirts', 2000, { hull: 0.04 }], ['Canards', 3000, { sp: 0.03 }]]]
     } },
@@ -16,7 +21,9 @@ const SHIP_CLASSES = {
       armor: ['Armor', [['Plated', 0, {}], ['Heavy slab', 4500, { hull: 0.25, sp: -0.05 }], ['Cage frame', 3000, { hull: 0.1, sp: 0.03 }]]],
       eng: ['Engines', [['Hauler twins', 0, {}], ['Quad thrusters', 4000, { sp: 0.1 }]]],
       hopper: ['Cargo', [['Ore trays', 0, {}], ['Tank pods', 3000, { ore: 0.2 }], ['Container rack', 5000, { ore: 0.35, sp: -0.03 }]]],
-      lights: ['Lights', [['Floodlights', 0, {}], ['Light bar', 1500, {}], ['Lights off', 0, {}]]]
+      lights: ['Lights', [['Floodlights', 0, {}], ['Light bar', 1500, {}], ['Lights off', 0, {}]]],
+      lc: ['Laser color', LASER_OPTS],
+      beam: ['Beam', [['Steady', 0, {}], ['Overdrive', 4000, { mine: 0.4 }], ['Cutter', 8000, { mine: 0.8, laser: 0.1 }]]]
     } }
 };
 function scS() { S.scl = S.scl || { cur: 'fighter', own: {}, cfg: {}, m3: 1 }; const Q = S.scl; Q.own = Q.own || {}; Q.cfg = Q.cfg || {};
@@ -72,7 +79,15 @@ const SC_BUILD = {
     const grey = '#6a6e76', lg = '#9aa1aa', wh = '#e8eef2', cyan = glow('#3ff4ff'), haz = SC_HAZ(), rcs = [], guns = [];
     part(g, B(1.9, 0.8, 5.2), grey, 0, -0.1, 0.6); part(g, B(1.94, 0.12, 5.2), dk, 0, -0.42, 0.6);
     // nose
-    if (C.nose === 2) for (const s of [-1, 1]) { part(g, B(0.5, 0.5, 2.6), grey, 0.55 * s, -0.15, -2.9); part(g, B(0.4, 0.12, 2.4), hull, 0.55 * s, 0.14, -2.9); }
+    if (C.nose === 3) { part(g, B(1.7, 0.6, 2.0), grey, 0, -0.2, -2.8); part(g, B(3.0, 0.42, 0.9), grey, 0, -0.2, -4.1); part(g, B(2.9, 0.1, 0.8), hull, 0, 0.05, -4.1); part(g, B(1.3, 0.12, 2.0), hull, 0, 0.14, -2.8, 0.05);
+      for (const s of [-1, 1]) { part(g, B(0.3, 0.3, 0.06), glow('#fff6d0'), 1.3 * s, -0.2, -4.57); part(g, B(0.2, 0.44, 0.92), haz, 1.5 * s, -0.2, -4.1); } }
+    else if (C.nose === 4) { for (const [w, h, z] of [[1.4, 0.55, -2.6], [0.9, 0.42, -3.9], [0.5, 0.3, -5.1]]) { part(g, B(w, h, 1.4), grey, 0, -0.2, z); part(g, B(w * 0.7, 0.08, 1.3), hull, 0, -0.2 + h / 2 + 0.03, z); }
+      part(g, Cy(0.05, 0.05, 1.4, 6), lg, 0, -0.2, -6.4, Math.PI / 2); E(g, glow('#ff3a2a'), 0, -0.2, -7.1, 0.08, 0.08, 0.08); }
+    else if (C.nose === 5) { part(g, B(1.95, 0.9, 2.4), grey, 0, -0.1, -2.9); part(g, B(1.85, 0.8, 0.16), haz, 0, -0.1, -4.15); part(g, B(1.5, 0.14, 2.2), hull, 0, 0.38, -2.9);
+      for (const s of [-1, 1]) for (let k = 0; k < 3; k++) E(g, lg, 0.99 * s, -0.1, -2.1 - k * 0.7, 0.07, 0.07, 0.07); }
+    else if (C.nose === 6) { for (const s of [-1, 1]) { part(g, B(0.55, 0.5, 2.8), grey, 0.6 * s, -0.2, -3.0, 0, -0.12 * s, 0); part(g, B(0.45, 0.1, 2.6), hull, 0.62 * s, 0.07, -3.0, 0, -0.12 * s, 0); part(g, B(0.3, 0.3, 0.3), lg, 0.82 * s, -0.2, -4.4); }
+      part(g, B(0.6, 0.35, 1.2), dk, 0, -0.25, -2.6); part(g, B(0.5, 0.25, 0.05), glow('#3ff4ff'), 0, -0.25, -3.22); }
+    else if (C.nose === 2) for (const s of [-1, 1]) { part(g, B(0.5, 0.5, 2.6), grey, 0.55 * s, -0.15, -2.9); part(g, B(0.4, 0.12, 2.4), hull, 0.55 * s, 0.14, -2.9); }
     else { const n = part(g, B(1.7, 0.6, 2.2), grey, 0, -0.2, -2.9); part(g, B(1.2, 0.5, 1.2), grey, 0, -0.25, -4.4); part(g, B(1.3, 0.14, 3.4), hull, 0, 0.17, -2.9, 0.06); part(g, B(0.8, 0.12, 1.1), hull, 0, 0.0, -4.4, 0.12);
       if (C.nose === 1) { for (let i = 0; i < 5; i++) part(g, new THREE.ConeGeometry(0.07, 0.22, 3), wh, -0.4 + i * 0.2, -0.5, -4.95, Math.PI); E(g, glow('#ff2a3a'), 0.4, -0.05, -4.6, 0.07, 0.07, 0.07); E(g, glow('#ff2a3a'), -0.4, -0.05, -4.6, 0.07, 0.07, 0.07); } }
     // cockpit: white canopy frame around a dark glass front
@@ -211,7 +226,7 @@ function scGarage(k) {
   const render = () => { rows.textContent = '';
     $('dlgLine').textContent = `${S.cr.toLocaleString()} cr · speed ${Math.round(shipModOf(k, 'sp') * 100)}% · hull ${Math.round(shipModOf(k, 'hull') * 100)}% · guns ${Math.round(shipModOf(k, 'laser') * 100)}%`;
     listOf(tab).forEach((it, i) => { const own = owned(tab, i), on = (C[tab] | 0) === i, cost = (tab === 'p' || tab === 'a' || tab === 'x') ? 0 : it[1], r = document.createElement('div'); r.className = 'rowi';
-      const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = (tab === 'p' || tab === 'a' || tab === 'x') ? (it[1] === 'rainbow' ? 'linear-gradient(90deg,#ff2a3a,#ffd36a,#7fff6a)' : it[1] || S.col) : on ? '#6fdc5a' : '#9aa1aa';
+      const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = tab === 'lc' ? LASER_COLS[i][1] : (tab === 'p' || tab === 'a' || tab === 'x') ? (it[1] === 'rainbow' ? 'linear-gradient(90deg,#ff2a3a,#ffd36a,#7fff6a)' : it[1] || S.col) : on ? '#6fdc5a' : '#9aa1aa';
       const nm = document.createElement('span'); nm.textContent = it[0] + (statTxt(it[2]) ? ` · ${statTxt(it[2])}` : '');
       const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '13px'; mt.textContent = on ? 'Fitted' : own ? 'Owned' : cost ? cost.toLocaleString() + ' cr' : 'Scavenge';
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = on ? '✓' : own ? 'Fit' : cost ? 'Buy' : '🔒'; b.disabled = on || (!own && !cost);

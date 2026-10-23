@@ -409,12 +409,16 @@ function shipFire() {
     for (const r of F.raiders) { if (r.dead) continue; const tt = raySphere(from, dir, r.obj.position, 5); if (tt > 0 && tt < ht) { ht = tt; hit = r; rock = -1; ext = null; } }
     F.rockData.forEach((R, i) => { if (R.dead) return; const tt = raySphere(from, dir, R.p, R.s); if (tt > 0 && tt < ht) { ht = tt; hit = null; rock = i; ext = null; } });
     const end = from.clone().addScaledVector(dir, ht); tracer(from, end, shipTracer());
-    if (ext) ext.hit(dmg / 2, end);
-    else if (hit) { hit.hp -= dmg / 2; hit.aggro = true; burst(end, '#ffd36a', 6, 12); hitmark(false); if (hit.hp <= 0) killRaider(hit); else drawPlate(hit.plate, (hit.def && hit.def.name) || 'Drome Raider', 'Lv ' + hit.lv, hpColor(hit.lv), hit.hp / hit.max); }
-    else if (rock >= 0) { const R = F.rockData[rock]; R.hp -= dmg / 2 * shipMineMul(); burst(end, '#b8a07a', 4, 10);
+    shipHitApply({ hit, rock, ext }, dmg / 2, end);
+  }
+}
+// apply one laser hit (shared by bolts and beams)
+function shipHitApply(o, dmgH, end) { const F = fly, hit = o.hit, rock = o.rock, ext = o.ext;
+    if (ext) ext.hit(dmgH, end);
+    else if (hit) { hit.hp -= dmgH; hit.aggro = true; burst(end, '#ffd36a', 6, 12); hitmark(false); if (hit.hp <= 0) killRaider(hit); else drawPlate(hit.plate, (hit.def && hit.def.name) || 'Drome Raider', 'Lv ' + hit.lv, hpColor(hit.lv), hit.hp / hit.max); }
+    else if (rock >= 0) { const R = F.rockData[rock]; R.hp -= dmgH * shipMineMul(); burst(end, '#b8a07a', 4, 10);
       if (R.hp <= 0) { R.dead = 0.001; F.dm.position.copy(R.p); F.dm.scale.setScalar(0.0001); F.dm.updateMatrix(); F.rocks.setMatrixAt(rock, F.dm.matrix); F.rocks.instanceMatrix.needsUpdate = true; burst(R.p, '#b8a07a', 24, 30); SFX.crack();
         const n = Math.max(1, Math.round(R.s / 4 * shipOreMul())); for (let k = 0; k < n; k++) spaceDrop(R.p, 'item', 'ore', 1); if (R.crystal || Math.random() < 0.1) spaceDrop(R.p, 'item', 'starcrystal', 1); if (R.drug) { if (R.glow) R.glow.visible = false; const ks = Object.keys(BQ_ING).filter(k => !BQ_ING[k].rare); for (let k = 0; k < 2 + randi(0, 2); k++) spaceDrop(R.p, 'item', ks[randi(0, ks.length - 1)], 1); if (Math.random() < 0.08) spaceDrop(R.p, 'item', 'starnectar', 1); } questProgressKill('asteroid'); } }
-  }
 }
 function killRaider(r) {
   r.dead = 0.001; r.obj.visible = false; SFX.boom(); hitmark(true); burst(r.obj.position, '#ff9a3c', 30, 30); burst(r.obj.position, '#ff2a3a', 16, 20);

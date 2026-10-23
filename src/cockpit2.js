@@ -33,11 +33,11 @@
     const dial = (x, y, z, ry, r, col) => { const d = P(new THREE.CircleGeometry(r + 0.005, 18), plate, x, y, z); d.rotation.y = ry; const f = P(new THREE.CircleGeometry(r, 18), M('#0e1418'), x, y, z + 0.001); f.rotation.y = ry;
       const n = new THREE.Group(); n.position.set(x, y, z + 0.003); n.rotation.y = ry; g.add(n); add.push(n); part(n, B(0.002, r * 0.85, 0.001), L(col), 0, r * 0.4, 0); SCOCK.needles.push(n); };
     for (const s of [-1, 1]) { const ry = -s * 0.45;
-      mini(s * 0.6, -0.08, -0.66, ry, 0.12, 0.08); mini(s * 0.6, 0.02, -0.68, ry, 0.12, 0.06);
+      for (const [yy, zz] of [[-0.08, -0.66], [0.02, -0.68]]) { const pl = P(B(0.13, 0.07, 0.008), plate, s * 0.6, yy, zz); pl.rotation.y = ry; }
       for (let k = 0; k < 3; k++) dial(s * (0.71 + k * 0.0), -0.04 + k * 0.0 - k * 0.055, -0.6 + k * 0.0, ry, 0.022, ['#ff3a2a', '#6fdc5a', '#4fd2ff'][k]);
       for (let r = 0; r < 2; r++) for (let k = 0; k < 4; k++) { const b = P(B(0.018, 0.014, 0.01), L(['#ff6a3a', '#6fdc5a', '#4fd2ff', '#ffd36a'][(r + k) % 4]), s * (0.53 + k * 0.026), -0.15 - r * 0.022, -0.635); b.rotation.y = ry; b.userData.blink = r * 4 + k + (s > 0 ? 8 : 0); }
     }
-    mini(0, -0.172, -0.69, 0, 0.12, 0.04);
+
     // banks of flip switches under the side screens, each with a status light
     for (const s of [-1, 1]) for (let r = 0; r < 1; r++) for (let k = 0; k < 7; k++) { const x = s * (0.12 + k * 0.04), y = -0.172, ry = 0;
       P(B(0.022, 0.024, 0.008), plate, x, y, -0.672).rotation.y = ry; const t = P(new THREE.CylinderGeometry(0.003, 0.004, 0.022, 6), M('#d8dce4'), x, y + 0.01, -0.665); t.rotation.x = ((k + r) % 3 ? 0.8 : -0.8); part(t, B(0.007, 0.006, 0.007), L(['#ff3a2a', '#ffd36a', '#c8ccd4'][(k + r) % 3]), 0, 0.012, 0);

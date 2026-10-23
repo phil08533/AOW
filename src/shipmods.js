@@ -1,5 +1,5 @@
 // =================== SHIP MODS: paint and parts for the Setting Sun, some scavenged in space and on planets ===================
-const SHIP_PAINTS = [['Gunmetal', '#9aa1aa', 1], ['Arctic', '#e8eef2', 1], ['Olive Drab', '#6f7a3e', 1], ['Midnight', '#2a3756', 1], ['Crimson', '#8a1e1e', 0], ['Sunset Gold', '#c9a43a', 0], ['Void Black', '#1e1c22', 0], ['Nebula Violet', '#5a2a8a', 0], ['Coral', '#e86a5a', 0], ['Toxic Green', '#5aff6a', 0], ['Hauler Orange', '#c8560a', 1]];
+const SHIP_PAINTS = [['Gunmetal', '#9aa1aa', 1], ['Arctic', '#e8eef2', 1], ['Olive Drab', '#6f7a3e', 1], ['Midnight', '#2a3756', 1], ['Crimson', '#8a1e1e', 0], ['Sunset Gold', '#c9a43a', 0], ['Void Black', '#1e1c22', 0], ['Nebula Violet', '#5a2a8a', 0], ['Coral', '#e86a5a', 0], ['Toxic Green', '#5aff6a', 0], ['Hauler Orange', '#b04a08', 1]];
 const SHIP_ACCENTS = [['Team color', null, 1], ['Orange', '#ff8a2a', 1], ['Ice', '#4fd2ff', 1], ['Hazard', '#ffd36a', 0], ['Blood', '#ff2a3a', 0], ['Pink', '#ff6aa8', 0], ['Chrome', '#e8e4dc', 0]];
 const SHIP_EXHAUST = [['Sunfire orange', '#ff9a3c', 1], ['Plasma blue', '#4fd2ff', 1], ['Toxic green', '#7fff6a', 1], ['Hot pink', '#ff6aa8', 1], ['Royal violet', '#c86aff', 1], ['White hot', '#f4f4ff', 1], ['Blood red', '#ff2a3a', 1], ['Gold', '#ffd36a', 1], ['Rainbow', 'rainbow', 1]];
 const SHIP_PARTS = {

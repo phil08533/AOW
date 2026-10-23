@@ -1,4 +1,4 @@
-// Glop Drop lookup service: Cloudflare Worker + D1 database bound as DB. Holds only listings, never passwords or gameplay.
+// Blork lookup service: Cloudflare Worker + D1 database bound as DB. Holds only listings, never passwords or gameplay.
 //   POST /announce  {key?, name, desc, port, public, locked, count, max, rules}  -> {key, code}   (heartbeat every 2 min)
 //   POST /remove    {key}
 //   GET  /list?q=   public servers seen in the last 5 minutes, matching the search text

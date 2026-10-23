@@ -1,4 +1,4 @@
-# Glop Drop Server
+# Blork Server
 
 Player-hosted server for Art of War: Setting Sun.
 

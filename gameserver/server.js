@@ -1,4 +1,4 @@
-// Glop Drop Server: a player-hosted Art of War server.
+// Blork Server: a player-hosted Art of War server.
 // Players connect over WebSocket. Public:  GET /info (name, rules, players, locked).
 // Admin API for the server window: /admin/*, bound to 127.0.0.1 only and needs the admin token from config.
 'use strict';
@@ -89,6 +89,6 @@ const admin = http.createServer((req, res) => {
       case '/admin/stop': send({ ok: true }); say('Server stopping'); for (const ws of players.keys()) ws.close(1001, 'Server shutting down.'); return setTimeout(() => process.exit(0), 300);
       default: res.writeHead(404); res.end(); } });
 });
-server.listen(cfg.port, () => say(`Glop Drop Server "${cfg.name}" on port ${cfg.port}`));
+server.listen(cfg.port, () => say(`Blork Server "${cfg.name}" on port ${cfg.port}`));
 admin.listen(cfg.adminPort, '127.0.0.1');
 module.exports = { cfg, setPassword };

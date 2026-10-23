@@ -1,28 +1,28 @@
 // =================== INTRO: studio card, game title, legal ===================
 // Plays once per page load before the start screen. Tap or any key skips a card. S is not loaded yet, so the accepted-terms flag lives in localStorage.
-const STUDIO = { name: 'Glop Drop Studio', video: null }; // swap in the logo/video when Phil sends them
+const STUDIO = { name: 'Blork Studios', video: null }; // swap in the logo/video when Phil sends them
 const LEGAL_VER = 1;
 const LEGAL = {
   terms: ['Terms of Service', [
     'By playing Art of War: Setting Sun you agree to these terms. If you do not agree, do not play.',
     'Age. You must be at least 13 years old, or the minimum age to use online services where you live. If you are under 18, a parent or guardian should review these terms with you.',
     'Conduct. Do not harass, threaten or impersonate other players. Do not use hateful, sexual or offensive names, chat or server names. Do not cheat, exploit bugs on purpose, or attack servers or other players\' devices.',
-    'Player servers. Servers are run by players, not by Glop Drop Studio. Hosts set their own rules and are responsible for what happens on their server. We may remove any public listing that breaks these terms.',
+    'Player servers. Servers are run by players, not by Blork Studios. Hosts set their own rules and are responsible for what happens on their server. We may remove any public listing that breaks these terms.',
     'Your content. You keep what you make. By sharing names, chat or builds in multiplayer you let other players see them while playing.',
     'Virtual items. Credits, gear and other in-game items have no real-world value and cannot be sold or exchanged for money.',
     'Enforcement. We may limit or block access for anyone who breaks these terms.',
-    'No warranty. The game is provided as is. Saves can be lost, servers can go down. To the extent the law allows, Glop Drop Studio is not liable for losses from using the game.',
+    'No warranty. The game is provided as is. Saves can be lost, servers can go down. To the extent the law allows, Blork Studios is not liable for losses from using the game.',
     'Changes. We may update these terms. Continuing to play after an update means you accept it.']],
   privacy: ['Privacy', [
     'Saves. Your characters and progress are stored on your device. Clearing your browser data deletes them.',
     'Multiplayer. When you play online, other players on the same server see your callsign, character, position and chat. Server hosts can see who joined.',
     'We do not sell your data and we do not run ads that track you.',
     'Children. We do not knowingly collect personal information from children under 13.',
-    'Questions or removal requests: contact Glop Drop Studio.']],
+    'Questions or removal requests: contact Blork Studios.']],
   eula: ['License', [
-    'Glop Drop Studio grants you a personal, non-exclusive license to play the game. You may not resell, redistribute or claim the game as your own.',
-    'Art of War: Setting Sun, its characters, art and code are owned by Glop Drop Studio. All rights reserved.']],
-  credits: ['Credits', ['A Glop Drop Studio game.', 'Created by Phil and Caleb.', 'Built with three.js (MIT license).']]
+    'Blork Studios grants you a personal, non-exclusive license to play the game. You may not resell, redistribute or claim the game as your own.',
+    'Art of War: Setting Sun, its characters, art and code are owned by Blork Studios. All rights reserved.']],
+  credits: ['Credits', ['A Blork Studios game.', 'Created by Phil and Caleb.', 'Built with three.js (MIT license).']]
 };
 function legalOpen(k) { const L = LEGAL[k], d = document.createElement('div'); d.className = 'introLegal';
   d.innerHTML = `<div class="ilBox"><h2>${L[0]}</h2>${L[1].map(p => `<p>${p}</p>`).join('')}<button class="cta win">Close</button></div>`;
@@ -38,7 +38,8 @@ function cleanName(s, fb) { return badName(s) ? fb : s; }
 #introCov .ic.on{opacity:1}
 #introCov .studio{font-size:clamp(28px,6vw,56px);font-weight:900;letter-spacing:.04em;color:#7dff6a;text-shadow:0 0 30px #3aff2a88}
 #introCov .studio small{display:block;font-size:.3em;letter-spacing:.5em;color:#cfe;margin-top:10px;font-weight:600}
-#introCov .drop{width:46px;height:60px;margin:0 auto 18px;background:#7dff6a;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;box-shadow:0 0 30px #3aff2a;animation:icd 1.4s ease-in}
+#introCov .drop{position:relative;width:64px;height:60px;margin:0 auto 18px;background:#7dff6a;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;box-shadow:0 0 30px #3aff2a;animation:icd 1.4s ease-in}
+#introCov .shades{position:absolute;left:8px;right:8px;top:20px;height:12px;background:#0a0a0a;border-radius:3px 3px 10px 10px;box-shadow:inset 0 2px 0 #444}#introCov .shades:before,#introCov .shades:after{content:'';position:absolute;top:0;width:18px;height:14px;background:#0a0a0a;border-radius:2px 2px 9px 9px}#introCov .shades:before{left:0}#introCov .shades:after{right:0}
 @keyframes icd{0%{transform:translateY(-60vh) scaleY(1.4)}70%{transform:translateY(0) scaleY(1.2)}85%{transform:scale(1.3,.6)}100%{transform:none}}
 #introCov .gt{font-size:clamp(34px,8vw,84px);font-weight:900;color:#fff;letter-spacing:.06em;line-height:1}
 #introCov .gt span{color:#ff5a3a}#introCov .gs{color:#ff8a4a;letter-spacing:.6em;font-size:clamp(12px,2vw,18px);margin-top:12px}
@@ -51,7 +52,7 @@ function cleanName(s, fb) { return badName(s) ? fb : s; }
 #legalRow a{color:#9ab;cursor:pointer;text-decoration:underline}#tosRow{font-size:12px;display:flex;gap:8px;align-items:center;justify-content:center}`;
   document.head.appendChild(css);
   const cov = document.createElement('div'); cov.id = 'introCov';
-  cov.innerHTML = `<div class="sun"></div><div class="ic" id="ic1"><div class="drop"></div><div class="studio">${STUDIO.name.toUpperCase().replace(' STUDIO', '')}<small>STUDIO</small></div></div>`;
+  cov.innerHTML = `<div class="sun"></div><div class="ic" id="ic1"><div class="drop"><i class="shades"></i></div><div class="studio">${STUDIO.name.toUpperCase().replace(/ STUDIOS?$/, '')}<small>STUDIOS</small></div></div>`;
   document.body.appendChild(cov);
   let step = 0, tm = 0, lockT = 0; const c1 = () => cov.querySelector('#ic1');
   const next = (ev) => { if (ev && (performance.now() < lockT || !ev.isTrusted)) return; clearTimeout(tm); step++; lockT = performance.now() + 1200;

@@ -235,7 +235,7 @@ const _origShipMods = openShipMods;
 openShipMods = function () { const Q = scS(); openDlg('Shipyard', 'Your hangar');
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   const render = () => { rows.textContent = ''; $('dlgLine').textContent = `Buy a hull, fly it, then tune it in the garage. ${S.cr.toLocaleString()} cr.`;
-    for (const k in SHIP_CLASSES) { const D = SHIP_CLASSES[k], own = Q.own[k], on = Q.cur === k, r = document.createElement('div'); r.className = 'rowi';
+    for (const k in SHIP_CLASSES) { const D = SHIP_CLASSES[k], own = Q.own[k], on = Q.cur === k; if (D.hide && D.hide() && !own) continue; const r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = on ? '#6fdc5a' : own ? '#4fd2ff' : '#9aa1aa';
       const nm = document.createElement('span'); nm.textContent = `${D.name} · ${D.blurb}`; const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '13px'; mt.textContent = on ? 'Flying' : own ? 'Owned' : D.cost.toLocaleString() + ' cr';
       const b1 = document.createElement('button'); b1.className = 'pbtn'; b1.style.padding = '5px 10px'; b1.textContent = own ? (on ? 'Garage' : 'Fly') : 'Buy';

@@ -51,16 +51,18 @@ function cleanName(s, fb) { return badName(s) ? fb : s; }
 .introLegal h2{margin:0 0 10px}#legalRow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;font-size:12px;margin-top:6px}
 #legalRow a{color:#9ab;cursor:pointer;text-decoration:underline}#tosRow{font-size:12px;display:flex;gap:8px;align-items:center;justify-content:center}`;
   document.head.appendChild(css);
-  const cov = document.createElement('div'); cov.id = 'introCov';
-  cov.innerHTML = `<div class="sun"></div><div class="ic" id="ic1"><div class="drop"><i class="shades"></i></div><div class="studio">${STUDIO.name.toUpperCase().replace(/ STUDIOS?$/, '')}<small>STUDIOS</small></div></div>`;
-  document.body.appendChild(cov);
+  // the studio card is already in the page markup so it shows the moment the page opens
+  let cov = document.getElementById('introCov');
+  if (!cov) { cov = document.createElement('div'); cov.id = 'introCov'; document.body.appendChild(cov); }
+  if (!cov.querySelector('.sun')) cov.insertAdjacentHTML('afterbegin', '<div class="sun"></div>');
+  if (!cov.querySelector('#ic1')) cov.insertAdjacentHTML('beforeend', `<div class="ic" id="ic1"><div class="drop"><i class="shades"></i></div><div class="studio">${STUDIO.name.toUpperCase().replace(/ STUDIOS?$/, '')}<small>STUDIOS</small></div></div>`);
   let step = 0, tm = 0, lockT = 0; const c1 = () => cov.querySelector('#ic1');
   const next = (ev) => { if (ev && (performance.now() < lockT || !ev.isTrusted)) return; clearTimeout(tm); step++; lockT = performance.now() + 1200;
     if (step === 1) { requestAnimationFrame(() => { const c = c1(); if (c) c.classList.add('on'); }); tm = setTimeout(next, 3200); }
     else if (step === 2) { const c = c1(); if (c) c.classList.remove('on'); tm = setTimeout(() => { if (c) c.remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; cov.appendChild(g); requestAnimationFrame(() => { g.classList.add('on'); const su = cov.querySelector('.sun'); if (su) su.classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); }
     else { cov.style.opacity = 0; setTimeout(() => cov.remove(), 800); removeEventListener('keydown', next); } };
   cov.addEventListener('click', e => { if (step >= 1) next(e); }); addEventListener('keydown', e => { if (document.getElementById('introCov') && step >= 1) next(e); });
-  if (document.readyState === 'complete') next(); else addEventListener('load', () => next());
+  requestAnimationFrame(() => next()); // start right away; waiting for the page's load event left a long black screen
   // legal links + terms acceptance on the start screen
   const pb = document.getElementById('playBtn'); if (!pb) return;
   let ok = false; try { ok = +localStorage.getItem('aow-tos') >= LEGAL_VER; } catch (_) {}

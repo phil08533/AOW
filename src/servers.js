@@ -46,3 +46,13 @@ function openServers() {
 (function () { const pb = document.getElementById('playBtn'); if (!pb) return; const b = document.createElement('button'); b.className = 'cta'; b.id = 'mpBtn';
   let cur = null; try { cur = JSON.parse(sessionStorage.getItem('aow-server') || 'null'); } catch (_) {}
   b.textContent = cur ? 'Multiplayer · on a server' : 'Multiplayer'; b.style.marginTop = '6px'; b.onclick = openServers; pb.after(b); })();
+// ---------- settings a server host locked ----------
+// Locked values are served through a getter and never saved: savePrefs runs with the locks lifted, so leaving the server gives back the player's own choice.
+const SRV_LOCK = {}; let SRV_INFO = null;
+for (const k of ['subs', 'cuts']) { const d = Object.getOwnPropertyDescriptor(PREFS, k) || { value: PREFS[k], writable: true }; let v = d.value;
+  Object.defineProperty(PREFS, k, { get: () => k in SRV_LOCK ? SRV_LOCK[k] : d.get ? d.get() : v, set: x => { if (d.set) d.set(x); else v = x; }, enumerable: true, configurable: true }); }
+{ const _sp = savePrefs; savePrefs = function () { const held = Object.assign({}, SRV_LOCK); for (const k in SRV_LOCK) delete SRV_LOCK[k]; try { return _sp.apply(this, arguments); } finally { Object.assign(SRV_LOCK, held); } }; }
+function srvApplyRules(info) { SRV_INFO = info; const L = (info.rules && info.rules.locks) || {};
+  for (const k in SRV_LOCK) delete SRV_LOCK[k]; for (const k in L) SRV_LOCK[k] = L[k] === 'on';
+  const n = Object.keys(L).length; if (typeof toast === 'function') toast(info.name || 'SERVER', n ? `Joined. The host locked ${n} setting${n > 1 ? 's' : ''}.` : 'Joined.', 3);
+  if (typeof renderSettings === 'function') try { renderSettings(); } catch (_) {} }

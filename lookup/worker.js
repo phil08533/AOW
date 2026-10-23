@@ -40,7 +40,7 @@ async function handle(req, env) {
     await db.prepare('INSERT INTO servers(key,code,ip,port,name,descr,search,public,locked,count,max,rules,t) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13) ON CONFLICT(key) DO UPDATE SET port=?4,name=?5,descr=?6,search=?7,public=?8,locked=?9,count=?10,max=?11,rules=?12,t=?13')
       .bind(key, code, ip, port, name, desc, norm(name + ' ' + desc), b.public ? 1 : 0, b.locked ? 1 : 0, count, max, rules, now).run();
     if (Math.random() < 0.02) await db.prepare('DELETE FROM servers WHERE t<?1').bind(now - FRESH * 12).run();
-    return J({ key, code }); }
+    return J({ key, code, ip }); }
   if (u.pathname === '/remove') { await db.prepare('DELETE FROM servers WHERE key=?1 AND ip=?2').bind(String(b.key || ''), ip).run(); return J({ ok: true }); }
   if (u.pathname === '/report') { await db.prepare('INSERT INTO reports(code,why,ip,t) VALUES(?1,?2,?3,?4)').bind(String(b.code || '').slice(0, 8), String(b.why || '').slice(0, 500), ip, now).run(); return J({ ok: true }); }
   return J({ error: 'not found' }, 404);

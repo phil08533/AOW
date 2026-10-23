@@ -267,6 +267,7 @@ html.ready #bootLoad { display: none; }
 </style>
 </head>
 <body>
+<div id="introCov" style="position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;transition:opacity .8s"><div class="ic on" id="ic1" style="text-align:center"><div class="drop" style="position:relative;width:64px;height:60px;margin:0 auto 18px;background:#7dff6a;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;box-shadow:0 0 30px #3aff2a"><i class="shades"></i></div><div class="studio" style="font-size:clamp(28px,6vw,56px);font-weight:900;letter-spacing:.04em;color:#7dff6a;text-shadow:0 0 30px #3aff2a88;font-family:monospace">BLORK<small style="display:block;font-size:.3em;letter-spacing:.5em;color:#cfe;margin-top:10px;font-weight:600">STUDIOS</small></div></div></div>
 <div id="bootLoad">LOADING<b><i></i></b></div>
 
 <div id="stage" aria-label="Game view"></div>
@@ -350,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.81</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.82</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -18992,6 +18993,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 247, title: '2.22.82 · Faster intro, easy hosting', items: ['The Blork card shows the moment the game opens, no more long black screen.', 'Host Server launcher with a control panel: join code, your addresses with Copy buttons, rules, password, kick and ban.', 'Hosts can lock player settings like drugs and story scenes; your own choices come back when you leave.'] },
   { id: 246, title: '2.22.81 · Multiplayer help', items: ['Added a How to join or host guide to the Multiplayer screen.'] },
   { id: 245, title: '2.22.80 · Server list', items: ['Multiplayer now shows public servers with search, and you can join with a 6-letter code.'] },
   { id: 244, title: '2.22.79 · Server preview fix', items: ['Server preview now works when the game is opened from a secure link.'] },
@@ -27752,16 +27754,18 @@ function cleanName(s, fb) { return badName(s) ? fb : s; }
 .introLegal h2{margin:0 0 10px}#legalRow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;font-size:12px;margin-top:6px}
 #legalRow a{color:#9ab;cursor:pointer;text-decoration:underline}#tosRow{font-size:12px;display:flex;gap:8px;align-items:center;justify-content:center}`;
   document.head.appendChild(css);
-  const cov = document.createElement('div'); cov.id = 'introCov';
-  cov.innerHTML = `<div class="sun"></div><div class="ic" id="ic1"><div class="drop"><i class="shades"></i></div><div class="studio">${STUDIO.name.toUpperCase().replace(/ STUDIOS?$/, '')}<small>STUDIOS</small></div></div>`;
-  document.body.appendChild(cov);
+  // the studio card is already in the page markup so it shows the moment the page opens
+  let cov = document.getElementById('introCov');
+  if (!cov) { cov = document.createElement('div'); cov.id = 'introCov'; document.body.appendChild(cov); }
+  if (!cov.querySelector('.sun')) cov.insertAdjacentHTML('afterbegin', '<div class="sun"></div>');
+  if (!cov.querySelector('#ic1')) cov.insertAdjacentHTML('beforeend', `<div class="ic" id="ic1"><div class="drop"><i class="shades"></i></div><div class="studio">${STUDIO.name.toUpperCase().replace(/ STUDIOS?$/, '')}<small>STUDIOS</small></div></div>`);
   let step = 0, tm = 0, lockT = 0; const c1 = () => cov.querySelector('#ic1');
   const next = (ev) => { if (ev && (performance.now() < lockT || !ev.isTrusted)) return; clearTimeout(tm); step++; lockT = performance.now() + 1200;
     if (step === 1) { requestAnimationFrame(() => { const c = c1(); if (c) c.classList.add('on'); }); tm = setTimeout(next, 3200); }
     else if (step === 2) { const c = c1(); if (c) c.classList.remove('on'); tm = setTimeout(() => { if (c) c.remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; cov.appendChild(g); requestAnimationFrame(() => { g.classList.add('on'); const su = cov.querySelector('.sun'); if (su) su.classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); }
     else { cov.style.opacity = 0; setTimeout(() => cov.remove(), 800); removeEventListener('keydown', next); } };
   cov.addEventListener('click', e => { if (step >= 1) next(e); }); addEventListener('keydown', e => { if (document.getElementById('introCov') && step >= 1) next(e); });
-  if (document.readyState === 'complete') next(); else addEventListener('load', () => next());
+  requestAnimationFrame(() => next()); // start right away; waiting for the page's load event left a long black screen
   // legal links + terms acceptance on the start screen
   const pb = document.getElementById('playBtn'); if (!pb) return;
   let ok = false; try { ok = +localStorage.getItem('aow-tos') >= LEGAL_VER; } catch (_) {}
@@ -27822,6 +27826,16 @@ function openServers() {
 (function () { const pb = document.getElementById('playBtn'); if (!pb) return; const b = document.createElement('button'); b.className = 'cta'; b.id = 'mpBtn';
   let cur = null; try { cur = JSON.parse(sessionStorage.getItem('aow-server') || 'null'); } catch (_) {}
   b.textContent = cur ? 'Multiplayer · on a server' : 'Multiplayer'; b.style.marginTop = '6px'; b.onclick = openServers; pb.after(b); })();
+// ---------- settings a server host locked ----------
+// Locked values are served through a getter and never saved: savePrefs runs with the locks lifted, so leaving the server gives back the player's own choice.
+const SRV_LOCK = {}; let SRV_INFO = null;
+for (const k of ['subs', 'cuts']) { const d = Object.getOwnPropertyDescriptor(PREFS, k) || { value: PREFS[k], writable: true }; let v = d.value;
+  Object.defineProperty(PREFS, k, { get: () => k in SRV_LOCK ? SRV_LOCK[k] : d.get ? d.get() : v, set: x => { if (d.set) d.set(x); else v = x; }, enumerable: true, configurable: true }); }
+{ const _sp = savePrefs; savePrefs = function () { const held = Object.assign({}, SRV_LOCK); for (const k in SRV_LOCK) delete SRV_LOCK[k]; try { return _sp.apply(this, arguments); } finally { Object.assign(SRV_LOCK, held); } }; }
+function srvApplyRules(info) { SRV_INFO = info; const L = (info.rules && info.rules.locks) || {};
+  for (const k in SRV_LOCK) delete SRV_LOCK[k]; for (const k in L) SRV_LOCK[k] = L[k] === 'on';
+  const n = Object.keys(L).length; if (typeof toast === 'function') toast(info.name || 'SERVER', n ? `Joined. The host locked ${n} setting${n > 1 ? 's' : ''}.` : 'Joined.', 3);
+  if (typeof renderSettings === 'function') try { renderSettings(); } catch (_) {} }
 
 
 // =================== STATE + SAVE ===================
@@ -28228,6 +28242,7 @@ function syncPeers(peers) {
           if (msg.type === 'welcome' && msg.peerId) {
             myId = msg.peerId;
             myPeer = myId;
+            if (msg.server && typeof srvApplyRules === 'function') srvApplyRules(msg.server);
           } else if (msg.type === 'peers' && Array.isArray(msg.peers)) {
             lastPeers = msg.peers.map(p => ({
               ...p,

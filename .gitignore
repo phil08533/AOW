@@ -8,3 +8,4 @@ dist/video/notld/source.mp4
 
 dist/video/*/source.mp4
 gameserver/server-config.json
+gameserver/node_modules

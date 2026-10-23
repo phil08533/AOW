@@ -267,6 +267,7 @@ html.ready #bootLoad { display: none; }
 </style>
 </head>
 <body>
+<div id="introCov" style="position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;transition:opacity .8s"><div class="ic on" id="ic1" style="text-align:center"><div class="drop" style="position:relative;width:64px;height:60px;margin:0 auto 18px;background:#7dff6a;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;box-shadow:0 0 30px #3aff2a"><i class="shades"></i></div><div class="studio" style="font-size:clamp(28px,6vw,56px);font-weight:900;letter-spacing:.04em;color:#7dff6a;text-shadow:0 0 30px #3aff2a88;font-family:monospace">BLORK<small style="display:block;font-size:.3em;letter-spacing:.5em;color:#cfe;margin-top:10px;font-weight:600">STUDIOS</small></div></div></div>
 <div id="bootLoad">LOADING<b><i></i></b></div>
 
 <div id="stage" aria-label="Game view"></div>
@@ -350,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.81</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.82</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1205,6 +1206,7 @@ function syncPeers(peers) {
           if (msg.type === 'welcome' && msg.peerId) {
             myId = msg.peerId;
             myPeer = myId;
+            if (msg.server && typeof srvApplyRules === 'function') srvApplyRules(msg.server);
           } else if (msg.type === 'peers' && Array.isArray(msg.peers)) {
             lastPeers = msg.peers.map(p => ({
               ...p,

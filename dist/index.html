@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.89</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.90</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19002,6 +19002,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 255, title: '2.22.90 · Shared world fallback', items: ['If a picked server can not be reached, the game drops back to the shared world everyone joins with Play.'] },
   { id: 254, title: '2.22.89 · Join through a tunnel', items: ['You can type or paste a tunnel address (like name.trycloudflare.com) into Multiplayer to join a server through it.'] },
   { id: 253, title: '2.22.88 · Character delete', items: ['Characters list has a delete button (asks first).', 'New character keeps the callsign you typed.'] },
   { id: 252, title: '2.22.87 · Join your own server by code', items: ['Joining by code now works on the PC that is hosting the server.'] },
@@ -28267,6 +28268,7 @@ function syncPeers(peers) {
     function connect() {
       try { ws = new WebSocket(wsUrl); } catch (_) { setTimeout(connect, 3000); return; }
       ws.onopen = () => {
+        connect.fails = 0;
         if (GD) ws.send(JSON.stringify({ type: 'join', pid: (S && S.cid) || myId, nick: (S && S.nick) || 'Trooper', pass: GD.pass || '' }));
         room = {
           onPeers: (cb) => { peerCbs.push(cb); },
@@ -28317,7 +28319,7 @@ function syncPeers(peers) {
           }
         } catch (_) {}
       };
-      ws.onclose = (ev) => { room = null; if (GD && ev.code >= 4000) { try { sessionStorage.removeItem('aow-server'); } catch (_) {} if (typeof toast === 'function') toast('SERVER', ev.reason || 'Disconnected', 4); return; } setTimeout(connect, 2500); };
+      ws.onclose = (ev) => { room = null; if (GD && (ev.code >= 4000 || (connect.fails = (connect.fails || 0) + 1) >= 3)) { try { sessionStorage.removeItem('aow-server'); } catch (_) {} if (typeof toast === 'function') toast('SERVER', ev.reason || "Couldn't reach that server. Back on the shared world.", 4); setTimeout(() => location.reload(), 1500); return; } setTimeout(connect, 2500); };
       ws.onerror = () => { try { ws.close(); } catch (_) {} };
     }
     connect();

@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.89</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.90</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1189,6 +1189,7 @@ function syncPeers(peers) {
     function connect() {
       try { ws = new WebSocket(wsUrl); } catch (_) { setTimeout(connect, 3000); return; }
       ws.onopen = () => {
+        connect.fails = 0;
         if (GD) ws.send(JSON.stringify({ type: 'join', pid: (S && S.cid) || myId, nick: (S && S.nick) || 'Trooper', pass: GD.pass || '' }));
         room = {
           onPeers: (cb) => { peerCbs.push(cb); },
@@ -1239,7 +1240,7 @@ function syncPeers(peers) {
           }
         } catch (_) {}
       };
-      ws.onclose = (ev) => { room = null; if (GD && ev.code >= 4000) { try { sessionStorage.removeItem('aow-server'); } catch (_) {} if (typeof toast === 'function') toast('SERVER', ev.reason || 'Disconnected', 4); return; } setTimeout(connect, 2500); };
+      ws.onclose = (ev) => { room = null; if (GD && (ev.code >= 4000 || (connect.fails = (connect.fails || 0) + 1) >= 3)) { try { sessionStorage.removeItem('aow-server'); } catch (_) {} if (typeof toast === 'function') toast('SERVER', ev.reason || "Couldn't reach that server. Back on the shared world.", 4); setTimeout(() => location.reload(), 1500); return; } setTimeout(connect, 2500); };
       ws.onerror = () => { try { ws.close(); } catch (_) {} };
     }
     connect();

@@ -269,7 +269,7 @@ function renderQuest() {
   $('qTitle').textContent = q.title;
   if (!s) { const lv = npcHome(q.giver); add('Talk to ' + npcName(q.giver) + (lv && (!LEVEL || LEVEL.id !== lv) ? ` (${LEVELS[lv].name})` : '')); return; }
   q.obj.forEach((o, k) => add(`${o.text}${o.n > 1 ? ` ${objHave(o, s.p[k])}/${o.n}` : ''}`, objDone(o, s.p[k])));
-  if (s.st === 'ready') add('Return to ' + npcName(q.turnIn), true);
+  if (s.st === 'ready') { const lv = npcHome(q.turnIn); add('Return to ' + npcName(q.turnIn) + (lv && (!LEVEL || LEVEL.id !== lv) ? ` (${LEVELS[lv].name})` : ''), true); }
   const t = questTarget(); if (t && t.label && t.label.startsWith('Travel')) add(t.label);
 }
 // which level an NPC lives on, so a quest you haven't picked up yet still says where to go

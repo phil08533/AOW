@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.22.96</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.22.97</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -5244,7 +5244,7 @@ function renderQuest() {
   $('qTitle').textContent = q.title;
   if (!s) { const lv = npcHome(q.giver); add('Talk to ' + npcName(q.giver) + (lv && (!LEVEL || LEVEL.id !== lv) ? ` (${LEVELS[lv].name})` : '')); return; }
   q.obj.forEach((o, k) => add(`${o.text}${o.n > 1 ? ` ${objHave(o, s.p[k])}/${o.n}` : ''}`, objDone(o, s.p[k])));
-  if (s.st === 'ready') add('Return to ' + npcName(q.turnIn), true);
+  if (s.st === 'ready') { const lv = npcHome(q.turnIn); add('Return to ' + npcName(q.turnIn) + (lv && (!LEVEL || LEVEL.id !== lv) ? ` (${LEVELS[lv].name})` : ''), true); }
   const t = questTarget(); if (t && t.label && t.label.startsWith('Travel')) add(t.label);
 }
 // which level an NPC lives on, so a quest you haven't picked up yet still says where to go
@@ -7978,7 +7978,7 @@ LEVELS.arena.zones.push({ id: 'pit', name: 'Betting Pit', lvl: 'Safe balcony · 
 let boutEl = null;
 function boutHud() {
   if (!boutEl) { boutEl = document.createElement('div'); boutEl.className = 'win'; boutEl.id = 'bout'; $('hud').appendChild(boutEl); }
-  const B = ARENA.bout, show = LEVEL && LEVEL.id === 'arena' && (B || ARENA.result) && Math.hypot(player.pos.x - PIT[0], player.pos.z - PIT[1]) < 45;
+  const B = ARENA.bout, show = LEVEL && LEVEL.id === 'arena' && (B || ARENA.result) && Math.hypot(player.pos.x - PIT[0], player.pos.z - PIT[1]) < 16;
   boutEl.hidden = !show; if (!show) return;
   if (!B) { boutEl.innerHTML = `<div class="bres">${ARENA.result}</div><div class="bsub">Next bout soon</div>`; return; }
   const mine = ARENA.bets.reduce((s, b) => (s[b.side] += b.amt, s), [0, 0]);
@@ -7986,6 +7986,11 @@ function boutHud() {
   boutEl.innerHTML = bar(B.f[0], 0) + bar(B.f[1], 1) + `<div class="bsub">${B.over ? (ARENA.result || '') : B.open > 0 ? `Bets open: ${Math.ceil(B.open)}s · talk to Lucky Vix` : 'FIGHT!'}</div>`;
 }
 { const _ll = loadLevel; loadLevel = function (id, o) { if (boutEl) boutEl.hidden = true; return _ll(id, o); }; }
+// the crowd roars while a fight is on in the big ring (Kade, ladder waves, PvP)
+{ let cheerT = 0; levelAnims.push && 0; const tick = () => { if (!LEVEL || LEVEL.id !== 'arena' || state !== 'play') return; if (Math.hypot(player.pos.x, player.pos.z) > 32) return;
+  const fight = (typeof enemies !== 'undefined' && enemies.some(e => e.alive !== false && e.hp > 0 && e.obj && e.obj.position.distanceTo(player.pos) < 30)) || (typeof peers !== 'undefined' && Object.keys(peers || {}).length);
+  if (fight && performance.now() > cheerT) { cheerT = performance.now() + 4000 + Math.random() * 5000; try { SFX.cheer(); } catch (_) {} } };
+  setInterval(tick, 1000); }
 
 // =================== ROBOT CITY ===================
 Object.assign(ITEMS, {
@@ -8119,7 +8124,7 @@ defQuest('r4', { ch: 'Robot City · Chapter 4', title: 'The Factory Line', giver
 defQuest('r5', { ch: 'Robot City · Chapter 4', title: 'Tower of Death', giver: 'ada', turnIn: 'ada', req: ['r4'], main: true,
   intro: ["The Overseer waits at the foot of his tower, northwest. Ghosts of every robot he deleted guard him.", "End him, gunner. Bring me his core."],
   obj: [{ kind: 'item', t: 'overcore', n: 1, text: 'Defeat the Overseer and take his core', zone: 'tower' }],
-  outro: ["His core is still warm. Listen... it's broadcasting.", "\"THE SETTING SUN RISES. ALL WORLDS WILL BURN RED.\"", "He's coming himself now. Whatever the Setting Sun is, we'll be ready. Thank you, gunner. Robot City is free.", "One more thing, gunner. Every channel in the city just lit up with your face. Somebody put a price on your head."],
+  outro: ["His core is still warm. Listen... it's broadcasting.", "\"THE SETTING SUN RISES. ALL WORLDS WILL BURN RED.\"", "He's coming himself now. Whatever the Setting Sun is, we'll be ready. Thank you, gunner. Robot City is free.", "One more thing, gunner. Every channel in the city just lit up with your face. Somebody put a price on your head.", "And the Galactic Marshals want a word. Marshal Rook, on the Zeltac. Go see him."],
   reward: { cr: 8000, xp: 20000, take: { overcore: 1 } } });
 defQuest('rs1', { ch: 'Robot City · Side job', title: 'Pit Row Calling', giver: 'zip', turnIn: 'vroom', req: ['r1'],
   intro: ["Everyone fast moved to Velocity, the magnet storm planet.", "Tell Vroom in Pit Row that Zip sent you. He owes me a tire. Several tires."],
@@ -12985,7 +12990,8 @@ openGalaxy = function () {
   const ids = Object.keys(SPACE_BODIES).filter(id => LEVELS[id] || SPACE_BODIES[id].survey);
   let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const id of ids) { const p = SPACE_BODIES[id].pos; x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); z0 = Math.min(z0, p.z); z1 = Math.max(z1, p.z); }
   const pad = 70, sc = Math.min((W - pad * 2) / (x1 - x0 || 1), (H - pad * 2) / (z1 - z0 || 1)), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
-  const toPx = p => [W / 2 + (p.x - cx) * sc, H / 2 + (p.z - cz) * sc];
+  const NUDGE = { skycity: [-46, -6] }; // Earth Sky sits on top of Earth at map scale, so draw it a little to the side
+  const toPx = (p, id) => { const n = NUDGE[id] || [0, 0]; return [W / 2 + (p.x - cx) * sc + n[0], H / 2 + (p.z - cz) * sc + n[1]]; };
   const here = LEVEL.fly ? null : (['forestlife', 'swift'].includes(LEVEL.id) ? 'earth' : LEVEL.id === 'zfloor' ? 'zeltac' : LEVEL.id === 'ship' ? (S.orbit || 'earth') : LEVEL.id);
   let sel = here && SPACE_BODIES[here] ? here : ids[0];
   const stars = Array.from({ length: 220 }, () => [Math.random() * W, Math.random() * H, Math.random()]);
@@ -13001,9 +13007,11 @@ openGalaxy = function () {
     // asteroid belt
     c.strokeStyle = 'rgba(180,160,130,0.35)'; c.setLineDash([2, 5]); c.lineWidth = 6; c.beginPath(); for (let a = 0; a <= 6.3; a += 0.05) { const [x, y] = toPx(V(Math.cos(a) * 760, 0, Math.sin(a) * 760 * 0.7 + 90)); a ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); c.setLineDash([]); c.lineWidth = 1;
     // route line from here to the selection
-    if (here && SPACE_BODIES[here] && sel !== here) { const [ax, ay] = toPx(SPACE_BODIES[here].pos), [bx, by] = toPx(SPACE_BODIES[sel].pos); c.strokeStyle = 'rgba(255,211,106,0.8)'; c.setLineDash([8, 6]); c.lineDashOffset = -t * 30; c.lineWidth = 2; c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke(); c.setLineDash([]); c.lineWidth = 1; }
+    if (here && SPACE_BODIES[here] && sel !== here) { const [ax, ay] = toPx(SPACE_BODIES[here].pos, here), [bx, by] = toPx(SPACE_BODIES[sel].pos, sel); c.strokeStyle = 'rgba(255,211,106,0.8)'; c.setLineDash([8, 6]); c.lineDashOffset = -t * 30; c.lineWidth = 2; c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke(); c.setLineDash([]); c.lineWidth = 1; }
+    const taken = ids.map(id => { const P = SPACE_BODIES[id], [x, y] = toPx(P.pos, id), r = Math.max(P.station ? 6 : 7, Math.min(22, P.r * sc * 1.6)); return [x - r, y - r, x + r, y + r]; });
+    const hit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
     for (const id of ids) {
-      const P = SPACE_BODIES[id], [x, y] = toPx(P.pos), r = Math.max(P.station ? 6 : 7, Math.min(22, P.r * sc * 1.6)), open = !!LEVELS[id] && planetOpen(id);
+      const P = SPACE_BODIES[id], [x, y] = toPx(P.pos, id), r = Math.max(P.station ? 6 : 7, Math.min(22, P.r * sc * 1.6)), open = !!LEVELS[id] && planetOpen(id);
       if (P.ring) { c.strokeStyle = 'rgba(220,200,160,0.6)'; c.lineWidth = 2; c.beginPath(); c.ellipse(x, y, r * 1.8, r * 0.5, -0.3, 0, 6.3); c.stroke(); c.lineWidth = 1; }
       if (P.station) { c.fillStyle = '#8fe3ff'; c.fillRect(x - r, y - r * 0.35, r * 2, r * 0.7); c.fillStyle = '#3a3d44'; c.fillRect(x - r * 0.4, y - r * 0.6, r * 0.8, r * 1.2); }
       else { c.save(); c.beginPath(); c.arc(x, y, r, 0, 6.3); c.clip(); if (tex[id]) { const off = (t * 4 + x) % (r * 4); c.drawImage(tex[id], x - r - off, y - r, r * 4, r * 2); c.drawImage(tex[id], x - r - off + r * 4, y - r, r * 4, r * 2); } else { c.fillStyle = P.col || '#9aa1aa'; c.fill(); } const sh = c.createLinearGradient(x - r, y - r, x + r, y + r); sh.addColorStop(0, 'rgba(255,255,255,0.15)'); sh.addColorStop(1, 'rgba(0,0,0,0.55)'); c.fillStyle = sh; c.fillRect(x - r, y - r, r * 2, r * 2); c.restore(); }
@@ -13012,7 +13020,7 @@ openGalaxy = function () {
       if (id === here) { c.fillStyle = '#6fdc5a'; c.beginPath(); c.moveTo(x, y - r - 14); c.lineTo(x - 6, y - r - 24); c.lineTo(x + 6, y - r - 24); c.fill(); }
       if (raid && raid.active && raid.world === id) { c.fillStyle = '#ff6a5a'; c.font = 'bold 14px monospace'; c.fillText('⚔', x + r + 2, y - r); }
       const name = (LEVELS[id] && !P.survey ? LEVELS[id].name : P.survey || id) + (open ? '' : ' 🔒');
-      c.font = `${id === sel ? 'bold ' : ''}12px monospace`; c.textAlign = 'center'; c.fillStyle = 'rgba(0,0,0,0.6)'; const tw = c.measureText(name).width; const ly = id === 'skycity' || id === 'moon' ? y - r - 19 : y + r + 4; c.fillRect(x - tw / 2 - 3, ly, tw + 6, 15); c.fillStyle = open ? (id === sel ? '#ffd36a' : '#e8ecf8') : '#8a8fa0'; c.fillText(name, x, ly + 11); c.textAlign = 'left';
+      c.font = `${id === sel ? 'bold ' : ''}12px monospace`; c.textAlign = 'center'; c.fillStyle = 'rgba(0,0,0,0.6)'; const tw = c.measureText(name).width; let lx = x, ly = y + r + 4; for (const [dx, dy] of [[0, y + r + 4], [0, y - r - 19], [tw / 2 + r + 6, y - 7], [-tw / 2 - r - 6, y - 7], [0, y + r + 20], [0, y - r - 35]]) { const R = [x + dx - tw / 2 - 3, dy, x + dx + tw / 2 + 3, dy + 15]; if (!taken.some(T => hit(R, T) && !(T[0] === x - r && T[1] === y - r))) { lx = x + dx; ly = dy; break; } } taken.push([lx - tw / 2 - 3, ly, lx + tw / 2 + 3, ly + 15]); c.fillRect(lx - tw / 2 - 3, ly, tw + 6, 15); c.fillStyle = open ? (id === sel ? '#ffd36a' : '#e8ecf8') : '#8a8fa0'; c.fillText(name, lx, ly + 11); c.textAlign = 'left';
     }
     c.fillStyle = 'rgba(232,236,248,0.6)'; c.font = '11px monospace'; c.fillText('▲ you are here   ⚔ raid   🔒 locked', 10, H - 10);
   };
@@ -13024,7 +13032,7 @@ openGalaxy = function () {
     if (open && shipUnlocked()) list.push(['Fly there yourself', () => { S.orbit = sel; closeDlg(); enterSpace(sel); }]);
     list.push(['Close', closeDlg]); acts(list);
   };
-  const pick = e => { const r = cv.getBoundingClientRect(), mx = (e.clientX - r.left) / r.width * W, my = (e.clientY - r.top) / r.height * H; let best = null, bd = 40; for (const id of ids) { const [x, y] = toPx(SPACE_BODIES[id].pos), d = Math.hypot(x - mx, y - my); if (d < bd) { bd = d; best = id; } } if (best) { sel = best; SFX.ui(); showInfo(); } };
+  const pick = e => { const r = cv.getBoundingClientRect(), mx = (e.clientX - r.left) / r.width * W, my = (e.clientY - r.top) / r.height * H; let best = null, bd = 40; for (const id of ids) { const [x, y] = toPx(SPACE_BODIES[id].pos, id), d = Math.hypot(x - mx, y - my); if (d < bd) { bd = d; best = id; } } if (best) { sel = best; SFX.ui(); showInfo(); } };
   cv.addEventListener('pointerdown', pick);
   const loop = () => { if (!document.body.contains(cv) || $('dlg').hidden) return; draw(performance.now() / 1000); requestAnimationFrame(loop); };
   showInfo(); loop();
@@ -19005,6 +19013,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 262, title: '2.22.97 · Fixes from playtest', items: ['The Long Arm starts as soon as Robot City is freed and points you straight to Marshal Rook on the Zeltac', 'Kade\'s ship is no longer swallowed by fog in the cutscene', 'Arena Prime intro stays over the arena instead of showing the edge of the world', 'The betting bar only shows when you are at the Betting Pit', 'The crowd cheers during fights in the big ring', 'Galaxy map labels no longer cover each other, and Earth Sky sits beside Earth', 'The Marshal armory list no longer sticks around in other menus'] },
   { id: 261, title: '2.22.96 · Quest tracker', items: ['Quests you have not picked up yet now say which world the quest giver is on (like Ada-9 in Robot City)'] },
   { id: 260, title: '2.22.95 · Intro and Undercroft fixes', items: ['World intro flyovers no longer show striped floors', 'The Zeltac intro now flies through the plaza instead of showing the ship as a box in space', 'The Undercroft tip jar sits on the stage instead of floating in front of Vixen'] },
   { id: 259, title: '2.22.94 · Robot City', items: ['The old Hover Track is gone from Robot City, along with talk of the Hover Cup'] },
@@ -27394,14 +27403,15 @@ function bhShipScene() {
     const sp = []; for (let k = 0; k < 400; k++) { const v = V(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(85); sp.push(v.x, v.y, v.z); }
     const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); O.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: '#ffffff', size: 0.5, fog: false })));
     const hk = makeHulk('drome'); hk.traverse(m => { if (!m.material) return; m.material = m.material.clone(); const c = m.material.color; if (!c) return; const hsl = {}; c.getHSL(hsl);
-      if (hsl.s > 0.4 && (hsl.h < 0.06 || hsl.h > 0.94)) c.set('#9a3aff'); else c.multiplyScalar(0.7); });
+      if (hsl.s > 0.4 && (hsl.h < 0.06 || hsl.h > 0.94)) c.set('#9a3aff'); else c.multiplyScalar(0.85); });
     const bb = new THREE.Box3().setFromObject(hk), hs = bb.getSize(V(0, 0, 0)), hc = bb.getCenter(V(0, 0, 0)); hk.position.sub(hc); O.add(hk);
     for (let k = 0; k < 9; k++) part(O, new THREE.OctahedronGeometry(0.6 + Math.random() * 1.2, 0), glow(k % 2 ? '#57dcff' : '#eefaff'), (Math.random() - 0.5) * hs.x * 0.8, hs.y * 0.35 + Math.random() * 1.5, (Math.random() - 0.5) * hs.z * 0.7, Math.random(), Math.random(), Math.random());
     O.add(new THREE.AmbientLight('#6a5a8a', 0.8)); const sun = new THREE.DirectionalLight('#d8c8ff', 1.6); sun.position.set(30, 40, 20); O.add(sun); const ext = Math.max(hs.x, hs.z);
     const lamp = new THREE.PointLight('#b07aff', 1.4, 14); lamp.position.set(0, 3.4, -1); R.add(lamp);
-    const far0 = camera.far; return { objs: [R], restore: () => { camera.far = far0; }, shot: (s, k, t) => {
+    const far0 = camera.far, fn0 = scene.fog.near, ff0 = scene.fog.far; return { objs: [R], restore: () => { camera.far = far0; scene.fog.near = fn0; scene.fog.far = ff0; }, shot: (s, k, t) => {
       fl.forEach((f, n) => f.scale.y = 1 + Math.sin(t * 3 + n) * 0.15);
-      if (s === 'outside' || s === 'outside2') { const a = (s === 'outside' ? 0.6 : 2.4) + t * 0.05, d = ext * 1.15; camera.position.set(300 + Math.sin(a) * d, Y + ext * 0.35, Math.cos(a) * d); camera.lookAt(300, Y, 0); return; }
+      const outside = s === 'outside' || s === 'outside2'; scene.fog.near = outside ? 400 : fn0; scene.fog.far = outside ? 900 : ff0; // fog was swallowing the ship into a dark blob
+      if (outside) { const a = (s === 'outside' ? 0.6 : 2.4) + t * 0.05, d = ext * 1.15; camera.position.set(300 + Math.sin(a) * d, Y + ext * 0.35, Math.cos(a) * d); camera.lookAt(300, Y, 0); return; }
       if (s === 'room') camera.position.set(4.2 - k, Y + 2.6, 3.8); if (s === 'bench') camera.position.set(1.8, Y + 1.7, -0.6 + k * 0.4); if (s === 'me') camera.position.set(2.9, Y + 2.1, -3.6); if (s === 'close') camera.position.set(0.4, Y + 1.8, 0.8 - k * 0.6);
       if (s === 'me') camera.lookAt(-0.9, Y + 1.5, 0.6); else if (s === 'bench') camera.lookAt(0, Y + 1, -2.8); else camera.lookAt(1.4, Y + 1.6, -1.7); } };
   }, () => { S.flags.bhLab = 1; if (S.qst.bh1 && S.qst.bh1.st !== 'done') { S.qst.bh1.st = 'ready'; completeQuest('bh1'); } toast('LAB UNLOCKED', 'Build one from the room menu on your ship', 5); log('Kade taught you to cook. You can now build a Lab on your ship.', 'loot'); markDirty(); });
@@ -27511,8 +27521,8 @@ const WORLD_INTRO = {
 };
 function worldIntro(id, replay) {
   const L = LEVELS[id], sp = L.spawn || { x: 0, z: 0 }, zs = (L.zones || []).filter(z => !z.safe && z.r >= 8).slice(0, 6), pick = [zs[0], zs[Math.floor(zs.length / 2)]].filter((z, i, a) => z && a.indexOf(z) === i), fh = (x, z) => { try { return floorAt(x, z); } catch (_) { return 0; } };
-  const inner = id === 'zeltac', R0 = inner ? 16 : 70, H0 = inner ? 7 : 38;
-  const shots = [{ text: WORLD_INTRO[id], dur: 6.5, cam: (t, k) => { const a = 0.4 + k * 0.6, r = R0 - k * (inner ? 4 : 20); camera.position.set((inner ? 0 : sp.x) + Math.sin(a) * r, fh(sp.x, sp.z) + H0 - k * (inner ? 2 : 12), (inner ? 0 : sp.z) + Math.cos(a) * r); camera.lookAt(inner ? 0 : sp.x, fh(sp.x, sp.z) + 2, inner ? 0 : sp.z); } }];
+  const inner = id === 'zeltac', small = id === 'arena', R0 = inner ? 16 : small ? 34 : 70, H0 = inner ? 7 : small ? 14 : 38;
+  const shots = [{ text: WORLD_INTRO[id], dur: 6.5, cam: (t, k) => { const a = 0.4 + k * 0.6, r = R0 - k * (inner ? 4 : small ? 8 : 20); camera.position.set((inner ? 0 : sp.x) + Math.sin(a) * r, fh(sp.x, sp.z) + H0 - k * (inner ? 2 : small ? 4 : 12), (inner ? 0 : sp.z) + Math.cos(a) * r); camera.lookAt(inner ? 0 : sp.x, fh(sp.x, sp.z) + 2, inner ? 0 : sp.z); } }];
   for (const z of pick) shots.push({ text: `${z.name}${z.lvl ? ' · ' + z.lvl : ''}`, dur: 4, cam: (t, k) => { const a = t * 0.15 + 1, r = z.r * 1.4 + 8; camera.position.set(z.x + Math.sin(a) * r, fh(z.x, z.z) + 9 + z.r * 0.35, z.z + Math.cos(a) * r); camera.lookAt(z.x, fh(z.x, z.z) + 1.5, z.z); } });
   shots.push({ text: '', dur: 2, cam: (t, k) => { const p = player.pos; camera.position.set(p.x + Math.sin(player.yaw) * (6 - k * 6), p.y + 1.6 + 4 * (1 - k), p.z + Math.cos(player.yaw) * (6 - k * 6)); camera.lookAt(p.x - Math.sin(player.yaw) * 8, p.y + 1.4, p.z - Math.cos(player.yaw) * 8); } });
   camera.near = 0.4; camera.updateProjectionMatrix(); // a deeper near plane stops the striped floors on high flyover shots
@@ -27555,7 +27565,7 @@ function mGain(n, why) { if (!mOn()) return; const M = mS(), r0 = mRank(); M.xp 
 
 // ---- story: the Marshals reach out between Chapter 4 and Kade ----
 defQuest('law1', { ch: 'Interlude · The Law', title: 'The Long Arm', giver: 'ada', turnIn: 'rook', req: ['r5'], main: true,
-  intro: ["Before you go anywhere, gunner: the Galactic Marshals sent a message. Marshal Rook wants to see you on the Zeltac. In person.", "Marshals don't send invitations. Go see what he wants."],
+  intro: ["The Galactic Marshals sent a message. Marshal Rook wants to see you on the Zeltac. In person."],
   obj: [],
   outro: ["So you're the one Robot City keeps talking about. Sit down.", "Out here there are two kinds of people with guns. The ones who take what they want, and the ones who stop them.", "Crime pays. I won't lie to you. Labs, fences, contraband. Plenty of captains get rich that way, until someone like me shows up.", "The badge pays too, and it lets you sleep. Ranks, gear, a ship of our own, and every crook in the galaxy afraid of your shadow.", "You don't have to pick today. But someone just bought a bounty on your head. When you've dealt with that, call me."],
   reward: { cr: 1500, xp: 6000 } });
@@ -27628,6 +27638,9 @@ setInterval(mTouch, 2000);
   $('dlgLine').textContent = `Marshal XP ${M.xp}${nx ? ` (${nx[1]} at ${nx[0]})` : ' · top rank'}. Clout ${M.clout || 0}. Busts ${M.busts || 0}. Earn XP by taking down drifters and outlaws, collecting bounties and flashing your badge. Marshal missions, busts, the armory and the Marshal ship are on the way.`;
   acts([['🪪 Flash badge', () => { closeDlg(); mFlash(); }, true], ['Turn in badge', mTurnIn], ['Close', closeDlg]]); }; }
 setTimeout(() => { try { outHud(); mTouch(); } catch (_) {} }, 3000);
+// The Long Arm starts on its own when Robot City is freed, so the tracker points straight at Rook instead of back at Ada-9
+{ const _cq = completeQuest; completeQuest = function (id) { const r = _cq.apply(this, arguments); if (id === 'r5' && !S.qst.law1) setTimeout(() => { if (!S.qst.law1) startQuest('law1', true); }, 400); return r; }; }
+setTimeout(() => { try { if (S.qst && S.qst.r5 && S.qst.r5.st === 'done' && !S.qst.law1) startQuest('law1', true); } catch (_) {} }, 3000);
 
 // =================== THE MARSHALS part 2: the ship board (rank animation), missions, random busts, the armory, the Lawbringer ===================
 // Save adds to S.marshal: seenXp, hunt { lv, name }, bustT, buy {}.
@@ -27640,7 +27653,7 @@ ARMOR_KITS.mcoat = (g, A) => { if (ARMOR_KITS.marshal) ARMOR_KITS.marshal(g, A);
   part(g, B(0.4, 0.6, 0.05), navy, 0, 0.92, -0.25, 0.1); part(g, new THREE.OctahedronGeometry(0.06, 0), glow('#ffd36a'), 0.14, 1.42, 0.2); };
 const M_SHOP = [['mlaw', 'gun', 1, 4000, 'Lawgiver Pistol', 'A heavy sidearm with a gold slide'], ['marshalArmor', 'flag', 0, 0, 'Marshal Armor', 'Standard issue for every Deputy'], ['mcoat', 'armor', 2, 12000, 'Star Marshal Coat', 'Armor 30%, a long navy coat with gold trim'], ['mpeace', 'gun', 3, 15000, 'Peacekeeper Rifle', 'A scoped rifle for Chief Marshals']];
 function mArmory() {
-  openDlg('Marshal armory', mRankName()); const rows = document.createElement('div'); rows.className = 'rows'; $('dlgLine').textContent = `Gear unlocks with rank. ${S.cr.toLocaleString()} cr.`; $('dlgActs').before(rows);
+  openDlg('Marshal armory', mRankName()); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; $('dlgLine').textContent = `Gear unlocks with rank. ${S.cr.toLocaleString()} cr.`; $('dlgActs').before(rows);
   for (const [id, kind, rk, cost, name, desc] of M_SHOP) { const have = kind === 'gun' ? S.guns.includes(id) : kind === 'flag' ? !!(S.flags && S.flags[id]) : !!(S.flags && S.flags[ARMORS[id].flag]), r = document.createElement('div'); r.className = 'rowi';
     const nm = document.createElement('span'); nm.textContent = `${name} · ${desc}`; const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = have ? 'Owned' : mRank() < rk ? `${M_RANKS[rk][1]} rank` : cost ? cost.toLocaleString() + ' cr' : 'Free';
     const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = '#e8c35a'; const ac = document.createElement('span'); ac.style.display = 'flex'; const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = have ? '✓' : 'Get'; b.disabled = have || mRank() < rk || S.cr < cost;

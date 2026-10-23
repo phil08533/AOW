@@ -91,14 +91,15 @@ function bhShipScene() {
     const sp = []; for (let k = 0; k < 400; k++) { const v = V(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(85); sp.push(v.x, v.y, v.z); }
     const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); O.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: '#ffffff', size: 0.5, fog: false })));
     const hk = makeHulk('drome'); hk.traverse(m => { if (!m.material) return; m.material = m.material.clone(); const c = m.material.color; if (!c) return; const hsl = {}; c.getHSL(hsl);
-      if (hsl.s > 0.4 && (hsl.h < 0.06 || hsl.h > 0.94)) c.set('#9a3aff'); else c.multiplyScalar(0.7); });
+      if (hsl.s > 0.4 && (hsl.h < 0.06 || hsl.h > 0.94)) c.set('#9a3aff'); else c.multiplyScalar(0.85); });
     const bb = new THREE.Box3().setFromObject(hk), hs = bb.getSize(V(0, 0, 0)), hc = bb.getCenter(V(0, 0, 0)); hk.position.sub(hc); O.add(hk);
     for (let k = 0; k < 9; k++) part(O, new THREE.OctahedronGeometry(0.6 + Math.random() * 1.2, 0), glow(k % 2 ? '#57dcff' : '#eefaff'), (Math.random() - 0.5) * hs.x * 0.8, hs.y * 0.35 + Math.random() * 1.5, (Math.random() - 0.5) * hs.z * 0.7, Math.random(), Math.random(), Math.random());
     O.add(new THREE.AmbientLight('#6a5a8a', 0.8)); const sun = new THREE.DirectionalLight('#d8c8ff', 1.6); sun.position.set(30, 40, 20); O.add(sun); const ext = Math.max(hs.x, hs.z);
     const lamp = new THREE.PointLight('#b07aff', 1.4, 14); lamp.position.set(0, 3.4, -1); R.add(lamp);
-    const far0 = camera.far; return { objs: [R], restore: () => { camera.far = far0; }, shot: (s, k, t) => {
+    const far0 = camera.far, fn0 = scene.fog.near, ff0 = scene.fog.far; return { objs: [R], restore: () => { camera.far = far0; scene.fog.near = fn0; scene.fog.far = ff0; }, shot: (s, k, t) => {
       fl.forEach((f, n) => f.scale.y = 1 + Math.sin(t * 3 + n) * 0.15);
-      if (s === 'outside' || s === 'outside2') { const a = (s === 'outside' ? 0.6 : 2.4) + t * 0.05, d = ext * 1.15; camera.position.set(300 + Math.sin(a) * d, Y + ext * 0.35, Math.cos(a) * d); camera.lookAt(300, Y, 0); return; }
+      const outside = s === 'outside' || s === 'outside2'; scene.fog.near = outside ? 400 : fn0; scene.fog.far = outside ? 900 : ff0; // fog was swallowing the ship into a dark blob
+      if (outside) { const a = (s === 'outside' ? 0.6 : 2.4) + t * 0.05, d = ext * 1.15; camera.position.set(300 + Math.sin(a) * d, Y + ext * 0.35, Math.cos(a) * d); camera.lookAt(300, Y, 0); return; }
       if (s === 'room') camera.position.set(4.2 - k, Y + 2.6, 3.8); if (s === 'bench') camera.position.set(1.8, Y + 1.7, -0.6 + k * 0.4); if (s === 'me') camera.position.set(2.9, Y + 2.1, -3.6); if (s === 'close') camera.position.set(0.4, Y + 1.8, 0.8 - k * 0.6);
       if (s === 'me') camera.lookAt(-0.9, Y + 1.5, 0.6); else if (s === 'bench') camera.lookAt(0, Y + 1, -2.8); else camera.lookAt(1.4, Y + 1.6, -1.7); } };
   }, () => { S.flags.bhLab = 1; if (S.qst.bh1 && S.qst.bh1.st !== 'done') { S.qst.bh1.st = 'ready'; completeQuest('bh1'); } toast('LAB UNLOCKED', 'Build one from the room menu on your ship', 5); log('Kade taught you to cook. You can now build a Lab on your ship.', 'loot'); markDirty(); });

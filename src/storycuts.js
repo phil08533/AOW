@@ -51,8 +51,8 @@ const WORLD_INTRO = {
 };
 function worldIntro(id, replay) {
   const L = LEVELS[id], sp = L.spawn || { x: 0, z: 0 }, zs = (L.zones || []).filter(z => !z.safe && z.r >= 8).slice(0, 6), pick = [zs[0], zs[Math.floor(zs.length / 2)]].filter((z, i, a) => z && a.indexOf(z) === i), fh = (x, z) => { try { return floorAt(x, z); } catch (_) { return 0; } };
-  const inner = id === 'zeltac', R0 = inner ? 16 : 70, H0 = inner ? 7 : 38;
-  const shots = [{ text: WORLD_INTRO[id], dur: 6.5, cam: (t, k) => { const a = 0.4 + k * 0.6, r = R0 - k * (inner ? 4 : 20); camera.position.set((inner ? 0 : sp.x) + Math.sin(a) * r, fh(sp.x, sp.z) + H0 - k * (inner ? 2 : 12), (inner ? 0 : sp.z) + Math.cos(a) * r); camera.lookAt(inner ? 0 : sp.x, fh(sp.x, sp.z) + 2, inner ? 0 : sp.z); } }];
+  const inner = id === 'zeltac', small = id === 'arena', R0 = inner ? 16 : small ? 34 : 70, H0 = inner ? 7 : small ? 14 : 38;
+  const shots = [{ text: WORLD_INTRO[id], dur: 6.5, cam: (t, k) => { const a = 0.4 + k * 0.6, r = R0 - k * (inner ? 4 : small ? 8 : 20); camera.position.set((inner ? 0 : sp.x) + Math.sin(a) * r, fh(sp.x, sp.z) + H0 - k * (inner ? 2 : small ? 4 : 12), (inner ? 0 : sp.z) + Math.cos(a) * r); camera.lookAt(inner ? 0 : sp.x, fh(sp.x, sp.z) + 2, inner ? 0 : sp.z); } }];
   for (const z of pick) shots.push({ text: `${z.name}${z.lvl ? ' · ' + z.lvl : ''}`, dur: 4, cam: (t, k) => { const a = t * 0.15 + 1, r = z.r * 1.4 + 8; camera.position.set(z.x + Math.sin(a) * r, fh(z.x, z.z) + 9 + z.r * 0.35, z.z + Math.cos(a) * r); camera.lookAt(z.x, fh(z.x, z.z) + 1.5, z.z); } });
   shots.push({ text: '', dur: 2, cam: (t, k) => { const p = player.pos; camera.position.set(p.x + Math.sin(player.yaw) * (6 - k * 6), p.y + 1.6 + 4 * (1 - k), p.z + Math.cos(player.yaw) * (6 - k * 6)); camera.lookAt(p.x - Math.sin(player.yaw) * 8, p.y + 1.4, p.z - Math.cos(player.yaw) * 8); } });
   camera.near = 0.4; camera.updateProjectionMatrix(); // a deeper near plane stops the striped floors on high flyover shots

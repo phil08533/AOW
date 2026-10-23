@@ -213,7 +213,7 @@ LEVELS.arena.zones.push({ id: 'pit', name: 'Betting Pit', lvl: 'Safe balcony · 
 let boutEl = null;
 function boutHud() {
   if (!boutEl) { boutEl = document.createElement('div'); boutEl.className = 'win'; boutEl.id = 'bout'; $('hud').appendChild(boutEl); }
-  const B = ARENA.bout, show = LEVEL && LEVEL.id === 'arena' && (B || ARENA.result) && Math.hypot(player.pos.x - PIT[0], player.pos.z - PIT[1]) < 45;
+  const B = ARENA.bout, show = LEVEL && LEVEL.id === 'arena' && (B || ARENA.result) && Math.hypot(player.pos.x - PIT[0], player.pos.z - PIT[1]) < 16;
   boutEl.hidden = !show; if (!show) return;
   if (!B) { boutEl.innerHTML = `<div class="bres">${ARENA.result}</div><div class="bsub">Next bout soon</div>`; return; }
   const mine = ARENA.bets.reduce((s, b) => (s[b.side] += b.amt, s), [0, 0]);
@@ -221,3 +221,8 @@ function boutHud() {
   boutEl.innerHTML = bar(B.f[0], 0) + bar(B.f[1], 1) + `<div class="bsub">${B.over ? (ARENA.result || '') : B.open > 0 ? `Bets open: ${Math.ceil(B.open)}s · talk to Lucky Vix` : 'FIGHT!'}</div>`;
 }
 { const _ll = loadLevel; loadLevel = function (id, o) { if (boutEl) boutEl.hidden = true; return _ll(id, o); }; }
+// the crowd roars while a fight is on in the big ring (Kade, ladder waves, PvP)
+{ let cheerT = 0; levelAnims.push && 0; const tick = () => { if (!LEVEL || LEVEL.id !== 'arena' || state !== 'play') return; if (Math.hypot(player.pos.x, player.pos.z) > 32) return;
+  const fight = (typeof enemies !== 'undefined' && enemies.some(e => e.alive !== false && e.hp > 0 && e.obj && e.obj.position.distanceTo(player.pos) < 30)) || (typeof peers !== 'undefined' && Object.keys(peers || {}).length);
+  if (fight && performance.now() > cheerT) { cheerT = performance.now() + 4000 + Math.random() * 5000; try { SFX.cheer(); } catch (_) {} } };
+  setInterval(tick, 1000); }

@@ -11,7 +11,7 @@ function mGain(n, why) { if (!mOn()) return; const M = mS(), r0 = mRank(); M.xp 
 
 // ---- story: the Marshals reach out between Chapter 4 and Kade ----
 defQuest('law1', { ch: 'Interlude · The Law', title: 'The Long Arm', giver: 'ada', turnIn: 'rook', req: ['r5'], main: true,
-  intro: ["Before you go anywhere, gunner: the Galactic Marshals sent a message. Marshal Rook wants to see you on the Zeltac. In person.", "Marshals don't send invitations. Go see what he wants."],
+  intro: ["The Galactic Marshals sent a message. Marshal Rook wants to see you on the Zeltac. In person."],
   obj: [],
   outro: ["So you're the one Robot City keeps talking about. Sit down.", "Out here there are two kinds of people with guns. The ones who take what they want, and the ones who stop them.", "Crime pays. I won't lie to you. Labs, fences, contraband. Plenty of captains get rich that way, until someone like me shows up.", "The badge pays too, and it lets you sleep. Ranks, gear, a ship of our own, and every crook in the galaxy afraid of your shadow.", "You don't have to pick today. But someone just bought a bounty on your head. When you've dealt with that, call me."],
   reward: { cr: 1500, xp: 6000 } });
@@ -84,3 +84,6 @@ setInterval(mTouch, 2000);
   $('dlgLine').textContent = `Marshal XP ${M.xp}${nx ? ` (${nx[1]} at ${nx[0]})` : ' · top rank'}. Clout ${M.clout || 0}. Busts ${M.busts || 0}. Earn XP by taking down drifters and outlaws, collecting bounties and flashing your badge. Marshal missions, busts, the armory and the Marshal ship are on the way.`;
   acts([['🪪 Flash badge', () => { closeDlg(); mFlash(); }, true], ['Turn in badge', mTurnIn], ['Close', closeDlg]]); }; }
 setTimeout(() => { try { outHud(); mTouch(); } catch (_) {} }, 3000);
+// The Long Arm starts on its own when Robot City is freed, so the tracker points straight at Rook instead of back at Ada-9
+{ const _cq = completeQuest; completeQuest = function (id) { const r = _cq.apply(this, arguments); if (id === 'r5' && !S.qst.law1) setTimeout(() => { if (!S.qst.law1) startQuest('law1', true); }, 400); return r; }; }
+setTimeout(() => { try { if (S.qst && S.qst.r5 && S.qst.r5.st === 'done' && !S.qst.law1) startQuest('law1', true); } catch (_) {} }, 3000);

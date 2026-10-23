@@ -10,7 +10,8 @@ openGalaxy = function () {
   const ids = Object.keys(SPACE_BODIES).filter(id => LEVELS[id] || SPACE_BODIES[id].survey);
   let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const id of ids) { const p = SPACE_BODIES[id].pos; x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); z0 = Math.min(z0, p.z); z1 = Math.max(z1, p.z); }
   const pad = 70, sc = Math.min((W - pad * 2) / (x1 - x0 || 1), (H - pad * 2) / (z1 - z0 || 1)), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
-  const toPx = p => [W / 2 + (p.x - cx) * sc, H / 2 + (p.z - cz) * sc];
+  const NUDGE = { skycity: [-46, -6] }; // Earth Sky sits on top of Earth at map scale, so draw it a little to the side
+  const toPx = (p, id) => { const n = NUDGE[id] || [0, 0]; return [W / 2 + (p.x - cx) * sc + n[0], H / 2 + (p.z - cz) * sc + n[1]]; };
   const here = LEVEL.fly ? null : (['forestlife', 'swift'].includes(LEVEL.id) ? 'earth' : LEVEL.id === 'zfloor' ? 'zeltac' : LEVEL.id === 'ship' ? (S.orbit || 'earth') : LEVEL.id);
   let sel = here && SPACE_BODIES[here] ? here : ids[0];
   const stars = Array.from({ length: 220 }, () => [Math.random() * W, Math.random() * H, Math.random()]);
@@ -26,9 +27,11 @@ openGalaxy = function () {
     // asteroid belt
     c.strokeStyle = 'rgba(180,160,130,0.35)'; c.setLineDash([2, 5]); c.lineWidth = 6; c.beginPath(); for (let a = 0; a <= 6.3; a += 0.05) { const [x, y] = toPx(V(Math.cos(a) * 760, 0, Math.sin(a) * 760 * 0.7 + 90)); a ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); c.setLineDash([]); c.lineWidth = 1;
     // route line from here to the selection
-    if (here && SPACE_BODIES[here] && sel !== here) { const [ax, ay] = toPx(SPACE_BODIES[here].pos), [bx, by] = toPx(SPACE_BODIES[sel].pos); c.strokeStyle = 'rgba(255,211,106,0.8)'; c.setLineDash([8, 6]); c.lineDashOffset = -t * 30; c.lineWidth = 2; c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke(); c.setLineDash([]); c.lineWidth = 1; }
+    if (here && SPACE_BODIES[here] && sel !== here) { const [ax, ay] = toPx(SPACE_BODIES[here].pos, here), [bx, by] = toPx(SPACE_BODIES[sel].pos, sel); c.strokeStyle = 'rgba(255,211,106,0.8)'; c.setLineDash([8, 6]); c.lineDashOffset = -t * 30; c.lineWidth = 2; c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke(); c.setLineDash([]); c.lineWidth = 1; }
+    const taken = ids.map(id => { const P = SPACE_BODIES[id], [x, y] = toPx(P.pos, id), r = Math.max(P.station ? 6 : 7, Math.min(22, P.r * sc * 1.6)); return [x - r, y - r, x + r, y + r]; });
+    const hit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
     for (const id of ids) {
-      const P = SPACE_BODIES[id], [x, y] = toPx(P.pos), r = Math.max(P.station ? 6 : 7, Math.min(22, P.r * sc * 1.6)), open = !!LEVELS[id] && planetOpen(id);
+      const P = SPACE_BODIES[id], [x, y] = toPx(P.pos, id), r = Math.max(P.station ? 6 : 7, Math.min(22, P.r * sc * 1.6)), open = !!LEVELS[id] && planetOpen(id);
       if (P.ring) { c.strokeStyle = 'rgba(220,200,160,0.6)'; c.lineWidth = 2; c.beginPath(); c.ellipse(x, y, r * 1.8, r * 0.5, -0.3, 0, 6.3); c.stroke(); c.lineWidth = 1; }
       if (P.station) { c.fillStyle = '#8fe3ff'; c.fillRect(x - r, y - r * 0.35, r * 2, r * 0.7); c.fillStyle = '#3a3d44'; c.fillRect(x - r * 0.4, y - r * 0.6, r * 0.8, r * 1.2); }
       else { c.save(); c.beginPath(); c.arc(x, y, r, 0, 6.3); c.clip(); if (tex[id]) { const off = (t * 4 + x) % (r * 4); c.drawImage(tex[id], x - r - off, y - r, r * 4, r * 2); c.drawImage(tex[id], x - r - off + r * 4, y - r, r * 4, r * 2); } else { c.fillStyle = P.col || '#9aa1aa'; c.fill(); } const sh = c.createLinearGradient(x - r, y - r, x + r, y + r); sh.addColorStop(0, 'rgba(255,255,255,0.15)'); sh.addColorStop(1, 'rgba(0,0,0,0.55)'); c.fillStyle = sh; c.fillRect(x - r, y - r, r * 2, r * 2); c.restore(); }
@@ -37,7 +40,7 @@ openGalaxy = function () {
       if (id === here) { c.fillStyle = '#6fdc5a'; c.beginPath(); c.moveTo(x, y - r - 14); c.lineTo(x - 6, y - r - 24); c.lineTo(x + 6, y - r - 24); c.fill(); }
       if (raid && raid.active && raid.world === id) { c.fillStyle = '#ff6a5a'; c.font = 'bold 14px monospace'; c.fillText('⚔', x + r + 2, y - r); }
       const name = (LEVELS[id] && !P.survey ? LEVELS[id].name : P.survey || id) + (open ? '' : ' 🔒');
-      c.font = `${id === sel ? 'bold ' : ''}12px monospace`; c.textAlign = 'center'; c.fillStyle = 'rgba(0,0,0,0.6)'; const tw = c.measureText(name).width; const ly = id === 'skycity' || id === 'moon' ? y - r - 19 : y + r + 4; c.fillRect(x - tw / 2 - 3, ly, tw + 6, 15); c.fillStyle = open ? (id === sel ? '#ffd36a' : '#e8ecf8') : '#8a8fa0'; c.fillText(name, x, ly + 11); c.textAlign = 'left';
+      c.font = `${id === sel ? 'bold ' : ''}12px monospace`; c.textAlign = 'center'; c.fillStyle = 'rgba(0,0,0,0.6)'; const tw = c.measureText(name).width; let lx = x, ly = y + r + 4; for (const [dx, dy] of [[0, y + r + 4], [0, y - r - 19], [tw / 2 + r + 6, y - 7], [-tw / 2 - r - 6, y - 7], [0, y + r + 20], [0, y - r - 35]]) { const R = [x + dx - tw / 2 - 3, dy, x + dx + tw / 2 + 3, dy + 15]; if (!taken.some(T => hit(R, T) && !(T[0] === x - r && T[1] === y - r))) { lx = x + dx; ly = dy; break; } } taken.push([lx - tw / 2 - 3, ly, lx + tw / 2 + 3, ly + 15]); c.fillRect(lx - tw / 2 - 3, ly, tw + 6, 15); c.fillStyle = open ? (id === sel ? '#ffd36a' : '#e8ecf8') : '#8a8fa0'; c.fillText(name, lx, ly + 11); c.textAlign = 'left';
     }
     c.fillStyle = 'rgba(232,236,248,0.6)'; c.font = '11px monospace'; c.fillText('▲ you are here   ⚔ raid   🔒 locked', 10, H - 10);
   };
@@ -49,7 +52,7 @@ openGalaxy = function () {
     if (open && shipUnlocked()) list.push(['Fly there yourself', () => { S.orbit = sel; closeDlg(); enterSpace(sel); }]);
     list.push(['Close', closeDlg]); acts(list);
   };
-  const pick = e => { const r = cv.getBoundingClientRect(), mx = (e.clientX - r.left) / r.width * W, my = (e.clientY - r.top) / r.height * H; let best = null, bd = 40; for (const id of ids) { const [x, y] = toPx(SPACE_BODIES[id].pos), d = Math.hypot(x - mx, y - my); if (d < bd) { bd = d; best = id; } } if (best) { sel = best; SFX.ui(); showInfo(); } };
+  const pick = e => { const r = cv.getBoundingClientRect(), mx = (e.clientX - r.left) / r.width * W, my = (e.clientY - r.top) / r.height * H; let best = null, bd = 40; for (const id of ids) { const [x, y] = toPx(SPACE_BODIES[id].pos, id), d = Math.hypot(x - mx, y - my); if (d < bd) { bd = d; best = id; } } if (best) { sel = best; SFX.ui(); showInfo(); } };
   cv.addEventListener('pointerdown', pick);
   const loop = () => { if (!document.body.contains(cv) || $('dlg').hidden) return; draw(performance.now() / 1000); requestAnimationFrame(loop); };
   showInfo(); loop();

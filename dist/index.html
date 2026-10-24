@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.10</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.11</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19101,6 +19101,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 276, title: '2.23.11 · Kayak fix', items: ['Paddling the kayak no longer uses the walking head-bob'] },
   { id: 275, title: '2.23.10 · Swimming fix', items: ['Underwater you only drift up while looking up. Looking level or down holds your depth, so you can dive properly'] },
   { id: 274, title: '2.23.9 · Bridge string lights', items: ['Earth Sky rope bridges are strung with warm 2400K bulbs that glow and twinkle at night'] },
   { id: 273, title: '2.23.8 · B.U.R.P. hatch fix', items: ['B.U.R.P.\'s hatch is now built flush into the starboard bridge wall','Talk to him and pick Power down to tuck him back inside; talk to the shut hatch to power him up again'] },
@@ -29260,7 +29261,7 @@ function step(dt) {
   const moving = Math.min(1, Math.hypot(mx, mz));
   const pb = Math.floor(bob / Math.PI); bob += dt * speed * 1.6 * moving; if (Math.floor(bob / Math.PI) !== pb && player.onGround && !S.riding && !VH.on) SFX.step(!LEVEL.terrain ? 'metal' : (LEVEL.palette.snowZ != null && player.pos.z > LEVEL.palette.snowZ) || LEVEL.weather === 'snow' && player.pos.y > 6 ? 'snow' : 'dirt');
   SFX.bike(S.riding ? moving * (player.onGround ? 1 : 0.6) : 0);
-  camera.position.set(player.pos.x, player.pos.y + (VH.on ? VEH[VH.id].eye : 1.6) + (player.onGround ? Math.sin(bob * 2) * 0.03 * moving : 0), player.pos.z);
+  camera.position.set(player.pos.x, player.pos.y + (VH.on ? VEH[VH.id].eye : 1.6) + (player.onGround && !S.inSub ? Math.sin(bob * 2) * 0.03 * moving : 0), player.pos.z);
   camera.rotation.set(player.pitch, player.yaw, 0);
   kick = Math.max(0, kick - dt * 9);
   vm.position.set(vmBase.x + Math.sin(bob) * 0.01 * moving, vmBase.y + Math.abs(Math.cos(bob)) * 0.01 * moving - (player.reloading > 0 ? 0.1 : 0) - (inSafe(player.pos) ? 0.08 : 0), vmBase.z + kick * 0.05);

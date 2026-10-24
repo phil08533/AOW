@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -11154,7 +11154,31 @@ function skyHangingBridges() {
     // end posts with a cross beam, at both anchors
     for (const [P, dir] of [[A, 1], [Bp, -1]]) for (const sd of [-1, 1]) { const ox = uz * sd, oz = -ux * sd, x = P.x + ox * (W + 0.1) - ux * dir * 0.3, z = P.z + oz * (W + 0.1) - uz * dir * 0.3, y = groundH(x, z);
       part(props, B(0.32, 2.6, 0.32), dark, x, y + 1.0, z, 0, ang, 0); part(props, B(0.42, 0.18, 0.42), toon('#3a2a1a', 'wood'), x, y + 2.35, z, 0, ang, 0); solid(x, z, 0.3); }
+    // string lights: a wire looped between the hanger posts just under each handrail, warm bulbs dangling off it
+    for (const sd of [-1, 1]) { const ox = uz * sd * (W - 0.02), oz = -ux * sd * (W - 0.02);
+      for (let i = 0; i < seg; i++) { const t0 = i / seg, t1 = (i + 1) / seg, h0 = yAt(t0) + 0.98, h1 = yAt(t1) + 0.98;
+        let prev = null; for (let k = 0; k <= 8; k++) { const f = k / 8, t = t0 + (t1 - t0) * f, w = new THREE.Vector3(px(t) + ox, h0 + (h1 - h0) * f - 0.32 * Math.sin(Math.PI * f), pz(t) + oz);
+          if (prev) SKYLITE.wire.push(prev.x, prev.y, prev.z, w.x, w.y, w.z); prev = w;
+          if (k === 2 || k === 6) { SKYLITE.wire.push(w.x, w.y, w.z, w.x, w.y - 0.14, w.z); SKYLITE.bulbs.push(w.x, w.y - 0.2, w.z); } } } }
+    if (SKYLITE.lamps.length < 8) { const Lt = new THREE.PointLight('#ffa257', 0, 14, 1.5); Lt.position.set(px(0.5), yAt(0.5) + 1.2, pz(0.5)); levelGroup.add(Lt); SKYLITE.lamps.push(Lt); }
   }
+  skyStringLights();
+}
+// ---- string lights on the rope bridges: ~2400K bulbs, a soft halo each, gentle twinkle; they really come alive at night ----
+const SKYLITE = { wire: [], bulbs: [], lamps: [] };
+{ const _h = skyHangingBridges; skyHangingBridges = function () { SKYLITE.wire = []; SKYLITE.bulbs = []; SKYLITE.lamps = []; return _h.apply(this, arguments); }; }
+function skyStringLights() {
+  if (!SKYLITE.bulbs.length) return; const nb = SKYLITE.bulbs.length / 3;
+  const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(SKYLITE.wire, 3)); levelGroup.add(new THREE.LineSegments(wg, new THREE.LineBasicMaterial({ color: '#2a2018' })));
+  const bm = new THREE.MeshBasicMaterial({ color: '#ffb46b' }), bulbs = new THREE.InstancedMesh(new THREE.SphereGeometry(0.075, 8, 6), bm, nb), mx = new THREE.Matrix4();
+  for (let i = 0; i < nb; i++) { mx.makeScale(1, 1.3, 1); mx.setPosition(SKYLITE.bulbs[i * 3], SKYLITE.bulbs[i * 3 + 1], SKYLITE.bulbs[i * 3 + 2]); bulbs.setMatrixAt(i, mx); } levelGroup.add(bulbs);
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64; const c = cv.getContext('2d'), gr = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,214,160,1)'); gr.addColorStop(0.25, 'rgba(255,162,87,0.55)'); gr.addColorStop(1, 'rgba(255,140,60,0)'); c.fillStyle = gr; c.fillRect(0, 0, 64, 64);
+  const hg = new THREE.BufferGeometry(); hg.setAttribute('position', new THREE.Float32BufferAttribute(SKYLITE.bulbs, 3));
+  const hm = new THREE.PointsMaterial({ map: new THREE.CanvasTexture(cv), size: 0.9, sizeAttenuation: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: '#ffa257' }); const halos = new THREE.Points(hg, hm); levelGroup.add(halos);
+  levelAnims.push(t => { const n = ENV.night || 0, tw = 0.92 + Math.sin(t * 2.3) * 0.05 + Math.sin(t * 7.1) * 0.03;
+    hm.opacity = (0.08 + n * 0.37) * tw; hm.size = 0.35 + n * 0.3; bm.color.setRGB(0.95, 0.6, 0.3).multiplyScalar(0.55 + n * 0.3);
+    SKYLITE.lamps.forEach((L, i) => { L.intensity = n * 1.1 * (0.95 + Math.sin(t * 3 + i) * 0.05); }); });
 }
 
 // =================== ZARLICH (violet storm world) and VECTOR (the dark world) ===================
@@ -19077,6 +19101,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 274, title: '2.23.9 · Bridge string lights', items: ['Earth Sky rope bridges are strung with warm 2400K bulbs that glow and twinkle at night'] },
   { id: 273, title: '2.23.8 · B.U.R.P. hatch fix', items: ['B.U.R.P.\'s hatch is now built flush into the starboard bridge wall','Talk to him and pick Power down to tuck him back inside; talk to the shut hatch to power him up again'] },
   { id: 272, title: '2.23.7 · Hanging bridges', items: ['Earth Sky islands are now linked by sagging rope bridges with plank decks and rope rails, no more ground clipping under them','B.U.R.P. now lives in a wall hatch on the bridge and swings out on a hinged arm to hang out with you'] },
   { id: 271, title: '2.23.6 · Sky fixes and the badge compass', items: ['Earth Sky bridges sit above the ground instead of fighting with it, and the airstrip has flat ground under it', 'Marshals: crimes nearby show a gold badge star on the compass with the distance'] },

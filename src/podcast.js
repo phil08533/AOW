@@ -67,8 +67,8 @@ setInterval(() => { if (POD.ep && POD.el) $('podTime').textContent = podFmt(POD.
 const RDEV = { r: null, cv: null, sc: null, cam: null, g: null, sx: null, stex: null, keys: {}, sel: 0, ask: null, open: false, t0: 0, drawT: 0 };
 function rdevShape(w, h, c) { const s = new THREE.Shape(), x = w / 2, y = h / 2; s.moveTo(-x + c, -y); s.lineTo(x - c, -y); s.lineTo(x, -y + c); s.lineTo(x, y - c); s.lineTo(x - c, y); s.lineTo(-x + c, y); s.lineTo(-x, y - c); s.lineTo(-x, -y + c); s.closePath(); return s; }
 function rdevBuild() {
-  const cv = RDEV.cv = document.createElement('canvas'); cv.id = 'radioDev'; cv.style.cssText = 'width:300px;height:400px;display:block;margin:0 auto;cursor:pointer;touch-action:none';
-  const r = RDEV.r = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true }); r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.setSize(300, 400, false); r.outputEncoding = THREE.sRGBEncoding;
+  const cv = RDEV.cv = document.createElement('canvas'); cv.id = 'radioDev'; cv.style.cssText = 'width:420px;height:560px;display:block;margin:0 auto;cursor:pointer;touch-action:none';
+  const r = RDEV.r = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true }); r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.setSize(420, 560, false); r.outputEncoding = THREE.sRGBEncoding;
   const sc = RDEV.sc = new THREE.Scene(), cam = RDEV.cam = new THREE.PerspectiveCamera(30, 0.75, 0.1, 50); cam.position.set(0, 0, 11.6);
   sc.add(new THREE.HemisphereLight(0xdfe8ff, 0x20222a, 0.8)); const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(-3, 4, 6); sc.add(key); const rim = new THREE.DirectionalLight(0x9fd8c0, 0.2); rim.position.set(4, -2, 3); sc.add(rim);
   const M = (c, rough) => new THREE.MeshStandardMaterial({ color: new THREE.Color(c).convertSRGBToLinear(), roughness: rough || 0.75, metalness: 0.1, flatShading: true });
@@ -87,6 +87,9 @@ function rdevBuild() {
   const mid = mkBtn('mid', new THREE.CylinderGeometry(0.34, 0.34, 0.12, 8).rotateX(Math.PI / 2).rotateZ(Math.PI / 8), 0, 0, 0);
   { const pl = new THREE.Mesh(new THREE.ShapeGeometry(tri), ink); pl.rotation.z = -Math.PI / 2; pl.position.set(-0.07, 0, 0.08); pl.scale.setScalar(0.9); pl.userData.btn = 'mid'; mid.add(pl);
     for (const x of [0.08, 0.15]) { const bar = new THREE.Mesh(new THREE.PlaneGeometry(0.04, 0.17), ink); bar.position.set(x, 0, 0.08); bar.userData.btn = 'mid'; mid.add(bar); } }
+  // the heart key: favourite (or un-favourite) the song on screen
+  { const h = new THREE.Shape(); h.moveTo(0, -0.17); h.bezierCurveTo(-0.05, -0.1, -0.2, -0.02, -0.2, 0.07); h.bezierCurveTo(-0.2, 0.16, -0.08, 0.2, 0, 0.1); h.bezierCurveTo(0.08, 0.2, 0.2, 0.16, 0.2, 0.07); h.bezierCurveTo(0.2, -0.02, 0.05, -0.1, 0, -0.17);
+    const k = mkBtn('fav', ext(h, 0.1, 0.03), 0.8, -0.66, 0); k.children[0].material = M('#b8324a', 0.55); }
   // tap a key
   const ray = new THREE.Raycaster(), m2 = new THREE.Vector2();
   cv.addEventListener('pointerdown', e => { e.stopPropagation(); const b = cv.getBoundingClientRect(); m2.set(((e.clientX - b.left) / b.width) * 2 - 1, -((e.clientY - b.top) / b.height) * 2 + 1); ray.setFromCamera(m2, cam);
@@ -97,10 +100,14 @@ const POD_SONG_TITLES = { risingsun: 'Art of War: Rising Sun', overture: 'Veloci
 const POD_SONGS = {}; // song items, made once so the player can tell them apart
 function podSongList() { S.songs = S.songs || {}; return Object.keys(S.songs).filter(k => TRACKS[k]).map(k => POD_SONGS[k] || (POD_SONGS[k] = { id: 'song_' + k, key: k, file: TRACKS[k], title: POD_SONG_TITLES[k] || k[0].toUpperCase() + k.slice(1), song: true })); }
 { const _ms = musStart; musStart = function (list, idx) { const r = _ms.apply(this, arguments); try { const k = PLAYLISTS[list][idx % PLAYLISTS[list].length]; S.songs = S.songs || {}; if (k && TRACKS[k] && !S.songs[k]) { S.songs[k] = 1; if (typeof markDirty === 'function') markDirty(); } } catch (_) {} return r; }; }
-const rdevList = () => RDEV.mode === 'songs' ? podSongList() : podList();
+const RDEV_MODES = ['shows', 'songs', 'favs'], RDEV_NAMES = { shows: 'NEBULA 88.8', songs: 'ALL SONGS', favs: 'FAVORITES' };
+const podFavs = () => (S.favSongs = S.favSongs || {});
+const rdevList = () => RDEV.mode === 'songs' ? podSongList() : RDEV.mode === 'favs' ? podSongList().filter(e => podFavs()[e.key]) : podList();
 function rdevPress(k) { const K = RDEV.keys[k]; if (K) { K.position.z = -0.06; setTimeout(() => { K.position.z = 0; }, 120); } try { SFX.ui(); } catch (_) {}
   if (RDEV.ask && k !== 'mid') { RDEV.ask = null; rdevDraw(); return; }
-  if (k === 'up' || k === 'down') { RDEV.mode = RDEV.mode === 'songs' ? 'shows' : 'songs'; RDEV.sel = 0; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); rdevDraw(); return; }
+  if (k === 'fav') { const L = rdevList(), ep = L.length ? L[RDEV.sel % L.length] : null; if (!ep || !ep.song) { toast('FAVORITES', ep ? 'Only songs go in Favorites' : 'Pick a song first', 1.4); return; }
+    const F = podFavs(); if (F[ep.key]) delete F[ep.key]; else F[ep.key] = 1; RDEV.heartT = performance.now(); markDirty(); if (RDEV.mode === 'favs') RDEV.sel = Math.min(RDEV.sel, Math.max(0, rdevList().length - 1)); rdevDraw(); return; }
+  if (k === 'up' || k === 'down') { RDEV.mode = RDEV_MODES[(RDEV_MODES.indexOf(RDEV.mode) + (k === 'up' ? 2 : 1)) % 3]; RDEV.sel = 0; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); rdevDraw(); return; }
   const L = rdevList(); if (!L.length) { rdevDraw(); return; }
   if (k === 'left') RDEV.sel = (RDEV.sel + L.length - 1) % L.length;
   else if (k === 'right') RDEV.sel = (RDEV.sel + 1) % L.length;
@@ -112,13 +119,15 @@ function rdevDraw() { const x = RDEV.sx; if (!x) return; const W = 512, H = 400,
   x.strokeStyle = fg; x.fillStyle = fg; x.lineWidth = 5;
   // podcast icon, station name, battery
   x.beginPath(); x.arc(52, 58, 12, 0, Math.PI * 2); x.fill(); for (const r of [22, 32]) { x.beginPath(); x.arc(52, 58, r, Math.PI * 0.8, Math.PI * 2.2); x.stroke(); } x.fillRect(48, 70, 8, 26);
-  x.font = 'bold 30px "Courier New",monospace'; x.textBaseline = 'middle'; x.fillText('NEBULA 88.8', 100, 46); x.font = '20px "Courier New",monospace'; x.fillStyle = dim; x.fillText(RDEV.mode === 'songs' ? 'Your songs' : 'Drome War Radio', 100, 76); x.fillStyle = fg;
+  x.font = 'bold 30px "Courier New",monospace'; x.textBaseline = 'middle'; x.fillText(RDEV_NAMES[RDEV.mode] || 'NEBULA 88.8', 100, 46); x.font = '20px "Courier New",monospace'; x.fillStyle = dim; x.fillText(RDEV.mode === 'songs' ? 'Songs from the galaxy' : RDEV.mode === 'favs' ? 'Your hearted songs' : 'Drome War Radio', 100, 76); x.fillStyle = fg;
   x.lineWidth = 3; x.strokeRect(440, 24, 44, 20); x.fillRect(484, 29, 5, 10); x.fillRect(444, 28, 30, 12);
-  const songs = RDEV.mode === 'songs', L = rdevList(), ep = L.length ? L[RDEV.sel % L.length] : null;
-  x.font = 'bold 20px "Courier New",monospace'; x.fillStyle = songs ? dim : fg; x.fillText('▲ SHOWS', 300, 100); x.fillStyle = songs ? fg : dim; x.fillText('▼ SONGS', 400, 100); x.fillStyle = fg;
-  if (!ep) { x.font = 'bold 30px "Courier New",monospace'; x.fillText(songs ? 'No songs yet' : 'Nothing on air yet', 40, 190); x.font = '22px "Courier New",monospace'; x.fillStyle = dim; (songs ? ['Songs you hear around the', 'galaxy show up here.'] : ['Shows come on as the', 'story moves on.']).forEach((l, i) => x.fillText(l, 40, 236 + i * 28)); RDEV.stex.needsUpdate = true; return; }
+  const songs = RDEV.mode !== 'shows', L = rdevList(), ep = L.length ? L[RDEV.sel % L.length] : null;
+  x.font = 'bold 17px "Courier New",monospace'; [['shows', 'RADIO', 40], ['songs', 'ALL SONGS', 150], ['favs', '♥ FAVS', 300]].forEach(([m, t, tx]) => { x.fillStyle = RDEV.mode === m ? fg : dim; x.fillText(t, tx, 108); if (RDEV.mode === m) x.fillRect(tx, 120, x.measureText(t).width, 3); }); x.fillStyle = dim; x.fillText('▲▼', 440, 108); x.fillStyle = fg;
+  if (!ep) { x.font = 'bold 30px "Courier New",monospace'; x.fillText(RDEV.mode === 'favs' ? 'No favorites yet' : songs ? 'No songs yet' : 'Nothing on air yet', 40, 190); x.font = '22px "Courier New",monospace'; x.fillStyle = dim; (RDEV.mode === 'favs' ? ['Pick a song in ALL SONGS', 'and press the heart key.'] : songs ? ['Songs you hear around the', 'galaxy show up here.'] : ['Shows come on as the', 'story moves on.']).forEach((l, i) => x.fillText(l, 40, 236 + i * 28)); RDEV.stex.needsUpdate = true; return; }
   if (RDEV.ask) { x.font = 'bold 22px "Courier New",monospace'; x.fillText('★ NEW SHOW ON AIR', 40, 130); }
-  x.font = 'bold 30px "Courier New",monospace'; rdevWrap(x, ep.title, 440).slice(0, 2).forEach((l, i) => x.fillText(l, 40, (RDEV.ask ? 172 : 140) + i * 36));
+  if (ep.song) { const on = podFavs()[ep.key], pop = RDEV.heartT ? Math.max(0, 1 - (performance.now() - RDEV.heartT) / 400) : 0; x.save(); x.translate(460, 150); x.scale(1 + pop * 0.5, 1 + pop * 0.5); x.beginPath(); x.moveTo(0, 14); x.bezierCurveTo(-4, 8, -18, 2, -18, -7); x.bezierCurveTo(-18, -16, -6, -19, 0, -10); x.bezierCurveTo(6, -19, 18, -16, 18, -7); x.bezierCurveTo(18, 2, 4, 8, 0, 14);
+    x.lineWidth = 3; if (on) { x.fillStyle = '#ff6a8a'; x.fill(); } else x.stroke(); x.restore(); x.fillStyle = fg; }
+  x.font = 'bold 30px "Courier New",monospace'; rdevWrap(x, ep.title, ep.song ? 390 : 440).slice(0, 2).forEach((l, i) => x.fillText(l, 40, (RDEV.ask ? 172 : 140) + i * 36));
   const on = POD.ep === ep, cur = on && POD.el ? POD.el.currentTime : (!ep.song && S.podPos && S.podPos[ep.id]) || 0, dur = on && POD.el && isFinite(POD.el.duration) ? POD.el.duration : 0;
   x.font = '24px "Courier New",monospace'; x.fillStyle = RDEV.ask ? fg : dim;
   x.fillText(RDEV.ask ? 'Listen now? Press ▶‖' : on && POD.part === 'intro' ? 'Station ID…' : on ? `${podFmt(cur)} / ${podFmt(dur)}` : cur ? `Resume at ${podFmt(cur)}` : 'Press ▶‖ to play', 40, 248); x.fillStyle = fg;
@@ -132,21 +141,21 @@ function rdevDraw() { const x = RDEV.sx; if (!x) return; const W = 512, H = 400,
   RDEV.stex.needsUpdate = true; }
 function rdevLoop() { if (!RDEV.open) return; requestAnimationFrame(rdevLoop); const t = performance.now() / 1000, k = Math.min(1, (performance.now() - RDEV.t0) / 350), e = 1 - Math.pow(1 - k, 3);
   RDEV.g.position.y = -4 * (1 - e) + Math.sin(t * 1.4) * 0.05; RDEV.g.position.x = 0.45; RDEV.g.rotation.set(-0.1 + Math.sin(t * 0.9) * 0.03, 0.32 + Math.sin(t * 0.6) * 0.06 - (1 - e) * 0.6, 0.05); RDEV.g.scale.setScalar(0.8 + 0.2 * e);
-  if (t - RDEV.drawT > 0.25) { RDEV.drawT = t; rdevDraw(); } RDEV.r.render(RDEV.sc, RDEV.cam); }
+  if (t - RDEV.drawT > 0.25 || (RDEV.heartT && performance.now() - RDEV.heartT < 450)) { RDEV.drawT = t; rdevDraw(); } RDEV.r.render(RDEV.sc, RDEV.cam); }
 const rdevWrapEl = document.createElement('div'); rdevWrapEl.id = 'radioWrap'; rdevWrapEl.hidden = true;
-rdevWrapEl.style.cssText = 'position:fixed;left:50%;bottom:28px;z-index:24;width:300px;transform:translateX(-50%);transform-origin:50% 100%';
+rdevWrapEl.style.cssText = 'position:fixed;left:50%;bottom:48px;z-index:60;width:420px;transform:translateX(-50%);transform-origin:50% 100%';
 rdevWrapEl.innerHTML = '<button id="radioX" class="pbtn" style="position:absolute;right:4px;top:18px;padding:2px 9px;min-width:0;z-index:1" aria-label="Put the radio away">✕</button><div id="radioHint" style="position:absolute;left:50%;bottom:-20px;transform:translateX(-50%);white-space:nowrap;text-align:center;font:600 11px var(--mono,monospace);color:#cfd6de;text-shadow:0 1px 2px #000;margin-top:-6px"></div>';
 document.body.appendChild(rdevWrapEl); $('radioX').addEventListener('pointerdown', e => e.stopPropagation()); $('radioX').addEventListener('click', e => { e.stopPropagation(); rdevClose(); });
 function rdevClose() { RDEV.open = false; RDEV.ask = null; rdevWrapEl.hidden = true; }
 function openPodcast(askEp) { if (!podHasRadio()) { toast('NO RADIO', 'Finish your first job for Captain Vega', 2); return; }
   if (!RDEV.r) { rdevBuild(); rdevWrapEl.prepend(RDEV.cv); }
   if (askEp) { RDEV.mode = 'shows'; const L = podList(); RDEV.ask = askEp; RDEV.sel = Math.max(0, L.indexOf(askEp)); }
-  else { RDEV.ask = null; RDEV.mode = POD.ep && POD.ep.song ? 'songs' : RDEV.mode || 'shows'; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); }
-  $('radioHint').textContent = TOUCH ? 'Tap the keys' : 'Click the keys or use the arrows and Enter · O puts it away';
-  rdevWrapEl.style.scale = String(Math.min(1, innerHeight * 0.62 / 420)); rdevWrapEl.hidden = false; firing = false;
+  else { RDEV.ask = null; RDEV.mode = RDEV.mode || 'shows'; if (POD.ep && POD.ep.song && RDEV.mode === 'shows') RDEV.mode = 'songs'; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); }
+  $('radioHint').textContent = TOUCH ? 'Tap the keys' : 'Click the keys, or arrows · Enter · H for ♥ · O puts it away';
+  rdevWrapEl.style.scale = String(Math.min(1, innerHeight * 0.8 / 590, innerWidth * 0.94 / 420)); rdevWrapEl.hidden = false; firing = false;
   if (document.pointerLockElement) document.exitPointerLock();
   RDEV.open = true; RDEV.t0 = performance.now(); RDEV.drawT = 0; rdevDraw(); requestAnimationFrame(rdevLoop); }
-window.addEventListener('keydown', e => { if (!RDEV.open || dlgOpen || (typeof chatOpen === 'function' && chatOpen())) return; const k = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', Enter: 'mid', Space: 'mid' }[e.code];
+window.addEventListener('keydown', e => { if (!RDEV.open || dlgOpen || (typeof chatOpen === 'function' && chatOpen())) return; const k = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', Enter: 'mid', Space: 'mid', KeyH: 'fav' }[e.code];
   if (k) { e.preventDefault(); e.stopPropagation(); rdevPress(k); } else if ((e.code === 'KeyO' && !e.repeat) || e.code === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); rdevClose(); } }, true);
 // put it away when something else takes the screen
 setInterval(() => { if (RDEV.open && (state !== 'play' || dlgOpen || CUT.on || (typeof TAB !== 'undefined' && TAB.t > 0))) rdevClose(); }, 300);

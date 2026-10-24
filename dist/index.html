@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.23</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.24</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -14679,8 +14679,8 @@ setInterval(() => { if (POD.ep && POD.el) $('podTime').textContent = podFmt(POD.
 const RDEV = { r: null, cv: null, sc: null, cam: null, g: null, sx: null, stex: null, keys: {}, sel: 0, ask: null, open: false, t0: 0, drawT: 0 };
 function rdevShape(w, h, c) { const s = new THREE.Shape(), x = w / 2, y = h / 2; s.moveTo(-x + c, -y); s.lineTo(x - c, -y); s.lineTo(x, -y + c); s.lineTo(x, y - c); s.lineTo(x - c, y); s.lineTo(-x + c, y); s.lineTo(-x, y - c); s.lineTo(-x, -y + c); s.closePath(); return s; }
 function rdevBuild() {
-  const cv = RDEV.cv = document.createElement('canvas'); cv.id = 'radioDev'; cv.style.cssText = 'width:300px;height:400px;display:block;margin:0 auto;cursor:pointer;touch-action:none';
-  const r = RDEV.r = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true }); r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.setSize(300, 400, false); r.outputEncoding = THREE.sRGBEncoding;
+  const cv = RDEV.cv = document.createElement('canvas'); cv.id = 'radioDev'; cv.style.cssText = 'width:420px;height:560px;display:block;margin:0 auto;cursor:pointer;touch-action:none';
+  const r = RDEV.r = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true }); r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.setSize(420, 560, false); r.outputEncoding = THREE.sRGBEncoding;
   const sc = RDEV.sc = new THREE.Scene(), cam = RDEV.cam = new THREE.PerspectiveCamera(30, 0.75, 0.1, 50); cam.position.set(0, 0, 11.6);
   sc.add(new THREE.HemisphereLight(0xdfe8ff, 0x20222a, 0.8)); const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(-3, 4, 6); sc.add(key); const rim = new THREE.DirectionalLight(0x9fd8c0, 0.2); rim.position.set(4, -2, 3); sc.add(rim);
   const M = (c, rough) => new THREE.MeshStandardMaterial({ color: new THREE.Color(c).convertSRGBToLinear(), roughness: rough || 0.75, metalness: 0.1, flatShading: true });
@@ -14699,6 +14699,9 @@ function rdevBuild() {
   const mid = mkBtn('mid', new THREE.CylinderGeometry(0.34, 0.34, 0.12, 8).rotateX(Math.PI / 2).rotateZ(Math.PI / 8), 0, 0, 0);
   { const pl = new THREE.Mesh(new THREE.ShapeGeometry(tri), ink); pl.rotation.z = -Math.PI / 2; pl.position.set(-0.07, 0, 0.08); pl.scale.setScalar(0.9); pl.userData.btn = 'mid'; mid.add(pl);
     for (const x of [0.08, 0.15]) { const bar = new THREE.Mesh(new THREE.PlaneGeometry(0.04, 0.17), ink); bar.position.set(x, 0, 0.08); bar.userData.btn = 'mid'; mid.add(bar); } }
+  // the heart key: favourite (or un-favourite) the song on screen
+  { const h = new THREE.Shape(); h.moveTo(0, -0.17); h.bezierCurveTo(-0.05, -0.1, -0.2, -0.02, -0.2, 0.07); h.bezierCurveTo(-0.2, 0.16, -0.08, 0.2, 0, 0.1); h.bezierCurveTo(0.08, 0.2, 0.2, 0.16, 0.2, 0.07); h.bezierCurveTo(0.2, -0.02, 0.05, -0.1, 0, -0.17);
+    const k = mkBtn('fav', ext(h, 0.1, 0.03), 0.8, -0.66, 0); k.children[0].material = M('#b8324a', 0.55); }
   // tap a key
   const ray = new THREE.Raycaster(), m2 = new THREE.Vector2();
   cv.addEventListener('pointerdown', e => { e.stopPropagation(); const b = cv.getBoundingClientRect(); m2.set(((e.clientX - b.left) / b.width) * 2 - 1, -((e.clientY - b.top) / b.height) * 2 + 1); ray.setFromCamera(m2, cam);
@@ -14709,10 +14712,14 @@ const POD_SONG_TITLES = { risingsun: 'Art of War: Rising Sun', overture: 'Veloci
 const POD_SONGS = {}; // song items, made once so the player can tell them apart
 function podSongList() { S.songs = S.songs || {}; return Object.keys(S.songs).filter(k => TRACKS[k]).map(k => POD_SONGS[k] || (POD_SONGS[k] = { id: 'song_' + k, key: k, file: TRACKS[k], title: POD_SONG_TITLES[k] || k[0].toUpperCase() + k.slice(1), song: true })); }
 { const _ms = musStart; musStart = function (list, idx) { const r = _ms.apply(this, arguments); try { const k = PLAYLISTS[list][idx % PLAYLISTS[list].length]; S.songs = S.songs || {}; if (k && TRACKS[k] && !S.songs[k]) { S.songs[k] = 1; if (typeof markDirty === 'function') markDirty(); } } catch (_) {} return r; }; }
-const rdevList = () => RDEV.mode === 'songs' ? podSongList() : podList();
+const RDEV_MODES = ['shows', 'songs', 'favs'], RDEV_NAMES = { shows: 'NEBULA 88.8', songs: 'ALL SONGS', favs: 'FAVORITES' };
+const podFavs = () => (S.favSongs = S.favSongs || {});
+const rdevList = () => RDEV.mode === 'songs' ? podSongList() : RDEV.mode === 'favs' ? podSongList().filter(e => podFavs()[e.key]) : podList();
 function rdevPress(k) { const K = RDEV.keys[k]; if (K) { K.position.z = -0.06; setTimeout(() => { K.position.z = 0; }, 120); } try { SFX.ui(); } catch (_) {}
   if (RDEV.ask && k !== 'mid') { RDEV.ask = null; rdevDraw(); return; }
-  if (k === 'up' || k === 'down') { RDEV.mode = RDEV.mode === 'songs' ? 'shows' : 'songs'; RDEV.sel = 0; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); rdevDraw(); return; }
+  if (k === 'fav') { const L = rdevList(), ep = L.length ? L[RDEV.sel % L.length] : null; if (!ep || !ep.song) { toast('FAVORITES', ep ? 'Only songs go in Favorites' : 'Pick a song first', 1.4); return; }
+    const F = podFavs(); if (F[ep.key]) delete F[ep.key]; else F[ep.key] = 1; RDEV.heartT = performance.now(); markDirty(); if (RDEV.mode === 'favs') RDEV.sel = Math.min(RDEV.sel, Math.max(0, rdevList().length - 1)); rdevDraw(); return; }
+  if (k === 'up' || k === 'down') { RDEV.mode = RDEV_MODES[(RDEV_MODES.indexOf(RDEV.mode) + (k === 'up' ? 2 : 1)) % 3]; RDEV.sel = 0; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); rdevDraw(); return; }
   const L = rdevList(); if (!L.length) { rdevDraw(); return; }
   if (k === 'left') RDEV.sel = (RDEV.sel + L.length - 1) % L.length;
   else if (k === 'right') RDEV.sel = (RDEV.sel + 1) % L.length;
@@ -14724,13 +14731,15 @@ function rdevDraw() { const x = RDEV.sx; if (!x) return; const W = 512, H = 400,
   x.strokeStyle = fg; x.fillStyle = fg; x.lineWidth = 5;
   // podcast icon, station name, battery
   x.beginPath(); x.arc(52, 58, 12, 0, Math.PI * 2); x.fill(); for (const r of [22, 32]) { x.beginPath(); x.arc(52, 58, r, Math.PI * 0.8, Math.PI * 2.2); x.stroke(); } x.fillRect(48, 70, 8, 26);
-  x.font = 'bold 30px "Courier New",monospace'; x.textBaseline = 'middle'; x.fillText('NEBULA 88.8', 100, 46); x.font = '20px "Courier New",monospace'; x.fillStyle = dim; x.fillText(RDEV.mode === 'songs' ? 'Your songs' : 'Drome War Radio', 100, 76); x.fillStyle = fg;
+  x.font = 'bold 30px "Courier New",monospace'; x.textBaseline = 'middle'; x.fillText(RDEV_NAMES[RDEV.mode] || 'NEBULA 88.8', 100, 46); x.font = '20px "Courier New",monospace'; x.fillStyle = dim; x.fillText(RDEV.mode === 'songs' ? 'Songs from the galaxy' : RDEV.mode === 'favs' ? 'Your hearted songs' : 'Drome War Radio', 100, 76); x.fillStyle = fg;
   x.lineWidth = 3; x.strokeRect(440, 24, 44, 20); x.fillRect(484, 29, 5, 10); x.fillRect(444, 28, 30, 12);
-  const songs = RDEV.mode === 'songs', L = rdevList(), ep = L.length ? L[RDEV.sel % L.length] : null;
-  x.font = 'bold 20px "Courier New",monospace'; x.fillStyle = songs ? dim : fg; x.fillText('▲ SHOWS', 300, 100); x.fillStyle = songs ? fg : dim; x.fillText('▼ SONGS', 400, 100); x.fillStyle = fg;
-  if (!ep) { x.font = 'bold 30px "Courier New",monospace'; x.fillText(songs ? 'No songs yet' : 'Nothing on air yet', 40, 190); x.font = '22px "Courier New",monospace'; x.fillStyle = dim; (songs ? ['Songs you hear around the', 'galaxy show up here.'] : ['Shows come on as the', 'story moves on.']).forEach((l, i) => x.fillText(l, 40, 236 + i * 28)); RDEV.stex.needsUpdate = true; return; }
+  const songs = RDEV.mode !== 'shows', L = rdevList(), ep = L.length ? L[RDEV.sel % L.length] : null;
+  x.font = 'bold 17px "Courier New",monospace'; [['shows', 'RADIO', 40], ['songs', 'ALL SONGS', 150], ['favs', '♥ FAVS', 300]].forEach(([m, t, tx]) => { x.fillStyle = RDEV.mode === m ? fg : dim; x.fillText(t, tx, 108); if (RDEV.mode === m) x.fillRect(tx, 120, x.measureText(t).width, 3); }); x.fillStyle = dim; x.fillText('▲▼', 440, 108); x.fillStyle = fg;
+  if (!ep) { x.font = 'bold 30px "Courier New",monospace'; x.fillText(RDEV.mode === 'favs' ? 'No favorites yet' : songs ? 'No songs yet' : 'Nothing on air yet', 40, 190); x.font = '22px "Courier New",monospace'; x.fillStyle = dim; (RDEV.mode === 'favs' ? ['Pick a song in ALL SONGS', 'and press the heart key.'] : songs ? ['Songs you hear around the', 'galaxy show up here.'] : ['Shows come on as the', 'story moves on.']).forEach((l, i) => x.fillText(l, 40, 236 + i * 28)); RDEV.stex.needsUpdate = true; return; }
   if (RDEV.ask) { x.font = 'bold 22px "Courier New",monospace'; x.fillText('★ NEW SHOW ON AIR', 40, 130); }
-  x.font = 'bold 30px "Courier New",monospace'; rdevWrap(x, ep.title, 440).slice(0, 2).forEach((l, i) => x.fillText(l, 40, (RDEV.ask ? 172 : 140) + i * 36));
+  if (ep.song) { const on = podFavs()[ep.key], pop = RDEV.heartT ? Math.max(0, 1 - (performance.now() - RDEV.heartT) / 400) : 0; x.save(); x.translate(460, 150); x.scale(1 + pop * 0.5, 1 + pop * 0.5); x.beginPath(); x.moveTo(0, 14); x.bezierCurveTo(-4, 8, -18, 2, -18, -7); x.bezierCurveTo(-18, -16, -6, -19, 0, -10); x.bezierCurveTo(6, -19, 18, -16, 18, -7); x.bezierCurveTo(18, 2, 4, 8, 0, 14);
+    x.lineWidth = 3; if (on) { x.fillStyle = '#ff6a8a'; x.fill(); } else x.stroke(); x.restore(); x.fillStyle = fg; }
+  x.font = 'bold 30px "Courier New",monospace'; rdevWrap(x, ep.title, ep.song ? 390 : 440).slice(0, 2).forEach((l, i) => x.fillText(l, 40, (RDEV.ask ? 172 : 140) + i * 36));
   const on = POD.ep === ep, cur = on && POD.el ? POD.el.currentTime : (!ep.song && S.podPos && S.podPos[ep.id]) || 0, dur = on && POD.el && isFinite(POD.el.duration) ? POD.el.duration : 0;
   x.font = '24px "Courier New",monospace'; x.fillStyle = RDEV.ask ? fg : dim;
   x.fillText(RDEV.ask ? 'Listen now? Press ▶‖' : on && POD.part === 'intro' ? 'Station ID…' : on ? `${podFmt(cur)} / ${podFmt(dur)}` : cur ? `Resume at ${podFmt(cur)}` : 'Press ▶‖ to play', 40, 248); x.fillStyle = fg;
@@ -14744,21 +14753,21 @@ function rdevDraw() { const x = RDEV.sx; if (!x) return; const W = 512, H = 400,
   RDEV.stex.needsUpdate = true; }
 function rdevLoop() { if (!RDEV.open) return; requestAnimationFrame(rdevLoop); const t = performance.now() / 1000, k = Math.min(1, (performance.now() - RDEV.t0) / 350), e = 1 - Math.pow(1 - k, 3);
   RDEV.g.position.y = -4 * (1 - e) + Math.sin(t * 1.4) * 0.05; RDEV.g.position.x = 0.45; RDEV.g.rotation.set(-0.1 + Math.sin(t * 0.9) * 0.03, 0.32 + Math.sin(t * 0.6) * 0.06 - (1 - e) * 0.6, 0.05); RDEV.g.scale.setScalar(0.8 + 0.2 * e);
-  if (t - RDEV.drawT > 0.25) { RDEV.drawT = t; rdevDraw(); } RDEV.r.render(RDEV.sc, RDEV.cam); }
+  if (t - RDEV.drawT > 0.25 || (RDEV.heartT && performance.now() - RDEV.heartT < 450)) { RDEV.drawT = t; rdevDraw(); } RDEV.r.render(RDEV.sc, RDEV.cam); }
 const rdevWrapEl = document.createElement('div'); rdevWrapEl.id = 'radioWrap'; rdevWrapEl.hidden = true;
-rdevWrapEl.style.cssText = 'position:fixed;left:50%;bottom:28px;z-index:24;width:300px;transform:translateX(-50%);transform-origin:50% 100%';
+rdevWrapEl.style.cssText = 'position:fixed;left:50%;bottom:48px;z-index:60;width:420px;transform:translateX(-50%);transform-origin:50% 100%';
 rdevWrapEl.innerHTML = '<button id="radioX" class="pbtn" style="position:absolute;right:4px;top:18px;padding:2px 9px;min-width:0;z-index:1" aria-label="Put the radio away">✕</button><div id="radioHint" style="position:absolute;left:50%;bottom:-20px;transform:translateX(-50%);white-space:nowrap;text-align:center;font:600 11px var(--mono,monospace);color:#cfd6de;text-shadow:0 1px 2px #000;margin-top:-6px"></div>';
 document.body.appendChild(rdevWrapEl); $('radioX').addEventListener('pointerdown', e => e.stopPropagation()); $('radioX').addEventListener('click', e => { e.stopPropagation(); rdevClose(); });
 function rdevClose() { RDEV.open = false; RDEV.ask = null; rdevWrapEl.hidden = true; }
 function openPodcast(askEp) { if (!podHasRadio()) { toast('NO RADIO', 'Finish your first job for Captain Vega', 2); return; }
   if (!RDEV.r) { rdevBuild(); rdevWrapEl.prepend(RDEV.cv); }
   if (askEp) { RDEV.mode = 'shows'; const L = podList(); RDEV.ask = askEp; RDEV.sel = Math.max(0, L.indexOf(askEp)); }
-  else { RDEV.ask = null; RDEV.mode = POD.ep && POD.ep.song ? 'songs' : RDEV.mode || 'shows'; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); }
-  $('radioHint').textContent = TOUCH ? 'Tap the keys' : 'Click the keys or use the arrows and Enter · O puts it away';
-  rdevWrapEl.style.scale = String(Math.min(1, innerHeight * 0.62 / 420)); rdevWrapEl.hidden = false; firing = false;
+  else { RDEV.ask = null; RDEV.mode = RDEV.mode || 'shows'; if (POD.ep && POD.ep.song && RDEV.mode === 'shows') RDEV.mode = 'songs'; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); }
+  $('radioHint').textContent = TOUCH ? 'Tap the keys' : 'Click the keys, or arrows · Enter · H for ♥ · O puts it away';
+  rdevWrapEl.style.scale = String(Math.min(1, innerHeight * 0.8 / 590, innerWidth * 0.94 / 420)); rdevWrapEl.hidden = false; firing = false;
   if (document.pointerLockElement) document.exitPointerLock();
   RDEV.open = true; RDEV.t0 = performance.now(); RDEV.drawT = 0; rdevDraw(); requestAnimationFrame(rdevLoop); }
-window.addEventListener('keydown', e => { if (!RDEV.open || dlgOpen || (typeof chatOpen === 'function' && chatOpen())) return; const k = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', Enter: 'mid', Space: 'mid' }[e.code];
+window.addEventListener('keydown', e => { if (!RDEV.open || dlgOpen || (typeof chatOpen === 'function' && chatOpen())) return; const k = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', Enter: 'mid', Space: 'mid', KeyH: 'fav' }[e.code];
   if (k) { e.preventDefault(); e.stopPropagation(); rdevPress(k); } else if ((e.code === 'KeyO' && !e.repeat) || e.code === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); rdevClose(); } }, true);
 // put it away when something else takes the screen
 setInterval(() => { if (RDEV.open && (state !== 'play' || dlgOpen || CUT.on || (typeof TAB !== 'undefined' && TAB.t > 0))) rdevClose(); }, 300);
@@ -15749,7 +15758,7 @@ function raidNote(big, sm) { raidNoteTxt = `⚔ ${big}${sm ? ' · ' + sm : ''}`;
 let lockWorks = false, lockDrop = 0;
 document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement === stage) lockWorks = true; });
 if (document.exitPointerLock) { const _ex = document.exitPointerLock.bind(document); document.exitPointerLock = function () { lockDrop = performance.now(); return _ex(); }; }
-const uiBusy = () => dlgOpen || chatOpen() || !$('menuDrop').hidden || !!document.getElementById('ending') || (typeof CUT !== 'undefined' && CUT.on) || (typeof PHOTO !== 'undefined' && PHOTO.on) || (typeof baseState !== 'undefined' && baseState.on);
+const uiBusy = () => dlgOpen || chatOpen() || !$('menuDrop').hidden || !!document.getElementById('ending') || (typeof CUT !== 'undefined' && CUT.on) || (typeof PHOTO !== 'undefined' && PHOTO.on) || (typeof baseState !== 'undefined' && baseState.on) || (typeof RDEV !== 'undefined' && RDEV.open);
 function relock() { if (TOUCH || state !== 'play' || uiBusy() || document.pointerLockElement) return; lock(); }
 // the first click after a menu only grabs the mouse; it doesn't shoot
 stage.addEventListener('mousedown', e => { if (TOUCH || state !== 'play' || uiBusy() || document.pointerLockElement || !lockWorks) return; lock(); e.stopImmediatePropagation(); }, true);
@@ -19292,6 +19301,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 289, title: '2.23.24 · Radio favorites, gates home', items: ['The radio keys work with the mouse again (the game was grabbing the mouse back on every click)', 'The radio is bigger. ▲ ▼ now cycle three lists: Nebula 88.8, All songs and Favorites', 'New heart key (or H): heart a song to add it to Favorites, press again to take it off. A heart on the screen shows it', 'The Forest of Life and the Swift Arena each have a warp gate back to Earth town'] },
   { id: 288, title: '2.23.23 · Radio in hand', items: ['Press O and the radio comes up in your hand on its own: no panel. Its keys do everything: ◀ ▶ pick, the middle key plays or pauses, ▲ ▼ switch between Shows and Songs.', 'Songs: every track you hear out in the galaxy is saved to the radio\'s Songs list, and it plays through them in order.', 'New pixel-art mouse cursor: gold arrow, cyan over anything you can click.'] },
   { id: 287, title: '2.23.22 · Pocket radio', items: ['The Nebula 88.8 radio is now a real little player: a chamfered body, a green screen with the show, time and progress, a d-pad and earbuds. Click its keys, or use the arrow keys and Enter.', 'It pops up asking if you want to listen when you first get it and whenever a new show comes on air.', 'B.U.R.P. stays quiet while a show is playing.'] },
   { id: 286, title: '2.23.21 · Nebula 88.8', items: ['New: the Nebula 88.8 pocket radio. Captain Vega gives it to you after Welcome to Earth. Press O, or Menu → Journal → Radio, to tune in.', 'Four shows come on air as the story moves on, each opening with the station ID. The music stops while a show plays, and it remembers where you stopped.', 'The Greater Maw battle now has everyone the history says came through: Vega, Skye, Ada-9, Hale, Elismas and Rell, plus your side (Marshals or outlaws).'] },
@@ -26984,9 +26994,9 @@ function mariHazeFx(on) { let o = document.getElementById('mariHaze');
 
 // =================== WARP GATES (2.22.51): the Forest of Life trail sign becomes a living warp gate ===================
 { const ob = LEVELS.earth.build; LEVELS.earth.build = function () { const r = ob.apply(this, arguments); try { warpGate(TOWN.x + 9, TOWN.z + 39, 'Trail to the Forest of Life', 'FOREST OF LIFE', 'forest'); warpGate(TOWN.x - 9, TOWN.z + 39, 'Shuttle to the Super Swift Arena', 'SUPER SWIFT ARENA', 'swift'); } catch (e) { console.warn('gate', e); } return r; }; }
-function warpGate(x, z, lbl, title, kind) { const F = kind === 'forest', C1 = F ? '#7fff9a' : '#4fd2ff', C2 = F ? '#ffd36a' : '#ff8a2a';
+function warpGate(x, z, lbl, title, kind, dest, ry) { const F = kind === 'forest', C1 = F ? '#7fff9a' : '#4fd2ff', C2 = F ? '#ffd36a' : '#ff8a2a';
   // retire the old wooden signpost
-  const it = INTERACTS.find(i => i.label === lbl); if (it) it.label = '🌀 Step through the warp gate to the ' + (F ? 'Forest of Life' : 'Super Swift Arena');
+  const it = INTERACTS.find(i => i.label === lbl); if (it) { it.label = '🌀 Step through the warp gate to ' + (dest || (F ? 'the Forest of Life' : 'the Super Swift Arena')); it.x = x; it.z = z; it.r = 3.2; }
   const g = new THREE.Group(), stone = F ? toon('#7a7468', 'stone') : toon('#3a3d44'), moss = F ? toon('#3f7a34') : toon('#2b2a2c'), bark = F ? toon('#5a3a22', 'wood') : toon('#9aa1aa');
   // stone dais with steps and glowing runes
   part(g, Cy(2.4, 2.6, 0.3, 16), stone, 0, 0.15, 0); part(g, Cy(2.0, 2.2, 0.2, 16), stone, 0, 0.4, 0);
@@ -27006,12 +27016,15 @@ function warpGate(x, z, lbl, title, kind) { const F = kind === 'forest', C1 = F 
   const motes = []; for (let i = 0; i < 24; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 4), glow(i % 3 ? C1 : C2)); g.add(m); motes.push([m, Math.random() * 6.28, Math.random()]); }
   // sign above the arch
   const sp = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.6), new THREE.MeshBasicMaterial({ map: signTex(title, F ? '#1e3a1e' : '#1a1e2a', F ? '#b8ffcf' : '#ffd36a'), side: THREE.DoubleSide })); sp.position.set(0, 5.35, 0.1); g.add(sp);
-  at(g, x, z, Math.PI); for (const s of [-1, 1]) solid(x + s * 1.9, z, 0.5);
+  at(g, x, z, ry == null ? Math.PI : ry); for (const s of [-1, 1]) solid(x + s * 1.9, z, 0.5);
   levelAnims.push(t => { disc.rotation.z = -t * 1.2; pl.intensity = 1.4 + Math.sin(t * 2.3) * 0.4;
     for (const [m, a0, k] of motes) { const u = (t * 0.35 + k) % 1, a = a0 + t * 1.5, r = 2.6 * (1 - u); m.position.set(Math.cos(a) * r, 2.5 + Math.sin(a) * r, (1 - u) * 1.2); } });
   // stepping through: a green flash before the jump
   if (it) { const f0 = it.fn; it.fn = () => { try { SFX.zap && SFX.zap(); } catch (_) {} const o = document.createElement('div'); o.style.cssText = 'position:fixed;inset:0;z-index:60;pointer-events:none;background:radial-gradient(circle,#ffffff,' + C1 + ' 40%,#000);opacity:0;transition:opacity .45s'; document.body.appendChild(o); requestAnimationFrame(() => o.style.opacity = 1); setTimeout(() => { f0(); o.style.opacity = 0; setTimeout(() => o.remove(), 600); }, 480); }; }
 }
+// and a gate home from each: the Forest's trail and the Arena's shuttle stop become warp gates back to Earth town
+for (const [lv, lbl, x, z, kind, ry] of [['forestlife', 'Trail back to Earth town', 9, -22, 'forest', 0], ['swift', 'Shuttle back to Earth town', 9, -46, 'swift', 0]]) {
+  const ob = LEVELS[lv].build; LEVELS[lv].build = function () { const r = ob.apply(this, arguments); try { warpGate(x, z, lbl, 'EARTH TOWN', kind, 'Earth town', ry); } catch (e) { console.warn('gate', e); } return r; }; }
 
 // =================== HOT GUNS (2.22.52): energy and beam guns use their charge even with the Unlimited Clip, and vent steam when they reload ===================
 // A noisy hiss, shared: steam vents ("tssshh"), and anything else that needs a spray sound.

@@ -1,8 +1,8 @@
 // =================== WARP GATES (2.22.51): the Forest of Life trail sign becomes a living warp gate ===================
 { const ob = LEVELS.earth.build; LEVELS.earth.build = function () { const r = ob.apply(this, arguments); try { warpGate(TOWN.x + 9, TOWN.z + 39, 'Trail to the Forest of Life', 'FOREST OF LIFE', 'forest'); warpGate(TOWN.x - 9, TOWN.z + 39, 'Shuttle to the Super Swift Arena', 'SUPER SWIFT ARENA', 'swift'); } catch (e) { console.warn('gate', e); } return r; }; }
-function warpGate(x, z, lbl, title, kind) { const F = kind === 'forest', C1 = F ? '#7fff9a' : '#4fd2ff', C2 = F ? '#ffd36a' : '#ff8a2a';
+function warpGate(x, z, lbl, title, kind, dest, ry) { const F = kind === 'forest', C1 = F ? '#7fff9a' : '#4fd2ff', C2 = F ? '#ffd36a' : '#ff8a2a';
   // retire the old wooden signpost
-  const it = INTERACTS.find(i => i.label === lbl); if (it) it.label = '🌀 Step through the warp gate to the ' + (F ? 'Forest of Life' : 'Super Swift Arena');
+  const it = INTERACTS.find(i => i.label === lbl); if (it) { it.label = '🌀 Step through the warp gate to ' + (dest || (F ? 'the Forest of Life' : 'the Super Swift Arena')); it.x = x; it.z = z; it.r = 3.2; }
   const g = new THREE.Group(), stone = F ? toon('#7a7468', 'stone') : toon('#3a3d44'), moss = F ? toon('#3f7a34') : toon('#2b2a2c'), bark = F ? toon('#5a3a22', 'wood') : toon('#9aa1aa');
   // stone dais with steps and glowing runes
   part(g, Cy(2.4, 2.6, 0.3, 16), stone, 0, 0.15, 0); part(g, Cy(2.0, 2.2, 0.2, 16), stone, 0, 0.4, 0);
@@ -22,9 +22,12 @@ function warpGate(x, z, lbl, title, kind) { const F = kind === 'forest', C1 = F 
   const motes = []; for (let i = 0; i < 24; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 4), glow(i % 3 ? C1 : C2)); g.add(m); motes.push([m, Math.random() * 6.28, Math.random()]); }
   // sign above the arch
   const sp = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.6), new THREE.MeshBasicMaterial({ map: signTex(title, F ? '#1e3a1e' : '#1a1e2a', F ? '#b8ffcf' : '#ffd36a'), side: THREE.DoubleSide })); sp.position.set(0, 5.35, 0.1); g.add(sp);
-  at(g, x, z, Math.PI); for (const s of [-1, 1]) solid(x + s * 1.9, z, 0.5);
+  at(g, x, z, ry == null ? Math.PI : ry); for (const s of [-1, 1]) solid(x + s * 1.9, z, 0.5);
   levelAnims.push(t => { disc.rotation.z = -t * 1.2; pl.intensity = 1.4 + Math.sin(t * 2.3) * 0.4;
     for (const [m, a0, k] of motes) { const u = (t * 0.35 + k) % 1, a = a0 + t * 1.5, r = 2.6 * (1 - u); m.position.set(Math.cos(a) * r, 2.5 + Math.sin(a) * r, (1 - u) * 1.2); } });
   // stepping through: a green flash before the jump
   if (it) { const f0 = it.fn; it.fn = () => { try { SFX.zap && SFX.zap(); } catch (_) {} const o = document.createElement('div'); o.style.cssText = 'position:fixed;inset:0;z-index:60;pointer-events:none;background:radial-gradient(circle,#ffffff,' + C1 + ' 40%,#000);opacity:0;transition:opacity .45s'; document.body.appendChild(o); requestAnimationFrame(() => o.style.opacity = 1); setTimeout(() => { f0(); o.style.opacity = 0; setTimeout(() => o.remove(), 600); }, 480); }; }
 }
+// and a gate home from each: the Forest's trail and the Arena's shuttle stop become warp gates back to Earth town
+for (const [lv, lbl, x, z, kind, ry] of [['forestlife', 'Trail back to Earth town', 9, -22, 'forest', 0], ['swift', 'Shuttle back to Earth town', 9, -46, 'swift', 0]]) {
+  const ob = LEVELS[lv].build; LEVELS[lv].build = function () { const r = ob.apply(this, arguments); try { warpGate(x, z, lbl, 'EARTH TOWN', kind, 'Earth town', ry); } catch (e) { console.warn('gate', e); } return r; }; }

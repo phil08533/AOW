@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.7</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.8</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19077,6 +19077,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 273, title: '2.23.8 · B.U.R.P. hatch fix', items: ['B.U.R.P.\'s hatch is now built flush into the starboard bridge wall','Talk to him and pick Power down to tuck him back inside; talk to the shut hatch to power him up again'] },
   { id: 272, title: '2.23.7 · Hanging bridges', items: ['Earth Sky islands are now linked by sagging rope bridges with plank decks and rope rails, no more ground clipping under them','B.U.R.P. now lives in a wall hatch on the bridge and swings out on a hinged arm to hang out with you'] },
   { id: 271, title: '2.23.6 · Sky fixes and the badge compass', items: ['Earth Sky bridges sit above the ground instead of fighting with it, and the airstrip has flat ground under it', 'Marshals: crimes nearby show a gold badge star on the compass with the distance'] },
   { id: 270, title: '2.23.5 · More sky', items: ['Earth Sky has three times the clouds: thick banks below, drifting wisps between the islands, and a high layer overhead'] },
@@ -25334,7 +25335,7 @@ setInterval(() => { const t = performance.now(), on = t < BG.talkUntil; for (con
 // B.U.R.P. lives in a wall hatch on the front bridge wall (where the old Marshal board was). When you come close the
 // hatch pops, his arm swings out on a hinge, and he hangs out: looks at you, bobs, does the odd spin or nod, then tucks away.
 function burpTerminal() {
-  const x = 3.0, z = -10.42, g = new THREE.Group(); g.position.set(x, 0, z); levelGroup.add(g);
+  const x = 6.79, z = -8.5, g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = -Math.PI / 2; levelGroup.add(g); // flush in the starboard wall, facing in
   part(g, B(1.3, 1.4, 0.12), toon('#2a2d34', 'panel'), 0, 1.65, 0); part(g, B(1.1, 1.2, 0.04), new THREE.MeshBasicMaterial({ color: '#0a1a24' }), 0, 1.65, 0.07);
   part(g, B(1.3, 0.06, 0.08), glow('#7fe8ff'), 0, 2.36, 0.08); part(g, B(1.3, 0.06, 0.08), glow('#7fe8ff'), 0, 0.94, 0.08);
   const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.16), new THREE.MeshBasicMaterial({ map: signTex('B.U.R.P.', '#0a1a24', '#7fe8ff') })); sg.position.set(0, 2.5, 0.07); g.add(sg);
@@ -25347,25 +25348,26 @@ function burpTerminal() {
   const h = burpHead(false); h.scale.setScalar(1.0); h.position.z = 0.75; elbow.add(h); BG.head = h;
   const st = { out: 0, trick: 0, tt: 6 + Math.random() * 6, kind: 0 }; let last = 0;
   levelAnims.push(t => { const dt = Math.min(0.05, last ? t - last : 0.016); last = t; if (!g.parent) return;
-    const near = Math.hypot(player.pos.x - x, player.pos.z - z) < 5.5 || performance.now() < BG.talkUntil || dlgOpen && $('dlgName') && /B\.U\.R\.P/.test($('dlgName').textContent);
+    const near = !(S.flags && S.flags.burpOff) && (Math.hypot(player.pos.x - x, player.pos.z - z) < 5.5 || performance.now() < BG.talkUntil || dlgOpen && $('dlgName') && /B\.U\.R\.P/.test($('dlgName').textContent));
     st.out += ((near ? 1 : 0) - st.out) * Math.min(1, dt * 3.2); const o = st.out;
     door.rotation.y = -Math.min(1, o * 1.6) * 1.9; // the hatch pops first
     const ext = clamp((o - 0.25) / 0.75, 0, 1);
-    arm1.rotation.y = (1 - ext) * 1.5; elbow.rotation.y = (1 - ext) * -2.6; hinge.position.z = 0.12 + ext * 0.05; h.visible = o > 0.12;
+    arm1.rotation.y = (1 - ext) * 1.5; elbow.rotation.y = (1 - ext) * -2.6; hinge.position.z = 0.12 + ext * 0.05; h.visible = hinge.visible = o > 0.12;
     // look at you, with a little bob
-    const wx = x + 0.3 + Math.sin(arm1.rotation.y) * 0.7, wz = z + 0.9; h.rotation.y = Math.atan2(player.pos.x - wx, player.pos.z - wz) * ext + Math.sin(t * 0.9) * 0.12 - arm1.rotation.y - elbow.rotation.y;
+    const lp = g.worldToLocal(player.pos.clone()), wx = 0.3 + Math.sin(arm1.rotation.y) * 0.7, wz = 0.9; h.rotation.y = Math.atan2(lp.x - wx, lp.z - wz) * ext + Math.sin(t * 0.9) * 0.12 - arm1.rotation.y - elbow.rotation.y;
     h.position.y = Math.sin(t * 2.1) * 0.04 * ext; arm1.rotation.x = Math.sin(t * 0.8) * 0.06 * ext;
     // the odd trick while he's out: a spin, a happy nod, or a wobble
     if (ext > 0.9) { st.tt -= dt; if (st.tt <= 0) { st.trick = 1; st.kind = Math.floor(Math.random() * 3); st.tt = 6 + Math.random() * 7; } }
     if (st.trick > 0) { st.trick = Math.max(0, st.trick - dt * 0.9); const k = 1 - st.trick;
       if (st.kind === 0) h.rotation.y += k * Math.PI * 2; else if (st.kind === 1) h.rotation.x = Math.sin(k * Math.PI * 4) * 0.35; else h.rotation.z = Math.sin(k * Math.PI * 6) * 0.3; }
     else { h.rotation.x *= 0.9; h.rotation.z *= 0.9; } });
-  INTERACTS.push({ x, z: z + 1.2, r: 2.4, label: '🤖 Talk to B.U.R.P.', fn: openBurpTerminal });
+  INTERACTS.push({ x: x - 1.2, z, r: 2.4, label: '🤖 Talk to B.U.R.P.', fn: openBurpTerminal });
 }
 function openBurpTerminal() {
+  S.flags = S.flags || {}; if (S.flags.burpOff) { openDlg('Ship assistant', 'B.U.R.P. (powered down)'); $('dlgLine').textContent = 'The hatch is shut. A small switch reads OFF.'; acts([['Power him up', () => { S.flags.burpOff = 0; markDirty(); closeDlg(); }, true], ['Leave him be', closeDlg]]); return; }
   openDlg('Ship assistant', 'B.U.R.P.'); const say = t => { $('dlgLine').textContent = t; burpSay(t); };
   say("Hello. What do you need?");
-  acts([['Explain things again', () => { closeDlg(); burpGuide(true); }, true], ['Say something', () => say(BURP_IDLE[Math.floor(Math.random() * BURP_IDLE.length)])], ['Bye', closeDlg]]);
+  acts([['Power down (back in the wall)', () => { S.flags.burpOff = 1; markDirty(); BG.talkUntil = 0; closeDlg(); toast('B.U.R.P. powered down. He tucks back into his hatch.'); }], ['Explain things again', () => { closeDlg(); burpGuide(true); }, true], ['Say something', () => say(BURP_IDLE[Math.floor(Math.random() * BURP_IDLE.length)])], ['Bye', closeDlg]]);
 }
 { const _b = LEVELS.ship.build; LEVELS.ship.build = function () { _b.apply(this, arguments); try { burpTerminal(); } catch (e) { console.warn('burp terminal', e); } }; }
 

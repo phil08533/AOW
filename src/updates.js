@@ -176,6 +176,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 267, title: '2.23.2 · Mobile stick', items: ['The move stick now appears wherever you put your left thumb, so you can strafe left at full speed'] },
   { id: 266, title: '2.23.1 · Quest tracking', items: ['You can track any quest in the journal, even ones you have not picked up yet. The tracker and compass point you to the quest giver', 'Quests the main story needs first (like Heavy Metal at Fort Ironrock) are now marked as main story'] },
   { id: 265, title: '2.23.0 · Kade stays home', items: ['Kade no longer follows you to other worlds after his fight'] },
   { id: 264, title: '2.22.99 · Marshals', items: ['Marshals can no longer raid merchant haulers in space'] },

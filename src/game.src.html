@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.2</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1332,7 +1332,7 @@ stage.addEventListener('touchstart', e => { if (CMD.on) return;
   if (state !== 'play' || dlgOpen) return;
   for (const t of e.changedTouches) {
     const r = stickEl.getBoundingClientRect();
-    if (stickId === null && t.clientX < window.innerWidth * 0.45 && t.clientY > window.innerHeight * 0.4) { stickId = t.identifier; stickC = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }
+    if (stickId === null && t.clientX < window.innerWidth * 0.45 && t.clientY > window.innerHeight * 0.4) { stickId = t.identifier; stickC = { x: t.clientX, y: t.clientY }; stickEl.style.left = (t.clientX - r.width / 2) + 'px'; stickEl.style.top = (t.clientY - r.height / 2) + 'px'; stickEl.style.bottom = 'auto'; } // the stick centers wherever your thumb lands
     else lookIds.set(t.identifier, { x: t.clientX, y: t.clientY });
   }
   e.preventDefault();
@@ -1344,7 +1344,7 @@ stage.addEventListener('touchmove', e => {
   }
   e.preventDefault();
 }, { passive: false });
-const endTouch = e => { for (const t of e.changedTouches) { if (t.identifier === stickId) { stickId = null; move.x = move.y = 0; knob.style.transform = ''; } lookIds.delete(t.identifier); } };
+const endTouch = e => { for (const t of e.changedTouches) { if (t.identifier === stickId) { stickId = null; move.x = move.y = 0; knob.style.transform = ''; stickEl.style.left = stickEl.style.top = stickEl.style.bottom = ''; } lookIds.delete(t.identifier); } };
 stage.addEventListener('touchend', endTouch); stage.addEventListener('touchcancel', endTouch);
 const fireBtn = $('tFire'); let fireLook = null;
 fireBtn.addEventListener('touchstart', e => { firing = true; const t = e.changedTouches[0]; fireLook = { id: t.identifier, x: t.clientX, y: t.clientY }; e.preventDefault(); }, { passive: false });

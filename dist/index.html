@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.2</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19016,6 +19016,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 267, title: '2.23.2 · Mobile stick', items: ['The move stick now appears wherever you put your left thumb, so you can strafe left at full speed'] },
   { id: 266, title: '2.23.1 · Quest tracking', items: ['You can track any quest in the journal, even ones you have not picked up yet. The tracker and compass point you to the quest giver', 'Quests the main story needs first (like Heavy Metal at Fort Ironrock) are now marked as main story'] },
   { id: 265, title: '2.23.0 · Kade stays home', items: ['Kade no longer follows you to other worlds after his fight'] },
   { id: 264, title: '2.22.99 · Marshals', items: ['Marshals can no longer raid merchant haulers in space'] },
@@ -28872,7 +28873,7 @@ stage.addEventListener('touchstart', e => { if (CMD.on) return;
   if (state !== 'play' || dlgOpen) return;
   for (const t of e.changedTouches) {
     const r = stickEl.getBoundingClientRect();
-    if (stickId === null && t.clientX < window.innerWidth * 0.45 && t.clientY > window.innerHeight * 0.4) { stickId = t.identifier; stickC = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }
+    if (stickId === null && t.clientX < window.innerWidth * 0.45 && t.clientY > window.innerHeight * 0.4) { stickId = t.identifier; stickC = { x: t.clientX, y: t.clientY }; stickEl.style.left = (t.clientX - r.width / 2) + 'px'; stickEl.style.top = (t.clientY - r.height / 2) + 'px'; stickEl.style.bottom = 'auto'; } // the stick centers wherever your thumb lands
     else lookIds.set(t.identifier, { x: t.clientX, y: t.clientY });
   }
   e.preventDefault();
@@ -28884,7 +28885,7 @@ stage.addEventListener('touchmove', e => {
   }
   e.preventDefault();
 }, { passive: false });
-const endTouch = e => { for (const t of e.changedTouches) { if (t.identifier === stickId) { stickId = null; move.x = move.y = 0; knob.style.transform = ''; } lookIds.delete(t.identifier); } };
+const endTouch = e => { for (const t of e.changedTouches) { if (t.identifier === stickId) { stickId = null; move.x = move.y = 0; knob.style.transform = ''; stickEl.style.left = stickEl.style.top = stickEl.style.bottom = ''; } lookIds.delete(t.identifier); } };
 stage.addEventListener('touchend', endTouch); stage.addEventListener('touchcancel', endTouch);
 const fireBtn = $('tFire'); let fireLook = null;
 fireBtn.addEventListener('touchstart', e => { firing = true; const t = e.changedTouches[0]; fireLook = { id: t.identifier, x: t.clientX, y: t.clientY }; e.preventDefault(); }, { passive: false });

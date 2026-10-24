@@ -260,13 +260,21 @@ openShipMods = function () { const Q = scS(); openDlg('Shipyard', 'Your hangar')
 function scGarage(k) {
   const D = SHIP_CLASSES[k], C = scS().cfg[k]; C.own = C.own || {}; openDlg('Garage', D.name);
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; let tab = 'st';
-  const tabs = [['st', 'Style'], ['p', 'Paint'], ['a', 'Accent'], ['x', 'Exhaust'], ...Object.entries(D.slots).map(([s, v]) => [s, v[0]])];
+  const tabs = [['st', 'Style'], ['p', 'Paint'], ['a', 'Accent'], ['x', 'Exhaust'], ...Object.entries(D.slots).map(([s, v]) => [s, v[0]]), ...(typeof BOBBLES !== 'undefined' ? [['bob', 'Bobblehead']] : [])];
   const listOf = t => t === 'st' ? PAINT_STYLES.map(s => [s[0], s[1], {}]) : t === 'p' ? SHIP_PAINTS : t === 'a' ? SHIP_ACCENTS : t === 'x' ? SHIP_EXHAUST : D.slots[t][1];
   const owned = (t, i) => (t === 'p' || t === 'a' || t === 'x') ? smOwn(t, i) : !listOf(t)[i][1] || !!C.own[t + i];
   const statTxt = st => Object.entries(st || {}).map(([s, v]) => `${v > 0 ? '+' : ''}${Math.round(v * 100)}% ${s === 'sp' ? 'speed' : s}`).join(', ');
   const pv = (over, lbl) => setPreview(() => { const g = makeStarship(S.col, Object.assign({ cls: k }, C, over || {})); g.rotation.set(0.4, Math.PI * 0.75, 0); return g; }, lbl || D.name, 1.5)
   const render = () => { rows.textContent = '';
     $('dlgLine').textContent = `${S.cr.toLocaleString()} cr · speed ${Math.round(shipModOf(k, 'sp') * 100)}% · hull ${Math.round(shipModOf(k, 'hull') * 100)}% · guns ${Math.round(shipModOf(k, 'laser') * 100)}%`;
+    if (tab === 'bob') { // the dash bobblehead: pick any you've earned, see how to earn the rest
+      const cur = bobbleCur(); BOBBLES.forEach(bb => { let got = false; try { got = bb.got(); } catch (_) {} const on = got && bb.id === cur, r = document.createElement('div'); r.className = 'rowi';
+        const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = on ? '#6fdc5a' : got ? '#9aa1aa' : '#3a3d44';
+        const nm = document.createElement('span'); nm.textContent = bb.name; const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '13px'; mt.textContent = on ? 'On the dash' : got ? 'Owned' : bb.how;
+        const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = on ? '✓' : got ? 'Fit' : 'Locked'; b.disabled = on || !got;
+        b.addEventListener('click', () => { S.bobble = bb.id; markDirty(); SFX.item(); render(); });
+        r.style.cursor = 'pointer'; r.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') return; setPreview(() => { return bobbleMake(bb.id); }, bb.name, 1.5); });
+        r.append(dot, nm, mt, b); rows.appendChild(r); }); return; }
     listOf(tab).forEach((it, i) => { const own = owned(tab, i), on = (C[tab] | 0) === i, cost = (tab === 'p' || tab === 'a' || tab === 'x') ? 0 : it[1], r = document.createElement('div'); r.className = 'rowi';
       const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = tab === 'lc' ? LASER_COLS[i][1] : (tab === 'p' || tab === 'a' || tab === 'x') ? (it[1] === 'rainbow' ? 'linear-gradient(90deg,#ff2a3a,#ffd36a,#7fff6a)' : it[1] || S.col) : on ? '#6fdc5a' : '#9aa1aa';
       const nm = document.createElement('span'); nm.textContent = it[0] + (statTxt(it[2]) ? ` · ${statTxt(it[2])}` : '');

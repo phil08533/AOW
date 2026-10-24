@@ -26,7 +26,7 @@ function bossIntro(e, replay) {
   shots.push({ text: B[1][0], dur: 4.5, cam: (t, k) => { const a = face(); camera.position.set(P().x + Math.sin(a + 0.5) * (h * 1.4 + 2.5 - k), P().y + h * 0.35, P().z + Math.cos(a + 0.5) * (h * 1.4 + 2.5 - k)); camera.lookAt(P().x, P().y + h * 0.75, P().z); } });
   if (B[1][1]) shots.push({ text: B[1][1], dur: 4.5, cam: (t, k) => { const a = face(); camera.position.set(P().x + Math.sin(a - 0.35) * (h * 1.0 + 1.4), P().y + h * 0.95, P().z + Math.cos(a - 0.35) * (h * 1.0 + 1.4)); camera.lookAt(P().x, P().y + h * 0.85, P().z); } });
   shots.push({ text: '', dur: 1.6, cam: (t, k) => { const d = V(P().x - player.pos.x, 0, P().z - player.pos.z).normalize(); camera.position.set(player.pos.x - d.x * 2.6 + d.z * 0.8, player.pos.y + 2.2, player.pos.z - d.z * 2.6 - d.x * 0.8); camera.lookAt(P().x, P().y + h * 0.6, P().z); } });
-  runCutscene({ title: B[0], lock: 2, replay, shots, onEnd: () => { if (!replay) { S.flags['bi_' + e.sp.type] = 1; markDirty(); } e.aggro = true; } });
+  runCutscene({ title: B[0], lock: 2, replay, shots, music: 'boss', onEnd: () => { if (!replay) { S.flags['bi_' + e.sp.type] = 1; markDirty(); } e.aggro = true; } });
 }
 setInterval(() => { try {
   if (state !== 'play' || CUT.on || dlgOpen || !LEVEL || LEVEL.fly || !player.alive || (typeof BH !== 'undefined' && BH.cut)) return; S.flags = S.flags || {};
@@ -56,7 +56,7 @@ function worldIntro(id, replay) {
   for (const z of pick) shots.push({ text: `${z.name}${z.lvl ? ' · ' + z.lvl : ''}`, dur: 4, cam: (t, k) => { const a = t * 0.15 + 1, r = z.r * 1.4 + 8; camera.position.set(z.x + Math.sin(a) * r, fh(z.x, z.z) + 9 + z.r * 0.35, z.z + Math.cos(a) * r); camera.lookAt(z.x, fh(z.x, z.z) + 1.5, z.z); } });
   shots.push({ text: '', dur: 2, cam: (t, k) => { const p = player.pos; camera.position.set(p.x + Math.sin(player.yaw) * (6 - k * 6), p.y + 1.6 + 4 * (1 - k), p.z + Math.cos(player.yaw) * (6 - k * 6)); camera.lookAt(p.x - Math.sin(player.yaw) * 8, p.y + 1.4, p.z - Math.cos(player.yaw) * 8); } });
   camera.near = 0.4; camera.updateProjectionMatrix(); // a deeper near plane stops the striped floors on high flyover shots
-  runCutscene({ lock: 3, replay, shots, onEnd: () => { camera.near = LEVEL.fly ? 0.5 : 0.03; camera.updateProjectionMatrix(); if (!replay) { S.flags['wi_' + id] = 1; markDirty(); } } });
+  runCutscene({ lock: 3, replay, shots, music: (() => { const f = MUS.force; MUS.force = null; let r = 'other'; try { r = musContext(0) || 'other'; } catch (_) {} MUS.force = f; return r === 'battle' || r === 'boss' ? 'other' : r; })(), onEnd: () => { camera.near = LEVEL.fly ? 0.5 : 0.03; camera.updateProjectionMatrix(); if (!replay) { S.flags['wi_' + id] = 1; markDirty(); } } });
 }
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); S.flags = S.flags || {};
   if (WORLD_INTRO[id] && !S.flags['wi_' + id]) setTimeout(() => { if (LEVEL.id === id && state === 'play' && !CUT.on && !dlgOpen && !S.flags['wi_' + id]) worldIntro(id); }, 1100);

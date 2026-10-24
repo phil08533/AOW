@@ -12,8 +12,8 @@ document.body.appendChild(tabWrap);
 #tabShade { position: absolute; inset: 0; background: rgba(0,0,0,.32); opacity: 0; transition: opacity .2s; }
 #tabWrap.on #tabShade { opacity: 1; }
 body.menuopen #zone { opacity: 0 !important; }
-body #tabWrap #menuDrop { position: absolute !important; display: flex !important; flex-direction: column; inset: auto !important; max-height: none !important; transform-origin: 50% 50%; padding: 0 !important; overflow: hidden !important; border-radius: 8px !important;
-  background: radial-gradient(120% 90% at 30% 0%, #1d4366, #050c1a 60%) !important; border: 1px solid rgba(120,220,255,.28) !important; box-shadow: inset 0 0 30px rgba(80,200,255,.10) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; animation: none !important; gap: 0 !important; grid-template-columns: none !important; }
+body #tabWrap #menuDrop { position: absolute !important; display: flex !important; flex-direction: column; inset: auto !important; max-height: none !important; transform-origin: 50% 50%; padding: 0 !important; overflow: hidden !important; border-radius: 22px !important; box-sizing: content-box !important;
+  background: radial-gradient(120% 90% at 30% 0%, #1d4366, #050c1a 60%) !important; border: var(--bz,18px) solid #0d0f12 !important; border-bottom-width: calc(var(--bz,18px) + 14px) !important; box-shadow: 0 0 0 2px #9aa0a8, 0 18px 50px rgba(0,0,0,.55), inset 0 0 30px rgba(80,200,255,.10) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; animation: none !important; gap: 0 !important; grid-template-columns: none !important; }
 body #tabWrap #menuDrop[hidden] { display: none !important; }
 body #tabWrap #menuDrop::before { display: none !important; }
 #menuDrop .tabTop { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid rgba(120,220,255,.18); font: 700 13px var(--hud); letter-spacing: .2em; color: #8fe3ff; flex: none; }
@@ -135,21 +135,14 @@ function tabletFrame() {
   TAB.t = Math.max(0, Math.min(1, TAB.t + (open ? dt / 0.22 : -dt / 0.16)));
   if (TAB.t <= 0) { if (tabletObj.visible) tabletObj.visible = false; return; }
   const W0 = innerWidth, H0 = innerHeight, tall = H0 > W0;
-  const W = Math.round(Math.min(W0 * (tall ? 0.94 : 0.86), 720)), H = Math.round(Math.min(H0 * (tall ? 0.7 : 0.78), tall ? W * 1.35 : W * 0.6));
-  const e = 1 - Math.pow(1 - TAB.t, 3), ty = H0 * 0.03 + (1 - e) * H0 * 0.9, tilt = 7;
+  let W = Math.round(Math.min(W0 * (tall ? 0.94 : 0.86), 720)), H = Math.round(Math.min(H0 * (tall ? 0.7 : 0.78), tall ? W * 1.35 : W * 0.6));
+  const e = 1 - Math.pow(1 - TAB.t, 3), ty = H0 * 0.03 + (1 - e) * H0 * 0.9, tilt = 0; // flat: the page and the 3D tablet line up exactly
+  const bz0 = Math.round(Math.max(14, W * 0.035));
   const f = H0 / 2 / Math.tan(camera.fov * Math.PI / 360);
   tabWrap.style.perspective = f + 'px';
-  for (const [k2, v] of [['width', W + 'px'], ['height', H + 'px'], ['left', (W0 - W) / 2 + 'px'], ['top', (H0 - H) / 2 + 'px'], ['transform', `translateY(${ty}px) rotateX(${tilt}deg)`]]) drop.style.setProperty(k2, v, 'important');
-  // 3D tablet at depth d, sized so 1 css px on the screen plane = k world units
-  const d = Math.max(0.5, camera.near * 2.2), k = 2 * d * Math.tan(camera.fov * Math.PI / 360) / H0, U = tabletObj.userData, bz = Math.max(14, W * 0.035);
-  tabletObj.visible = true; tabletObj.position.set(0, -ty * k, -d); tabletObj.rotation.set(tilt * Math.PI / 180, 0, 0);
-  U.screen.scale.set(W * k, H * k, 1); U.screen.position.z = -0.0005;
-  U.body.scale.set((W + bz * 2) * k, (H + bz * 2 + 26) * k, 0.012); U.body.position.set(0, -13 * k, -0.0075); // extra chin for the brand line
-  U.edge.scale.set((W + bz * 2 + 4) * k, (H + bz * 2 + 30) * k, 0.008); U.edge.position.set(0, -13 * k, -0.012);
-  U.cam.scale.setScalar(3 * k); U.cam.position.set(0, (H / 2 + bz / 2) * k, -0.001);
-  const hs = Math.max(26, Math.min(W, H) * 0.13) * k;
-  U.hl.scale.setScalar(hs); U.hl.position.set(-(W / 2 + bz * 0.4) * k, -(H * 0.18) * k, 0.006);
-  U.hr.scale.setScalar(hs); U.hr.position.set((W / 2 + bz * 0.4) * k, -(H * 0.18) * k, 0.006);
+  for (const [k2, v] of [['width', W + 'px'], ['height', H + 'px'], ['left', (W0 - W) / 2 - bz0 + 'px'], ['top', (H0 - H) / 2 - bz0 - 7 + 'px'], ['transform', `translateY(${ty}px) rotateX(${tilt}deg)`]]) drop.style.setProperty(k2, v, 'important');
+  // the tablet body is drawn on the menu box itself (CSS bezel), so it lines up exactly in every view, flying included
+  tabletObj.visible = false; drop.style.setProperty('--bz', bz0 + 'px');
   if (open) { const c = drop.querySelector('.tclock'); if (c) c.textContent = (typeof clockText === 'function' ? String(clockText()).split(' ·')[0] : new Date().toTimeString().slice(0, 5)); }
 }
 requestAnimationFrame(tabletFrame);

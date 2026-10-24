@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.16</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.17</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -15736,8 +15736,8 @@ document.body.appendChild(tabWrap);
 #tabShade { position: absolute; inset: 0; background: rgba(0,0,0,.32); opacity: 0; transition: opacity .2s; }
 #tabWrap.on #tabShade { opacity: 1; }
 body.menuopen #zone { opacity: 0 !important; }
-body #tabWrap #menuDrop { position: absolute !important; display: flex !important; flex-direction: column; inset: auto !important; max-height: none !important; transform-origin: 50% 50%; padding: 0 !important; overflow: hidden !important; border-radius: 8px !important;
-  background: radial-gradient(120% 90% at 30% 0%, #1d4366, #050c1a 60%) !important; border: 1px solid rgba(120,220,255,.28) !important; box-shadow: inset 0 0 30px rgba(80,200,255,.10) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; animation: none !important; gap: 0 !important; grid-template-columns: none !important; }
+body #tabWrap #menuDrop { position: absolute !important; display: flex !important; flex-direction: column; inset: auto !important; max-height: none !important; transform-origin: 50% 50%; padding: 0 !important; overflow: hidden !important; border-radius: 22px !important; box-sizing: content-box !important;
+  background: radial-gradient(120% 90% at 30% 0%, #1d4366, #050c1a 60%) !important; border: var(--bz,18px) solid #0d0f12 !important; border-bottom-width: calc(var(--bz,18px) + 14px) !important; box-shadow: 0 0 0 2px #9aa0a8, 0 18px 50px rgba(0,0,0,.55), inset 0 0 30px rgba(80,200,255,.10) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; animation: none !important; gap: 0 !important; grid-template-columns: none !important; }
 body #tabWrap #menuDrop[hidden] { display: none !important; }
 body #tabWrap #menuDrop::before { display: none !important; }
 #menuDrop .tabTop { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid rgba(120,220,255,.18); font: 700 13px var(--hud); letter-spacing: .2em; color: #8fe3ff; flex: none; }
@@ -15859,21 +15859,14 @@ function tabletFrame() {
   TAB.t = Math.max(0, Math.min(1, TAB.t + (open ? dt / 0.22 : -dt / 0.16)));
   if (TAB.t <= 0) { if (tabletObj.visible) tabletObj.visible = false; return; }
   const W0 = innerWidth, H0 = innerHeight, tall = H0 > W0;
-  const W = Math.round(Math.min(W0 * (tall ? 0.94 : 0.86), 720)), H = Math.round(Math.min(H0 * (tall ? 0.7 : 0.78), tall ? W * 1.35 : W * 0.6));
-  const e = 1 - Math.pow(1 - TAB.t, 3), ty = H0 * 0.03 + (1 - e) * H0 * 0.9, tilt = 7;
+  let W = Math.round(Math.min(W0 * (tall ? 0.94 : 0.86), 720)), H = Math.round(Math.min(H0 * (tall ? 0.7 : 0.78), tall ? W * 1.35 : W * 0.6));
+  const e = 1 - Math.pow(1 - TAB.t, 3), ty = H0 * 0.03 + (1 - e) * H0 * 0.9, tilt = 0; // flat: the page and the 3D tablet line up exactly
+  const bz0 = Math.round(Math.max(14, W * 0.035));
   const f = H0 / 2 / Math.tan(camera.fov * Math.PI / 360);
   tabWrap.style.perspective = f + 'px';
-  for (const [k2, v] of [['width', W + 'px'], ['height', H + 'px'], ['left', (W0 - W) / 2 + 'px'], ['top', (H0 - H) / 2 + 'px'], ['transform', `translateY(${ty}px) rotateX(${tilt}deg)`]]) drop.style.setProperty(k2, v, 'important');
-  // 3D tablet at depth d, sized so 1 css px on the screen plane = k world units
-  const d = Math.max(0.5, camera.near * 2.2), k = 2 * d * Math.tan(camera.fov * Math.PI / 360) / H0, U = tabletObj.userData, bz = Math.max(14, W * 0.035);
-  tabletObj.visible = true; tabletObj.position.set(0, -ty * k, -d); tabletObj.rotation.set(tilt * Math.PI / 180, 0, 0);
-  U.screen.scale.set(W * k, H * k, 1); U.screen.position.z = -0.0005;
-  U.body.scale.set((W + bz * 2) * k, (H + bz * 2 + 26) * k, 0.012); U.body.position.set(0, -13 * k, -0.0075); // extra chin for the brand line
-  U.edge.scale.set((W + bz * 2 + 4) * k, (H + bz * 2 + 30) * k, 0.008); U.edge.position.set(0, -13 * k, -0.012);
-  U.cam.scale.setScalar(3 * k); U.cam.position.set(0, (H / 2 + bz / 2) * k, -0.001);
-  const hs = Math.max(26, Math.min(W, H) * 0.13) * k;
-  U.hl.scale.setScalar(hs); U.hl.position.set(-(W / 2 + bz * 0.4) * k, -(H * 0.18) * k, 0.006);
-  U.hr.scale.setScalar(hs); U.hr.position.set((W / 2 + bz * 0.4) * k, -(H * 0.18) * k, 0.006);
+  for (const [k2, v] of [['width', W + 'px'], ['height', H + 'px'], ['left', (W0 - W) / 2 - bz0 + 'px'], ['top', (H0 - H) / 2 - bz0 - 7 + 'px'], ['transform', `translateY(${ty}px) rotateX(${tilt}deg)`]]) drop.style.setProperty(k2, v, 'important');
+  // the tablet body is drawn on the menu box itself (CSS bezel), so it lines up exactly in every view, flying included
+  tabletObj.visible = false; drop.style.setProperty('--bz', bz0 + 'px');
   if (open) { const c = drop.querySelector('.tclock'); if (c) c.textContent = (typeof clockText === 'function' ? String(clockText()).split(' ·')[0] : new Date().toTimeString().slice(0, 5)); }
 }
 requestAnimationFrame(tabletFrame);
@@ -19121,6 +19114,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 282, title: '2.23.17 · Cockpit and menu fit', items: ['The menu tablet frame is now drawn right on the menu, so it lines up exactly whether you are on foot or flying.', 'The ship cockpit sits higher so the dash screens clear the HUD, the dash lip is gone and the side dials sit on panels.', 'The C Cockpit view hint now shows at the top of the screen.'] },
   { id: 281, title: '2.23.16 · Cutscene music', items: ['Location intro cutscenes now play that place\'s music, and boss intros play the boss music'] },
   { id: 280, title: '2.23.15 · Cockpit pass', items: ['Ship cockpit is shaded and deeper: lit panels, a dash lip, side consoles and a footwell','The bobblehead has its own clear plinth with a glow ring','Every gauge and meter reads something real: speed, hull, throttle, cruise, heading, missiles, EMP and radar contacts; the warning lamp only blinks on low hull','Aim at a raider in range and the ring turns red with a LOCK readout','Pick your bobblehead in the garage (new Bobblehead tab)','On PC a C · Cockpit view hint shows when you start flying or racing'] },
   { id: 279, title: '2.23.14 · Tablet, welder bot, the Don', items: ['Menu tablet now fits the whole menu on PC and while flying, and the scanline filter is replaced by a soft glass screen look','Surfaces no longer bend toward the screen edges (dropped the old PS1 texture warp)','Brakka\'s bay has a hover welder bot that works its way round the ship, clear of everything','McKlunkies: the Home of the Klunk wallpaper no longer flickers into the wall, and Don Klunkleone has a lit cigar'] },
@@ -24336,7 +24330,7 @@ body { text-shadow: 2px 2px 0 #07060a !important; }
 #map { border-image: none !important; border: 4px solid ${T.lite} !important; border-radius: 50% !important; background: ${T.screen} !important; box-shadow: 0 0 0 2px #07060a, inset 0 0 0 2px ${T.dark}, 4px 4px 0 rgba(0,0,0,.55) !important; overflow: hidden !important; }
 #map canvas { border-radius: 50% !important; }
 #map::before, #map::after { content: none !important; }
-body #tabWrap #menuDrop { border: 0 !important; border-image: none !important; border-radius: 0 !important; background: ${T.screen} !important; box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,.6) !important; }
+body #tabWrap #menuDrop { border: var(--bz,18px) solid #0d0f12 !important; border-bottom-width: calc(var(--bz,18px) + 14px) !important; border-image: none !important; border-radius: 22px !important; background: ${T.screen} !important; box-shadow: 0 0 0 2px #9aa0a8, 0 18px 50px rgba(0,0,0,.55), inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,.6) !important; }
 body #tabWrap #menuDrop::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 5; background: linear-gradient(118deg, rgba(255,255,255,.075) 0%, rgba(255,255,255,.025) 34%, transparent 34.2%), radial-gradient(ellipse at 50% 45%, transparent 62%, rgba(0,0,0,.32) 100%); box-shadow: inset 0 0 0 1px rgba(160,220,255,.08), inset 0 0 18px rgba(80,170,255,.07); }
 #menuDrop .tabTop { border-bottom: 2px solid ${T.lite} !important; color: ${T.accent} !important; background: rgba(0,0,0,.25); }
 #menuDrop .tabTop button { all: unset; }
@@ -24366,12 +24360,12 @@ applyUiTheme();
 #menuDrop .tabCat { font-size: 18px !important; }`; document.head.appendChild(st);
   const U = tabletObj.userData; U.body.material.color.set('#0d0f12'); U.edge.material.color.set('#9aa0a8'); U.screen.material.color.set('#000000');
   const brand = document.createElement('div'); brand.id = 'tabBrand'; brand.textContent = 'iTab 15 Pro + Ss Extreme';
-  brand.style.cssText = 'position:absolute;pointer-events:none;text-align:center;font:600 10px "Pixelify Sans","Courier New",monospace;letter-spacing:.08em;color:#aab0b8;text-shadow:none;opacity:.8;white-space:nowrap';
+  brand.style.cssText = 'position:absolute;z-index:40;pointer-events:none;text-align:center;font:600 10px "Pixelify Sans","Courier New",monospace;letter-spacing:.08em;color:#aab0b8;text-shadow:none;opacity:.8;white-space:nowrap';
   tabWrap.appendChild(brand);
-  const loop = () => { requestAnimationFrame(loop); const d = $('menuDrop'); if (!tabletObj.visible || d.hidden) { brand.style.display = 'none'; return; }
+  const loop = () => { requestAnimationFrame(loop); const d = $('menuDrop'); if (!(TAB.t > 0) || d.hidden) { brand.style.display = 'none'; return; }
     const W = parseFloat(d.style.width), H = parseFloat(d.style.height), bz = Math.max(14, W * 0.035);
-    brand.style.display = 'block'; brand.style.left = d.style.left; brand.style.width = W + 'px'; brand.style.top = (parseFloat(d.style.top) + H + bz * 0.5 - 6) + 'px';
-    brand.style.transformOrigin = `50% ${-(H / 2 + bz * 0.5 - 6)}px`; brand.style.transform = d.style.transform; brand.style.fontSize = Math.max(8, Math.min(12, bz * 0.5)) + 'px'; };
+    brand.style.display = 'block'; brand.style.left = (parseFloat(d.style.left) + bz) + 'px'; brand.style.width = W + 'px'; brand.style.top = (parseFloat(d.style.top) + H + bz + (bz + 14) * 0.5 - 7) + 'px';
+    brand.style.transformOrigin = `50% ${-(H / 2 + bz + (bz + 14) * 0.5 - 7)}px`; brand.style.transform = d.style.transform; brand.style.fontSize = Math.max(8, Math.min(12, bz * 0.5)) + 'px'; };
   requestAnimationFrame(loop); }
 
 // =================== SMOOTH MELEE (2.22.13): flowing swings instead of a jerky up-and-down chop ===================
@@ -26959,7 +26953,7 @@ setInterval(() => { try { if (state === 'play' && !LEVEL.fly && !handMelee() && 
     const add = [], P = (geo, m, x, y, z, rx, ry, rz) => { const o = part(g, geo, m, x, y, z, rx, ry, rz); add.push(o); return o; };
     const hull = M('#2a2f3a'), dark = M('#14171d'), trim = M('#3a404c');
     // depth: a padded dash lip that juts toward you, angled side consoles, a sill under the canopy and a dark footwell
-    P(B(1.66, 0.05, 0.12), dark, 0, -0.235, -0.58, 0.35); P(B(1.66, 0.02, 0.02), trim, 0, -0.213, -0.525);
+    
     for (const s of [-1, 1]) { P(B(0.3, 0.06, 0.5), hull, s * 0.86, -0.36, -0.42, 0, 0, -s * 0.28); P(B(0.26, 0.01, 0.44), trim, s * 0.85, -0.325, -0.42, 0, 0, -s * 0.28);
       P(B(0.06, 0.5, 0.6), dark, s * 0.98, -0.12, -0.45, 0, 0, s * 0.12); P(B(0.05, 0.05, 0.9), hull, s * 0.92, 0.18, -0.55, 0.15, 0, s * 0.5); }
     P(B(1.4, 0.3, 0.4), M('#0c0e12'), 0, -0.62, -0.5);
@@ -26977,8 +26971,12 @@ setInterval(() => { try { if (state === 'play' && !LEVEL.fly && !handMelee() && 
     // target lock text over the aiming ring
     const c = document.createElement('canvas'); c.width = 128; c.height = 32; SCOCK.lockC = c; SCOCK.lockT = new THREE.CanvasTexture(c);
     SCOCK.lock = P(new THREE.PlaneGeometry(0.12, 0.03), new THREE.MeshBasicMaterial({ map: SCOCK.lockT, transparent: true, fog: false, depthWrite: false, toneMapped: false }), 0, -0.06, -1.2); SCOCK.lock.visible = false;
+    // backing plates behind the side dials so they sit on a panel instead of floating in the canopy
+    for (const sd of [-1, 1]) P(B(0.1, 0.2, 0.02), hull, sd * 0.71, -0.095, -0.615, 0, -sd * 0.45, 0);
     add.forEach(o => o.traverse(q => { q.renderOrder = 5; }));
     g.scale.setScalar(s0);
+    // sit the whole cockpit higher in view so the dash screens clear the HUD at the bottom of the screen
+    g.position.y = 0.24;
   };
   const gaugeSet = (n, v) => { if (n) n.rotation.z = -(-2.2 + 4.4 * clamp(v, 0, 1)); };
   const meterSet = (o, v) => { if (!o) return; v = clamp(v, 0.04, 1); o.scale.y = v; o.position.y = -0.405 + 0.075 * v; };
@@ -27001,7 +26999,7 @@ setInterval(() => { try { if (state === 'play' && !LEVEL.fly && !handMelee() && 
   };
   // PC hint: "C · Cockpit view" for a few seconds each time you start flying or racing
   const hint = document.createElement('div'); hint.id = 'cockHint'; hint.innerHTML = '<kbd>C</kbd> Cockpit view'; hint.hidden = true;
-  hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(-50%);z-index:21;padding:6px 12px;background:rgba(8,10,16,.72);border:1px solid rgba(255,255,255,.22);color:#e8eef2;font:600 14px var(--mono,monospace);letter-spacing:.04em;pointer-events:none;transition:opacity .4s';
+  hint.style.cssText = 'position:fixed;left:50%;top:96px;transform:translateX(-50%);z-index:21;padding:6px 12px;background:rgba(8,10,16,.72);border:1px solid rgba(255,255,255,.22);color:#e8eef2;font:600 14px var(--mono,monospace);letter-spacing:.04em;pointer-events:none;transition:opacity .4s';
   document.body.appendChild(hint); const kb = hint.querySelector('kbd'); kb.style.cssText = 'display:inline-block;padding:1px 7px;margin-right:6px;background:#ffd36a;color:#14171d;font:700 13px var(--mono,monospace)';
   let was = false, until = 0;
   setInterval(() => { const on = typeof TOUCH !== 'undefined' && !TOUCH && state === 'play' && !dlgOpen && LEVEL && ((LEVEL.fly && fly && fly.ship) || (LEVEL.id === 'speedway' && typeof RC !== 'undefined' && RC.on));

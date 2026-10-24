@@ -14,7 +14,7 @@
     const add = [], P = (geo, m, x, y, z, rx, ry, rz) => { const o = part(g, geo, m, x, y, z, rx, ry, rz); add.push(o); return o; };
     const hull = M('#2a2f3a'), dark = M('#14171d'), trim = M('#3a404c');
     // depth: a padded dash lip that juts toward you, angled side consoles, a sill under the canopy and a dark footwell
-    P(B(1.66, 0.05, 0.12), dark, 0, -0.235, -0.58, 0.35); P(B(1.66, 0.02, 0.02), trim, 0, -0.213, -0.525);
+    
     for (const s of [-1, 1]) { P(B(0.3, 0.06, 0.5), hull, s * 0.86, -0.36, -0.42, 0, 0, -s * 0.28); P(B(0.26, 0.01, 0.44), trim, s * 0.85, -0.325, -0.42, 0, 0, -s * 0.28);
       P(B(0.06, 0.5, 0.6), dark, s * 0.98, -0.12, -0.45, 0, 0, s * 0.12); P(B(0.05, 0.05, 0.9), hull, s * 0.92, 0.18, -0.55, 0.15, 0, s * 0.5); }
     P(B(1.4, 0.3, 0.4), M('#0c0e12'), 0, -0.62, -0.5);
@@ -32,8 +32,12 @@
     // target lock text over the aiming ring
     const c = document.createElement('canvas'); c.width = 128; c.height = 32; SCOCK.lockC = c; SCOCK.lockT = new THREE.CanvasTexture(c);
     SCOCK.lock = P(new THREE.PlaneGeometry(0.12, 0.03), new THREE.MeshBasicMaterial({ map: SCOCK.lockT, transparent: true, fog: false, depthWrite: false, toneMapped: false }), 0, -0.06, -1.2); SCOCK.lock.visible = false;
+    // backing plates behind the side dials so they sit on a panel instead of floating in the canopy
+    for (const sd of [-1, 1]) P(B(0.1, 0.2, 0.02), hull, sd * 0.71, -0.095, -0.615, 0, -sd * 0.45, 0);
     add.forEach(o => o.traverse(q => { q.renderOrder = 5; }));
     g.scale.setScalar(s0);
+    // sit the whole cockpit higher in view so the dash screens clear the HUD at the bottom of the screen
+    g.position.y = 0.24;
   };
   const gaugeSet = (n, v) => { if (n) n.rotation.z = -(-2.2 + 4.4 * clamp(v, 0, 1)); };
   const meterSet = (o, v) => { if (!o) return; v = clamp(v, 0.04, 1); o.scale.y = v; o.position.y = -0.405 + 0.075 * v; };
@@ -56,7 +60,7 @@
   };
   // PC hint: "C · Cockpit view" for a few seconds each time you start flying or racing
   const hint = document.createElement('div'); hint.id = 'cockHint'; hint.innerHTML = '<kbd>C</kbd> Cockpit view'; hint.hidden = true;
-  hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(-50%);z-index:21;padding:6px 12px;background:rgba(8,10,16,.72);border:1px solid rgba(255,255,255,.22);color:#e8eef2;font:600 14px var(--mono,monospace);letter-spacing:.04em;pointer-events:none;transition:opacity .4s';
+  hint.style.cssText = 'position:fixed;left:50%;top:96px;transform:translateX(-50%);z-index:21;padding:6px 12px;background:rgba(8,10,16,.72);border:1px solid rgba(255,255,255,.22);color:#e8eef2;font:600 14px var(--mono,monospace);letter-spacing:.04em;pointer-events:none;transition:opacity .4s';
   document.body.appendChild(hint); const kb = hint.querySelector('kbd'); kb.style.cssText = 'display:inline-block;padding:1px 7px;margin-right:6px;background:#ffd36a;color:#14171d;font:700 13px var(--mono,monospace)';
   let was = false, until = 0;
   setInterval(() => { const on = typeof TOUCH !== 'undefined' && !TOUCH && state === 'play' && !dlgOpen && LEVEL && ((LEVEL.fly && fly && fly.ship) || (LEVEL.id === 'speedway' && typeof RC !== 'undefined' && RC.on));

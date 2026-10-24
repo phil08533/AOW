@@ -44,7 +44,7 @@ body { text-shadow: 2px 2px 0 #07060a !important; }
 #map { border-image: none !important; border: 4px solid ${T.lite} !important; border-radius: 50% !important; background: ${T.screen} !important; box-shadow: 0 0 0 2px #07060a, inset 0 0 0 2px ${T.dark}, 4px 4px 0 rgba(0,0,0,.55) !important; overflow: hidden !important; }
 #map canvas { border-radius: 50% !important; }
 #map::before, #map::after { content: none !important; }
-body #tabWrap #menuDrop { border: 0 !important; border-image: none !important; border-radius: 0 !important; background: ${T.screen} !important; box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,.6) !important; }
+body #tabWrap #menuDrop { border: var(--bz,18px) solid #0d0f12 !important; border-bottom-width: calc(var(--bz,18px) + 14px) !important; border-image: none !important; border-radius: 22px !important; background: ${T.screen} !important; box-shadow: 0 0 0 2px #9aa0a8, 0 18px 50px rgba(0,0,0,.55), inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,.6) !important; }
 body #tabWrap #menuDrop::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 5; background: linear-gradient(118deg, rgba(255,255,255,.075) 0%, rgba(255,255,255,.025) 34%, transparent 34.2%), radial-gradient(ellipse at 50% 45%, transparent 62%, rgba(0,0,0,.32) 100%); box-shadow: inset 0 0 0 1px rgba(160,220,255,.08), inset 0 0 18px rgba(80,170,255,.07); }
 #menuDrop .tabTop { border-bottom: 2px solid ${T.lite} !important; color: ${T.accent} !important; background: rgba(0,0,0,.25); }
 #menuDrop .tabTop button { all: unset; }
@@ -74,10 +74,10 @@ applyUiTheme();
 #menuDrop .tabCat { font-size: 18px !important; }`; document.head.appendChild(st);
   const U = tabletObj.userData; U.body.material.color.set('#0d0f12'); U.edge.material.color.set('#9aa0a8'); U.screen.material.color.set('#000000');
   const brand = document.createElement('div'); brand.id = 'tabBrand'; brand.textContent = 'iTab 15 Pro + Ss Extreme';
-  brand.style.cssText = 'position:absolute;pointer-events:none;text-align:center;font:600 10px "Pixelify Sans","Courier New",monospace;letter-spacing:.08em;color:#aab0b8;text-shadow:none;opacity:.8;white-space:nowrap';
+  brand.style.cssText = 'position:absolute;z-index:40;pointer-events:none;text-align:center;font:600 10px "Pixelify Sans","Courier New",monospace;letter-spacing:.08em;color:#aab0b8;text-shadow:none;opacity:.8;white-space:nowrap';
   tabWrap.appendChild(brand);
-  const loop = () => { requestAnimationFrame(loop); const d = $('menuDrop'); if (!tabletObj.visible || d.hidden) { brand.style.display = 'none'; return; }
+  const loop = () => { requestAnimationFrame(loop); const d = $('menuDrop'); if (!(TAB.t > 0) || d.hidden) { brand.style.display = 'none'; return; }
     const W = parseFloat(d.style.width), H = parseFloat(d.style.height), bz = Math.max(14, W * 0.035);
-    brand.style.display = 'block'; brand.style.left = d.style.left; brand.style.width = W + 'px'; brand.style.top = (parseFloat(d.style.top) + H + bz * 0.5 - 6) + 'px';
-    brand.style.transformOrigin = `50% ${-(H / 2 + bz * 0.5 - 6)}px`; brand.style.transform = d.style.transform; brand.style.fontSize = Math.max(8, Math.min(12, bz * 0.5)) + 'px'; };
+    brand.style.display = 'block'; brand.style.left = (parseFloat(d.style.left) + bz) + 'px'; brand.style.width = W + 'px'; brand.style.top = (parseFloat(d.style.top) + H + bz + (bz + 14) * 0.5 - 7) + 'px';
+    brand.style.transformOrigin = `50% ${-(H / 2 + bz + (bz + 14) * 0.5 - 7)}px`; brand.style.transform = d.style.transform; brand.style.fontSize = Math.max(8, Math.min(12, bz * 0.5)) + 'px'; };
   requestAnimationFrame(loop); }

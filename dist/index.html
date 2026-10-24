@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.20</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.21</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -14481,7 +14481,7 @@ if (!PREFS.musicV2) { PREFS.musicV2 = 1; PREFS.music = 3; if (PREFS.musicVol == 
 if (PREFS.musicVol == null) PREFS.musicVol = 0.7;
 const MUS = { a: null, b: null, cur: null, list: null, idx: 0, want: null, force: null, battleT: 0, calmT: 0, romT: 0, unlocked: false, fades: [] };
 function musEl() { const e = new Audio(); e.preload = 'auto'; e.volume = 0; e.addEventListener('ended', () => { if (e === MUS.cur && MUS.list && PLAYLISTS[MUS.list].length > 1) { MUS.idx = (MUS.idx + 1) % PLAYLISTS[MUS.list].length; musStart(MUS.list, MUS.idx); } }); return e; }
-const musVol = () => (PREFS.music === 3 || (MUS.force && PREFS.music)) ? Math.max(0, Math.min(1, PREFS.musicVol * (MUS.ac ? 1 : (MUS.spaceK || 1)))) * (typeof POD !== 'undefined' && POD.playing ? 0.18 : 1) : 0;
+const musVol = () => (PREFS.music === 3 || (MUS.force && PREFS.music)) ? Math.max(0, Math.min(1, PREFS.musicVol * (MUS.ac ? 1 : (MUS.spaceK || 1)))) * (typeof POD !== 'undefined' && POD.playing ? 0 : 1) : 0;
 function musFade(el, to, sec, then) { MUS.fades = MUS.fades.filter(f => f.el !== el); MUS.fades.push({ el, from: el.volume, to, t: 0, sec, then }); }
 setInterval(() => { for (const f of MUS.fades.slice()) { f.t += 0.05; const k = Math.min(1, f.t / f.sec); f.el.volume = Math.max(0, Math.min(1, f.from + (f.to - f.from) * k)); if (k >= 1) { MUS.fades.splice(MUS.fades.indexOf(f), 1); if (f.then) f.then(); } } }, 50);
 function musStart(list, idx) {
@@ -14610,33 +14610,46 @@ PLAYLISTS.cutscene = ['hymn'];
   { musForce('cutscene'); const iv = setInterval(() => { if (!document.getElementById('ending')) { clearInterval(iv); musRelease('cutscene'); } }, 400); }
   return r; }; }
 
-// =================== PODCAST: episodes unlock after a quest the owner picks, play on the pod (O) with the music ducked ===================
+// =================== NEBULA 88.8: radio shows unlock with the story, play on the pocket radio (O) with the music stopped ===================
 // Audio files live next to the page (podcast/*.mp3). Which quest unlocks each episode, and which intro plays first, is set in
 // the owner's editor (Podcast tab) and saved to the shared world/podcast doc, so it changes for everyone without a rebuild.
+// def: what unlocks it until the owner picks something else in the editor ('@allmain' = every main quest done, '@maw' = the Greater Maw is dead)
 const POD_EPS = [
+  { id: 'vector', file: 'podcast/vector_before.mp3', title: 'Why Everyone Avoided Vector Before Drome', def: 'q1' },
+  { id: 'earth', file: 'podcast/earth_against.mp3', title: 'How Drome Turned Earth Against Itself', def: 'q5' },
+  { id: 'surreal', file: 'podcast/surreal_drama.mp3', title: 'Surreal Local Drama in the Drome War', def: '@allmain' },
+  { id: 'final', file: 'podcast/final_hours.mp3', title: 'The Final Hours of the Drome War', def: '@maw' },
   { id: 'drome', file: 'podcast/drome_map.mp3', title: "Drome's Death Reveals a Map to Vector" },
   { id: 'duke', file: 'podcast/duke_starling.mp3', title: 'Did Duke Starling Escape True Justice?' },
 ];
-const POD_INTROS = []; // { id, file, title }: intro stingers, picked per episode in the editor
+const POD_INTROS = [{ id: 'nebula88', file: 'music/radio/nebula88-intro.mp3', title: 'Nebula 88.8 station intro' }]; // picked per episode in the editor
 const POD = { cfg: {}, el: null, ep: null, part: null, playing: false, cutPaused: false };
-const podCfg = id => POD.cfg[id] || {};
-const podOpen = ep => !!podCfg(ep.id).quest && qDone(podCfg(ep.id).quest);
+const podCfg = id => { const c = POD.cfg[id] || {}, ep = POD_EPS.find(e => e.id === id) || {}; return { quest: c.quest !== undefined ? c.quest : ep.def || '', intro: c.intro !== undefined ? c.intro : 'nebula88' }; };
+const podUnlocked = q => !q ? false : q === '@maw' ? !!(S.flags && S.flags.mawDead) : q === '@allmain' ? Object.keys(QDEFS).every(k => !QDEFS[k] || !QDEFS[k].main || qDone(k)) : qDone(q);
+const podOpen = ep => podUnlocked(podCfg(ep.id).quest);
+// the radio itself: Vega hands it over after the first quest, and you need it to tune in
+ITEMS.radio88 = { name: 'Nebula 88.8 Radio', v: 0, col: '#c86aff', quest: true, desc: 'A pocket radio locked to Nebula 88.8. Press O (or Menu → Journal → Radio) to tune in.' };
+setTimeout(() => { // after inventory.js has loaded
+  INV_SVG.radio = '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M7 8 17 3l.6 1.2L10 8z"/><circle cx="8.5" cy="14" r="3.2" fill="#000" opacity=".45"/><rect x="14" y="11" width="5" height="1.6" fill="#000" opacity=".45"/><rect x="14" y="14" width="5" height="1.6" fill="#000" opacity=".45"/><rect x="14" y="17" width="3" height="1.4" fill="#000" opacity=".45"/>';
+  const _ii = itemIcon; itemIcon = function (id) { return id === 'radio88' ? 'radio' : _ii(id); }; }, 0);
+const podHasRadio = () => !!(S.inv && S.inv.radio88);
+function podGiveRadio() { if (podHasRadio() || !qDone('q1')) return; S.inv.radio88 = 1; if (typeof markDirty === 'function') markDirty(); log('+1 Nebula 88.8 Radio', 'loot'); toast('NEBULA 88.8 RADIO', 'A pocket radio. ' + (TOUCH ? 'Menu → Journal → Radio' : 'Press O') + ' to tune in.', 3.5); }
 const podList = () => POD_EPS.filter(podOpen);
 // shared config: the owner's picks, loaded once the cloud is up (local copy when offline)
 { let tries = 0; const iv = setInterval(async () => { tries++; if (!db && tries < 20) return; clearInterval(iv);
   try { if (db) { const s = await db.doc('world/podcast').get(); if (s.exists && s.data() && s.data().data) POD.cfg = JSON.parse(s.data().data) || {}; }
     else { const l = localStorage.getItem('aow-podcast'); if (l) POD.cfg = JSON.parse(l) || {}; } } catch (_) {}
-  POD.seen = true; podCheckNew(); }, 500); }
+  POD.seen = true; podGiveRadio(); podCheckNew(); }, 500); }
 function podSaveCfg() { try { localStorage.setItem('aow-podcast', JSON.stringify(POD.cfg)); } catch (_) {} clearTimeout(POD.st);
   POD.st = setTimeout(async () => { if (db) { try { await db.doc('world/podcast').set({ v: 1, t: Date.now(), data: JSON.stringify(POD.cfg) }); toast('EDITOR', 'Podcast saved · live for everyone', 1.2); } catch (_) { toast('EDITOR', 'Saved on this device only', 1.5); } } }, 600); }
 // a new episode unlocked: tell the player once
-function podCheckNew() { if (!POD.seen || !S || !S.qst) return; S.podNew = S.podNew || {};
-  for (const ep of podList()) if (!S.podNew[ep.id]) { S.podNew[ep.id] = 1; if (typeof markDirty === 'function') markDirty(); toast('NEW PODCAST', ep.title + (TOUCH ? ' · Journal → Podcast' : ' · press O'), 3); } }
-{ const _cq = completeQuest; completeQuest = function (id) { const r = _cq.apply(this, arguments); setTimeout(podCheckNew, 1500); return r; }; }
+function podCheckNew() { if (!POD.seen || !S || !S.qst || !podHasRadio()) return; S.podNew = S.podNew || {};
+  for (const ep of podList()) if (!S.podNew[ep.id]) { S.podNew[ep.id] = 1; if (typeof markDirty === 'function') markDirty(); toast('NEW ON NEBULA 88.8', ep.title + (TOUCH ? ' · Journal → Radio' : ' · press O'), 3); } }
+{ const _cq = completeQuest; completeQuest = function (id) { const r = _cq.apply(this, arguments); setTimeout(() => { podGiveRadio(); podCheckNew(); }, 1500); return r; }; }
 // playback: the intro (if any) then the episode; the music drops low underneath and cutscenes pause it
 function podEl() { if (POD.el) return POD.el; const e = POD.el = new Audio(); e.preload = 'auto';
   e.addEventListener('ended', () => { if (POD.part === 'intro') podStart(POD.ep, 'main'); else { S.podPos = S.podPos || {}; delete S.podPos[POD.ep.id]; POD.playing = false; POD.ep = null; podUi(); } });
-  e.addEventListener('error', () => { if (POD.playing) { POD.playing = false; toast('PODCAST', 'Could not load that episode', 2); podUi(); } }); return e; }
+  e.addEventListener('error', () => { if (POD.playing) { POD.playing = false; toast('NEBULA 88.8', 'Could not load that show', 2); podUi(); } }); return e; }
 function podStart(ep, part) { const e = podEl(), intro = POD_INTROS.find(x => x.id === podCfg(ep.id).intro);
   if (!part) part = intro && !(S.podPos && S.podPos[ep.id]) ? 'intro' : 'main';
   POD.ep = ep; POD.part = part; e.src = part === 'intro' ? intro.file : ep.file; e.volume = Math.max(0.2, Math.min(1, PREFS.sfxVol != null ? Math.max(0.6, PREFS.sfxVol) : 1));
@@ -14655,16 +14668,16 @@ setInterval(() => { if (!POD.el || !POD.ep) return;
 // the now-playing strip
 const podBar = document.createElement('div'); podBar.id = 'podBar';
 podBar.style.cssText = 'position:fixed;left:50%;top:132px;transform:translateX(-50%);z-index:21;display:none;align-items:center;gap:8px;padding:5px 10px;background:rgba(8,10,16,.78);border:1px solid rgba(255,255,255,.22);color:#e8eef2;font:600 12px var(--mono,monospace);max-width:min(92vw,520px)';
-podBar.innerHTML = '<span style="color:#ffd36a">♪ PODCAST</span><span id="podT" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1"></span><span id="podTime" style="opacity:.7"></span><button id="podPP" class="pbtn" style="padding:2px 8px;min-width:0">❚❚</button><button id="podX" class="pbtn" style="padding:2px 8px;min-width:0">✕</button>';
+podBar.innerHTML = '<span style="color:#d08aff">📻 NEBULA 88.8</span><span id="podT" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1"></span><span id="podTime" style="opacity:.7"></span><button id="podPP" class="pbtn" style="padding:2px 8px;min-width:0">❚❚</button><button id="podX" class="pbtn" style="padding:2px 8px;min-width:0">✕</button>';
 document.body.appendChild(podBar);
 $('podPP').addEventListener('click', () => { POD.playing ? podPause() : podResume(); });
 $('podX').addEventListener('click', () => { podPause(); podStop(); });
 const podFmt = s => isFinite(s) ? Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0') : '--:--';
-function podUi() { podBar.style.display = POD.ep && state === 'play' ? 'flex' : 'none'; if (!POD.ep) return; $('podT').textContent = (POD.part === 'intro' ? 'Intro · ' : '') + POD.ep.title; $('podPP').textContent = POD.playing ? '❚❚' : '▶'; }
+function podUi() { podBar.style.display = POD.ep && state === 'play' ? 'flex' : 'none'; if (!POD.ep) return; $('podT').textContent = (POD.part === 'intro' ? 'Station ID · ' : '') + POD.ep.title; $('podPP').textContent = POD.playing ? '❚❚' : '▶'; }
 setInterval(() => { if (POD.ep && POD.el) $('podTime').textContent = podFmt(POD.el.currentTime) + ' / ' + podFmt(POD.el.duration); podBar.style.display = POD.ep && state === 'play' ? 'flex' : 'none'; }, 500);
 // the pod: list of unlocked episodes (O on PC, Journal → Podcast on the tablet)
-function openPodcast() { const L = podList(); openDlg('Podcast', L.length ? 'Episodes you have unlocked' : 'No episodes yet');
-  $('dlgLine').textContent = L.length ? 'Plays over your music, pauses for cutscenes, and remembers where you stopped.' : 'Finish quests to unlock episodes.';
+function openPodcast() { if (!podHasRadio()) { toast('NO RADIO', 'Finish your first job for Captain Vega', 2); return; } const L = podList(); openDlg('Nebula 88.8', L.length ? 'Shows you can tune in to' : 'Nothing on air yet');
+  $('dlgLine').textContent = L.length ? 'The music stops while a show plays. Cutscenes pause it, and it remembers where you stopped.' : 'New shows come on air as the story moves on.';
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   for (const ep of L) { const r = document.createElement('div'); r.className = 'rowi nodot'; const on = POD.ep === ep, at = S.podPos && S.podPos[ep.id];
     r.innerHTML = `<span><b></b></span><span class="meta">${on && POD.playing ? 'Playing' : at ? 'Resume at ' + podFmt(at) : ''}</span>`; r.querySelector('b').textContent = ep.title;
@@ -14673,20 +14686,20 @@ function openPodcast() { const L = podList(); openDlg('Podcast', L.length ? 'Epi
     const sp = document.createElement('span'); sp.appendChild(b); r.appendChild(sp); rows.appendChild(r); }
   $('dlgActs').before(rows); acts([['Close', closeDlg]]); }
 window.addEventListener('keydown', e => { if (e.code === 'KeyO' && !e.repeat && state === 'play' && !dlgOpen && !(typeof chatOpen === 'function' && chatOpen())) openPodcast(); });
-{ const b = document.createElement('button'); b.className = 'hbtn win'; b.id = 'podBtn'; b.textContent = 'Podcast'; b.addEventListener('click', () => { if (!dlgOpen) openPodcast(); }); $('menuDrop').appendChild(b); }
+{ const b = document.createElement('button'); b.className = 'hbtn win'; b.id = 'podBtn'; b.textContent = 'Radio'; b.addEventListener('click', () => { if (!dlgOpen) openPodcast(); }); $('menuDrop').appendChild(b); }
 // ---- editor: Podcast tab (owner only) ----
 function openPodEditor() { if (!EDIT.owner) return; openDlg('Game editor', 'Podcast');
   $('dlgLine').textContent = 'Pick the quest that unlocks each episode, and an intro to play before it. Saves for everyone. Send Claude new episode or intro files to add them here.';
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.style.maxHeight = '50vh'; rows.style.overflowY = 'auto';
   const sel = (opts, cur, fn) => { const s = document.createElement('select'); s.style.cssText = 'font:inherit;padding:3px;background:#0a0f2a;color:#fff;border:1px solid rgba(255,255,255,.35);max-width:220px'; for (const [v, t] of opts) { const o = document.createElement('option'); o.value = v; o.textContent = t; o.selected = v === (cur || ''); s.appendChild(o); } s.addEventListener('keydown', e => e.stopPropagation()); s.addEventListener('change', () => fn(s.value)); return s; };
-  const qs = [['', '— Locked (no quest) —']].concat(Object.keys(QDEFS).filter(k => QDEFS[k] && QDEFS[k].title).map(k => [k, (QDEFS[k].main ? '★ ' : '') + QDEFS[k].title]).sort((a, b) => a[1].localeCompare(b[1])));
+  const qs = [['', '— Locked (no quest) —'], ['@allmain', '◆ Every main quest done'], ['@maw', '◆ Greater Maw defeated']].concat(Object.keys(QDEFS).filter(k => QDEFS[k] && QDEFS[k].title).map(k => [k, (QDEFS[k].main ? '★ ' : '') + QDEFS[k].title]).sort((a, b) => a[1].localeCompare(b[1])));
   const ins = [['', 'No intro']].concat(POD_INTROS.map(x => [x.id, x.title]));
   for (const ep of POD_EPS) { const c = POD.cfg[ep.id] = POD.cfg[ep.id] || {};
     const r = document.createElement('div'); r.className = 'rowi nodot'; r.style.flexWrap = 'wrap'; const a = document.createElement('span'); a.innerHTML = '<b></b>'; a.querySelector('b').textContent = ep.title;
     const ctl = document.createElement('span'); ctl.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end';
     const test = document.createElement('button'); test.className = 'pbtn'; test.style.cssText = 'padding:4px 9px;min-width:0'; test.textContent = POD.ep === ep && POD.playing ? 'Stop' : 'Test';
     test.addEventListener('click', () => { SFX.ui(); if (POD.ep === ep && POD.playing) podStop(); else { if (S.podPos) delete S.podPos[ep.id]; podStart(ep); } openPodEditor(); });
-    ctl.append(sel(qs, c.quest, v => { c.quest = v; podSaveCfg(); }), sel(ins, c.intro, v => { c.intro = v; podSaveCfg(); }), test);
+    const cur = podCfg(ep.id); ctl.append(sel(qs, cur.quest, v => { c.quest = v; podSaveCfg(); }), sel(ins, cur.intro, v => { c.intro = v; podSaveCfg(); }), test);
     r.append(a, ctl); rows.appendChild(r); }
   $('dlgActs').before(rows); acts([['← Editor', () => openEditor('place')], ['Close', closeDlg]]); }
 // wrapped after every script has loaded, so the button survives the other editor tabs' wrappers
@@ -19196,6 +19209,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 286, title: '2.23.21 · Nebula 88.8', items: ['New: the Nebula 88.8 pocket radio. Captain Vega gives it to you after Welcome to Earth. Press O, or Menu → Journal → Radio, to tune in.', 'Four shows come on air as the story moves on, each opening with the station ID. The music stops while a show plays, and it remembers where you stopped.', 'The Greater Maw battle now has everyone the history says came through: Vega, Skye, Ada-9, Hale, Elismas and Rell, plus your side (Marshals or outlaws).'] },
   { id: 285, title: '2.23.20 · The Maw barrage', items: ['In the Greater Maw\'s last form, its eye now charges a purple beam barrage: thin lines flicker in to show where they\'ll land, then a fan of thick beams burns for a few seconds. Fly out of the lines or take heavy damage.'] },
   { id: 284, title: '2.23.19 · Podcast', items: ['New: Podcast episodes. Each one unlocks after a quest, then plays from the pod (press O, or Menu → Journal → Podcast).', 'Episodes play over the music with it turned down low, pause for cutscenes, and remember where you stopped.', 'Owner editor: a new Podcast tab picks the quest and intro for each episode, live for everyone.'] },
   { id: 283, title: '2.23.18 · Lasers on target', items: ['Fixed the Bulldog Miner mining beam: it carves and breaks asteroids again, and the beam no longer stays stuck on screen.', 'Setting Sun lasers now fire straight to the reticle in both chase and cockpit view.', 'Cockpit view shows a single aiming ring at the centre of the screen.'] },
@@ -28098,7 +28112,8 @@ function mArrest(e, a) { if (e.dead) return mDrop(e); mBadgePop(); const M = mS(
 setInterval(() => { try { if (!mOn() || state !== 'play' || CUT.on || !LEVEL) return; const M = mS(); if (!M.bustT) M.bustT = Date.now() + 60000; if (Date.now() > M.bustT) { M.bustT = Date.now() + 60000; mSpawnBust(); } } catch (err) { console.warn('bust', err); } }, 5000);
 setTimeout(() => { try { if (mOn()) mHuntSet(); } catch (_) {} }, 2000);
 // ---- the Maw finale: Vega and her squadron, plus your side (Marshals or outlaws) instead of the old cameos ----
-{ const KEEP = ['Captain Vega', 'Lt. Vance', 'Ensign Park', 'Sgt. Okafor'], base = MAW_ALLIES.filter(a => KEEP.includes(a[0])), chat0 = MAW_CHATTER.filter(c => c[2] || /rookie!|beam|MOVE/.test(c[1]) && !/Skye|Ada|Hale|Rell|Lumen|Bug|Maxurge|Ramick|Elismas/.test(c[1]));
+{ // who came through the wormhole, as the history tells it: Vega, Skye, Ada-9, Hale, Elismas, Rell and the squadron pilots
+  const KEEP = ['Captain Vega', 'Captain Skye', 'Ada-9', 'General Hale', 'Elismas', 'Harbor Master Rell', 'Lt. Vance', 'Ensign Park', 'Sgt. Okafor'], base = MAW_ALLIES.filter(a => KEEP.includes(a[0])), chat0 = MAW_CHATTER.filter(c => c[2] || /rookie!|beam|MOVE/.test(c[1]) && !/Lumen|Bug|Maxurge|Ramick/.test(c[1]) || /Skye|Ada|Hale|Rell|Elismas/.test(c[0] + c[1]) && !/Lumen|Bug|Maxurge|Ramick/.test(c[1]));
   const SIDES = {
     law: { ships: [['Marshal Rook', '#1e2a52'], ['Senior Marshal Quill', '#1e2a52'], ['Marshal Ibarra', '#2a3a7a'], ['Marshal Toomey', '#2a3a7a'], ['Deputy Hask', '#3a4a8a'], ['Deputy Brandt', '#3a4a8a'], ['Deputy Oyelaran', '#3a4a8a'], ['Marshal Vey', '#2a3a7a']], cls: 'lawman',
       chat: [['CAPTAIN VEGA', 'Rook brought every badge in the sector. Never thought I\'d be glad to see Marshals.'], ['CAPTAIN VEGA', 'Marshal squadron, light bars on! Let it know the law is here.'], ['CAPTAIN VEGA', 'Rook says you outrank half of them now, Marshal. Lead from the front.'], ['CAPTAIN VEGA', 'Deputies, stay in pairs. The little eyes love a straggler.']], in: 'Marshals, on the Captain! Light it up!' },

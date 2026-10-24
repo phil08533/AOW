@@ -21,15 +21,36 @@ function burpHead(holo) {
 { const _bs = burpSay; burpSay = function (text) { BG.talkUntil = performance.now() + Math.min(9000, 700 + String(text).split(/\s+/).length * 330); return _bs.apply(this, arguments); }; }
 setInterval(() => { const t = performance.now(), on = t < BG.talkUntil; for (const h of [BG.head, BG.holo]) { if (!h || !h.parent) continue; const mo = h.userData.mouth; mo.scale.y = on ? 1 + Math.abs(Math.sin(t / 70)) * 3.5 : 1; } }, 40);
 
-// the terminal: a framed screen on the wall by the console, with the head inside
+// B.U.R.P. lives in a wall hatch on the front bridge wall (where the old Marshal board was). When you come close the
+// hatch pops, his arm swings out on a hinge, and he hangs out: looks at you, bobs, does the odd spin or nod, then tucks away.
 function burpTerminal() {
-  const x = -6.85, z = -9.5, g = new THREE.Group();
-  part(g, B(0.15, 1.3, 1.2), toon('#2a2d34', 'panel'), 0, 1.65, 0); part(g, B(0.05, 1.1, 1.0), new THREE.MeshBasicMaterial({ color: '#0a1a24' }), 0.08, 1.65, 0);
-  part(g, B(0.06, 0.06, 1.2), glow('#7fe8ff'), 0.1, 2.28, 0); part(g, B(0.06, 0.06, 1.2), glow('#7fe8ff'), 0.1, 1.02, 0);
-  const h = burpHead(false); h.scale.setScalar(1.1); h.position.set(0.38, 1.65, 0); h.rotation.y = Math.PI / 2; g.add(h); BG.head = h;
-  const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.16), new THREE.MeshBasicMaterial({ map: signTex('B.U.R.P.', '#0a1a24', '#7fe8ff') })); sg.position.set(0.12, 2.42, 0); sg.rotation.y = Math.PI / 2; g.add(sg);
-  g.position.set(x, 0, z); levelGroup.add(g); levelAnims.push(t => { h.rotation.y = Math.PI / 2 + Math.sin(t * 0.7) * 0.25; h.position.y = 1.65 + Math.sin(t * 1.3) * 0.03; });
-  INTERACTS.push({ x: x + 1, z, r: 2.2, label: '🤖 Talk to B.U.R.P.', fn: openBurpTerminal });
+  const x = 3.0, z = -10.42, g = new THREE.Group(); g.position.set(x, 0, z); levelGroup.add(g);
+  part(g, B(1.3, 1.4, 0.12), toon('#2a2d34', 'panel'), 0, 1.65, 0); part(g, B(1.1, 1.2, 0.04), new THREE.MeshBasicMaterial({ color: '#0a1a24' }), 0, 1.65, 0.07);
+  part(g, B(1.3, 0.06, 0.08), glow('#7fe8ff'), 0, 2.36, 0.08); part(g, B(1.3, 0.06, 0.08), glow('#7fe8ff'), 0, 0.94, 0.08);
+  const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.16), new THREE.MeshBasicMaterial({ map: signTex('B.U.R.P.', '#0a1a24', '#7fe8ff') })); sg.position.set(0, 2.5, 0.07); g.add(sg);
+  // hatch door, hinged on its left edge
+  const door = new THREE.Group(); door.position.set(-0.55, 1.65, 0.1); g.add(door); part(door, B(1.1, 1.2, 0.05), toon('#3a3e48', 'panel'), 0.55, 0, 0); part(door, B(0.5, 0.05, 0.06), glow('#ff6a3a'), 0.55, 0.3, 0.03);
+  // the arm: hinge at the wall, two segments, head on the end
+  const hinge = new THREE.Group(); hinge.position.set(0.3, 1.65, 0.12); g.add(hinge); part(hinge, Cy(0.09, 0.09, 0.3, 10), toon('#5d636c', 'metal'), 0, 0, 0);
+  const arm1 = new THREE.Group(); hinge.add(arm1); part(arm1, B(0.1, 0.1, 0.7), toon('#9aa1aa', 'metal'), 0, 0, 0.35);
+  const elbow = new THREE.Group(); elbow.position.z = 0.7; arm1.add(elbow); part(elbow, new THREE.SphereGeometry(0.08, 8, 6), toon('#5d636c', 'metal'), 0, 0, 0); part(elbow, B(0.08, 0.08, 0.55), toon('#9aa1aa', 'metal'), 0, 0, 0.27);
+  const h = burpHead(false); h.scale.setScalar(1.0); h.position.z = 0.75; elbow.add(h); BG.head = h;
+  const st = { out: 0, trick: 0, tt: 6 + Math.random() * 6, kind: 0 }; let last = 0;
+  levelAnims.push(t => { const dt = Math.min(0.05, last ? t - last : 0.016); last = t; if (!g.parent) return;
+    const near = Math.hypot(player.pos.x - x, player.pos.z - z) < 5.5 || performance.now() < BG.talkUntil || dlgOpen && $('dlgName') && /B\.U\.R\.P/.test($('dlgName').textContent);
+    st.out += ((near ? 1 : 0) - st.out) * Math.min(1, dt * 3.2); const o = st.out;
+    door.rotation.y = -Math.min(1, o * 1.6) * 1.9; // the hatch pops first
+    const ext = clamp((o - 0.25) / 0.75, 0, 1);
+    arm1.rotation.y = (1 - ext) * 1.5; elbow.rotation.y = (1 - ext) * -2.6; hinge.position.z = 0.12 + ext * 0.05; h.visible = o > 0.12;
+    // look at you, with a little bob
+    const wx = x + 0.3 + Math.sin(arm1.rotation.y) * 0.7, wz = z + 0.9; h.rotation.y = Math.atan2(player.pos.x - wx, player.pos.z - wz) * ext + Math.sin(t * 0.9) * 0.12 - arm1.rotation.y - elbow.rotation.y;
+    h.position.y = Math.sin(t * 2.1) * 0.04 * ext; arm1.rotation.x = Math.sin(t * 0.8) * 0.06 * ext;
+    // the odd trick while he's out: a spin, a happy nod, or a wobble
+    if (ext > 0.9) { st.tt -= dt; if (st.tt <= 0) { st.trick = 1; st.kind = Math.floor(Math.random() * 3); st.tt = 6 + Math.random() * 7; } }
+    if (st.trick > 0) { st.trick = Math.max(0, st.trick - dt * 0.9); const k = 1 - st.trick;
+      if (st.kind === 0) h.rotation.y += k * Math.PI * 2; else if (st.kind === 1) h.rotation.x = Math.sin(k * Math.PI * 4) * 0.35; else h.rotation.z = Math.sin(k * Math.PI * 6) * 0.3; }
+    else { h.rotation.x *= 0.9; h.rotation.z *= 0.9; } });
+  INTERACTS.push({ x, z: z + 1.2, r: 2.4, label: '🤖 Talk to B.U.R.P.', fn: openBurpTerminal });
 }
 function openBurpTerminal() {
   openDlg('Ship assistant', 'B.U.R.P.'); const say = t => { $('dlgLine').textContent = t; burpSay(t); };

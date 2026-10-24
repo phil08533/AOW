@@ -27,7 +27,7 @@ LEVELS.skycity = {
   carve: (x, z, h) => {
     let best = -42;
     for (const k in ISL) { const [ix, iz, r] = ISL[k], d = Math.hypot(x - ix, z - iz); if (d < r) best = Math.max(best, h * 0.6 + 2 - smooth(d, r - 4, r) * 3); else if (d < r + 7) best = Math.max(best, 2 - (d - r) * 6); }
-    for (const [a, b] of SKY_BRIDGES) { const d = islSeg(x, z, ISL[a], ISL[b]); if (d < 3) best = Math.max(best, 2.1); else if (d < 5) best = Math.max(best, 2.1 - (d - 3) * 20); }
+    // (no ground under the bridges: they hang over open sky)
     if (Math.hypot(x - ISL.airbase[0], z - ISL.airbase[1]) < 20 || Math.hypot(x - ISL.dbase[0], z - ISL.dbase[1]) < 24) best = Math.min(best, 2.4);
     { const rz = z - ISL.airbase[1], rx = x - (ISL.airbase[0] - 12) - Math.sin(0.1) * rz; if (Math.abs(rz) < 18 && Math.abs(rx) < 6.5) best = 2.4; } // flat apron under the runway
     return best; },
@@ -60,9 +60,7 @@ LEVELS.skycity = {
     for (let i = 0; i < 40; i++) { const a = Math.random() * 6.28, r = 60 + Math.random() * 220, c = new THREE.Mesh(new THREE.SphereGeometry(4 + Math.random() * 6, 7, 5), new THREE.MeshLambertMaterial({ color: '#ffffff' })); c.scale.y = 0.4; c.position.set(Math.cos(a) * r, -12 - Math.random() * 10, 50 + Math.sin(a) * r); levelGroup.add(c); }
     // island undersides: rocky cones hanging below each island
     for (const k in ISL) { const [ix, iz, r] = ISL[k]; part(props, new THREE.ConeGeometry(r * 0.95, r * 1.3, 9), toon('#7a6a58', 'stone'), ix, -4 - r * 0.65, iz, Math.PI); for (let i = 0; i < 5; i++) { const a = i * 1.3; part(props, new THREE.ConeGeometry(r * 0.25, r * 0.7, 6), toon('#6a5a48', 'stone'), ix + Math.cos(a) * r * 0.6, -5 - r * 0.4, iz + Math.sin(a) * r * 0.6, Math.PI); } }
-    // bridges: plank decks with glowing rails
-    for (const [a, b] of SKY_BRIDGES) { const A = ISL[a], Bv = ISL[b], dx = Bv[0] - A[0], dz = Bv[1] - A[1], L = Math.hypot(dx, dz), ang = Math.atan2(dx, dz);
-      for (let s = A[2] - 2; s < L - Bv[2] + 2; s += 2) { const x = A[0] + dx * s / L, z = A[1] + dz * s / L; if (Math.max(groundH(x - 2, z), groundH(x + 2, z), groundH(x, z - 2), groundH(x, z + 2)) > 2.2) continue; part(props, B(5.6, 0.3, 1.8), toon('#8a6a44', 'wood'), x, Math.max(2.3, groundH(x, z) + 0.2), z, 0, ang, 0); if (Math.round(s) % 6 === 0) for (const sd of [-1, 1]) part(props, B(0.2, 1.1, 0.2), glow('#4fd2ff'), x + Math.cos(ang) * 2.8 * sd, Math.max(2.3, groundH(x, z) + 0.2) + 0.7, z - Math.sin(ang) * 2.8 * sd); } }
+    skyHangingBridges();
     // Air Base: runway, hangars, a parked jet, landing pad
     const [ax, az] = ISL.airbase; part(props, B(10, 0.1, 34), '#3a3d44', ax - 12, 2.47, az, 0, 0.1, 0); for (let i = 0; i < 8; i++) part(props, B(0.4, 0.12, 2), '#ffd36a', ax - 12 + Math.sin(0.1) * (i * 4 - 14), 2.5, az + i * 4 - 14, 0, 0.1, 0);
     for (const [ox, oz] of [[12, -6], [12, 6]]) { const t = makeCityBlock(6, 4.5, 6, '#9aa1aa', '#4fd2ff'); at(t, ax + ox, az + oz); box(ax + ox, az + oz, 3, 3); }
@@ -154,3 +152,35 @@ const SKYFX = { torches: [], lights: [], clouds: [], seas: [], puffs: [] };
   return r; }; }
 // haze and softer light up here (the global HD pass pushes fog far away and boosts the sun, which made Earth Sky glaring)
 { const _ue = updateEnv; updateEnv = function (a, b) { _ue(a, b); if (!LEVEL || LEVEL.id !== 'skycity') return; scene.fog.near = 26; scene.fog.far = 165 - (ENV.night || 0) * 40; scene.fog.color.lerp(new THREE.Color('#c8d4e2').convertSRGBToLinear(), 0.35 * (1 - (ENV.night || 0))); sun.intensity *= 0.72; hemi.intensity *= 0.85; }; }
+
+// ---- hanging rope bridges: wooden slats on a sagging curve, rope handrails, posts at each end, walkable all the way ----
+function skyHangingBridges() {
+  const wood = toon('#8a6a44', 'wood'), dark = toon('#5a3e26', 'wood'), rope = toon('#c8a870', 'cloth');
+  const edge = (P, Q) => { // walk from P's center toward Q until the island ends; anchor a little inside the rim
+    const dx = Q[0] - P[0], dz = Q[1] - P[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L; let s = P[2] - 6;
+    while (s < P[2] + 8 && groundH(P[0] + ux * (s + 1), P[1] + uz * (s + 1)) > 1.6) s += 0.5;
+    const x = P[0] + ux * s, z = P[1] + uz * s; return { x, z, y: groundH(x, z) }; };
+  for (const [a, b] of SKY_BRIDGES) {
+    const A = edge(ISL[a], ISL[b]), Bp = edge(ISL[b], ISL[a]), dx = Bp.x - A.x, dz = Bp.z - A.z, L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, ang = Math.atan2(dx, dz), sag = Math.min(4.5, L * 0.07), W = 1.6;
+    const yAt = t => A.y + (Bp.y - A.y) * t - sag * Math.sin(Math.PI * t) + 0.12, px = t => A.x + dx * t, pz = t => A.z + dz * t;
+    const n = Math.ceil(L / 0.62);
+    for (let i = 0; i < n; i++) { const t = (i + 0.5) / n, y = yAt(t), slope = (yAt(Math.min(1, t + 0.01)) - yAt(Math.max(0, t - 0.01))) / (0.02 * L);
+      const sl = part(props, B(W * 2, 0.1, 0.48), i % 5 === 2 ? dark : wood, px(t), y, pz(t), 0, ang, 0); sl.rotation.order = 'YXZ'; sl.rotation.x = -Math.atan(slope); }
+    // two stringers under the slats, and the rope handrails, in short straight pieces along the curve
+    const seg = Math.ceil(L / 2);
+    for (let i = 0; i < seg; i++) { const t0 = i / seg, t1 = (i + 1) / seg, y0 = yAt(t0), y1 = yAt(t1), len = Math.hypot(L / seg, y1 - y0), pitch = Math.atan2(y1 - y0, L / seg), tm = (t0 + t1) / 2;
+      for (const sd of [-1, 1]) { const ox = uz * sd, oz = -ux * sd;
+        const st = part(props, B(0.12, 0.12, len), dark, px(tm) + ox * (W - 0.1), (y0 + y1) / 2 - 0.1, pz(tm) + oz * (W - 0.1), 0, ang, 0); st.rotation.order = 'YXZ'; st.rotation.x = -pitch;
+        const rh = (y0 + y1) / 2 + 1.0 + 0.25 * Math.sin(Math.PI * tm) * 0; const rp = part(props, B(0.07, 0.07, len), rope, px(tm) + ox * W, rh, pz(tm) + oz * W, 0, ang, 0); rp.rotation.order = 'YXZ'; rp.rotation.x = -pitch;
+        // vertical hanger ropes from handrail to deck
+        part(props, B(0.04, 1.0, 0.04), rope, px(t0) + ox * W, y0 + 0.5, pz(t0) + oz * W);
+        // keep you on the bridge: invisible side posts
+        for (let k = 0; k < 3; k++) { const tk = t0 + (t1 - t0) * k / 3; solid(px(tk) + ox * (W + 0.15), pz(tk) + oz * (W + 0.15), 0.18); } } }
+    // walkable deck: short sloped surfaces following the sag
+    for (let i = 0; i < seg; i++) { const t0 = i / seg, t1 = (i + 1) / seg, y0 = yAt(t0), y1 = yAt(t1), hl = L / seg / 2 + 0.05;
+      SURFACES.push({ x: px((t0 + t1) / 2), z: pz((t0 + t1) / 2), ux, uz, hl, hw: W, y: (y0 + y1) / 2 + 0.05, slope: (y1 - y0) / (L / seg) }); }
+    // end posts with a cross beam, at both anchors
+    for (const [P, dir] of [[A, 1], [Bp, -1]]) for (const sd of [-1, 1]) { const ox = uz * sd, oz = -ux * sd, x = P.x + ox * (W + 0.1) - ux * dir * 0.3, z = P.z + oz * (W + 0.1) - uz * dir * 0.3, y = groundH(x, z);
+      part(props, B(0.32, 2.6, 0.32), dark, x, y + 1.0, z, 0, ang, 0); part(props, B(0.42, 0.18, 0.42), toon('#3a2a1a', 'wood'), x, y + 2.35, z, 0, ang, 0); solid(x, z, 0.3); }
+  }
+}

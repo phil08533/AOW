@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.2</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.3</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -11033,7 +11033,7 @@ LEVELS.skycity = {
     for (const k in ISL) { const [ix, iz, r] = ISL[k]; part(props, new THREE.ConeGeometry(r * 0.95, r * 1.3, 9), toon('#7a6a58', 'stone'), ix, -4 - r * 0.65, iz, Math.PI); for (let i = 0; i < 5; i++) { const a = i * 1.3; part(props, new THREE.ConeGeometry(r * 0.25, r * 0.7, 6), toon('#6a5a48', 'stone'), ix + Math.cos(a) * r * 0.6, -5 - r * 0.4, iz + Math.sin(a) * r * 0.6, Math.PI); } }
     // bridges: plank decks with glowing rails
     for (const [a, b] of SKY_BRIDGES) { const A = ISL[a], Bv = ISL[b], dx = Bv[0] - A[0], dz = Bv[1] - A[1], L = Math.hypot(dx, dz), ang = Math.atan2(dx, dz);
-      for (let s = A[2] - 2; s < L - Bv[2] + 2; s += 2) { const x = A[0] + dx * s / L, z = A[1] + dz * s / L; part(props, B(5.6, 0.3, 1.8), toon('#8a6a44', 'wood'), x, 1.95, z, 0, ang, 0); if (Math.round(s) % 6 === 0) for (const sd of [-1, 1]) part(props, B(0.2, 1.1, 0.2), glow('#4fd2ff'), x + Math.cos(ang) * 2.8 * sd, 2.5, z - Math.sin(ang) * 2.8 * sd); } }
+      for (let s = A[2] - 2; s < L - Bv[2] + 2; s += 2) { const x = A[0] + dx * s / L, z = A[1] + dz * s / L; if (Math.max(groundH(x - 2, z), groundH(x + 2, z), groundH(x, z - 2), groundH(x, z + 2)) > 2.2) continue; part(props, B(5.6, 0.3, 1.8), toon('#8a6a44', 'wood'), x, 1.95, z, 0, ang, 0); if (Math.round(s) % 6 === 0) for (const sd of [-1, 1]) part(props, B(0.2, 1.1, 0.2), glow('#4fd2ff'), x + Math.cos(ang) * 2.8 * sd, 2.5, z - Math.sin(ang) * 2.8 * sd); } }
     // Air Base: runway, hangars, a parked jet, landing pad
     const [ax, az] = ISL.airbase; part(props, B(10, 0.1, 34), '#3a3d44', ax - 12, groundH(ax - 12, az) + 0.06, az, 0, 0.1, 0); for (let i = 0; i < 8; i++) part(props, B(0.4, 0.12, 2), '#ffd36a', ax - 12 + Math.sin(0.1) * (i * 4 - 14), groundH(ax - 12, az) + 0.1, az + i * 4 - 14, 0, 0.1, 0);
     for (const [ox, oz] of [[12, -6], [12, 6]]) { const t = makeCityBlock(6, 4.5, 6, '#9aa1aa', '#4fd2ff'); at(t, ax + ox, az + oz); box(ax + ox, az + oz, 3, 3); }
@@ -19016,6 +19016,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 268, title: '2.23.3 · Sky bridges and busts', items: ['Earth Sky bridges no longer clip into the islands', 'Marshals: a crime nearby now takes over the compass with the distance, and its red beacon shows through walls'] },
   { id: 267, title: '2.23.2 · Mobile stick', items: ['The move stick now appears wherever you put your left thumb, so you can strafe left at full speed'] },
   { id: 266, title: '2.23.1 · Quest tracking', items: ['You can track any quest in the journal, even ones you have not picked up yet. The tracker and compass point you to the quest giver', 'Quests the main story needs first (like Heavy Metal at Fort Ironrock) are now marked as main story'] },
   { id: 265, title: '2.23.0 · Kade stays home', items: ['Kade no longer follows you to other worlds after his fight'] },
@@ -27736,7 +27737,7 @@ function marshalTerminal(x, z, ry) { const g = new THREE.Group();
   return r; }; }
 // ---- manhunt spawns and random busts ----
 function mRandSpot(min, max) { for (let n = 0; n < 20; n++) { const a = Math.random() * 6.283, d = min + Math.random() * (max - min), x = player.pos.x + Math.sin(a) * d, z = player.pos.z + Math.cos(a) * d; if (Math.hypot(x - LEVEL.center[0], z - LEVEL.center[1]) > LEVEL.radius - 6) continue; if (typeof inSafe === 'function' && inSafe(V(x, 0, z))) continue; return { x, z }; } return null; }
-function mMarker(e, col) { const m = part(e.obj, Cy(0.08, 0.08, 6, 6), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending }), 0, 4.5, 0); return m; }
+function mMarker(e, col) { const m = part(e.obj, Cy(0.08, 0.08, 6, 6), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.6, depthWrite: false, depthTest: false, fog: false, blending: THREE.AdditiveBlending }), 0, 4.5, 0); m.renderOrder = 9; m.scale.set(2, 3, 2); return m; } // shows through walls, like badge x-ray
 function mSpawnHunt() { const M = mS(), s = S.qst.mm1; if (!M.hunt || !s || s.st !== 'active' || LEVEL.id !== M.hunt.lv || enemies.some(e => e.sp.mHunt && !e.dead)) return;
   let p = null; try { p = outSpot(Math.floor(Math.random() * 999), 0.5, 0.85); } catch (_) {} if (!p) p = mRandSpot(50, 90); if (!p) return; Z.mhunt = { id: 'mhunt', name: 'Fugitive hideout', x: p.x, z: p.z, r: 12 };
   const e = makeEnemy({ zone: 'mhunt', type: 'fugitive', n: 1, lv: [S.lvl, S.lvl], once: true, mHunt: true }); e.def = Object.assign({}, e.def, { name: M.hunt.name }); e.plateHp = -1; updatePlate(e); mMarker(e, '#ff8a2a'); toast('MANHUNT', `${M.hunt.name} is hiding on this world. Follow your tracker.`, 4); }
@@ -27744,7 +27745,7 @@ const M_BUSTS = [['Street deal in progress', 'Dealer'], ['Smuggler with contraba
 function mSpawnBust() { const M = mS(); if (!OUT_WORLDS.includes(LEVEL.id) || LEVEL.fly || enemies.some(e => e.sp.mBust && !e.dead)) return; const p = mRandSpot(22, 40); if (!p) return; const B0 = M_BUSTS[Math.floor(Math.random() * M_BUSTS.length)];
   const zid = 'mbust'; Z[zid] = { id: zid, name: B0[0], x: p.x, z: p.z, r: 6 }; const e = makeEnemy({ zone: zid, type: 'suspect', n: 1, lv: [Math.max(1, S.lvl - 2), S.lvl], once: true, mBust: true, at: [0, 0] }); e.def = Object.assign({}, e.def, { name: B0[1] }); e.plateHp = -1; updatePlate(e); mMarker(e, '#ff2a3a');
   const a = { r: 3, get x() { return e.obj.position.x; }, get z() { return e.obj.position.z; }, label: '🪪 Flash your badge: you\'re under arrest', fn: () => mArrest(e, a) }; INTERACTS.push(a); e.mAct = a;
-  toast('🚔 ' + B0[0].toUpperCase(), 'Nearby. Look for the red beacon', 3.5); SFX.zap && SFX.zap(); }
+  toast('🚔 ' + B0[0].toUpperCase(), 'Follow the compass to the red beacon', 3.5); SFX.zap && SFX.zap(); }
 function mDrop(e) { const k = INTERACTS.indexOf(e.mAct); if (k >= 0) INTERACTS.splice(k, 1); }
 function mArrest(e, a) { if (e.dead) return mDrop(e); mBadgePop(); const M = mS();
   if (!e.ran && Math.random() < 0.6) { e.dead = 3; e.gone = true; scene.remove(e.obj); const k = enemies.indexOf(e); if (k >= 0) enemies.splice(k, 1); mDrop(e); M.busts = (M.busts || 0) + 1; const cr = 120 + S.lvl * 12; S.cr += cr; mGain(40 + mRank() * 10, 'Arrest'); toast('ARRESTED', `Contraband seized · +${cr} cr`, 3); SFX.quest && SFX.quest(); markDirty(); M.bustT = Date.now() + (150 + Math.random() * 120) * 1000; }
@@ -27796,6 +27797,9 @@ function officePerks(cx, cz, inner, outer) { const sd = Math.sign(outer - cx);
   let shown = -1; levelAnims.push(() => { const n = mS().busts || 0; if (n === shown) return; shown = n; const x = cv.getContext('2d'); x.fillStyle = '#0c1430'; x.fillRect(0, 0, 256, 64); x.fillStyle = '#e8c35a'; x.font = '700 26px sans-serif'; x.textAlign = 'center'; x.fillText(`ARRESTS: ${n}`, 128, 42); T.needsUpdate = true; });
   C.position.set(cx, 0, cz - 2.9); props.add(C); box(cx, cz - 2.9, 0.9, 0.12); }
 { const _mg = mGain; mGain = function (n, why) { if (mOn() && roomLvl('office') && n > 0) n = Math.round(n * 1.15); return _mg.call(this, n, why); }; }
+
+// a live bust takes over the compass and tracker so you can find it
+{ const _qt = questTarget; questTarget = function () { const e = typeof enemies !== 'undefined' && enemies.find(x => x.sp && x.sp.mBust && !x.dead); if (e && mOn()) return { p: e.obj.position, label: `🚔 ${e.def.name}: ${Math.round(e.obj.position.distanceTo(player.pos))} m` }; return _qt.apply(this, arguments); }; }
 
 // =================== INTRO: studio card, game title, legal ===================
 // Plays once per page load before the start screen. Tap or any key skips a card. S is not loaded yet, so the accepted-terms flag lives in localStorage.

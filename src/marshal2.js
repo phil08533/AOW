@@ -75,7 +75,7 @@ function marshalTerminal(x, z, ry) { const g = new THREE.Group();
   return r; }; }
 // ---- manhunt spawns and random busts ----
 function mRandSpot(min, max) { for (let n = 0; n < 20; n++) { const a = Math.random() * 6.283, d = min + Math.random() * (max - min), x = player.pos.x + Math.sin(a) * d, z = player.pos.z + Math.cos(a) * d; if (Math.hypot(x - LEVEL.center[0], z - LEVEL.center[1]) > LEVEL.radius - 6) continue; if (typeof inSafe === 'function' && inSafe(V(x, 0, z))) continue; return { x, z }; } return null; }
-function mMarker(e, col) { const m = part(e.obj, Cy(0.08, 0.08, 6, 6), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending }), 0, 4.5, 0); return m; }
+function mMarker(e, col) { const m = part(e.obj, Cy(0.08, 0.08, 6, 6), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.6, depthWrite: false, depthTest: false, fog: false, blending: THREE.AdditiveBlending }), 0, 4.5, 0); m.renderOrder = 9; m.scale.set(2, 3, 2); return m; } // shows through walls, like badge x-ray
 function mSpawnHunt() { const M = mS(), s = S.qst.mm1; if (!M.hunt || !s || s.st !== 'active' || LEVEL.id !== M.hunt.lv || enemies.some(e => e.sp.mHunt && !e.dead)) return;
   let p = null; try { p = outSpot(Math.floor(Math.random() * 999), 0.5, 0.85); } catch (_) {} if (!p) p = mRandSpot(50, 90); if (!p) return; Z.mhunt = { id: 'mhunt', name: 'Fugitive hideout', x: p.x, z: p.z, r: 12 };
   const e = makeEnemy({ zone: 'mhunt', type: 'fugitive', n: 1, lv: [S.lvl, S.lvl], once: true, mHunt: true }); e.def = Object.assign({}, e.def, { name: M.hunt.name }); e.plateHp = -1; updatePlate(e); mMarker(e, '#ff8a2a'); toast('MANHUNT', `${M.hunt.name} is hiding on this world. Follow your tracker.`, 4); }
@@ -83,7 +83,7 @@ const M_BUSTS = [['Street deal in progress', 'Dealer'], ['Smuggler with contraba
 function mSpawnBust() { const M = mS(); if (!OUT_WORLDS.includes(LEVEL.id) || LEVEL.fly || enemies.some(e => e.sp.mBust && !e.dead)) return; const p = mRandSpot(22, 40); if (!p) return; const B0 = M_BUSTS[Math.floor(Math.random() * M_BUSTS.length)];
   const zid = 'mbust'; Z[zid] = { id: zid, name: B0[0], x: p.x, z: p.z, r: 6 }; const e = makeEnemy({ zone: zid, type: 'suspect', n: 1, lv: [Math.max(1, S.lvl - 2), S.lvl], once: true, mBust: true, at: [0, 0] }); e.def = Object.assign({}, e.def, { name: B0[1] }); e.plateHp = -1; updatePlate(e); mMarker(e, '#ff2a3a');
   const a = { r: 3, get x() { return e.obj.position.x; }, get z() { return e.obj.position.z; }, label: '🪪 Flash your badge: you\'re under arrest', fn: () => mArrest(e, a) }; INTERACTS.push(a); e.mAct = a;
-  toast('🚔 ' + B0[0].toUpperCase(), 'Nearby. Look for the red beacon', 3.5); SFX.zap && SFX.zap(); }
+  toast('🚔 ' + B0[0].toUpperCase(), 'Follow the compass to the red beacon', 3.5); SFX.zap && SFX.zap(); }
 function mDrop(e) { const k = INTERACTS.indexOf(e.mAct); if (k >= 0) INTERACTS.splice(k, 1); }
 function mArrest(e, a) { if (e.dead) return mDrop(e); mBadgePop(); const M = mS();
   if (!e.ran && Math.random() < 0.6) { e.dead = 3; e.gone = true; scene.remove(e.obj); const k = enemies.indexOf(e); if (k >= 0) enemies.splice(k, 1); mDrop(e); M.busts = (M.busts || 0) + 1; const cr = 120 + S.lvl * 12; S.cr += cr; mGain(40 + mRank() * 10, 'Arrest'); toast('ARRESTED', `Contraband seized · +${cr} cr`, 3); SFX.quest && SFX.quest(); markDirty(); M.bustT = Date.now() + (150 + Math.random() * 120) * 1000; }
@@ -135,3 +135,6 @@ function officePerks(cx, cz, inner, outer) { const sd = Math.sign(outer - cx);
   let shown = -1; levelAnims.push(() => { const n = mS().busts || 0; if (n === shown) return; shown = n; const x = cv.getContext('2d'); x.fillStyle = '#0c1430'; x.fillRect(0, 0, 256, 64); x.fillStyle = '#e8c35a'; x.font = '700 26px sans-serif'; x.textAlign = 'center'; x.fillText(`ARRESTS: ${n}`, 128, 42); T.needsUpdate = true; });
   C.position.set(cx, 0, cz - 2.9); props.add(C); box(cx, cz - 2.9, 0.9, 0.12); }
 { const _mg = mGain; mGain = function (n, why) { if (mOn() && roomLvl('office') && n > 0) n = Math.round(n * 1.15); return _mg.call(this, n, why); }; }
+
+// a live bust takes over the compass and tracker so you can find it
+{ const _qt = questTarget; questTarget = function () { const e = typeof enemies !== 'undefined' && enemies.find(x => x.sp && x.sp.mBust && !x.dead); if (e && mOn()) return { p: e.obj.position, label: `🚔 ${e.def.name}: ${Math.round(e.obj.position.distanceTo(player.pos))} m` }; return _qt.apply(this, arguments); }; }

@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.21</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.22</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -14644,7 +14644,7 @@ function podSaveCfg() { try { localStorage.setItem('aow-podcast', JSON.stringify
   POD.st = setTimeout(async () => { if (db) { try { await db.doc('world/podcast').set({ v: 1, t: Date.now(), data: JSON.stringify(POD.cfg) }); toast('EDITOR', 'Podcast saved · live for everyone', 1.2); } catch (_) { toast('EDITOR', 'Saved on this device only', 1.5); } } }, 600); }
 // a new episode unlocked: tell the player once
 function podCheckNew() { if (!POD.seen || !S || !S.qst || !podHasRadio()) return; S.podNew = S.podNew || {};
-  for (const ep of podList()) if (!S.podNew[ep.id]) { S.podNew[ep.id] = 1; if (typeof markDirty === 'function') markDirty(); toast('NEW ON NEBULA 88.8', ep.title + (TOUCH ? ' · Journal → Radio' : ' · press O'), 3); } }
+  for (const ep of podList()) if (!S.podNew[ep.id]) { S.podNew[ep.id] = 1; if (typeof markDirty === 'function') markDirty(); (POD.pending = POD.pending || []).push(ep); } }
 { const _cq = completeQuest; completeQuest = function (id) { const r = _cq.apply(this, arguments); setTimeout(() => { podGiveRadio(); podCheckNew(); }, 1500); return r; }; }
 // playback: the intro (if any) then the episode; the music drops low underneath and cutscenes pause it
 function podEl() { if (POD.el) return POD.el; const e = POD.el = new Audio(); e.preload = 'auto';
@@ -14665,7 +14665,7 @@ setInterval(() => { if (!POD.el || !POD.ep) return;
   if (cut && POD.playing) { POD.cutPaused = true; POD.el.pause(); POD.playing = false; podUi(); }
   else if (!cut && POD.cutPaused) { POD.cutPaused = false; podResume(); }
   if (POD.playing && POD.part === 'main') { S.podPos = S.podPos || {}; S.podPos[POD.ep.id] = POD.el.currentTime; } }, 400);
-// the now-playing strip
+// the now-playing strip (stays up while the radio is put away)
 const podBar = document.createElement('div'); podBar.id = 'podBar';
 podBar.style.cssText = 'position:fixed;left:50%;top:132px;transform:translateX(-50%);z-index:21;display:none;align-items:center;gap:8px;padding:5px 10px;background:rgba(8,10,16,.78);border:1px solid rgba(255,255,255,.22);color:#e8eef2;font:600 12px var(--mono,monospace);max-width:min(92vw,520px)';
 podBar.innerHTML = '<span style="color:#d08aff">📻 NEBULA 88.8</span><span id="podT" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1"></span><span id="podTime" style="opacity:.7"></span><button id="podPP" class="pbtn" style="padding:2px 8px;min-width:0">❚❚</button><button id="podX" class="pbtn" style="padding:2px 8px;min-width:0">✕</button>';
@@ -14675,18 +14675,90 @@ $('podX').addEventListener('click', () => { podPause(); podStop(); });
 const podFmt = s => isFinite(s) ? Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0') : '--:--';
 function podUi() { podBar.style.display = POD.ep && state === 'play' ? 'flex' : 'none'; if (!POD.ep) return; $('podT').textContent = (POD.part === 'intro' ? 'Station ID · ' : '') + POD.ep.title; $('podPP').textContent = POD.playing ? '❚❚' : '▶'; }
 setInterval(() => { if (POD.ep && POD.el) $('podTime').textContent = podFmt(POD.el.currentTime) + ' / ' + podFmt(POD.el.duration); podBar.style.display = POD.ep && state === 'play' ? 'flex' : 'none'; }, 500);
-// the pod: list of unlocked episodes (O on PC, Journal → Podcast on the tablet)
-function openPodcast() { if (!podHasRadio()) { toast('NO RADIO', 'Finish your first job for Captain Vega', 2); return; } const L = podList(); openDlg('Nebula 88.8', L.length ? 'Shows you can tune in to' : 'Nothing on air yet');
-  $('dlgLine').textContent = L.length ? 'The music stops while a show plays. Cutscenes pause it, and it remembers where you stopped.' : 'New shows come on air as the story moves on.';
-  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
-  for (const ep of L) { const r = document.createElement('div'); r.className = 'rowi nodot'; const on = POD.ep === ep, at = S.podPos && S.podPos[ep.id];
-    r.innerHTML = `<span><b></b></span><span class="meta">${on && POD.playing ? 'Playing' : at ? 'Resume at ' + podFmt(at) : ''}</span>`; r.querySelector('b').textContent = ep.title;
-    const b = document.createElement('button'); b.className = 'pbtn go'; b.style.cssText = 'padding:4px 10px;min-width:0'; b.textContent = on && POD.playing ? 'Pause' : 'Play';
-    b.addEventListener('click', () => { SFX.ui(); if (on && POD.playing) podPause(); else if (on) podResume(); else { if (POD.ep) podPause(); podStart(ep); } openPodcast(); });
-    const sp = document.createElement('span'); sp.appendChild(b); r.appendChild(sp); rows.appendChild(r); }
-  $('dlgActs').before(rows); acts([['Close', closeDlg]]); }
+// ---- the pocket radio: a real little player (chamfered body, green screen, d-pad, earbuds) that pops up in a dialog ----
+const RDEV = { r: null, cv: null, sc: null, cam: null, g: null, sx: null, stex: null, keys: {}, sel: 0, ask: null, open: false, t0: 0, drawT: 0 };
+function rdevShape(w, h, c) { const s = new THREE.Shape(), x = w / 2, y = h / 2; s.moveTo(-x + c, -y); s.lineTo(x - c, -y); s.lineTo(x, -y + c); s.lineTo(x, y - c); s.lineTo(x - c, y); s.lineTo(-x + c, y); s.lineTo(-x, y - c); s.lineTo(-x, -y + c); s.closePath(); return s; }
+function rdevBuild() {
+  const cv = RDEV.cv = document.createElement('canvas'); cv.id = 'radioDev'; cv.style.cssText = 'width:300px;height:400px;display:block;margin:0 auto;cursor:pointer;touch-action:none';
+  const r = RDEV.r = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true }); r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.setSize(300, 400, false); r.outputEncoding = THREE.sRGBEncoding;
+  const sc = RDEV.sc = new THREE.Scene(), cam = RDEV.cam = new THREE.PerspectiveCamera(30, 0.75, 0.1, 50); cam.position.set(0, 0, 11.6);
+  sc.add(new THREE.HemisphereLight(0xdfe8ff, 0x20222a, 0.8)); const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(-3, 4, 6); sc.add(key); const rim = new THREE.DirectionalLight(0x9fd8c0, 0.2); rim.position.set(4, -2, 3); sc.add(rim);
+  const M = (c, rough) => new THREE.MeshStandardMaterial({ color: new THREE.Color(c).convertSRGBToLinear(), roughness: rough || 0.75, metalness: 0.1, flatShading: true });
+  const ext = (shape, d, bv) => { const geo = new THREE.ExtrudeGeometry(shape, { depth: d, bevelEnabled: true, bevelThickness: bv, bevelSize: bv, bevelSegments: 1 }); geo.translate(0, 0, -d / 2); return geo; };
+  const g = RDEV.g = new THREE.Group(); sc.add(g);
+  const body = new THREE.Mesh(ext(rdevShape(2.5, 3.9, 0.38), 0.42, 0.13), M('#3a3d44')); g.add(body);
+  const bez = new THREE.Mesh(ext(rdevShape(2.04, 1.62, 0.14), 0.06, 0.04), M('#16181c', 0.5)); bez.position.set(0, 0.86, 0.29); g.add(bez);
+  const c2 = document.createElement('canvas'); c2.width = 512; c2.height = 400; RDEV.sx = c2.getContext('2d'); RDEV.stex = new THREE.CanvasTexture(c2); RDEV.stex.encoding = THREE.sRGBEncoding;
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.86, 1.45), new THREE.MeshBasicMaterial({ map: RDEV.stex, toneMapped: false })); scr.position.set(0, 0.86, 0.41); g.add(scr);
+  // d-pad: four chamfered keys with arrows round an octagonal play/pause
+  const keyM = M('#18191d', 0.6), ink = new THREE.MeshBasicMaterial({ color: '#d4d8de' }), tri = new THREE.Shape(); tri.moveTo(0, 0.11); tri.lineTo(-0.1, -0.06); tri.lineTo(0.1, -0.06); tri.closePath();
+  const pad = new THREE.Group(); pad.position.set(0, -0.92, 0.27); g.add(pad);
+  const mkBtn = (name, geo, x, y, rot) => { const k = new THREE.Group(); k.position.set(x, y, 0); k.rotation.z = rot || 0; const m = new THREE.Mesh(geo, keyM); m.userData.btn = name; k.add(m); pad.add(k); RDEV.keys[name] = k; return k; };
+  const sideGeo = ext(rdevShape(0.5, 0.42, 0.12), 0.1, 0.04);
+  [['up', 0, 0.6, 0], ['down', 0, -0.6, Math.PI], ['left', -0.6, 0, Math.PI / 2], ['right', 0.6, 0, -Math.PI / 2]].forEach(([n, x, y, rot]) => { const k = mkBtn(n, sideGeo, x, y, rot); const a = new THREE.Mesh(new THREE.ShapeGeometry(tri), ink); a.position.z = 0.1; a.userData.btn = n; k.add(a); });
+  const mid = mkBtn('mid', new THREE.CylinderGeometry(0.34, 0.34, 0.12, 8).rotateX(Math.PI / 2).rotateZ(Math.PI / 8), 0, 0, 0);
+  { const pl = new THREE.Mesh(new THREE.ShapeGeometry(tri), ink); pl.rotation.z = -Math.PI / 2; pl.position.set(-0.07, 0, 0.08); pl.scale.setScalar(0.9); pl.userData.btn = 'mid'; mid.add(pl);
+    for (const x of [0.08, 0.15]) { const bar = new THREE.Mesh(new THREE.PlaneGeometry(0.04, 0.17), ink); bar.position.set(x, 0, 0.08); bar.userData.btn = 'mid'; mid.add(bar); } }
+  // jack, cable and earbuds
+  const jack = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.2, 0.2), M('#18191d')); jack.position.set(0.55, 2.0, 0); g.add(jack);
+  const cableM = M('#111215', 0.5), tube = pts => new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p => V(p[0], p[1], p[2]))), 40, 0.045, 5), cableM);
+  const split = [-0.9, 2.55, -0.1]; g.add(tube([[0.55, 2.1, 0], [0.5, 2.6, -0.1], [-0.2, 2.85, -0.15], split]));
+  for (const [ex, ey, ez] of [[-2.05, -0.2, 0.2], [-1.55, -1.25, 0.35]]) { g.add(tube([split, [-1.7, 2.0, -0.2], [ex - 0.1, ey + 1.2, ez - 0.2], [ex, ey + 0.35, ez]]));
+    const bud = new THREE.Mesh(new THREE.IcosahedronGeometry(0.34, 0), M('#1a1b1f', 0.55)); bud.scale.set(1, 1.2, 0.85); bud.position.set(ex, ey, ez); g.add(bud); }
+  // tap a key
+  const ray = new THREE.Raycaster(), m2 = new THREE.Vector2();
+  cv.addEventListener('pointerdown', e => { const b = cv.getBoundingClientRect(); m2.set(((e.clientX - b.left) / b.width) * 2 - 1, -((e.clientY - b.top) / b.height) * 2 + 1); ray.setFromCamera(m2, cam);
+    const hit = ray.intersectObjects(pad.children, true).find(h => h.object.userData.btn); if (hit) { e.preventDefault(); rdevPress(hit.object.userData.btn); } });
+}
+function rdevPress(k) { const K = RDEV.keys[k]; if (K) { K.position.z = -0.06; setTimeout(() => { K.position.z = 0; }, 120); } try { SFX.ui(); } catch (_) {}
+  const L = podList(); if (!L.length) return;
+  if (k === 'left' || k === 'up') { RDEV.sel = (RDEV.sel + L.length - 1) % L.length; RDEV.ask = null; }
+  else if (k === 'right' || k === 'down') { RDEV.sel = (RDEV.sel + 1) % L.length; RDEV.ask = null; }
+  else if (k === 'mid') { const ep = L[RDEV.sel % L.length]; RDEV.ask = null; if (POD.ep === ep) { POD.playing ? podPause() : podResume(); } else { if (POD.ep) podPause(); podStart(ep); } }
+  rdevDraw(); rdevActs(); }
+function rdevWrap(x, text, maxW) { const w = String(text).split(' '), out = []; let line = ''; for (const s of w) { const t = line ? line + ' ' + s : s; if (x.measureText(t).width > maxW && line) { out.push(line); line = s; } else line = t; } if (line) out.push(line); return out; }
+function rdevDraw() { const x = RDEV.sx; if (!x) return; const W = 512, H = 400, fg = '#a8e6cc', dim = 'rgba(168,230,204,.45)';
+  const gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#13302a'); gr.addColorStop(1, '#0a1a17'); x.fillStyle = gr; x.fillRect(0, 0, W, H);
+  x.strokeStyle = fg; x.fillStyle = fg; x.lineWidth = 5;
+  // podcast icon, station name, battery
+  x.beginPath(); x.arc(52, 58, 12, 0, Math.PI * 2); x.fill(); for (const r of [22, 32]) { x.beginPath(); x.arc(52, 58, r, Math.PI * 0.8, Math.PI * 2.2); x.stroke(); } x.fillRect(48, 70, 8, 26);
+  x.font = 'bold 30px "Courier New",monospace'; x.textBaseline = 'middle'; x.fillText('NEBULA 88.8', 100, 46); x.font = '20px "Courier New",monospace'; x.fillStyle = dim; x.fillText('FM · Drome War Radio', 100, 76); x.fillStyle = fg;
+  x.lineWidth = 3; x.strokeRect(440, 24, 44, 20); x.fillRect(484, 29, 5, 10); x.fillRect(444, 28, 30, 12);
+  const L = podList(), ep = L.length ? L[RDEV.sel % L.length] : null;
+  if (!ep) { x.font = 'bold 30px "Courier New",monospace'; x.fillText('Nothing on air yet', 40, 190); x.font = '22px "Courier New",monospace'; x.fillStyle = dim; x.fillText('Shows come on as the', 40, 236); x.fillText('story moves on.', 40, 264); RDEV.stex.needsUpdate = true; return; }
+  if (RDEV.ask) { x.font = 'bold 22px "Courier New",monospace'; x.fillText('★ NEW SHOW ON AIR', 40, 130); }
+  x.font = 'bold 30px "Courier New",monospace'; rdevWrap(x, ep.title, 440).slice(0, 2).forEach((l, i) => x.fillText(l, 40, (RDEV.ask ? 172 : 140) + i * 36));
+  const on = POD.ep === ep, cur = on && POD.el ? POD.el.currentTime : (S.podPos && S.podPos[ep.id]) || 0, dur = on && POD.el && isFinite(POD.el.duration) ? POD.el.duration : 0;
+  x.font = '24px "Courier New",monospace'; x.fillStyle = RDEV.ask ? fg : dim;
+  x.fillText(RDEV.ask ? 'Listen now?  Press ▶‖' : on && POD.part === 'intro' ? 'Station ID…' : on ? `${podFmt(cur)} / ${podFmt(dur)}` : cur ? `Resume at ${podFmt(cur)}` : 'Press ▶‖ to play', 40, 248); x.fillStyle = fg;
+  x.lineWidth = 3; x.strokeRect(40, 276, 432, 18); x.fillRect(44, 280, Math.max(0, 424 * (dur ? cur / dur : 0)), 10);
+  // ⏮ ⏯ ⏭
+  const ic = (cx, f) => { x.save(); x.translate(cx, 340); f(); x.restore(); };
+  ic(120, () => { x.fillRect(-16, -16, 5, 32); x.beginPath(); x.moveTo(14, -16); x.lineTo(-10, 0); x.lineTo(14, 16); x.fill(); });
+  ic(256, () => { if (on && POD.playing) { x.fillRect(-14, -18, 9, 36); x.fillRect(5, -18, 9, 36); } else { x.beginPath(); x.moveTo(-12, -18); x.lineTo(16, 0); x.lineTo(-12, 18); x.fill(); } });
+  ic(392, () => { x.fillRect(11, -16, 5, 32); x.beginPath(); x.moveTo(-14, -16); x.lineTo(10, 0); x.lineTo(-14, 16); x.fill(); });
+  x.font = '18px "Courier New",monospace'; x.fillStyle = dim; x.textAlign = 'right'; x.fillText(`${(RDEV.sel % L.length) + 1}/${L.length}`, 484, 384); x.textAlign = 'left';
+  RDEV.stex.needsUpdate = true; }
+function rdevLoop() { if (!RDEV.open) return; requestAnimationFrame(rdevLoop); const t = performance.now() / 1000, k = Math.min(1, (performance.now() - RDEV.t0) / 350), e = 1 - Math.pow(1 - k, 3);
+  RDEV.g.position.y = -4 * (1 - e) + Math.sin(t * 1.4) * 0.05; RDEV.g.position.x = 0.45; RDEV.g.rotation.set(-0.1 + Math.sin(t * 0.9) * 0.03, 0.32 + Math.sin(t * 0.6) * 0.06 - (1 - e) * 0.6, 0.05); RDEV.g.scale.setScalar(0.8 + 0.2 * e);
+  if (t - RDEV.drawT > 0.25) { RDEV.drawT = t; rdevDraw(); } RDEV.r.render(RDEV.sc, RDEV.cam); }
+function rdevActs() { if (!RDEV.open) return; const L = podList(), ep = L[RDEV.sel % (L.length || 1)];
+  if (RDEV.ask) acts([['Listen now', () => rdevPress('mid'), true], ['Later', () => { RDEV.ask = null; closeDlg(); }]]);
+  else acts([[ep && POD.ep === ep && POD.playing ? 'Pause' : 'Play', () => rdevPress('mid'), true], ['Prev', () => rdevPress('left')], ['Next', () => rdevPress('right')], ['Close', closeDlg]]); }
+function openPodcast(askEp) { if (!podHasRadio()) { toast('NO RADIO', 'Finish your first job for Captain Vega', 2); return; }
+  if (!RDEV.r) rdevBuild(); const L = podList();
+  if (askEp) { RDEV.ask = askEp; RDEV.sel = Math.max(0, L.indexOf(askEp)); } else { RDEV.ask = null; if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); }
+  openDlg('Pocket radio', 'Nebula 88.8'); $('dlgLine').textContent = TOUCH ? 'Tap the keys: ◀ ▶ pick a show, the middle one plays or pauses.' : 'Click the keys or use ← → to pick a show, Enter to play or pause.';
+  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; rows.appendChild(RDEV.cv); $('dlgActs').before(rows);
+  RDEV.open = true; RDEV.t0 = performance.now(); RDEV.drawT = 0; rdevDraw(); rdevActs(); requestAnimationFrame(rdevLoop); }
+window.addEventListener('keydown', e => { if (!RDEV.open || !dlgOpen) return; const k = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', Enter: 'mid', Space: 'mid' }[e.code]; if (k) { e.preventDefault(); e.stopPropagation(); rdevPress(k); } else if (e.code === 'KeyO' || e.code === 'Escape') { e.stopPropagation(); closeDlg(); } }, true);
 window.addEventListener('keydown', e => { if (e.code === 'KeyO' && !e.repeat && state === 'play' && !dlgOpen && !(typeof chatOpen === 'function' && chatOpen())) openPodcast(); });
 { const b = document.createElement('button'); b.className = 'hbtn win'; b.id = 'podBtn'; b.textContent = 'Radio'; b.addEventListener('click', () => { if (!dlgOpen) openPodcast(); }); $('menuDrop').appendChild(b); }
+// a new show (or the radio itself) asks if you want to listen, as soon as you're free
+setInterval(() => { if (!POD.pending || !POD.pending.length || state !== 'play' || dlgOpen || CUT.on || (typeof TAB !== 'undefined' && TAB.t > 0)) return; openPodcast(POD.pending.shift()); }, 1000);
+// B.U.R.P. stays quiet while a show plays; the radio stops drawing when its dialog closes
+setTimeout(() => { const _bs = burpSay; burpSay = function () { if (POD.playing) return; return _bs.apply(this, arguments); };
+  const _cd = closeDlg; closeDlg = function () { RDEV.open = false; return _cd.apply(this, arguments); }; }, 0);
 // ---- editor: Podcast tab (owner only) ----
 function openPodEditor() { if (!EDIT.owner) return; openDlg('Game editor', 'Podcast');
   $('dlgLine').textContent = 'Pick the quest that unlocks each episode, and an intro to play before it. Saves for everyone. Send Claude new episode or intro files to add them here.';
@@ -19209,6 +19281,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 287, title: '2.23.22 · Pocket radio', items: ['The Nebula 88.8 radio is now a real little player: a chamfered body, a green screen with the show, time and progress, a d-pad and earbuds. Click its keys, or use the arrow keys and Enter.', 'It pops up asking if you want to listen when you first get it and whenever a new show comes on air.', 'B.U.R.P. stays quiet while a show is playing.'] },
   { id: 286, title: '2.23.21 · Nebula 88.8', items: ['New: the Nebula 88.8 pocket radio. Captain Vega gives it to you after Welcome to Earth. Press O, or Menu → Journal → Radio, to tune in.', 'Four shows come on air as the story moves on, each opening with the station ID. The music stops while a show plays, and it remembers where you stopped.', 'The Greater Maw battle now has everyone the history says came through: Vega, Skye, Ada-9, Hale, Elismas and Rell, plus your side (Marshals or outlaws).'] },
   { id: 285, title: '2.23.20 · The Maw barrage', items: ['In the Greater Maw\'s last form, its eye now charges a purple beam barrage: thin lines flicker in to show where they\'ll land, then a fan of thick beams burns for a few seconds. Fly out of the lines or take heavy damage.'] },
   { id: 284, title: '2.23.19 · Podcast', items: ['New: Podcast episodes. Each one unlocks after a quest, then plays from the pod (press O, or Menu → Journal → Podcast).', 'Episodes play over the music with it turned down low, pause for cutscenes, and remember where you stopped.', 'Owner editor: a new Podcast tab picks the quest and intro for each episode, live for everyone.'] },

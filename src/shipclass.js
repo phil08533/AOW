@@ -129,18 +129,26 @@ const SC_BUILD = {
     for (const s of [-1, 1]) {
       // wings
       const ws = C.wing === 1 ? -0.35 : C.wing === 2 ? 0.7 : 0.4, wl = C.wing === 2 || C.wing === 5 ? 2.4 : C.wing === 4 ? 1.1 : 2.2;
-      if ((C.wing | 0) < 4) {
+      if ((C.wing | 0) < 4 && C.wing !== 3) {
       const w = part(g, B(wl, 0.2, 2.0), grey, (1.0 + wl / 2) * s, -0.15, 1.0, 0, ws * s, 0); part(g, B(wl, 0.08, 0.4), hull, (1.0 + wl / 2) * s, -0.02, 0.2 + (C.wing === 1 ? -0.3 : 0.3), 0, ws * s, 0);
       part(g, B(0.4, 0.06, 0.15), haz, 2.4 * s, -0.02, 1.9); part(g, B(0.35, 0.18, 0.5), lg, 1.7 * s, 0.03, 0.7); part(g, B(0.12, 0.12, 0.12), glow('#ff3a2a'), 1.55 * s, 0.1, 0.45); part(g, B(0.12, 0.12, 0.12), glow('#ff3a2a'), 1.72 * s, 0.1, 0.45);
-      if (C.wing === 3) { const w2 = part(g, B(2.2, 0.16, 1.6), grey, 2.1 * s, 0.5, 1.2, 0, 0.3 * s, 0.35 * s); }
-      } else scWingX(g, C.wing, s, { grey, hull, lg, haz, dk });
+      } else if (C.wing !== 3) scWingX(g, C.wing, s, { grey, hull, lg, haz, dk });
+      if (C.wing === 3) { // Quad X-wing: the regular wing, twice per side, split into an X at the root, each with its own laser pod
+        for (const up of [1, -1]) { const pv = new THREE.Group(); pv.position.set(1.0 * s, -0.12 + up * 0.14, 0.9); pv.rotation.z = up * 0.3 * s; g.add(pv);
+          part(pv, B(wl, 0.18, 1.8), grey, wl / 2 * s, 0, 0, 0, ws * 0.5 * s, 0); part(pv, B(wl, 0.07, 0.36), hull, wl / 2 * s, 0.11 * up, -0.55, 0, ws * 0.5 * s, 0);
+          part(pv, B(0.4, 0.06, 0.15), haz, (wl - 0.6) * s, 0.11 * up, 0.75); part(pv, B(0.12, 0.12, 0.12), glow('#ff3a2a'), 0.6 * s, 0.12 * up, -0.4);
+          const tx = (wl + 0.15) * s; part(pv, B(0.5, 0.48, 2.1), hull, tx, 0, -0.5); for (const z of [-1.05, 0.25]) part(pv, B(0.55, 0.52, 0.12), lg, tx, 0, z);
+          part(pv, B(0.42, 0.4, 0.45), lg, tx, 0, -1.75); part(pv, Cy(0.05, 0.05, 0.9, 6), lg, tx, 0, -2.3, Math.PI / 2); part(pv, B(0.12, 0.12, 0.08), cyan, tx, 0, -2.78);
+          pv.updateMatrix(); guns.push(V(tx, 0, -2.8).applyMatrix4(pv.matrix)); } }
       // wingtip pods: orange barrels, grey collars, glowing cyan laser faces
+      if (C.wing !== 3) {
       const px = C.wing === 4 ? 2.45 * s : (1.0 + wl) * s + (C.wing === 2 || C.wing === 5 ? 0 : 0.1 * s), pz = C.wing === 1 ? 0.6 : C.wing === 4 ? 0.9 : 0.2, py = C.wing === 5 ? -0.55 : 0;
       part(g, B(0.75, 0.7, 2.4), hull, px, -0.1, pz); for (const z of [pz - 0.6, pz + 0.7]) part(g, B(0.8, 0.75, 0.15), lg, px, -0.1, z); part(g, B(0.4, 0.15, 0.6), lg, px, 0.3, pz + 0.2); part(g, B(0.22, 0.22, 0.06), lg, px + 0.39 * s, -0.1, pz + 0.3);
       part(g, B(0.6, 0.55, 0.5), lg, px, -0.1, pz - 1.45);
       if (C.wpn === 1) for (let k = 0; k < 4; k++) part(g, Cy(0.05, 0.05, 0.8, 4), lg, px + Math.cos(k * 1.57) * 0.13, -0.1 + Math.sin(k * 1.57) * 0.13, pz - 2.0, Math.PI / 2);
       else part(g, B(0.46, 0.42, 0.05), cyan, px, -0.1, pz - 1.72);
       guns.push(V(px, -0.1, pz - 1.8));
+      }
       if (C.wpn === 2) for (let k = 0; k < 2; k++) { part(g, Cy(0.08, 0.08, 1.2, 6), lg, (1.5 + k * 0.45) * s, -0.45, 0.8, Math.PI / 2); part(g, new THREE.ConeGeometry(0.08, 0.25, 6), '#c8402f', (1.5 + k * 0.45) * s, -0.45, 0.07, -Math.PI / 2); }
       // small cannons under the nose and wings, orange tipped
       part(g, Cy(0.06, 0.06, 1.0, 6), lg, 0.5 * s, -0.55, -3.4, Math.PI / 2); part(g, B(0.14, 0.14, 0.14), hull, 0.5 * s, -0.55, -3.95); part(g, B(0.25, 0.2, 0.4), hull, 0.5 * s, -0.5, -2.9);

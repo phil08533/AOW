@@ -148,6 +148,27 @@ const HELM_KITS = window.HELM_KITS = window.HELM_KITS || {
   bug(g) { for (const s of [-1, 1]) { chain(g, [[0.06 * s, 1.9, 0.05], [0.14 * s, 2.1, 0.12], [0.2 * s, 2.15, 0.2]], 0.012, '#3a2c1c', 0.008); E(g, glow('#ffd23a'), 0.07 * s, 1.83, 0.15, 0.03, 0.03, 0.02); } },
   crown(g) { part(g, Cy(0.15, 0.15, 0.05, 10), toon('#c9a43a'), 0, 1.9, 0); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; part(g, new THREE.ConeGeometry(0.03, 0.14, 4), glow('#9fe8ff'), Math.cos(a) * 0.13, 1.98, Math.sin(a) * 0.13); } }
 };
+// AR Screen: a fitted gunmetal shell with a wraparound green AR visor, live HUD marks on the glass, a side sensor pod and a whip antenna
+HELMS.ar_screen = { name: 'AR Screen', lvl: 1 };
+HELM_KITS.ar_screen = function (g) {
+  const shell = toon('#2b3138', 'metal'), dk = toon('#15181c', 'metal'), grn = glow('#04ff00'), y = 1.79;
+  E(g, shell, 0, 1.8, -0.015, 0.19, 0.185, 0.2); // shell over the head
+  part(g, B(0.26, 0.035, 0.1), dk, 0, 1.955, 0.06, -0.25); // brow ridge
+  part(g, B(0.04, 0.03, 0.3), dk, 0, 1.985, -0.04); // top fin
+  for (const s of [-1, 1]) part(g, B(0.03, 0.15, 0.13), dk, 0.18 * s, 1.73, 0.02); // cheek guards
+  part(g, B(0.2, 0.055, 0.08), dk, 0, 1.655, 0.12); part(g, B(0.12, 0.02, 0.02), grn, 0, 1.655, 0.162); // chin guard + vent glow
+  // the wraparound screen: a curved band of tinted glass with glowing rails top and bottom
+  const scr = new THREE.Mesh(new THREE.CylinderGeometry(0.198, 0.198, 0.1, 18, 1, true, -1.0, 2.0), new THREE.MeshBasicMaterial({ color: '#14c824', transparent: true, opacity: 0.72, side: THREE.DoubleSide, depthWrite: false }));
+  scr.position.set(0, y, 0); g.add(scr);
+  for (let i = 0; i < 10; i++) { const a = -1.0 + (i + 0.5) * 0.2; for (const dy of [-0.055, 0.055]) part(g, B(0.042, 0.012, 0.012), grn, Math.sin(a) * 0.2, y + dy, Math.cos(a) * 0.2, 0, a, 0); }
+  // HUD marks on the glass: a reticle bracket over the right eye, data lines over the left
+  const on = (a, dy, w, h) => part(g, B(w, h, 0.004), glow('#c8ffc0'), Math.sin(a) * 0.203, y + dy, Math.cos(a) * 0.203, 0, a, 0);
+  on(0.3, 0.02, 0.035, 0.005); on(0.3, -0.02, 0.035, 0.005); on(0.22, 0, 0.005, 0.03); on(0.38, 0, 0.005, 0.03);
+  for (let k = 0; k < 3; k++) on(-0.32, 0.026 - k * 0.022, 0.06 - k * 0.015, 0.006);
+  // sensor pod on the right with a lens, whip antenna on the left with a green tip
+  part(g, Cy(0.045, 0.05, 0.07, 10), dk, 0.2, 1.8, -0.01, 0, 0, Math.PI / 2); part(g, Cy(0.028, 0.028, 0.012, 10), grn, 0.236, 1.8, -0.01, 0, 0, Math.PI / 2);
+  part(g, Cy(0.005, 0.007, 0.26, 4), dk, -0.17, 2.0, -0.08, 0.25, 0, 0.2); part(g, new THREE.SphereGeometry(0.018, 6, 4), grn, -0.195, 2.125, -0.11);
+};
 function lookUnlocked(T, id) {
   const it = T[id]; if (!it) return false;
   if (S.lvl < it.lvl) return false; if (it.q && !qDone(it.q)) return false; if (it.gear && !hasGear(it.gear)) return false; if (it.flag && !(S.flags && S.flags[it.flag])) return false; if (it.cost && !(S.ownA && S.ownA[id])) return false; return true;

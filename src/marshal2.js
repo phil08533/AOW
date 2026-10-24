@@ -137,4 +137,4 @@ function officePerks(cx, cz, inner, outer) { const sd = Math.sign(outer - cx);
 { const _mg = mGain; mGain = function (n, why) { if (mOn() && roomLvl('office') && n > 0) n = Math.round(n * 1.15); return _mg.call(this, n, why); }; }
 
 // a live bust takes over the compass and tracker so you can find it
-{ const _qt = questTarget; questTarget = function () { const e = typeof enemies !== 'undefined' && enemies.find(x => x.sp && x.sp.mBust && !x.dead); if (e && mOn()) return { p: e.obj.position, label: `🚔 ${e.def.name}: ${Math.round(e.obj.position.distanceTo(player.pos))} m` }; return _qt.apply(this, arguments); }; }
+{ const _qt = questTarget; questTarget = function () { const e = typeof enemies !== 'undefined' && enemies.find(x => x.sp && x.sp.mBust && !x.dead); if (e && mOn()) return { p: e.obj.position, badge: true, label: `🚔 ${e.def.name}: ${Math.round(e.obj.position.distanceTo(player.pos))} m` }; return _qt.apply(this, arguments); }; }

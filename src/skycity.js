@@ -29,6 +29,7 @@ LEVELS.skycity = {
     for (const k in ISL) { const [ix, iz, r] = ISL[k], d = Math.hypot(x - ix, z - iz); if (d < r) best = Math.max(best, h * 0.6 + 2 - smooth(d, r - 4, r) * 3); else if (d < r + 7) best = Math.max(best, 2 - (d - r) * 6); }
     for (const [a, b] of SKY_BRIDGES) { const d = islSeg(x, z, ISL[a], ISL[b]); if (d < 3) best = Math.max(best, 2.1); else if (d < 5) best = Math.max(best, 2.1 - (d - 3) * 20); }
     if (Math.hypot(x - ISL.airbase[0], z - ISL.airbase[1]) < 20 || Math.hypot(x - ISL.dbase[0], z - ISL.dbase[1]) < 24) best = Math.min(best, 2.4);
+    { const rz = z - ISL.airbase[1], rx = x - (ISL.airbase[0] - 12) - Math.sin(0.1) * rz; if (Math.abs(rz) < 18 && Math.abs(rx) < 6.5) best = 2.4; } // flat apron under the runway
     return best; },
   zones: [
     { id: 'airbase', name: 'Sky Air Base', lvl: 'Safe · Earth Defense Force', x: ISL.airbase[0], z: ISL.airbase[1], r: 22, fr: 23, col: '#9aa1aa', safe: true, h: 0 },
@@ -61,9 +62,9 @@ LEVELS.skycity = {
     for (const k in ISL) { const [ix, iz, r] = ISL[k]; part(props, new THREE.ConeGeometry(r * 0.95, r * 1.3, 9), toon('#7a6a58', 'stone'), ix, -4 - r * 0.65, iz, Math.PI); for (let i = 0; i < 5; i++) { const a = i * 1.3; part(props, new THREE.ConeGeometry(r * 0.25, r * 0.7, 6), toon('#6a5a48', 'stone'), ix + Math.cos(a) * r * 0.6, -5 - r * 0.4, iz + Math.sin(a) * r * 0.6, Math.PI); } }
     // bridges: plank decks with glowing rails
     for (const [a, b] of SKY_BRIDGES) { const A = ISL[a], Bv = ISL[b], dx = Bv[0] - A[0], dz = Bv[1] - A[1], L = Math.hypot(dx, dz), ang = Math.atan2(dx, dz);
-      for (let s = A[2] - 2; s < L - Bv[2] + 2; s += 2) { const x = A[0] + dx * s / L, z = A[1] + dz * s / L; if (Math.max(groundH(x - 2, z), groundH(x + 2, z), groundH(x, z - 2), groundH(x, z + 2)) > 2.2) continue; part(props, B(5.6, 0.3, 1.8), toon('#8a6a44', 'wood'), x, 1.95, z, 0, ang, 0); if (Math.round(s) % 6 === 0) for (const sd of [-1, 1]) part(props, B(0.2, 1.1, 0.2), glow('#4fd2ff'), x + Math.cos(ang) * 2.8 * sd, 2.5, z - Math.sin(ang) * 2.8 * sd); } }
+      for (let s = A[2] - 2; s < L - Bv[2] + 2; s += 2) { const x = A[0] + dx * s / L, z = A[1] + dz * s / L; if (Math.max(groundH(x - 2, z), groundH(x + 2, z), groundH(x, z - 2), groundH(x, z + 2)) > 2.2) continue; part(props, B(5.6, 0.3, 1.8), toon('#8a6a44', 'wood'), x, Math.max(2.3, groundH(x, z) + 0.2), z, 0, ang, 0); if (Math.round(s) % 6 === 0) for (const sd of [-1, 1]) part(props, B(0.2, 1.1, 0.2), glow('#4fd2ff'), x + Math.cos(ang) * 2.8 * sd, Math.max(2.3, groundH(x, z) + 0.2) + 0.7, z - Math.sin(ang) * 2.8 * sd); } }
     // Air Base: runway, hangars, a parked jet, landing pad
-    const [ax, az] = ISL.airbase; part(props, B(10, 0.1, 34), '#3a3d44', ax - 12, groundH(ax - 12, az) + 0.06, az, 0, 0.1, 0); for (let i = 0; i < 8; i++) part(props, B(0.4, 0.12, 2), '#ffd36a', ax - 12 + Math.sin(0.1) * (i * 4 - 14), groundH(ax - 12, az) + 0.1, az + i * 4 - 14, 0, 0.1, 0);
+    const [ax, az] = ISL.airbase; part(props, B(10, 0.1, 34), '#3a3d44', ax - 12, 2.47, az, 0, 0.1, 0); for (let i = 0; i < 8; i++) part(props, B(0.4, 0.12, 2), '#ffd36a', ax - 12 + Math.sin(0.1) * (i * 4 - 14), 2.5, az + i * 4 - 14, 0, 0.1, 0);
     for (const [ox, oz] of [[12, -6], [12, 6]]) { const t = makeCityBlock(6, 4.5, 6, '#9aa1aa', '#4fd2ff'); at(t, ax + ox, az + oz); box(ax + ox, az + oz, 3, 3); }
     const jet = new THREE.Group(); part(jet, B(1.2, 0.8, 7), '#9aa1aa', 0, 1, 0); part(jet, B(8, 0.15, 2.2), '#9aa1aa', 0, 1, -0.5); part(jet, B(0.15, 1.6, 1.6), '#9aa1aa', 0, 2, -3); part(jet, B(0.8, 0.4, 1.4), glow('#4fd2ff'), 0, 1.5, 1.8); at(jet, ax - 12, az + 8, 0.1); solid(ax - 12, az + 8, 2);
     const flag = new THREE.Group(); part(flag, Cy(0.08, 0.08, 7, 6), '#cfd3d8', 0, 3.5, 0); part(flag, B(2.2, 1.3, 0.05), toon('#3b4f7a', 'cloth'), 1.1, 6.2, 0); at(flag, ax + 6, az - 18);

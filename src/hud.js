@@ -175,7 +175,7 @@ function drawTape() {
     if (d % 45 === 0) { x.fillRect(X - 1, 10, 2, 12); x.font = `700 ${d % 90 ? 20 : 27}px "Share Tech Mono", monospace`; x.fillStyle = d === 0 ? '#ffb347' : '#e6f6ff'; x.fillText(names[d / 45], X, 46); } else x.fillRect(X - 1, 10, 2, 6); }
   x.globalAlpha = 1; x.fillStyle = '#e6f6ff'; x.beginPath(); x.moveTo(w / 2 - 7, 8); x.lineTo(w / 2 + 7, 8); x.lineTo(w / 2, 16); x.fill();
   const tg = questTarget(); if (tg && tg.p) { const dx = tg.p.x - player.pos.x, dz = tg.p.z - player.pos.z, a = wrap(Math.atan2(dx, -dz) - face), dist = Math.round(Math.hypot(dx, dz)), cl = Math.max(-span / 2 * 0.92, Math.min(span / 2 * 0.92, a)), X = px(cl);
-    x.fillStyle = '#ffb347'; x.strokeStyle = '#000'; x.lineWidth = 2; x.beginPath(); x.moveTo(X, 14); x.lineTo(X + 9, 26); x.lineTo(X, 38); x.lineTo(X - 9, 26); x.closePath(); x.stroke(); x.fill();
+    if (tg.badge) { x.font = '700 28px sans-serif'; x.textAlign = 'center'; x.lineWidth = 3; x.strokeStyle = '#000'; x.fillStyle = '#ffd36a'; x.strokeText('★', X, 36); x.fillText('★', X, 36); x.fillStyle = '#ffd36a'; } else { x.fillStyle = '#ffb347'; x.strokeStyle = '#000'; x.lineWidth = 2; x.beginPath(); x.moveTo(X, 14); x.lineTo(X + 9, 26); x.lineTo(X, 38); x.lineTo(X - 9, 26); x.closePath(); x.stroke(); x.fill(); }
     if (Math.abs(a) > span / 2) { x.beginPath(); const s = a > 0 ? 1 : -1; x.moveTo(X + s * 18, 26); x.lineTo(X + s * 11, 19); x.lineTo(X + s * 11, 33); x.fill(); }
     x.font = '700 22px "Share Tech Mono", monospace'; x.fillStyle = '#ffd27a'; x.strokeText(dist + ' m', X, 70); x.fillText(dist + ' m', X, 70); }
 }

@@ -133,11 +133,11 @@ const SKYFX = { torches: [], lights: [], clouds: [], seas: [], puffs: [] };
   // soft cloud sprites at and below island level so you look down through cloud
   const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d'); for (let i = 0; i < 7; i++) { const x = 30 + Math.random() * 68, y = 44 + Math.random() * 40, rr = 22 + Math.random() * 20, gr = g.createRadialGradient(x, y, 0, x, y, rr); gr.addColorStop(0, 'rgba(255,255,255,0.85)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); }
   const tex = new THREE.CanvasTexture(cv);
-  for (let i = 0; i < 46; i++) { const m = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.5, depthWrite: false, color: '#e6ecf4' }), s = new THREE.Sprite(m), low = i < 26;
-    const a = Math.random() * 6.28, rad = low ? 30 + Math.random() * 170 : 40 + Math.random() * 150; s.position.set(Math.cos(a) * rad, low ? -16 + Math.random() * 12 : -2 + Math.random() * 10, 50 + Math.sin(a) * rad);
+  for (let i = 0; i < 150; i++) { const m = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.6, depthWrite: false, color: '#e6ecf4' }), s = new THREE.Sprite(m), low = i < 70, high = i >= 120;
+    const a = Math.random() * 6.28, rad = low ? 30 + Math.random() * 170 : 40 + Math.random() * 150; s.position.set(Math.cos(a) * rad, low ? -18 + Math.random() * 14 : high ? 22 + Math.random() * 30 : -2 + Math.random() * 12, 50 + Math.sin(a) * rad);
     // keep the island-level banks off the islands themselves
-    if (!low) { let on = false; for (const k in ISL) if (Math.hypot(s.position.x - ISL[k][0], s.position.z - ISL[k][1]) < ISL[k][2] + 8) on = true; if (on) { s.position.y = -14; } }
-    const sz = low ? 40 + Math.random() * 40 : 22 + Math.random() * 20; s.scale.set(sz, sz * 0.45, 1); s.userData.v = 0.6 + Math.random() * 1.2; s.userData.base = m.opacity; levelGroup.add(s); SKYFX.clouds.push(s); }
+    if (!low && !high) { let on = false; for (const k in ISL) if (Math.hypot(s.position.x - ISL[k][0], s.position.z - ISL[k][1]) < ISL[k][2] + 8) on = true; if (on) { s.position.y = -14; } }
+    const sz = low ? 50 + Math.random() * 50 : high ? 45 + Math.random() * 45 : 24 + Math.random() * 24; s.scale.set(sz, sz * 0.45, 1); s.userData.v = 0.6 + Math.random() * 1.2; s.userData.base = m.opacity; levelGroup.add(s); SKYFX.clouds.push(s); }
   // torches: bridge ends and island rims
   const spots = []; for (const [a, b] of SKY_BRIDGES) { const A = ISL[a], Bv = ISL[b], dx = Bv[0] - A[0], dz = Bv[1] - A[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L; for (const [P, s] of [[A, A[2] - 1], [Bv, -(Bv[2] - 1)]]) { const base = s > 0 ? A : Bv, d = Math.abs(s), sg = s > 0 ? 1 : -1; for (const sd of [-1, 1]) spots.push([base[0] + ux * d * sg + uz * 3.6 * sd, base[1] + uz * d * sg - ux * 3.6 * sd]); } }
   for (const k in ISL) { const [ix, iz, rr] = ISL[k]; for (let i = 0; i < 6; i++) { const a = i / 6 * 6.28 + 0.3; spots.push([ix + Math.cos(a) * (rr - 3), iz + Math.sin(a) * (rr - 3)]); } }
@@ -148,7 +148,7 @@ const SKYFX = { torches: [], lights: [], clouds: [], seas: [], puffs: [] };
   levelAnims.push(t => { const n = ENV.night || 0;
     SKYFX.torches.forEach((f, i) => { const k = 0.8 + Math.sin(t * 13 + i * 2.1) * 0.12 + Math.sin(t * 29 + i) * 0.08; f.scale.set(1, k * (0.6 + n * 0.6), 1); f.material.opacity = 0.35 + n * 0.6; });
     SKYFX.lights.forEach((L, i) => { L.intensity = n * (1.2 + Math.sin(t * 11 + i * 1.7) * 0.25 + Math.sin(t * 23 + i) * 0.15); });
-    for (const c of SKYFX.clouds) { c.position.x += c.userData.v * 0.02; if (c.position.x > 230) c.position.x = -230; c.material.opacity = c.userData.base * (1 - n * 0.45); c.material.color.setRGB(0.9 - n * 0.68, 0.93 - n * 0.68, 0.96 - n * 0.6); }
+    for (const c of SKYFX.clouds) { c.position.x += c.userData.v * 0.02; if (c.position.x > 230) c.position.x = -230; c.material.opacity = c.userData.base * (1 - n * 0.45); c.material.color.setRGB(0.84 - n * 0.62, 0.87 - n * 0.62, 0.92 - n * 0.56); }
     for (const o of SKYFX.seas) o.material.color.setRGB(0.66 - n * 0.62, 0.71 - n * 0.65, 0.78 - n * 0.68); for (const o of SKYFX.puffs) o.material.color.setRGB(0.8 - n * 0.64, 0.83 - n * 0.66, 0.88 - n * 0.66); });
   return r; }; }
 // haze and softer light up here (the global HD pass pushes fog far away and boosts the sun, which made Earth Sky glaring)

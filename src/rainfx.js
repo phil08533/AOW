@@ -21,7 +21,7 @@ const SWE = { out: true, air: false, vy: 0, sink: 0 };
   if (SWE.air) { const y0 = player.pos.y; _sw(dt, mx, mz, sprint); SWE.vy -= 22 * dt; player.pos.y = y0 + SWE.vy * dt; player.onGround = false;
     if (player.pos.y <= top) { SWE.air = false; SWE.sink = Math.max(-9, Math.min(-2.2, SWE.vy * 0.45)); try { SFX.splash(); SFX.splash(); } catch (_) {} rfxSplash(player.pos.x, player.pos.z, Math.min(1.6, -SWE.vy / 8)); } return; }
   if (SWE.sink < 0) { const y0 = player.pos.y; _sw(dt, mx, mz, sprint); SWE.sink += 7 * dt; player.pos.y = Math.max(groundH(player.pos.x, player.pos.z) + 0.3, y0 + SWE.sink * dt); if (SWE.sink >= 0) SWE.sink = 0; if (player.pos.y < top) player.pos.y = Math.min(top, player.pos.y); return; }
-  if (player.pos.y < top - 0.05) { const y0 = player.pos.y; _sw(dt, mx, mz, sprint); if (!(keys.KeyC || keys.ControlLeft)) player.pos.y = Math.min(top, y0 + 2.2 * dt + (player.pos.y - y0)); return; }
+  if (player.pos.y < top - 0.05) { const y0 = player.pos.y; _sw(dt, mx, mz, sprint); if (!(keys.KeyC || keys.ControlLeft) && player.pitch > 0.05) player.pos.y = Math.min(top, y0 + 2.2 * dt + (player.pos.y - y0)); return; }
   // with a jetpack, holding jump at the surface blasts you out of the water
   if (typeof hasGear === 'function' && hasGear('jet') && (keys.Space || jetHeld) && player.pos.y >= top - 0.1 && (player.jet == null || player.jet > 0)) { _sw(dt, mx, mz, sprint); player.pos.y = WATER_Y + 0.25; player.vy = 7; player.onGround = false; SWE.out = true; try { SFX.splash(); } catch (_) {} rfxSplash(player.pos.x, player.pos.z, 0.6); return; }
   return _sw(dt, mx, mz, sprint); }; }

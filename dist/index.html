@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.9</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.10</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19101,6 +19101,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 275, title: '2.23.10 · Swimming fix', items: ['Underwater you only drift up while looking up. Looking level or down holds your depth, so you can dive properly'] },
   { id: 274, title: '2.23.9 · Bridge string lights', items: ['Earth Sky rope bridges are strung with warm 2400K bulbs that glow and twinkle at night'] },
   { id: 273, title: '2.23.8 · B.U.R.P. hatch fix', items: ['B.U.R.P.\'s hatch is now built flush into the starboard bridge wall','Talk to him and pick Power down to tuck him back inside; talk to the shut hatch to power him up again'] },
   { id: 272, title: '2.23.7 · Hanging bridges', items: ['Earth Sky islands are now linked by sagging rope bridges with plank decks and rope rails, no more ground clipping under them','B.U.R.P. now lives in a wall hatch on the bridge and swings out on a hinged arm to hang out with you'] },
@@ -26604,7 +26605,7 @@ const SWE = { out: true, air: false, vy: 0, sink: 0 };
   if (SWE.air) { const y0 = player.pos.y; _sw(dt, mx, mz, sprint); SWE.vy -= 22 * dt; player.pos.y = y0 + SWE.vy * dt; player.onGround = false;
     if (player.pos.y <= top) { SWE.air = false; SWE.sink = Math.max(-9, Math.min(-2.2, SWE.vy * 0.45)); try { SFX.splash(); SFX.splash(); } catch (_) {} rfxSplash(player.pos.x, player.pos.z, Math.min(1.6, -SWE.vy / 8)); } return; }
   if (SWE.sink < 0) { const y0 = player.pos.y; _sw(dt, mx, mz, sprint); SWE.sink += 7 * dt; player.pos.y = Math.max(groundH(player.pos.x, player.pos.z) + 0.3, y0 + SWE.sink * dt); if (SWE.sink >= 0) SWE.sink = 0; if (player.pos.y < top) player.pos.y = Math.min(top, player.pos.y); return; }
-  if (player.pos.y < top - 0.05) { const y0 = player.pos.y; _sw(dt, mx, mz, sprint); if (!(keys.KeyC || keys.ControlLeft)) player.pos.y = Math.min(top, y0 + 2.2 * dt + (player.pos.y - y0)); return; }
+  if (player.pos.y < top - 0.05) { const y0 = player.pos.y; _sw(dt, mx, mz, sprint); if (!(keys.KeyC || keys.ControlLeft) && player.pitch > 0.05) player.pos.y = Math.min(top, y0 + 2.2 * dt + (player.pos.y - y0)); return; }
   // with a jetpack, holding jump at the surface blasts you out of the water
   if (typeof hasGear === 'function' && hasGear('jet') && (keys.Space || jetHeld) && player.pos.y >= top - 0.1 && (player.jet == null || player.jet > 0)) { _sw(dt, mx, mz, sprint); player.pos.y = WATER_Y + 0.25; player.vy = 7; player.onGround = false; SWE.out = true; try { SFX.splash(); } catch (_) {} rfxSplash(player.pos.x, player.pos.z, 0.6); return; }
   return _sw(dt, mx, mz, sprint); }; }

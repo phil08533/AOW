@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.0</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.1</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -5199,6 +5199,7 @@ function talk(id) {
 function trackedQuest() {
   for (const k in S.qst) if (!QDEFS[k]) delete S.qst[k];
   if (S.track && QDEFS[S.track] && S.qst[S.track] && S.qst[S.track].st !== 'done') return S.track;
+  if (S.track && QDEFS[S.track] && !S.qst[S.track] && qAvailable(S.track)) return S.track; // tracking a quest you haven't picked up yet points you at its giver
   for (const qid of QORDER) { const s = S.qst[qid]; if (s && s.st === 'ready') return qid; }
   for (const qid of QORDER) { const s = S.qst[qid]; if (s && s.st === 'active' && QDEFS[qid].main) return qid; }
   for (const qid of QORDER) { const s = S.qst[qid]; if (s && s.st === 'active') return qid; }
@@ -5263,7 +5264,7 @@ function openQuestLog() {
       r.append(dot, nm, mt); if (btn) r.appendChild(btn); else r.appendChild(document.createElement('span')); rows.appendChild(r); };
     if (S.bh && S.bh.active) { const a = S.bh.active, b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = S.track === 'bounty' ? 'Tracked' : 'Track'; b.disabled = S.track === 'bounty'; b.addEventListener('click', () => { S.track = 'bounty'; markDirty(); renderQuest(); render(); }); const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = '#ffd36a'; const nm = document.createElement('span'); nm.textContent = `BOUNTY: ${a.name} · ${a.planet === 'space' ? 'Open space' : LEVELS[a.planet].name}`; const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = a.reward + ' cr'; r.append(dot, nm, mt, b); rows.appendChild(r); }
     act.forEach(id => { const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; const tr = trackedQuest() === id; b.textContent = tr ? 'Tracked' : 'Track'; b.disabled = tr; b.addEventListener('click', () => { S.track = id; markDirty(); renderQuest(); render(); }); row(id, S.qst[id].st === 'ready' ? 'Turn in' : 'Active', b); });
-    avail.forEach(id => { const lv = npcHome(QDEFS[id].giver); row(id, 'See ' + npcName(QDEFS[id].giver) + (lv ? ` (${LEVELS[lv].name})` : '')); });
+    avail.forEach(id => { const lv = npcHome(QDEFS[id].giver), tr = trackedQuest() === id, b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = tr ? 'Tracked' : 'Track'; b.disabled = tr; b.addEventListener('click', () => { S.track = id; markDirty(); renderQuest(); render(); }); row(id, 'See ' + npcName(QDEFS[id].giver) + (lv ? ` (${LEVELS[lv].name})` : ''), b); });
     if (!act.length && !avail.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'No open quests. Look for people with a ! over their heads, or explore.'; rows.appendChild(e); }
     if ((S.gear || []).length) { const g = document.createElement('div'); g.className = 'empty'; g.textContent = 'Master gear: ' + S.gear.map(k => `${GEAR[k].name} (${GEAR[k].desc})`).join(' · '); rows.appendChild(g); }
   };
@@ -13938,6 +13939,8 @@ function rollCredits(replay) {
   };
   requestAnimationFrame(draw);
 }
+// any quest the main story needs first counts as main story too (Fort Ironrock's chain leads into Chapter 6)
+setTimeout(() => { const need = new Set(QORDER.filter(id => QDEFS[id].main)); let grew = true; while (grew) { grew = false; for (const id of [...need]) for (const r of QDEFS[id].req || []) if (QDEFS[r] && !need.has(r)) { need.add(r); grew = true; } } for (const id of need) QDEFS[id].main = true; }, 0);
 
 // =================== HUD 2.0: helmet-style glass HUD, compass tape, quick-action column, menu sheet ===================
 { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap'; document.head.appendChild(l); }
@@ -19013,6 +19016,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 266, title: '2.23.1 · Quest tracking', items: ['You can track any quest in the journal, even ones you have not picked up yet. The tracker and compass point you to the quest giver', 'Quests the main story needs first (like Heavy Metal at Fort Ironrock) are now marked as main story'] },
   { id: 265, title: '2.23.0 · Kade stays home', items: ['Kade no longer follows you to other worlds after his fight'] },
   { id: 264, title: '2.22.99 · Marshals', items: ['Marshals can no longer raid merchant haulers in space'] },
   { id: 263, title: '2.22.98 · Main story in the journal', items: ['Main story quests are listed first in the journal, marked ★ MAIN, with where to find the quest giver', 'Dead Air (Chapter 5) starts right after Kade, so the main story never goes missing'] },

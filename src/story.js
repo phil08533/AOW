@@ -91,3 +91,5 @@ function rollCredits(replay) {
   };
   requestAnimationFrame(draw);
 }
+// any quest the main story needs first counts as main story too (Fort Ironrock's chain leads into Chapter 6)
+setTimeout(() => { const need = new Set(QORDER.filter(id => QDEFS[id].main)); let grew = true; while (grew) { grew = false; for (const id of [...need]) for (const r of QDEFS[id].req || []) if (QDEFS[r] && !need.has(r)) { need.add(r); grew = true; } } for (const id of need) QDEFS[id].main = true; }, 0);

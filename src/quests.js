@@ -224,6 +224,7 @@ function talk(id) {
 function trackedQuest() {
   for (const k in S.qst) if (!QDEFS[k]) delete S.qst[k];
   if (S.track && QDEFS[S.track] && S.qst[S.track] && S.qst[S.track].st !== 'done') return S.track;
+  if (S.track && QDEFS[S.track] && !S.qst[S.track] && qAvailable(S.track)) return S.track; // tracking a quest you haven't picked up yet points you at its giver
   for (const qid of QORDER) { const s = S.qst[qid]; if (s && s.st === 'ready') return qid; }
   for (const qid of QORDER) { const s = S.qst[qid]; if (s && s.st === 'active' && QDEFS[qid].main) return qid; }
   for (const qid of QORDER) { const s = S.qst[qid]; if (s && s.st === 'active') return qid; }
@@ -288,7 +289,7 @@ function openQuestLog() {
       r.append(dot, nm, mt); if (btn) r.appendChild(btn); else r.appendChild(document.createElement('span')); rows.appendChild(r); };
     if (S.bh && S.bh.active) { const a = S.bh.active, b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = S.track === 'bounty' ? 'Tracked' : 'Track'; b.disabled = S.track === 'bounty'; b.addEventListener('click', () => { S.track = 'bounty'; markDirty(); renderQuest(); render(); }); const r = document.createElement('div'); r.className = 'rowi'; const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = '#ffd36a'; const nm = document.createElement('span'); nm.textContent = `BOUNTY: ${a.name} · ${a.planet === 'space' ? 'Open space' : LEVELS[a.planet].name}`; const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px'; mt.textContent = a.reward + ' cr'; r.append(dot, nm, mt, b); rows.appendChild(r); }
     act.forEach(id => { const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; const tr = trackedQuest() === id; b.textContent = tr ? 'Tracked' : 'Track'; b.disabled = tr; b.addEventListener('click', () => { S.track = id; markDirty(); renderQuest(); render(); }); row(id, S.qst[id].st === 'ready' ? 'Turn in' : 'Active', b); });
-    avail.forEach(id => { const lv = npcHome(QDEFS[id].giver); row(id, 'See ' + npcName(QDEFS[id].giver) + (lv ? ` (${LEVELS[lv].name})` : '')); });
+    avail.forEach(id => { const lv = npcHome(QDEFS[id].giver), tr = trackedQuest() === id, b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = tr ? 'Tracked' : 'Track'; b.disabled = tr; b.addEventListener('click', () => { S.track = id; markDirty(); renderQuest(); render(); }); row(id, 'See ' + npcName(QDEFS[id].giver) + (lv ? ` (${LEVELS[lv].name})` : ''), b); });
     if (!act.length && !avail.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'No open quests. Look for people with a ! over their heads, or explore.'; rows.appendChild(e); }
     if ((S.gear || []).length) { const g = document.createElement('div'); g.className = 'empty'; g.textContent = 'Master gear: ' + S.gear.map(k => `${GEAR[k].name} (${GEAR[k].desc})`).join(' · '); rows.appendChild(g); }
   };

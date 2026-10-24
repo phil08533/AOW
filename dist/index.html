@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.3</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.4</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -11096,6 +11096,36 @@ defQuest('k4', { ch: 'Chapter 6 · Earth Sky', title: 'The Setting Sun', giver: 
   outro: ["The Sigil of the Setting Sun. You did it. Drome is finished.", "...but this sigil is a map too. It points past Zarlich, into the dark. Into Vector.", "Rest up. Whatever Drome was working FOR is still out there."], reward: { cr: 20000, xp: 60000, take: { sunsigil: 1 }, cape: 'sunslayer' } });
 CAPES.sunslayer = { name: 'Sunslayer Cape', lvl: 1, flag: 'sunslayer', col: '#1e1c22', trim: '#ff6a1a' };
 
+// ---- Earth Sky atmosphere: cloud banks drifting past the islands, a high-altitude haze, softer light, and torches for the night ----
+const SKYFX = { torches: [], lights: [], clouds: [], seas: [], puffs: [] };
+{ const _b = LEVELS.skycity.build; LEVELS.skycity.build = function () { const r = _b.apply(this, arguments);
+  SKYFX.torches = []; SKYFX.lights = []; SKYFX.clouds = []; SKYFX.seas = []; SKYFX.puffs = [];
+  // tone down the blinding white cloud sea and the puffy cloud balls
+  levelGroup.traverse(o => { if (!o.isMesh || !o.material || !o.material.color) return; if (o.geometry && o.geometry.type === 'PlaneGeometry' && o.position.y < -20) { SKYFX.seas.push(o); } else if (o.geometry && o.geometry.type === 'SphereGeometry' && o.position.y < -8 && o.material.color.getHex() === 0xffffff) { o.material = new THREE.MeshBasicMaterial({ color: '#d4dce6' }); SKYFX.puffs.push(o); } });
+  // soft cloud sprites at and below island level so you look down through cloud
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d'); for (let i = 0; i < 7; i++) { const x = 30 + Math.random() * 68, y = 44 + Math.random() * 40, rr = 22 + Math.random() * 20, gr = g.createRadialGradient(x, y, 0, x, y, rr); gr.addColorStop(0, 'rgba(255,255,255,0.85)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); }
+  const tex = new THREE.CanvasTexture(cv);
+  for (let i = 0; i < 46; i++) { const m = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.5, depthWrite: false, color: '#e6ecf4' }), s = new THREE.Sprite(m), low = i < 26;
+    const a = Math.random() * 6.28, rad = low ? 30 + Math.random() * 170 : 40 + Math.random() * 150; s.position.set(Math.cos(a) * rad, low ? -16 + Math.random() * 12 : -2 + Math.random() * 10, 50 + Math.sin(a) * rad);
+    // keep the island-level banks off the islands themselves
+    if (!low) { let on = false; for (const k in ISL) if (Math.hypot(s.position.x - ISL[k][0], s.position.z - ISL[k][1]) < ISL[k][2] + 8) on = true; if (on) { s.position.y = -14; } }
+    const sz = low ? 40 + Math.random() * 40 : 22 + Math.random() * 20; s.scale.set(sz, sz * 0.45, 1); s.userData.v = 0.6 + Math.random() * 1.2; s.userData.base = m.opacity; levelGroup.add(s); SKYFX.clouds.push(s); }
+  // torches: bridge ends and island rims
+  const spots = []; for (const [a, b] of SKY_BRIDGES) { const A = ISL[a], Bv = ISL[b], dx = Bv[0] - A[0], dz = Bv[1] - A[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L; for (const [P, s] of [[A, A[2] - 1], [Bv, -(Bv[2] - 1)]]) { const base = s > 0 ? A : Bv, d = Math.abs(s), sg = s > 0 ? 1 : -1; for (const sd of [-1, 1]) spots.push([base[0] + ux * d * sg + uz * 3.6 * sd, base[1] + uz * d * sg - ux * 3.6 * sd]); } }
+  for (const k in ISL) { const [ix, iz, rr] = ISL[k]; for (let i = 0; i < 6; i++) { const a = i / 6 * 6.28 + 0.3; spots.push([ix + Math.cos(a) * (rr - 3), iz + Math.sin(a) * (rr - 3)]); } }
+  const flameM = () => new THREE.MeshBasicMaterial({ color: '#ffb040', transparent: true, opacity: 0.95 });
+  spots.forEach(([x, z], i) => { const y = groundH(x, z); if (y < 0) return; const t = new THREE.Group(); part(t, Cy(0.07, 0.1, 1.6, 6), toon('#4a3a2a', 'wood'), 0, 0.8, 0); part(t, Cy(0.16, 0.1, 0.22, 6), '#2a2622', 0, 1.65, 0);
+    const f = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.42, 6), flameM()); f.position.y = 1.95; t.add(f); t.position.set(x, y, z); levelGroup.add(t); solid(x, z, 0.2); SKYFX.torches.push(f);
+    if (i % 3 === 0 && SKYFX.lights.length < 10) { const L = new THREE.PointLight('#ff9a3a', 0, 9, 1.6); L.position.set(x, y + 2.1, z); levelGroup.add(L); SKYFX.lights.push(L); } });
+  levelAnims.push(t => { const n = ENV.night || 0;
+    SKYFX.torches.forEach((f, i) => { const k = 0.8 + Math.sin(t * 13 + i * 2.1) * 0.12 + Math.sin(t * 29 + i) * 0.08; f.scale.set(1, k * (0.6 + n * 0.6), 1); f.material.opacity = 0.35 + n * 0.6; });
+    SKYFX.lights.forEach((L, i) => { L.intensity = n * (1.2 + Math.sin(t * 11 + i * 1.7) * 0.25 + Math.sin(t * 23 + i) * 0.15); });
+    for (const c of SKYFX.clouds) { c.position.x += c.userData.v * 0.02; if (c.position.x > 230) c.position.x = -230; c.material.opacity = c.userData.base * (1 - n * 0.45); c.material.color.setRGB(0.9 - n * 0.68, 0.93 - n * 0.68, 0.96 - n * 0.6); }
+    for (const o of SKYFX.seas) o.material.color.setRGB(0.66 - n * 0.62, 0.71 - n * 0.65, 0.78 - n * 0.68); for (const o of SKYFX.puffs) o.material.color.setRGB(0.8 - n * 0.64, 0.83 - n * 0.66, 0.88 - n * 0.66); });
+  return r; }; }
+// haze and softer light up here (the global HD pass pushes fog far away and boosts the sun, which made Earth Sky glaring)
+{ const _ue = updateEnv; updateEnv = function (a, b) { _ue(a, b); if (!LEVEL || LEVEL.id !== 'skycity') return; scene.fog.near = 26; scene.fog.far = 165 - (ENV.night || 0) * 40; scene.fog.color.lerp(new THREE.Color('#c8d4e2').convertSRGBToLinear(), 0.35 * (1 - (ENV.night || 0))); sun.intensity *= 0.72; hemi.intensity *= 0.85; }; }
+
 // =================== ZARLICH (violet storm world) and VECTOR (the dark world) ===================
 // creatures from the colored creature sheet
 function makeTubeShark(col) {
@@ -19016,6 +19046,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 269, title: '2.23.4 · Earth Sky atmosphere', items: ['Cloud banks drift past and below the islands, with a high-altitude haze', 'Torches line the bridges and island edges, and flicker to life at night', 'The cloud sea and lighting are toned down so Earth Sky is no longer blinding', 'Nights up here go properly dark'] },
   { id: 268, title: '2.23.3 · Sky bridges and busts', items: ['Earth Sky bridges no longer clip into the islands', 'Marshals: a crime nearby now takes over the compass with the distance, and its red beacon shows through walls'] },
   { id: 267, title: '2.23.2 · Mobile stick', items: ['The move stick now appears wherever you put your left thumb, so you can strafe left at full speed'] },
   { id: 266, title: '2.23.1 · Quest tracking', items: ['You can track any quest in the journal, even ones you have not picked up yet. The tracker and compass point you to the quest giver', 'Quests the main story needs first (like Heavy Metal at Fort Ironrock) are now marked as main story'] },

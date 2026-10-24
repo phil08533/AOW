@@ -31,6 +31,7 @@ function legalOpen(k) { const L = LEGAL[k], d = document.createElement('div'); d
 const BAD_WORDS = ['fuck', 'shit', 'cunt', 'nigg', 'fag', 'retard', 'rape', 'nazi', 'hitler', 'whore', 'slut', 'bitch', 'dick', 'cock', 'pussy', 'porn', 'kkk', 'chink', 'spic', 'kike'];
 function badName(s) { const n = String(s || '').toLowerCase().replace(/[0@]/g, 'o').replace(/[1!|]/g, 'i').replace(/3/g, 'e').replace(/[4]/g, 'a').replace(/[5$]/g, 's').replace(/7/g, 't').replace(/[^a-z]/g, ''); return BAD_WORDS.some(w => n.includes(w)); }
 function cleanName(s, fb) { return badName(s) ? fb : s; }
+let showTitleRef = () => {};
 (function introRun() {
   const css = document.createElement('style'); css.textContent = `
 #introCov{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;transition:opacity .8s}
@@ -56,17 +57,20 @@ function cleanName(s, fb) { return badName(s) ? fb : s; }
   let cov = document.getElementById('introCov');
   if (!cov) { cov = document.createElement('div'); cov.id = 'introCov'; document.body.appendChild(cov); }
   if (!cov.querySelector('.sun')) cov.insertAdjacentHTML('afterbegin', '<div class="sun"></div>');
-  if (!cov.querySelector('#ic1')) cov.insertAdjacentHTML('beforeend', `<div class="ic" id="ic1"><div class="drop"><i class="shades"></i></div><div class="studio">${STUDIO.name.toUpperCase().replace(/ STUDIOS?$/, '')}<small>STUDIOS</small></div></div>`);
+  if (!cov.querySelector('#ic1')) cov.insertAdjacentHTML('beforeend', '<div class="ic on" id="ic1"></div>');
+  // the Blork logo shot (blork.js); the old slime card only if WebGL is unavailable
+  let blork = null; { const c = cov.querySelector('#ic1'); c.style.cssText = 'position:absolute;inset:0';
+    try { blork = blorkIntro(c, () => setTimeout(showTitleRef, 250)); } catch (e) { console.warn('blork', e); c.style.cssText = 'text-align:center'; c.innerHTML = `<div class="drop"><i class="shades"></i></div><div class="studio">BLORK<small>STUDIOS</small></div>`; setTimeout(() => showTitleRef(), 3200); } }
   // card -> title -> (player input, once the game is ready) -> start screen. Each stage runs once, whatever calls it.
   const c1 = () => cov.querySelector('#ic1'), ready = () => document.documentElement.classList.contains('ready');
   let stage = 'card', inputAt = 0;
-  const showTitle = () => { if (stage !== 'card') return; stage = 'title'; inputAt = performance.now() + 900; const c = c1(); if (c) c.classList.remove('on');
+  const showTitle = () => { if (stage !== 'card') return; stage = 'title'; if (blork) blork.finish(); inputAt = performance.now() + 900; const c = c1(); if (c) c.classList.remove('on');
     setTimeout(() => { if (c) c.remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; cov.appendChild(g);
       requestAnimationFrame(() => { g.classList.add('on'); const su = cov.querySelector('.sun'); if (su) su.classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); };
   const finish = () => { if (stage === 'done') return; stage = 'done'; cov.style.opacity = 0; setTimeout(() => cov.remove(), 800); };
   const onInput = e => { if (!e.isTrusted || !document.getElementById('introCov')) return; if (stage === 'card') { if (performance.now() > 600) showTitle(); } else if (stage === 'title' && ready() && performance.now() > inputAt) finish(); };
   cov.addEventListener('click', onInput); addEventListener('keydown', onInput);
-  { const c = c1(); if (c) c.classList.add('on'); } setTimeout(showTitle, 3200);
+  { const c = c1(); if (c) c.classList.add('on'); } showTitleRef = showTitle; if (!blork) setTimeout(showTitle, 3200);
   // legal links + terms acceptance on the start screen
   const pb = document.getElementById('playBtn'); if (!pb) return;
   let ok = false; try { ok = +localStorage.getItem('aow-tos') >= LEGAL_VER; } catch (_) {}

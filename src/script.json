@@ -1,6 +1,62 @@
 {
-  "burp": {},
-  "say": {},
+  "burp": {
+    "planet_ocean": [
+      "Water everywhere. I am not I P S - rated for water. Please keep me dry.",
+      "It is not advisable to get too close to any of these fish.",
+      "Beginning suit decompression.",
+      "There must've been quite the storm on this planet at some point.",
+      "The whole planet is ocean front property."
+    ],
+    "planet_robot": [
+      "Robot City. Some of these machines may be my distant cousins. I will not ask.",
+      "City of machines. Finally, an environment with standards and proper cable management.",
+      "Welcome to Robot City. ",
+      "Robot City. The air smells like ozone and municipal bureaucracy. "
+    ],
+    "space": [
+      "Helm is yours. The sun is that way. I recommend going any other way.",
+      "Thruster check complete",
+      "Thrusters engaged! Try to avoid the space rocks. They don't have brakes and neither do we.",
+      "In orbit. The universe is very large. I have plotted a few safe routes through it.",
+      "Engaging sub-light engines. If you hear a rattling noise, ignore it. It's just the galley.",
+      "Space flight initiated. Plenty of vacuum out there. It is very quiet. I like quiet.",
+      "Navigation online. Point her at the stars and try not to scratch the solar panels.",
+      "Free flight. If planetary patrol stops us, I will explain that you were driving.",
+      "Engines humming at 100%. Starfield looks pretty. Don't stare too long, asteroids are fast.",
+      "Zero gravity engaged. Everything not bolted down is now a projectile. Including you."
+    ],
+    "veh": [
+      "Wheels down. Please avoid cliffs. The vehicle is not designed for flight.",
+      "Mind the paint. That enamel cost forty credits a can.",
+      "Speed mode engaged! Keep your hands on the bars and your teeth together.",
+      "My telemetry systems are getting motion sick.",
+      "Vehicle engaged! Floor it, but remember that trees do not yield to oncoming traffic."
+    ],
+    "room": [
+      "New room installed. More square footage for me to monitor. I like monitoring. ",
+      "Ship expansion complete! Will calibrate Wi-Fi.",
+      "Ah, that new module smell. Ozone, fresh polymer, and a large invoice.",
+      "Room added! She's starting to look like a proper battle cruiser now.",
+      "More space. Now you have somewhere to put things.",
+      "Expansion verified. The Setting Sun just got a little roomier."
+    ],
+    "race_win": [
+      "Gold! I'd hug you, but I'm a voice in a box. Consider yourself verbally squeezed.",
+      "First place. The other drivers are blaming the rain. The rain is not commenting.",
+      "Gold medal. I'm adding it to the trophy shelf. ",
+      "You won. I predicted this. I am saying so now so it counts.",
+      "Track record smashed. Mostly the record. Some of the track.",
+      "Victory. Gus will say it was his tuning. Gus says that about everything."
+    ]
+  },
+  "say": {
+    "bfd9d2c6": "For those who like their uppers over their downers, we have deck five of the Zeltac Ship. A cesspool of the rich and powerful, come to party their life away",
+    "9cf05b18": "DJ Nova has been playing the same four songs for nine years. Nobody has ever complained.",
+    "e68a8db0": "The lights and sounds brought even more to life with every drink.. or hit.. you may take. ",
+    "fd58e27f": "...the President of the New United States. Off duty - very off duty.",
+    "d962c599": "Tanks, battle cars, machines built for destruction. If it rolls and shoots, they build it here.",
+    "314127fa": "The Halo Line. A magnet tube around the whole planet. Keep your hands inside the car the air-speed would remove them."
+  },
   "voice": {
     "active": "burp",
     "packs": {
@@ -9,11 +65,11 @@
         "engine": "kokoro",
         "voice": "bm_george",
         "lang": "en-gb",
-        "speed": 1.0,
+        "speed": 1,
         "fx": {
           "ring": 0.45,
           "ringHz": 52,
-          "echo": 1.0,
+          "echo": 1,
           "crush": 9
         }
       }

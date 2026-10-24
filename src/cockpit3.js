@@ -37,11 +37,12 @@
     add.forEach(o => o.traverse(q => { q.renderOrder = 5; }));
     g.scale.setScalar(s0);
     // sit the whole cockpit higher in view so the dash screens clear the HUD at the bottom of the screen
-    g.position.y = 0.24;
+    g.position.y = 0.24; SCOCK.holo.position.y -= 0.24 / s0; SCOCK.lock.position.y -= 0.24 / s0;
   };
   const gaugeSet = (n, v) => { if (n) n.rotation.z = -(-2.2 + 4.4 * clamp(v, 0, 1)); };
   const meterSet = (o, v) => { if (!o) return; v = clamp(v, 0.04, 1); o.scale.y = v; o.position.y = -0.405 + 0.075 * v; };
   const _st = step; step = function (dt) { _st(dt);
+    { const cr = $('cross'), ck = !!(SCOCK.g && SCOCK.g.visible); if (cr && cr.dataset.ck !== String(ck)) { cr.dataset.ck = ck; cr.style.visibility = ck ? 'hidden' : ''; } } // one reticle: the cockpit's own ring replaces the HUD one
     if (!SCOCK.g || !SCOCK.g.visible || !fly || !fly.ship) return; const F = fly, sp = F.vel.length(), hp = clamp(player.hp / hullMax(), 0, 1);
     const SA = typeof SAMMO !== 'undefined' ? SAMMO : null, empK = SA ? (SA.empT > gameTime ? 0 : 1) : 1;
     const live = F.raiders.filter(r => !r.dead), near = live.filter(r => r.obj.position.distanceTo(player.pos) < 800).length;

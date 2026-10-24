@@ -3,7 +3,9 @@ const laserCol = () => { const C = scS().cfg[shipCls()]; return LASER_COLS[(C &&
 const boltSpeed = () => [260, 380, 560][(scS().cfg.fighter.bolt) | 0] || 260;
 // aim assist: lock onto whatever is near your crosshair. Settings can turn it off
 function shipAimFocus(F) {
-  let focus = player.pos.clone().addScaledVector(shipFwd, 160), mn = shipCls() === 'miner', bestA = PREFS.shipAim === false ? -1 : mn ? 0.32 : 0.1;
+  // default aim: whatever sits under the screen reticle (the camera's centre ray), so bolts meet the crosshair in chase and cockpit views
+  const cp = camera.getWorldPosition(new THREE.Vector3()), cd = camera.getWorldDirection(new THREE.Vector3()), off = cp.distanceTo(player.pos), ch = shipRayHit(F, cp.clone().addScaledVector(cd, off + 2), cd, 600);
+  let focus = cp.clone().addScaledVector(cd, ch.any ? off + 2 + ch.t : off + 160), mn = shipCls() === 'miner', bestA = PREFS.shipAim === false ? -1 : mn ? 0.32 : 0.1;
   for (const r of F.raiders) { if (r.dead) continue; const to = r.obj.position.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = r.obj.position.clone(); } }
   for (const X of F.extra || []) { if (X.dead) continue; const p = X.pos(), to = p.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = p; } }
   // the miner also locks onto asteroids, so the beams stay on the rock you're carving
@@ -32,7 +34,7 @@ shipFire = function () {
     (F.sbolts = F.sbolts || []).push({ g, v: dir.multiplyScalar(spd).add(F.vel.clone().multiplyScalar(0.9)), life: 420 / spd + 0.3, dmg: dmg / 2 }); }
 };
 // the miner's beam: two textured streams out of the arm emitters, re-aimed every frame, with the beam guns' hum
-function minerBeams(F) { if (F.mb && F.mb[0].parent) return F.mb; F.mb = [0, 1].map(() => { const g = new THREE.Group(), core = new THREE.Mesh(BOLT.unit, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.97, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })), rim = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff'), 0.3)), rim2 = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff'), 0.12)); g.add(rim2, rim, core); g.visible = false; levelGroup.add(g); return { g, core, rim, rim2, acc: 0, st: null }; }); return F.mb; }
+function minerBeams(F) { if (F.mb && F.mb[0].g.parent) return F.mb; F.mb = [0, 1].map(() => { const g = new THREE.Group(), core = new THREE.Mesh(BOLT.unit, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.97, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })), rim = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff'), 0.3)), rim2 = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff'), 0.12)); g.add(rim2, rim, core); g.visible = false; levelGroup.add(g); return { g, core, rim, rim2, acc: 0, st: null }; }); return F.mb; }
 { const _ss = spaceStep; spaceStep = function (dt, t) { _ss(dt, t); const F = fly; if (!F) return;
   // bolts fly, and hit the first thing along their path this frame
   for (let i = (F.sbolts || []).length - 1; i >= 0; i--) { const B = F.sbolts[i], step = B.v.length() * dt, dir = B.v.clone().normalize(), from = B.g.position.clone(), o = shipRayHit(F, from, dir, step);

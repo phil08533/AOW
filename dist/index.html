@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.17</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.18</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19114,6 +19114,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 283, title: '2.23.18 · Lasers on target', items: ['Fixed the Bulldog Miner mining beam: it carves and breaks asteroids again, and the beam no longer stays stuck on screen.', 'Setting Sun lasers now fire straight to the reticle in both chase and cockpit view.', 'Cockpit view shows a single aiming ring at the centre of the screen.'] },
   { id: 282, title: '2.23.17 · Cockpit and menu fit', items: ['The menu tablet frame is now drawn right on the menu, so it lines up exactly whether you are on foot or flying.', 'The ship cockpit sits higher so the dash screens clear the HUD, the dash lip is gone and the side dials sit on panels.', 'The C Cockpit view hint now shows at the top of the screen.'] },
   { id: 281, title: '2.23.16 · Cutscene music', items: ['Location intro cutscenes now play that place\'s music, and boss intros play the boss music'] },
   { id: 280, title: '2.23.15 · Cockpit pass', items: ['Ship cockpit is shaded and deeper: lit panels, a dash lip, side consoles and a footwell','The bobblehead has its own clear plinth with a glow ring','Every gauge and meter reads something real: speed, hull, throttle, cruise, heading, missiles, EMP and radar contacts; the warning lamp only blinks on low hull','Aim at a raider in range and the ring turns red with a LOCK readout','Pick your bobblehead in the garage (new Bobblehead tab)','On PC a C · Cockpit view hint shows when you start flying or racing'] },
@@ -26976,11 +26977,12 @@ setInterval(() => { try { if (state === 'play' && !LEVEL.fly && !handMelee() && 
     add.forEach(o => o.traverse(q => { q.renderOrder = 5; }));
     g.scale.setScalar(s0);
     // sit the whole cockpit higher in view so the dash screens clear the HUD at the bottom of the screen
-    g.position.y = 0.24;
+    g.position.y = 0.24; SCOCK.holo.position.y -= 0.24 / s0; SCOCK.lock.position.y -= 0.24 / s0;
   };
   const gaugeSet = (n, v) => { if (n) n.rotation.z = -(-2.2 + 4.4 * clamp(v, 0, 1)); };
   const meterSet = (o, v) => { if (!o) return; v = clamp(v, 0.04, 1); o.scale.y = v; o.position.y = -0.405 + 0.075 * v; };
   const _st = step; step = function (dt) { _st(dt);
+    { const cr = $('cross'), ck = !!(SCOCK.g && SCOCK.g.visible); if (cr && cr.dataset.ck !== String(ck)) { cr.dataset.ck = ck; cr.style.visibility = ck ? 'hidden' : ''; } } // one reticle: the cockpit's own ring replaces the HUD one
     if (!SCOCK.g || !SCOCK.g.visible || !fly || !fly.ship) return; const F = fly, sp = F.vel.length(), hp = clamp(player.hp / hullMax(), 0, 1);
     const SA = typeof SAMMO !== 'undefined' ? SAMMO : null, empK = SA ? (SA.empT > gameTime ? 0 : 1) : 1;
     const live = F.raiders.filter(r => !r.dead), near = live.filter(r => r.obj.position.distanceTo(player.pos) < 800).length;
@@ -27516,7 +27518,9 @@ const laserCol = () => { const C = scS().cfg[shipCls()]; return LASER_COLS[(C &&
 const boltSpeed = () => [260, 380, 560][(scS().cfg.fighter.bolt) | 0] || 260;
 // aim assist: lock onto whatever is near your crosshair. Settings can turn it off
 function shipAimFocus(F) {
-  let focus = player.pos.clone().addScaledVector(shipFwd, 160), mn = shipCls() === 'miner', bestA = PREFS.shipAim === false ? -1 : mn ? 0.32 : 0.1;
+  // default aim: whatever sits under the screen reticle (the camera's centre ray), so bolts meet the crosshair in chase and cockpit views
+  const cp = camera.getWorldPosition(new THREE.Vector3()), cd = camera.getWorldDirection(new THREE.Vector3()), off = cp.distanceTo(player.pos), ch = shipRayHit(F, cp.clone().addScaledVector(cd, off + 2), cd, 600);
+  let focus = cp.clone().addScaledVector(cd, ch.any ? off + 2 + ch.t : off + 160), mn = shipCls() === 'miner', bestA = PREFS.shipAim === false ? -1 : mn ? 0.32 : 0.1;
   for (const r of F.raiders) { if (r.dead) continue; const to = r.obj.position.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = r.obj.position.clone(); } }
   for (const X of F.extra || []) { if (X.dead) continue; const p = X.pos(), to = p.clone().sub(player.pos), d = to.length(); if (d > 420) continue; const a = to.normalize().angleTo(shipFwd); if (a < bestA) { bestA = a; focus = p; } }
   // the miner also locks onto asteroids, so the beams stay on the rock you're carving
@@ -27545,7 +27549,7 @@ shipFire = function () {
     (F.sbolts = F.sbolts || []).push({ g, v: dir.multiplyScalar(spd).add(F.vel.clone().multiplyScalar(0.9)), life: 420 / spd + 0.3, dmg: dmg / 2 }); }
 };
 // the miner's beam: two textured streams out of the arm emitters, re-aimed every frame, with the beam guns' hum
-function minerBeams(F) { if (F.mb && F.mb[0].parent) return F.mb; F.mb = [0, 1].map(() => { const g = new THREE.Group(), core = new THREE.Mesh(BOLT.unit, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.97, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })), rim = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff'), 0.3)), rim2 = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff'), 0.12)); g.add(rim2, rim, core); g.visible = false; levelGroup.add(g); return { g, core, rim, rim2, acc: 0, st: null }; }); return F.mb; }
+function minerBeams(F) { if (F.mb && F.mb[0].g.parent) return F.mb; F.mb = [0, 1].map(() => { const g = new THREE.Group(), core = new THREE.Mesh(BOLT.unit, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.97, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })), rim = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff'), 0.3)), rim2 = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff'), 0.12)); g.add(rim2, rim, core); g.visible = false; levelGroup.add(g); return { g, core, rim, rim2, acc: 0, st: null }; }); return F.mb; }
 { const _ss = spaceStep; spaceStep = function (dt, t) { _ss(dt, t); const F = fly; if (!F) return;
   // bolts fly, and hit the first thing along their path this frame
   for (let i = (F.sbolts || []).length - 1; i >= 0; i--) { const B = F.sbolts[i], step = B.v.length() * dt, dir = B.v.clone().normalize(), from = B.g.position.clone(), o = shipRayHit(F, from, dir, step);

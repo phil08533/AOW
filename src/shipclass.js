@@ -96,8 +96,13 @@ function scWingX(g, W, s, m) {
     return;
   }
   if (W === 6) { // twin blades: two thin swept wings joined by an end plate
-    for (const [y, l] of [[-0.32, 2.3], [0.5, 1.9]]) { part(g, B(l, 0.1, 1.5), m.grey, (1.0 + l / 2) * s, y, 1.1, 0, 0.5 * s, 0); part(g, B(l, 0.05, 0.3), m.hull, (1.0 + l / 2) * s, y + 0.06, 0.55, 0, 0.5 * s, 0); part(g, B(l * 0.9, 0.02, 0.04), cy, (1.0 + l / 2) * s, y + 0.07, 1.85, 0, 0.5 * s, 0); }
-    part(g, B(0.1, 1.05, 1.2), m.grey, 3.0 * s, 0.1, 1.55); part(g, B(0.12, 0.3, 0.6), m.haz, 3.0 * s, 0.55, 1.75); part(g, B(0.08, 0.08, 0.08), red, 3.02 * s, 0.62, 1.2);
+    for (const [y, l] of [[-0.32, 2.1], [0.5, 2.1]]) { part(g, B(l, 0.1, 1.5), m.grey, (1.0 + l / 2) * s, y, 1.1, 0, 0.5 * s, 0); part(g, B(l, 0.05, 0.3), m.hull, (1.0 + l / 2) * s, y + 0.06, 0.55, 0, 0.5 * s, 0); part(g, B(l * 0.9, 0.02, 0.04), cy, (1.0 + l / 2) * s, y + 0.07, 1.85, 0, 0.5 * s, 0); }
+    // the gun: one tall, thin slab along the blade tips (swept to match), joining both blades, with a slim barrel off the top and bottom
+    const ry = 0.5 * s, cx = 1.0 + 1.05 + 1.05 * Math.cos(0.5) + 0.08 * Math.cos(0.5), cz = 1.1 - (1.05 + 0.08) * Math.sin(0.5), at = (lx, lz) => [cx * s + (lx * Math.cos(ry) + lz * Math.sin(ry)), cz + (-lx * Math.sin(ry) + lz * Math.cos(ry))];
+    const P = (geo, mat, lx, y, lz) => { const [x, z] = at(lx * s, lz); return part(g, geo, mat, x, y, z, 0, ry, 0); };
+    P(B(0.14, 1.12, 2.0), m.hull, 0, 0.09, 0); P(B(0.16, 1.16, 0.1), m.lg, 0, 0.09, -0.95); P(B(0.16, 1.16, 0.1), m.lg, 0, 0.09, 0.95);
+    P(B(0.17, 0.3, 0.5), m.haz, 0, 0.09, 0.45); P(B(0.03, 0.8, 0.04), cy, 0.08, 0.09, -0.3); P(B(0.08, 0.08, 0.08), red, 0, 0.7, 0.85);
+    const [fx, fz] = at(0, -1.0); for (const y of [-0.32, 0.5]) { part(g, B(0.1, 0.1, 1.1), m.lg, fx, y, fz - 0.5); part(g, B(0.13, 0.13, 0.12), m.dk, fx, y, fz - 0.02); part(g, B(0.11, 0.11, 0.05), glow('#3ff4ff'), fx, y, fz - 1.07); m.guns && m.guns.push(V(fx, y, fz - 1.15)); }
   }
 }
 const SC_BUILD = {
@@ -132,7 +137,7 @@ const SC_BUILD = {
       if ((C.wing | 0) < 4 && C.wing !== 3) {
       const w = part(g, B(wl, 0.2, 2.0), grey, (1.0 + wl / 2) * s, -0.15, 1.0, 0, ws * s, 0); part(g, B(wl, 0.08, 0.4), hull, (1.0 + wl / 2) * s, -0.02, 0.2 + (C.wing === 1 ? -0.3 : 0.3), 0, ws * s, 0);
       part(g, B(0.4, 0.06, 0.15), haz, 2.4 * s, -0.02, 1.9); part(g, B(0.35, 0.18, 0.5), lg, 1.7 * s, 0.03, 0.7); part(g, B(0.12, 0.12, 0.12), glow('#ff3a2a'), 1.55 * s, 0.1, 0.45); part(g, B(0.12, 0.12, 0.12), glow('#ff3a2a'), 1.72 * s, 0.1, 0.45);
-      } else if (C.wing !== 3) scWingX(g, C.wing, s, { grey, hull, lg, haz, dk });
+      } else if (C.wing !== 3) scWingX(g, C.wing, s, { grey, hull, lg, haz, dk, guns });
       if (C.wing === 3) { // Quad X-wing: the regular wing, twice per side, split into an X at the root, each with its own laser pod
         for (const up of [1, -1]) { const pv = new THREE.Group(); pv.position.set(1.0 * s, -0.12 + up * 0.14, 0.9); pv.rotation.z = up * 0.3 * s; g.add(pv);
           part(pv, B(wl, 0.18, 1.8), grey, wl / 2 * s, 0, 0, 0, ws * 0.5 * s, 0); part(pv, B(wl, 0.07, 0.36), hull, wl / 2 * s, 0.11 * up, -0.55, 0, ws * 0.5 * s, 0);
@@ -141,7 +146,7 @@ const SC_BUILD = {
           part(pv, B(0.42, 0.4, 0.45), lg, tx, 0, -1.75); part(pv, Cy(0.05, 0.05, 0.9, 6), lg, tx, 0, -2.3, Math.PI / 2); part(pv, B(0.12, 0.12, 0.08), cyan, tx, 0, -2.78);
           pv.updateMatrix(); guns.push(V(tx, 0, -2.8).applyMatrix4(pv.matrix)); } }
       // wingtip pods: orange barrels, grey collars, glowing cyan laser faces
-      if (C.wing !== 3) {
+      if (C.wing !== 3 && C.wing !== 6) {
       const px = C.wing === 4 ? 2.45 * s : (1.0 + wl) * s + (C.wing === 2 || C.wing === 5 ? 0 : 0.1 * s), pz = C.wing === 1 ? 0.6 : C.wing === 4 ? 0.9 : 0.2, py = C.wing === 5 ? -0.55 : 0;
       part(g, B(0.75, 0.7, 2.4), hull, px, -0.1, pz); for (const z of [pz - 0.6, pz + 0.7]) part(g, B(0.8, 0.75, 0.15), lg, px, -0.1, z); part(g, B(0.4, 0.15, 0.6), lg, px, 0.3, pz + 0.2); part(g, B(0.22, 0.22, 0.06), lg, px + 0.39 * s, -0.1, pz + 0.3);
       part(g, B(0.6, 0.55, 0.5), lg, px, -0.1, pz - 1.45);

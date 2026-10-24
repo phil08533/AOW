@@ -152,6 +152,7 @@ const HELM_KITS = window.HELM_KITS = window.HELM_KITS || {
 HELMS.ar_screen = { name: 'AR Screen', lvl: 1 };
 HELM_KITS.ar_screen = function (g) {
   const shell = toon('#2b3138', 'metal'), dk = toon('#15181c', 'metal'), grn = glow('#04ff00'), y = 1.79;
+  for (const o of [...g.children]) if (o.isMesh && o.position.y > 1.62 && o.position.y < 1.98 && Math.abs(o.position.x) < 0.24 && Math.abs(o.position.z) < 0.24) o.visible = false; // the stock head, visor and ear cap sit under the shell
   E(g, shell, 0, 1.8, -0.015, 0.19, 0.185, 0.2); // shell over the head
   part(g, B(0.26, 0.035, 0.1), dk, 0, 1.955, 0.06, -0.25); // brow ridge
   part(g, B(0.04, 0.03, 0.3), dk, 0, 1.985, -0.04); // top fin

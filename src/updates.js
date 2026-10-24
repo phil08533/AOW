@@ -176,6 +176,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 278, title: '2.23.13 · Twin blade guns, helmet fit', items: ['Twin blade wings: the gun is now one thin slab swept along both blade tips, joining them, with a slim barrel off the top and bottom blade','AR Screen helmet no longer clips with the head underneath'] },
   { id: 277, title: '2.23.12 · X-wing and AR Screen', items: ['Quad X-wing ship upgrade rebuilt: the regular wings now split into a proper X (two per side, same style), each with its own laser pod','New AR Screen helmet: gunmetal shell, wraparound green AR visor with HUD marks, sensor pod and antenna'] },
   { id: 276, title: '2.23.11 · Kayak fix', items: ['Paddling the kayak no longer uses the walking head-bob'] },
   { id: 275, title: '2.23.10 · Swimming fix', items: ['Underwater you only drift up while looking up. Looking level or down holds your depth, so you can dive properly'] },

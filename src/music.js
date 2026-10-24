@@ -6,7 +6,7 @@ if (!PREFS.musicV2) { PREFS.musicV2 = 1; PREFS.music = 3; if (PREFS.musicVol == 
 if (PREFS.musicVol == null) PREFS.musicVol = 0.7;
 const MUS = { a: null, b: null, cur: null, list: null, idx: 0, want: null, force: null, battleT: 0, calmT: 0, romT: 0, unlocked: false, fades: [] };
 function musEl() { const e = new Audio(); e.preload = 'auto'; e.volume = 0; e.addEventListener('ended', () => { if (e === MUS.cur && MUS.list && PLAYLISTS[MUS.list].length > 1) { MUS.idx = (MUS.idx + 1) % PLAYLISTS[MUS.list].length; musStart(MUS.list, MUS.idx); } }); return e; }
-const musVol = () => (PREFS.music === 3 || (MUS.force && PREFS.music)) ? Math.max(0, Math.min(1, PREFS.musicVol * (MUS.ac ? 1 : (MUS.spaceK || 1)))) : 0;
+const musVol = () => (PREFS.music === 3 || (MUS.force && PREFS.music)) ? Math.max(0, Math.min(1, PREFS.musicVol * (MUS.ac ? 1 : (MUS.spaceK || 1)))) * (typeof POD !== 'undefined' && POD.playing ? 0.18 : 1) : 0;
 function musFade(el, to, sec, then) { MUS.fades = MUS.fades.filter(f => f.el !== el); MUS.fades.push({ el, from: el.volume, to, t: 0, sec, then }); }
 setInterval(() => { for (const f of MUS.fades.slice()) { f.t += 0.05; const k = Math.min(1, f.t / f.sec); f.el.volume = Math.max(0, Math.min(1, f.from + (f.to - f.from) * k)); if (k >= 1) { MUS.fades.splice(MUS.fades.indexOf(f), 1); if (f.then) f.then(); } } }, 50);
 function musStart(list, idx) {

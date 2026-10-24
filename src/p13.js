@@ -98,7 +98,7 @@ addEventListener('keyup', e => { if (e.code === 'KeyH') holdEnd(); }, true);
   tRepair.style.opacity = player.hp < maxHp() ? 1 : 0.45; } catch (e) { console.warn('hold', e); } }; }
 
 // ---- Zeltac: Brakka's shipwright bay. A ship up on stands with a panel open, a crane, a tool cart,
-// and Brakka at work on it: he leans in, the welder flares and sparks fly. Talk to him for ship upgrades. ----
+// and a hover-bot welding it while Brakka supervises. Talk to him for ship upgrades. ----
 { const _zb = LEVELS.zeltac.build; LEVELS.zeltac.build = function () { _zb.apply(this, arguments);
   try { const cx = 24.5, cz = 6, Y = 0.02;
     // the bay floor: a dark pad with hazard striping around the edge
@@ -121,17 +121,40 @@ addEventListener('keyup', e => { if (e.code === 'KeyH') holdEnd(); }, true);
       part(g, B(0.4, 0.15, 0.25), '#2a2c32', -0.3, 1.02, 0); part(g, B(0.5, 0.04, 0.06), '#9aa1aa', 0.25, 0.97, -0.1, 0, 0.4, 0); part(g, Cy(0.08, 0.08, 0.35, 8), '#4fa8ff', 0.3, 1.1, 0.15);
       g.position.set(cx - 3.6, 0, cz + 4.6); props.add(g); box(cx - 3.6, cz + 4.6, 0.65, 0.4); }
     part(props, B(1.1, 0.9, 1.1), toonNS('#8a6a4a', 'wood'), cx + 3.4, 0.45, cz - 5.6); part(props, B(0.8, 0.6, 0.8), toonNS('#5a7a9a', 'hull'), cx + 3.4, 1.2, cz - 5.5, 0, 0.3, 0); box(cx + 3.4, cz - 5.6, 0.6, 0.6);
-    // Brakka at work: lean in, weld, step back
-    const flare = new THREE.Sprite(new THREE.SpriteMaterial({ color: '#9fe8ff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); flare.scale.setScalar(0.01); flare.position.set(cx - 0.55, 1.75, cz - 0.6); levelGroup.add(flare);
-    let last = 0; const W = { t: 0 };
-    levelAnims.push(t => { const dt = Math.min(0.05, t - last || 0.016); last = t; const n = npcObjs.brakka; if (!n || !n.obj) return; const o = n.obj;
-      const talking = Math.hypot(player.pos.x - o.position.x, player.pos.z - o.position.z) < 3;
-      if (talking) { o.rotation.x *= 0.8; flare.scale.setScalar(0.01); return; }
-      W.t += dt; const c = W.t % 6, weld = c > 1.2 && c < 4.2;
-      o.rotation.y = Math.PI / 2 + Math.sin(t * 0.7) * 0.15; o.rotation.x = (weld ? 0.18 : 0.02) * 0.4 + o.rotation.x * 0.6;
-      if (weld) { flare.scale.setScalar(0.25 + Math.random() * 0.45); if (Math.random() < dt * 18) burst(flare.position, Math.random() < 0.5 ? '#ffd36a' : '#ff9a3c', 3, 4); }
-      else flare.scale.setScalar(0.01);
-    });
+    // the welder: a little hover-bot that works its way round the ship. It climbs to a safe height, glides to the next job, drops in,
+    // turns its torch on the hull and sparks fly. Every stop and every leg of the route sits clear of the ship, stands, crane and crates.
+    const flare = new THREE.Sprite(new THREE.SpriteMaterial({ color: '#9fe8ff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); flare.scale.setScalar(0.01); levelGroup.add(flare);
+    const bot = new THREE.Group(), body = new THREE.Group(); bot.name = "weldbot"; bot.add(body); levelGroup.add(bot);
+    part(body, new THREE.SphereGeometry(0.2, 12, 9), toon('#c9a43a', 'metal'), 0, 0, 0); part(body, Cy(0.205, 0.205, 0.06, 14), toon('#3a3d44', 'metal'), 0, 0, 0);
+    part(body, B(0.2, 0.08, 0.04), glow('#4fd2ff'), 0, 0.06, 0.185); part(body, Cy(0.09, 0.12, 0.08, 10), toon('#3a3d44', 'metal'), 0, -0.2, 0);
+    const jet = part(body, new THREE.ConeGeometry(0.08, 0.28, 8), glow('#7fd8ff'), 0, -0.36, 0, Math.PI); jet.material = jet.material.clone(); jet.material.transparent = true; jet.material.opacity = 0.6;
+    for (const sd of [-1, 1]) { part(body, B(0.06, 0.06, 0.12), toon('#5d636c', 'metal'), 0.22 * sd, 0, 0); part(body, Cy(0.01, 0.01, 0.16, 4), '#2a2c32', 0.1 * sd, 0.25, -0.04, 0, 0, -0.3 * sd); part(body, new THREE.SphereGeometry(0.022, 6, 4), glow(sd < 0 ? '#ff3a2a' : '#6fdc5a'), 0.145 * sd, 0.32, -0.04); }
+    const arm = new THREE.Group(); arm.position.set(0, -0.06, 0.16); body.add(arm); part(arm, B(0.05, 0.05, 0.26), toon('#5d636c', 'metal'), 0, 0, 0.13); part(arm, Cy(0.03, 0.02, 0.1, 6), toon('#2a2c32'), 0, 0, 0.3, Math.PI / 2);
+    const torch = new THREE.Object3D(); torch.position.set(0, 0, 0.37); arm.add(torch);
+    // jobs: where the bot hovers and the hull spot it welds (left wing, open engine panel from above, nose, right wing, tail)
+    const SAFE = 3.4, JOBS = [[cx + 0.6, cz - 3.05, 1.9, cx + 0.6, 1.55, cz - 2.35], [cx - 0.5, cz - 1.25, 2.9, cx - 0.5, 2.2, cz - 0.6], [cx - 2.45, cz - 0.6, 2.2, cx - 1.8, 1.7, cz - 0.3],
+      [cx + 0.6, cz + 3.05, 1.9, cx + 0.6, 1.55, cz + 2.35], [cx + 3.0, cz - 0.9, 2.6, cx + 2.6, 1.9, cz - 0.4]];
+    const W = { j: 0, ph: 'weld', t: 0, from: new THREE.Vector3(), to: new THREE.Vector3() }, tp = new THREE.Vector3(), aim = new THREE.Vector3();
+    bot.position.set(JOBS[0][0], JOBS[0][2], JOBS[0][1]); bot.userData.W = W;
+    let last = 0;
+    levelAnims.push(t => { const dt = Math.min(0.25, t - last || 0.016); last = t; const J = JOBS[W.j], p = bot.position; W.t += dt;
+      // route: weld → rise straight up → glide level at SAFE height → drop straight down → weld
+      if (W.ph === 'weld') { if (W.t > 4.5) { W.ph = 'up'; W.t = 0; } }
+      else if (W.ph === 'up') { p.y = Math.min(SAFE, p.y + dt * 1.2); if (p.y >= SAFE) { W.ph = 'glide'; W.t = 0; W.j = (W.j + 1) % JOBS.length; W.from.set(p.x, SAFE, p.z); W.to.set(JOBS[W.j][0], SAFE, JOBS[W.j][1]); } }
+      else if (W.ph === 'glide') { const d = W.from.distanceTo(W.to), k = Math.min(1, W.t * 1.4 / Math.max(0.5, d)), e = k * k * (3 - 2 * k); p.lerpVectors(W.from, W.to, e); if (k >= 1) { W.ph = 'down'; W.t = 0; } }
+      else if (W.ph === 'down') { p.y = Math.max(J[2], p.y - dt * 1.0); if (p.y <= J[2]) { W.ph = 'weld'; W.t = 0; } }
+      const welding = W.ph === 'weld' && W.t > 0.6 && W.t < 4.1;
+      // face the job while working, the way it's going while moving
+      const Jn = JOBS[W.j]; aim.set(Jn[3], Jn[4], Jn[5]); if (W.ph === 'glide') aim.set(W.to.x, p.y, W.to.z);
+      const yaw = Math.atan2(aim.x - p.x, aim.z - p.z); let dy = yaw - bot.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); bot.rotation.y += dy * Math.min(1, dt * 4);
+      arm.rotation.x = W.ph === 'weld' ? -Math.atan2(aim.y - p.y, Math.hypot(aim.x - p.x, aim.z - p.z)) * -1 : 0; arm.rotation.x = W.ph === 'weld' ? Math.atan2(p.y - aim.y, Math.hypot(aim.x - p.x, aim.z - p.z)) : arm.rotation.x * 0.9;
+      body.position.y = Math.sin(t * 2.4) * 0.04; body.rotation.z = Math.sin(t * 1.7) * 0.05 + (W.ph === 'glide' ? -dy * 0.3 : 0);
+      jet.scale.set(1, 0.8 + Math.random() * 0.4 + (W.ph === 'up' ? 0.4 : 0), 1);
+      if (welding) { torch.getWorldPosition(tp); flare.position.copy(tp); flare.scale.setScalar(0.18 + Math.random() * 0.3); if (Math.random() < dt * 18) burst(tp, Math.random() < 0.5 ? '#ffd36a' : '#ff9a3c', 3, 4); }
+      else flare.scale.setScalar(0.01); });
+    // Brakka supervises from beside the bay now
+    levelAnims.push(t => { const n = npcObjs.brakka; if (!n || !n.obj) return; const o = n.obj; const near = Math.hypot(player.pos.x - o.position.x, player.pos.z - o.position.z) < 3;
+      if (!near) { const yw = Math.atan2(bot.position.x - o.position.x, bot.position.z - o.position.z); o.rotation.y += (yw - o.rotation.y) * 0.03; } o.rotation.x *= 0.8; });
   } catch (e) { console.warn('shipwright bay', e); }
 }; }
 

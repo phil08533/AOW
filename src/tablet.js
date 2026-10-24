@@ -141,11 +141,11 @@ function tabletFrame() {
   tabWrap.style.perspective = f + 'px';
   for (const [k2, v] of [['width', W + 'px'], ['height', H + 'px'], ['left', (W0 - W) / 2 + 'px'], ['top', (H0 - H) / 2 + 'px'], ['transform', `translateY(${ty}px) rotateX(${tilt}deg)`]]) drop.style.setProperty(k2, v, 'important');
   // 3D tablet at depth d, sized so 1 css px on the screen plane = k world units
-  const d = 0.5, k = 2 * d * Math.tan(camera.fov * Math.PI / 360) / H0, U = tabletObj.userData, bz = Math.max(14, W * 0.035);
-  tabletObj.visible = true; tabletObj.position.set(0, -ty * k, -d); tabletObj.rotation.set(-tilt * Math.PI / 180, 0, 0);
+  const d = Math.max(0.5, camera.near * 2.2), k = 2 * d * Math.tan(camera.fov * Math.PI / 360) / H0, U = tabletObj.userData, bz = Math.max(14, W * 0.035);
+  tabletObj.visible = true; tabletObj.position.set(0, -ty * k, -d); tabletObj.rotation.set(tilt * Math.PI / 180, 0, 0);
   U.screen.scale.set(W * k, H * k, 1); U.screen.position.z = -0.0005;
-  U.body.scale.set((W + bz * 2) * k, (H + bz * 2) * k, 0.012); U.body.position.z = -0.0075;
-  U.edge.scale.set((W + bz * 2 + 4) * k, (H + bz * 2 + 4) * k, 0.008); U.edge.position.z = -0.012;
+  U.body.scale.set((W + bz * 2) * k, (H + bz * 2 + 26) * k, 0.012); U.body.position.set(0, -13 * k, -0.0075); // extra chin for the brand line
+  U.edge.scale.set((W + bz * 2 + 4) * k, (H + bz * 2 + 30) * k, 0.008); U.edge.position.set(0, -13 * k, -0.012);
   U.cam.scale.setScalar(3 * k); U.cam.position.set(0, (H / 2 + bz / 2) * k, -0.001);
   const hs = Math.max(26, Math.min(W, H) * 0.13) * k;
   U.hl.scale.setScalar(hs); U.hl.position.set(-(W / 2 + bz * 0.4) * k, -(H * 0.18) * k, 0.006);

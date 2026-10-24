@@ -1,7 +1,7 @@
 // =================== PS1 LOOK ===================
 // Everything renders into a small render target (about 240 lines tall), then gets upscaled with hard pixels,
 // 15-bit color and a 4x4 ordered dither. Vertices snap to that low-res grid (the classic wobble), textures
-// are sampled without perspective correction (the classic warp), and lighting is per-vertex.
+// are sampled perspective-correct (the affine warp was dropped), and lighting is per-vertex.
 const PSX = { res: { value: new THREE.Vector2(320, 240) } };
 function psx(mat) {
   if (RSTYLE !== 'retro') return mat;
@@ -9,11 +9,9 @@ function psx(mat) {
     sh.uniforms.uRes = PSX.res;
     sh.vertexShader = 'uniform vec2 uRes;\n#ifdef USE_MAP\nvarying vec3 vAff;\n#endif\n' + sh.vertexShader.replace('#include <project_vertex>',
       '#include <project_vertex>\n{ vec4 sp = gl_Position; vec2 g = uRes * 0.5; sp.xy = floor(sp.xy / sp.w * g + 0.5) / g * sp.w; gl_Position = sp; }\n#ifdef USE_MAP\nvAff = vec3(vUv * gl_Position.w, gl_Position.w);\n#endif');
-    if (sh.fragmentShader.indexOf('#include <map_fragment>') >= 0)
-      sh.fragmentShader = '#ifdef USE_MAP\nvarying vec3 vAff;\n#endif\n' + sh.fragmentShader.replace('#include <map_fragment>',
-        '#ifdef USE_MAP\nvec4 texelColor = texture2D( map, vAff.xy / vAff.z );\ntexelColor = mapTexelToLinear( texelColor );\ndiffuseColor *= texelColor;\n#endif');
+    // textures are sampled perspective-correct now: the old affine warp bent surfaces toward the screen edges
   };
-  mat.customProgramCacheKey = () => 'psx1';
+  mat.customProgramCacheKey = () => 'psx2';
   return mat;
 }
 // seeded procedural pixel textures

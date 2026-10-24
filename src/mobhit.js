@@ -111,13 +111,13 @@ function mckRoom() {
   part(g, SB(0.3, H, 0.5), dw, X + 3.6, H / 2, Z - 1.75); part(g, B(0.3, H - 2.5, 1.4), dw, X + 3.6, 2.5 + (H - 2.5) / 2, Z - 2.7);
   for (const z of [Z - 3.4, Z - 2.0]) part(g, B(0.4, 2.5, 0.12), toon('#c9a43a'), X + 3.6, 1.25, z); part(g, B(0.4, 0.12, 1.5), toon('#c9a43a'), X + 3.6, 2.5, Z - 2.7);
   { const dr = new THREE.Group(); part(dr, B(0.08, 2.4, 1.3), toon('#3a2014', 'wood'), 0, 1.2, -0.65); part(dr, new THREE.SphereGeometry(0.06, 6, 4), toon('#c9a43a'), 0.08, 1.1, -1.15); dr.position.set(X + 3.6, 0, Z - 2.05); dr.rotation.y = -1.3; g.add(dr); }
-  const mural = (w, h, draw) => { const c = document.createElement('canvas'); c.width = 256; c.height = Math.round(256 * h / w); const x2 = c.getContext('2d'); draw(x2, c.width, c.height); return new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(c) }); };
+  const mural = (w, h, draw) => { const c = document.createElement('canvas'); c.width = 256; c.height = Math.round(256 * h / w); const x2 = c.getContext('2d'); draw(x2, c.width, c.height); return new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(c), polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }); };
   const paint = (x2, w, h, n) => { x2.fillStyle = '#ffd36a'; x2.fillRect(0, 0, w, h); x2.fillStyle = '#c8402f'; x2.fillRect(0, h * 0.78, w, h * 0.22); x2.fillStyle = '#ffffff'; for (let i = 0; i < w; i += 16) x2.fillRect(i, h * 0.76, 8, 4);
     for (let i = 0; i < n; i++) { const cx = w * (i + 0.5) / n, cy = h * 0.42, r = Math.min(w / n, h) * 0.28; x2.fillStyle = '#d89a40'; x2.beginPath(); x2.arc(cx, cy - r * 0.2, r, Math.PI, 0); x2.fill(); x2.fillStyle = '#6fce4a'; x2.fillRect(cx - r, cy - r * 0.2, r * 2, r * 0.18); x2.fillStyle = '#5a2a1a'; x2.fillRect(cx - r, cy, r * 2, r * 0.3); x2.fillStyle = '#d89a40'; x2.fillRect(cx - r * 0.95, cy + r * 0.3, r * 1.9, r * 0.35);
       x2.fillStyle = '#fff'; x2.beginPath(); x2.arc(cx - r * 0.4, cy - r * 0.55, r * 0.2, 0, 7); x2.arc(cx + r * 0.4, cy - r * 0.55, r * 0.2, 0, 7); x2.fill(); x2.fillStyle = '#000'; x2.beginPath(); x2.arc(cx - r * 0.36, cy - r * 0.5, r * 0.09, 0, 7); x2.arc(cx + r * 0.44, cy - r * 0.5, r * 0.09, 0, 7); x2.fill(); }
     x2.fillStyle = '#c8402f'; x2.font = 'bold ' + Math.round(h * 0.12) + 'px monospace'; x2.textAlign = 'center'; x2.fillText('HOME OF THE KLUNK', w / 2, h * 0.14); };
-  { const m = new THREE.Mesh(new THREE.PlaneGeometry(9.8, H - 0.4), mural(9.8, H - 0.4, (x2, w, h) => paint(x2, w, h, 3))); m.position.set(X + 8.8, H / 2, Z - 1.5 + 0.17); g.add(m);
-    const m2 = new THREE.Mesh(new THREE.PlaneGeometry(7.2, H - 0.4), mural(7.2, H - 0.4, (x2, w, h) => paint(x2, w, h, 2))); m2.position.set(X + 3.6 - 0.17, H / 2, Z - 7.2); m2.rotation.y = -Math.PI / 2; g.add(m2); }
+  { const m = new THREE.Mesh(new THREE.PlaneGeometry(9.8, H - 0.4), mural(9.8, H - 0.4, (x2, w, h) => paint(x2, w, h, 3))); m.position.set(X + 8.8, H / 2, Z - 1.5 + 0.21); g.add(m);
+    const m2 = new THREE.Mesh(new THREE.PlaneGeometry(7.2, H - 0.4), mural(7.2, H - 0.4, (x2, w, h) => paint(x2, w, h, 2))); m2.position.set(X + 3.6 - 0.21, H / 2, Z - 7.2); m2.rotation.y = -Math.PI / 2; g.add(m2); }
   part(g, SB(10, 0.12, 9.6), toon('#4a2a1a', 'wood'), C.x, 0.06, C.z); part(g, SB(10, 0.1, 9.6), toon('#2a1814'), C.x, H - 0.15, C.z);
   // velvet walls over the yellow, wainscot, a rug, sconces, a painting of the Don, a bar cart and cigar smoke
   const vel = toon('#5a0e18', 'cloth'), wd = toon('#3a2014', 'wood');
@@ -137,7 +137,15 @@ function mckRoom() {
   part(g, Cy(0.28, 0.28, 0.22, 10), toon('#c8892a'), lx - 0.2, 0.92, lz); part(g, B(0.12, 0.3, 0.12), toon('#3a5a2a'), lx + 0.4, 0.97, lz); // Mega Klunk and a bottle
   sign('PRIVATE · FAMILY ONLY', '#1a0e0c', '#c9a43a', 1.4, 0.3, X + 3.4, 2.85, Z - 2.7, -Math.PI / 2);
   levelGroup.add(g);
-  sitAt(() => makeCivilian('#f4f0e8', '#2a2a30', '#d8a07a', '#1e1c22', '#c8402f'), lx, lz - 0.95, 0);
+  { const don = sitAt(() => makeCivilian('#f4f0e8', '#2a2a30', '#d8a07a', '#1e1c22', '#c8402f'), lx, lz - 0.95, 0), R = don.userData.rig, hd = R && R.head;
+    // the Don's cigar: out of the corner of his mouth, a glowing tip that brightens on each puff, smoke curling up
+    if (hd) { don.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(hd), sz = bb.getSize(new THREE.Vector3()), mw = new THREE.Vector3(bb.min.x + sz.x * 0.62, bb.min.y + sz.y * 0.28, bb.max.z), ml = hd.worldToLocal(mw.clone());
+      const cg = new THREE.Group(); cg.position.copy(ml); cg.rotation.set(0.18, 0.35, 0); hd.add(cg);
+      part(cg, Cy(0.022, 0.024, 0.2, 8), toon('#5a3418'), 0, 0, 0.1, Math.PI / 2); part(cg, Cy(0.026, 0.026, 0.03, 8), toon('#c8402f'), 0, 0, 0.05, Math.PI / 2); part(cg, Cy(0.024, 0.024, 0.012, 8), toon('#c9a43a'), 0, 0, 0.068, Math.PI / 2);
+      const ash = part(cg, Cy(0.022, 0.022, 0.025, 8), toon('#8a8580'), 0, 0, 0.21, Math.PI / 2), tip = part(cg, Cy(0.023, 0.023, 0.006, 8), glow('#ff5a1a'), 0, 0, 0.224, Math.PI / 2);
+      const smk = []; for (let i = 0; i < 5; i++) { const sm = new THREE.Sprite(new THREE.SpriteMaterial({ color: '#d8d0c8', transparent: true, opacity: 0, depthWrite: false })); g.add(sm); smk.push({ sm, t: i / 5 }); }
+      const tw = new THREE.Vector3(); levelAnims.push((t) => { const pf = Math.max(0, Math.sin(t * 0.7)) ** 6; tip.scale.setScalar(1 + pf * 0.5); tip.material.color.setRGB(1, 0.3 + pf * 0.35, 0.08); ash.visible = true;
+        tip.getWorldPosition(tw); for (const s2 of smk) { s2.t = (s2.t + 0.004) % 1; const k = s2.t; s2.sm.position.set(tw.x + Math.sin(k * 6 + t) * 0.08 * k, tw.y + k * 1.1, tw.z + Math.cos(k * 5) * 0.06 * k); s2.sm.scale.setScalar(0.06 + k * 0.35); s2.sm.material.opacity = 0.32 * Math.sin(k * Math.PI); } }); } }
   for (const [x, z, ry] of [[C.x - 0.4, C.z - 2.5, -1.2], [C.x + 0.2, C.z + 0.6, -2.2]]) { const o = buildChar(() => makeCivilian('#1e1c22', '#1e1c22', '#c58a64', '#1e1c22', '#3a3d44'), 'civ'); o.position.set(x, 0, z); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.4); }
   INTERACTS.push({ x: lx - 1.6, z: lz, r: 2.4, label: '🍔 Talk to Don Klunkleone', fn: mobDon });
   // the corner is dim: the whole ship's lighting drops while you stand in it

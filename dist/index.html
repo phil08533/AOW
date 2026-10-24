@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.13</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.14</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -437,7 +437,7 @@ const clamp = THREE.MathUtils.clamp, smooth = THREE.MathUtils.smoothstep;
 // =================== PS1 LOOK ===================
 // Everything renders into a small render target (about 240 lines tall), then gets upscaled with hard pixels,
 // 15-bit color and a 4x4 ordered dither. Vertices snap to that low-res grid (the classic wobble), textures
-// are sampled without perspective correction (the classic warp), and lighting is per-vertex.
+// are sampled perspective-correct (the affine warp was dropped), and lighting is per-vertex.
 const PSX = { res: { value: new THREE.Vector2(320, 240) } };
 function psx(mat) {
   if (RSTYLE !== 'retro') return mat;
@@ -445,11 +445,9 @@ function psx(mat) {
     sh.uniforms.uRes = PSX.res;
     sh.vertexShader = 'uniform vec2 uRes;\n#ifdef USE_MAP\nvarying vec3 vAff;\n#endif\n' + sh.vertexShader.replace('#include <project_vertex>',
       '#include <project_vertex>\n{ vec4 sp = gl_Position; vec2 g = uRes * 0.5; sp.xy = floor(sp.xy / sp.w * g + 0.5) / g * sp.w; gl_Position = sp; }\n#ifdef USE_MAP\nvAff = vec3(vUv * gl_Position.w, gl_Position.w);\n#endif');
-    if (sh.fragmentShader.indexOf('#include <map_fragment>') >= 0)
-      sh.fragmentShader = '#ifdef USE_MAP\nvarying vec3 vAff;\n#endif\n' + sh.fragmentShader.replace('#include <map_fragment>',
-        '#ifdef USE_MAP\nvec4 texelColor = texture2D( map, vAff.xy / vAff.z );\ntexelColor = mapTexelToLinear( texelColor );\ndiffuseColor *= texelColor;\n#endif');
+    // textures are sampled perspective-correct now: the old affine warp bent surfaces toward the screen edges
   };
-  mat.customProgramCacheKey = () => 'psx1';
+  mat.customProgramCacheKey = () => 'psx2';
   return mat;
 }
 // seeded procedural pixel textures
@@ -15867,11 +15865,11 @@ function tabletFrame() {
   tabWrap.style.perspective = f + 'px';
   for (const [k2, v] of [['width', W + 'px'], ['height', H + 'px'], ['left', (W0 - W) / 2 + 'px'], ['top', (H0 - H) / 2 + 'px'], ['transform', `translateY(${ty}px) rotateX(${tilt}deg)`]]) drop.style.setProperty(k2, v, 'important');
   // 3D tablet at depth d, sized so 1 css px on the screen plane = k world units
-  const d = 0.5, k = 2 * d * Math.tan(camera.fov * Math.PI / 360) / H0, U = tabletObj.userData, bz = Math.max(14, W * 0.035);
-  tabletObj.visible = true; tabletObj.position.set(0, -ty * k, -d); tabletObj.rotation.set(-tilt * Math.PI / 180, 0, 0);
+  const d = Math.max(0.5, camera.near * 2.2), k = 2 * d * Math.tan(camera.fov * Math.PI / 360) / H0, U = tabletObj.userData, bz = Math.max(14, W * 0.035);
+  tabletObj.visible = true; tabletObj.position.set(0, -ty * k, -d); tabletObj.rotation.set(tilt * Math.PI / 180, 0, 0);
   U.screen.scale.set(W * k, H * k, 1); U.screen.position.z = -0.0005;
-  U.body.scale.set((W + bz * 2) * k, (H + bz * 2) * k, 0.012); U.body.position.z = -0.0075;
-  U.edge.scale.set((W + bz * 2 + 4) * k, (H + bz * 2 + 4) * k, 0.008); U.edge.position.z = -0.012;
+  U.body.scale.set((W + bz * 2) * k, (H + bz * 2 + 26) * k, 0.012); U.body.position.set(0, -13 * k, -0.0075); // extra chin for the brand line
+  U.edge.scale.set((W + bz * 2 + 4) * k, (H + bz * 2 + 30) * k, 0.008); U.edge.position.set(0, -13 * k, -0.012);
   U.cam.scale.setScalar(3 * k); U.cam.position.set(0, (H / 2 + bz / 2) * k, -0.001);
   const hs = Math.max(26, Math.min(W, H) * 0.13) * k;
   U.hl.scale.setScalar(hs); U.hl.position.set(-(W / 2 + bz * 0.4) * k, -(H * 0.18) * k, 0.006);
@@ -19123,6 +19121,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 279, title: '2.23.14 · Tablet, welder bot, the Don', items: ['Menu tablet now fits the whole menu on PC and while flying, and the scanline filter is replaced by a soft glass screen look','Surfaces no longer bend toward the screen edges (dropped the old PS1 texture warp)','Brakka\'s bay has a hover welder bot that works its way round the ship, clear of everything','McKlunkies: the Home of the Klunk wallpaper no longer flickers into the wall, and Don Klunkleone has a lit cigar'] },
   { id: 278, title: '2.23.13 · Twin blade guns, helmet fit', items: ['Twin blade wings: the gun is now one thin slab swept along both blade tips, joining them, with a slim barrel off the top and bottom blade','AR Screen helmet no longer clips with the head underneath'] },
   { id: 277, title: '2.23.12 · X-wing and AR Screen', items: ['Quad X-wing ship upgrade rebuilt: the regular wings now split into a proper X (two per side, same style), each with its own laser pod','New AR Screen helmet: gunmetal shell, wraparound green AR visor with HUD marks, sensor pod and antenna'] },
   { id: 276, title: '2.23.11 · Kayak fix', items: ['Paddling the kayak no longer uses the walking head-bob'] },
@@ -21777,7 +21776,7 @@ addEventListener('keyup', e => { if (e.code === 'KeyH') holdEnd(); }, true);
   tRepair.style.opacity = player.hp < maxHp() ? 1 : 0.45; } catch (e) { console.warn('hold', e); } }; }
 
 // ---- Zeltac: Brakka's shipwright bay. A ship up on stands with a panel open, a crane, a tool cart,
-// and Brakka at work on it: he leans in, the welder flares and sparks fly. Talk to him for ship upgrades. ----
+// and a hover-bot welding it while Brakka supervises. Talk to him for ship upgrades. ----
 { const _zb = LEVELS.zeltac.build; LEVELS.zeltac.build = function () { _zb.apply(this, arguments);
   try { const cx = 24.5, cz = 6, Y = 0.02;
     // the bay floor: a dark pad with hazard striping around the edge
@@ -21800,17 +21799,40 @@ addEventListener('keyup', e => { if (e.code === 'KeyH') holdEnd(); }, true);
       part(g, B(0.4, 0.15, 0.25), '#2a2c32', -0.3, 1.02, 0); part(g, B(0.5, 0.04, 0.06), '#9aa1aa', 0.25, 0.97, -0.1, 0, 0.4, 0); part(g, Cy(0.08, 0.08, 0.35, 8), '#4fa8ff', 0.3, 1.1, 0.15);
       g.position.set(cx - 3.6, 0, cz + 4.6); props.add(g); box(cx - 3.6, cz + 4.6, 0.65, 0.4); }
     part(props, B(1.1, 0.9, 1.1), toonNS('#8a6a4a', 'wood'), cx + 3.4, 0.45, cz - 5.6); part(props, B(0.8, 0.6, 0.8), toonNS('#5a7a9a', 'hull'), cx + 3.4, 1.2, cz - 5.5, 0, 0.3, 0); box(cx + 3.4, cz - 5.6, 0.6, 0.6);
-    // Brakka at work: lean in, weld, step back
-    const flare = new THREE.Sprite(new THREE.SpriteMaterial({ color: '#9fe8ff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); flare.scale.setScalar(0.01); flare.position.set(cx - 0.55, 1.75, cz - 0.6); levelGroup.add(flare);
-    let last = 0; const W = { t: 0 };
-    levelAnims.push(t => { const dt = Math.min(0.05, t - last || 0.016); last = t; const n = npcObjs.brakka; if (!n || !n.obj) return; const o = n.obj;
-      const talking = Math.hypot(player.pos.x - o.position.x, player.pos.z - o.position.z) < 3;
-      if (talking) { o.rotation.x *= 0.8; flare.scale.setScalar(0.01); return; }
-      W.t += dt; const c = W.t % 6, weld = c > 1.2 && c < 4.2;
-      o.rotation.y = Math.PI / 2 + Math.sin(t * 0.7) * 0.15; o.rotation.x = (weld ? 0.18 : 0.02) * 0.4 + o.rotation.x * 0.6;
-      if (weld) { flare.scale.setScalar(0.25 + Math.random() * 0.45); if (Math.random() < dt * 18) burst(flare.position, Math.random() < 0.5 ? '#ffd36a' : '#ff9a3c', 3, 4); }
-      else flare.scale.setScalar(0.01);
-    });
+    // the welder: a little hover-bot that works its way round the ship. It climbs to a safe height, glides to the next job, drops in,
+    // turns its torch on the hull and sparks fly. Every stop and every leg of the route sits clear of the ship, stands, crane and crates.
+    const flare = new THREE.Sprite(new THREE.SpriteMaterial({ color: '#9fe8ff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); flare.scale.setScalar(0.01); levelGroup.add(flare);
+    const bot = new THREE.Group(), body = new THREE.Group(); bot.name = "weldbot"; bot.add(body); levelGroup.add(bot);
+    part(body, new THREE.SphereGeometry(0.2, 12, 9), toon('#c9a43a', 'metal'), 0, 0, 0); part(body, Cy(0.205, 0.205, 0.06, 14), toon('#3a3d44', 'metal'), 0, 0, 0);
+    part(body, B(0.2, 0.08, 0.04), glow('#4fd2ff'), 0, 0.06, 0.185); part(body, Cy(0.09, 0.12, 0.08, 10), toon('#3a3d44', 'metal'), 0, -0.2, 0);
+    const jet = part(body, new THREE.ConeGeometry(0.08, 0.28, 8), glow('#7fd8ff'), 0, -0.36, 0, Math.PI); jet.material = jet.material.clone(); jet.material.transparent = true; jet.material.opacity = 0.6;
+    for (const sd of [-1, 1]) { part(body, B(0.06, 0.06, 0.12), toon('#5d636c', 'metal'), 0.22 * sd, 0, 0); part(body, Cy(0.01, 0.01, 0.16, 4), '#2a2c32', 0.1 * sd, 0.25, -0.04, 0, 0, -0.3 * sd); part(body, new THREE.SphereGeometry(0.022, 6, 4), glow(sd < 0 ? '#ff3a2a' : '#6fdc5a'), 0.145 * sd, 0.32, -0.04); }
+    const arm = new THREE.Group(); arm.position.set(0, -0.06, 0.16); body.add(arm); part(arm, B(0.05, 0.05, 0.26), toon('#5d636c', 'metal'), 0, 0, 0.13); part(arm, Cy(0.03, 0.02, 0.1, 6), toon('#2a2c32'), 0, 0, 0.3, Math.PI / 2);
+    const torch = new THREE.Object3D(); torch.position.set(0, 0, 0.37); arm.add(torch);
+    // jobs: where the bot hovers and the hull spot it welds (left wing, open engine panel from above, nose, right wing, tail)
+    const SAFE = 3.4, JOBS = [[cx + 0.6, cz - 3.05, 1.9, cx + 0.6, 1.55, cz - 2.35], [cx - 0.5, cz - 1.25, 2.9, cx - 0.5, 2.2, cz - 0.6], [cx - 2.45, cz - 0.6, 2.2, cx - 1.8, 1.7, cz - 0.3],
+      [cx + 0.6, cz + 3.05, 1.9, cx + 0.6, 1.55, cz + 2.35], [cx + 3.0, cz - 0.9, 2.6, cx + 2.6, 1.9, cz - 0.4]];
+    const W = { j: 0, ph: 'weld', t: 0, from: new THREE.Vector3(), to: new THREE.Vector3() }, tp = new THREE.Vector3(), aim = new THREE.Vector3();
+    bot.position.set(JOBS[0][0], JOBS[0][2], JOBS[0][1]); bot.userData.W = W;
+    let last = 0;
+    levelAnims.push(t => { const dt = Math.min(0.25, t - last || 0.016); last = t; const J = JOBS[W.j], p = bot.position; W.t += dt;
+      // route: weld → rise straight up → glide level at SAFE height → drop straight down → weld
+      if (W.ph === 'weld') { if (W.t > 4.5) { W.ph = 'up'; W.t = 0; } }
+      else if (W.ph === 'up') { p.y = Math.min(SAFE, p.y + dt * 1.2); if (p.y >= SAFE) { W.ph = 'glide'; W.t = 0; W.j = (W.j + 1) % JOBS.length; W.from.set(p.x, SAFE, p.z); W.to.set(JOBS[W.j][0], SAFE, JOBS[W.j][1]); } }
+      else if (W.ph === 'glide') { const d = W.from.distanceTo(W.to), k = Math.min(1, W.t * 1.4 / Math.max(0.5, d)), e = k * k * (3 - 2 * k); p.lerpVectors(W.from, W.to, e); if (k >= 1) { W.ph = 'down'; W.t = 0; } }
+      else if (W.ph === 'down') { p.y = Math.max(J[2], p.y - dt * 1.0); if (p.y <= J[2]) { W.ph = 'weld'; W.t = 0; } }
+      const welding = W.ph === 'weld' && W.t > 0.6 && W.t < 4.1;
+      // face the job while working, the way it's going while moving
+      const Jn = JOBS[W.j]; aim.set(Jn[3], Jn[4], Jn[5]); if (W.ph === 'glide') aim.set(W.to.x, p.y, W.to.z);
+      const yaw = Math.atan2(aim.x - p.x, aim.z - p.z); let dy = yaw - bot.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); bot.rotation.y += dy * Math.min(1, dt * 4);
+      arm.rotation.x = W.ph === 'weld' ? -Math.atan2(aim.y - p.y, Math.hypot(aim.x - p.x, aim.z - p.z)) * -1 : 0; arm.rotation.x = W.ph === 'weld' ? Math.atan2(p.y - aim.y, Math.hypot(aim.x - p.x, aim.z - p.z)) : arm.rotation.x * 0.9;
+      body.position.y = Math.sin(t * 2.4) * 0.04; body.rotation.z = Math.sin(t * 1.7) * 0.05 + (W.ph === 'glide' ? -dy * 0.3 : 0);
+      jet.scale.set(1, 0.8 + Math.random() * 0.4 + (W.ph === 'up' ? 0.4 : 0), 1);
+      if (welding) { torch.getWorldPosition(tp); flare.position.copy(tp); flare.scale.setScalar(0.18 + Math.random() * 0.3); if (Math.random() < dt * 18) burst(tp, Math.random() < 0.5 ? '#ffd36a' : '#ff9a3c', 3, 4); }
+      else flare.scale.setScalar(0.01); });
+    // Brakka supervises from beside the bay now
+    levelAnims.push(t => { const n = npcObjs.brakka; if (!n || !n.obj) return; const o = n.obj; const near = Math.hypot(player.pos.x - o.position.x, player.pos.z - o.position.z) < 3;
+      if (!near) { const yw = Math.atan2(bot.position.x - o.position.x, bot.position.z - o.position.z); o.rotation.y += (yw - o.rotation.y) * 0.03; } o.rotation.x *= 0.8; });
   } catch (e) { console.warn('shipwright bay', e); }
 }; }
 
@@ -24313,7 +24335,7 @@ body { text-shadow: 2px 2px 0 #07060a !important; }
 #map canvas { border-radius: 50% !important; }
 #map::before, #map::after { content: none !important; }
 body #tabWrap #menuDrop { border: 0 !important; border-image: none !important; border-radius: 0 !important; background: ${T.screen} !important; box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,.6) !important; }
-body #tabWrap #menuDrop::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
+body #tabWrap #menuDrop::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 5; background: linear-gradient(118deg, rgba(255,255,255,.075) 0%, rgba(255,255,255,.025) 34%, transparent 34.2%), radial-gradient(ellipse at 50% 45%, transparent 62%, rgba(0,0,0,.32) 100%); box-shadow: inset 0 0 0 1px rgba(160,220,255,.08), inset 0 0 18px rgba(80,170,255,.07); }
 #menuDrop .tabTop { border-bottom: 2px solid ${T.lite} !important; color: ${T.accent} !important; background: rgba(0,0,0,.25); }
 #menuDrop .tabTop button { all: unset; }
 .dlg .who, .win .who { color: ${T.who} !important; }
@@ -25205,13 +25227,13 @@ function mckRoom() {
   part(g, SB(0.3, H, 0.5), dw, X + 3.6, H / 2, Z - 1.75); part(g, B(0.3, H - 2.5, 1.4), dw, X + 3.6, 2.5 + (H - 2.5) / 2, Z - 2.7);
   for (const z of [Z - 3.4, Z - 2.0]) part(g, B(0.4, 2.5, 0.12), toon('#c9a43a'), X + 3.6, 1.25, z); part(g, B(0.4, 0.12, 1.5), toon('#c9a43a'), X + 3.6, 2.5, Z - 2.7);
   { const dr = new THREE.Group(); part(dr, B(0.08, 2.4, 1.3), toon('#3a2014', 'wood'), 0, 1.2, -0.65); part(dr, new THREE.SphereGeometry(0.06, 6, 4), toon('#c9a43a'), 0.08, 1.1, -1.15); dr.position.set(X + 3.6, 0, Z - 2.05); dr.rotation.y = -1.3; g.add(dr); }
-  const mural = (w, h, draw) => { const c = document.createElement('canvas'); c.width = 256; c.height = Math.round(256 * h / w); const x2 = c.getContext('2d'); draw(x2, c.width, c.height); return new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(c) }); };
+  const mural = (w, h, draw) => { const c = document.createElement('canvas'); c.width = 256; c.height = Math.round(256 * h / w); const x2 = c.getContext('2d'); draw(x2, c.width, c.height); return new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(c), polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }); };
   const paint = (x2, w, h, n) => { x2.fillStyle = '#ffd36a'; x2.fillRect(0, 0, w, h); x2.fillStyle = '#c8402f'; x2.fillRect(0, h * 0.78, w, h * 0.22); x2.fillStyle = '#ffffff'; for (let i = 0; i < w; i += 16) x2.fillRect(i, h * 0.76, 8, 4);
     for (let i = 0; i < n; i++) { const cx = w * (i + 0.5) / n, cy = h * 0.42, r = Math.min(w / n, h) * 0.28; x2.fillStyle = '#d89a40'; x2.beginPath(); x2.arc(cx, cy - r * 0.2, r, Math.PI, 0); x2.fill(); x2.fillStyle = '#6fce4a'; x2.fillRect(cx - r, cy - r * 0.2, r * 2, r * 0.18); x2.fillStyle = '#5a2a1a'; x2.fillRect(cx - r, cy, r * 2, r * 0.3); x2.fillStyle = '#d89a40'; x2.fillRect(cx - r * 0.95, cy + r * 0.3, r * 1.9, r * 0.35);
       x2.fillStyle = '#fff'; x2.beginPath(); x2.arc(cx - r * 0.4, cy - r * 0.55, r * 0.2, 0, 7); x2.arc(cx + r * 0.4, cy - r * 0.55, r * 0.2, 0, 7); x2.fill(); x2.fillStyle = '#000'; x2.beginPath(); x2.arc(cx - r * 0.36, cy - r * 0.5, r * 0.09, 0, 7); x2.arc(cx + r * 0.44, cy - r * 0.5, r * 0.09, 0, 7); x2.fill(); }
     x2.fillStyle = '#c8402f'; x2.font = 'bold ' + Math.round(h * 0.12) + 'px monospace'; x2.textAlign = 'center'; x2.fillText('HOME OF THE KLUNK', w / 2, h * 0.14); };
-  { const m = new THREE.Mesh(new THREE.PlaneGeometry(9.8, H - 0.4), mural(9.8, H - 0.4, (x2, w, h) => paint(x2, w, h, 3))); m.position.set(X + 8.8, H / 2, Z - 1.5 + 0.17); g.add(m);
-    const m2 = new THREE.Mesh(new THREE.PlaneGeometry(7.2, H - 0.4), mural(7.2, H - 0.4, (x2, w, h) => paint(x2, w, h, 2))); m2.position.set(X + 3.6 - 0.17, H / 2, Z - 7.2); m2.rotation.y = -Math.PI / 2; g.add(m2); }
+  { const m = new THREE.Mesh(new THREE.PlaneGeometry(9.8, H - 0.4), mural(9.8, H - 0.4, (x2, w, h) => paint(x2, w, h, 3))); m.position.set(X + 8.8, H / 2, Z - 1.5 + 0.21); g.add(m);
+    const m2 = new THREE.Mesh(new THREE.PlaneGeometry(7.2, H - 0.4), mural(7.2, H - 0.4, (x2, w, h) => paint(x2, w, h, 2))); m2.position.set(X + 3.6 - 0.21, H / 2, Z - 7.2); m2.rotation.y = -Math.PI / 2; g.add(m2); }
   part(g, SB(10, 0.12, 9.6), toon('#4a2a1a', 'wood'), C.x, 0.06, C.z); part(g, SB(10, 0.1, 9.6), toon('#2a1814'), C.x, H - 0.15, C.z);
   // velvet walls over the yellow, wainscot, a rug, sconces, a painting of the Don, a bar cart and cigar smoke
   const vel = toon('#5a0e18', 'cloth'), wd = toon('#3a2014', 'wood');
@@ -25231,7 +25253,15 @@ function mckRoom() {
   part(g, Cy(0.28, 0.28, 0.22, 10), toon('#c8892a'), lx - 0.2, 0.92, lz); part(g, B(0.12, 0.3, 0.12), toon('#3a5a2a'), lx + 0.4, 0.97, lz); // Mega Klunk and a bottle
   sign('PRIVATE · FAMILY ONLY', '#1a0e0c', '#c9a43a', 1.4, 0.3, X + 3.4, 2.85, Z - 2.7, -Math.PI / 2);
   levelGroup.add(g);
-  sitAt(() => makeCivilian('#f4f0e8', '#2a2a30', '#d8a07a', '#1e1c22', '#c8402f'), lx, lz - 0.95, 0);
+  { const don = sitAt(() => makeCivilian('#f4f0e8', '#2a2a30', '#d8a07a', '#1e1c22', '#c8402f'), lx, lz - 0.95, 0), R = don.userData.rig, hd = R && R.head;
+    // the Don's cigar: out of the corner of his mouth, a glowing tip that brightens on each puff, smoke curling up
+    if (hd) { don.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(hd), sz = bb.getSize(new THREE.Vector3()), mw = new THREE.Vector3(bb.min.x + sz.x * 0.62, bb.min.y + sz.y * 0.28, bb.max.z), ml = hd.worldToLocal(mw.clone());
+      const cg = new THREE.Group(); cg.position.copy(ml); cg.rotation.set(0.18, 0.35, 0); hd.add(cg);
+      part(cg, Cy(0.022, 0.024, 0.2, 8), toon('#5a3418'), 0, 0, 0.1, Math.PI / 2); part(cg, Cy(0.026, 0.026, 0.03, 8), toon('#c8402f'), 0, 0, 0.05, Math.PI / 2); part(cg, Cy(0.024, 0.024, 0.012, 8), toon('#c9a43a'), 0, 0, 0.068, Math.PI / 2);
+      const ash = part(cg, Cy(0.022, 0.022, 0.025, 8), toon('#8a8580'), 0, 0, 0.21, Math.PI / 2), tip = part(cg, Cy(0.023, 0.023, 0.006, 8), glow('#ff5a1a'), 0, 0, 0.224, Math.PI / 2);
+      const smk = []; for (let i = 0; i < 5; i++) { const sm = new THREE.Sprite(new THREE.SpriteMaterial({ color: '#d8d0c8', transparent: true, opacity: 0, depthWrite: false })); g.add(sm); smk.push({ sm, t: i / 5 }); }
+      const tw = new THREE.Vector3(); levelAnims.push((t) => { const pf = Math.max(0, Math.sin(t * 0.7)) ** 6; tip.scale.setScalar(1 + pf * 0.5); tip.material.color.setRGB(1, 0.3 + pf * 0.35, 0.08); ash.visible = true;
+        tip.getWorldPosition(tw); for (const s2 of smk) { s2.t = (s2.t + 0.004) % 1; const k = s2.t; s2.sm.position.set(tw.x + Math.sin(k * 6 + t) * 0.08 * k, tw.y + k * 1.1, tw.z + Math.cos(k * 5) * 0.06 * k); s2.sm.scale.setScalar(0.06 + k * 0.35); s2.sm.material.opacity = 0.32 * Math.sin(k * Math.PI); } }); } }
   for (const [x, z, ry] of [[C.x - 0.4, C.z - 2.5, -1.2], [C.x + 0.2, C.z + 0.6, -2.2]]) { const o = buildChar(() => makeCivilian('#1e1c22', '#1e1c22', '#c58a64', '#1e1c22', '#3a3d44'), 'civ'); o.position.set(x, 0, z); o.rotation.y = ry; levelGroup.add(o); solid(x, z, 0.4); }
   INTERACTS.push({ x: lx - 1.6, z: lz, r: 2.4, label: '🍔 Talk to Don Klunkleone', fn: mobDon });
   // the corner is dim: the whole ship's lighting drops while you stand in it

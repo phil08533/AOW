@@ -45,7 +45,7 @@ body { text-shadow: 2px 2px 0 #07060a !important; }
 #map canvas { border-radius: 50% !important; }
 #map::before, #map::after { content: none !important; }
 body #tabWrap #menuDrop { border: 0 !important; border-image: none !important; border-radius: 0 !important; background: ${T.screen} !important; box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,.6) !important; }
-body #tabWrap #menuDrop::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
+body #tabWrap #menuDrop::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 5; background: linear-gradient(118deg, rgba(255,255,255,.075) 0%, rgba(255,255,255,.025) 34%, transparent 34.2%), radial-gradient(ellipse at 50% 45%, transparent 62%, rgba(0,0,0,.32) 100%); box-shadow: inset 0 0 0 1px rgba(160,220,255,.08), inset 0 0 18px rgba(80,170,255,.07); }
 #menuDrop .tabTop { border-bottom: 2px solid ${T.lite} !important; color: ${T.accent} !important; background: rgba(0,0,0,.25); }
 #menuDrop .tabTop button { all: unset; }
 .dlg .who, .win .who { color: ${T.who} !important; }

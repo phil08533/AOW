@@ -26,7 +26,7 @@ function mmcRender(R) {
   const w2m = (x, z) => [cx + (x - player.pos.x) * sc, cy + (z - player.pos.z) * sc];
   for (const e of enemies) if (!e.dead && e.obj.visible && Math.abs(e.obj.position.x - player.pos.x) < R && Math.abs(e.obj.position.z - player.pos.z) < R) { const [ex, ez] = w2m(e.obj.position.x, e.obj.position.z); mctx.fillStyle = e.def.boss ? '#ff2a3a' : '#d83a3a'; mctx.strokeStyle = '#000'; mctx.lineWidth = 1; mctx.beginPath(); mctx.arc(ex, ez, e.def.boss ? 4 : 2.5, 0, 7); mctx.fill(); mctx.stroke(); }
   for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible || !N.mark) continue; const [nx, nz] = w2m(N.obj.position.x, N.obj.position.z); if (N.mark === '$') { mctx.fillStyle = '#8fe3ff'; mctx.strokeStyle = '#000'; mctx.lineWidth = 1; mctx.fillRect(nx - 2, nz - 2, 4, 4); mctx.strokeRect(nx - 2, nz - 2, 4, 4); continue; } mctx.fillStyle = '#ffd36a'; mctx.font = 'bold 12px monospace'; mctx.textAlign = 'center'; mctx.strokeStyle = '#000'; mctx.lineWidth = 3; mctx.strokeText(N.mark, nx, nz + 4); mctx.fillText(N.mark, nx, nz + 4); }
-  if (!mmcMe()) { mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.fillStyle = '#ff9a3c'; mctx.strokeStyle = '#000'; mctx.lineWidth = 1.5; mctx.beginPath(); mctx.moveTo(0, -7); mctx.lineTo(5, 5); mctx.lineTo(0, 2.5); mctx.lineTo(-5, 5); mctx.closePath(); mctx.stroke(); mctx.fill(); mctx.restore(); }
+  if (!mmcMe()) mapArrow(cx, cy);
 }; }
 { const st = document.createElement('style'); st.textContent = '#map { pointer-events: auto; cursor: pointer; }'; document.head.appendChild(st);
   $('map').addEventListener('click', e => { e.stopPropagation(); mmcSet(mmcMode() + 1); }); }

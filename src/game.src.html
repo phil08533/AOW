@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.42</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.43</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -967,25 +967,44 @@ function log(text, cls, who) {
 let zoneShown = null, zoneT = 0;
 const mapC = $('mapC'), mctx = mapC.getContext('2d');
 function drawMap() {
-  const S2 = 112, sc = 0.9, cx = S2 / 2, cy = S2 / 2; mctx.clearRect(0, 0, S2, S2); mctx.imageSmoothingEnabled = false;
-  mctx.fillStyle = LEVEL.id === 'ship' ? 'rgba(20,24,40,.8)' : (LEVEL.palette.grass + '99'); mctx.fillRect(0, 0, S2, S2);
-  if (LEVEL.fly) { drawSpaceMap(mctx, S2); mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.translate(-cx, -cy); mctx.fillStyle = '#ff9a3c'; mctx.beginPath(); mctx.moveTo(cx, cy - 6); mctx.lineTo(cx + 4, cy + 4); mctx.lineTo(cx, cy + 2); mctx.lineTo(cx - 4, cy + 4); mctx.closePath(); mctx.fill(); mctx.restore(); return; }
+  const S2 = 112, sc = 0.9, cx = S2 / 2, cy = S2 / 2; mctx.clearRect(0, 0, S2, S2); mctx.imageSmoothingEnabled = true;
+  if (LEVEL.fly) { mctx.fillStyle = '#05081a'; mctx.fillRect(0, 0, S2, S2); drawSpaceMap(mctx, S2); mapArrow(cx, cy); return; }
+  // ground: the level's own colour, toned down so markers read on top, with a world-anchored speckle so you can feel yourself move
+  const ship = LEVEL.id === 'ship', g0 = ship ? '#1a2032' : LEVEL.palette.grass; mctx.fillStyle = g0; mctx.fillRect(0, 0, S2, S2); mctx.fillStyle = 'rgba(8,10,22,.32)'; mctx.fillRect(0, 0, S2, S2);
+  if (!drawMap.grain) { const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d'); for (let k = 0; k < 90; k++) { x.fillStyle = k % 3 ? 'rgba(0,0,0,.13)' : 'rgba(255,255,255,.07)'; x.fillRect((k * 37) % 32, (k * 53 + (k >> 2)) % 32, 1 + (k % 2), 1); } drawMap.grain = mctx.createPattern(c, 'repeat'); }
+  mctx.save(); mctx.translate(-((player.pos.x * sc) % 32), -((player.pos.z * sc) % 32)); mctx.fillStyle = drawMap.grain; mctx.fillRect(-32, -32, S2 + 64, S2 + 64); mctx.restore();
   mctx.save(); mctx.translate(cx, cy);
-  const w2m = (x, z) => [(x - player.pos.x) * sc, (z - player.pos.z) * sc];
-  mctx.strokeStyle = 'rgba(168,144,95,.95)'; mctx.lineWidth = 3; mctx.lineCap = 'butt';
-  for (const [a, b] of PATHS) { const [ax, az] = w2m(a[0], a[1]), [bx, bz] = w2m(b[0], b[1]); mctx.beginPath(); mctx.moveTo(ax, az); mctx.lineTo(bx, bz); mctx.stroke(); }
-  mctx.strokeStyle = '#5aa8d8'; mctx.lineWidth = 3; mctx.beginPath(); RIVER.forEach(([rx, rz], i) => { const [mx, mz] = w2m(rx, rz); if (i) mctx.lineTo(mx, mz); else mctx.moveTo(mx, mz); }); mctx.stroke();
-  mctx.fillStyle = '#5aa8d8'; for (const [px, pz, pr] of [...(Z.lake ? [[Z.lake.x, Z.lake.z, 9.5]] : []), ...POOLS]) { const [mx, mz] = w2m(px, pz); mctx.beginPath(); mctx.arc(mx, mz, pr * sc, 0, 7); mctx.fill(); }
-  mctx.fillStyle = '#ff6a1a'; for (const [px, pz, pr] of LAVA) { const [mx, mz] = w2m(px, pz); mctx.fillRect(mx - pr * sc, mz - pr * sc, pr * sc * 2, pr * sc * 2); }
-  if (LEVEL.id === 'ship') { mctx.fillStyle = 'rgba(160,170,190,.9)'; for (const [bx, bz, hx, hz] of BOXES) { const [mx, mz] = w2m(bx, bz); mctx.save(); mctx.translate(mx, mz); mctx.fillRect(-hx * sc, -hz * sc, hx * sc * 2, hz * sc * 2); mctx.restore(); } }
-  for (const zn of ZONES) { const [zx, zz] = w2m(zn.x, zn.z); mctx.fillStyle = zn.col + 'cc'; mctx.beginPath(); mctx.arc(zx, zz, zn.r * sc, 0, 7); mctx.fill(); if (zn.safe) { mctx.strokeStyle = '#efe7d6'; mctx.lineWidth = 2; mctx.stroke(); } }
-  for (const e of enemies) if (!e.dead && e.obj.position.distanceToSquared(player.pos) < 3600) { const [ex, ez] = w2m(e.obj.position.x, e.obj.position.z); mctx.fillStyle = e.def.boss ? '#ff2a3a' : '#d8342a'; mctx.fillRect(ex - 1.5, ez - 1.5, e.def.boss || e.def.elite ? 5 : 3, e.def.boss || e.def.elite ? 5 : 3); }
-  for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible || !N.mark) continue; const [nx, nz] = w2m(N.obj.position.x, N.obj.position.z); mctx.fillStyle = N.mark === '$' ? '#8fe3ff' : '#ffd75e'; mctx.fillRect(nx - 2, nz - 2, 4, 4); }
-  for (const r of remotes.values()) { const [rx, rz] = w2m(r.obj.position.x, r.obj.position.z); mctx.fillStyle = '#8fe3ff'; mctx.fillRect(rx - 2, rz - 2, 4, 4); }
+  const w2m = (x, z) => [(x - player.pos.x) * sc, (z - player.pos.z) * sc], near = (x, z, r) => Math.abs(x - player.pos.x) < 70 + r && Math.abs(z - player.pos.z) < 70 + r;
+  const line = (pts, w, col) => { mctx.strokeStyle = col; mctx.lineWidth = w; mctx.beginPath(); pts.forEach(([x, z], i) => { const [mx, mz] = w2m(x, z); if (i) mctx.lineTo(mx, mz); else mctx.moveTo(mx, mz); }); mctx.stroke(); };
+  mctx.lineCap = mctx.lineJoin = 'round';
+  // zones: soft pools of colour; safe zones get a dashed cream edge
+  for (const zn of ZONES) { if (!near(zn.x, zn.z, zn.r)) continue; const [zx, zz] = w2m(zn.x, zn.z), R = zn.r * sc, gr = mctx.createRadialGradient(zx, zz, 0, zx, zz, R); gr.addColorStop(0, zn.col + '66'); gr.addColorStop(1, zn.col + '26'); mctx.fillStyle = gr; mctx.beginPath(); mctx.arc(zx, zz, R, 0, 7); mctx.fill();
+    if (zn.safe) { mctx.setLineDash([3, 3]); mctx.strokeStyle = 'rgba(239,231,214,.75)'; mctx.lineWidth = 1.2; mctx.stroke(); mctx.setLineDash([]); } }
+  // water and lava
+  if (RIVER.length) { line(RIVER, 5, '#1d4a78'); line(RIVER, 3, '#4a9ad0'); line(RIVER, 1, 'rgba(190,235,255,.55)'); }
+  for (const [px, pz, pr] of [...(Z.lake ? [[Z.lake.x, Z.lake.z, 9.5]] : []), ...POOLS]) { if (!near(px, pz, pr)) continue; const [mx, mz] = w2m(px, pz); mctx.fillStyle = '#1d4a78'; mctx.beginPath(); mctx.arc(mx, mz, pr * sc + 1, 0, 7); mctx.fill(); mctx.fillStyle = '#4a9ad0'; mctx.beginPath(); mctx.arc(mx, mz, pr * sc, 0, 7); mctx.fill(); mctx.fillStyle = 'rgba(190,235,255,.35)'; mctx.beginPath(); mctx.arc(mx - pr * sc * 0.3, mz - pr * sc * 0.3, pr * sc * 0.35, 0, 7); mctx.fill(); }
+  for (const [px, pz, pr] of LAVA) { if (!near(px, pz, pr)) continue; const [mx, mz] = w2m(px, pz), R = pr * sc, gr = mctx.createRadialGradient(mx, mz, 0, mx, mz, R * 1.3); gr.addColorStop(0, '#ffd36a'); gr.addColorStop(0.6, '#ff6a1a'); gr.addColorStop(1, 'rgba(255,60,10,0)'); mctx.fillStyle = gr; mctx.fillRect(mx - R * 1.3, mz - R * 1.3, R * 2.6, R * 2.6); }
+  // roads: a dark kerb under a sandy top
+  for (const [a, b] of PATHS) { if (!near(a[0], a[1], 40) && !near(b[0], b[1], 40)) continue; line([a, b], 4.6, 'rgba(40,30,18,.55)'); line([a, b], 3, '#b8a070'); }
+  // buildings and walls: raised blocks with a drop shadow and a lit top edge
+  for (const [bx, bz, hx, hz] of BOXES) { if (!near(bx, bz, Math.max(hx, hz))) continue; const [mx, mz] = w2m(bx, bz), w = Math.max(1.2, hx * sc * 2), h = Math.max(1.2, hz * sc * 2), x0 = mx - w / 2, z0 = mz - h / 2;
+    mctx.fillStyle = 'rgba(0,0,0,.4)'; mctx.fillRect(x0 + 1.2, z0 + 1.2, w, h); mctx.fillStyle = ship ? '#8a94aa' : '#9a9282'; mctx.fillRect(x0, z0, w, h); mctx.fillStyle = 'rgba(255,255,255,.28)'; mctx.fillRect(x0, z0, w, Math.min(1, h)); mctx.strokeStyle = 'rgba(20,18,26,.7)'; mctx.lineWidth = 0.6; mctx.strokeRect(x0, z0, w, h); }
+  // people: enemies as red beads (bosses pulse), quest marks in gold, shops and players in cyan
+  const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 180);
+  for (const e of enemies) if (!e.dead && e.obj.visible !== false && e.obj.position.distanceToSquared(player.pos) < 3600) { const [ex, ez] = w2m(e.obj.position.x, e.obj.position.z), big = e.def.boss || e.def.elite, r = big ? 3.2 : 2.1;
+    if (e.def.boss) { mctx.strokeStyle = `rgba(255,60,60,${0.3 + pulse * 0.5})`; mctx.lineWidth = 1.2; mctx.beginPath(); mctx.arc(ex, ez, r + 2 + pulse * 1.5, 0, 7); mctx.stroke(); }
+    mctx.fillStyle = '#1a0606'; mctx.beginPath(); mctx.arc(ex, ez, r + 0.8, 0, 7); mctx.fill(); mctx.fillStyle = e.def.boss ? '#ff3a3a' : '#e0402e'; mctx.beginPath(); mctx.arc(ex, ez, r, 0, 7); mctx.fill(); mctx.fillStyle = 'rgba(255,220,200,.6)'; mctx.fillRect(ex - r * 0.5, ez - r * 0.6, 1, 1); }
+  for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible || !N.mark) continue; const [nx, nz] = w2m(N.obj.position.x, N.obj.position.z);
+    if (N.mark === '$') { mctx.fillStyle = '#05121a'; mctx.beginPath(); mctx.moveTo(nx, nz - 3.6); mctx.lineTo(nx + 3.6, nz); mctx.lineTo(nx, nz + 3.6); mctx.lineTo(nx - 3.6, nz); mctx.fill(); mctx.fillStyle = '#8fe3ff'; mctx.beginPath(); mctx.moveTo(nx, nz - 2.6); mctx.lineTo(nx + 2.6, nz); mctx.lineTo(nx, nz + 2.6); mctx.lineTo(nx - 2.6, nz); mctx.fill(); continue; }
+    mctx.font = '700 11px "Pixelify Sans", monospace'; mctx.textAlign = 'center'; mctx.textBaseline = 'middle'; mctx.strokeStyle = '#1a1000'; mctx.lineWidth = 3; mctx.strokeText(N.mark, nx, nz); mctx.fillStyle = '#ffd75e'; mctx.fillText(N.mark, nx, nz); }
+  for (const r of remotes.values()) { const [rx, rz] = w2m(r.obj.position.x, r.obj.position.z); mctx.fillStyle = '#05121a'; mctx.beginPath(); mctx.arc(rx, rz, 3, 0, 7); mctx.fill(); mctx.fillStyle = '#8fe3ff'; mctx.beginPath(); mctx.arc(rx, rz, 2.1, 0, 7); mctx.fill(); }
   mctx.restore();
-  mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.translate(-cx, -cy);
-  mctx.fillStyle = '#ff9a3c'; mctx.beginPath(); mctx.moveTo(cx, cy - 6); mctx.lineTo(cx + 4, cy + 4); mctx.lineTo(cx, cy + 2); mctx.lineTo(cx - 4, cy + 4); mctx.closePath(); mctx.fill(); mctx.restore();
+  if (!(typeof mmcMe === 'function' && mmcMe())) mapArrow(cx, cy);
 }
+// you: an orange chevron with a dark edge, pointing where you face
+function mapArrow(cx, cy) { mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.lineJoin = 'round';
+  mctx.beginPath(); mctx.moveTo(0, -7); mctx.lineTo(5, 5); mctx.lineTo(0, 2.5); mctx.lineTo(-5, 5); mctx.closePath(); mctx.fillStyle = 'rgba(0,0,0,.4)'; mctx.save(); mctx.translate(0.8, 0.8); mctx.fill(); mctx.restore();
+  mctx.strokeStyle = '#1a0c00'; mctx.lineWidth = 1.6; mctx.stroke(); mctx.fillStyle = '#ff9a3c'; mctx.fill(); mctx.fillStyle = '#ffd9a8'; mctx.beginPath(); mctx.moveTo(0, -5); mctx.lineTo(1.6, -1); mctx.lineTo(-1.6, -1); mctx.closePath(); mctx.fill(); mctx.restore(); }
 function updateHud() {
   const g = gun(); refreshGunModel();
   $('hpN').textContent = Math.ceil(player.hp) + ' / ' + maxHp();

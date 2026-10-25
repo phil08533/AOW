@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.42</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.43</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19301,6 +19301,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 308, title: 'Dome watch minimap', items: ['The minimap is now a high-dome watch: a metal case in your menu colours with a crown, cream lume bars and N E S W, an oil-dark rim and a curved glass highlight', 'The middle of the map bulges a little, like looking through an oil-filled dome', 'The classic map is redrawn: softer ground, shaded roads and water, raised buildings, enemy beads (bosses pulse), shop diamonds and gold quest marks', 'Works with the live camera map, your character token and space flight, and the compass is unchanged'] },
   { id: 307, title: 'Badge button fix', items: ['On phones the Marshal BADGE button now sits in the right-hand button column instead of on the minimap'] },
   { id: 306, title: 'Cockpit lasers on target', items: ['In cockpit view your lasers now fly straight up the aiming ring instead of landing below it'] },
   { id: 305, title: 'Mile Down lounge', items: ['The robot singer performs Deep Boop in the bar', 'The regulars sip, chat, look around and shoot pool instead of standing frozen', 'Talk to the regulars after the story for their take on the screaming'] },
@@ -29387,7 +29388,7 @@ function mmcRender(R) {
   const w2m = (x, z) => [cx + (x - player.pos.x) * sc, cy + (z - player.pos.z) * sc];
   for (const e of enemies) if (!e.dead && e.obj.visible && Math.abs(e.obj.position.x - player.pos.x) < R && Math.abs(e.obj.position.z - player.pos.z) < R) { const [ex, ez] = w2m(e.obj.position.x, e.obj.position.z); mctx.fillStyle = e.def.boss ? '#ff2a3a' : '#d83a3a'; mctx.strokeStyle = '#000'; mctx.lineWidth = 1; mctx.beginPath(); mctx.arc(ex, ez, e.def.boss ? 4 : 2.5, 0, 7); mctx.fill(); mctx.stroke(); }
   for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible || !N.mark) continue; const [nx, nz] = w2m(N.obj.position.x, N.obj.position.z); if (N.mark === '$') { mctx.fillStyle = '#8fe3ff'; mctx.strokeStyle = '#000'; mctx.lineWidth = 1; mctx.fillRect(nx - 2, nz - 2, 4, 4); mctx.strokeRect(nx - 2, nz - 2, 4, 4); continue; } mctx.fillStyle = '#ffd36a'; mctx.font = 'bold 12px monospace'; mctx.textAlign = 'center'; mctx.strokeStyle = '#000'; mctx.lineWidth = 3; mctx.strokeText(N.mark, nx, nz + 4); mctx.fillText(N.mark, nx, nz + 4); }
-  if (!mmcMe()) { mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.fillStyle = '#ff9a3c'; mctx.strokeStyle = '#000'; mctx.lineWidth = 1.5; mctx.beginPath(); mctx.moveTo(0, -7); mctx.lineTo(5, 5); mctx.lineTo(0, 2.5); mctx.lineTo(-5, 5); mctx.closePath(); mctx.stroke(); mctx.fill(); mctx.restore(); }
+  if (!mmcMe()) mapArrow(cx, cy);
 }; }
 { const st = document.createElement('style'); st.textContent = '#map { pointer-events: auto; cursor: pointer; }'; document.head.appendChild(st);
   $('map').addEventListener('click', e => { e.stopPropagation(); mmcSet(mmcMode() + 1); }); }
@@ -29421,6 +29422,75 @@ function mmcToken() {
 }
 { const _dm2 = drawMap; drawMap = function () { _dm2(); if (!mmcMe() || !LEVEL || LEVEL.fly || state === 'menu') return;
   try { const c = mmcToken(), s = 40; mctx.save(); mctx.shadowColor = 'rgba(0,0,0,.8)'; mctx.shadowBlur = 4; mctx.drawImage(c, 56 - s / 2, 56 - s * 0.62, s, s); mctx.restore(); } catch (e) { console.warn('mmc token', e); } }; }
+
+// =================== MDOME MINIMAP: the map sits under an oil-filled high-dome watch glass ===================
+// Inspired by the U-Boat Capsoil: a metal case in the menu colours, cream lume bars with N E S W at the quarters,
+// a dark oily edge, a gentle magnifying bulge in the middle and a curved glass highlight. The map underneath is
+// whatever drawMap() drew (classic, live camera or space), so every mode gets the same face. The compass tape is untouched.
+const MDOME = { k: 2, off: null, key: '', face: null };
+{ const st = document.createElement('style'); st.textContent = `
+html body #map.win { border: 0 !important; background: transparent !important; box-shadow: none !important; filter: drop-shadow(3px 3px 0 rgba(0,0,0,.55)); overflow: visible !important; }
+html body #map.win canvas { image-rendering: auto !important; border-radius: 50% !important; }
+#mapCrown { position: absolute; width: 7px; height: 16px; border-radius: 2px; pointer-events: none; z-index: 4; box-shadow: 2px 2px 0 rgba(0,0,0,.55); }
+body.menuopen #mapCrown, body.photo #mapCrown, body.decor #mapCrown, body.flying #mapCrown { visibility: hidden; }`; document.head.appendChild(st); }
+const domeTheme = () => (typeof UI_THEMES !== 'undefined' && (UI_THEMES[PREFS.uiTheme] || UI_THEMES.Steel)) || { lite: '#4a5058', dark: '#0c0d10', hiLite: '#767e8a', body: '#1c1e22', accent: '#e8e8e8' };
+// the parts that never move (case, lume, glass) are painted once per theme into their own canvas
+function domeFace(T) {
+  const N = 112 * MDOME.k, c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d'); x.scale(MDOME.k, MDOME.k);
+  const C = 56, R = 48.5;
+  // the oil: dark at the rim, clear in the middle, a touch of deep blue like the dial in the photo
+  let g = x.createRadialGradient(C, C, R * 0.35, C, C, R); g.addColorStop(0, 'rgba(10,20,50,0)'); g.addColorStop(0.7, 'rgba(10,18,44,.22)'); g.addColorStop(0.93, 'rgba(4,6,16,.7)'); g.addColorStop(1, 'rgba(0,0,0,.92)');
+  x.fillStyle = g; x.beginPath(); x.arc(C, C, R, 0, 7); x.fill();
+  // minute track and lume bars
+  for (let i = 0; i < 60; i++) { const a = i / 60 * Math.PI * 2; x.fillStyle = 'rgba(233,220,184,.45)'; x.beginPath(); x.arc(C + Math.sin(a) * (R - 1.6), C - Math.cos(a) * (R - 1.6), 0.45, 0, 7); x.fill(); }
+  x.lineCap = 'round';
+  for (let i = 0; i < 12; i++) { if (i % 3 === 0) continue; const a = i / 12 * Math.PI * 2, s = Math.sin(a), co = -Math.cos(a), r0 = R - 3.2, r1 = R - 9;
+    x.strokeStyle = 'rgba(0,0,0,.65)'; x.lineWidth = 3.6; x.beginPath(); x.moveTo(C + s * r0, C + co * r0); x.lineTo(C + s * r1, C + co * r1); x.stroke();
+    x.strokeStyle = '#e9dcb8'; x.lineWidth = 2.2; x.beginPath(); x.moveTo(C + s * r0, C + co * r0); x.lineTo(C + s * r1, C + co * r1); x.stroke(); }
+  x.font = '700 12px "Pixelify Sans", monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  for (const [t, i] of [['N', 0], ['E', 1], ['S', 2], ['W', 3]]) { const a = i * Math.PI / 2, px = C + Math.sin(a) * (R - 8.5), py = C - Math.cos(a) * (R - 8.5) + 0.5;
+    x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.75)'; x.strokeText(t, px, py); x.fillStyle = t === 'N' ? '#ffb347' : '#e9dcb8'; x.fillText(t, px, py); }
+  // the glass: a dark refraction rim, a big curved highlight up top-left and a small hot spot
+  x.strokeStyle = 'rgba(0,0,0,.55)'; x.lineWidth = 2; x.beginPath(); x.arc(C, C, R - 0.8, 0, 7); x.stroke();
+  x.save(); x.beginPath(); x.arc(C, C, R, 0, 7); x.clip();
+  g = x.createLinearGradient(C - R, C - R, C, C); g.addColorStop(0, 'rgba(255,255,255,.55)'); g.addColorStop(0.55, 'rgba(255,255,255,.12)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.beginPath(); x.ellipse(C - 8, C - 13, R * 0.86, R * 0.6, -0.55, Math.PI * 1.02, Math.PI * 1.98); x.ellipse(C - 4, C - 6, R * 0.72, R * 0.36, -0.55, Math.PI * 1.98, Math.PI * 1.02, true); x.fill();
+  g = x.createRadialGradient(C - 17, C - 22, 0, C - 17, C - 22, 7); g.addColorStop(0, 'rgba(255,255,255,.8)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(C - 26, C - 31, 18, 18);
+  g = x.createLinearGradient(C, C + R, C + R * 0.6, C); g.addColorStop(0, 'rgba(160,210,255,.16)'); g.addColorStop(1, 'rgba(160,210,255,0)'); x.fillStyle = g; x.beginPath(); x.arc(C, C, R - 2.5, 0.15, 1.45); x.arc(C, C, R - 7, 1.45, 0.15, true); x.fill();
+  x.restore();
+  // the case: brushed metal in the menu colours, a thin accent line, a dark lip and four screws
+  x.save(); x.beginPath(); x.arc(C, C, 55.6, 0, 7); x.arc(C, C, R, 0, 7, true);
+  g = x.createLinearGradient(0, 0, 112, 112); g.addColorStop(0, T.hiLite); g.addColorStop(0.45, T.lite); g.addColorStop(1, T.dark); x.fillStyle = g; x.fill('evenodd');
+  for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2; x.strokeStyle = i % 2 ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.12)'; x.lineWidth = 0.8; x.beginPath(); x.moveTo(C + Math.sin(a) * (R + 1.5), C - Math.cos(a) * (R + 1.5)); x.lineTo(C + Math.sin(a) * 55, C - Math.cos(a) * 55); x.stroke(); }
+  x.restore();
+  x.lineWidth = 1; x.strokeStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.arc(C, C, 55, Math.PI * 0.95, Math.PI * 1.75); x.stroke();
+  x.strokeStyle = T.accent; x.globalAlpha = 0.75; x.lineWidth = 0.9; x.beginPath(); x.arc(C, C, R + 1.1, 0, 7); x.stroke(); x.globalAlpha = 1;
+  x.strokeStyle = 'rgba(0,0,0,.8)'; x.lineWidth = 1; x.beginPath(); x.arc(C, C, R + 0.3, 0, 7); x.stroke(); x.beginPath(); x.arc(C, C, 55.6, 0, 7); x.stroke();
+  for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2, px = C + Math.sin(a) * 52, py = C - Math.cos(a) * 52;
+    x.fillStyle = T.dark; x.beginPath(); x.arc(px, py, 1.9, 0, 7); x.fill(); x.fillStyle = T.hiLite; x.beginPath(); x.arc(px - 0.3, py - 0.3, 1.3, 0, 7); x.fill(); x.strokeStyle = T.dark; x.lineWidth = 0.6; x.beginPath(); x.moveTo(px - 1, py + 0.6); x.lineTo(px + 0.6, py - 1); x.stroke(); }
+  return c;
+}
+// the oil bulge: the middle of the map is drawn a little larger than the rim, in rings, like looking down through a lens
+function domeBulge() {
+  const N = 112 * MDOME.k; if (!MDOME.off) { MDOME.off = document.createElement('canvas'); MDOME.off.width = MDOME.off.height = N; }
+  const o = MDOME.off.getContext('2d'); o.clearRect(0, 0, N, N); o.drawImage(mapC, 0, 0);
+  const C = N / 2, R = 48.5 * MDOME.k, steps = 9; mctx.save(); mctx.setTransform(1, 0, 0, 1, 0, 0);
+  for (let i = 0; i < steps; i++) { const f = 1 - i / steps, r = R * f, m = 1 + 0.13 * Math.pow(1 - f, 0.8) + 0.02, w = N * m;
+    mctx.save(); mctx.beginPath(); mctx.arc(C, C, r, 0, 7); mctx.clip(); mctx.drawImage(MDOME.off, C - w / 2, C - w / 2, w, w); mctx.restore(); }
+  mctx.restore();
+}
+{ const _dm = drawMap; drawMap = function () {
+  if (mapC.width !== 112 * MDOME.k) mapC.width = mapC.height = 112 * MDOME.k;
+  mctx.setTransform(MDOME.k, 0, 0, MDOME.k, 0, 0); _dm();
+  try { if (!LEVEL || state === 'menu') return; const T = domeTheme(), key = PREFS.uiTheme || 'Steel'; if (!MDOME.face || MDOME.key !== key) { MDOME.face = domeFace(T); MDOME.key = key; }
+    domeBulge(); mctx.save(); mctx.setTransform(1, 0, 0, 1, 0, 0); mctx.drawImage(MDOME.face, 0, 0); mctx.restore(); domeCrown(T); } catch (e) { console.warn('dome', e); }
+}; }
+// a knurled crown at 3 o'clock, outside the round map
+const mapCrown = document.createElement('div'); mapCrown.id = 'mapCrown';
+function domeCrown(T) { const m = $('map'); if (!m) return; if (mapCrown.parentNode !== m.parentNode) m.parentNode.appendChild(mapCrown);
+  const r = m.getBoundingClientRect(), pr = m.parentNode.getBoundingClientRect(), h = Math.round(r.height * 0.15), w = Math.max(4, Math.round(h * 0.42));
+  mapCrown.style.left = (r.right - pr.left - 1) + 'px'; mapCrown.style.top = (r.top - pr.top + r.height / 2 - h / 2) + 'px'; mapCrown.style.width = w + 'px'; mapCrown.style.height = h + 'px';
+  if (mapCrown.dataset.k !== MDOME.key) { mapCrown.dataset.k = MDOME.key; mapCrown.style.background = `repeating-linear-gradient(0deg, ${T.hiLite} 0 1.5px, ${T.dark} 1.5px 3px)`; mapCrown.style.border = `1px solid ${T.dark}`; } }
 
 
 // =================== STATE + SAVE ===================
@@ -29588,25 +29658,44 @@ function log(text, cls, who) {
 let zoneShown = null, zoneT = 0;
 const mapC = $('mapC'), mctx = mapC.getContext('2d');
 function drawMap() {
-  const S2 = 112, sc = 0.9, cx = S2 / 2, cy = S2 / 2; mctx.clearRect(0, 0, S2, S2); mctx.imageSmoothingEnabled = false;
-  mctx.fillStyle = LEVEL.id === 'ship' ? 'rgba(20,24,40,.8)' : (LEVEL.palette.grass + '99'); mctx.fillRect(0, 0, S2, S2);
-  if (LEVEL.fly) { drawSpaceMap(mctx, S2); mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.translate(-cx, -cy); mctx.fillStyle = '#ff9a3c'; mctx.beginPath(); mctx.moveTo(cx, cy - 6); mctx.lineTo(cx + 4, cy + 4); mctx.lineTo(cx, cy + 2); mctx.lineTo(cx - 4, cy + 4); mctx.closePath(); mctx.fill(); mctx.restore(); return; }
+  const S2 = 112, sc = 0.9, cx = S2 / 2, cy = S2 / 2; mctx.clearRect(0, 0, S2, S2); mctx.imageSmoothingEnabled = true;
+  if (LEVEL.fly) { mctx.fillStyle = '#05081a'; mctx.fillRect(0, 0, S2, S2); drawSpaceMap(mctx, S2); mapArrow(cx, cy); return; }
+  // ground: the level's own colour, toned down so markers read on top, with a world-anchored speckle so you can feel yourself move
+  const ship = LEVEL.id === 'ship', g0 = ship ? '#1a2032' : LEVEL.palette.grass; mctx.fillStyle = g0; mctx.fillRect(0, 0, S2, S2); mctx.fillStyle = 'rgba(8,10,22,.32)'; mctx.fillRect(0, 0, S2, S2);
+  if (!drawMap.grain) { const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d'); for (let k = 0; k < 90; k++) { x.fillStyle = k % 3 ? 'rgba(0,0,0,.13)' : 'rgba(255,255,255,.07)'; x.fillRect((k * 37) % 32, (k * 53 + (k >> 2)) % 32, 1 + (k % 2), 1); } drawMap.grain = mctx.createPattern(c, 'repeat'); }
+  mctx.save(); mctx.translate(-((player.pos.x * sc) % 32), -((player.pos.z * sc) % 32)); mctx.fillStyle = drawMap.grain; mctx.fillRect(-32, -32, S2 + 64, S2 + 64); mctx.restore();
   mctx.save(); mctx.translate(cx, cy);
-  const w2m = (x, z) => [(x - player.pos.x) * sc, (z - player.pos.z) * sc];
-  mctx.strokeStyle = 'rgba(168,144,95,.95)'; mctx.lineWidth = 3; mctx.lineCap = 'butt';
-  for (const [a, b] of PATHS) { const [ax, az] = w2m(a[0], a[1]), [bx, bz] = w2m(b[0], b[1]); mctx.beginPath(); mctx.moveTo(ax, az); mctx.lineTo(bx, bz); mctx.stroke(); }
-  mctx.strokeStyle = '#5aa8d8'; mctx.lineWidth = 3; mctx.beginPath(); RIVER.forEach(([rx, rz], i) => { const [mx, mz] = w2m(rx, rz); if (i) mctx.lineTo(mx, mz); else mctx.moveTo(mx, mz); }); mctx.stroke();
-  mctx.fillStyle = '#5aa8d8'; for (const [px, pz, pr] of [...(Z.lake ? [[Z.lake.x, Z.lake.z, 9.5]] : []), ...POOLS]) { const [mx, mz] = w2m(px, pz); mctx.beginPath(); mctx.arc(mx, mz, pr * sc, 0, 7); mctx.fill(); }
-  mctx.fillStyle = '#ff6a1a'; for (const [px, pz, pr] of LAVA) { const [mx, mz] = w2m(px, pz); mctx.fillRect(mx - pr * sc, mz - pr * sc, pr * sc * 2, pr * sc * 2); }
-  if (LEVEL.id === 'ship') { mctx.fillStyle = 'rgba(160,170,190,.9)'; for (const [bx, bz, hx, hz] of BOXES) { const [mx, mz] = w2m(bx, bz); mctx.save(); mctx.translate(mx, mz); mctx.fillRect(-hx * sc, -hz * sc, hx * sc * 2, hz * sc * 2); mctx.restore(); } }
-  for (const zn of ZONES) { const [zx, zz] = w2m(zn.x, zn.z); mctx.fillStyle = zn.col + 'cc'; mctx.beginPath(); mctx.arc(zx, zz, zn.r * sc, 0, 7); mctx.fill(); if (zn.safe) { mctx.strokeStyle = '#efe7d6'; mctx.lineWidth = 2; mctx.stroke(); } }
-  for (const e of enemies) if (!e.dead && e.obj.position.distanceToSquared(player.pos) < 3600) { const [ex, ez] = w2m(e.obj.position.x, e.obj.position.z); mctx.fillStyle = e.def.boss ? '#ff2a3a' : '#d8342a'; mctx.fillRect(ex - 1.5, ez - 1.5, e.def.boss || e.def.elite ? 5 : 3, e.def.boss || e.def.elite ? 5 : 3); }
-  for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible || !N.mark) continue; const [nx, nz] = w2m(N.obj.position.x, N.obj.position.z); mctx.fillStyle = N.mark === '$' ? '#8fe3ff' : '#ffd75e'; mctx.fillRect(nx - 2, nz - 2, 4, 4); }
-  for (const r of remotes.values()) { const [rx, rz] = w2m(r.obj.position.x, r.obj.position.z); mctx.fillStyle = '#8fe3ff'; mctx.fillRect(rx - 2, rz - 2, 4, 4); }
+  const w2m = (x, z) => [(x - player.pos.x) * sc, (z - player.pos.z) * sc], near = (x, z, r) => Math.abs(x - player.pos.x) < 70 + r && Math.abs(z - player.pos.z) < 70 + r;
+  const line = (pts, w, col) => { mctx.strokeStyle = col; mctx.lineWidth = w; mctx.beginPath(); pts.forEach(([x, z], i) => { const [mx, mz] = w2m(x, z); if (i) mctx.lineTo(mx, mz); else mctx.moveTo(mx, mz); }); mctx.stroke(); };
+  mctx.lineCap = mctx.lineJoin = 'round';
+  // zones: soft pools of colour; safe zones get a dashed cream edge
+  for (const zn of ZONES) { if (!near(zn.x, zn.z, zn.r)) continue; const [zx, zz] = w2m(zn.x, zn.z), R = zn.r * sc, gr = mctx.createRadialGradient(zx, zz, 0, zx, zz, R); gr.addColorStop(0, zn.col + '66'); gr.addColorStop(1, zn.col + '26'); mctx.fillStyle = gr; mctx.beginPath(); mctx.arc(zx, zz, R, 0, 7); mctx.fill();
+    if (zn.safe) { mctx.setLineDash([3, 3]); mctx.strokeStyle = 'rgba(239,231,214,.75)'; mctx.lineWidth = 1.2; mctx.stroke(); mctx.setLineDash([]); } }
+  // water and lava
+  if (RIVER.length) { line(RIVER, 5, '#1d4a78'); line(RIVER, 3, '#4a9ad0'); line(RIVER, 1, 'rgba(190,235,255,.55)'); }
+  for (const [px, pz, pr] of [...(Z.lake ? [[Z.lake.x, Z.lake.z, 9.5]] : []), ...POOLS]) { if (!near(px, pz, pr)) continue; const [mx, mz] = w2m(px, pz); mctx.fillStyle = '#1d4a78'; mctx.beginPath(); mctx.arc(mx, mz, pr * sc + 1, 0, 7); mctx.fill(); mctx.fillStyle = '#4a9ad0'; mctx.beginPath(); mctx.arc(mx, mz, pr * sc, 0, 7); mctx.fill(); mctx.fillStyle = 'rgba(190,235,255,.35)'; mctx.beginPath(); mctx.arc(mx - pr * sc * 0.3, mz - pr * sc * 0.3, pr * sc * 0.35, 0, 7); mctx.fill(); }
+  for (const [px, pz, pr] of LAVA) { if (!near(px, pz, pr)) continue; const [mx, mz] = w2m(px, pz), R = pr * sc, gr = mctx.createRadialGradient(mx, mz, 0, mx, mz, R * 1.3); gr.addColorStop(0, '#ffd36a'); gr.addColorStop(0.6, '#ff6a1a'); gr.addColorStop(1, 'rgba(255,60,10,0)'); mctx.fillStyle = gr; mctx.fillRect(mx - R * 1.3, mz - R * 1.3, R * 2.6, R * 2.6); }
+  // roads: a dark kerb under a sandy top
+  for (const [a, b] of PATHS) { if (!near(a[0], a[1], 40) && !near(b[0], b[1], 40)) continue; line([a, b], 4.6, 'rgba(40,30,18,.55)'); line([a, b], 3, '#b8a070'); }
+  // buildings and walls: raised blocks with a drop shadow and a lit top edge
+  for (const [bx, bz, hx, hz] of BOXES) { if (!near(bx, bz, Math.max(hx, hz))) continue; const [mx, mz] = w2m(bx, bz), w = Math.max(1.2, hx * sc * 2), h = Math.max(1.2, hz * sc * 2), x0 = mx - w / 2, z0 = mz - h / 2;
+    mctx.fillStyle = 'rgba(0,0,0,.4)'; mctx.fillRect(x0 + 1.2, z0 + 1.2, w, h); mctx.fillStyle = ship ? '#8a94aa' : '#9a9282'; mctx.fillRect(x0, z0, w, h); mctx.fillStyle = 'rgba(255,255,255,.28)'; mctx.fillRect(x0, z0, w, Math.min(1, h)); mctx.strokeStyle = 'rgba(20,18,26,.7)'; mctx.lineWidth = 0.6; mctx.strokeRect(x0, z0, w, h); }
+  // people: enemies as red beads (bosses pulse), quest marks in gold, shops and players in cyan
+  const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 180);
+  for (const e of enemies) if (!e.dead && e.obj.visible !== false && e.obj.position.distanceToSquared(player.pos) < 3600) { const [ex, ez] = w2m(e.obj.position.x, e.obj.position.z), big = e.def.boss || e.def.elite, r = big ? 3.2 : 2.1;
+    if (e.def.boss) { mctx.strokeStyle = `rgba(255,60,60,${0.3 + pulse * 0.5})`; mctx.lineWidth = 1.2; mctx.beginPath(); mctx.arc(ex, ez, r + 2 + pulse * 1.5, 0, 7); mctx.stroke(); }
+    mctx.fillStyle = '#1a0606'; mctx.beginPath(); mctx.arc(ex, ez, r + 0.8, 0, 7); mctx.fill(); mctx.fillStyle = e.def.boss ? '#ff3a3a' : '#e0402e'; mctx.beginPath(); mctx.arc(ex, ez, r, 0, 7); mctx.fill(); mctx.fillStyle = 'rgba(255,220,200,.6)'; mctx.fillRect(ex - r * 0.5, ez - r * 0.6, 1, 1); }
+  for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible || !N.mark) continue; const [nx, nz] = w2m(N.obj.position.x, N.obj.position.z);
+    if (N.mark === '$') { mctx.fillStyle = '#05121a'; mctx.beginPath(); mctx.moveTo(nx, nz - 3.6); mctx.lineTo(nx + 3.6, nz); mctx.lineTo(nx, nz + 3.6); mctx.lineTo(nx - 3.6, nz); mctx.fill(); mctx.fillStyle = '#8fe3ff'; mctx.beginPath(); mctx.moveTo(nx, nz - 2.6); mctx.lineTo(nx + 2.6, nz); mctx.lineTo(nx, nz + 2.6); mctx.lineTo(nx - 2.6, nz); mctx.fill(); continue; }
+    mctx.font = '700 11px "Pixelify Sans", monospace'; mctx.textAlign = 'center'; mctx.textBaseline = 'middle'; mctx.strokeStyle = '#1a1000'; mctx.lineWidth = 3; mctx.strokeText(N.mark, nx, nz); mctx.fillStyle = '#ffd75e'; mctx.fillText(N.mark, nx, nz); }
+  for (const r of remotes.values()) { const [rx, rz] = w2m(r.obj.position.x, r.obj.position.z); mctx.fillStyle = '#05121a'; mctx.beginPath(); mctx.arc(rx, rz, 3, 0, 7); mctx.fill(); mctx.fillStyle = '#8fe3ff'; mctx.beginPath(); mctx.arc(rx, rz, 2.1, 0, 7); mctx.fill(); }
   mctx.restore();
-  mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.translate(-cx, -cy);
-  mctx.fillStyle = '#ff9a3c'; mctx.beginPath(); mctx.moveTo(cx, cy - 6); mctx.lineTo(cx + 4, cy + 4); mctx.lineTo(cx, cy + 2); mctx.lineTo(cx - 4, cy + 4); mctx.closePath(); mctx.fill(); mctx.restore();
+  if (!(typeof mmcMe === 'function' && mmcMe())) mapArrow(cx, cy);
 }
+// you: an orange chevron with a dark edge, pointing where you face
+function mapArrow(cx, cy) { mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.lineJoin = 'round';
+  mctx.beginPath(); mctx.moveTo(0, -7); mctx.lineTo(5, 5); mctx.lineTo(0, 2.5); mctx.lineTo(-5, 5); mctx.closePath(); mctx.fillStyle = 'rgba(0,0,0,.4)'; mctx.save(); mctx.translate(0.8, 0.8); mctx.fill(); mctx.restore();
+  mctx.strokeStyle = '#1a0c00'; mctx.lineWidth = 1.6; mctx.stroke(); mctx.fillStyle = '#ff9a3c'; mctx.fill(); mctx.fillStyle = '#ffd9a8'; mctx.beginPath(); mctx.moveTo(0, -5); mctx.lineTo(1.6, -1); mctx.lineTo(-1.6, -1); mctx.closePath(); mctx.fill(); mctx.restore(); }
 function updateHud() {
   const g = gun(); refreshGunModel();
   $('hpN').textContent = Math.ceil(player.hp) + ' / ' + maxHp();

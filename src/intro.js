@@ -44,7 +44,7 @@ let showTitleRef = () => {};
 @keyframes icd{0%{transform:translateY(-60vh) scaleY(1.4)}70%{transform:translateY(0) scaleY(1.2)}85%{transform:scale(1.3,.6)}100%{transform:none}}
 #introCov .gt{font-size:clamp(34px,8vw,84px);font-weight:900;color:#fff;letter-spacing:.06em;line-height:1}
 #introCov .gt span{color:#ff5a3a}#introCov .gs{color:#ff8a4a;letter-spacing:.6em;font-size:clamp(12px,2vw,18px);margin-top:12px}
-#introCov .gt,#introCov .gs,#introCov .pk{text-shadow:0 3px 0 #000,0 0 14px #000,0 0 4px #000}#bootLoad{z-index:10001}html:not(.ready) #introCov .pk{visibility:hidden}
+#introCov .gt,#introCov .gs,#introCov .pk{text-shadow:0 0 6px #000}#bootLoad{z-index:10001}html:not(.ready) #introCov .pk{visibility:hidden}
 #introCov .pk{margin-top:40px;font-size:14px;letter-spacing:.3em;color:#ccd;animation:icp 1.6s infinite}@keyframes icp{50%{opacity:.25}}
 .introLegal{position:fixed;inset:0;z-index:10000;background:#000c;display:flex;align-items:center;justify-content:center;padding:16px}
 .introLegal .ilBox{max-width:620px;max-height:85vh;overflow:auto;background:#12141a;border:1px solid #333;border-radius:10px;padding:20px;color:#dde;font-size:14px;line-height:1.5}
@@ -62,7 +62,7 @@ let showTitleRef = () => {};
   const c1 = () => cov.querySelector('#ic1'), ready = () => document.documentElement.classList.contains('ready');
   let stage = 'card', inputAt = 0;
   const showTitle = () => { if (stage !== 'card') return; stage = 'title'; if (blork) blork.finish(); inputAt = performance.now() + 900; const c = c1(); if (c) c.classList.remove('on');
-    setTimeout(() => { if (c) c.remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; g.style.cssText = 'position:relative;z-index:1'; try { titleCrest(cov); } catch (e) { console.warn('crest', e); } cov.appendChild(g);
+    setTimeout(() => { if (c) c.remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; g.style.cssText = 'position:relative;z-index:1'; cov.appendChild(g); try { titleCrest(cov, g.querySelector('.gs')); } catch (e) { console.warn('crest', e); }
       requestAnimationFrame(() => { g.classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); };
   const finish = () => { if (stage === 'done') return; stage = 'done'; const cr = cov.querySelector('.crest'); if (cr && cr.stop) cr.stop(); cov.style.opacity = 0; setTimeout(() => cov.remove(), 800); };
   const onInput = e => { if (!e.isTrusted || !document.getElementById('introCov')) return; if (stage === 'card') { if (performance.now() > 600) showTitle(); } else if (stage === 'title' && ready() && performance.now() > inputAt) finish(); };

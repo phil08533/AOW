@@ -12,7 +12,10 @@ function shipAimFocus(F) {
   if (mn && bestA > 0) for (const R of F.rockData) { if (R.dead) continue; const to = R.p.clone().sub(player.pos), d = to.length() - R.s; if (d > 300) continue; const a = to.normalize().angleTo(shipFwd) - Math.min(0.2, R.s / Math.max(30, d) * 0.5); if (a < bestA) { bestA = a; focus = R.p.clone(); } }
   return focus;
 }
-function shipMuzzle(side) { const go = shipGunOff(side); return player.pos.clone().addScaledVector(shipRight, go.x).addScaledVector(V(0, 1, 0).applyQuaternion(_q), go.y).addScaledVector(shipFwd, -go.z); }
+function shipMuzzle(side) { const go = shipGunOff(side);
+  // cockpit view: the bolts leave from eye level, just off each side of the canopy, so they run straight up the reticle instead of arriving under it
+  if (typeof SCOCK !== 'undefined' && SCOCK.g && SCOCK.g.visible) { const cp = camera.getWorldPosition(new THREE.Vector3()), cd = camera.getWorldDirection(new THREE.Vector3()); return cp.addScaledVector(cd, 3).addScaledVector(shipRight, side * 0.9); }
+  return player.pos.clone().addScaledVector(shipRight, go.x).addScaledVector(V(0, 1, 0).applyQuaternion(_q), go.y).addScaledVector(shipFwd, -go.z); }
 // the first thing a ray from `from` along `dir` hits within `max`
 function shipRayHit(F, from, dir, max) {
   let ht = max, o = { hit: null, rock: -1, ext: null };

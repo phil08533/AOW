@@ -68,7 +68,7 @@ function mFlash(n) {
   markDirty();
 }
 function mBadgePop() { const d = document.createElement('div'); d.style.cssText = 'position:fixed;left:50%;top:44%;z-index:30;pointer-events:none;transform:translate(-50%,-50%) scale(.3) rotateY(80deg);transition:transform .35s cubic-bezier(.2,1.6,.4,1),opacity .4s;opacity:0';
-  d.innerHTML = `<svg width="150" height="170" viewBox="0 0 150 170"><path d="M75 6l17 34 38 5-28 26 7 38-34-18-34 18 7-38-28-26 38-5z" fill="#e8c35a" stroke="#7a5a1a" stroke-width="5"/><circle cx="75" cy="70" r="22" fill="#2a3a7a" stroke="#ffe8a0" stroke-width="3"/><text x="75" y="77" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="16" fill="#ffe8a0">${'★'.repeat(mRank() + 1).slice(0, 5)}</text><rect x="18" y="134" width="114" height="26" rx="5" fill="#1a2240"/><text x="75" y="152" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="13" fill="#ffe8a0">${mRankName().toUpperCase()}</text></svg>`;
+  d.innerHTML = mBadgeArt(mRank(), 170);
   document.body.appendChild(d); requestAnimationFrame(() => { d.style.opacity = 1; d.style.transform = 'translate(-50%,-50%) scale(1) rotateY(0)'; }); setTimeout(() => { d.style.opacity = 0; }, 1300); setTimeout(() => d.remove(), 1800); }
 window.addEventListener('keydown', e => { if (e.code === 'KeyN' && state === 'play' && !dlgOpen && mOn() && !(document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName))) mFlash(); });
 const tBadge = document.createElement('button'); tBadge.className = 'tbtn tq'; tBadge.id = 'tBadge'; tBadge.innerHTML = '<i>★</i><small>BADGE</small>'; tBadge.hidden = true; { const t = document.getElementById('touch'); if (t) t.appendChild(tBadge); }

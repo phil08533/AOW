@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.31</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.32</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -14673,8 +14673,8 @@ document.body.appendChild(podBar);
 $('podPP').addEventListener('click', () => { POD.playing ? podPause() : podResume(); });
 $('podX').addEventListener('click', () => { podPause(); podStop(); });
 const podFmt = s => isFinite(s) ? Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0') : '--:--';
-function podUi() { podBar.style.display = POD.ep && state === 'play' ? 'flex' : 'none'; if (!POD.ep) return; $('podT').textContent = (POD.part === 'intro' ? 'Station ID · ' : '') + POD.ep.title; $('podPP').textContent = POD.playing ? '❚❚' : '▶'; }
-setInterval(() => { if (POD.ep && POD.el) $('podTime').textContent = podFmt(POD.el.currentTime) + ' / ' + podFmt(POD.el.duration); podBar.style.display = POD.ep && state === 'play' ? 'flex' : 'none'; }, 500);
+function podUi() { podBar.style.display = 'none'; if (!POD.ep) return; $('podT').textContent = (POD.part === 'intro' ? 'Station ID · ' : '') + POD.ep.title; $('podPP').textContent = POD.playing ? '❚❚' : '▶'; }
+setInterval(() => { if (POD.ep && POD.el) $('podTime').textContent = podFmt(POD.el.currentTime) + ' / ' + podFmt(POD.el.duration); podBar.style.display = 'none'; }, 500);
 // ---- the pocket radio: a real little player (chamfered body, green screen, d-pad, earbuds) that pops up in a dialog ----
 const RDEV = { r: null, cv: null, sc: null, cam: null, g: null, sx: null, stex: null, keys: {}, sel: 0, ask: null, open: false, t0: 0, drawT: 0 };
 function rdevShape(w, h, c) { const s = new THREE.Shape(), x = w / 2, y = h / 2; s.moveTo(-x + c, -y); s.lineTo(x - c, -y); s.lineTo(x, -y + c); s.lineTo(x, y - c); s.lineTo(x - c, y); s.lineTo(-x + c, y); s.lineTo(-x, y - c); s.lineTo(-x, -y + c); s.closePath(); return s; }
@@ -19301,6 +19301,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 297, title: '2.23.32 · Lirra Vey, moon helmets and a new badge', items: ['The band in Grub\'s bar is rebuilt like the Undercroft one: a drummer behind a full kit, guitar, bass and keys, with shades and hats', 'New singer Lirra Vey: a green alien in a black sequined mermaid gown with big green eyes, red lips, antennae and opera gloves, under a warm pin spot', 'The Underworld is much darker now, with smoke hanging over the room', 'Anyone outside Luna Dome on the Moon wears a glass bubble helmet and an air pack', 'Marshal busts and manhunts no longer put a giant light beam on the suspect', 'A new Marshal badge: polished gold seven point star, GALACTIC MARSHALS seal, rank stars and a red rank ribbon', 'The radio now-playing bar no longer pops up; the radio itself still has the controls'] },
   { id: 296, title: '2.23.31 · Title crest, round 2', items: ['Only the top half of the sun shows, sitting just above SETTING SUN', 'The rifle is side on with its muzzle to the left, crossed with the sword in front of the sun', 'The crest is bigger and much more faded'] },
   { id: 295, title: '2.23.30 · Title crest', items: ['The glow behind the title screen is gone', 'New crest behind ART OF WAR: a striped setting sun with the Lvl 15 Rifle and Master Sword crossed over it, built from the game models'] },
   { id: 294, title: '2.23.29 · Blork logo, round 4', items: ['The Setting Sun now strafes at full speed and fires on the fly instead of stopping', 'Its shots come out of the wing guns like in game, in your laser color', 'BLORK STUDIOS is set in Gasoek One', 'The glow behind the title screen is menu blue instead of orange'] },
@@ -25252,6 +25253,146 @@ function vixFight(x, z) {
   toast('FISTS ONLY', 'Krenn kicks your weapons under the couch. Put him down!', 3); SFX.hit();
 }
 
+// =================== THE GLONK QUARTET, REDONE (2.23.32): a real band, a new singer and a dim, smoky Grub's ===================
+// The Underworld band gets the Undercroft treatment: a drummer behind a full kit, guitar, bass and keys, shades and hats,
+// and up front Lirra Vey, a green alien singer in a black sequined gown with big pretty eyes and red lips.
+// The whole den is dimmed way down with a low smoky haze, and a pin spot picks her out.
+const UWB_ON = () => LEVEL && LEVEL.id === 'underworld';
+{ const _ue = updateEnv; updateEnv = function (a, b) { _ue(a, b); if (!UWB_ON()) return;
+  scene.fog.color.set('#0a0709').convertSRGBToLinear(); scene.fog.near = 3; scene.fog.far = 22; sun.intensity = 0.08; hemi.intensity = 0.2; hemi.color.set('#a08a90'); fill.intensity = 0.05; }; }
+{ const _b = LEVELS.underworld.build; LEVELS.underworld.build = function () { _b.apply(this, arguments); try { uwbBand(); uwbSmoke(); } catch (e) { console.warn('uwband', e); } }; }
+
+// the singer: a slim green alien in a long black sequined gown, opera gloves, big almond eyes and glossy red lips
+function makeLirra() {
+  // built from scratch (not the boxy civilian): an oval head, bare shoulders, a fitted bodice and a mermaid gown, slim gloved arms
+  const g = new THREE.Group(), skin = new THREE.MeshLambertMaterial({ color: '#5fc27a' }), gown = new THREE.MeshPhongMaterial({ color: '#120c18', shininess: 25, specular: '#1a1420', side: THREE.DoubleSide }), glove = toon('#0c0a10', 'cloth');
+  // head and neck
+  E(g, skin, 0, 1.765, 0, 0.112, 0.138, 0.118); E(g, skin, 0, 1.672, 0.028, 0.06, 0.04, 0.06); part(g, Cy(0.042, 0.05, 0.14, 10), skin, 0, 1.59, 0);
+  // bare shoulders and collarbones, the bodice with a sweetheart line, a nipped waist and the hips
+  E(g, skin, 0, 1.475, 0, 0.2, 0.055, 0.085); E(g, skin, 0, 1.43, 0.02, 0.14, 0.07, 0.07);
+  E(g, gown, 0, 1.3, 0, 0.15, 0.12, 0.095); for (const s of [-1, 1]) E(g, gown, s * 0.065, 1.335, 0.052, 0.078, 0.07, 0.065);
+  part(g, Cy(0.105, 0.135, 0.3, 14), gown, 0, 1.1, 0); E(g, gown, 0, 0.92, 0, 0.17, 0.12, 0.125);
+  for (const s of [-1, 1]) part(g, B(0.015, 0.1, 0.012), gown, s * 0.1, 1.42, 0.05, 0, 0, s * 0.15);
+  // the mermaid skirt: hugs the legs to the knee, then flares out onto the floor
+  const prof = [[0.31, 0.0], [0.24, 0.06], [0.16, 0.22], [0.125, 0.4], [0.135, 0.6], [0.155, 0.8], [0.15, 0.95]].map(([r, y]) => new THREE.Vector2(r, y));
+  part(g, new THREE.LatheGeometry(prof, 20), gown, 0, 0, 0);
+  part(g, B(0.05, 0.36, 0.012), skin, 0.06, 0.5, 0.13, -0.08);
+  for (const s of [-1, 1]) part(g, B(0.06, 0.04, 0.12), toon('#c9a43a'), s * 0.06, 0.02, 0.12);
+  // sequins scattered over the gown, and a thin gold belt
+  for (let i = 0; i < 50; i++) { const y = 0.04 + Math.random() * 1.32, a = (Math.random() - 0.5) * Math.PI * 1.6, r = y > 1.0 ? 0.13 : y > 0.4 ? 0.14 + Math.abs(y - 0.6) * 0.05 : 0.13 + (0.4 - y) * 0.45;
+    part(g, new THREE.OctahedronGeometry(0.011, 0), glow(i % 3 ? '#e8e0ff' : '#ffd36a'), Math.sin(a) * r, y, Math.cos(a) * r); }
+  part(g, Cy(0.112, 0.112, 0.025, 14), toon('#c9a43a'), 0, 0.97, 0);
+  // slim arms: bare green upper arms and black opera gloves past the elbow
+  for (const s of [-1, 1]) { part(g, Cy(0.036, 0.032, 0.28, 8), skin, 0.265 * s, 1.31, 0, 0, 0, 0.04 * s); part(g, Cy(0.034, 0.028, 0.32, 8), glove, 0.275 * s, 1.03, 0, 0, 0, 0.03 * s); E(g, '#0c0a10', 0.28 * s, 0.85, 0.01, 0.03, 0.05, 0.022); }
+  // the face: big almond eyes with green irises, lashes and a shimmer of eyeshadow, a small nose, glossy red lips, cheek glow
+  for (const s of [-1, 1]) { const ex = s * 0.046, ey = 1.785;
+    E(g, '#3a1a4a', ex, ey + 0.012, 0.1, 0.038, 0.024, 0.012, 0, 0, -s * 0.2);
+    E(g, '#f4f0ec', ex, ey, 0.104, 0.031, 0.02, 0.012, 0, 0, -s * 0.18); E(g, '#1a8a5a', ex, ey - 0.002, 0.113, 0.017, 0.018, 0.006); E(g, '#05040a', ex, ey - 0.002, 0.118, 0.008, 0.01, 0.003);
+    E(g, glow('#ffffff'), ex + 0.006, ey + 0.006, 0.121, 0.004, 0.004, 0.002);
+    part(g, B(0.064, 0.009, 0.012), toon('#05040a'), ex, ey + 0.019, 0.112, 0, 0, -s * 0.2); for (let k = 0; k < 3; k++) part(g, B(0.006, 0.018, 0.004), toon('#05040a'), ex + s * (0.018 + k * 0.01), ey + 0.025 + k * 0.003, 0.11, 0, 0, -s * (0.5 + k * 0.2));
+    part(g, B(0.045, 0.007, 0.008), toon('#1e3a22'), ex, ey + 0.044, 0.104, 0, 0, -s * 0.14);
+    E(g, '#7ad89a', s * 0.066, 1.735, 0.094, 0.02, 0.011, 0.006); part(g, new THREE.SphereGeometry(0.014, 8, 6), glow('#ffd36a'), s * 0.112, 1.7, 0); }
+  E(g, '#4aa866', 0, 1.752, 0.118, 0.008, 0.012, 0.008);
+  E(g, '#b80e22', 0, 1.709, 0.108, 0.026, 0.009, 0.009); E(g, '#d4142e', 0, 1.699, 0.106, 0.024, 0.01, 0.009); E(g, glow('#ff6a7a'), 0.008, 1.698, 0.114, 0.008, 0.003, 0.002);
+  // little antennae with glowing pearl tips
+  for (const s of [-1, 1]) { const pts = []; for (let k = 0; k <= 6; k++) { const f = k / 6; pts.push(new THREE.Vector3(s * (0.045 + f * 0.08), 1.88 + f * 0.19 - f * f * 0.06, 0.02 - f * 0.05)); }
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 10, 0.008, 5, false), skin)); part(g, new THREE.SphereGeometry(0.022, 8, 6), glow('#c8ffd8'), pts[6].x, pts[6].y, pts[6].z); }
+  // sleek black hair with a deep green sheen, a side-swept wave across the brow, falling past the shoulders
+  const hm = toon('#0c0a10', 'cloth'), hm2 = toon('#1a3a2a', 'cloth');
+  E(g, '#0c0a10', 0, 1.83, -0.018, 0.124, 0.098, 0.13);
+  for (let i = 0; i < 22; i++) { const a = Math.PI * (0.4 + i / 21 * 1.2), r0 = 0.12, len = 0.3 + (i % 3) * 0.05, ph = i * 1.1, pts = [];
+    for (let k = 0; k <= 8; k++) { const f = k / 8, r = r0 + f * 0.035 + Math.sin(f * 6 + ph) * 0.018; pts.push(new THREE.Vector3(Math.sin(a) * r, 1.87 - f * len - f * f * 0.06, Math.cos(a) * r - f * 0.03)); }
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 14, 0.028 - (i % 2) * 0.006, 5, false), i % 4 ? hm : hm2)); }
+  { const pts = []; for (let k = 0; k <= 8; k++) { const f = k / 8; pts.push(new THREE.Vector3(0.09 - f * 0.18, 1.9 - f * 0.03 + Math.sin(f * 3.2) * 0.025, 0.095 + Math.sin(f * 3.1) * 0.02)); } g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 12, 0.032, 6, false), hm)); }
+  // a choker with a green gem
+  part(g, Cy(0.05, 0.05, 0.02, 12), toon('#0c0a10'), 0, 1.6, 0); part(g, new THREE.OctahedronGeometry(0.016, 0), glow('#6aff9a'), 0, 1.595, 0.052);
+  return g;
+}
+
+function uwbBand() {
+  const sx = -9.4, sz = 7.2, ry = Math.PI / 2 + 0.35;
+  // clear the old players, the theremin, the drum pods and the old mic, keeping the stage, truss, backdrop and speakers
+  const inS = o => Math.abs(o.position.x - sx) < 1.55 && Math.abs(o.position.z - sz) < 1.55;
+  for (const o of [...levelGroup.children]) if (o.userData && o.userData.rig && inS(o)) levelGroup.remove(o);
+  for (const o of [...props.children]) if (inS(o) && o.position.y > 0.33) props.remove(o);
+  const black = toon('#141218'), chrome = toon('#a8aeb8'), gold = toon('#c9a43a'), red = toon('#7a1020');
+  // stage-local placement: +f toward the crowd, +s along the stage
+  const fx = Math.sin(ry), fz = Math.cos(ry), lx = Math.cos(ry), lz = -Math.sin(ry), at = (f, s) => [sx + fx * f + lx * s, sz + fz * f + lz * s];
+  const band = [];
+  const mus = (mk, rig, f, s, anim, seat) => { const [x, z] = at(f, s), o = buildChar(mk, rig), R = o.userData.rig; o.position.set(x, 0.3, z); o.rotation.y = ry;
+    if (seat) { o.position.y = 0.3 + seat - (R ? R.spec.hip : 0.95) + 0.07; sitChar(o, seat); } levelGroup.add(o); const st = {}; band.push([o, R, anim, st, !seat]); return o; };
+  // drums on a riser at the back
+  { const [x, z] = at(-1.35, 0); part(props, Cy(0.85, 0.9, 0.22, 18), black, x, 0.41, z);
+    const dk = new THREE.Group(); dk.position.set(x, 0.52, z); dk.rotation.y = ry; levelGroup.add(dk);
+    part(dk, Cy(0.34, 0.34, 0.3, 16), red, 0, 0.36, 0.4, Math.PI / 2); part(dk, Cy(0.3, 0.3, 0.31, 16), toon('#e8e4dc'), 0, 0.36, 0.4, Math.PI / 2);
+    part(dk, Cy(0.16, 0.16, 0.12, 12), red, -0.34, 0.62, 0.5); part(dk, Cy(0.14, 0.14, 0.14, 12), red, -0.12, 0.8, 0.46, 0.4); part(dk, Cy(0.14, 0.14, 0.14, 12), red, 0.14, 0.8, 0.46, 0.4); part(dk, Cy(0.21, 0.21, 0.34, 12), red, 0.46, 0.36, 0.42);
+    const cym = []; for (const [cx, cy, cz] of [[-0.62, 1.05, 0.38], [0.6, 1.2, 0.3], [-0.34, 1.15, 0.12]]) { part(dk, Cy(0.012, 0.012, cy, 4), chrome, cx, cy / 2, cz); cym.push(part(dk, Cy(0.25, 0.25, 0.012, 16), gold, cx, cy, cz)); }
+    part(dk, Cy(0.18, 0.16, 0.42, 10), black, 0, 0.21, -0.12);
+    const dn = new THREE.Mesh(new THREE.CircleGeometry(0.29, 20), new THREE.MeshBasicMaterial({ map: signTex('GLONK', '#1a0a12', '#c86aff') })); dn.position.set(0, 0.36, 0.56); dk.add(dn);
+    const o = buildChar(() => npcDisarm(recolor(makeSpearman(), { '#7fae63': '#8a4a6a', '#4f7a3c': '#5a2a4a' })), 'spearman'), R = o.userData.rig; o.position.set(0, 0.42 - (R ? R.spec.hip : 0.95) + 0.07, -0.1); sitChar(o, 0.42); dk.add(o);
+    for (const arm of [R && R.armL, R && R.armR]) if (arm) part(arm, Cy(0.018, 0.018, 0.45, 4), toon('#e8d0a0'), 0, -0.5, 0.2, 1.2);
+    levelAnims.push(t => { if (!R || !o.parent) return; const b = t * 8.4; if (R.armL) R.armL.rotation.x = -1.0 + Math.max(0, Math.sin(b)) * 0.7; if (R.armR) R.armR.rotation.x = -1.0 + Math.max(0, Math.sin(b + Math.PI)) * 0.7; if (R.head) R.head.rotation.x = Math.abs(Math.sin(b / 2)) * 0.22; cym.forEach((c, i) => { c.rotation.x = Math.sin(t * 9 + i * 2) * 0.12; }); }); }
+  // a guitar (or bass): body, neck, headstock and glowing strings, slung across the player
+  const axe = (o, col, bass) => { const g = new THREE.Group(), L = bass ? 0.95 : 0.8; part(g, B(0.34, 0.42, 0.07), toon(col), 0, 0, 0); part(g, B(0.24, 0.2, 0.072), toon(col), 0.04, 0.24, 0); part(g, Cy(0.06, 0.06, 0.075, 12), black, 0, 0.02, 0.0, Math.PI / 2);
+    part(g, B(0.06, L, 0.04), toon('#3a2414', 'wood'), 0, 0.2 + L / 2, 0.01); part(g, B(0.1, 0.16, 0.04), black, 0, 0.28 + L, 0.01); for (let k = 0; k < (bass ? 4 : 6); k++) part(g, B(0.004, L + 0.25, 0.004), glow('#e8f0ff'), -0.02 + k * 0.009, 0.1 + L / 2, 0.04);
+    part(g, B(0.04, 0.6, 0.02), black, 0.1, 0.34, -0.06, 0, 0, -0.9); g.position.set(0.04, 1.08, 0.2); g.rotation.set(0, 0, -1.15); o.add(g); };
+  const strum = (o, R, t) => { if (R.armR) { R.armR.rotation.x = -0.75 + Math.sin(t * 9.5) * 0.18; R.armR.rotation.z = 0.25; } if (R.armL) { R.armL.rotation.x = -1.05 + Math.sin(t * 2.1) * 0.06; R.armL.rotation.z = -0.55; } if (R.head) R.head.rotation.x = Math.max(0, Math.sin(t * 4.2)) * 0.18; };
+  axe(mus(() => npcDisarm(recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a8a', '#3e5e26': '#2a3a6a' })), 'bughybrid', -0.2, -1.05, strum), '#c8202a');
+  axe(mus(() => makeCivilian('#2a2a30', '#14120f', '#8fae6a', '#1e1a18', '#4fd2ff'), 'civ', -0.2, 1.05, (o, R, t) => strum(o, R, t * 0.6)), '#2a6ac8', true);
+  // keys back left
+  { const [x, z] = at(-0.95, -1.15), kb = new THREE.Group(); kb.position.set(x, 0.3, z); kb.rotation.y = ry; levelGroup.add(kb);
+    part(kb, B(1.0, 0.07, 0.34), black, 0, 0.98, 0.42); part(kb, B(0.92, 0.02, 0.15), toon('#f0ece4'), 0, 1.02, 0.48); for (let k = 0; k < 6; k++) part(kb, B(0.05, 0.02, 0.09), black, -0.38 + k * 0.16, 1.035, 0.45); for (const s of [-1, 1]) part(kb, B(0.04, 0.9, 0.04), chrome, s * 0.3, 0.5, 0.42, 0, 0, s * 0.45);
+    for (let k = 0; k < 4; k++) part(kb, B(0.03, 0.03, 0.01), glow(['#ff4fd8', '#4fe0ff', '#ffd36a', '#7fff6a'][k]), -0.36 + k * 0.07, 1.0, 0.6); }
+  // singer's spot, front and centre, with a vintage mic on a stand
+  const [mx, mz] = at(1.25, 0);
+  { const [x, z] = at(1.62, 0); part(props, Cy(0.015, 0.015, 1.25, 5), chrome, x, 0.92, z); part(props, Cy(0.17, 0.19, 0.03, 10), black, x, 0.32, z); const m = part(props, new THREE.SphereGeometry(0.05, 10, 8), chrome, x, 1.56, z); m.scale.set(1, 1.3, 1); part(props, Cy(0.035, 0.025, 0.08, 8), black, x, 1.49, z); }
+  const sing = mus(makeLirra, 'civ', 1.25, 0, (o, R, t) => { if (R.armR) { R.armR.rotation.x = -1.0 + Math.sin(t * 0.9) * 0.05; R.armR.rotation.z = 0.12; } if (R.armL) { R.armL.rotation.x = -0.55 - Math.max(0, Math.sin(t * 0.7)) * 0.9; R.armL.rotation.z = -0.35 - Math.sin(t * 0.5) * 0.25; }
+    if (R.head) { R.head.rotation.x = -0.12 + Math.sin(t * 1.3) * 0.06; R.head.rotation.z = Math.sin(t * 0.8) * 0.1; } o.rotation.y = ry + Math.sin(t * 0.45) * 0.22; });
+  const sp = []; sing.traverse(c => { if (c.isMesh && c.geometry.type === 'OctahedronGeometry' && c.geometry.parameters.radius < 0.012) sp.push(c); }); // sequins that survived the merge twinkle
+  // the players get shades, and a fedora or a beret
+  band.forEach(([o, R], i) => { if (!R || !R.head || o === sing) return; const y = 1.78 - R.spec.neck; part(R.head, B(0.24, 0.045, 0.02), toon('#0c0a10'), 0, y, 0.14); part(R.head, B(0.06, 0.03, 0.02), glow(['#ff6ad8', '#7fe8ff'][i % 2]), 0.06, y + 0.005, 0.151);
+    if (i % 2) { part(R.head, Cy(0.13, 0.15, 0.12, 12), toon('#1a1418', 'cloth'), 0, y + 0.16, -0.01); part(R.head, Cy(0.24, 0.24, 0.015, 16), toon('#1a1418', 'cloth'), 0, y + 0.1, -0.01); part(R.head, Cy(0.151, 0.151, 0.03, 12), toon('#8a1e2a'), 0, y + 0.12, -0.01); }
+    else part(R.head, Cy(0.17, 0.15, 0.06, 14), toon('#5a1e8a', 'cloth'), 0.02, y + 0.12, -0.01, 0, 0, 0.2); });
+  // a warm pin spot on her from the truss, and a soft violet wash on the band behind
+  const pin = new THREE.SpotLight(0xffd8b0, 1.5, 7, 0.32, 0.55, 1.4); pin.position.set(mx + fx * 0.6, 3.2, mz + fz * 0.6); pin.target.position.set(mx, 1.2, mz); levelGroup.add(pin, pin.target);
+  const beam = new THREE.Mesh(new THREE.ConeGeometry(0.62, 2.9, 18, 1, true), new THREE.MeshBasicMaterial({ color: '#ffd8b0', transparent: true, opacity: 0.035, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })); beam.position.set(mx + fx * 0.3, 1.75, mz + fz * 0.3); levelGroup.add(beam);
+  const wash = new THREE.PointLight(0x9a5aff, 0.5, 5, 1.6); { const [wx, wz] = at(-0.8, 0); wash.position.set(wx, 2.6, wz); } levelGroup.add(wash);
+  levelAnims.push(t => { band.forEach(([o, R, anim, st, stand], i) => { if (!o.parent || !R) return; if (stand) { animRig(o, st, 1 / 60, t); o.position.y = 0.3 + Math.abs(Math.sin(t * 2.1 + i)) * 0.02; } anim(o, R, t); });
+    sp.forEach((c, i) => c.scale.setScalar(0.4 + Math.max(0, Math.sin(t * 3 + i * 1.7)) * 1.3)); beam.material.opacity = 0.03 + Math.sin(t * 1.3) * 0.008; pin.intensity = 1.4 + Math.sin(t * 2.3) * 0.15; });
+  // the room's own lamps come way down, and the old band's colour cones go
+  for (const o of levelGroup.children) if (o.isMesh && o.geometry.type === 'ConeGeometry' && o.geometry.parameters.height === 2.9 && o !== beam) o.visible = false;
+  for (const o of levelGroup.children) if (o.isPointLight && o !== wash && o.position.y > 2.5 && o.intensity > 0.5) o.intensity *= 0.3;
+}
+
+// smoke: a low, slow haze over the whole den, thicker in front of the stage
+function uwbSmoke() {
+  const N = 230, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), c = new THREE.Color(), sp = [];
+  for (let i = 0; i < N; i++) { const st = i < 60; pos.set(st ? [-9.4 + 1 + Math.random() * 5, 0.5 + Math.random() * 2.6, 7.2 + (Math.random() - 0.5) * 6] : [(Math.random() - 0.5) * 23, 0.5 + Math.random() * 2.6, (Math.random() - 0.5) * 21], i * 3);
+    if (st) c.setHSL(0.75 + Math.random() * 0.1, 0.45, 0.42 + Math.random() * 0.12); else c.setHSL(0.07 + Math.random() * 0.06, 0.18, 0.3 + Math.random() * 0.12); col.set([c.r, c.g, c.b], i * 3); sp.push(Math.random() * 6); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const m = new THREE.Points(g, new THREE.PointsMaterial({ size: 3.2, map: hbHazeTex(), vertexColors: true, transparent: true, opacity: 0.14, depthWrite: false })); m.frustumCulled = false; levelGroup.add(m);
+  levelAnims.push(t => { for (let i = 0; i < N; i++) { pos[i * 3] += Math.sin(t * 0.07 + sp[i]) * 0.005; pos[i * 3 + 2] += Math.cos(t * 0.05 + sp[i]) * 0.005; pos[i * 3 + 1] += Math.sin(t * 0.2 + sp[i]) * 0.0015; } g.attributes.position.needsUpdate = true; });
+  // cigarette smoke curling up off a few tables and the bar
+  for (const [x, z] of [[-5, 8.9], [-2, -7.8], [1.6, -7.8], [6, 4]]) levelAnims.push(() => { if (Math.random() < 0.05) burst(V(x, 1.0, z), '#9a9aa4', 1, 0.08); });
+}
+
+// =================== MOON HELMETS (2.23.32): anyone out on the Moon's surface wears a glass bubble and an air pack ===================
+// Inside Luna Dome the bubble comes off. Checked twice a second, so walkers and NPCs who stroll out the airlock suit up.
+const MH_RIGS = ['civ', 'trooper', 'maxurge', 'elismas'];
+let MH_GLASS = null;
+function mhSuit(o) { const R = o.userData.rig; if (o.userData.mh || !R || !R.head || !R.torso) return o.userData.mh; const sp = R.spec;
+  if (!MH_GLASS) MH_GLASS = new THREE.MeshPhongMaterial({ color: '#d8f0ff', transparent: true, opacity: 0.22, shininess: 120, specular: '#ffffff', depthWrite: false });
+  const h = new THREE.Group(), y = 1.78 - sp.neck; part(h, new THREE.SphereGeometry(0.25, 16, 12), MH_GLASS, 0, y, 0.01); part(h, new THREE.TorusGeometry(0.17, 0.035, 6, 16), '#c8ccd4', 0, 1.6 - sp.neck, 0, Math.PI / 2);
+  part(h, new THREE.SphereGeometry(0.04, 6, 4), glow('#7fe8ff'), 0.12, 1.6 - sp.neck, 0.11); R.head.add(h);
+  const t = new THREE.Group(); part(t, B(0.3, 0.42, 0.14), '#e8e4dc', 0, 1.3 - sp.hip, -0.2); for (const s of [-1, 1]) part(t, Cy(0.055, 0.055, 0.4, 8), '#9aa1aa', s * 0.08, 1.32 - sp.hip, -0.3); part(t, B(0.08, 0.03, 0.02), glow('#6fdc5a'), 0.08, 1.45 - sp.hip, -0.13); R.torso.add(t);
+  return (o.userData.mh = [h, t]); }
+setInterval(() => { try { if (!LEVEL || LEVEL.id !== 'moon') return; const seen = new Set();
+  const check = o => { if (!o || seen.has(o) || !o.userData || !o.userData.rig) return; seen.add(o); const R = o.userData.rig; if (!MH_RIGS.some(k => RIGS[k] === R.spec)) return;
+    if (typeof enemies !== 'undefined' && enemies.some(e => e.obj === o)) return;
+    const out = Math.hypot(o.position.x - DOME[0], o.position.z - DOME[1]) > 15.5, m = out ? mhSuit(o) : o.userData.mh; if (m) m.forEach(g => g.visible = out); };
+  levelGroup.children.forEach(check); scene.children.forEach(check); if (typeof npcObjs !== 'undefined') for (const id in npcObjs) check(npcObjs[id].obj);
+} catch (_) {} }, 500);
+
 // =================== TUBES AND THE AIRLOCK (2.22.30) ===================
 // The Zeltac elevators become Futurama-style pneumatic tubes: a glass tube from floor to ceiling with chrome rings,
 // a glowing intake pad and air rushing upward, and a WHOOSH that sucks you up when you pick a floor.
@@ -28100,7 +28241,7 @@ function mFlash(n) {
   markDirty();
 }
 function mBadgePop() { const d = document.createElement('div'); d.style.cssText = 'position:fixed;left:50%;top:44%;z-index:30;pointer-events:none;transform:translate(-50%,-50%) scale(.3) rotateY(80deg);transition:transform .35s cubic-bezier(.2,1.6,.4,1),opacity .4s;opacity:0';
-  d.innerHTML = `<svg width="150" height="170" viewBox="0 0 150 170"><path d="M75 6l17 34 38 5-28 26 7 38-34-18-34 18 7-38-28-26 38-5z" fill="#e8c35a" stroke="#7a5a1a" stroke-width="5"/><circle cx="75" cy="70" r="22" fill="#2a3a7a" stroke="#ffe8a0" stroke-width="3"/><text x="75" y="77" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="16" fill="#ffe8a0">${'★'.repeat(mRank() + 1).slice(0, 5)}</text><rect x="18" y="134" width="114" height="26" rx="5" fill="#1a2240"/><text x="75" y="152" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="13" fill="#ffe8a0">${mRankName().toUpperCase()}</text></svg>`;
+  d.innerHTML = mBadgeArt(mRank(), 170);
   document.body.appendChild(d); requestAnimationFrame(() => { d.style.opacity = 1; d.style.transform = 'translate(-50%,-50%) scale(1) rotateY(0)'; }); setTimeout(() => { d.style.opacity = 0; }, 1300); setTimeout(() => d.remove(), 1800); }
 window.addEventListener('keydown', e => { if (e.code === 'KeyN' && state === 'play' && !dlgOpen && mOn() && !(document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName))) mFlash(); });
 const tBadge = document.createElement('button'); tBadge.className = 'tbtn tq'; tBadge.id = 'tBadge'; tBadge.innerHTML = '<i>★</i><small>BADGE</small>'; tBadge.hidden = true; { const t = document.getElementById('touch'); if (t) t.appendChild(tBadge); }
@@ -28207,7 +28348,7 @@ const M_BUSTS = [['Street deal in progress', 'Dealer'], ['Smuggler with contraba
 function mSpawnBust() { const M = mS(); if (!OUT_WORLDS.includes(LEVEL.id) || LEVEL.fly || enemies.some(e => e.sp.mBust && !e.dead)) return; const p = mRandSpot(22, 40); if (!p) return; const B0 = M_BUSTS[Math.floor(Math.random() * M_BUSTS.length)];
   const zid = 'mbust'; Z[zid] = { id: zid, name: B0[0], x: p.x, z: p.z, r: 6 }; const e = makeEnemy({ zone: zid, type: 'suspect', n: 1, lv: [Math.max(1, S.lvl - 2), S.lvl], once: true, mBust: true, at: [0, 0] }); e.def = Object.assign({}, e.def, { name: B0[1] }); e.plateHp = -1; updatePlate(e); mMarker(e, '#ff2a3a');
   const a = { r: 3, get x() { return e.obj.position.x; }, get z() { return e.obj.position.z; }, label: '🪪 Flash your badge: you\'re under arrest', fn: () => mArrest(e, a) }; INTERACTS.push(a); e.mAct = a;
-  toast('🚔 ' + B0[0].toUpperCase(), 'Follow the compass to the red beacon', 3.5); SFX.zap && SFX.zap(); }
+  toast('🚔 ' + B0[0].toUpperCase(), 'Follow the compass', 3.5); SFX.zap && SFX.zap(); }
 function mDrop(e) { const k = INTERACTS.indexOf(e.mAct); if (k >= 0) INTERACTS.splice(k, 1); }
 function mArrest(e, a) { if (e.dead) return mDrop(e); mBadgePop(); const M = mS();
   if (!e.ran && Math.random() < 0.6) { e.dead = 3; e.gone = true; scene.remove(e.obj); const k = enemies.indexOf(e); if (k >= 0) enemies.splice(k, 1); mDrop(e); M.busts = (M.busts || 0) + 1; const cr = 120 + S.lvl * 12; S.cr += cr; mGain(40 + mRank() * 10, 'Arrest'); toast('ARRESTED', `Contraband seized · +${cr} cr`, 3); SFX.quest && SFX.quest(); markDirty(); M.bustT = Date.now() + (150 + Math.random() * 120) * 1000; }
@@ -28263,6 +28404,38 @@ function officePerks(cx, cz, inner, outer) { const sd = Math.sign(outer - cx);
 
 // a live bust takes over the compass and tracker so you can find it
 { const _qt = questTarget; questTarget = function () { const e = typeof enemies !== 'undefined' && enemies.find(x => x.sp && x.sp.mBust && !x.dead); if (e && mOn()) return { p: e.obj.position, badge: true, label: `🚔 ${e.def.name}: ${Math.round(e.obj.position.distanceTo(player.pos))} m` }; return _qt.apply(this, arguments); }; }
+// the Marshal badge, redone (2.23.32): a seven-point star in polished gold with ball tips and a bevel, a navy seal ringed with
+// GALACTIC MARSHALS, a ringed planet in the middle, rank stars, a red rank ribbon, and a light glint that sweeps across it
+let M_BADGE_N = 0;
+function mBadgeArt(r, w, anim) {
+  const k = ++M_BADGE_N, cx = 100, cy = 98, pts = (R0, R1) => { const p = []; for (let i = 0; i < 14; i++) { const a = -Math.PI / 2 + i * Math.PI / 7, R = i % 2 ? R1 : R0; p.push((cx + Math.cos(a) * R).toFixed(1) + ',' + (cy + Math.sin(a) * R).toFixed(1)); } return p.join(' '); };
+  const tips = Array.from({ length: 7 }, (_, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / 7; return `<circle cx="${(cx + Math.cos(a) * 92).toFixed(1)}" cy="${(cy + Math.sin(a) * 92).toFixed(1)}" r="9" fill="url(#mbG${k})" stroke="#5a3a0a" stroke-width="3"/>`; }).join('');
+  const stars = Array.from({ length: 5 }, (_, i) => { const x = cx + Math.cos(Math.PI / 2 + (i - 2) * 0.32) * 27, y = cy + Math.sin(Math.PI / 2 + (i - 2) * 0.32) * 27; return `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle" font-size="11" fill="${i <= r ? '#ffe27a' : '#2a3460'}" style="${anim && i === r ? 'animation:mstar 1s 1.2s both' : ''}">★</text>`; }).join('');
+  const name = (M_RANKS[r] ? M_RANKS[r][1] : 'Marshal').toUpperCase();
+  return `<svg width="${w}" height="${w * 1.15}" viewBox="0 0 200 230" style="${anim ? 'animation:mspin 2.4s ease-out 1;' : ''}display:block;margin:0 auto;overflow:visible"><defs>
+<linearGradient id="mbG${k}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c0"/><stop offset=".35" stop-color="#f0c45a"/><stop offset=".7" stop-color="#b8862a"/><stop offset="1" stop-color="#7a5212"/></linearGradient>
+<radialGradient id="mbN${k}" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#3a5ad0"/><stop offset=".6" stop-color="#162a78"/><stop offset="1" stop-color="#0a1238"/></radialGradient>
+<linearGradient id="mbR${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e83a3a"/><stop offset="1" stop-color="#8a1018"/></linearGradient>
+<linearGradient id="mbS${k}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<clipPath id="mbC${k}"><polygon points="${pts(92, 50)}"/></clipPath>
+<path id="mbT${k}" d="M ${cx - 36} ${cy + 9} A 36 36 0 1 1 ${cx + 36} ${cy + 9}"/></defs>
+<style>@keyframes mbglint${k}{0%,55%{transform:translateX(-160px) rotate(25deg)}100%{transform:translateX(220px) rotate(25deg)}}</style>
+<polygon points="${pts(92, 50)}" fill="#3a2406" transform="translate(3,5)" opacity=".5"/>
+${tips}<polygon points="${pts(92, 50)}" fill="url(#mbG${k})" stroke="#5a3a0a" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="${pts(80, 44)}" fill="none" stroke="#fff6c8" stroke-opacity=".55" stroke-width="2.5" stroke-linejoin="round"/>
+<g clip-path="url(#mbC${k})"><rect x="0" y="-40" width="34" height="320" fill="url(#mbS${k})" style="animation:mbglint${k} 3.2s ease-in-out infinite;transform-origin:100px 100px"/></g>
+<circle cx="${cx}" cy="${cy}" r="47" fill="#5a3a0a"/><circle cx="${cx}" cy="${cy}" r="44" fill="url(#mbN${k})" stroke="url(#mbG${k})" stroke-width="5"/>
+<circle cx="${cx}" cy="${cy}" r="30" fill="none" stroke="#ffe27a" stroke-opacity=".35" stroke-width="1.2" stroke-dasharray="2 3"/>
+<text font-family="sans-serif" font-weight="800" font-size="8.6" letter-spacing="0.5" fill="#ffe8a0"><textPath href="#mbT${k}" startOffset="50%" text-anchor="middle">GALACTIC MARSHALS</textPath></text>
+<ellipse cx="${cx}" cy="${cy - 2}" rx="21" ry="6" fill="none" stroke="#ffe27a" stroke-width="2.4" transform="rotate(-18 ${cx} ${cy - 2})"/><circle cx="${cx}" cy="${cy - 2}" r="11" fill="url(#mbG${k})" stroke="#5a3a0a" stroke-width="1.5"/>
+<path d="M ${cx - 21} ${cy - 2} a 21 6 0 0 0 42 0" fill="none" stroke="#ffe27a" stroke-width="2.4" transform="rotate(-18 ${cx} ${cy - 2})"/>
+${stars}
+<path d="M14 186 h172 l-12 16 l12 16 h-172 l12 -16 z" fill="#5a0a10" transform="translate(0,3)" opacity=".6"/>
+<path d="M14 186 h172 l-12 16 l12 16 h-172 l12 -16 z" fill="url(#mbR${k})" stroke="#ffe27a" stroke-width="2"/>
+<text x="100" y="208" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="14" letter-spacing="2" fill="#fff4c0"${name.length > 9 ? ' textLength="138" lengthAdjust="spacingAndGlyphs"' : ''}>${name}</text></svg>`;
+}
+mBadgeSvg = (r, anim) => mBadgeArt(r, 132, anim);
+mMarker = () => null; // no more light pillar over suspects and fugitives: the compass already points the way
 
 // blork.js: the Blork Studios logo, shot like our cutscenes in one take (~7 s, Phil's storyboard), with the game's own models.
 // A Drome trooper runs down an Earth trail toward the camera, the Setting Sun drops in behind him and shoots him, blood hits

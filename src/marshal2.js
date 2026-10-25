@@ -83,7 +83,7 @@ const M_BUSTS = [['Street deal in progress', 'Dealer'], ['Smuggler with contraba
 function mSpawnBust() { const M = mS(); if (!OUT_WORLDS.includes(LEVEL.id) || LEVEL.fly || enemies.some(e => e.sp.mBust && !e.dead)) return; const p = mRandSpot(22, 40); if (!p) return; const B0 = M_BUSTS[Math.floor(Math.random() * M_BUSTS.length)];
   const zid = 'mbust'; Z[zid] = { id: zid, name: B0[0], x: p.x, z: p.z, r: 6 }; const e = makeEnemy({ zone: zid, type: 'suspect', n: 1, lv: [Math.max(1, S.lvl - 2), S.lvl], once: true, mBust: true, at: [0, 0] }); e.def = Object.assign({}, e.def, { name: B0[1] }); e.plateHp = -1; updatePlate(e); mMarker(e, '#ff2a3a');
   const a = { r: 3, get x() { return e.obj.position.x; }, get z() { return e.obj.position.z; }, label: '🪪 Flash your badge: you\'re under arrest', fn: () => mArrest(e, a) }; INTERACTS.push(a); e.mAct = a;
-  toast('🚔 ' + B0[0].toUpperCase(), 'Follow the compass to the red beacon', 3.5); SFX.zap && SFX.zap(); }
+  toast('🚔 ' + B0[0].toUpperCase(), 'Follow the compass', 3.5); SFX.zap && SFX.zap(); }
 function mDrop(e) { const k = INTERACTS.indexOf(e.mAct); if (k >= 0) INTERACTS.splice(k, 1); }
 function mArrest(e, a) { if (e.dead) return mDrop(e); mBadgePop(); const M = mS();
   if (!e.ran && Math.random() < 0.6) { e.dead = 3; e.gone = true; scene.remove(e.obj); const k = enemies.indexOf(e); if (k >= 0) enemies.splice(k, 1); mDrop(e); M.busts = (M.busts || 0) + 1; const cr = 120 + S.lvl * 12; S.cr += cr; mGain(40 + mRank() * 10, 'Arrest'); toast('ARRESTED', `Contraband seized · +${cr} cr`, 3); SFX.quest && SFX.quest(); markDirty(); M.bustT = Date.now() + (150 + Math.random() * 120) * 1000; }
@@ -139,3 +139,35 @@ function officePerks(cx, cz, inner, outer) { const sd = Math.sign(outer - cx);
 
 // a live bust takes over the compass and tracker so you can find it
 { const _qt = questTarget; questTarget = function () { const e = typeof enemies !== 'undefined' && enemies.find(x => x.sp && x.sp.mBust && !x.dead); if (e && mOn()) return { p: e.obj.position, badge: true, label: `🚔 ${e.def.name}: ${Math.round(e.obj.position.distanceTo(player.pos))} m` }; return _qt.apply(this, arguments); }; }
+// the Marshal badge, redone (2.23.32): a seven-point star in polished gold with ball tips and a bevel, a navy seal ringed with
+// GALACTIC MARSHALS, a ringed planet in the middle, rank stars, a red rank ribbon, and a light glint that sweeps across it
+let M_BADGE_N = 0;
+function mBadgeArt(r, w, anim) {
+  const k = ++M_BADGE_N, cx = 100, cy = 98, pts = (R0, R1) => { const p = []; for (let i = 0; i < 14; i++) { const a = -Math.PI / 2 + i * Math.PI / 7, R = i % 2 ? R1 : R0; p.push((cx + Math.cos(a) * R).toFixed(1) + ',' + (cy + Math.sin(a) * R).toFixed(1)); } return p.join(' '); };
+  const tips = Array.from({ length: 7 }, (_, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / 7; return `<circle cx="${(cx + Math.cos(a) * 92).toFixed(1)}" cy="${(cy + Math.sin(a) * 92).toFixed(1)}" r="9" fill="url(#mbG${k})" stroke="#5a3a0a" stroke-width="3"/>`; }).join('');
+  const stars = Array.from({ length: 5 }, (_, i) => { const x = cx + Math.cos(Math.PI / 2 + (i - 2) * 0.32) * 27, y = cy + Math.sin(Math.PI / 2 + (i - 2) * 0.32) * 27; return `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle" font-size="11" fill="${i <= r ? '#ffe27a' : '#2a3460'}" style="${anim && i === r ? 'animation:mstar 1s 1.2s both' : ''}">★</text>`; }).join('');
+  const name = (M_RANKS[r] ? M_RANKS[r][1] : 'Marshal').toUpperCase();
+  return `<svg width="${w}" height="${w * 1.15}" viewBox="0 0 200 230" style="${anim ? 'animation:mspin 2.4s ease-out 1;' : ''}display:block;margin:0 auto;overflow:visible"><defs>
+<linearGradient id="mbG${k}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c0"/><stop offset=".35" stop-color="#f0c45a"/><stop offset=".7" stop-color="#b8862a"/><stop offset="1" stop-color="#7a5212"/></linearGradient>
+<radialGradient id="mbN${k}" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#3a5ad0"/><stop offset=".6" stop-color="#162a78"/><stop offset="1" stop-color="#0a1238"/></radialGradient>
+<linearGradient id="mbR${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e83a3a"/><stop offset="1" stop-color="#8a1018"/></linearGradient>
+<linearGradient id="mbS${k}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<clipPath id="mbC${k}"><polygon points="${pts(92, 50)}"/></clipPath>
+<path id="mbT${k}" d="M ${cx - 36} ${cy + 9} A 36 36 0 1 1 ${cx + 36} ${cy + 9}"/></defs>
+<style>@keyframes mbglint${k}{0%,55%{transform:translateX(-160px) rotate(25deg)}100%{transform:translateX(220px) rotate(25deg)}}</style>
+<polygon points="${pts(92, 50)}" fill="#3a2406" transform="translate(3,5)" opacity=".5"/>
+${tips}<polygon points="${pts(92, 50)}" fill="url(#mbG${k})" stroke="#5a3a0a" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="${pts(80, 44)}" fill="none" stroke="#fff6c8" stroke-opacity=".55" stroke-width="2.5" stroke-linejoin="round"/>
+<g clip-path="url(#mbC${k})"><rect x="0" y="-40" width="34" height="320" fill="url(#mbS${k})" style="animation:mbglint${k} 3.2s ease-in-out infinite;transform-origin:100px 100px"/></g>
+<circle cx="${cx}" cy="${cy}" r="47" fill="#5a3a0a"/><circle cx="${cx}" cy="${cy}" r="44" fill="url(#mbN${k})" stroke="url(#mbG${k})" stroke-width="5"/>
+<circle cx="${cx}" cy="${cy}" r="30" fill="none" stroke="#ffe27a" stroke-opacity=".35" stroke-width="1.2" stroke-dasharray="2 3"/>
+<text font-family="sans-serif" font-weight="800" font-size="8.6" letter-spacing="0.5" fill="#ffe8a0"><textPath href="#mbT${k}" startOffset="50%" text-anchor="middle">GALACTIC MARSHALS</textPath></text>
+<ellipse cx="${cx}" cy="${cy - 2}" rx="21" ry="6" fill="none" stroke="#ffe27a" stroke-width="2.4" transform="rotate(-18 ${cx} ${cy - 2})"/><circle cx="${cx}" cy="${cy - 2}" r="11" fill="url(#mbG${k})" stroke="#5a3a0a" stroke-width="1.5"/>
+<path d="M ${cx - 21} ${cy - 2} a 21 6 0 0 0 42 0" fill="none" stroke="#ffe27a" stroke-width="2.4" transform="rotate(-18 ${cx} ${cy - 2})"/>
+${stars}
+<path d="M14 186 h172 l-12 16 l12 16 h-172 l12 -16 z" fill="#5a0a10" transform="translate(0,3)" opacity=".6"/>
+<path d="M14 186 h172 l-12 16 l12 16 h-172 l12 -16 z" fill="url(#mbR${k})" stroke="#ffe27a" stroke-width="2"/>
+<text x="100" y="208" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="14" letter-spacing="2" fill="#fff4c0"${name.length > 9 ? ' textLength="138" lengthAdjust="spacingAndGlyphs"' : ''}>${name}</text></svg>`;
+}
+mBadgeSvg = (r, anim) => mBadgeArt(r, 132, anim);
+mMarker = () => null; // no more light pillar over suspects and fugitives: the compass already points the way

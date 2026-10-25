@@ -61,8 +61,8 @@ document.body.appendChild(podBar);
 $('podPP').addEventListener('click', () => { POD.playing ? podPause() : podResume(); });
 $('podX').addEventListener('click', () => { podPause(); podStop(); });
 const podFmt = s => isFinite(s) ? Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0') : '--:--';
-function podUi() { podBar.style.display = POD.ep && state === 'play' ? 'flex' : 'none'; if (!POD.ep) return; $('podT').textContent = (POD.part === 'intro' ? 'Station ID · ' : '') + POD.ep.title; $('podPP').textContent = POD.playing ? '❚❚' : '▶'; }
-setInterval(() => { if (POD.ep && POD.el) $('podTime').textContent = podFmt(POD.el.currentTime) + ' / ' + podFmt(POD.el.duration); podBar.style.display = POD.ep && state === 'play' ? 'flex' : 'none'; }, 500);
+function podUi() { podBar.style.display = 'none'; if (!POD.ep) return; $('podT').textContent = (POD.part === 'intro' ? 'Station ID · ' : '') + POD.ep.title; $('podPP').textContent = POD.playing ? '❚❚' : '▶'; }
+setInterval(() => { if (POD.ep && POD.el) $('podTime').textContent = podFmt(POD.el.currentTime) + ' / ' + podFmt(POD.el.duration); podBar.style.display = 'none'; }, 500);
 // ---- the pocket radio: a real little player (chamfered body, green screen, d-pad, earbuds) that pops up in a dialog ----
 const RDEV = { r: null, cv: null, sc: null, cam: null, g: null, sx: null, stex: null, keys: {}, sel: 0, ask: null, open: false, t0: 0, drawT: 0 };
 function rdevShape(w, h, c) { const s = new THREE.Shape(), x = w / 2, y = h / 2; s.moveTo(-x + c, -y); s.lineTo(x - c, -y); s.lineTo(x, -y + c); s.lineTo(x, y - c); s.lineTo(x - c, y); s.lineTo(-x + c, y); s.lineTo(-x, y - c); s.lineTo(-x, -y + c); s.closePath(); return s; }

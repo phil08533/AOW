@@ -286,3 +286,12 @@ document.addEventListener('click', e => { if (!e.target.closest || !e.target.clo
 { const st = document.createElement('style'); st.textContent = 'body.touch #tMelee { display: none !important; }'; document.head.appendChild(st);
   const fix = () => { const m = $('tMelee'), r = $('tReload'); if (!m || !r) return; if (!TOUCH) return; r.style.removeProperty('bottom'); r.style.removeProperty('right'); const cm = getComputedStyle(m); r.style.setProperty('bottom', cm.bottom, 'important'); r.style.setProperty('right', cm.right, 'important'); };
   if (TOUCH) document.body.classList.add('touch'); addEventListener('resize', () => setTimeout(fix, 50)); setTimeout(fix, 300); }
+// the Radio tile shows the Nebula 88.8 player itself: grey body, dark bezel, glowing green screen, d-pad and the red heart key
+MENU_ICONS.podBtn = icoG(g => { const ext = (sh, d, bv) => { const geo = new THREE.ExtrudeGeometry(sh, { depth: d, bevelEnabled: true, bevelThickness: bv, bevelSize: bv, bevelSegments: 1 }); geo.translate(0, 0, -d / 2); return geo; };
+  part(g, ext(rdevShape(2.5, 3.9, 0.38), 0.42, 0.13), toon('#3a3d44', 'panel'), 0, 0, 0); part(g, ext(rdevShape(2.04, 1.62, 0.14), 0.06, 0.04), '#16181c', 0, 0.86, 0.29);
+  const c = document.createElement('canvas'); c.width = 256; c.height = 200; const x = c.getContext('2d'); x.fillStyle = '#0e2a22'; x.fillRect(0, 0, 256, 200); x.fillStyle = '#a8e6cc'; x.font = 'bold 26px "Courier New",monospace'; x.textAlign = 'center'; x.fillText('NEBULA', 128, 70); x.font = 'bold 54px "Courier New",monospace'; x.fillText('88.8', 128, 130); x.fillRect(40, 155, 176, 8);
+  const tx = new THREE.CanvasTexture(c); tx.encoding = THREE.sRGBEncoding; part(g, new THREE.PlaneGeometry(1.86, 1.45), new THREE.MeshBasicMaterial({ map: tx }), 0, 0.86, 0.41);
+  const key = toon('#18191d', 'panel'); for (const [px, py] of [[0, 0.6], [0, -0.6], [-0.6, 0], [0.6, 0]]) part(g, ext(rdevShape(0.5, 0.42, 0.12), 0.1, 0.04), key, px, -0.92 + py, 0.27);
+  part(g, new THREE.CylinderGeometry(0.34, 0.34, 0.12, 8).rotateX(Math.PI / 2), key, 0, -0.92, 0.27);
+  const h = new THREE.Shape(); h.moveTo(0, -0.17); h.bezierCurveTo(-0.05, -0.1, -0.2, -0.02, -0.2, 0.07); h.bezierCurveTo(-0.2, 0.16, -0.08, 0.2, 0, 0.1); h.bezierCurveTo(0.08, 0.2, 0.2, 0.16, 0.2, 0.07); h.bezierCurveTo(0.2, -0.02, 0.05, -0.1, 0, -0.17);
+  part(g, ext(h, 0.1, 0.03), toon("#b8324a"), 0.8, -1.58, 0.27); g.rotation.y = 0.45; });

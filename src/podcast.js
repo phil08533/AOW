@@ -159,10 +159,10 @@ window.addEventListener('keydown', e => { if (!RDEV.open || dlgOpen || (typeof c
   if (k) { e.preventDefault(); e.stopPropagation(); rdevPress(k); } else if ((e.code === 'KeyO' && !e.repeat) || e.code === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); rdevClose(); } }, true);
 // put it away when something else takes the screen
 setInterval(() => { if (RDEV.open && (state !== 'play' || dlgOpen || CUT.on || (typeof TAB !== 'undefined' && TAB.t > 0))) rdevClose(); }, 300);
-window.addEventListener('keydown', e => { if (e.code === 'KeyO' && !e.repeat && !RDEV.open && state === 'play' && !dlgOpen && !(typeof chatOpen === 'function' && chatOpen())) openPodcast(); });
+window.addEventListener('keydown', e => { if (e.code === 'KeyO' && !e.repeat && !RDEV.open && state === 'play' && !dlgOpen && !(typeof chatOpen === 'function' && chatOpen())) { const a = RDEV.next; RDEV.next = null; openPodcast(a); } });
 { const b = document.createElement('button'); b.className = 'hbtn win'; b.id = 'podBtn'; b.textContent = 'Radio'; b.addEventListener('click', () => { if (typeof closeTablet === 'function') closeTablet(); setTimeout(() => openPodcast(), 250); }); $('menuDrop').appendChild(b); }
 // a new show (or the radio itself) asks if you want to listen, as soon as you're free
-setInterval(() => { if (!POD.pending || !POD.pending.length || RDEV.open || state !== 'play' || dlgOpen || CUT.on || (typeof TAB !== 'undefined' && TAB.t > 0)) return; openPodcast(POD.pending.shift()); }, 1000);
+setInterval(() => { if (!POD.pending || !POD.pending.length || RDEV.open || state !== 'play' || dlgOpen || CUT.on || (typeof TAB !== 'undefined' && TAB.t > 0)) return; const ep = POD.pending.shift(); RDEV.next = ep; toast('NEW SHOW ON AIR', ep.title + ' · press O to listen', 4); }, 1000);
 // B.U.R.P. stays quiet while a show plays; the radio stops drawing when its dialog closes
 setTimeout(() => { const _bs = burpSay; burpSay = function () { if (POD.playing) return; return _bs.apply(this, arguments); }; }, 0);
 // ---- editor: Podcast tab (owner only) ----

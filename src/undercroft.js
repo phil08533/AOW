@@ -115,9 +115,9 @@ function ucSmoke(o, y) { levelAnims.push(() => { if (o.parent && Math.random() <
   const hb = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 0.5), new THREE.MeshBasicMaterial({ map: signTex('CONTRACTS', '#140806', '#c8402f') })); hb.position.set(-12, 2.9, -27.4); props.add(hb);
   // ---- wanted posters on both side walls and the back wall ----
   const wnt = typeof isWanted === 'function' && isWanted(), bty = wnt && typeof outS === 'function' ? outS().bounty : 0;
-  const spots = [[-W + 0.35, -14, Math.PI / 2], [-W + 0.35, -11, Math.PI / 2], [-W + 0.35, 2, Math.PI / 2], [W - 0.35, -12, -Math.PI / 2], [W - 0.35, -8, -Math.PI / 2], [W - 0.35, 4, -Math.PI / 2], [W - 0.35, 7, -Math.PI / 2], [-9.4, -D + 0.85, 0], [9.4, -D + 0.85, 0]];
+  const spots = [[-W + 0.55, -14, Math.PI / 2], [-W + 0.55, -11, Math.PI / 2], [-W + 0.55, 2, Math.PI / 2], [W - 0.55, -12, -Math.PI / 2], [W - 0.55, -8, -Math.PI / 2], [W - 0.55, 4, -Math.PI / 2], [W - 0.55, 7, -Math.PI / 2], [-9.4, -D + 0.85, 0], [9.4, -D + 0.85, 0]];
   spots.forEach(([x, z, ry], i) => { const you = wnt && i === 4, d = you ? ['You', 'Known to this bar', `${(bty || 1000).toLocaleString()} CR`, 0] : UC_POSTERS[i % UC_POSTERS.length];
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.24), new THREE.MeshBasicMaterial({ map: ucPoster(d[0], d[1], d[2], d[3], you) })); m.position.set(x, 2.1 + (i % 2) * 0.25, z); m.rotation.set(0, ry, (i % 3 - 1) * 0.06); props.add(m); });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.24), new THREE.MeshBasicMaterial({ map: ucPoster(d[0], d[1], d[2], d[3], you) })); m.position.set(x, 2.65 + (i % 2) * 0.2, z); m.rotation.set(0, ry, (i % 3 - 1) * 0.06); props.add(m); });
   // ---- the floor: barrel tables, arm wrestlers, drunks ----
   const barrel = (x, z) => { part(props, Cy(0.55, 0.55, 1.1, 12), toon('#5a3a22', 'wood'), x, 0.55, z); part(props, Cy(0.57, 0.57, 0.08, 12), metal, x, 0.3, z); part(props, Cy(0.57, 0.57, 0.08, 12), metal, x, 0.85, z); part(props, Cy(0.8, 0.8, 0.06, 12), wood, x, 1.12, z); solid(x, z, 0.85); };
   for (const [x, z, a] of [[-6, -2, 0.4], [7, 6, 2.2], [-4, 10, 1.3]]) { barrel(x, z); part(props, Cy(0.06, 0.06, 0.24, 6), glow('#c8a03a'), x + 0.2, 1.27, z); for (let k = 0; k < 2; k++) { const aa = a + k * 2.6, px = x + Math.cos(aa) * 1.15, pz = z + Math.sin(aa) * 1.15, ry = Math.atan2(x - px, z - pz);

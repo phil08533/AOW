@@ -37,7 +37,7 @@
     add.forEach(o => o.traverse(q => { q.renderOrder = 5; }));
     g.scale.setScalar(s0);
     // sit the whole cockpit higher in view so the dash screens clear the HUD at the bottom of the screen
-    g.position.y = 0.24; SCOCK.holo.position.y -= 0.24 / s0; SCOCK.lock.position.y -= 0.24 / s0;
+    g.position.y = 0.04; SCOCK.holo.position.y -= 0.04 / s0; SCOCK.lock.position.y -= 0.04 / s0; // low, so the dash leaves the middle of the view clear
   };
   const gaugeSet = (n, v) => { if (n) n.rotation.z = -(-2.2 + 4.4 * clamp(v, 0, 1)); };
   const meterSet = (o, v) => { if (!o) return; v = clamp(v, 0.04, 1); o.scale.y = v; o.position.y = -0.405 + 0.075 * v; };

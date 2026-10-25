@@ -350,9 +350,9 @@ function mawDoomStep(A, dt) {
   return true;
 }
 // ---- the fight ----
-const MAW_FINAL_TOUGH = 0.6; // the last, morphed phase soaks more: every hit lands at 60%
+const MAW_FINAL_TOUGH = 0.2, MAW_P1_K = 1.2; // Phil (2.23.35): the first stretch has about a sixth less health (hits land at 120%), the morphed last phase triple (hits land at 20%, was 60%)
 function mawDamage(n, byYou, at) {
-  if (MAW.dead || !MAW.obj) return; if (MAW.final) n *= MAW_FINAL_TOUGH; MAW.hp -= n;
+  if (MAW.dead || !MAW.obj) return; n *= MAW.final ? MAW_FINAL_TOUGH : MAW_P1_K; MAW.hp -= n;
   const f = MAW.hp / MAW.max, ph = f > 0.66 ? 1 : f > 0.33 ? 2 : 3;
   if (ph !== MAW.phase && !MAW.final) { MAW.phase = ph; MAW.obj.userData.rage = ph - 1; SFX.boom(); if (fly) fly.shake = 0.6;
     toast(ph === 2 ? 'IT SPAWNS' : 'IT\'S ENRAGED', ph === 2 ? 'The Maw tears off pieces of itself' : 'Every eye opens at once', 2.5); }

@@ -9,11 +9,16 @@ function mawbMake() { const st = BEAM_STYLES.maw, tx = beamTex(st).clone(); tx.n
   g.add(rim2, rim, core, warn); g.visible = false; levelGroup.add(g); return { g, core, rim, rim2, warn, dir: V(0, 0, 1), spin: 0 }; }
 function mawbClear() { for (const b of MAWB.list) if (b.g.parent) b.g.parent.remove(b.g); MAWB.list = []; MAWB.on = 0; MAWB.next = 10; }
 // aim a fan at you: one line through where you are now, the rest scattered around it with gaps big enough to slip through
-function mawbStart(eye) { if (!MAWB.list.length || !MAWB.list[0].g.parent) MAWB.list = Array.from({ length: MAWB_N }, mawbMake);
-  const to = player.pos.clone().sub(eye), d = to.length(), fwd = to.clone().normalize(), side = V(0, 1, 0).cross(fwd).normalize(), up = fwd.clone().cross(side).normalize();
-  MAWB.list.forEach((b, i) => { const a = i * 2.39996, r = i === 0 ? 0 : 16 + Math.sqrt(i) * 17, p = player.pos.clone().addScaledVector(side, Math.cos(a) * r).addScaledVector(up, Math.sin(a) * r);
-    b.dir.copy(p.sub(eye).normalize()); b.spin = (i % 2 ? 1 : -1) * 0.05; b.g.visible = true; b.core.visible = b.rim.visible = b.rim2.visible = false; b.warn.visible = true; });
-  MAWB.on = 1; MAWB.t = 0; MAWB.axis = fwd; toast('THE MAW IS CHARGING', 'Fly out of the purple lines!', 1.6); try { SFX.ui(); } catch (_) {} }
+// 2.23.35: several fans at once, the first on you and the rest thrown out in every direction, each one turning on its own axis
+const MAWB_G = 4;
+function mawbStart(eye) { if (MAWB.list.length !== MAWB_N * MAWB_G || !MAWB.list[0].g.parent) { mawbClear(); MAWB.list = Array.from({ length: MAWB_N * MAWB_G }, mawbMake); }
+  const to = player.pos.clone().sub(eye), d = to.length(), you = to.clone().normalize();
+  for (let gi = 0; gi < MAWB_G; gi++) { let fwd = you.clone();
+    if (gi) { for (let k = 0; k < 12; k++) { fwd = V(Math.random() - 0.5, (Math.random() - 0.5) * 0.9, Math.random() - 0.5).normalize(); if (fwd.angleTo(you) > 0.9) break; } }
+    const c = eye.clone().addScaledVector(fwd, d), side = V(0, 1, 0).cross(fwd).normalize(), up = fwd.clone().cross(side).normalize(), sp = (gi % 2 ? 1 : -1) * (0.05 + gi * 0.02);
+    for (let i = 0; i < MAWB_N; i++) { const b = MAWB.list[gi * MAWB_N + i], a = i * 2.39996, r = i === 0 ? 0 : 16 + Math.sqrt(i) * 17, p = c.clone().addScaledVector(side, Math.cos(a) * r).addScaledVector(up, Math.sin(a) * r);
+      b.dir.copy(p.sub(eye).normalize()); b.axis = fwd; b.spin = (i % 2 ? 1 : -1) * 0.05 + sp; b.g.visible = true; b.core.visible = b.rim.visible = b.rim2.visible = false; b.warn.visible = true; } }
+  MAWB.on = 1; MAWB.t = 0; MAWB.axis = you; toast('THE MAW IS CHARGING', 'Fly out of the purple lines!', 1.6); try { SFX.ui(); } catch (_) {} }
 { const _mf = mawFinalStep; mawFinalStep = function (dt, t) { _mf(dt, t);
   if (MAW.dead || !MAW.obj || !player.alive || CUT.on) { if (MAWB.on) { MAWB.list.forEach(b => { b.g.visible = false; }); MAWB.on = 0; try { beamHum(false); } catch (_) {} } return; }
   const eye = MAW.obj.userData.eye.getWorldPosition(V(0, 0, 0)), F = fly;
@@ -21,12 +26,12 @@ function mawbStart(eye) { if (!MAWB.list.length || !MAWB.list[0].g.parent) MAWB.
   MAWB.t += dt; const burn = MAWB.t > MAWB_WARN, q = new THREE.Quaternion();
   if (burn && MAWB.on === 1) { MAWB.on = 2; SFX.boom(); if (F) F.shake = Math.max(F.shake, 0.5); try { beamHum(true, BEAM_STYLES.maw); } catch (_) {} MAWB.list.forEach(b => { b.warn.visible = false; b.core.visible = b.rim.visible = b.rim2.visible = true; }); }
   let hit = false;
-  for (const b of MAWB.list) { if (burn) { q.setFromAxisAngle(MAWB.axis, b.spin * dt); b.dir.applyQuaternion(q).normalize(); }
+  for (const b of MAWB.list) { if (burn) { q.setFromAxisAngle(b.axis || MAWB.axis, b.spin * dt); b.dir.applyQuaternion(q).normalize(); }
     const e = eye.clone().addScaledVector(b.dir, 1600);
     if (!burn) boltAlong(b.warn, eye, e, 0.5 + Math.abs(Math.sin(MAWB.t * 14)) * 0.6);
     else { const w = Math.min(1, (MAWB.t - MAWB_WARN) / 0.25); boltAlong(b.core, eye, e, (3.4 + Math.sin(t * 40 + b.spin * 99) * 0.4) * w); boltAlong(b.rim, eye, e, 5.4 * w); boltAlong(b.rim2, eye, e, 8.2 * w);
       const tx = b.core.material.map; tx.repeat.set(1, 60); tx.offset.y -= dt * 6;
       const rel = player.pos.clone().sub(eye), al = rel.dot(b.dir); if (al > 0 && rel.addScaledVector(b.dir, -al).length() < MAWB_R) hit = true; } }
   if (hit) { MAW.hurtAcc += 80 * dt; if (F) F.shake = Math.max(F.shake, 0.35); if (Math.random() < 0.5) burst(player.pos, BEAM_STYLES.maw.spark[(Math.random() * 3) | 0], 3, 6); }
-  if (MAWB.t > MAWB_WARN + MAWB_BURN) { MAWB.list.forEach(b => { b.g.visible = false; }); MAWB.on = 0; MAWB.next = 11 + Math.random() * 4; try { beamHum(false); } catch (_) {} } }; }
+  if (MAWB.t > MAWB_WARN + MAWB_BURN) { MAWB.list.forEach(b => { b.g.visible = false; }); MAWB.on = 0; MAWB.next = 7 + Math.random() * 3; try { beamHum(false); } catch (_) {} } }; }
 { const _ll = loadLevel; loadLevel = function (id, o) { if (MAWB.on) { try { beamHum(false); } catch (_) {} } MAWB.list = []; MAWB.on = 0; MAWB.next = 10; return _ll(id, o); }; }

@@ -31,7 +31,8 @@ shipFire = function () {
     const halo = new THREE.Mesh(BOLT.unit, boltMat(col.clone().multiplyScalar(1.3), 0.55)), core = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff').lerp(col, 0.45), 0.95));
     halo.scale.set(0.34, 0.34, 7); core.scale.set(0.12, 0.12, 6.4); g.add(halo, core); const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: FLASH_TEX, color: col, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); fl.scale.setScalar(2.2); fl.position.z = 3.2; g.add(fl);
     g.position.copy(from); g.lookAt(from.clone().add(dir)); levelGroup.add(g);
-    (F.sbolts = F.sbolts || []).push({ g, v: dir.multiplyScalar(spd).add(F.vel.clone().multiplyScalar(0.9)), life: 420 / spd + 0.3, dmg: dmg / 2 }); }
+    const fw = Math.max(0, F.vel.dot(dir)) * 0.9; // only the ship's speed along the shot carries over, so strafing never bends a bolt off the crosshair
+    (F.sbolts = F.sbolts || []).push({ g, v: dir.multiplyScalar(spd + fw), life: 420 / spd + 0.3, dmg: dmg / 2 }); }
 };
 // the miner's beam: two textured streams out of the arm emitters, re-aimed every frame, with the beam guns' hum
 function minerBeams(F) { if (F.mb && F.mb[0].g.parent) return F.mb; F.mb = [0, 1].map(() => { const g = new THREE.Group(), core = new THREE.Mesh(BOLT.unit, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.97, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })), rim = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff'), 0.3)), rim2 = new THREE.Mesh(BOLT.unit, boltMat(new THREE.Color('#ffffff'), 0.12)); g.add(rim2, rim, core); g.visible = false; levelGroup.add(g); return { g, core, rim, rim2, acc: 0, st: null }; }); return F.mb; }
@@ -59,3 +60,17 @@ function minerBeams(F) { if (F.mb && F.mb[0].g.parent) return F.mb; F.mb = [0, 1
 { const anchor = $('setMusic').previousElementSibling, l = document.createElement('span'); l.textContent = 'Ship auto aim'; const b = document.createElement('button'); b.className = 'pbtn'; b.id = 'setShipAim';
   b.addEventListener('click', () => { PREFS.shipAim = PREFS.shipAim === false; savePrefs(); renderSettings(); SFX.ui(); }); anchor.before(l, b); SET_OF.setShipAim = 'game'; }
 { const _rs = renderSettings; renderSettings = function () { _rs(); const b = $('setShipAim'); if (b) b.textContent = PREFS.shipAim === false ? 'Off' : 'On'; }; }
+
+// every weapon bought in ship upgrades fires with the lasers again (this file replaced shipFire, which had dropped the
+// multi-mount wrapper from shipammo.js): plasma fires heavy purple bolts, flak a spread of small orange ones, plus missiles and EMP
+{ const _nf = shipFire; shipFire = function () { const F = fly; _nf.apply(this, arguments); if (!F || shipCls() === 'miner' || typeof SHIP_AMMO === 'undefined') return;
+  const lc = F.cool, own = shipGunsOwned(); SAMMO.cd = SAMMO.cd || {};
+  for (const A of SHIP_AMMO) { if (A.id === 'laser' || !own[A.id] || (SAMMO.cd[A.id] || 0) > gameTime) continue;
+    if (A.id === 'emp' && !F.raiders.some(r => !r.dead && r.obj.position.distanceTo(player.pos) < 170)) continue;
+    SAMMO.cd[A.id] = gameTime + A.cool;
+    if (A.id === 'plasma' || A.id === 'flak') { const n0 = (F.sbolts || []).length, y0 = player.yaw, p0 = player.pitch;
+      try { for (let k = 0; k < (A.pellets || 1); k++) { if (A.pellets) { player.yaw = y0 + rand(-0.06, 0.06); player.pitch = p0 + rand(-0.045, 0.045); } _nf.apply(this, arguments); } } finally { player.yaw = y0; player.pitch = p0; }
+      for (const B of (F.sbolts || []).slice(n0)) { B.dmg *= A.mult; B.g.scale.setScalar(A.id === 'plasma' ? 2.2 : 0.75); B.g.traverse(c => { if (c.isMesh) { c.material = c.material.clone(); c.material.color.set(A.col); } }); }
+      F.shake = Math.max(F.shake, A.id === 'plasma' ? 0.12 : 0.08); }
+    else sammoFireOne(A, _nf, this, arguments); }
+  F.cool = lc; }; }

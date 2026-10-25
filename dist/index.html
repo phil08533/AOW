@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Art of War</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=VT323&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gasoek+One&family=Pixelify+Sans:wght@400;500;600;700&family=VT323&display=swap">
 <style>
 /* Layout: full-screen first-person RPG rendered like a PS1 game. HUD follows the notebook
    "Screen play" page: aimer center, map top-right, objective arrow, red edges when hurt.
@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.28</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.29</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19301,6 +19301,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 294, title: '2.23.29 · Blork logo, round 4', items: ['The Setting Sun now strafes at full speed and fires on the fly instead of stopping', 'Its shots come out of the wing guns like in game, in your laser color', 'BLORK STUDIOS is set in Gasoek One', 'The glow behind the title screen is menu blue instead of orange'] },
   { id: 293, title: '2.23.28 · Blork logo fixes', items: ['The ship in the Blork Studios intro now flies nose first', 'Smoother intro: blood is cached and the clock pauses through load stalls instead of skipping', 'Intro renders at the game default pixel size'] },
   { id: 292, title: '2.23.27 · Blork logo, take 2', items: ['The Blork Studios film now uses the game itself: a Drome trooper sprints down an Earth trail toward you, the Setting Sun drops in behind him and guns him down, his blood hits the lens and covers the screen, then drains away leaving BLORK written in dripping blood over STUDIOS'] },
   { id: 291, title: '2.23.26 · New Blork Studios logo', items: ['The Blork Studios card is now a one-shot film in the game\'s own style: a drone trooper runs across a dusk ridge, the Blork ship swoops in and shoots him, blood sprays over the screen, it floods red and BLORK STUDIOS is hand-lettered on top. Click to skip'] },
@@ -28305,9 +28306,9 @@ function blorkIntro(stageEl, done) {
   // the Setting Sun, as the player has it set up in the garage
   let cfg = {}; try { cfg = scS().cfg.fighter || {}; } catch (_) {} // the save may not be loaded yet this early
   let ship; try { ship = makeClassShip('fighter', Object.assign({}, cfg, { cls: 'fighter' })); } catch (e) { console.warn('blork ship', e); ship = new THREE.Group(); }
-  ship.rotation.y = Math.PI; const sh = new THREE.Group(); sh.add(ship); sc.add(sh); { const b = new THREE.Box3().setFromObject(ship), sz = b.getSize(new THREE.Vector3()); ship.scale.setScalar(6 / Math.max(sz.x, sz.z, 0.01)); }
-  const boltM = boltMat(new THREE.Color('#ff3a2a'), 0.95), boltR = boltMat(new THREE.Color('#ff8a6a'), 0.35);
-  const bolts = [0, 1, 2].map(() => { const g = new THREE.Group(), a = new THREE.Mesh(BOLT.unit, boltM), b = new THREE.Mesh(BOLT.unit, boltR); g.add(a, b); g.visible = false; sc.add(g); return { g, a, b }; });
+  ship.rotation.y = Math.PI; const guns = (ship.userData.guns || []).length ? [ship.userData.guns[0], ship.userData.guns[ship.userData.guns.length - 1]] : [new THREE.Vector3(-4.4, 0, -1), new THREE.Vector3(4.4, 0, -1)]; const sh = new THREE.Group(); sh.add(ship); sc.add(sh); { const b = new THREE.Box3().setFromObject(ship), sz = b.getSize(new THREE.Vector3()); ship.scale.setScalar(6 / Math.max(sz.x, sz.z, 0.01)); }
+  let lc = '#ff3a2a'; try { lc = (LASER_COLS[cfg.lc | 0] || LASER_COLS[0])[1] || lc; } catch (_) {} const boltM = boltMat(new THREE.Color('#ffffff').lerp(new THREE.Color(lc), 0.45), 0.95), boltR = boltMat(new THREE.Color(lc).multiplyScalar(1.3), 0.55);
+  const bolts = [0, 1, 2, 3].map(() => { const g = new THREE.Group(), a = new THREE.Mesh(BOLT.unit, boltM), b = new THREE.Mesh(BOLT.unit, boltR); g.add(a, b); g.visible = false; sc.add(g); return { g, a, b, from: null }; });
   const flash = new THREE.PointLight(lin('#ff3a2a'), 0, 14); sc.add(flash);
   const gore = Array.from({ length: 120 }, () => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.07), G(Math.random() < 0.5 ? '#7a0408' : '#c01018')); m.visible = false; sc.add(m); return { m, v: new THREE.Vector3() }; });
   // blood on the lens: a few wet splats with spray, runs that creep down, then it covers everything
@@ -28322,8 +28323,8 @@ function blorkIntro(stageEl, done) {
       const run = Math.max(0, t - T.splat - s.d - 0.15); for (const [ox, w, sp] of s.runs) { const L = Math.min(H, run * sp * U * 0.5), rx = cx + ox * R * 0.6, rw = R * w; if (L <= 0) continue; lx.fillRect(rx - rw / 2, cy, rw, L); lx.beginPath(); lx.arc(rx, cy + L, rw * 0.75, 0, 7); lx.fill(); } }
     const fk = Math.max(0, Math.min(1, (t - T.flood) / 0.6)); if (fk > 0) { lx.beginPath(); lx.arc(hx, hy, Math.hypot(W, H) * fk * fk, 0, 7); lx.fill(); } };
   // the logo: BLORK in the game's title face, written in blood with drips that keep running; STUDIOS in bone white under it
-  let logo = null; const fam = '"Tektur", "Rajdhani", system-ui, sans-serif'; try { document.fonts && document.fonts.load('700 100px Tektur'); } catch (_) {}
-  const buildLogo = () => { const fs = Math.min(W * 0.2, H * 0.3), m = document.createElement('canvas'); m.width = W; m.height = H; const y = m.getContext('2d'); y.font = `700 ${fs}px ${fam}`; y.textAlign = 'center'; y.textBaseline = 'alphabetic';
+  let logo = null; const fam = '"Gasoek One", "Tektur", system-ui, sans-serif'; try { document.fonts && document.fonts.load('400 100px "Gasoek One"'); } catch (_) {}
+  const buildLogo = () => { const fs = Math.min(W * 0.2, H * 0.3), m = document.createElement('canvas'); m.width = W; m.height = H; const y = m.getContext('2d'); y.font = `400 ${fs}px ${fam}`; y.textAlign = 'center'; y.textBaseline = 'alphabetic';
     const by = H * 0.5; y.fillStyle = '#fff'; y.fillText('BLORK', W / 2, by); const tw = y.measureText('BLORK').width, img = y.getImageData(0, 0, W, H).data, drips = [];
     for (let i = 0; i < 26; i++) { const cx = Math.round(W / 2 - tw / 2 + rnd() * tw); let low = -1; for (let yy = Math.round(by + fs * 0.1); yy > by - fs; yy--) if (img[(yy * W + cx) * 4 + 3] > 200) { low = yy; break; } if (low > 0) drips.push({ x: cx, y: low, w: fs * (0.018 + rnd() * 0.035), L: fs * (0.12 + rnd() * rnd() * 0.5), sp: 0.4 + rnd() * 0.9, d: rnd() * 0.6 }); }
     return { m, fs, by, tw, drips }; };
@@ -28332,7 +28333,8 @@ function blorkIntro(stageEl, done) {
     for (const d of drips) { const e = Math.max(0, Math.min(1, (k - d.d) * d.sp)), L = d.L * (1 - Math.pow(1 - e, 2)); if (L <= 0) continue; y.beginPath(); y.moveTo(d.x - d.w, d.y - d.w); y.quadraticCurveTo(d.x - d.w * 0.5, d.y + L * 0.5, d.x - d.w * 0.45, d.y + L); y.lineTo(d.x + d.w * 0.45, d.y + L); y.quadraticCurveTo(d.x + d.w * 0.5, d.y + L * 0.5, d.x + d.w, d.y - d.w); y.fill(); y.beginPath(); y.arc(d.x, d.y + L, d.w * 0.85, 0, 7); y.fill(); }
     const dr = blorkBloodify(mk, Math.max(2, fs * 0.035), true), [out, o] = blorkTmp('logo', W, H); o.drawImage(dr, 0, 0); o.drawImage(logo.txt, 0, 0); return out; };
   let hitPt = null, t = 0, last = performance.now(), raf = 0, over = false, shake = 0, mv = null;
-  const v = new THREE.Vector3(), aim = new THREE.Vector3(), wf = new THREE.Vector3();
+  const v = new THREE.Vector3(), wf = new THREE.Vector3();
+  const shipAt = (t, o) => { const z = -90 + 46 * Math.max(0, t - T.ship), a = Math.max(0, Math.min(1, -(z + 8) / 82)); return o.set(9 * Math.max(0, Math.min(1, -z / 90)), 6.5 + 16 * Math.pow(a, 1.5) + Math.max(0, z + 8) * 0.15, z); };
   const frame = () => { if (over) return; raf = requestAnimationFrame(frame); const now = performance.now(), dt = Math.min(1 / 30, (now - last) / 1000); last = now; t += dt;
     if (t < T.text) {
       if (t < T.hit) { const mz = -19 + t * 7.2, mx = Math.sin(t * 2.3) * 0.25; man.position.set(mx, gy(mx, mz), mz); man.rotation.y = Math.cos(t * 2.3) * 0.1; animRig(man, ms, dt, t); }
@@ -28342,10 +28344,9 @@ function blorkIntro(stageEl, done) {
       for (const g of gore) if (g.m.visible) { g.v.y -= 14 * dt; g.m.position.addScaledVector(g.v, dt); const gh = gy(g.m.position.x, g.m.position.z) + 0.03; if (g.m.position.y < gh) { g.m.position.y = gh; g.v.multiplyScalar(0.15); } }
       flash.intensity = Math.max(0, flash.intensity - dt * 14);
       // the Setting Sun drops in behind him, chases him down the trail, fires, then screams over the camera
-      const sp = Math.max(0, Math.min(1, (t - T.ship) / (T.fire - T.ship))), e = 1 - Math.pow(1 - sp, 2), away = Math.max(0, t - T.hit);
-      sh.position.set(9 - e * 8.4, 22 - e * 15 + away * 6, -90 + e * 72 + away * 40);
-      if (away > 0) { wf.copy(sh.position).add(new THREE.Vector3(0, 0.6, 10)); sh.lookAt(wf); } else { aim.copy(man.position).add(new THREE.Vector3(0, 1, 0)); sh.lookAt(aim); } sh.rotateZ((1 - e) * 0.7 + Math.sin(t * 3) * 0.05);
-      bolts.forEach((b, i) => { const ft = T.fire + i * 0.1, k = (t - ft) / 0.28; b.g.visible = k > 0 && k < 1.1 && !mv; if (!b.g.visible) return; const tgt = man.position.clone().add(new THREE.Vector3(i * 0.25 - 0.25, 1.1, 0)), from = sh.position.clone(), d = tgt.clone().sub(from), h0 = Math.min(1, k), tb = Math.max(0, h0 - 0.3);
+      // one constant-speed strafing run: it never slows, fires two wing volleys on the way in, then pulls up over the camera
+      shipAt(t, sh.position); sh.lookAt(shipAt(t + 0.05, wf)); sh.rotateZ(Math.max(0, 0.55 - (t - T.ship) * 0.3) + Math.sin(t * 3) * 0.04); sh.updateMatrixWorld(true);
+      bolts.forEach((b, i) => { const ft = T.fire + (i >> 1) * 0.12, k = (t - ft) / 0.28; if (k > 0 && !b.from) b.from = ship.localToWorld(guns[i & 1].clone()); b.g.visible = k > 0 && k < 1.1 && !mv; if (!b.g.visible) return; const tgt = man.position.clone().add(new THREE.Vector3((i & 1) * 0.4 - 0.2, 1.1, 0)), from = b.from, d = tgt.clone().sub(from), h0 = Math.min(1, k), tb = Math.max(0, h0 - 0.3);
         boltAlong(b.a, from.clone().addScaledVector(d, tb), from.clone().addScaledVector(d, h0), 0.07); boltAlong(b.b, from.clone().addScaledVector(d, tb), from.clone().addScaledVector(d, h0), 0.2); });
       cam.position.set((Math.random() - 0.5) * shake, 1.6 + (Math.random() - 0.5) * shake, 8); cam.lookAt(0, 2.2, -12); shake = Math.max(0, shake - dt * 0.9); r.render(sc, cam); }
     x.clearRect(0, 0, W, H);
@@ -28354,7 +28355,7 @@ function blorkIntro(stageEl, done) {
     if (t > T.text) { if (gl.parentNode) { try { r.dispose(); r.forceContextLoss(); } catch (_) {} gl.remove(); }
       x.globalCompositeOperation = 'destination-over'; x.fillStyle = '#050304'; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'source-over';
       x.save(); x.shadowColor = 'rgba(0,0,0,.8)'; x.shadowBlur = U * 0.02; x.shadowOffsetY = U * 0.006; x.drawImage(logoFrame(t), 0, 0); x.restore();
-      const sk = Math.max(0, Math.min(1, (t - T.studios) / 0.6)); if (sk > 0) { x.globalAlpha = sk; x.fillStyle = '#e8e0d8'; x.font = `600 ${logo.fs * 0.2}px ${fam}`; x.textAlign = 'center'; x.letterSpacing = `${logo.fs * 0.08}px`; x.fillText('STUDIOS', W / 2 + logo.fs * 0.04, logo.by + logo.fs * 0.78); x.letterSpacing = '0px'; x.globalAlpha = 1; } }
+      const sk = Math.max(0, Math.min(1, (t - T.studios) / 0.6)); if (sk > 0) { x.globalAlpha = sk; x.fillStyle = '#e8e0d8'; x.font = `400 ${logo.fs * 0.2}px ${fam}`; x.textAlign = 'center'; x.letterSpacing = `${logo.fs * 0.08}px`; x.fillText('STUDIOS', W / 2 + logo.fs * 0.04, logo.by + logo.fs * 0.78); x.letterSpacing = '0px'; x.globalAlpha = 1; } }
     if (t > T.end) finish(); };
   const finish = () => { if (over) return; over = true; cancelAnimationFrame(raf); try { r.dispose(); r.forceContextLoss(); } catch (_) {} gl.remove(); done && done(); };
   frame(); return { finish };
@@ -28408,7 +28409,7 @@ let showTitleRef = () => {};
 #introCov .gt span{color:#ff5a3a}#introCov .gs{color:#ff8a4a;letter-spacing:.6em;font-size:clamp(12px,2vw,18px);margin-top:12px}
 #bootLoad{z-index:10001}html:not(.ready) #introCov .pk{visibility:hidden}
 #introCov .pk{margin-top:40px;font-size:14px;letter-spacing:.3em;color:#ccd;animation:icp 1.6s infinite}@keyframes icp{50%{opacity:.25}}
-#introCov .sun{position:absolute;left:50%;top:62%;width:60vmin;height:60vmin;margin-left:-30vmin;border-radius:50%;background:radial-gradient(circle,#ff6a2a,#c0202000 70%);opacity:.0;transition:opacity 2s}
+#introCov .sun{position:absolute;left:50%;top:62%;width:60vmin;height:60vmin;margin-left:-30vmin;border-radius:50%;background:radial-gradient(circle,#8fc8ff,#3b52bd00 70%);opacity:.0;transition:opacity 2s}
 #introCov .sun.on{opacity:.55}
 .introLegal{position:fixed;inset:0;z-index:10000;background:#000c;display:flex;align-items:center;justify-content:center;padding:16px}
 .introLegal .ilBox{max-width:620px;max-height:85vh;overflow:auto;background:#12141a;border:1px solid #333;border-radius:10px;padding:20px;color:#dde;font-size:14px;line-height:1.5}

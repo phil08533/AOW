@@ -46,7 +46,7 @@ let showTitleRef = () => {};
 #introCov .gt span{color:#ff5a3a}#introCov .gs{color:#ff8a4a;letter-spacing:.6em;font-size:clamp(12px,2vw,18px);margin-top:12px}
 #bootLoad{z-index:10001}html:not(.ready) #introCov .pk{visibility:hidden}
 #introCov .pk{margin-top:40px;font-size:14px;letter-spacing:.3em;color:#ccd;animation:icp 1.6s infinite}@keyframes icp{50%{opacity:.25}}
-#introCov .sun{position:absolute;left:50%;top:62%;width:60vmin;height:60vmin;margin-left:-30vmin;border-radius:50%;background:radial-gradient(circle,#ff6a2a,#c0202000 70%);opacity:.0;transition:opacity 2s}
+#introCov .sun{position:absolute;left:50%;top:62%;width:60vmin;height:60vmin;margin-left:-30vmin;border-radius:50%;background:radial-gradient(circle,#8fc8ff,#3b52bd00 70%);opacity:.0;transition:opacity 2s}
 #introCov .sun.on{opacity:.55}
 .introLegal{position:fixed;inset:0;z-index:10000;background:#000c;display:flex;align-items:center;justify-content:center;padding:16px}
 .introLegal .ilBox{max-width:620px;max-height:85vh;overflow:auto;background:#12141a;border:1px solid #333;border-radius:10px;padding:20px;color:#dde;font-size:14px;line-height:1.5}

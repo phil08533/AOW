@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.37</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.38</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19301,6 +19301,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 303, title: '2.23.38 · Mile Down glow-up, your character on the minimap', items: ['The Mile Down bar was rebuilt so nothing clips through: rocks tucked into the corners, stalactites flush with the ceiling, wood wainscot round the walls', 'New in the bar: a mirrored back bar with lit bottle shelves, beer taps, a register and menu board, padded bar front, hanging lamps and string lights, round tables and chairs, an atomic rug, a pool table, a little stage with a mic, a real jukebox, photos, a mounted space-fish and cacti', 'Minimap: the round button under it (or the backslash key) swaps the arrow for your own character, in both the classic map and the live view'] },
   { id: 302, title: '2.23.37 · Live minimap', items: ['Click the minimap (or press = and -) to switch between the classic map and a live overhead camera at close, mid and far zoom', 'Indoors the camera looks down from just under the ceiling, so you see the room', 'Enemies, quest marks and your arrow are drawn on top. The game remembers your choice'] },
   { id: 301, title: '2.23.36 · The Mile Down', items: ['New side story in Earth Sky: Pail is waiting by a rusty elevator on the edge of the Floating City. His buddy Big E went down to see what is in the middle of the island', 'Ride a mile down the cliff to the Mile Down, a neon cave bar with a window onto the clouds', 'Behind the lab door, Doc has a retro horror experiment going. Movie-style cutscenes all the way through', 'Big E, the frog and the body all end up at the bar for good. Replay the ending from the Codex cinema'] },
   { id: 300, title: '2.23.35 · Greater Maw rebalance, straight ship guns and tidy posters', items: ['Greater Maw: the first phase has about a sixth less health, the final phase takes three times as much', 'The final phase fires four fans of lasers at once, spread in all directions, with one fan aimed at you', 'Ship bolts fly straight where you aim, even while strafing', 'Every ship weapon you own fires together when you hit fire', 'The cockpit sits lower so the reticle is in the middle of the view', 'Undercroft wanted posters no longer clip into the walls', 'New radio shows no longer pop the radio open: you get a note and press O to listen'] },
@@ -28963,6 +28964,17 @@ function mdPosterTex(top, big, col) { const c = document.createElement('canvas')
   x.fillStyle = '#ffe9b0'; x.textAlign = 'center'; x.font = 'bold 18px Impact, sans-serif'; x.fillText(top, 96, 30); x.font = 'bold 34px Impact, sans-serif'; big.split('|').forEach((s, i) => x.fillText(s, 96, 215 + i * 34));
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; }
 
+function mdPlankTex() { const c = document.createElement('canvas'); c.width = 128; c.height = 128; const x = c.getContext('2d');
+  for (let i = 0; i < 8; i++) { x.fillStyle = ['#3a2216', '#33200f', '#41281a', '#2e1c12'][i % 4]; x.fillRect(0, i * 16, 128, 16); x.fillStyle = 'rgba(0,0,0,.45)'; x.fillRect(0, i * 16 + 15, 128, 1); x.fillRect((i * 37) % 128, i * 16, 1, 16); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 5); t.encoding = THREE.sRGBEncoding; return t; }
+function mdRugTex() { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#7a1a22'; x.fillRect(0, 0, 128, 128);
+  x.strokeStyle = '#ffb03a'; x.lineWidth = 4; x.beginPath(); x.arc(64, 64, 58, 0, 7); x.stroke(); x.lineWidth = 2; for (let i = 0; i < 3; i++) { x.beginPath(); x.ellipse(64, 64, 40, 13, i * 1.05, 0, 7); x.stroke(); }
+  x.fillStyle = '#7fe9ff'; x.beginPath(); x.arc(64, 64, 7, 0, 7); x.fill(); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; }
+function mdMenuTex() { const c = document.createElement('canvas'); c.width = 256; c.height = 180; const x = c.getContext('2d'); x.fillStyle = '#1a2018'; x.fillRect(0, 0, 256, 180);
+  x.fillStyle = '#f0ece0'; x.font = 'bold 22px "Courier New",monospace'; x.textAlign = 'center'; x.fillText('TONIGHT', 128, 28); x.font = '15px "Courier New",monospace'; x.textAlign = 'left';
+  [['CLIFF DIVER', '12'], ['THE LONG DROP', '15'], ['ROOT BEER (REAL ROOTS)', '6'], ['FROG LEGS', '--'], ['NO FROG LEGS', '9']].forEach(([a, b], i) => { x.fillText(a, 14, 58 + i * 24); x.fillText(b, 214, 58 + i * 24); });
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; }
+function mdPuffTex() { if (MD.puff) return MD.puff; const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const g = x.createRadialGradient(32, 32, 2, 32, 32, 30); g.addColorStop(0, 'rgba(230,225,220,.9)'); g.addColorStop(1, 'rgba(230,225,220,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); MD.puff = new THREE.CanvasTexture(c); return MD.puff; }
 // ---- the bar and the lab ----
 LEVELS.miledown = {
   id: 'miledown', name: 'The Mile Down', tag: 'A bar one mile under the Floating City', lvls: 'Lv 30+', size: 60, center: [0, 0], radius: 200, water: -99, sky: 'space', weather: 'none', indoor: true,
@@ -28978,34 +28990,87 @@ LEVELS.miledown = {
   build() {
     const W = 11, H = 4.2, rock = toon('#3a2e2a', 'panel'), rock2 = toon('#2a2220', 'panel'), wood = toon('#4a2a1a', 'wood'), chrome = toon('#b8bcc4'), red = toon('#a8202a', 'cloth');
     MD.arcs = []; MD.e = null; MD.smoke = null; const dyn = new THREE.Group(); levelGroup.add(dyn); MD.dyn = dyn; // things that move or hide stay out of props
-    // floor, ceiling and cave walls
-    const fl = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, 18).rotateX(-Math.PI / 2), toon('#2a1a18', 'wood')); fl.position.z = 5.5; props.add(fl);
+    // floor, ceiling, cave walls (2.23.38: rebuilt so nothing pokes through, with a lot more in it)
+    const fl = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, 18).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: mdPlankTex() })); fl.position.z = 5.5; props.add(fl);
     const ce = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, 40).rotateX(Math.PI / 2), toon('#1a1412')); ce.position.set(0, H, -3); props.add(ce);
     const wall = (x, z, w, d, m) => { part(props, B(w, H, d), m || rock, x, H / 2, z); box(x, z, w / 2, d / 2); };
     wall(-W, 5.5, 0.6, 18); wall(0, 14.4, W * 2, 0.6); wall(W, 0.5, 0.6, 6); wall(W, 12.5, 0.6, 3.4); part(props, B(0.6, 0.9, 6.2), rock, W, 0.45, 7.8); part(props, B(0.6, 0.6, 6.2), rock, W, H - 0.3, 7.8); box(W, 7.8, 0.3, 3.1);
-    for (let i = 0; i < 26; i++) { const sx = i % 2 ? 1 : -1, z = -2 + (i * 7 % 16), y = 0.4 + (i * 5 % 9) * 0.42, s = 0.5 + (i % 3) * 0.3; if (sx > 0 && z > 3.5 && z < 12) continue; part(props, new THREE.DodecahedronGeometry(s, 0), i % 3 ? rock : rock2, sx * (W - 0.25), y, z, i, i * 2, 0); }
-    for (let i = 0; i < 9; i++) part(props, new THREE.ConeGeometry(0.18 + (i % 3) * 0.08, 0.6 + (i % 4) * 0.3, 5), rock2, -9 + i * 2.3, H - 0.3, 1 + (i * 5 % 12), Math.PI);
-    // the window: clouds a mile under the island
+    // dark wood wainscot with a chrome rail round the room (the window wall keeps its sill)
+    const wain = toon('#3a2216', 'wood');
+    part(props, B(0.08, 1.1, 17.4), wain, -W + 0.34, 0.55, 5.5); part(props, B(0.1, 0.06, 17.4), chrome, -W + 0.36, 1.12, 5.5);
+    part(props, B(21.4, 1.1, 0.08), wain, 0, 0.55, 14.06); part(props, B(21.4, 0.06, 0.1), chrome, 0, 1.12, 14.04);
+    for (const [z, d] of [[0.5, 6], [12.5, 3.4]]) { part(props, B(0.08, 1.1, d), wain, W - 0.34, 0.55, z); part(props, B(0.1, 0.06, d), chrome, W - 0.36, 1.12, z); }
+    part(props, B(9.4, 1.1, 0.08), wain, -6, 0.55, -2.71); part(props, B(9.4, 1.1, 0.08), wain, 6, 0.55, -2.71);
+    // rock outcrops tucked into the corners and stalactites hanging from the ceiling (bases flush with it)
+    for (const [x, z, s] of [[-10.4, -2.4, 0.9], [10.4, -2.4, 1.0], [-10.5, 13.8, 0.8], [10.4, 13.8, 1.1], [-10.6, 10.6, 0.6], [10.5, 2.6, 0.7]]) { part(props, new THREE.DodecahedronGeometry(s, 0), rock2, x, H - s * 0.5, z, s, s * 3, 0); part(props, new THREE.DodecahedronGeometry(s * 0.8, 0), rock, x, s * 0.4, z, s * 2, s, 0); }
+    for (let i = 0; i < 14; i++) { const h = 0.4 + (i % 4) * 0.22, x = -9 + ((i * 7) % 19), z = -1.5 + ((i * 11) % 15); part(props, new THREE.ConeGeometry(0.12 + (i % 3) * 0.06, h, 5), rock2, x, H - h / 2, z, Math.PI); }
+    // ceiling beams, string lights and hanging lamps
+    for (const z of [-1.5, 2.5, 6.5, 10.5]) part(props, B(W * 2, 0.22, 0.28), wood, 0, H - 0.11, z);
+    for (const z of [2.5, 6.5, 10.5]) for (let i = 0; i <= 20; i++) { const x = -10 + i, sag = Math.sin(i / 20 * Math.PI) * 0.45; part(props, new THREE.SphereGeometry(0.045, 6, 4), glow(['#ffd36a', '#ff6aa8', '#7fe9ff'][(i + z) % 3 | 0]), x, H - 0.3 - sag, z + 0.18); }
+    const lamp = (x, z, c) => { part(props, Cy(0.01, 0.01, 1.0, 4), toon('#1a1a1a'), x, H - 0.5, z); part(props, new THREE.ConeGeometry(0.28, 0.24, 12, 1, true), toon(c), x, H - 1.1, z); part(props, new THREE.SphereGeometry(0.08, 8, 6), glow('#fff2c0'), x, H - 1.18, z); };
+    for (const z of [2.5, 5, 7.5]) lamp(-8, z, '#a8202a'); lamp(5.5, 0.5, '#2a5a2a'); lamp(3.5, 2.6, '#c8a040'); lamp(4, 8.4, '#c8a040'); lamp(-3.6, 10.6, '#c8a040');
+    // a round atomic-pattern rug in the middle
+    const rug = new THREE.Mesh(new THREE.CircleGeometry(2.4, 28).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: mdRugTex(), color: '#9a8a8a' })); rug.position.set(0.5, 0.012, 5.5); props.add(rug);
+    // the window: clouds a mile under the island, with a deep sill and chrome mullions
     const sky = new THREE.Mesh(new THREE.PlaneGeometry(40, 22), new THREE.MeshBasicMaterial({ map: mdSkyTex(true), fog: false })); sky.position.set(W + 14, 2, 8); sky.rotation.y = -Math.PI / 2; props.add(sky);
-    for (const z of [4.7, 7.8, 10.9]) part(props, B(0.2, 2.6, 0.12), chrome, W - 0.2, 2.2, z); part(props, B(0.2, 0.12, 6.2), chrome, W - 0.2, 3.5, 7.8); part(props, B(0.2, 0.12, 6.2), chrome, W - 0.2, 0.95, 7.8);
+    for (const z of [4.75, 7.8, 10.85]) part(props, B(0.24, 2.6, 0.14), chrome, W - 0.18, 2.2, z); part(props, B(0.24, 0.14, 6.3), chrome, W - 0.18, 3.5, 7.8); part(props, B(0.5, 0.1, 6.3), toon('#5a3a26', 'wood'), W - 0.36, 0.95, 7.8);
     const gl = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 2.6), new THREE.MeshPhongMaterial({ color: '#9fc8ff', transparent: true, opacity: 0.1, shininess: 100, depthWrite: false })); gl.position.set(W - 0.25, 2.2, 7.8); gl.rotation.y = -Math.PI / 2; props.add(gl);
-    // the bar counter, stools, bottles and the sign
+    // the bar: a padded front with chrome studs, a neon edge, taps, a register and glasses
     part(props, B(1.2, 1.1, 9), wood, -8, 0.55, 5); part(props, B(1.5, 0.08, 9.3), toon('#7a4a2a', 'wood'), -8, 1.13, 5); part(props, B(0.04, 0.06, 9), glow('#ff3a8a'), -7.24, 1.0, 5); box(-8, 5, 0.6, 4.5);
-    for (const z of [2, 4, 6, 8]) { part(props, Cy(0.05, 0.05, 0.7, 6), chrome, -6.9, 0.35, z); part(props, Cy(0.24, 0.24, 0.1, 12), red, -6.9, 0.72, z); }
-    for (let i = 0; i < 14; i++) part(props, Cy(0.06, 0.08, 0.32 + (i % 3) * 0.08, 6), glow(['#8aff3a', '#ffd36a', '#ff6aa8', '#4fd2ff'][i % 4]), -10.5, 1.9 + (i % 2) * 0.7, 1.4 + (i >> 1) * 1.05);
-    part(props, B(0.1, 0.06, 8), wood, -10.5, 1.72, 5); part(props, B(0.1, 0.06, 8), wood, -10.5, 2.42, 5);
-    const sg = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 0.9), new THREE.MeshBasicMaterial({ map: signTex('THE MILE DOWN', '#100808', '#ff3a8a') })); sg.position.set(-10.62, 3.3, 5); sg.rotation.y = Math.PI / 2; props.add(sg);
-    const sg2 = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.4), new THREE.MeshBasicMaterial({ map: signTex('5,280 FT BELOW', '#100808', '#4fd2ff') })); sg2.position.set(-10.62, 2.75, 5); sg2.rotation.y = Math.PI / 2; props.add(sg2);
-    // booths by the window, a jukebox, an atomic clock and B-movie posters
-    for (const z of [4.2, 10.4]) { part(props, B(1.4, 0.75, 1), toon('#e8e4dc'), 8.8, 0.75, z); part(props, Cy(0.06, 0.06, 0.75, 6), chrome, 8.8, 0.37, z); for (const s of [-1, 1]) { part(props, B(1.6, 0.45, 0.6), red, 8.8, 0.22, z + s * 1.0); part(props, B(1.6, 0.9, 0.18), red, 8.8, 0.9, z + s * 1.25); } box(8.8, z, 0.8, 1.35); }
-    const jb = new THREE.Group(); part(jb, B(1.1, 1.5, 0.7), toon('#7a2a1a', 'wood'), 0, 0.75, 0); part(jb, Cy(0.55, 0.55, 0.7, 16), glow('#ffb03a'), 0, 1.5, 0, Math.PI / 2); part(jb, Cy(0.45, 0.45, 0.72, 16), toon('#7a2a1a', 'wood'), 0, 1.5, 0, Math.PI / 2); part(jb, B(0.8, 0.5, 0.05), glow('#ff6aa8'), 0, 0.9, 0.36); jb.position.set(6, 0, 13.6); jb.rotation.y = Math.PI; props.add(jb); box(6, 13.6, 0.6, 0.4);
-    const clk = new THREE.Group(); part(clk, Cy(0.18, 0.18, 0.06, 10), chrome, 0, 0, 0, Math.PI / 2); for (let i = 0; i < 8; i++) part(clk, B(0.6, 0.03, 0.03), chrome, Math.cos(i * 0.785) * 0.3, Math.sin(i * 0.785) * 0.3, 0, 0, 0, i * 0.785); clk.position.set(-4, 3.2, 14.05); props.add(clk);
+    part(props, B(0.06, 0.7, 8.8), toon('#7a1a22', 'cloth'), -7.38, 0.5, 5); for (let i = 0; i < 12; i++) part(props, new THREE.SphereGeometry(0.03, 6, 4), chrome, -7.34, 0.5 + (i % 2) * 0.3, 0.9 + i * 0.75); part(props, B(0.1, 0.08, 9), chrome, -7.3, 0.08, 5);
+    for (const z of [2, 4, 6, 8]) { part(props, Cy(0.05, 0.05, 0.7, 6), chrome, -6.9, 0.35, z); part(props, Cy(0.18, 0.22, 0.04, 12), chrome, -6.9, 0.03, z); part(props, Cy(0.24, 0.24, 0.1, 12), red, -6.9, 0.72, z); part(props, new THREE.TorusGeometry(0.24, 0.02, 4, 16), chrome, -6.9, 0.72, z, Math.PI / 2); }
+    for (const [z, c] of [[3, '#ffd36a'], [5.5, '#8aff3a'], [7.5, '#ff6aa8']]) { part(props, Cy(0.04, 0.04, 0.4, 6), chrome, -8.2, 1.37, z); part(props, B(0.12, 0.06, 0.06), chrome, -8.05, 1.52, z); part(props, B(0.05, 0.22, 0.05), toon(c), -7.98, 1.66, z); }
+    const reg = new THREE.Group(); part(reg, B(0.5, 0.3, 0.5), toon('#c8c0a8'), 0, 0.15, 0); part(reg, B(0.5, 0.16, 0.24), toon('#c8c0a8'), 0, 0.38, -0.1, -0.5); part(reg, B(0.3, 0.06, 0.02), glow('#8aff3a'), 0, 0.42, 0.04); reg.position.set(-8.1, 1.17, 9.0); reg.rotation.y = Math.PI / 2; props.add(reg);
+    for (const z of [2.6, 4.4, 6.3, 8.2]) part(props, Cy(0.05, 0.04, 0.14, 8), new THREE.MeshPhongMaterial({ color: '#cfefff', transparent: true, opacity: 0.45 }), -7.7, 1.24, z);
+    // back bar: a smoky mirror, lit shelves of bottles, the sign and a menu board
+    part(props, B(0.5, 1.1, 9), wood, -10.4, 0.55, 5); part(props, B(0.6, 0.06, 9.2), toon('#7a4a2a', 'wood'), -10.4, 1.12, 5);
+    const mir = new THREE.Mesh(new THREE.PlaneGeometry(8.4, 1.5), new THREE.MeshPhongMaterial({ color: '#3a4a5a', shininess: 120, specular: '#8aa0c0' })); mir.position.set(-10.66, 2.1, 5); mir.rotation.y = Math.PI / 2; props.add(mir);
+    for (const y of [1.5, 2.15]) { part(props, B(0.32, 0.05, 8.6), wood, -10.5, y, 5); part(props, B(0.02, 0.02, 8.6), glow('#ffb03a'), -10.36, y - 0.035, 5); }
+    for (let i = 0; i < 26; i++) { const y = i % 2 ? 2.17 : 1.52, z = 1.0 + (i >> 1) * 0.62, h = 0.26 + (i * 7 % 3) * 0.08; part(props, Cy(0.05, 0.065, h, 7), new THREE.MeshPhongMaterial({ color: ['#2a6a2a', '#7a3a1a', '#cfe8ff', '#5a1a3a', '#c8a040'][i % 5], transparent: true, opacity: 0.85, shininess: 80 }), -10.5, y + h / 2, z); part(props, Cy(0.018, 0.018, 0.1, 5), toon('#1a1a1a'), -10.5, y + h + 0.05, z); }
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 0.9), new THREE.MeshBasicMaterial({ map: signTex('THE MILE DOWN', '#100808', '#ff3a8a') })); sg.position.set(-10.62, 3.35, 5); sg.rotation.y = Math.PI / 2; props.add(sg);
+    const sg2 = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.4), new THREE.MeshBasicMaterial({ map: signTex('5,280 FT BELOW', '#100808', '#4fd2ff') })); sg2.position.set(-10.62, 2.92, 1.2); sg2.rotation.y = Math.PI / 2; props.add(sg2);
+    const mb = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.0), new THREE.MeshBasicMaterial({ map: mdMenuTex() })); mb.position.set(-10.62, 2.95, 8.4); mb.rotation.y = Math.PI / 2; props.add(mb); part(props, B(0.04, 1.08, 1.48), wood, -10.66, 2.95, 8.4);
+    // booths by the window: tufted red benches with chrome trim and formica tables
+    for (const z of [4.2, 10.4]) { part(props, B(1.3, 0.06, 0.95), toon('#5ac8b8'), 9.2, 0.78, z); part(props, B(1.34, 0.03, 0.99), chrome, 9.2, 0.74, z); part(props, Cy(0.06, 0.06, 0.74, 6), chrome, 9.2, 0.37, z); part(props, Cy(0.25, 0.3, 0.03, 10), chrome, 9.2, 0.02, z);
+      for (const s of [-1, 1]) { part(props, B(1.5, 0.42, 0.55), red, 9.2, 0.21, z + s * 0.95); part(props, B(1.5, 0.85, 0.16), red, 9.2, 0.85, z + s * 1.24); part(props, B(1.52, 0.04, 0.2), chrome, 9.2, 1.29, z + s * 1.24); for (let k = 0; k < 3; k++) part(props, new THREE.SphereGeometry(0.025, 5, 4), chrome, 8.75 + k * 0.45, 0.85, z + s * 1.15); }
+      part(props, Cy(0.05, 0.05, 0.14, 8), glow('#ffd36a'), 9.4, 0.88, z); box(9.2, z, 0.75, 1.32); }
+    // round tables with chrome chairs in the middle of the room
+    for (const [x, z] of [[3.5, 2.6], [4, 8.4], [-3.6, 10.6]]) { part(props, Cy(0.55, 0.55, 0.05, 16), toon('#a8202a'), x, 0.76, z); part(props, new THREE.TorusGeometry(0.55, 0.025, 4, 20), chrome, x, 0.76, z, Math.PI / 2); part(props, Cy(0.05, 0.05, 0.74, 6), chrome, x, 0.37, z); part(props, Cy(0.28, 0.32, 0.03, 12), chrome, x, 0.02, z);
+      for (const a of [0.6, 2.8, 4.6]) { const cx = x + Math.cos(a) * 0.95, cz = z + Math.sin(a) * 0.95; part(props, Cy(0.2, 0.2, 0.06, 10), red, cx, 0.46, cz); part(props, Cy(0.025, 0.025, 0.45, 5), chrome, cx, 0.22, cz); part(props, B(0.4, 0.4, 0.05), red, cx + Math.cos(a) * 0.2, 0.72, cz + Math.sin(a) * 0.2, 0, -a + Math.PI / 2, 0); }
+      part(props, Cy(0.04, 0.035, 0.12, 8), new THREE.MeshPhongMaterial({ color: '#ffb03a', transparent: true, opacity: 0.75 }), x + 0.15, 0.85, z - 0.1); solid(x, z, 0.75); }
+    // a pool table under a green lamp
+    { const pt = new THREE.Group(); part(pt, B(2.5, 0.2, 1.4), wood, 0, 0.72, 0); part(pt, B(2.3, 0.04, 1.2), toon('#1e6a3a', 'cloth'), 0, 0.83, 0); for (const sx of [-1, 1]) for (const sz of [-1, 1]) part(pt, B(0.16, 0.7, 0.16), wood, sx * 1.1, 0.35, sz * 0.58);
+      for (let i = 0; i < 9; i++) part(pt, new THREE.SphereGeometry(0.045, 8, 6), toon(['#f2f2f2', '#ffd23a', '#2a4aa8', '#c8402f', '#5a2a8a', '#ff8a2a', '#1e6a3a', '#7a1a1a', '#111'][i]), -0.5 + (i % 4) * 0.1 + (i === 0 ? -0.4 : 0), 0.89, -0.15 + Math.floor(i / 4) * 0.1);
+      part(pt, Cy(0.012, 0.02, 1.5, 5), toon('#c8a060', 'wood'), 0.2, 0.9, 0.3, 0, 0, Math.PI / 2 - 0.05); pt.position.set(5.5, 0, 0.5); props.add(pt); box(5.5, 0.5, 1.25, 0.7); }
+    // a little stage in the corner: a mic, an amp and a stool for whoever is brave enough
+    part(props, B(4.4, 0.3, 2.9), toon('#2a1a14', 'wood'), -8.4, 0.15, 12.7); part(props, B(4.4, 0.04, 0.06), glow('#ffd36a'), -8.4, 0.31, 11.25); box(-8.4, 12.7, 2.2, 1.45);
+    part(props, Cy(0.015, 0.015, 1.4, 5), chrome, -8, 1.0, 12.4); part(props, Cy(0.15, 0.18, 0.03, 10), chrome, -8, 0.32, 12.4); part(props, new THREE.SphereGeometry(0.05, 8, 6), toon('#1a1a1a'), -8, 1.72, 12.4);
+    part(props, B(0.6, 0.7, 0.4), toon('#1e1c22'), -9.6, 0.65, 13.4); part(props, B(0.5, 0.5, 0.02), toon('#3a3430', 'cloth'), -9.6, 0.65, 13.19); part(props, Cy(0.18, 0.18, 0.04, 10), red, -7.2, 0.82, 12.9); part(props, Cy(0.02, 0.02, 0.5, 5), chrome, -7.2, 0.55, 12.9);
+    const spot = new THREE.PointLight(0xffd36a, 0.6, 5); spot.position.set(-8.2, 3.2, 12.3); levelGroup.add(spot);
+    // a proper jukebox: wood cabinet, glowing arch, a rainbow grille and a record window
+    { const jb = new THREE.Group(); part(jb, B(1.1, 1.2, 0.6), toon('#7a2a1a', 'wood'), 0, 0.6, 0); part(jb, Cy(0.55, 0.55, 0.6, 18, 1, false, -Math.PI / 2, Math.PI), toon('#7a2a1a', 'wood'), 0, 1.2, 0, Math.PI / 2);
+      part(jb, new THREE.TorusGeometry(0.5, 0.06, 6, 18, Math.PI), glow('#ffb03a'), 0, 1.2, 0.31); part(jb, new THREE.TorusGeometry(0.36, 0.04, 6, 18, Math.PI), glow('#ff6aa8'), 0, 1.2, 0.31);
+      part(jb, new THREE.CircleGeometry(0.3, 16, 0, Math.PI), new THREE.MeshBasicMaterial({ color: '#2a1a40' }), 0, 1.2, 0.305); part(jb, B(0.7, 0.26, 0.02), glow('#7fe9ff'), 0, 0.98, 0.31);
+      for (let i = 0; i < 6; i++) part(jb, B(0.1, 0.5, 0.02), glow(['#ff3a3a', '#ff8a2a', '#ffd23a', '#8aff3a', '#4fd2ff', '#c86aff'][i]), -0.3 + i * 0.12, 0.45, 0.31);
+      for (const s of [-1, 1]) part(jb, B(0.06, 1.2, 0.06), chrome, s * 0.53, 0.6, 0.29);
+      jb.position.set(5.5, 0, 13.75); jb.rotation.y = Math.PI; props.add(jb); box(5.5, 13.75, 0.6, 0.35); }
+    // wall clutter: an atomic clock, B-movie posters, framed photos, a neon OPEN and a mounted space-fish
+    const clk = new THREE.Group(); part(clk, Cy(0.18, 0.18, 0.06, 10), chrome, 0, 0, 0, Math.PI / 2); for (let i = 0; i < 8; i++) part(clk, B(0.6, 0.03, 0.03), chrome, Math.cos(i * 0.785) * 0.3, Math.sin(i * 0.785) * 0.3, 0, 0, 0, i * 0.785); clk.position.set(-4, 3.2, 14.02); props.add(clk);
     [['THE MILE DOWN PRESENTS', 'IT CAME|FROM BELOW', '#5a8a2a'], ['ATOMIC TERROR', 'FROG|MEN', '#c8402f'], ['SEE IT! FEAR IT!', 'THE BRAIN|THAT HOPPED', '#3a6aa8']].forEach(([a, b, c], i) => {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.3), new THREE.MeshBasicMaterial({ map: mdPosterTex(a, b, c) })); m.position.set(-1.5 + i * 2.2, 2.3, 14.08); m.rotation.y = Math.PI; props.add(m); });
-    // the elevator cage you came down in
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.3), new THREE.MeshBasicMaterial({ map: mdPosterTex(a, b, c) })); m.position.set([-2.6, 2.6, 8.4][i], 2.2, 14.03); m.rotation.y = Math.PI; props.add(m); part(props, B(0.98, 1.38, 0.03), toon('#1a1a1a'), [-2.6, 2.6, 8.4][i], 2.2, 14.06); });
+    for (const [z, y, c] of [[-0.8, 2.2, '#c8a040'], [1.4, 2.6, '#8a9aa8'], [2.0, 1.9, '#a87a5a'], [12.3, 2.3, '#8a9aa8'], [13.2, 2.0, '#c8a040']]) { part(props, B(0.04, 0.55, 0.45), toon('#1a1a1a'), W - 0.32, y, z); part(props, B(0.02, 0.45, 0.35), toon(c), W - 0.35, y, z); }
+    const op = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.45), new THREE.MeshBasicMaterial({ map: signTex('OPEN 24/7', '#100808', '#8aff3a') })); op.position.set(W - 0.34, 2.7, 0.4); op.rotation.y = -Math.PI / 2; props.add(op);
+    { const fish = new THREE.Group(); part(fish, B(0.06, 0.6, 1.0), wood, 0, 0, 0); E(fish, '#3a8aa8', 0.12, 0, 0, 0.12, 0.16, 0.42); part(fish, new THREE.ConeGeometry(0.16, 0.3, 4), toon('#3a8aa8'), 0.12, 0, -0.5, -Math.PI / 2); E(fish, glow('#ffd23a'), 0.2, 0.05, 0.3, 0.035, 0.035, 0.035); fish.position.set(-W + 0.36, 3.1, -1.4); props.add(fish); }
+    // a couple of potted cacti and a coat rack by the elevator
+    for (const [x, z] of [[-1.7, 13.6], [10.3, 1.0]]) { part(props, Cy(0.22, 0.17, 0.4, 10), toon('#a85a3a'), x, 0.2, z); part(props, Cy(0.1, 0.12, 0.8, 8), toon('#3a7a3a'), x, 0.8, z); part(props, Cy(0.06, 0.07, 0.35, 6), toon('#3a7a3a'), x + 0.14, 0.9, z, 0, 0, -0.6); solid(x, z, 0.3); }
+    part(props, Cy(0.03, 0.03, 1.8, 6), toon('#3a2216', 'wood'), 1.8, 0.9, 13.7); for (let i = 0; i < 4; i++) part(props, Cy(0.015, 0.015, 0.3, 4), toon('#3a2216', 'wood'), 1.8 + Math.cos(i * 1.57) * 0.12, 1.7, 13.7 + Math.sin(i * 1.57) * 0.12, Math.sin(i * 1.57) * 0.7, 0, -Math.cos(i * 1.57) * 0.7);
+    part(props, B(0.4, 0.7, 0.12), toon('#5a4a3a', 'cloth'), 1.8, 1.35, 13.58);
+    // the elevator cage you came down in, with its floor dial and an UP arrow
     for (const s of [-1, 1]) part(props, B(0.14, H, 0.14), chrome, s * 1.1, H / 2, 13.2); part(props, B(2.3, 0.14, 0.14), chrome, 0, 2.7, 13.2);
     for (let i = 0; i < 9; i++) part(props, B(0.04, 2.6, 0.04), toon('#8a8f99'), -0.9 + i * 0.225, 1.3, 13.4, 0, 0, i % 2 ? 0.35 : -0.35);
     part(props, B(1.2, 0.3, 0.05), glow('#ffd36a'), 0, 3.1, 13.25);
+    { const dial = new THREE.Group(); part(dial, Cy(0.3, 0.3, 0.04, 16, 1, false, -Math.PI / 2, Math.PI), toon('#c8a040'), 0, 0, 0, Math.PI / 2); part(dial, B(0.02, 0.26, 0.02), toon('#1a1a1a'), 0.08, 0.12, 0.03, 0, 0, -0.6); dial.position.set(0, 3.5, 13.25); dial.rotation.y = Math.PI; props.add(dial); }
+    const up = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.3), new THREE.MeshBasicMaterial({ map: signTex('▲ UP', '#100808', '#ffd36a') })); up.position.set(1.7, 2.3, 14.03); up.rotation.y = Math.PI; props.add(up);
     INTERACTS.push({ x: 0, z: 12, r: 2.0, label: 'Ride the elevator up', fn: () => { SFX.door(); travel('skycity', { at: { x: MDT.x - 3.2, z: MDT.z, yaw: Math.PI / 2 } }); } });
     // the lab wall and its door
     part(props, B(10, H, 0.5), rock, -6, H / 2, -3); box(-6, -3, 5, 0.25); part(props, B(10, H, 0.5), rock, 6, H / 2, -3); box(6, -3, 5, 0.25); part(props, B(2, H - 2.6, 0.5), rock, 0, H - (H - 2.6) / 2, -3);
@@ -29082,11 +29147,11 @@ function mdTick(t, dt) {
   if (MD.frog && MD.frog.visible && !MD.frog.userData.held) MD.frog.position.y = 0.88 + Math.sin(t * 1.3) * 0.04;
   const s = MD.scope; if (s && (t * 20 | 0) % 2 === 0) { const x = s.x; x.fillStyle = '#04140a'; x.fillRect(0, 0, 128, 96); x.strokeStyle = 'rgba(80,255,120,.25)'; x.lineWidth = 1; for (let i = 16; i < 128; i += 16) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, 96); x.stroke(); }
     x.strokeStyle = '#6aff8a'; x.lineWidth = 2; x.beginPath(); for (let i = 0; i < 128; i++) { const y = 48 + Math.sin(i * 0.15 + t * 6) * (hot ? 34 : 16) * Math.sin(i * 0.03 + t); i ? x.lineTo(i, y) : x.moveTo(i, y); } x.stroke(); s.t.needsUpdate = true; }
-  if (MD.smoke) MD.smoke.forEach((m, i) => { m.position.y += dt * 0.35; m.scale.multiplyScalar(1 + dt * 0.4); m.material.opacity = Math.max(0, m.material.opacity - dt * 0.07); if (m.material.opacity <= 0) { m.position.set(-7.4 + Math.random() * 0.4, 1.4, 4.6 + Math.random() * 0.6); m.scale.setScalar(0.3); m.material.opacity = 0.32; } });
+  if (MD.smoke) MD.smoke.forEach((m, i) => { m.position.y += dt * 0.35; m.scale.multiplyScalar(1 + dt * 0.4); m.material.opacity = Math.max(0, m.material.opacity - dt * 0.07); if (m.material.opacity <= 0) { m.position.set(-7.4 + Math.random() * 0.4, 1.4, 4.6 + Math.random() * 0.6); m.scale.setScalar(0.3); m.material.opacity = 0.3; } });
 }
 function mdOpenDoor() { if (MD.door) MD.door.visible = false; const i = BOXES.indexOf(MD.doorBox); if (i >= 0) BOXES.splice(i, 1); }
 function mdDocDown() { const d = MD.doc; d.h.position.set(-3.1, 0, -13.4); d.h.rotation.y = -0.6; d.o.rotation.x = -Math.PI / 2; d.o.position.y = 0.15; }
-function mdSmoke() { if (MD.smoke) return; MD.smoke = []; for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 6), new THREE.MeshBasicMaterial({ color: '#d8d0c8', transparent: true, opacity: 0.05 * i, depthWrite: false })); m.position.set(-7.4, 1.4 + i * 0.25, 4.8); MD.dyn.add(m); MD.smoke.push(m); } }
+function mdSmoke() { if (MD.smoke) return; MD.smoke = []; for (let i = 0; i < 10; i++) { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: mdPuffTex(), transparent: true, opacity: 0.03 * i, depthWrite: false })); m.position.set(-7.4, 1.4 + i * 0.25, 4.8); m.scale.setScalar(0.3); MD.dyn.add(m); MD.smoke.push(m); } }
 
 // ---- the feral body ----
 Object.assign(ENEMY, { bigebody: { rig: 'civ', name: 'Big E (the body)', make: () => makeBigE(true), scale: 1.25, hp: 1400, speed: 4.2, r: 0.55, hy: 1.0, xp: 900, cr: [40, 60], elite: true, melee: { dmg: 38, rate: 0.9, reach: 2.3 }, drops: [] } });
@@ -29224,17 +29289,45 @@ function mmcRender(R) {
 { const _dm = drawMap; drawMap = function () {
   const m = mmcMode(); if (!m || !LEVEL || LEVEL.fly || state === 'menu') return _dm();
   const S2 = 112, R = MMC.modes[m], sc = S2 / 2 / R, cx = S2 / 2, cy = S2 / 2;
-  const now = performance.now(); try { if (!MMC.tmp || now - MMC.t > 220 || MMC.r !== R || MMC.lv !== LEVEL.id) { MMC.t = now; MMC.r = R; MMC.lv = LEVEL.id; mmcRender(R); } } catch (e) { console.warn('mmc', e); S.flags.mmCam = 0; return _dm(); }
+  const now = performance.now(); try { if (!MMC.tmp || now - MMC.t > (mmcMe() ? 110 : 220) || MMC.r !== R || MMC.lv !== LEVEL.id) { MMC.t = now; MMC.r = R; MMC.lv = LEVEL.id; mmcRender(R); } } catch (e) { console.warn('mmc', e); S.flags.mmCam = 0; return _dm(); }
   mctx.clearRect(0, 0, S2, S2); mctx.imageSmoothingEnabled = true; mctx.drawImage(MMC.tmp, 0, 0, S2, S2);
   const w2m = (x, z) => [cx + (x - player.pos.x) * sc, cy + (z - player.pos.z) * sc];
   for (const e of enemies) if (!e.dead && e.obj.visible && Math.abs(e.obj.position.x - player.pos.x) < R && Math.abs(e.obj.position.z - player.pos.z) < R) { const [ex, ez] = w2m(e.obj.position.x, e.obj.position.z); mctx.fillStyle = e.def.boss ? '#ff2a3a' : '#d83a3a'; mctx.strokeStyle = '#000'; mctx.lineWidth = 1; mctx.beginPath(); mctx.arc(ex, ez, e.def.boss ? 4 : 2.5, 0, 7); mctx.fill(); mctx.stroke(); }
   for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible || !N.mark) continue; const [nx, nz] = w2m(N.obj.position.x, N.obj.position.z); if (N.mark === '$') { mctx.fillStyle = '#8fe3ff'; mctx.strokeStyle = '#000'; mctx.lineWidth = 1; mctx.fillRect(nx - 2, nz - 2, 4, 4); mctx.strokeRect(nx - 2, nz - 2, 4, 4); continue; } mctx.fillStyle = '#ffd36a'; mctx.font = 'bold 12px monospace'; mctx.textAlign = 'center'; mctx.strokeStyle = '#000'; mctx.lineWidth = 3; mctx.strokeText(N.mark, nx, nz + 4); mctx.fillText(N.mark, nx, nz + 4); }
-  mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.fillStyle = '#ff9a3c'; mctx.strokeStyle = '#000'; mctx.lineWidth = 1.5; mctx.beginPath(); mctx.moveTo(0, -7); mctx.lineTo(5, 5); mctx.lineTo(0, 2.5); mctx.lineTo(-5, 5); mctx.closePath(); mctx.stroke(); mctx.fill(); mctx.restore();
+  if (!mmcMe()) { mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.fillStyle = '#ff9a3c'; mctx.strokeStyle = '#000'; mctx.lineWidth = 1.5; mctx.beginPath(); mctx.moveTo(0, -7); mctx.lineTo(5, 5); mctx.lineTo(0, 2.5); mctx.lineTo(-5, 5); mctx.closePath(); mctx.stroke(); mctx.fill(); mctx.restore(); }
 }; }
 { const st = document.createElement('style'); st.textContent = '#map { pointer-events: auto; cursor: pointer; }'; document.head.appendChild(st);
   $('map').addEventListener('click', e => { e.stopPropagation(); mmcSet(mmcMode() + 1); }); }
 window.addEventListener('keydown', e => { if (state !== 'play' || dlgOpen || e.repeat || (typeof chatOpen === 'function' && chatOpen())) return;
   if (e.code === 'Equal') mmcSet(mmcMode() + 1); else if (e.code === 'Minus') mmcSet(mmcMode() - 1); });
+// your character from above, in place of the arrow (toggle with the little button on the map, or \\)
+const mmcMe = () => !!(S.flags && S.flags.mmMe);
+function mmcBody(R) {
+  const key = JSON.stringify(myLook()) + S.col;
+  if (!MMC.me || MMC.meKey !== key) { MMC.me = buildChar(() => makePlayerChar(myLook(), S.col), 'trooper'); MMC.meKey = key; MMC.meSt = {}; }
+  const o = MMC.me, p = player.pos, t = performance.now() / 1000; o.position.set(0, 0, 0); o.rotation.y = player.yaw + Math.PI; 
+  o.position.set(p.x, 0, p.z); animRig(o, MMC.meSt, Math.min(0.25, t - (MMC.meT || t) || 0.1), t); o.position.set(0, 0, 0); MMC.meT = t; return o;
+}
+function mmcToggleMe() { S.flags = S.flags || {}; S.flags.mmMe = !mmcMe(); markDirty(); mmcBtn.textContent = mmcMe() ? '➤' : '🧍'; toast('MINIMAP', mmcMe() ? 'Showing your character' : 'Showing the arrow', 1.4); MMC.t = 0; hudT = 0; }
+const mmcBtn = document.createElement('button'); mmcBtn.id = 'mmcMe'; mmcBtn.title = 'Arrow or character'; mmcBtn.textContent = '🧍';
+{ const st = document.createElement('style'); st.textContent = '#mmcMe { position: absolute; right: 4px; top: calc(env(safe-area-inset-top, 0px) + 112px); z-index: 5; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #7fe9ff; background: rgba(5,12,24,.85); color: #fff; font: 13px sans-serif; padding: 0; cursor: pointer; pointer-events: auto; } body.menuopen #mmcMe, body.photo #mmcMe, body.decor #mmcMe { visibility: hidden; }'; document.head.appendChild(st);
+  $('map').parentNode.appendChild(mmcBtn); mmcBtn.addEventListener('click', e => { e.stopPropagation(); mmcToggleMe(); });
+  setInterval(() => { mmcBtn.hidden = !LEVEL || LEVEL.fly; mmcBtn.textContent = mmcMe() ? '➤' : '🧍'; }, 500); }
+window.addEventListener('keydown', e => { if (e.code === 'Backslash' && state === 'play' && !dlgOpen && !e.repeat) mmcToggleMe(); });
+// the character token: a small 3/4 view of you, rendered on its own and stamped in the middle of the map
+function mmcToken() {
+  const N = 96;
+  if (!MMC.tk) { const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xffffff, 0x444455, 1.1)); const dl = new THREE.DirectionalLight(0xffffff, 0.8); dl.position.set(2, 4, 3); sc.add(dl);
+    const cam = new THREE.OrthographicCamera(-1.05, 1.05, 1.25, -0.85, 0.1, 20); cam.position.set(0, 3.2, 2.6); cam.lookAt(0, 0.85, 0);
+    const rt = new THREE.WebGLRenderTarget(N, N); rt.texture.encoding = renderer.outputEncoding; const c = document.createElement('canvas'); c.width = c.height = N;
+    MMC.tk = { sc, cam, rt, c, buf: new Uint8Array(N * N * 4), img: c.getContext('2d').createImageData(N, N) }; }
+  const T = MMC.tk, o = mmcBody(16); if (o.parent !== T.sc) T.sc.add(o); for (const ch of [...T.sc.children]) if (ch.userData.rig && ch !== o) T.sc.remove(ch);
+  const prev = renderer.getRenderTarget(), cc = renderer.getClearColor(new THREE.Color()), ca = renderer.getClearAlpha(), su = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false;
+  renderer.setRenderTarget(T.rt); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(T.sc, T.cam); renderer.readRenderTargetPixels(T.rt, 0, 0, N, N, T.buf); renderer.setRenderTarget(prev); renderer.setClearColor(cc, ca); renderer.shadowMap.autoUpdate = su;
+  const d = T.img.data; for (let y = 0; y < N; y++) d.set(T.buf.subarray((N - 1 - y) * N * 4, (N - y) * N * 4), y * N * 4); T.c.getContext('2d').putImageData(T.img, 0, 0); return T.c;
+}
+{ const _dm2 = drawMap; drawMap = function () { _dm2(); if (!mmcMe() || !LEVEL || LEVEL.fly || state === 'menu') return;
+  try { const c = mmcToken(), s = 40; mctx.save(); mctx.shadowColor = 'rgba(0,0,0,.8)'; mctx.shadowBlur = 4; mctx.drawImage(c, 56 - s / 2, 56 - s * 0.62, s, s); mctx.restore(); } catch (e) { console.warn('mmc token', e); } }; }
 
 
 // =================== STATE + SAVE ===================

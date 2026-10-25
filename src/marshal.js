@@ -51,6 +51,11 @@ if (typeof openMcKBack === 'function') { const f0 = openMcKBack; openMcKBack = f
 if (typeof mobDon === 'function') { const f0 = mobDon; mobDon = function () { if (mOn()) return mNo("Don Klunkleone", "Don Klunkleone", "\"A badge. In my booth. Get out of here before your fries get cold, Marshal.\""); return f0.apply(this, arguments); }; }
 if (typeof openStreetDealers === 'function') { const f0 = openStreetDealers; openStreetDealers = function () { if (mOn()) return mNo("Street dealers", "Street dealers", "Your old contacts won't pick up. Word travels fast when you wear a badge."); return f0.apply(this, arguments); }; }
 if (typeof openLab === 'function') { const f0 = openLab; openLab = function () { if (mOn()) return mNo("Lab", "Lab", "The Marshals took the Lab apart."); return f0.apply(this, arguments); }; }
+if (typeof openHire === 'function') { const f0 = openHire; openHire = function () { if (mOn()) return mNo("Grub", "Grub", "\"Hire a crew? For what, the bake sale? You're wearing a badge, pal. Have a drink or get out.\""); return f0.apply(this, arguments); }; }
+if (typeof openCrew === 'function') { const f0 = openCrew; openCrew = function () { if (mOn()) return mNo("Crew", "Crew", "Your crew cleared out the day you took the badge."); return f0.apply(this, arguments); }; }
+// taking the badge breaks up the crew: no wages, no product, no crew standing around the lab
+{ const f0 = mTakeBadge; mTakeBadge = function () { const r = f0.apply(this, arguments); if (S.crew && Object.keys(S.crew).length) { S.crew = {}; log("Your crew scattered when word got out you joined the Marshals."); markDirty(); } return r; }; }
+{ const f0 = crewWork; crewWork = function () { if (mOn()) { if (S.crew && Object.keys(S.crew).length) { S.crew = {}; markDirty(); } return; } return f0.apply(this, arguments); }; }
 { const f0 = openDealSell; openDealSell = function (n) { if (!mOn()) return f0.apply(this, arguments); closeDlg(); mFlash(n); }; }
 // Marshals don't shoot civilians: peaceful wanderers just shrug off your rounds
 { const _k = kill; kill = function (e) { if (mOn() && e && e.def && e.def.wanderer === 'scav') { e.hp = Math.max(1, e.max * 0.6); e.aggro = false; if (!e.mWarn || gameTime - e.mWarn > 5) { e.mWarn = gameTime; toast('HOLD FIRE', "Marshals don't shoot civilians", 2.2); } return; } return _k.apply(this, arguments); }; }

@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.29</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.30</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19301,6 +19301,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 295, title: '2.23.30 · Title crest', items: ['The glow behind the title screen is gone', 'New crest behind ART OF WAR: a striped setting sun with the Lvl 15 Rifle and Master Sword crossed over it, built from the game models'] },
   { id: 294, title: '2.23.29 · Blork logo, round 4', items: ['The Setting Sun now strafes at full speed and fires on the fly instead of stopping', 'Its shots come out of the wing guns like in game, in your laser color', 'BLORK STUDIOS is set in Gasoek One', 'The glow behind the title screen is menu blue instead of orange'] },
   { id: 293, title: '2.23.28 · Blork logo fixes', items: ['The ship in the Blork Studios intro now flies nose first', 'Smoother intro: blood is cached and the clock pauses through load stalls instead of skipping', 'Intro renders at the game default pixel size'] },
   { id: 292, title: '2.23.27 · Blork logo, take 2', items: ['The Blork Studios film now uses the game itself: a Drome trooper sprints down an Earth trail toward you, the Setting Sun drops in behind him and guns him down, his blood hits the lens and covers the screen, then drains away leaving BLORK written in dripping blood over STUDIOS'] },
@@ -28361,6 +28362,36 @@ function blorkIntro(stageEl, done) {
   frame(); return { finish };
 }
 
+// the title crest behind ART OF WAR: a striped setting sun with the game's Lvl 15 Rifle and Master Sword crossed over it,
+// rendered with the game's own models at the default pixel size, swaying slowly until the title closes
+function titleCrest(cov) {
+  const S0 = Math.round(Math.min(innerWidth, innerHeight) * 0.78), PX = Math.max(1.2, Math.min(innerWidth, innerHeight) / 230 * 0.66 * 0.55), n = Math.ceil(S0 / PX);
+  const cv = document.createElement('canvas'); cv.className = 'crest'; cv.style.cssText = `position:absolute;left:50%;top:50%;width:${S0}px;height:${S0}px;margin:${-S0 / 2}px 0 0 ${-S0 / 2}px;image-rendering:pixelated;opacity:0;transition:opacity 1.2s;pointer-events:none`;
+  cov.appendChild(cv);
+  const r = new THREE.WebGLRenderer({ canvas: cv, antialias: false, alpha: true }); r.setPixelRatio(1); r.setSize(n, n, false); r.outputEncoding = THREE.sRGBEncoding; r.setClearColor(0, 0);
+  const sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, 1, 0.1, 50); cam.position.set(0, 0, 9); cam.lookAt(0, 0, 0);
+  const lin = c => new THREE.Color(c).convertSRGBToLinear();
+  sc.add(new THREE.HemisphereLight(lin('#ffe0c0'), lin('#402838'), 1.0)); const key = new THREE.DirectionalLight(lin('#ffd0a0'), 1.0); key.position.set(-3, 4, 6); sc.add(key);
+  // the sun: warm gradient disc with the bottom half cut into bands, sinking behind a thin horizon line
+  const st = document.createElement('canvas'); st.width = st.height = 256; { const x = st.getContext('2d'), g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, '#ffe27a'); g.addColorStop(0.45, '#ff9a3c'); g.addColorStop(1, '#d8283a'); x.fillStyle = g; x.beginPath(); x.arc(128, 128, 126, 0, 7); x.fill();
+    x.globalCompositeOperation = 'destination-out'; for (let i = 0; i < 7; i++) { const y = 140 + i * 17, h = 2 + i * 1.6; x.fillRect(0, y, 256, h); } }
+  const tex = new THREE.CanvasTexture(st); tex.encoding = THREE.sRGBEncoding; tex.magFilter = THREE.NearestFilter;
+  const sun = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 3.6), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })); sun.position.set(0, 0.15, -1.2); sc.add(sun);
+  const hz = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 0.05), new THREE.MeshBasicMaterial({ color: lin('#ff9a3c') })); hz.position.set(0, -1.55, -1.1); sc.add(hz);
+  // the weapons, each scaled to the same length and crossed behind the words
+  const arms = new THREE.Group(); sc.add(arms);
+  const fit = (m, len) => { const b = new THREE.Box3().setFromObject(m), sz = b.getSize(new THREE.Vector3()), c = b.getCenter(new THREE.Vector3()), w = new THREE.Group(); m.position.sub(c); w.add(m); w.scale.setScalar(len / Math.max(sz.x, sz.y, sz.z, 0.01)); return w; };
+  let gun = null, sword = null; try { const m = makeGunModel('r15'); m.rotation.set(-Math.PI / 2, 0, 0); const o = new THREE.Group(); o.add(m); gun = fit(o, 4.2); } catch (e) { console.warn('crest gun', e); }
+  try { const m = makeMeleeModel('master'); sword = fit(m, 4.4); } catch (e) { console.warn('crest sword', e); }
+  if (gun) { const p = new THREE.Group(); p.add(gun); p.rotation.z = 0.72; p.position.z = 0.2; arms.add(p); }
+  if (sword) { const p = new THREE.Group(); p.add(sword); p.rotation.z = -0.72; p.position.z = 0.35; arms.add(p); }
+  let raf = 0, t0 = performance.now(), on = true;
+  const loop = () => { if (!on) return; raf = requestAnimationFrame(loop); const t = (performance.now() - t0) / 1000; arms.rotation.y = Math.sin(t * 0.6) * 0.35; arms.position.y = Math.sin(t * 0.9) * 0.05; r.render(sc, cam); };
+  loop(); requestAnimationFrame(() => { cv.style.opacity = '0.9'; });
+  cv.stop = () => { on = false; cancelAnimationFrame(raf); setTimeout(() => { try { r.dispose(); r.forceContextLoss(); } catch (_) {} }, 900); };
+  return cv;
+}
+
 // =================== INTRO: studio card, game title, legal ===================
 // Plays once per page load before the start screen. Tap or any key skips a card. S is not loaded yet, so the accepted-terms flag lives in localStorage.
 const STUDIO = { name: 'Blork Studios', video: null }; // swap in the logo/video when Phil sends them
@@ -28407,10 +28438,8 @@ let showTitleRef = () => {};
 @keyframes icd{0%{transform:translateY(-60vh) scaleY(1.4)}70%{transform:translateY(0) scaleY(1.2)}85%{transform:scale(1.3,.6)}100%{transform:none}}
 #introCov .gt{font-size:clamp(34px,8vw,84px);font-weight:900;color:#fff;letter-spacing:.06em;line-height:1}
 #introCov .gt span{color:#ff5a3a}#introCov .gs{color:#ff8a4a;letter-spacing:.6em;font-size:clamp(12px,2vw,18px);margin-top:12px}
-#bootLoad{z-index:10001}html:not(.ready) #introCov .pk{visibility:hidden}
+#introCov .gt,#introCov .gs,#introCov .pk{text-shadow:0 3px 0 #000,0 0 14px #000,0 0 4px #000}#bootLoad{z-index:10001}html:not(.ready) #introCov .pk{visibility:hidden}
 #introCov .pk{margin-top:40px;font-size:14px;letter-spacing:.3em;color:#ccd;animation:icp 1.6s infinite}@keyframes icp{50%{opacity:.25}}
-#introCov .sun{position:absolute;left:50%;top:62%;width:60vmin;height:60vmin;margin-left:-30vmin;border-radius:50%;background:radial-gradient(circle,#8fc8ff,#3b52bd00 70%);opacity:.0;transition:opacity 2s}
-#introCov .sun.on{opacity:.55}
 .introLegal{position:fixed;inset:0;z-index:10000;background:#000c;display:flex;align-items:center;justify-content:center;padding:16px}
 .introLegal .ilBox{max-width:620px;max-height:85vh;overflow:auto;background:#12141a;border:1px solid #333;border-radius:10px;padding:20px;color:#dde;font-size:14px;line-height:1.5}
 .introLegal h2{margin:0 0 10px}#legalRow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;font-size:12px;margin-top:6px}
@@ -28419,7 +28448,6 @@ let showTitleRef = () => {};
   // the studio card is already in the page markup so it shows the moment the page opens
   let cov = document.getElementById('introCov');
   if (!cov) { cov = document.createElement('div'); cov.id = 'introCov'; document.body.appendChild(cov); }
-  if (!cov.querySelector('.sun')) cov.insertAdjacentHTML('afterbegin', '<div class="sun"></div>');
   if (!cov.querySelector('#ic1')) cov.insertAdjacentHTML('beforeend', '<div class="ic on" id="ic1"></div>');
   // the Blork logo shot (blork.js); the old slime card only if WebGL is unavailable
   let blork = null; { const c = cov.querySelector('#ic1'); c.style.cssText = 'position:absolute;inset:0';
@@ -28428,9 +28456,9 @@ let showTitleRef = () => {};
   const c1 = () => cov.querySelector('#ic1'), ready = () => document.documentElement.classList.contains('ready');
   let stage = 'card', inputAt = 0;
   const showTitle = () => { if (stage !== 'card') return; stage = 'title'; if (blork) blork.finish(); inputAt = performance.now() + 900; const c = c1(); if (c) c.classList.remove('on');
-    setTimeout(() => { if (c) c.remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; cov.appendChild(g);
-      requestAnimationFrame(() => { g.classList.add('on'); const su = cov.querySelector('.sun'); if (su) su.classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); };
-  const finish = () => { if (stage === 'done') return; stage = 'done'; cov.style.opacity = 0; setTimeout(() => cov.remove(), 800); };
+    setTimeout(() => { if (c) c.remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; g.style.cssText = 'position:relative;z-index:1'; try { titleCrest(cov); } catch (e) { console.warn('crest', e); } cov.appendChild(g);
+      requestAnimationFrame(() => { g.classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); };
+  const finish = () => { if (stage === 'done') return; stage = 'done'; const cr = cov.querySelector('.crest'); if (cr && cr.stop) cr.stop(); cov.style.opacity = 0; setTimeout(() => cov.remove(), 800); };
   const onInput = e => { if (!e.isTrusted || !document.getElementById('introCov')) return; if (stage === 'card') { if (performance.now() > 600) showTitle(); } else if (stage === 'title' && ready() && performance.now() > inputAt) finish(); };
   cov.addEventListener('click', onInput); addEventListener('keydown', onInput);
   { const c = c1(); if (c) c.classList.add('on'); } showTitleRef = showTitle; if (!blork) setTimeout(showTitle, 3200);

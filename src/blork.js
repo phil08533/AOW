@@ -96,3 +96,33 @@ function blorkIntro(stageEl, done) {
   const finish = () => { if (over) return; over = true; cancelAnimationFrame(raf); try { r.dispose(); r.forceContextLoss(); } catch (_) {} gl.remove(); done && done(); };
   frame(); return { finish };
 }
+
+// the title crest behind ART OF WAR: a striped setting sun with the game's Lvl 15 Rifle and Master Sword crossed over it,
+// rendered with the game's own models at the default pixel size, swaying slowly until the title closes
+function titleCrest(cov) {
+  const S0 = Math.round(Math.min(innerWidth, innerHeight) * 0.78), PX = Math.max(1.2, Math.min(innerWidth, innerHeight) / 230 * 0.66 * 0.55), n = Math.ceil(S0 / PX);
+  const cv = document.createElement('canvas'); cv.className = 'crest'; cv.style.cssText = `position:absolute;left:50%;top:50%;width:${S0}px;height:${S0}px;margin:${-S0 / 2}px 0 0 ${-S0 / 2}px;image-rendering:pixelated;opacity:0;transition:opacity 1.2s;pointer-events:none`;
+  cov.appendChild(cv);
+  const r = new THREE.WebGLRenderer({ canvas: cv, antialias: false, alpha: true }); r.setPixelRatio(1); r.setSize(n, n, false); r.outputEncoding = THREE.sRGBEncoding; r.setClearColor(0, 0);
+  const sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, 1, 0.1, 50); cam.position.set(0, 0, 9); cam.lookAt(0, 0, 0);
+  const lin = c => new THREE.Color(c).convertSRGBToLinear();
+  sc.add(new THREE.HemisphereLight(lin('#ffe0c0'), lin('#402838'), 1.0)); const key = new THREE.DirectionalLight(lin('#ffd0a0'), 1.0); key.position.set(-3, 4, 6); sc.add(key);
+  // the sun: warm gradient disc with the bottom half cut into bands, sinking behind a thin horizon line
+  const st = document.createElement('canvas'); st.width = st.height = 256; { const x = st.getContext('2d'), g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, '#ffe27a'); g.addColorStop(0.45, '#ff9a3c'); g.addColorStop(1, '#d8283a'); x.fillStyle = g; x.beginPath(); x.arc(128, 128, 126, 0, 7); x.fill();
+    x.globalCompositeOperation = 'destination-out'; for (let i = 0; i < 7; i++) { const y = 140 + i * 17, h = 2 + i * 1.6; x.fillRect(0, y, 256, h); } }
+  const tex = new THREE.CanvasTexture(st); tex.encoding = THREE.sRGBEncoding; tex.magFilter = THREE.NearestFilter;
+  const sun = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 3.6), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })); sun.position.set(0, 0.15, -1.2); sc.add(sun);
+  const hz = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 0.05), new THREE.MeshBasicMaterial({ color: lin('#ff9a3c') })); hz.position.set(0, -1.55, -1.1); sc.add(hz);
+  // the weapons, each scaled to the same length and crossed behind the words
+  const arms = new THREE.Group(); sc.add(arms);
+  const fit = (m, len) => { const b = new THREE.Box3().setFromObject(m), sz = b.getSize(new THREE.Vector3()), c = b.getCenter(new THREE.Vector3()), w = new THREE.Group(); m.position.sub(c); w.add(m); w.scale.setScalar(len / Math.max(sz.x, sz.y, sz.z, 0.01)); return w; };
+  let gun = null, sword = null; try { const m = makeGunModel('r15'); m.rotation.set(-Math.PI / 2, 0, 0); const o = new THREE.Group(); o.add(m); gun = fit(o, 4.2); } catch (e) { console.warn('crest gun', e); }
+  try { const m = makeMeleeModel('master'); sword = fit(m, 4.4); } catch (e) { console.warn('crest sword', e); }
+  if (gun) { const p = new THREE.Group(); p.add(gun); p.rotation.z = 0.72; p.position.z = 0.2; arms.add(p); }
+  if (sword) { const p = new THREE.Group(); p.add(sword); p.rotation.z = -0.72; p.position.z = 0.35; arms.add(p); }
+  let raf = 0, t0 = performance.now(), on = true;
+  const loop = () => { if (!on) return; raf = requestAnimationFrame(loop); const t = (performance.now() - t0) / 1000; arms.rotation.y = Math.sin(t * 0.6) * 0.35; arms.position.y = Math.sin(t * 0.9) * 0.05; r.render(sc, cam); };
+  loop(); requestAnimationFrame(() => { cv.style.opacity = '0.9'; });
+  cv.stop = () => { on = false; cancelAnimationFrame(raf); setTimeout(() => { try { r.dispose(); r.forceContextLoss(); } catch (_) {} }, 900); };
+  return cv;
+}

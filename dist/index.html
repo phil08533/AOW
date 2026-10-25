@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.41</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.42</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19301,6 +19301,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 307, title: 'Badge button fix', items: ['On phones the Marshal BADGE button now sits in the right-hand button column instead of on the minimap'] },
   { id: 306, title: 'Cockpit lasers on target', items: ['In cockpit view your lasers now fly straight up the aiming ring instead of landing below it'] },
   { id: 305, title: 'Mile Down lounge', items: ['The robot singer performs Deep Boop in the bar', 'The regulars sip, chat, look around and shoot pool instead of standing frozen', 'Talk to the regulars after the story for their take on the screaming'] },
   { id: 304, title: 'Mile Down touch-ups', items: ['The bar wall gap is sealed', 'The window looks out on a huge sunset sky with drifting clouds', 'Moody bar and lab lighting', 'Big E sits up, turns and steps down in one smooth motion', 'Pail carries Frog E in his hands', 'Big E no longer clips through the bar', 'Bar regulars and a robot lounge singer', 'Ask Mags about Big E, and get the lab key from her', 'Frog E gets the last word'] },
@@ -22086,7 +22087,8 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 // ---- touch HUD tidy (2.13.11): the USE button joins the right-hand button column, and the gun/ammo box moves next to the HP panel so FIRE never covers it ----
 const HUD_COL = ['tHeal', 'tNade', 'tMelee', 'tReload'];
 function hudStack() {
-  const sub = $('tSub'), am = $('ammo'), vit = $('vitals'), B = document.body.classList;
+  // the Marshal BADGE button takes the USE button's slot (only one of them shows at a time)
+  const sub = (() => { const a = $('tSub'), b = $('tBadge'); return a && !a.hidden ? a : b && !b.hidden ? b : a; })(), am = $('ammo'), vit = $('vitals'), B = document.body.classList;
   const touch = matchMedia('(pointer: coarse)').matches, special = B.contains('driving') || B.contains('flying');
   if (sub) { const col = HUD_COL.map(id => $(id)).filter(e => { if (!e || !e.offsetParent) return false; const c = getComputedStyle(e); return c.display !== 'none' && c.visibility !== 'hidden' && +c.opacity > 0.05; });
     if (!sub.hidden && col.length && !special) { const rs = col.map(e => e.getBoundingClientRect()), top = rs.reduce((a, r) => r.top < a.top ? r : a), gap = rs.length > 1 ? Math.abs(rs[0].top - rs[1].top) : top.height + 5;

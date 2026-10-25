@@ -201,7 +201,8 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 // ---- touch HUD tidy (2.13.11): the USE button joins the right-hand button column, and the gun/ammo box moves next to the HP panel so FIRE never covers it ----
 const HUD_COL = ['tHeal', 'tNade', 'tMelee', 'tReload'];
 function hudStack() {
-  const sub = $('tSub'), am = $('ammo'), vit = $('vitals'), B = document.body.classList;
+  // the Marshal BADGE button takes the USE button's slot (only one of them shows at a time)
+  const sub = (() => { const a = $('tSub'), b = $('tBadge'); return a && !a.hidden ? a : b && !b.hidden ? b : a; })(), am = $('ammo'), vit = $('vitals'), B = document.body.classList;
   const touch = matchMedia('(pointer: coarse)').matches, special = B.contains('driving') || B.contains('flying');
   if (sub) { const col = HUD_COL.map(id => $(id)).filter(e => { if (!e || !e.offsetParent) return false; const c = getComputedStyle(e); return c.display !== 'none' && c.visibility !== 'hidden' && +c.opacity > 0.05; });
     if (!sub.hidden && col.length && !special) { const rs = col.map(e => e.getBoundingClientRect()), top = rs.reduce((a, r) => r.top < a.top ? r : a), gap = rs.length > 1 ? Math.abs(rs[0].top - rs[1].top) : top.height + 5;

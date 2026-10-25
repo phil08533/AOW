@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.38</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.39</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19301,6 +19301,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 304, title: 'Mile Down touch-ups', items: ['The bar wall gap is sealed', 'The window looks out on a huge sunset sky with drifting clouds', 'Moody bar and lab lighting', 'Big E sits up, turns and steps down in one smooth motion', 'Pail carries Frog E in his hands', 'Big E no longer clips through the bar', 'Bar regulars and a robot lounge singer', 'Ask Mags about Big E, and get the lab key from her', 'Frog E gets the last word'] },
   { id: 303, title: '2.23.38 · Mile Down glow-up, your character on the minimap', items: ['The Mile Down bar was rebuilt so nothing clips through: rocks tucked into the corners, stalactites flush with the ceiling, wood wainscot round the walls', 'New in the bar: a mirrored back bar with lit bottle shelves, beer taps, a register and menu board, padded bar front, hanging lamps and string lights, round tables and chairs, an atomic rug, a pool table, a little stage with a mic, a real jukebox, photos, a mounted space-fish and cacti', 'Minimap: the round button under it (or the backslash key) swaps the arrow for your own character, in both the classic map and the live view'] },
   { id: 302, title: '2.23.37 · Live minimap', items: ['Click the minimap (or press = and -) to switch between the classic map and a live overhead camera at close, mid and far zoom', 'Indoors the camera looks down from just under the ceiling, so you see the room', 'Enemies, quest marks and your arrow are drawn on top. The game remembers your choice'] },
   { id: 301, title: '2.23.36 · The Mile Down', items: ['New side story in Earth Sky: Pail is waiting by a rusty elevator on the edge of the Floating City. His buddy Big E went down to see what is in the middle of the island', 'Ride a mile down the cliff to the Mile Down, a neon cave bar with a window onto the clouds', 'Behind the lab door, Doc has a retro horror experiment going. Movie-style cutscenes all the way through', 'Big E, the frog and the body all end up at the bar for good. Replay the ending from the Codex cinema'] },
@@ -28983,8 +28984,8 @@ LEVELS.miledown = {
   safes: [{ x: 0, z: 7, r: 7.5 }], spawn: { x: 0, z: 11, yaw: 0 }, menu: { x: 0, z: 6, r: 7, h: 2.6 }, npcBase: [0, 0], spawns: [],
   npcs: [
     { id: 'pail_md', name: 'Pail', role: "Big E's buddy", rig: 'civ', make: makePail, x: -6.1, z: 7.4, face: Math.PI / 2,
-      idle: ["Big E came down three days ago. Mags says he went through that door.", "I ain't going in first. I'm the moral support.", "You hear that hum? That's not the jukebox."] },
-    { id: 'mags', name: 'Mags', role: 'Bartender', rig: 'civ', make: makeMags, x: -9.4, z: 5, face: Math.PI / 2,
+      idle: ["Big E came down three days ago. Ask Mags, she sees everything from back there.", "That door's locked. Mags keeps the keys.", "I ain't going in first. I'm the moral support.", "You hear that hum? That's not the jukebox."] },
+    { id: 'mags', name: 'Mags', role: 'Bartender', rig: 'civ', make: makeMags, x: -9.4, z: 5, face: Math.PI / 2, custom: [['Talk', () => mdMags()]],
       idle: ["Mile down, mile high prices. That's the joke. Nobody laughs.", "Doc pays his tab in favors. I don't ask what kind.", "The window? That's just clouds. Don't look too long, they look back."] },
   ],
   build() {
@@ -28994,12 +28995,12 @@ LEVELS.miledown = {
     const fl = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, 18).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: mdPlankTex() })); fl.position.z = 5.5; props.add(fl);
     const ce = new THREE.Mesh(new THREE.PlaneGeometry(W * 2, 40).rotateX(Math.PI / 2), toon('#1a1412')); ce.position.set(0, H, -3); props.add(ce);
     const wall = (x, z, w, d, m) => { part(props, B(w, H, d), m || rock, x, H / 2, z); box(x, z, w / 2, d / 2); };
-    wall(-W, 5.5, 0.6, 18); wall(0, 14.4, W * 2, 0.6); wall(W, 0.5, 0.6, 6); wall(W, 12.5, 0.6, 3.4); part(props, B(0.6, 0.9, 6.2), rock, W, 0.45, 7.8); part(props, B(0.6, 0.6, 6.2), rock, W, H - 0.3, 7.8); box(W, 7.8, 0.3, 3.1);
+    wall(-W, 5.5, 0.6, 18); wall(0, 14.4, W * 2, 0.6); wall(W, 1.1, 0.6, 7.2); wall(W, 12.5, 0.6, 3.4); part(props, B(0.6, 0.9, 6.2), rock, W, 0.45, 7.8); part(props, B(0.6, 0.6, 6.2), rock, W, H - 0.3, 7.8); box(W, 7.8, 0.3, 3.1);
     // dark wood wainscot with a chrome rail round the room (the window wall keeps its sill)
     const wain = toon('#3a2216', 'wood');
     part(props, B(0.08, 1.1, 17.4), wain, -W + 0.34, 0.55, 5.5); part(props, B(0.1, 0.06, 17.4), chrome, -W + 0.36, 1.12, 5.5);
     part(props, B(21.4, 1.1, 0.08), wain, 0, 0.55, 14.06); part(props, B(21.4, 0.06, 0.1), chrome, 0, 1.12, 14.04);
-    for (const [z, d] of [[0.5, 6], [12.5, 3.4]]) { part(props, B(0.08, 1.1, d), wain, W - 0.34, 0.55, z); part(props, B(0.1, 0.06, d), chrome, W - 0.36, 1.12, z); }
+    for (const [z, d] of [[1.1, 7.2], [12.5, 3.4]]) { part(props, B(0.08, 1.1, d), wain, W - 0.34, 0.55, z); part(props, B(0.1, 0.06, d), chrome, W - 0.36, 1.12, z); }
     part(props, B(9.4, 1.1, 0.08), wain, -6, 0.55, -2.71); part(props, B(9.4, 1.1, 0.08), wain, 6, 0.55, -2.71);
     // rock outcrops tucked into the corners and stalactites hanging from the ceiling (bases flush with it)
     for (const [x, z, s] of [[-10.4, -2.4, 0.9], [10.4, -2.4, 1.0], [-10.5, 13.8, 0.8], [10.4, 13.8, 1.1], [-10.6, 10.6, 0.6], [10.5, 2.6, 0.7]]) { part(props, new THREE.DodecahedronGeometry(s, 0), rock2, x, H - s * 0.5, z, s, s * 3, 0); part(props, new THREE.DodecahedronGeometry(s * 0.8, 0), rock, x, s * 0.4, z, s * 2, s, 0); }
@@ -29012,7 +29013,10 @@ LEVELS.miledown = {
     // a round atomic-pattern rug in the middle
     const rug = new THREE.Mesh(new THREE.CircleGeometry(2.4, 28).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: mdRugTex(), color: '#9a8a8a' })); rug.position.set(0.5, 0.012, 5.5); props.add(rug);
     // the window: clouds a mile under the island, with a deep sill and chrome mullions
-    const sky = new THREE.Mesh(new THREE.PlaneGeometry(40, 22), new THREE.MeshBasicMaterial({ map: mdSkyTex(true), fog: false })); sky.position.set(W + 14, 2, 8); sky.rotation.y = -Math.PI / 2; props.add(sky);
+    const sky = new THREE.Mesh(new THREE.PlaneGeometry(220, 110), new THREE.MeshBasicMaterial({ map: mdSkyTex(true), fog: false, depthWrite: false })); sky.position.set(W + 60, 0, 8); sky.rotation.y = -Math.PI / 2; props.add(sky);
+    const sunD = new THREE.Mesh(new THREE.CircleGeometry(5, 24), new THREE.MeshBasicMaterial({ color: '#ffb070', fog: false })); sunD.position.set(W + 58, -3, 14); sunD.rotation.y = -Math.PI / 2; props.add(sunD);
+    MD.clouds = []; for (let i = 0; i < 16; i++) { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: mdPuffTex(), color: ['#ffc8b0', '#e8a0a8', '#ffd8c0', '#c890a8'][i % 4], transparent: true, opacity: 0.55, fog: false, depthWrite: false }));
+      const d = 10 + (i * 7 % 40); m.position.set(W + d, -8 + (i * 5 % 11), -30 + (i * 13 % 76)); m.scale.set(10 + d * 0.5, 3 + d * 0.15, 1); m.userData.v = 0.4 + (i % 5) * 0.25; dyn.add(m); MD.clouds.push(m); }
     for (const z of [4.75, 7.8, 10.85]) part(props, B(0.24, 2.6, 0.14), chrome, W - 0.18, 2.2, z); part(props, B(0.24, 0.14, 6.3), chrome, W - 0.18, 3.5, 7.8); part(props, B(0.5, 0.1, 6.3), toon('#5a3a26', 'wood'), W - 0.36, 0.95, 7.8);
     const gl = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 2.6), new THREE.MeshPhongMaterial({ color: '#9fc8ff', transparent: true, opacity: 0.1, shininess: 100, depthWrite: false })); gl.position.set(W - 0.25, 2.2, 7.8); gl.rotation.y = -Math.PI / 2; props.add(gl);
     // the bar: a padded front with chrome studs, a neon edge, taps, a register and glasses
@@ -29116,12 +29120,12 @@ LEVELS.miledown = {
     const al = new THREE.PointLight(0xff2a1a, 0, 14); al.position.set(0, 3.8, -12); levelGroup.add(al); MD.alarm = al; part(props, Cy(0.2, 0.25, 0.25, 10), glow('#ff2a1a'), 0, 4.05, -12);
     // the cast in the lab: Big E on the table, Doc at the switch, Pail in the doorway
     const st = mdF();
-    MD.body = mdActor(buildChar(() => makeBigE(false), 'civ'), 0, -11.0, 0); MD.body.o.scale.setScalar(1.25); MD.body.o.rotation.x = -Math.PI / 2; MD.body.o.position.y = 1.12; MD.body.h.visible = st === 0;
+    MD.body = mdActor(buildChar(() => makeBigE(false), 'civ'), 0, -12.2, 0); MD.body.o.scale.setScalar(1.25); mdPose(MD.body, -Math.PI / 2, 0, 0, -12.2, 1.15); MD.body.h.visible = st === 0;
     MD.doc = mdActor(buildChar(makeDoc, 'civ'), -3.6, -14.9, -2.5); if (st >= 1) mdDocDown();
     MD.pail = mdActor(buildChar(makePail, 'civ'), 0.6, -2.2, Math.PI); MD.pail.h.visible = false;
     if (st >= 2) { const sh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 1.9), toon('#e8e8e0', 'cloth')); sh.position.set(MD.doc.h.position.x, 0.12, MD.doc.h.position.z); sh.rotation.y = MD.doc.h.rotation.y; props.add(sh); MD.doc.h.visible = false; frog.visible = false; }
     // after: Big E's body on a stool, Big E the frog on the bar with a tiny glass
-    MD.seat = mdActor(buildChar(() => makeBigE(false), 'civ'), -6.9, 4, -Math.PI / 2); { const o = MD.seat.o, R = o.userData.rig; o.scale.setScalar(1.25); o.position.y = 0.77 - (R ? R.spec.hip : 0.95) * 1.25 + 0.06; sitChar(o, 0.6); o.rotation.x = 0.35; if (R && R.head) R.head.rotation.x = 0.5; if (R && R.armL) R.armL.rotation.x = -1.1; }
+    MD.seat = mdActor(buildChar(() => makeBigE(false), 'civ'), -6.62, 4, -Math.PI / 2); { const o = MD.seat.o, R = o.userData.rig; o.scale.setScalar(1.25); o.position.y = 0.77 - (R ? R.spec.hip : 0.95) * 1.25 + 0.06; sitChar(o, 0.6); o.rotation.x = 0.12; if (R && R.head) R.head.rotation.x = 0.65; if (R && R.armL) { R.armL.rotation.x = -1.25; R.armR.rotation.x = -0.9; } }
     MD.barFrog = mdActor(buildChar(makeFrog), -7.9, 4.9, Math.PI / 2 - 0.3); MD.barFrog.h.position.y = 1.17;
     part(MD.barFrog.h, Cy(0.05, 0.04, 0.1, 8), new THREE.MeshPhongMaterial({ color: '#ffb03a', transparent: true, opacity: 0.7 }), 0.12, 0.06, 0.32);
     part(props, Cy(0.07, 0.06, 0.16, 8), new THREE.MeshPhongMaterial({ color: '#ffb03a', transparent: true, opacity: 0.7 }), -7.7, 1.25, 3.7);
@@ -29130,6 +29134,9 @@ LEVELS.miledown = {
     else if (st === 1) { mdOpenDoor(); setTimeout(() => { if (LEVEL.id === 'miledown') mdSpawnBody(V(0.6, 0, -9.6)); }, 400); }
     // lights: neon pink and blue in the bar, cold green in the lab
     for (const [x, z, c, k] of [[-6, 5, 0xff3a8a, 1.4], [6, 8, 0x4fd2ff, 1.1], [0, 12, 0xffb03a, 0.9], [-2, 2, 0xffd9a0, 0.6], [-5, -9, 0x6aff9a, 0.9], [5, -15, 0x8ab0ff, 0.9], [0, -18, 0x6aff9a, 0.6]]) { const l = new THREE.PointLight(c, k, 16); l.position.set(x, H - 0.6, z); levelGroup.add(l); }
+    for (const [x, y, z, c, k, r] of [[-7.1, 0.5, 5, 0xff3a8a, 0.7, 4], [2.2, 1.3, -13.3, 0x6aff8a, 1.2, 5], [-9.2, 1.9, -12, 0x8aff3a, 0.5, 4], [9.8, 2.2, 7.8, 0xff9a6a, 0.8, 7]]) { const l = new THREE.PointLight(c, k, r); l.position.set(x, y, z); levelGroup.add(l); }
+    MD.coilL = new THREE.PointLight(0xb08aff, 0, 9); MD.coilL.position.set(0, 3, -12); levelGroup.add(MD.coilL);
+    mdPatrons(props); mdRobot(dyn);
     let last = 0; levelAnims.push(t => { if (LEVEL.id !== 'miledown') return; const dt = Math.min(0.1, t - last || 0.016); last = t; mdTick(t, dt); });
   }
 };
@@ -29137,7 +29144,9 @@ LEVELS.miledown = {
 
 function mdTick(t, dt) {
   // arcs crackle between the coil tops and the room, harder when the alarm is on
-  const hot = MD.alarm && MD.alarm.intensity > 0;
+  const hot = MD.alarm && MD.alarm.intensity > 0; if (MD.coilL) MD.coilL.intensity = Math.random() < (hot ? 0.5 : 0.15) ? (hot ? 2.2 : 0.9) : 0.1;
+  if (MD.clouds) for (const c of MD.clouds) { c.position.z += c.userData.v * dt; if (c.position.z > 46) c.position.z = -30; }
+  if (MD.bot) MD.bot(t, dt);
   for (const a of MD.arcs) { if (Math.random() < (hot ? 0.6 : 0.22)) { const p = a.ln.geometry.attributes.position, tx = a.x * 0.4 + (Math.random() - 0.5) * 6, ty = 0.5 + Math.random() * 3.4, tz = a.z * 0.6 - 5 + (Math.random() - 0.5) * 6;
       for (let i = 0; i < 10; i++) { const k = i / 9; p.setXYZ(i, a.x + (tx - a.x) * k + (i && i < 9 ? (Math.random() - 0.5) * 0.5 : 0), 3.2 + (ty - 3.2) * k + (i && i < 9 ? (Math.random() - 0.5) * 0.5 : 0), a.z + (tz - a.z) * k + (i && i < 9 ? (Math.random() - 0.5) * 0.5 : 0)); }
       p.needsUpdate = true; a.ln.visible = true; } else if (Math.random() < 0.5) a.ln.visible = false; }
@@ -29185,7 +29194,7 @@ function mdRideScene() {
 }
 function mdDoor() {
   const q = S.qst && S.qst.md1; if (!q || q.st === 'done') { toast('LOCKED', 'Somebody is humming on the other side.', 2.5); return; }
-  if (mdF() >= 1) return; mdSet(1); SFX.door(); mdOpenDoor(); MD.act.label = 'Doc\'s lab'; MD.act.fn = () => {};
+  if (mdF() >= 1) return; if (!(S.flags && S.flags.mdKey)) { toast('LOCKED', 'Mags behind the bar keeps the keys.', 3); SFX.ui(); return; } mdSet(1); SFX.door(); mdOpenDoor(); MD.act.label = 'Doc\'s lab'; MD.act.fn = () => {};
   const N = npcObjs.pail_md; if (N) N.obj.visible = false; const P = MD.pail; P.h.visible = true; P.h.position.set(0.6, 0, -2.2);
   const b = MD.body, d = MD.doc, f = MD.frog; MD.alarm.intensity = 0;
   runCutscene({ title: 'DOC', lock: 5, shots: [
@@ -29195,11 +29204,17 @@ function mdDoor() {
     { text: '', dur: 2.5, cam: (t, k) => { MD.lever.rotation.x = 0.7 - k * 1.4; MD.alarm.intensity = k > 0.5 ? 2.5 : 0; if (k > 0.5 && Math.random() < 0.3) burst(V(2.2, 2.0, -13.3), '#c8b0ff', 6, 4); mdCam(-3.0, 1.8, -13.9, -4.2, 1.6, -15.6); } },
     { text: "Doc: It works! The finest mind in Sky City, preserved forever in a superior amphibian vessel!", dur: 6, cam: (t, k) => { mdCam(2.9 - k * 0.3, 1.5, -12.3, 2.2, 1.2, -13.3); f.rotation.y = -0.6 + Math.sin(t * 2) * 0.2; } },
     { text: 'Pail: Finest mind? He once ate a battery. On purpose.', dur: 4, cam: (t, k) => { mdCam(0.6, 1.75, -4.6, P.h.position.x, 1.6, P.h.position.z); } },
-    { text: 'Something on the table croaks.', dur: 4, cam: (t, k) => { b.o.rotation.x = -Math.PI / 2 + k * Math.PI / 2; b.h.position.z = -11.0 + k * 0.4; b.o.position.y = 1.12 - k * 0.2; if (Math.random() < 0.2) burst(V(0, 1.4, -12), '#8aff3a', 3, 3); mdCam(2.6, 1.3, -9.6, 0, 1.4 + k, -11.5); } },
-    { text: "Big E's body: RIBBIT.", dur: 3, cam: (t, k) => { b.o.rotation.x = 0; mdCam(0.2, 2.0, -9.0, 0, 2.2, -10.6); } },
-    { text: "Doc: No. No no no. The frog was supposed to be DOCILE—", dur: 4, cam: (t, k) => { const tx = d.h.position.x + 0.9, tz = d.h.position.z + 0.6; b.h.position.x += (tx - b.h.position.x) * 0.06; b.h.position.z += (tz - b.h.position.z) * 0.06; b.h.rotation.y = Math.atan2(d.h.position.x - b.h.position.x, d.h.position.z - b.h.position.z); if (k > 0.75 && !b.st.atk) b.st.atk = 0.42; animRig(b.o, b.st, 1 / 60, t); mdCam(-0.5, 2.1, -11.4, -3.2, 1.4, -14.4); } },
-    { text: '', dur: 2.5, cam: (t, k) => { mdDocDown(); d.o.rotation.x = -Math.PI / 2 * Math.min(1, k * 2); if (k < 0.2) burst(V(-3.2, 1.2, -14), '#8a1a1a', 10, 4); mdCam(-0.5, 2.6, -11.0, -3.1, 0.4, -13.4); } },
-    { text: "It isn't Big E anymore. It's a very angry frog in a very big man.", dur: 4, cam: (t, k) => { b.h.rotation.y = Math.atan2(0 - b.h.position.x, 0 - b.h.position.z); mdCam(b.h.position.x + 0.5, 2.3, b.h.position.z + 2.6 - k * 0.8, b.h.position.x, 2.2, b.h.position.z); } },
+    { text: 'Something on the table croaks.', dur: 4, cam: (t, k) => { const e = k * k * (3 - 2 * k); mdPose(b, -Math.PI / 2 * (1 - e), -Math.PI / 2 * e, 0, -12.2, 1.15 - 0.04 * e); if (Math.random() < 0.2) burst(V(0, 1.6, -12.4), '#8aff3a', 3, 3); mdCam(2.6, 1.5, -9.6, 0, 1.3 + e * 0.6, -12); } },
+    { text: "Big E's body: RIBBIT.", dur: 3, cam: (t, k) => { mdPose(b, 0, -Math.PI / 2, 0, -12.2, 1.11); const R = b.o.userData.rig; if (R && R.head) R.head.rotation.y = Math.sin(t * 6) * 0.25; mdCam(0.3, 2.0, -9.6, 0, 1.9, -12.2); } },
+    { text: "Doc: No. No no no. The frog was supposed to be DOCILE—", dur: 4.5, cam: (t, k) => {
+      // one motion: turn toward Doc and slide off the table while the legs swing down, then lurch at him
+      const R = b.o.userData.rig, dx = d.h.position.x + 0.9, dz = d.h.position.z + 0.7, face = Math.atan2(d.h.position.x - b.h.position.x, d.h.position.z - b.h.position.z);
+      if (k < 0.4) { const e = k / 0.4, s2 = e * e * (3 - 2 * e); b.h.rotation.y = face * s2; mdPose(b, 0, -Math.PI / 2 * (1 - s2), -0.95 * s2, -12.2 + 0.2 * s2, 1.11 + (1.19 - 1.11) * s2); }
+      else { b.h.position.x += (dx - b.h.position.x) * 0.035; b.h.position.z += (dz - b.h.position.z) * 0.035; b.h.rotation.y = face; b.o.position.set(0, 0, 0); b.o.rotation.x = 0;
+        if (R) { const sw = Math.sin(t * 9) * 0.55 * Math.min(1, (k - 0.4) * 6); R.legL.rotation.x = sw; R.legR.rotation.x = -sw; R.armL.rotation.x = -sw * 0.8 - 0.9; R.armR.rotation.x = k > 0.8 ? -2.2 : sw * 0.8 - 0.9; } }
+      mdCam(-0.4, 2.1, -10.6, (b.h.position.x + d.h.position.x) / 2, 1.3, (b.h.position.z + d.h.position.z) / 2); } },
+    { text: '', dur: 2.5, cam: (t, k) => { mdDocDown(); d.o.rotation.x = -Math.PI / 2 * Math.min(1, k * 2); const R = b.o.userData.rig; if (R) R.armR.rotation.x = -2.2 + k * 1.4; if (k < 0.2) burst(V(-3.2, 1.2, -14), '#8a1a1a', 10, 4); mdCam(-0.5, 2.6, -11.0, -3.1, 0.4, -13.4); } },
+    { text: "It isn't Big E anymore. It's a very angry frog in a very big man.", dur: 4, cam: (t, k) => { const R = b.o.userData.rig; if (R) { R.armL.rotation.x = R.armR.rotation.x = -0.4; R.legL.rotation.x = R.legR.rotation.x = 0; } b.h.rotation.y = Math.atan2(0 - b.h.position.x, 0 - b.h.position.z); mdCam(b.h.position.x + 0.5, 2.3, b.h.position.z + 2.6 - k * 0.8, b.h.position.x, 2.2, b.h.position.z); } },
   ], onEnd: () => { const p = b.h.position.clone(); b.h.visible = false; MD.alarm.intensity = 1.2; P.h.position.set(-1.6, 0, -3.8); P.h.rotation.y = Math.PI;
     player.pos.set(0, 0, -4.2); player.yaw = 0; mdSpawnBody(p); toast("DOC'S LAB", 'Put the body down. Gently, if you can.', 3.5); } });
 }
@@ -29207,14 +29222,15 @@ function mdAfter() {
   const e = MD.e, p = e ? e.obj.position.clone() : V(0, 0, -9); if (e) e.obj.visible = false; MD.alarm.intensity = 0;
   const dead = mdActor(buildChar(() => makeBigE(true), 'civ'), p.x, p.z, 0.4); dead.o.scale.setScalar(1.25); dead.o.rotation.x = -Math.PI / 2; dead.o.position.y = 0.16;
   const P = MD.pail, f = MD.frog, j = MD.jar; P.h.visible = true; P.h.position.set(0.8, 0, -6); f.userData.held = 1;
-  const hand = () => V(P.h.position.x + Math.sin(P.h.rotation.y) * 0.35, 1.25, P.h.position.z + Math.cos(P.h.rotation.y) * 0.35);
+  const hold = () => { if (f.parent !== P.h) { P.h.add(f); f.position.set(0, 1.02, 0.46); f.rotation.set(0, Math.PI, 0); f.scale.setScalar(0.75); const R = P.o.userData.rig; if (R) { R.armL.rotation.x = R.armR.rotation.x = -1.05; R.armL.rotation.z = 0.28; R.armR.rotation.z = -0.28; R.legL.rotation.x = R.legR.rotation.x = 0; } } };
+  const fw = () => P.h.localToWorld(V(0, 1.25, 0.46));
   runCutscene({ lock: 4, shots: [
     { text: 'It goes down hard. Then it is quiet. Just the hum of the coils.', dur: 4.5, cam: (t, k) => { mdCam(p.x + 3, 2.4 - k * 0.6, p.z + 3, p.x, 0.3, p.z); } },
-    { text: '', dur: 3.5, cam: (t, k) => { P.h.position.x = 0.8 + k * 0.6; P.h.position.z = -6 - k * 6.4; P.h.rotation.y = Math.PI - 0.3; animRig(P.o, P.st, 1 / 60, t); if (k > 0.85) { j.position.y = 1.35 + (k - 0.85) * 4; } mdCam(-1.2, 2.0, -9.2, 1.6, 1.2, -12.8); } },
-    { text: 'Pail: Ahh man. Sorry, Big E.', dur: 4, cam: (t, k) => { P.h.rotation.y = Math.PI * 0.75; f.position.copy(hand()); f.rotation.y = P.h.rotation.y + Math.PI; mdCam(P.h.position.x - 1.3, 1.7, P.h.position.z - 1.2, P.h.position.x, 1.4, P.h.position.z); } },
-    { text: "Pail: Looks like you're a frog, dude.", dur: 3.5, cam: (t, k) => { const h = hand(); f.position.copy(h); mdCam(h.x - 0.7, 1.45, h.z - 0.75, h.x, 1.5, h.z); } },
-    { text: 'Big E: ...ribbit.', dur: 3, cam: (t, k) => { const h = hand(); f.position.copy(h); f.rotation.z = Math.sin(t * 3) * 0.1; mdCam(h.x - 0.5, 1.55, h.z - 0.55, h.x, 1.55, h.z); } },
-    { text: "Pail: Let's get your body up to the bar. Maybe that can help us.", dur: 5, cam: (t, k) => { P.h.rotation.y = Math.atan2(p.x - P.h.position.x, p.z - P.h.position.z); f.position.copy(hand()); mdCam(P.h.position.x + 2, 2.2, P.h.position.z + 1.5, p.x, 0.6, p.z); } },
+    { text: '', dur: 3.5, cam: (t, k) => { P.h.position.x = 0.8 + k * 0.6; P.h.position.z = -6 - k * 6.4; P.h.rotation.y = Math.PI - 0.3; const R = P.o.userData.rig; if (R) { const sw = Math.sin(t * 8) * 0.5; R.legL.rotation.x = sw; R.legR.rotation.x = -sw; R.armL.rotation.x = -sw * 0.7; R.armR.rotation.x = sw * 0.7; } if (k > 0.85) { j.position.y = 1.35 + (k - 0.85) * 4; } mdCam(-1.2, 2.0, -9.2, 1.6, 1.2, -12.8); } },
+    { text: 'Pail: Ahh man. Sorry, Big E.', dur: 4, cam: (t, k) => { P.h.rotation.y = Math.PI * 0.75; hold(); const w = fw(); mdCam(P.h.position.x - 1.5, 1.8, P.h.position.z - 1.4, w.x, 1.35, w.z); } },
+    { text: "Pail: Looks like you're a frog, dude.", dur: 3.5, cam: (t, k) => { const w = fw(); mdCam(w.x - 0.9, 1.55, w.z - 0.9, w.x, 1.3, w.z); } },
+    { text: 'Frog E: ...ribbit.', dur: 3, cam: (t, k) => { const w = fw(); f.rotation.z = Math.sin(t * 3) * 0.1; mdCam(w.x - 0.65, 1.4, w.z - 0.65, w.x, 1.25, w.z); } },
+    { text: "Pail: Let's get your body up to the bar. Maybe that can help us.", dur: 5, cam: (t, k) => { P.h.rotation.y = Math.atan2(p.x - P.h.position.x, p.z - P.h.position.z); mdCam(P.h.position.x + 2, 2.2, P.h.position.z + 1.5, p.x, 0.6, p.z); } },
   ], onEnd: () => { MD.dyn.remove(dead.h); P.h.visible = false; f.visible = false; setTimeout(() => mdFinale(false), 300); } });
 }
 function mdFinale(replay) {
@@ -29225,9 +29241,13 @@ function mdFinale(replay) {
     { text: 'Three regulars at the bar. One of them is a frog. One of them is dead.', dur: 6, cam: (t, k) => { mdCam(-2 - k, 2.4, 9 - k * 2, -7.4, 1.1, 4.6); } },
     { text: 'Pail: Mags. Three of the strong stuff.', dur: 4, cam: (t, k) => { mdCam(-4.6, 1.8, 5.2, -6.1, 1.6, 5.6); } },
     { text: "Mags: He's dead, Pail.  Pail: He's still a regular.", dur: 5, cam: (t, k) => { mdCam(-6.4, 1.7, 2.6, -9.4, 1.6, 5); } },
-    { text: 'Big E takes a long pull. For a frog, he holds it pretty well.', dur: 5, cam: (t, k) => { fr.h.rotation.z = Math.sin(t * 1.5) * 0.08; mdCam(-6.8, 1.45, 5.6 - k * 0.3, -7.9, 1.35, 4.9); } },
+    { text: 'Frog E takes a long pull. For a frog, he holds it pretty well.', dur: 5, cam: (t, k) => { fr.h.rotation.z = Math.sin(t * 1.5) * 0.08; mdCam(-6.8, 1.45, 5.6 - k * 0.3, -7.9, 1.35, 4.9); } },
     { text: 'Pail: You know what, man? You look good. Real good. Better than him.', dur: 5, cam: (t, k) => { mdCam(-5.6, 1.5, 3.2, -6.9, 1.3, 4); } },
-    { text: 'THE END ...?', dur: 4, cam: (t, k) => { mdCam(1 + k * 2, 2.6 + k * 0.6, 11, -7, 1.2, 5); } },
+    { text: "Frog E: Wait. I've got something to say...", dur: 3.5, cam: (t, k) => { fr.h.rotation.z = 0; fr.h.position.y = 1.17 + Math.max(0, Math.sin(t * 2)) * 0.02; mdCam(-6.9, 1.4, 5.3, -7.9, 1.32, 4.9); } },
+    { text: 'Pail: Huh?', dur: 2, cam: (t, k) => { mdCam(-4.7, 1.75, 5.0, -6.1, 1.6, 5.6); } },
+    { text: 'Frog E: Ribbit.', dur: 2.5, cam: (t, k) => { mdCam(-7.0, 1.38, 5.1, -7.9, 1.32, 4.9); } },
+    { text: '(The whole bar loses it.)', dur: 4.5, cam: (t, k) => { const j2 = Math.abs(Math.sin(t * 13)); fr.h.position.y = 1.17 + j2 * 0.06; if (N) { N.obj.position.y = j2 * 0.05; N.obj.rotation.z = Math.sin(t * 7) * 0.06; } const M = npcObjs.mags; if (M) M.obj.position.y = Math.abs(Math.sin(t * 11 + 1)) * 0.05; const R = seat.o.userData.rig; if (R && R.head) R.head.rotation.x = 0.65 + Math.sin(t * 9) * 0.05; mdCam(-3.6, 2.0, 6.4, -7.6, 1.2, 4.8); } },
+    { text: 'THE END ...?', dur: 4, cam: (t, k) => { fr.h.position.y = 1.17; if (N) { N.obj.position.y = 0; N.obj.rotation.z = 0; } const M = npcObjs.mags; if (M) M.obj.position.y = 0; mdCam(1 + k * 2, 2.6 + k * 0.6, 11, -7, 1.2, 5); } },
   ], onEnd: () => {
     if (!replay) { mdSet(2); if (S.qst.md1 && S.qst.md1.st !== 'done') { S.qst.md1.st = 'ready'; completeQuest('md1'); SFX.quest(); toast('QUEST COMPLETE', 'The Mile Down', 4); } }
     MD.act.label = 'Look into the lab'; MD.act.fn = () => toast('THE LAB', "Doc's under a sheet. The coils still hum.", 3);
@@ -29248,7 +29268,7 @@ defQuest('md1', { ch: 'Earth Sky · Side story', title: 'The Mile Down', giver: 
   outro: ["Thanks, man. Big E says ribbit."], reward: { cr: 3000, xp: 4000 } });
 { const _qt = questTarget; questTarget = function () { const id = trackedQuest(), s = id === 'md1' && S.qst.md1;
   if (s && s.st === 'active' && LEVEL && LEVEL.id !== 'miledown') return LEVEL.id === 'skycity' ? { p: V(MDT.x, 0, MDT.z), label: 'Take the elevator down' } : goto('skycity', null, '');
-  if (s && s.st === 'active' && LEVEL.id === 'miledown' && mdF() === 0) return { p: V(0, 0, -2.5) }; return _qt(); }; }
+  if (s && s.st === 'active' && LEVEL.id === 'miledown' && mdF() === 0) return S.flags && S.flags.mdKey ? { p: V(0, 0, -2.5), label: 'Unlock the lab door' } : { p: V(-9.4, 0, 5), label: 'Get the lab key from Mags' }; return _qt(); }; }
 { const _b = LEVELS.skycity.build; LEVELS.skycity.build = function () { _b.apply(this, arguments);
   const x = MDT.x, z = MDT.z, y0 = groundH(x, z), g = new THREE.Group(), st = toon('#5d636c', 'panel'), ch = toon('#b8bcc4');
   // a steel headframe hanging off the rim, a wheel, cables and a neon sign
@@ -29265,6 +29285,54 @@ defQuest('md1', { ch: 'Earth Sky · Side story', title: 'The Mile Down', giver: 
   INTERACTS.push({ x: x - 1.6, z, r: 2.2, label: 'Ride the elevator a mile down', fn: () => { const s = S.qst.md1; if (!s && mdF() < 2) { toast('MILE DOWN', 'Pail looks like he wants a word first.', 3); return; } SFX.door(); MD.ride = s && s.st === 'active' && mdF() === 0 ? 1 : 0; travel('miledown', { at: { x: 0, z: 11, yaw: 0 } }); } });
 }; }
 SCENES.push(['miledown', '🐸 The Mile Down', () => mdF() >= 2 || DEV_ALL, () => { const go = () => { mdFinale(true); }; if (LEVEL.id === 'miledown') go(); else { travel('miledown', { at: { x: 0, z: 11, yaw: 0 } }); setTimeout(go, 2600); } }]);
+
+// ---- helpers added in 2.23.39 ----
+// pose a lying/sitting/standing body around its hip: th tips the whole body, legA bends the legs, the hip sits at (hx, hipY, hz)
+function mdPose(b, th, legA, hx, hz, hipY) { const R = b.o.userData.rig, h = (R ? R.spec.hip : 0.95) * 1.25; b.h.position.set(hx, 0, hz); b.o.rotation.x = th; b.o.position.set(0, hipY - h * Math.cos(th), -h * Math.sin(th)); if (R && R.legL) R.legL.rotation.x = R.legR.rotation.x = legA; }
+function mdMags() {
+  const q = S.qst && S.qst.md1, act = q && q.st === 'active' && mdF() === 0, say2 = (lines, then) => { openDlg('Bartender', 'Mags'); SFX.talk(); say(lines, then); };
+  const menu = () => { openDlg('Bartender', 'Mags'); $('dlgLine').textContent = act ? "What'll it be, hon?" : "Pour you something? It's a long way back up.";
+    const L = []; if (act) { L.push(['Seen Big E?', () => say2(["Big fella? Beard, laughs like a leaf blower? Yeah, he came down three days back.", "Sat right there and drank with a guy he kept calling Doc. Lab coat, goggles, pays his tab in favors.", "Then the two of 'em went through that door. Doc's place, next door to the bar. Big E never came back out."], menu)]);
+      L.push(['Got a key to that door?', () => (S.flags && S.flags.mdKey) ? say2(["You've already got it. Go on, before I change my mind."], menu) : say2(["Doc's lab? I keep a spare for when he forgets to eat.", "Take it. And if Big E's in there, tell him he owes me for six Long Drops."], () => { S.flags = S.flags || {}; S.flags.mdKey = 1; markDirty(); SFX.item(); toast('GOT', 'Lab key', 2.5); log('Mags gave you the key to the lab.', 'loot'); renderQuest(); menu(); })]); }
+    else L.push(['How is Big E doing?', () => say2(mdF() >= 2 ? ["Better than you'd think. He drinks less now. Smaller liver.", "The other one hasn't said a word. Tips good, though."] : ["Who?"], menu)]);
+    L.push(['Bye', closeDlg]); acts(L); };
+  menu();
+}
+// regulars: a couple at each table, a pair in a booth, a pool shark and a guy holding up the wall
+function mdPatrons(par) {
+  const looks = [['#3a5a8a', '#2a2a30', '#6ab0c8', '#1e1c22', '#e8e4dc'], ['#8a3a5a', '#1e1c22', '#c58a64', '#5a3a1a', null], ['#5a6a3a', '#3a3430', '#8ac86a', '#2a2a2a', '#c8a040'], ['#c8a040', '#2a2a40', '#e0b892', '#c84040', null], ['#2a2a30', '#5a5a5a', '#c86ab0', '#e8e4dc', '#7fe9ff'], ['#7a2a1a', '#2a2a30', '#8a5a3a', '#1e1a18', '#e8e4dc'], ['#e8e4dc', '#3a4a6a', '#a8c8e8', '#3a3a8a', null]];
+  const sit = (k, x, z, ry, sh) => { const o = buildChar(() => makeCivilian(...looks[k % looks.length]), 'civ'), R = o.userData.rig; o.position.set(x, sh - (R ? R.spec.hip : 0.95) + 0.07, z); sitChar(o, sh); o.rotation.y = ry; if (R && R.armL) { R.armL.rotation.x = -0.9; R.armR.rotation.x = k % 2 ? -0.5 : -1.1; } par.add(o); return o; };
+  const stand = (k, x, z, ry, pose) => { const o = buildChar(() => makeCivilian(...looks[k % looks.length]), 'civ'), R = o.userData.rig; o.position.set(x, 0, z); o.rotation.y = ry; if (R && pose) pose(R); par.add(o); solid(x, z, 0.35); return o; };
+  for (const [k, x, z, a] of [[0, 3.5, 2.6, 0.6], [1, 3.5, 2.6, 2.8], [2, 4, 8.4, 4.6], [3, -3.6, 10.6, 0.6], [4, -3.6, 10.6, 4.6]]) { const cx = x + Math.cos(a) * 0.95, cz = z + Math.sin(a) * 0.95; sit(k, cx, cz, Math.atan2(x - cx, z - cz), 0.49); }
+  sit(5, 9.05, 4.2 - 0.95, 0, 0.45); sit(6, 9.05, 4.2 + 0.95, Math.PI, 0.45); sit(2, 9.05, 10.4 + 0.95, Math.PI, 0.45);
+  stand(1, 4.0, 1.5, Math.atan2(1.5, -1), R => { R.armL.rotation.x = -1.2; R.armR.rotation.x = -0.9; R.armR.rotation.z = 0.4; if (R.torso) R.torso.rotation.x = 0.35; });
+  part(par, Cy(0.012, 0.02, 1.5, 5), toon('#c8a060', 'wood'), 4.45, 1.05, 1.0, 0.9, Math.atan2(1.5, -1), 0);
+  stand(0, 10.15, -1.6, -Math.PI / 2, R => { R.armL.rotation.x = -0.25; R.armL.rotation.z = 0.3; R.armR.rotation.x = -1.6; });
+  stand(6, -4.6, -1.6, 0.3, R => { R.armR.rotation.x = -1.5; if (R.head) R.head.rotation.y = 0.5; });
+}
+// the house act: a chrome lounge robot crooning into the stage mic
+function mdRobot(par) {
+  const g = new THREE.Group(), ch = toon('#c8ccd4'), dk = toon('#3a3d44'), body = new THREE.Group(); g.add(body);
+  { const sp = new THREE.PointLight(0xff8ad0, 1.4, 6, 1.6); sp.position.set(0, 2.6, 0.9); g.add(sp); }
+  for (const s of [-1, 1]) { part(g, Cy(0.07, 0.09, 0.8, 8), dk, 0.13 * s, 0.4, 0); part(g, B(0.2, 0.08, 0.3), ch, 0.13 * s, 0.04, 0.05); }
+  part(body, Cy(0.26, 0.2, 0.6, 12), ch, 0, 1.1, 0); part(body, B(0.3, 0.2, 0.02), glow('#ff6aa8'), 0, 1.15, 0.24); part(body, new THREE.TorusGeometry(0.2, 0.025, 4, 14), toon('#1a1a1a'), 0, 1.15, 0.25);
+  part(body, B(0.12, 0.06, 0.02), glow('#ffd36a'), 0, 1.38, 0.2);
+  const armL = new THREE.Group(), armR = new THREE.Group(); armL.position.set(-0.3, 1.32, 0); armR.position.set(0.3, 1.32, 0); body.add(armL, armR);
+  for (const [a, s] of [[armL, -1], [armR, 1]]) { part(a, Cy(0.04, 0.04, 0.5, 6), dk, 0, -0.25, 0); E(a, ch, 0, -0.52, 0, 0.07, 0.07, 0.07); }
+  const head = new THREE.Group(); head.position.y = 1.6; body.add(head); part(head, new THREE.SphereGeometry(0.2, 14, 10), ch, 0, 0, 0); part(head, B(0.3, 0.07, 0.04), glow('#7fe9ff'), 0, 0.03, 0.18);
+  const mouth = part(head, B(0.12, 0.03, 0.02), glow('#7fe9ff'), 0, -0.08, 0.19); part(head, Cy(0.01, 0.01, 0.25, 4), dk, 0, 0.3, 0); const tip = part(head, new THREE.SphereGeometry(0.035, 6, 4), glow('#ff3a3a'), 0, 0.44, 0);
+  for (const s of [-1, 1]) part(head, Cy(0.05, 0.05, 0.06, 8), dk, 0.2 * s, 0, 0, 0, 0, Math.PI / 2);
+  g.position.set(-8.4, 0.3, 12.78); g.rotation.y = Math.atan2(8.4, -6.7); par.add(g); solid(-8.4, 12.78, 0.35);
+  // floating notes
+  const nc = document.createElement('canvas'); nc.width = nc.height = 64; const x = nc.getContext('2d'); x.fillStyle = '#ffd36a'; x.font = 'bold 50px serif'; x.textAlign = 'center'; x.fillText('♪', 32, 48); const nt = new THREE.CanvasTexture(nc);
+  const notes = []; for (let i = 0; i < 4; i++) { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: nt, transparent: true, depthWrite: false })); m.scale.setScalar(0.25); m.userData.t = i * 0.9; par.add(m); notes.push(m); }
+  MD.bot = (t, dt) => { body.rotation.z = Math.sin(t * 1.8) * 0.06; head.rotation.y = Math.sin(t * 0.9) * 0.3; head.rotation.x = Math.sin(t * 3.6) * 0.05; armR.rotation.x = -0.9 + Math.sin(t * 1.8) * 0.4; armR.rotation.z = -0.3; armL.rotation.x = -0.3; armL.rotation.z = 0.5 + Math.sin(t * 1.2) * 0.2;
+    mouth.scale.y = 1 + Math.abs(Math.sin(t * 9)) * 2.5; tip.visible = Math.sin(t * 4) > 0;
+    for (const n of notes) { n.userData.t += dt; const k = (n.userData.t % 3.6) / 3.6; n.position.set(-8.0 + Math.sin(n.userData.t * 2) * 0.3, 2.1 + k * 1.6, 12.4 + Math.cos(n.userData.t) * 0.2); n.material.opacity = 1 - k; } };
+}
+// mood: a dark, smoky room lit by its neon and lamps
+{ const _ue = updateEnv; updateEnv = function (a, b) { _ue(a, b); if (!LEVEL || LEVEL.id !== 'miledown') return;
+  if (scene.fog) { scene.fog.color.set('#0c0809').convertSRGBToLinear(); scene.fog.near = 6; scene.fog.far = 34; } sun.intensity = 0.12; hemi.intensity = 0.32; hemi.color.set('#b09098'); fill.intensity = 0.08; }; }
 
 // =================== MINIMAP CAMERA: an overhead live view in the minimap, with zoom levels ===================
 // Click the minimap (or press = / -) to cycle: classic map, then live camera at near, mid and far zoom.

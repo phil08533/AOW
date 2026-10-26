@@ -28,7 +28,7 @@ function scrySpawn(id) {
 }
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll.apply(this, arguments); try { scrySpawn(id); } catch (e) { console.warn('crystal', e); } return r; }; }
 
-// ---- light trail: the blade tips leave a fading ribbon of their own colour while you swing (first person)
+// ---- light trail: the whole blade leaves a fading ribbon of their own colour while you swing (first person)
 const STRL = { list: [] };
 function strlMesh(col) { const N = 10, geo = new THREE.BufferGeometry(), pos = new Float32Array(N * 2 * 3), cl = new Float32Array(N * 2 * 3), idx = [];
   for (let i = 0; i < N - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
@@ -41,11 +41,11 @@ function strlMesh(col) { const N = 10, geo = new THREE.BufferGeometry(), pos = n
     STRL.list.forEach((T, i) => { const tp = tips[i];
       if (tp && (!T || T.hex !== tp[2])) { if (T) { camera.remove(T.m); T.m.geometry.dispose(); } T = STRL.list[i] = strlMesh(tp[2]); T.hex = tp[2]; }
       if (!T) return; const live = tp && typeof SWG !== 'undefined' && SWG.blend > 0.3;
-      if (live) { vmMelee.updateMatrixWorld(true); const b = camera.worldToLocal(tp[1].getWorldPosition(new THREE.Vector3())), r = camera.worldToLocal(tp[0].getWorldPosition(new THREE.Vector3())); T.hist.unshift([r.lerp(b, 0.74), b]); }
+      if (live) { vmMelee.updateMatrixWorld(true); const b = camera.worldToLocal(tp[1].getWorldPosition(new THREE.Vector3())), r = camera.worldToLocal(tp[0].getWorldPosition(new THREE.Vector3())); const dz = Math.abs(b.clone().sub(r).normalize().z); T.hist.unshift([r, b, Math.pow(1 - dz, 2)]); }
       else T.hist.unshift(T.hist[0] || null);
       if (!live) T.hist.splice(Math.max(1, T.hist.length - 2)); if (T.hist.length > T.N) T.hist.length = T.N;
       const P = T.m.geometry.attributes.position, Cc = T.m.geometry.attributes.color, h = T.hist.filter(Boolean); T.m.visible = live && h.length > 2;
-      for (let k = 0; k < T.N; k++) { const s = h[Math.min(k, h.length - 1)]; if (!s) continue; const f = Math.pow(1 - k / (T.N - 1), 2) * 0.26;
-        P.setXYZ(k * 2, s[0].x, s[0].y, s[0].z); P.setXYZ(k * 2 + 1, s[1].x, s[1].y, s[1].z); Cc.setXYZ(k * 2, T.col.r * f * 0.25, T.col.g * f * 0.25, T.col.b * f * 0.25); Cc.setXYZ(k * 2 + 1, T.col.r * f, T.col.g * f, T.col.b * f); }
+      for (let k = 0; k < T.N; k++) { const s = h[Math.min(k, h.length - 1)]; if (!s) continue; const f = Math.pow(1 - k / (T.N - 1), 2) * 0.2 * (s[2] == null ? 1 : s[2]);
+        P.setXYZ(k * 2, s[0].x, s[0].y, s[0].z); P.setXYZ(k * 2 + 1, s[1].x, s[1].y, s[1].z); Cc.setXYZ(k * 2, T.col.r * f * 0.45, T.col.g * f * 0.45, T.col.b * f * 0.45); Cc.setXYZ(k * 2 + 1, T.col.r * f, T.col.g * f, T.col.b * f); }
       P.needsUpdate = Cc.needsUpdate = true; });
   } catch (e) { console.warn('trail', e); } }; }

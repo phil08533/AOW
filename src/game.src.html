@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.43</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.44</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1115,7 +1115,7 @@ function openGuns(n) {
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px';
       if (owned) { b.textContent = eq ? 'In hand' : 'Equip'; b.disabled = eq; b.addEventListener('click', () => { S.melee = id; markDirty(); render(); }); }
       else { b.textContent = 'Buy'; b.disabled = S.lvl < M.req || S.cr < M.price; b.addEventListener('click', () => { S.cr -= M.price; S.melees = (S.melees || ['knife']).concat(id); S.melee = id; if (id === 'nunchucks' && !hasGear('shockgloves')) S.gear.push('shockgloves'); log('Bought ' + M.name + ' (F or right click to swing)', 'loot'); SFX.item(); if (typeof burp === 'function') burp('buy'); markDirty(); render(); }); }
-      r.append(dot, nm, mt, b); rows.appendChild(r); r.style.cursor = 'pointer'; const pv = () => setPreview(meleePreview(id), M.name + (M.saber ? ` · ${saberCfg().col} blade, ${SABER_HILTS[saberCfg().hilt]} hilt` : '')); r.addEventListener('pointerenter', pv); r.addEventListener('click', e => { if (e.target === r || e.target === nm) pv(); }); });
+      r.append(dot, nm, mt, b); rows.appendChild(r); r.style.cursor = 'pointer'; const pv = () => setPreview(meleePreview(id), M.name + (M.saber ? ` · ${saberDesc()}` : '')); r.addEventListener('pointerenter', pv); r.addEventListener('click', e => { if (e.target === r || e.target === nm) pv(); }); });
   };
   $('dlgActs').before(rows); acts([['Done', closeDlg]]); render();
   showPreviewIn(rows); { const ml = n.melee || [], gl = n.guns || []; const sab = ml.find(k => MELEE[k] && MELEE[k].saber); if (sab) setPreview(meleePreview(sab), MELEE[sab].name + ' · tap a row to preview'); else if (gl[0]) setPreview(gunPreview(gl[0]), GUNS[gl[0]].name + ' · tap a row to preview'); else if (ml[0]) setPreview(meleePreview(ml[0]), MELEE[ml[0]].name); }

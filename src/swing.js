@@ -13,7 +13,7 @@ function swPose(th, b, big) { const s = Math.sin(th), c = Math.cos(th), ly = s *
 updateMelee = function (dt) { meleeCool -= dt; if (meleeT > 0) meleeT -= dt; if (!handMelee() && meleeT <= 0) vmMelee.visible = false; };
 { const _uh = updateHands; updateHands = function (dt, t) { _uh(dt, t);
   try { if (!handMelee() && meleeT <= 0) { SWG.blend = 0; SWG.pos = null; vmOffM.visible = false; return; }
-    const M = MELEE[S.melee || 'knife'] || {}, held = firing && !SHIELD.blocking && handMelee(), active = held || meleeT > 0;
+    const M = meleeStats(S.melee || 'knife') || {}, held = firing && !SHIELD.blocking && handMelee(), active = held || meleeT > 0;
     SWG.blend += ((active ? 1 : 0) - SWG.blend) * (1 - Math.exp(-dt * (active ? 12 : 7)));
     if (active) SWG.th += dt * Math.PI / (held ? Math.max(0.2, (M.rate || 0.4) * 1.05) : 0.3);
     else if (SWG.blend < 0.05) SWG.th = Math.PI / 2;

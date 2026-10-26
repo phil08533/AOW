@@ -280,7 +280,7 @@ function refreshMeleeModel() {
 function meleeAttack() {
   if (LEVEL.fly || !handMelee()) return;
   if (state !== 'play' || dlgOpen || meleeCool > 0 || !player.alive || baseState.on) return;
-  const M0 = MELEE[S.melee || 'knife'], M = M0.saber ? Object.assign({}, M0, { dmg: M0.dmg * (1 + 0.15 * saberMod('focus')), rate: M0.rate * (1 - 0.08 * saberMod('grip')), reach: M0.reach + 0.35 * saberMod('emitter') }) : M0; refreshMeleeModel();
+  const M = meleeStats(S.melee || 'knife'); refreshMeleeModel();
   meleeCool = M.rate; meleeT = 0.3; SFX.swing(M.saber);
   if (inSafe(player.pos)) return;
   const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw); let n = 0;

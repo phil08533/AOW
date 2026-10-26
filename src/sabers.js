@@ -99,8 +99,9 @@ function saberCrystalMesh(id, scale) { const C = SABER_CRYSTALS[id] || { col: '#
   }
   g.userData.spin = 1; return g; }
 // one emitter and blade, built upward from the group's origin (the dual's lower head is the same build, flipped)
-function saberHead(par, emit, emc, blade, col, tips) {
-  const g = new THREE.Group(); par.add(g); const em = SABER_TRIM[emc] || SABER_TRIM.steel, dark = '#16151a', bc = SABER_COLS[col] || SABER_COLS.blue;
+const sTag = (par, tag) => { for (const c of par.children) if (!c.userData.slot) c.userData.slot = tag; };
+function saberHead(par, emit, emc, blade, col, tips, sfx) {
+  sfx = sfx || ''; const g = new THREE.Group(); g.userData.slot = 'head' + sfx; par.add(g); const em = SABER_TRIM[emc] || SABER_TRIM.steel, dark = '#16151a', bc = SABER_COLS[col] || SABER_COLS.blue;
   const aura = (c, op) => { const m = glow(c).clone(); m.transparent = true; m.opacity = op; m.depthWrite = false; return m; };
   let eh = 0.05;
   switch (emit) {
@@ -111,7 +112,7 @@ function saberHead(par, emit, emc, blade, col, tips) {
     case 'halo': part(g, Cy(0.022, 0.026, 0.03, 8), em, 0, 0.015, 0); { const h = part(g, new THREE.TorusGeometry(0.04, 0.005, 5, 18), em, 0, 0.06, 0, Math.PI / 2); h.userData.spin = 2; for (let i = 0; i < 3; i++) { const a = i * 2.1; part(g, B(0.004, 0.035, 0.004), dark, Math.cos(a) * 0.03, 0.045, Math.sin(a) * 0.03); } } eh = 0.035; break;
     default: for (let i = 0; i < 4; i++) part(g, Cy(0.03 - i * 0.002, 0.03 - i * 0.002, 0.009, 10), i % 2 ? dark : em, 0, 0.006 + i * 0.012, 0);
   }
-  const b0 = eh; let len = 0.78, main = null;
+  sTag(g, 'emit' + sfx); const b0 = eh; let len = 0.78, main = null;
   const beam = (l, r, x) => { part(g, Cy(r * 0.45, r * 0.45, l, 6), glow('#ffffff'), x || 0, b0 + l / 2, 0); const a = part(g, Cy(r, r, l + 0.02, 8), glow(bc), x || 0, b0 + l / 2, 0); a.material = aura(bc, 0.55); return a; };
   switch (blade) {
     case 'edge': { len = 0.74; part(g, B(0.05, len, 0.006), glow('#ffffff'), 0, b0 + len / 2, 0); main = part(g, B(0.09, len, 0.02), glow(bc), 0, b0 + len / 2, 0); main.material = aura(bc, 0.5);
@@ -124,6 +125,7 @@ function saberHead(par, emit, emc, blade, col, tips) {
     case 'stub': len = 0.42; main = beam(len, 0.026); break;
     default: main = beam(len, 0.024);
   }
+  sTag(g, 'blade' + sfx);
   // anchors for the swing trail: the blade's root and tip
   const a0 = new THREE.Object3D(), a1 = new THREE.Object3D(); a0.position.y = b0 + 0.08; a1.position.y = b0 + len; if (blade === 'crescent') { const R = 0.9, an = len / R; a1.position.set(-R + Math.cos(an) * R, b0 + Math.sin(an) * R, 0); } g.add(a0, a1); tips.push([a0, a1, bc]);
   return { g, main };
@@ -142,14 +144,14 @@ function makeSaberModel(cfg) {
     case 'bound': part(g, Cy(0.02, 0.02, gl, 8), '#3a3430', 0, 0, 0); for (const y of [-0.075, -0.025, 0.025, 0.075]) part(g, Cy(0.027, 0.027, 0.018, 8), gm, 0, y, 0); break;
     default: part(g, Cy(0.024, 0.026, gl, 8), em, 0, 0, 0); for (let k = 0; k < 3; k++) part(g, Cy(0.028, 0.028, 0.02, 8), gm, 0, -gl / 2 + 0.04 + k * 0.05, 0);
   }
-  part(g, B(0.012, 0.03, 0.01), glow('#ff3b2a'), 0.026, 0.02, 0);
+  part(g, B(0.012, 0.03, 0.01), glow('#ff3b2a'), 0.026, 0.02, 0); sTag(g, 'grip');
   // the crystal chamber: a short glass section with the crystal glowing inside
   const ch = 0.06; part(g, Cy(0.026, 0.026, 0.008, 8), em, 0, top + 0.004, 0); part(g, Cy(0.026, 0.026, 0.008, 8), em, 0, top + ch - 0.004, 0);
-  { const gs = part(g, Cy(0.024, 0.024, ch - 0.016, 10), '#9fd8ff', 0, top + ch / 2, 0); gs.material = aura('#bfe8ff', 0.22); const cm = saberCrystalMesh(cfg.core === 'plain' ? null : cfg.core, 1); cm.position.y = top + ch / 2; g.add(cm); }
-  const up = saberHead(g, cfg.emit, cfg.emitCol, cfg.blade, cfg.col, tips); up.g.position.y = top + ch;
+  { const gs = part(g, Cy(0.024, 0.024, ch - 0.016, 10), '#9fd8ff', 0, top + ch / 2, 0); gs.material = aura('#bfe8ff', 0.22); const cm = saberCrystalMesh(cfg.core === 'plain' ? null : cfg.core, 1); cm.position.y = top + ch / 2; g.add(cm); } sTag(g, 'core');
+  const up = saberHead(g, cfg.emit, cfg.emitCol, cfg.blade, cfg.col, tips); up.g.position.y = top + ch; g.userData.head = up.g;
   // the lower end: a pommel, or a second emitter and blade on a double-ended sword
   const py = -gl / 2;
-  if (cfg.dual) { part(g, Cy(0.026, 0.026, 0.012, 8), em, 0, py - 0.006, 0); const lo = saberHead(g, cfg.emit2, cfg.emit2Col, cfg.blade2, cfg.col2, tips); lo.g.position.y = py - 0.012; lo.g.rotation.z = Math.PI; }
+  if (cfg.dual) { part(g, Cy(0.026, 0.026, 0.012, 8), em, 0, py - 0.006, 0); const lo = saberHead(g, cfg.emit2, cfg.emit2Col, cfg.blade2, cfg.col2, tips, '2'); lo.g.position.y = py - 0.012; lo.g.rotation.z = Math.PI; g.userData.head2 = lo.g; }
   else switch (cfg.pom) {
     case 'spike': part(g, Cy(0.026, 0.024, 0.015, 8), pm, 0, py - 0.0075, 0); part(g, new THREE.ConeGeometry(0.018, 0.07, 6), pm, 0, py - 0.05, 0, Math.PI); break;
     case 'tassel': { part(g, Cy(0.026, 0.026, 0.02, 8), pm, 0, py - 0.01, 0); const t = new THREE.Group(); t.position.y = py - 0.02; g.add(t); let par = t;
@@ -160,6 +162,7 @@ function makeSaberModel(cfg) {
     case 'fork': part(g, Cy(0.026, 0.026, 0.015, 8), pm, 0, py - 0.007, 0); for (const s of [-1, 1]) part(g, B(0.008, 0.05, 0.008), pm, s * 0.014, py - 0.035, 0, 0, 0, s * 0.3); break;
     default: part(g, Cy(0.03, 0.026, 0.04, 8), pm, 0, py - 0.02, 0);
   }
+  sTag(g, 'pom');
   g.userData.saberLight = SABER_COLS[cfg.col] || SABER_COLS.blue; g.userData.aura = up.main; g.userData.tips = tips;
   return g;
 }
@@ -204,61 +207,101 @@ function updateHands(dt, t) {
     if (firing && !SHIELD.blocking) meleeAttack();
     const M = MELEE[S.melee || 'knife']; if (M.saber && vmMelee.children[0] && vmMelee.children[0].userData.aura) vmMelee.children[0].userData.aura.material.opacity = 0.45 + Math.sin(t * 40) * 0.08; }
 }
+// ---- the forge: one floating saber, pulled apart into its parts. Each part has arrows to scroll its options; locked ones show grayed out
+const SFORGE = { el: null, r: null, scene: null, cam: null, model: null, v: null, rows: [], ups: false, raf: 0, who: '' };
+const SF_GRAY = new THREE.MeshLambertMaterial({ color: '#5a5e66', transparent: true, opacity: 0.5, depthWrite: false });
+const sfOwnsEnd = (e) => e === 'dual' ? saberHasDual() : saberOwns('pom', e);
+function sfRows() { const v = SFORGE.v, d = v.end === 'dual', R = [
+  { k: 'blade', slot: 'blade', tag: 'blade', name: d ? 'Upper blade' : 'Blade', col: 'col', pal: 'glow' },
+  { k: 'emit', slot: 'emit', tag: 'emit', name: d ? 'Upper emitter' : 'Emitter', col: 'emitCol', pal: 'trim' },
+  { k: 'core', slot: 'core', tag: 'core', name: 'Crystal' },
+  { k: 'grip', slot: 'grip', tag: 'grip', name: 'Grip', col: 'gripCol', pal: 'trim' },
+  { k: 'end', slot: 'pom', tag: 'pom', name: d ? 'Lower end' : 'Pommel', col: d ? null : 'pomCol', pal: 'trim' }];
+  if (d) R.push({ k: 'emit2', slot: 'emit', tag: 'emit2', name: 'Lower emitter', col: 'emit2Col', pal: 'trim' }, { k: 'blade2', slot: 'blade', tag: 'blade2', name: 'Lower blade', col: 'col2', pal: 'glow' });
+  return R; }
+const sfOpts = (r) => r.k === 'end' ? [...Object.keys(SABER_SLOTS.pom.parts), 'dual'] : Object.keys(SABER_SLOTS[r.slot].parts);
+const sfPart = (r, id) => r.k === 'end' && id === 'dual' ? SABER_DUAL : SABER_SLOTS[r.slot].parts[id];
+const sfOwn = (r, id) => r.k === 'end' ? sfOwnsEnd(id) : saberOwns(r.slot, id);
+// what's shown: may include locked parts. What's worn (S.saber) only ever takes parts you own
+function sfShown() { const v = SFORGE.v; return Object.assign({}, v, { dual: v.end === 'dual', pom: v.end === 'dual' ? v.pom : v.end }); }
+function sfWear(r, id) { if (!sfOwn(r, id)) return; const o = r.k === 'end' ? (id === 'dual' ? { dual: true } : { dual: false, pom: id }) : { [r.k]: id };
+  S.saber = Object.assign(saberCfg(), o, { v2: 1 }); delete S.saber.hilt; meleeShown = null; markDirty(); SFX.ignite(true); }
+function sfBuild() { const F = SFORGE, cfg = sfShown(), m = makeSaberModel(cfg), d = 0.075, lock = new Set();
+  for (const r of sfRows()) if (!sfOwn(r, F.v[r.k])) { lock.add(r.tag); if (r.k === 'end' && cfg.dual) lock.add('emit2').add('blade2'); }
+  // pull the parts apart along the hilt
+  for (const c of m.children) { const s = c.userData.slot; if (s === 'core') c.position.y += d; else if (s === 'head') c.position.y += 2 * d; else if (s === 'pom' || s === 'head2') c.position.y -= d; }
+  for (const [h, t] of [[m.userData.head, 'blade'], [m.userData.head2, 'blade2']]) if (h) for (const c of h.children) if (c.userData.slot === t) c.position.y += d;
+  m.traverse(o => { if (!o.isMesh) return; let p = o; while (p && !p.userData.slot) p = p.parent; if (p && lock.has(p.userData.slot)) o.material = SF_GRAY; });
+  if (F.model) { F.holder.remove(F.model); F.model.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
+  F.holder.add(m); F.model = m; F.holder.updateMatrixWorld(true);
+  // where each part sits (for its row of arrows) and the frame of the hilt
+  const box = new THREE.Box3(), hilt = new THREE.Box3(); F.anch = {};
+  for (const r of sfRows()) { box.makeEmpty(); m.traverse(o => { if (o.isMesh) { let p = o; while (p && !p.userData.slot) p = p.parent; const t = p && p.userData.slot; if (t === r.tag || (r.k === 'end' && cfg.dual && t === 'pom')) box.expandByObject(o); } });
+    if (box.isEmpty()) continue; const c = box.getCenter(V(0, 0, 0)); if (r.tag === 'blade') c.y = box.min.y + 0.14; if (r.tag === 'blade2') c.y = box.max.y - 0.14; F.anch[r.k] = m.worldToLocal(c.clone());
+    if (r.slot !== 'blade') hilt.union(box); }
+  const h = hilt.getSize(V(0, 0, 0)).y + 0.42; F.frameH = h; F.frameY = hilt.getCenter(V(0, 0, 0)).y + (cfg.dual ? 0 : 0.07); sfFit(); }
+function sfFit() { const F = SFORGE; if (!F.el || !F.r) return; const w = F.el.clientWidth, h = F.el.clientHeight; F.r.setSize(w, h, false); F.cam.aspect = w / h;
+  const dist = (F.frameH / 2) / Math.tan(THREE.MathUtils.degToRad(F.cam.fov / 2)), vw = F.frameH * F.cam.aspect, sx = w < 620 ? 0.27 : 0.34;
+  F.cam.position.set((0.5 - sx) * vw, F.frameY, dist); F.cam.lookAt((0.5 - sx) * vw, F.frameY, 0); F.cam.updateProjectionMatrix(); F.sx = sx * w; }
+function sfInit() { const F = SFORGE; if (F.el) return true;
+  try { F.r = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch (_) { return false; }
+  F.r.outputEncoding = THREE.sRGBEncoding; F.r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); F.r.setClearColor(0x000000, 0);
+  F.scene = new THREE.Scene(); F.cam = new THREE.PerspectiveCamera(30, 1, 0.01, 50);
+  F.scene.add(new THREE.HemisphereLight(0xe6ecff, 0x3a2e24, 1.0)); const dl = new THREE.DirectionalLight(0xfff0d8, 0.9); dl.position.set(1.5, 2, 2.5); F.scene.add(dl); const rim = new THREE.DirectionalLight(0x8fc8ff, 0.6); rim.position.set(-2, 0.5, -1.5); F.scene.add(rim);
+  F.holder = new THREE.Group(); F.scene.add(F.holder);
+  const el = document.createElement('div'); el.id = 'sforge'; el.hidden = true; F.el = el; el.append(F.r.domElement);
+  el.insertAdjacentHTML('beforeend', `<div class="sfTop"><div class="sfWho"></div><div class="sfStats"></div></div><div class="sfRows"></div><div class="sfUps win" hidden></div><div class="sfBot"><button class="pbtn sfUpB">Upgrades</button><button class="pbtn go sfDone">Done</button></div>`);
+  document.body.append(el); el.querySelector('.sfDone').addEventListener('click', () => closeDlg()); el.querySelector('.sfUpB').addEventListener('click', () => { F.ups = !F.ups; sfUps(); });
+  window.addEventListener('resize', () => { if (!el.hidden) sfFit(); });
+  const st = document.createElement('style'); st.textContent = `#sforge{position:fixed;inset:0;z-index:40;background:radial-gradient(ellipse at 34% 50%,rgba(34,46,84,.96),rgba(6,8,16,.98) 70%);font-size:13px;color:#e8ecf8;touch-action:manipulation}
+#sforge canvas{position:absolute;inset:0;width:100%;height:100%}
+#sforge .sfTop{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);pointer-events:none}#sforge .sfWho{font-size:20px;font-weight:700;color:var(--gold)}#sforge .sfStats{opacity:.85;margin-top:2px}
+#sforge .sfRow{position:absolute;left:0;right:0;height:0;pointer-events:none}#sforge .sfRow>*{pointer-events:auto;position:absolute;top:0;transform:translateY(-50%)}
+#sforge .sfArr{width:34px;height:34px;padding:0;font-size:20px;line-height:1;border-radius:50%}
+#sforge .sfLbl{right:10px;line-height:1.25;text-shadow:0 1px 2px #000}#sforge .sfLbl b{color:var(--gold)}#sforge .sfLbl.lock b{color:#8a8f98}#sforge .sfLbl small{opacity:.7}
+#sforge .sfLbl .pbtn{padding:3px 9px;margin-top:3px}#sforge .sfDot{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid #000;box-shadow:0 0 0 1px #fff8;vertical-align:-2px;margin-left:6px;cursor:pointer}
+#sforge .sfBot{position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;gap:8px}
+#sforge .sfUps{position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 56px);width:min(calc(100% - 24px),380px);padding:10px 12px}#sforge .sfUps .r{display:flex;align-items:center;gap:8px;margin:5px 0}#sforge .sfUps .r span{flex:1}`;
+  document.head.append(st); return true; }
+function sfStats() { const F = SFORGE, id = MELEE[S.melee] && MELEE[S.melee].saber ? S.melee : 'lsaber', M = meleeStats(id);
+  F.el.querySelector('.sfWho').textContent = F.who ? F.who + ' · Saber smith' : 'Saber forge';
+  F.el.querySelector('.sfStats').textContent = `Damage ${Math.round(M.dmg)} · ${(1 / M.rate).toFixed(2)} swings/s · reach ${M.reach.toFixed(1)} m${M.block ? ' · block +' + Math.round(M.block * 100) + '%' : ''} · ${Object.keys(S.saberCrystals || {}).length}/${Object.keys(SABER_CRYSTALS).length} crystals found`; }
+const sfChips = P => ['dmg', 'spd', 'reach', 'block'].filter(k => P[k]).map(k => { const v = P[k], up = v > 0; return `<span style="color:${up ? '#6fdc5a' : '#ff8a6a'}">${up ? '+' : ''}${k === 'reach' ? v.toFixed(2) + 'm reach' : Math.round(v * 100) + '% ' + { dmg: 'dmg', spd: 'speed', block: 'block' }[k]}</span>`; }).join(' ');
+function sfRender() { const F = SFORGE, box = F.el.querySelector('.sfRows'); box.textContent = ''; F.rows = []; sfStats();
+  for (const r of sfRows()) { const ids = sfOpts(r), cur = F.v[r.k], P = sfPart(r, cur), own = sfOwn(r, cur), row = document.createElement('div'); row.className = 'sfRow';
+    const arr = (t, dir) => { const b = document.createElement('button'); b.className = 'pbtn sfArr'; b.textContent = t; b.addEventListener('click', () => { const i = (ids.indexOf(F.v[r.k]) + dir + ids.length) % ids.length; F.v[r.k] = ids[i]; sfWear(r, ids[i]); SFX.click && SFX.click(); sfBuild(); sfRender(); }); return b; };
+    const L = arr('‹', -1), Rb = arr('›', 1), lb = document.createElement('div'); lb.className = 'sfLbl' + (own ? '' : ' lock');
+    const n = ids.indexOf(cur) + 1, col = r.col && (r.k !== 'end' || cur !== 'dual') ? (r.pal === 'glow' ? SABER_COLS : SABER_TRIM)[F.v[r.col]] : r.k === 'core' && P.col;
+    lb.innerHTML = `<small>${r.name} · ${n}/${ids.length}</small><br><b>${own ? '' : '🔒 '}${P.name}</b>${col ? `<span class="sfDot" style="background:${col}" title="Change colour"></span>` : ''}<br>${sfChips(P)}`;
+    const dot = lb.querySelector('.sfDot'); if (dot && r.col) dot.addEventListener('click', () => { const L2 = Object.keys(r.pal === 'glow' ? SABER_COLS : SABER_TRIM); F.v[r.col] = L2[(L2.indexOf(F.v[r.col]) + 1) % L2.length]; S.saber = Object.assign(saberCfg(), { [r.col]: F.v[r.col] }, { v2: 1 }); meleeShown = null; markDirty(); sfBuild(); sfRender(); });
+    if (!own) { const m = document.createElement('div');
+      if (r.k === 'core') m.innerHTML = `<small>Hidden on ${(LEVELS[cur] && LEVELS[cur].name) || cur}. Look for a beam of light.</small>`;
+      else { const b = document.createElement('button'); b.className = 'pbtn go'; b.textContent = 'Forge · ' + costLabel(P.cost); b.disabled = !costOk(P.cost);
+        b.addEventListener('click', () => { costPay(P.cost); S.saberParts = S.saberParts || {}; S.saberParts[r.k === 'end' && cur === 'dual' ? 'dual' : r.slot + ':' + cur] = 1; log(`Forged: ${P.name}`, 'loot'); sfWear(r, cur); sfBuild(); sfRender(); }); m.append(b); }
+      lb.append(m); }
+    row.append(L, Rb, lb); box.append(row); F.rows.push({ k: r.k, row, L, Rb, lb }); }
+  for (const R of F.rows) R.h = Math.max(36, R.lb.offsetHeight); F.topH = F.el.querySelector('.sfTop').getBoundingClientRect().bottom;
+  if (F.ups) sfUps(); }
+function sfUps() { const F = SFORGE, p = F.el.querySelector('.sfUps'); p.hidden = !F.ups; if (!F.ups) return; p.innerHTML = '<b style="color:var(--gold)">Upgrades (every laser sword)</b>';
+  for (const [k, Md] of Object.entries(SABER_MODS)) { const lv = saberMod(k), mx = Md.cost.length, r = document.createElement('div'); r.className = 'r';
+    r.innerHTML = `<span>${Md.name} ${'★'.repeat(lv)}${'☆'.repeat(mx - lv)}<br><small style="opacity:.7">${Md.desc}${lv < mx ? ' · ' + costLabel(Md.cost[lv]) : ''}</small></span>`;
+    const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = lv >= mx ? 'Maxed' : 'Install'; b.disabled = lv >= mx || !costOk(Md.cost[lv]);
+    b.addEventListener('click', () => { costPay(Md.cost[lv]); S.saberMods = S.saberMods || {}; S.saberMods[k] = lv + 1; SFX.ignite(true); log(`${Md.name} installed (tier ${lv + 1})`, 'loot'); markDirty(); sfStats(); sfUps(); }); r.append(b); p.append(r); } }
+// rows follow their part as the saber floats; they never overlap
+function sfPlace() { const F = SFORGE, w = F.el.clientWidth, h = F.el.clientHeight, top = F.topH + 8, bot = h - 70, P = [];
+  for (const R of F.rows) { const a = F.anch[R.k]; if (!a) continue; const p = F.model.localToWorld(a.clone()).project(F.cam); P.push({ R, y: (1 - p.y) / 2 * h, hh: R.h / 2 }); }
+  P.sort((a, b) => a.y - b.y);
+  for (let i = 0; i < P.length; i++) P[i].y = Math.max(P[i].y, i ? P[i - 1].y + P[i - 1].hh + P[i].hh + 6 : top + P[i].hh);
+  for (let i = P.length - 1; i >= 0; i--) P[i].y = Math.min(P[i].y, i < P.length - 1 ? P[i + 1].y - P[i + 1].hh - P[i].hh - 6 : bot - P[i].hh);
+  const sx = F.sx, off = w < 620 ? 44 : 58;
+  for (const { R, y } of P) { R.row.style.top = y + 'px'; R.L.style.left = (sx - off - 34) + 'px'; R.Rb.style.left = (sx + off) + 'px'; R.lb.style.left = (sx + off + 44) + 'px'; } }
 function openSaberForge(who) {
-  openDlg(who ? 'Saber smith' : 'Saber forge', who || 'Your laser sword');
-  const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows'; let tab = SFORGE.tab || 'blade';
-  const pv = () => setPreview(() => { const g = new THREE.Group(), m = makeSaberModel(saberCfg()); m.rotation.z = -1.0; g.add(m); return g; }, 'Your blade', saberCfg().dual ? 0.95 : 1.25);
-  const set = (o) => { S.saber = Object.assign(saberCfg(), o, { v2: 1 }); delete S.saber.hilt; meleeShown = null; markDirty(); SFX.ignite(true); render(); pv(); };
-  const chips = P => ['dmg', 'spd', 'reach', 'block'].filter(k => P[k]).map(k => { const v = P[k], up = v > 0; return `<span style="color:${up ? '#6fdc5a' : '#ff8a6a'}">${up ? '+' : ''}${k === 'reach' ? v.toFixed(2) + ' m reach' : Math.round(v * 100) + '% ' + { dmg: 'dmg', spd: 'speed', block: 'block' }[k]}</span>`; }).join(' ');
-  const head = (txt) => { const h = document.createElement('div'); h.textContent = txt; h.style.cssText = 'width:100%;color:var(--gold);margin:8px 0 4px'; rows.appendChild(h); };
-  const partList = (slot, key) => { const S0 = SABER_SLOTS[slot], cfg = saberCfg();
-    for (const [id, P] of Object.entries(S0.parts)) { const own = saberOwns(slot, id), on = cfg[key] === id, r = document.createElement('div'); r.className = 'rowi';
-      const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = slot === 'core' ? (P.col || '#dfefff') : on ? '#6fdc5a' : own ? '#9aa1aa' : '#3a3d44';
-      const nm = document.createElement('span'); nm.innerHTML = `<b>${P.name}</b> ${chips(P)}<br><small style="opacity:.75">${P.desc}</small>`;
-      const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '13px';
-      const b = document.createElement('button'); b.className = 'pbtn' + (on ? ' go' : ''); b.style.padding = '5px 10px';
-      if (on) { b.textContent = 'On'; b.disabled = true; mt.textContent = ''; }
-      else if (own) { b.textContent = 'Use'; b.addEventListener('click', () => set({ [key]: id })); }
-      else if (slot === 'core') { b.textContent = 'Not found'; b.disabled = true; mt.textContent = 'Hidden on ' + ((LEVELS[id] && LEVELS[id].name) || id); }
-      else { mt.textContent = costLabel(P.cost); b.textContent = 'Forge'; b.disabled = !costOk(P.cost); b.addEventListener('click', () => { costPay(P.cost); S.saberParts = S.saberParts || {}; S.saberParts[slot + ':' + id] = 1; log(`Forged: ${P.name}`, 'loot'); set({ [key]: id }); }); }
-      r.append(dot, nm, mt, b); rows.appendChild(r); } };
-  const colors = (kind, key, label) => { head(label); const r = document.createElement('div'); r.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px'; const cfg = saberCfg(), L = kind === 'glow' ? SABER_COLS : SABER_TRIM;
-    for (const [id, hex] of Object.entries(L)) { const b = document.createElement('button'); b.className = 'pbtn' + (cfg[key] === id ? ' go' : ''); b.style.cssText = `padding:5px 9px;border-color:${hex};color:${kind === 'glow' ? hex : '#fff'}`; b.innerHTML = (kind === 'glow' ? '' : `<span style="display:inline-block;width:10px;height:10px;background:${hex};border:1px solid #000;margin-right:5px;vertical-align:-1px"></span>`) + id[0].toUpperCase() + id.slice(1); b.addEventListener('click', () => set({ [key]: id })); r.appendChild(b); }
-    rows.appendChild(r); };
-  const render = () => {
-    rows.textContent = ''; const cfg = saberCfg(), M = meleeStats(MELEE[S.melee] && MELEE[S.melee].saber ? S.melee : 'lsaber'), M0 = MELEE[MELEE[S.melee] && MELEE[S.melee].saber ? S.melee : 'lsaber'];
-    const side = SFORGE.side; side.textContent = ''; $('dlgLine').textContent = saberDesc();
-    const st = document.createElement('div'); st.style.cssText = 'font-size:13px;opacity:.85;margin-bottom:6px'; st.innerHTML = `Damage ${Math.round(M.dmg)} · ${(1 / M.rate).toFixed(2)} swings/s · reach ${M.reach.toFixed(1)} m${M.block ? ' · block +' + Math.round(M.block * 100) + '%' : ''} (base ${M0.dmg} · ${(1 / M0.rate).toFixed(2)}/s). Every laser sword you own uses this build.`; side.appendChild(st);
-    const tabs = document.createElement('div'); tabs.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px';
-    for (const [id, nm] of [['blade', 'Blade'], ['core', 'Crystal'], ['emit', 'Emitter'], ['grip', 'Grip'], ['pom', cfg.dual ? 'Lower blade' : 'Pommel'], ['up', 'Upgrades']]) { const b = document.createElement('button'); b.className = 'pbtn' + (tab === id ? ' go' : ''); b.style.padding = '5px 10px'; b.textContent = nm; b.addEventListener('click', () => { tab = SFORGE.tab = id; render(); }); tabs.appendChild(b); }
-    side.appendChild(tabs);
-    if (tab === 'blade') { partList('blade', 'blade'); colors('glow', 'col', 'Blade colour'); }
-    else if (tab === 'core') { const n = Object.keys(S.saberCrystals || {}).length; head(`Crystals found: ${n} of ${Object.keys(SABER_CRYSTALS).length}. One is hidden on each world; look for a beam of light.`); partList('core', 'core'); }
-    else if (tab === 'emit') { partList('emit', 'emit'); colors('trim', 'emitCol', 'Emitter colour'); }
-    else if (tab === 'grip') { partList('grip', 'grip'); colors('trim', 'gripCol', 'Grip colour'); }
-    else if (tab === 'pom') {
-      const r = document.createElement('div'); r.className = 'rowi'; const nm = document.createElement('span'); nm.innerHTML = `<b>Double-ended</b> ${chips(SABER_DUAL)}<br><small style="opacity:.75">The pommel comes off and a second emitter and blade take its place. Swings hit all around you.</small>`;
-      const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '13px'; const b = document.createElement('button'); b.className = 'pbtn' + (cfg.dual ? ' go' : ''); b.style.padding = '5px 10px';
-      if (!saberHasDual()) { mt.textContent = costLabel(SABER_DUAL.cost); b.textContent = 'Forge'; b.disabled = !costOk(SABER_DUAL.cost); b.addEventListener('click', () => { costPay(SABER_DUAL.cost); S.saberParts = S.saberParts || {}; S.saberParts.dual = 1; log('Forged: double-ended hilt', 'loot'); set({ dual: true }); }); }
-      else { b.textContent = cfg.dual ? 'On (switch off)' : 'Switch on'; b.addEventListener('click', () => set({ dual: !cfg.dual })); }
-      const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = cfg.dual ? '#6fdc5a' : '#9aa1aa'; r.append(dot, nm, mt, b); rows.appendChild(r);
-      if (cfg.dual) { head('Lower blade'); partList('blade', 'blade2'); colors('glow', 'col2', 'Lower blade colour'); head('Lower emitter'); partList('emit', 'emit2'); colors('trim', 'emit2Col', 'Lower emitter colour'); }
-      else { head('Pommel'); partList('pom', 'pom'); colors('trim', 'pomCol', 'Pommel colour'); } }
-    else {
-      head('Upgrades (all laser swords)');
-      for (const [k, Md] of Object.entries(SABER_MODS)) { const lv = saberMod(k), mx = Md.cost.length, r = document.createElement('div'); r.className = 'rowi';
-        const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = ['#9aa1aa', '#6fdc5a', '#4fa8ff', '#c86aff', '#ffb347', '#ff6aa8'][lv];
-        const nm = document.createElement('span'); nm.textContent = `${Md.name} ${'★'.repeat(lv)}${'☆'.repeat(mx - lv)} · ${Md.desc}`;
-        const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '13px'; mt.textContent = lv >= mx ? 'Maxed' : costLabel(Md.cost[lv]);
-        const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = 'Install'; b.disabled = lv >= mx || !costOk(Md.cost[lv]);
-        b.addEventListener('click', () => { costPay(Md.cost[lv]); S.saberMods = S.saberMods || {}; S.saberMods[k] = lv + 1; SFX.ignite(true); log(`${Md.name} installed (tier ${lv + 1})`, 'loot'); markDirty(); render(); });
-        r.append(dot, nm, mt, b); rows.appendChild(r); } }
-  };
-  $('dlgActs').before(rows); acts([['Done', closeDlg]]); showPreviewIn(rows);
-  // the preview sits beside the tabs so the parts list gets the room
-  const topEl = document.createElement('div'); topEl.className = 'prevWrap'; topEl.style.cssText = 'display:flex;gap:10px;align-items:flex-start;width:100%'; rows.before(topEl); const side = document.createElement('div'); side.style.cssText = 'flex:1;min-width:0';
-  if (PREV.wrap && PREV.wrap.isConnected) { const hold = document.createElement('div'); hold.style.cssText = 'flex:0 0 44%;min-width:0'; hold.append(PREV.wrap); topEl.append(hold); } topEl.append(side); SFORGE.side = side; render(); pv();
-}
-const SFORGE = { tab: 'blade' };
+  if (!sfInit()) return; openDlg('Saber forge', who || ''); acts([['Done', closeDlg, true]]); $('dlg').hidden = true; const F = SFORGE; F.who = who || ''; F.ups = false;
+  const c = saberCfg(); F.v = Object.assign({}, c, { end: c.dual ? 'dual' : c.pom }); F.el.hidden = false; sfBuild(); sfRender();
+  cancelAnimationFrame(F.raf); const t0 = performance.now();
+  const loop = () => { if (F.el.hidden) return; const t = (performance.now() - t0) / 1000; F.holder.position.y = Math.sin(t * 1.3) * 0.012; F.holder.rotation.y = Math.sin(t * 0.45) * 0.7; F.holder.rotation.z = Math.sin(t * 0.8) * 0.03;
+    F.model.traverse(o => { if (o.userData.spin) o.rotation.y += 0.016 * o.userData.spin; }); F.holder.updateMatrixWorld(true); sfPlace(); F.r.render(F.scene, F.cam); F.raf = requestAnimationFrame(loop); };
+  loop(); }
+{ const _cd = closeDlg; closeDlg = function () { if (SFORGE.el && !SFORGE.el.hidden) { SFORGE.el.hidden = true; cancelAnimationFrame(SFORGE.raf); } return _cd.apply(this, arguments); }; }
 LEVELS.zeltac.npcs.push({ id: 'juno', name: 'Juno', role: 'Saber smith · laser swords', rig: 'civ', make: () => makeCivilian('#2a2a3a', '#1e1c22', '#c58a64', '#e8e4dc', '#4fa8ff'), x: 6, z: 12, face: Math.PI * 1.2, shop: 'guns', guns: [], melee: ['lsaber', 'lsaber2'], forge: true,
   idle: ["Every blade sings a different color. Pick yours.", "Hold your shield up when they swing. Laser swords are fast, not invincible."] });

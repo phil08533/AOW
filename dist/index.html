@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.46</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.47</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -8560,7 +8560,7 @@ const vmShield = new THREE.Group(); camera.add(vmShield); vmShield.visible = fal
   const emb = new THREE.Mesh(new THREE.RingGeometry(0.04, 0.055, 12), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false })); vmShield.add(emb);
   vmShield.userData.face = sm; vmShield.userData.rim = rim; }
 const SHIELD = { hp: 100, max: 100, blocking: false, flash: 0 };
-const handMelee = () => S.hand === 'melee' && !LEVEL.fly;
+const handMelee = () => S.hand === 'melee' && !LEVEL.fly && LEVEL.id !== 'speedway'; // in Velocity you are the car
 function swapHand() {
   if (state !== 'play' || dlgOpen || LEVEL.fly || S.riding) return;
   S.hand = S.hand === 'melee' ? 'gun' : 'melee'; firing = false; SHIELD.blocking = false; meleeShown = null; refreshMeleeModel(); if (MELEE[S.melee || 'knife'].saber) SFX.ignite(S.hand === 'melee'); else SFX.ui();
@@ -8743,6 +8743,8 @@ function openSaberForge(who) {
 { const _cd = closeDlg; closeDlg = function () { if (SFORGE.el && !SFORGE.el.hidden) { SFORGE.el.hidden = true; cancelAnimationFrame(SFORGE.raf); } return _cd.apply(this, arguments); }; }
 LEVELS.zeltac.npcs.push({ id: 'juno', name: 'Juno', role: 'Saber smith · laser swords', rig: 'civ', make: () => makeCivilian('#2a2a3a', '#1e1c22', '#c58a64', '#e8e4dc', '#4fa8ff'), x: 6, z: 12, face: Math.PI * 1.2, shop: 'guns', guns: [], melee: ['lsaber', 'lsaber2'], forge: true,
   idle: ["Every blade sings a different color. Pick yours.", "Hold your shield up when they swing. Laser swords are fast, not invincible."] });
+// the shield goes wherever the melee weapon goes: anything that hides the weapon (driving in Velocity, fishing, the tablet) hides it too
+setTimeout(() => { const _st = step; step = function (dt) { _st(dt); if (!vmMelee.visible) { vmShield.visible = false; SHIELD.blocking = false; } }; }, 0);
 
 // =================== THE OCEAN WORLD: Port Kelp, the sub, Kelp City, Bubble City, Ramick ===================
 function makeJelly(col) {
@@ -19592,6 +19594,7 @@ const UPDATES = [
   { id: 219, title: '2.22.54 · Peaceful townsfolk', items: ['Alien shopkeepers and townsfolk (bug folk, spearmen) no longer carry spears, shields or staves. Enemies still do'] },
   { id: 220, title: '2.22.55 · Spearmen walk', items: ['The green spear aliens (enemy spearmen, and townsfolk like Zib) now swing their legs and bob when they move instead of sliding'] },
   { id: 221, title: '2.22.56 · Unarmed crowds, really', items: ['The station crowd, the Undercroft regulars and every city crowd now leave their spears and shields at home too', 'Phones: the Reload button is really gone now'] },
+  { id: 312, title: 'Shield fix', items: ['The shield no longer sits on screen while you drive in Velocity (or fish, or use the tablet) with a melee weapon out'] },
   { id: 311, title: 'Forge bench and swing styles', items: ['On PC and phones held sideways the saber now lies big across a glowing work bench, with each part\'s arrows right under it. Tall phones keep the standing view', 'All new handles: smooth machined metal, plus three new grips (Fluted, Open Cage with a core that glows your blade colour, and Carved Wood) and a Ribbon Cap end with two trailing ribbons', 'Sparks drift around the saber and parts flash when you change them. The arrows no longer move while the saber floats', '12 swing styles to pick in the forge: Figure Eight, Side Sweep, Overhead Chop, Windmill, Rising Slash, Cross Cut, Sideways Eight, Lightning, Spiral, Lunge, Clover and Twirl', 'The light trail now runs the full length of the blade, and fades when the blade points at you so it never blinds you'] },
   { id: 310, title: 'Forge, your way', items: ['The saber forge is now one floating sword pulled apart into its parts, like the sketch', 'Tap the arrows beside a part to scroll its options. Parts you have not unlocked show grayed out with their price and a Forge button, or where to find the crystal', 'Tap the colour dot by a part to change its colour. Pick Double-ended at the bottom and the lower emitter and blade get their own arrows', 'Swing speed and the other upgrades sit behind the Upgrades button'] },
   { id: 309, title: 'The saber forge', items: ['Build your laser sword from parts: blade, crystal, emitter, grip and pommel, each with several new designs and its own colour', 'Parts have small trade-offs in damage, swing speed, reach and blocking; forge a part once, then swap for free', 'Double-ended: swap the pommel for a second emitter and blade with their own picks and colours; swings hit all around you', 'Twelve crystals, one hidden on each world under a beam of light, each with its own shape, colour and perk', 'Swing Speed upgrade now goes to 5 tiers, and the swing animation speeds up to match', 'Laser swords leave a light trail when you swing', 'Juno is now a saber smith, and the Kyber Laser Sword is now the Prism Laser Sword'] },

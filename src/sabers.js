@@ -205,7 +205,7 @@ const vmShield = new THREE.Group(); camera.add(vmShield); vmShield.visible = fal
   const emb = new THREE.Mesh(new THREE.RingGeometry(0.04, 0.055, 12), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false })); vmShield.add(emb);
   vmShield.userData.face = sm; vmShield.userData.rim = rim; }
 const SHIELD = { hp: 100, max: 100, blocking: false, flash: 0 };
-const handMelee = () => S.hand === 'melee' && !LEVEL.fly;
+const handMelee = () => S.hand === 'melee' && !LEVEL.fly && LEVEL.id !== 'speedway'; // in Velocity you are the car
 function swapHand() {
   if (state !== 'play' || dlgOpen || LEVEL.fly || S.riding) return;
   S.hand = S.hand === 'melee' ? 'gun' : 'melee'; firing = false; SHIELD.blocking = false; meleeShown = null; refreshMeleeModel(); if (MELEE[S.melee || 'knife'].saber) SFX.ignite(S.hand === 'melee'); else SFX.ui();
@@ -388,3 +388,5 @@ function openSaberForge(who) {
 { const _cd = closeDlg; closeDlg = function () { if (SFORGE.el && !SFORGE.el.hidden) { SFORGE.el.hidden = true; cancelAnimationFrame(SFORGE.raf); } return _cd.apply(this, arguments); }; }
 LEVELS.zeltac.npcs.push({ id: 'juno', name: 'Juno', role: 'Saber smith · laser swords', rig: 'civ', make: () => makeCivilian('#2a2a3a', '#1e1c22', '#c58a64', '#e8e4dc', '#4fa8ff'), x: 6, z: 12, face: Math.PI * 1.2, shop: 'guns', guns: [], melee: ['lsaber', 'lsaber2'], forge: true,
   idle: ["Every blade sings a different color. Pick yours.", "Hold your shield up when they swing. Laser swords are fast, not invincible."] });
+// the shield goes wherever the melee weapon goes: anything that hides the weapon (driving in Velocity, fishing, the tablet) hides it too
+setTimeout(() => { const _st = step; step = function (dt) { _st(dt); if (!vmMelee.visible) { vmShield.visible = false; SHIELD.blocking = false; } }; }, 0);

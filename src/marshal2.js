@@ -70,7 +70,7 @@ function marshalTerminal(x, z, ry) { const g = new THREE.Group();
   INTERACTS.push({ x: fx, z: fz, r: 1.8, label: '⭐ Marshal terminal (missions, bounties, rank, armory)', fn: openMarshalBoard }); }
 { const _rd = roomUpDress; roomUpDress = function (id, s, cx, cz, inner, props) { const r = _rd.apply(this, arguments);
   if (id === 'office') try { const outer = 2 * cx - inner, x = cx + (outer - cx) * 0.55, ry = Math.atan2(inner - outer, 0); marshalTerminal(x, cz, ry);
-    part(props, B(2.2, 0.04, 3.2), toonNS('#1a2240', 'carpet'), cx, 0.02, cz); part(props, B(0.05, 0.9, 0.9), toon('#e8c35a'), outer - Math.sign(outer - cx) * 0.06, 2.0, cz - 2.2);
+    part(props, B(2.2, 0.04, 3.2), toonNS('#1a2240', 'carpet'), cx, 0.02, cz); part(props, B(0.05, 0.9, 0.9), toon('#e8c35a'), outer - Math.sign(outer - cx) * 0.2, 2.0, cz - 2.2);
     officePerks(cx, cz, inner, outer); } catch (err) { console.warn('office', err); }
   return r; }; }
 // ---- manhunt spawns and random busts ----

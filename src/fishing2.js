@@ -59,6 +59,10 @@ function fshStart(F) {
   else { const ux = -Math.sin(player.yaw), uz = -Math.cos(player.yaw); FSH.to = V(player.pos.x + ux * 6, Math.max(WATER_Y, floorAt(player.pos.x + ux * 6, player.pos.z + uz * 6)) + 0.03, player.pos.z + uz * 6); FSH.shore = V(player.pos.x + ux * 1.5, FSH.to.y, player.pos.z + uz * 1.5); }
   if (!FSH.shore) FSH.shore = FSH.to.clone();
 }
+// no water under the lure, no fish: anywhere in the game
+const fshWet = (F, p) => (FSH.spot && FSH.spot.ice) || F.table === 'wormhole' || groundH(p.x, p.z) < WATER_Y - 0.05;
+function fshDry(F) { if (F.st === 'done' || F.st === 'dry') return; F.st = 'dry'; F.bar.style.opacity = 0.35; SFX.ui(); $('dlgLine').textContent = 'Your lure landed on dry ground. Face the water and cast again.';
+  acts([['Cast again', () => { closeDlg(); startFishing(F.name, F.table); }, true], ['Stop', closeDlg]]); }
 function fshStop() { FSH.F = null; if (FSH.holder) FSH.holder.visible = false; fshBobber.visible = false; fshLine.visible = false; }
 const fshTip = () => { const v = V(0, 0, 0); FSH.rod.userData.tip.getWorldPosition(v); return v; };
 function fshStep(dt) {
@@ -81,7 +85,7 @@ function fshStep(dt) {
   if (F.st === 'bite') bend = Math.max(bend, 0.12 + Math.sin(t * 25) * 0.04);
   H.rotation.x = tilt + bend * 0.6; H.rotation.z = -0.15; rod.rotation.x = -bend;
   // where the bobber is
-  if (FSH.fly >= 0 && FSH.fly < 1) { FSH.fly = Math.min(1, FSH.fly + dt / 0.7); const k = FSH.fly; FSH.pos.lerpVectors(FSH.from, FSH.to, k); FSH.pos.y += Math.sin(k * Math.PI) * (FSH.spot && FSH.spot.ice ? 0.4 : 2.2); if (k >= 1) fshRing(FSH.to.x, FSH.to.y, FSH.to.z); }
+  if (FSH.fly >= 0 && FSH.fly < 1) { FSH.fly = Math.min(1, FSH.fly + dt / 0.7); const k = FSH.fly; FSH.pos.lerpVectors(FSH.from, FSH.to, k); FSH.pos.y += Math.sin(k * Math.PI) * (FSH.spot && FSH.spot.ice ? 0.4 : 2.2); if (k >= 1) { if (fshWet(F, FSH.to)) fshRing(FSH.to.x, FSH.to.y, FSH.to.z); else fshDry(F); } }
   else if (FSH.fly >= 1) {
     if (F.st === 'done') { FSH.back = Math.min(1, (FSH.back || 0) + dt / 0.45); const tip = fshTip(); FSH.pos.lerpVectors(FSH.from, tip, FSH.back); FSH.pos.y += Math.sin(FSH.back * Math.PI) * 1.2; }
     else { FSH.pos.lerp(FSH.to, Math.min(1, dt * 6)); let y = FSH.to.y + Math.sin(t * 2.4) * 0.025;

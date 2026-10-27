@@ -78,7 +78,7 @@ LEVELS.ocean = {
     { id: 'marlin', name: 'Old Marlin', role: 'Fish buyer', rig: 'civ', make: () => makeCivilian('#c8b884', '#3a5266', '#e0b892', '#cfcac0', '#3f7d7a'), x: 7, z: -2, face: -1.2, shop: 'fish', rods: [1, 2, 3], idle: ["Pearlfish only bite when it's raining. Which is always. Lucky you."] },
     { id: 'coral', name: 'Doc Coral', role: 'Healer', rig: 'civ', make: () => makeCivilian('#ff9a8a', '#3a5266', '#8fae6a', '#1e1a18', '#e8e4dc'), x: -7, z: -2, face: 1.2, heal: true, idle: ["Jellyfish stings? Saltwater. Snapjaw bite? Also saltwater. I just really like saltwater."] },
     { id: 'ramick', name: 'Ramick', role: 'Master of the Sword', rig: 'trooper', make: makeRamick, x: -48, z: 62, face: 0.6, idle: ["A sword doesn't need ammo. It needs a reason.", "I came to this ocean to be alone. Then everyone showed up. Fine. Train with me."] },
-    { id: 'blub', name: 'Mayor Blub', role: 'Mayor of Bubble City', rig: null, make: () => { const g = makeJelly('#4fffe0'); g.scale.setScalar(1.4); return g; }, x: 0, z: 90, idle: ["Welcome to Bubble City, where the air is fresh and the walls are see-through. Don't think about it.", "Please do not tap on the dome."] }
+    { id: 'blub', name: 'Mayor Blub', role: 'Mayor of Bubble City', rig: null, make: () => { const g = makeJelly('#4fffe0'); g.scale.setScalar(1.4); g.position.y = 1.5; const w = new THREE.Group(); w.add(g); w.userData = g.userData; return w; }, x: 0, z: 90, idle: ["Welcome to Bubble City, where the air is fresh and the walls are see-through. Don't think about it.", "Please do not tap on the dome."] }
   ],
   spawns: [
     { zone: 'reef', type: 'snapjaw', n: 6, lv: [24, 27] },

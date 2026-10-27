@@ -335,8 +335,9 @@ LEVELS.ship = {
     const rooms = S.ship.rooms.filter(r => r !== 'bridge');
     const rows = Math.max(1, Math.ceil(rooms.length / 2)), Lz = 4 + (rows - 1) * 11 + 7;
     // ---- the bridge: dark navy deck, curved console row, the big window ----
-    floorQuad(-7, 7, -15, -2, toonNS('#3a4a6a', 'deck'), toonNS('#4a5060', 'ceil'), '#8fd0ff');
-    wall(-7, -15, -7, -2); wall(7, -15, 7, -2); wall(-7, -15, -4, -15); wall(4, -15, 7, -15); wall(-7, -2, -2, -2); wall(2, -2, 7, -2);
+    const SSM = (k, a) => typeof shipStyleMat === 'function' ? shipStyleMat(k, a) : null, BW = SSM('wall', 'bridge') || undefined, HW = SSM('wall', 'hall') || undefined;
+    floorQuad(-7, 7, -15, -2, SSM('floor', 'bridge') || toonNS('#3a4a6a', 'deck'), SSM('ceil', 'bridge') || toonNS('#4a5060', 'ceil'), '#8fd0ff');
+    wall(-7, -15, -7, -2, BW); wall(7, -15, 7, -2, BW); wall(-7, -15, -4, -15, BW); wall(4, -15, 7, -15, BW); wall(-7, -2, -2, -2, BW); wall(2, -2, 7, -2, BW);
     const glass = new THREE.Mesh(new THREE.PlaneGeometry(8, H), new THREE.MeshBasicMaterial({ color: '#8fd0ff', transparent: true, opacity: 0.12, depthWrite: false })); glass.position.set(0, H / 2, -15); levelGroup.add(glass); box(0, -15, 4, 0.2);
     part(props, B(8.2, 0.3, 0.5), '#2a2c32', 0, 0.15, -15); part(props, B(8.2, 0.3, 0.5), '#2a2c32', 0, H - 0.15, -15);
     // a tidy bridge console (2.18.7): a body, a sloped desk with a bezel and inset screen, button rows, side lamps and a light strip at its foot
@@ -387,13 +388,13 @@ LEVELS.ship = {
       for (const sx of [-1, 1]) { part(ch, B(0.12, 0.08, 0.62), dk, sx * 0.44, 0.82, 0.02); part(ch, B(0.08, 0.26, 0.08), dk, sx * 0.44, 0.67, 0.24); part(ch, B(0.1, 0.02, 0.2), glow(sx < 0 ? '#6fdc5a' : '#ffd36a'), sx * 0.44, 0.87, -0.14); part(ch, B(0.03, 0.03, 0.03), glow('#ff5a4a'), sx * 0.44, 0.88, -0.22); }
       ch.position.set(0, 0, -6.9); props.add(ch); solid(0, -6.9, 0.5); }
     // ---- the corridor: plated deck with a yellow guide line, ribbed hull walls ----
-    floorQuad(-2, 2, -2, Lz, toonNS('#8a8e96', 'deck'));
+    floorQuad(-2, 2, -2, Lz, SSM('floor', 'hall') || toonNS('#8a8e96', 'deck'), SSM('ceil', 'hall'));
     part(props, B(0.12, 0.01, Lz + 1.8), glow('#c9a43a'), 0, 0.012, (Lz - 2) / 2);
-    wall(-2, Lz, 2, Lz);
+    wall(-2, Lz, 2, Lz, HW);
     const doors = rooms.map((r, k) => roomSlot(k));
     for (const side of [1, -1]) {
       const gaps = doors.filter(d => d.side === side).map(d => d.zc).sort((a, b) => a - b);
-      let z = -2; for (const g of gaps) { if (g - 1.3 > z) wall(2 * side, z, 2 * side, g - 1.3); z = g + 1.3; } if (Lz > z) wall(2 * side, z, 2 * side, Lz);
+      let z = -2; for (const g of gaps) { if (g - 1.3 > z) wall(2 * side, z, 2 * side, g - 1.3, HW); z = g + 1.3; } if (Lz > z) wall(2 * side, z, 2 * side, Lz, HW);
       for (const g of gaps) { for (const dz of [-1.35, 1.35]) part(props, B(0.32, H, 0.12), '#2a2c32', 2 * side, H / 2, g + dz); part(props, B(0.32, 0.3, 2.8), '#2a2c32', 2 * side, H - 0.15, g); }
     }
     // hull ribs, but never inside a doorway (2.14.5: they used to stand in the middle of some doors)

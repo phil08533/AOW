@@ -68,7 +68,7 @@ function mFlash(n) {
   if (!mOn()) return; const M = mS(), now = Date.now(), cool = now - (M.flT || 0) < 20000; M.flT = now; if (!cool) { M.clout = Math.min(999, (M.clout || 0) + 3); mGain(2); }
   let near = n; if (!near) { let best = 6; for (const id in npcObjs) { const N = npcObjs[id]; if (!N.obj.visible) continue; const d = N.obj.position.distanceTo(player.pos); if (d < best) { best = d; near = N.def; } } }
   mBadgePop(); SFX.ui && SFX.ui();
-  if (near) { openDlg(near.role || 'Local', near.name); $('dlgLine').textContent = M_FLASH[Math.floor(Math.random() * M_FLASH.length)] + (cool ? '' : `  (+3 clout · ${M.clout})`); acts([['Carry on', closeDlg, true]]); }
+  if (near) setTimeout(() => { if (dlgOpen) return; openDlg(near.role || 'Local', near.name); $('dlgLine').textContent = M_FLASH[Math.floor(Math.random() * M_FLASH.length)] + (cool ? '' : `  (+3 clout · ${M.clout})`); acts([['Carry on', closeDlg, true]]); }, 1500);
   else toast('🪪 ' + mRankName().toUpperCase(), cool ? 'Nobody around to impress' : `+3 clout · ${M.clout}`, 2);
   markDirty();
 }

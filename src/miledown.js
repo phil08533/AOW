@@ -204,7 +204,7 @@ LEVELS.miledown = {
     // the cast in the lab: Big E on the table, Doc at the switch, Pail in the doorway
     const st = mdF();
     MD.body = mdActor(buildChar(() => makeBigE(false), 'civ'), 0, -12.2, 0); MD.body.o.scale.setScalar(1.25); mdPose(MD.body, -Math.PI / 2, 0, 0, -12.2, 1.15); MD.body.h.visible = st === 0;
-    MD.doc = mdActor(buildChar(makeDoc, 'civ'), -3.6, -14.9, -2.5); if (st >= 1) mdDocDown();
+    MD.doc = mdActor(buildChar(makeDoc, 'civ'), -3.6, -14.9, -2.5); if (st >= 1) mdDocDown(); peeable(MD.doc.o, 'Doc', ["Ahhh. For Big E.", ['DOC', '(a faint gurgle)'], 'His goggles fog up. Good.'], () => toast('RELIEVED', 'Doc will wake up smelling like a decision he made.', 2.6));
     MD.pail = mdActor(buildChar(makePail, 'civ'), 0.6, -2.2, Math.PI); MD.pail.h.visible = false;
     if (st >= 2) { const sh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 1.9), toon('#e8e8e0', 'cloth')); sh.position.set(MD.doc.h.position.x, 0.12, MD.doc.h.position.z); sh.rotation.y = MD.doc.h.rotation.y; props.add(sh); MD.doc.h.visible = false; frog.visible = false; }
     // after: Big E's body on a stool, Big E the frog on the bar with a tiny glass
@@ -304,7 +304,7 @@ function mdDoor() {
 }
 function mdAfter() {
   const e = MD.e, p = e ? e.obj.position.clone() : V(0, 0, -9); if (e) e.obj.visible = false; MD.alarm.intensity = 0;
-  const dead = mdActor(buildChar(() => makeBigE(true), 'civ'), p.x, p.z, 0.4); dead.o.scale.setScalar(1.25); dead.o.rotation.x = -Math.PI / 2; dead.o.position.y = 0.16;
+  const dead = mdActor(buildChar(() => makeBigE(true), 'civ'), p.x, p.z, 0.4); dead.o.scale.setScalar(1.25); dead.o.rotation.x = -Math.PI / 2; dead.o.position.y = 0.16; peeable(dead.o, 'Big E', ["Ahhh. He'd have laughed.", ['BIG E', '(nothing. he really is gone)'], 'Rest easy, big man.'], () => toast('RELIEVED', 'Big E would have wanted it this way. Probably.', 2.6));
   const P = MD.pail, f = MD.frog, j = MD.jar; P.h.visible = true; P.h.position.set(0.8, 0, -6); f.userData.held = 1;
   const hold = () => { if (f.parent !== P.h) { P.h.add(f); f.position.set(0, 1.02, 0.46); f.rotation.set(0, Math.PI, 0); f.scale.setScalar(0.75); const R = P.o.userData.rig; if (R) { R.armL.rotation.x = R.armR.rotation.x = -1.05; R.armL.rotation.z = 0.28; R.armR.rotation.z = -0.28; R.legL.rotation.x = R.legR.rotation.x = 0; } } };
   const fw = () => P.h.localToWorld(V(0, 1.25, 0.46));
@@ -431,6 +431,6 @@ function mdRobot(par) {
 // mood: a dark, smoky room lit by its neon and lamps
 { const _ue = updateEnv; updateEnv = function (a, b) { _ue(a, b); if (!LEVEL || LEVEL.id !== 'miledown') return;
   if (scene.fog) { scene.fog.color.set('#0c0809').convertSRGBToLinear(); scene.fog.near = 6; scene.fog.far = 34; } sun.intensity = 0.12; hemi.intensity = 0.32; hemi.color.set('#b09098'); fill.intensity = 0.08; }; }
-// the house song: the robot's number plays in the bar (the lab keeps its own score)
+// the house song: the robot's number plays in the bar, and you can still hear it through the walls in the back rooms
 TRACKS.deepboop = 'music/deepboop.mp3'; PLAYLISTS.mdbar = ['deepboop']; if (typeof RADIO_TITLES !== 'undefined') RADIO_TITLES.deepboop = 'Deep Boop';
-{ const _mc = musContext; musContext = function (dt) { const r = _mc(dt); if (r === 'cutscene' || r === null || !LEVEL || LEVEL.id !== 'miledown') return r; return player.pos.z > -3.5 ? 'mdbar' : r; }; }
+{ const _mc = musContext; musContext = function (dt) { const r = _mc(dt); if (r === 'cutscene' || r === null || !LEVEL || LEVEL.id !== 'miledown') return r; return 'mdbar'; }; }

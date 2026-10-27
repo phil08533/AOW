@@ -8,6 +8,7 @@ function daxDoses() { let n = 0; for (const k in S.inv) if (typeof SUBS !== 'und
 function daxValue() { let v = 0; for (const k in S.inv) if (SUBS[k] && S.inv[k] > 0) v += S.inv[k] * (SUBS[k].price || 100); return v; }
 function daxTalk() { const D = daxS(), have = daxDoses(); openDlg('Quartermaster · the morale fund', 'Dax');
   if (DAX.fight) { $('dlgLine').textContent = 'Marshals! Shoot them, not me!'; acts([['Go', closeDlg, true]]); return; }
+  if (typeof mOn === 'function' && mOn()) { $('dlgLine').textContent = "Morale fund? Never heard of it. I just count blankets, Marshal. Lots of blankets."; acts([['Right', closeDlg, true]]); return; }
   if (D.st === 0 && Date.now() - D.t < 24 * 3600e3) { $('dlgLine').textContent = "That last shipment's still going round. Come back tomorrow."; acts([['Later', closeDlg, true]]); return; }
   if (D.st === 0) { $('dlgLine').textContent = `The officers need... morale. A big shipment, quietly. ${DAX.need} doses of anything you cook or score. I pay well, and the Captain never looks at the cargo logs.`;
     acts([['Take the job', () => { D.st = 1; markDirty(); log(`Dax wants ${DAX.need} doses of any drug for the bridge. Bring them to him.`, 'loot'); closeDlg(); }, true], ['Not now', closeDlg]]); return; }

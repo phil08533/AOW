@@ -210,6 +210,8 @@ function velPhysics(dt) {
   if (nl > 0.01) { const ux = nx / nl, uz = nz / nl, vn = RC.vx * ux + RC.vz * uz; if (vn < 0) { RC.vx -= ux * vn * 1.4; RC.vz -= uz * vn * 1.4; RC.vx *= 0.85; RC.vz *= 0.85; if (-vn > 6 && (!RC.wallT || gameTime - RC.wallT > 0.35)) { RC.wallT = gameTime; SFX.hit(); FX.shake = Math.min(1, (FX.shake || 0) + 0.4); } } }
   // hover height, gravity and jumps off the bridge
   const floor1 = floorAt(p.x, p.z); RC.vy -= 22 * dt; p.y += RC.vy * dt;
+  // stick to the road going downhill (the ramp used to bounce you down it in little hops)
+  if (!air && RC.vy <= 0.5 && p.y > floor1 && p.y - floor1 < 0.35 + Math.hypot(RC.vx, RC.vz) * dt * 0.9) { p.y = floor1; RC.vy = 0; }
   if (p.y <= floor1) { if (air && RC.vy < -9) { SFX.land(); burst(p.clone(), '#8fd0ff', 10, 4); } p.y = floor1; RC.vy = Math.max(0, (floor1 - floor0) / Math.max(dt, 1e-3)) * 0.6; }
   player.onGround = !air; player.vy = 0; RC.v = vf; RC.vr = vr; RC.drift = drift && Math.abs(vr) > 2; RC.boost = boosting || VEL.kick > 0;
   SFX.engine(0.3 + Math.abs(vf) / K.top * 0.7, Math.abs(vf) / 30);

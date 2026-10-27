@@ -69,7 +69,7 @@ function mariFlat() { const X = MARI.x, Z = MARI.z, W = MARI.W, L = MARI.L, g = 
   const cx = X + W / 2 - 1.0, cz = Z + L / 2 - 1.3; part(g, B(1.2, 0.7, 0.8), toonNS('#6a4f34', 'wood'), cx, 0.35, cz); box(cx, cz, 0.65, 0.45);
   for (let i = 0; i < 9; i++) part(g, Cy(0.01, 0.01, 0.6, 4), toonNS('#c9a43a'), cx - 0.5 + i * 0.125, 1.0, cz - 0.3); for (let i = 0; i < 9; i++) part(g, Cy(0.01, 0.01, 0.6, 4), toonNS('#c9a43a'), cx - 0.5 + i * 0.125, 1.0, cz + 0.3);
   part(g, B(1.05, 0.03, 0.65), toonNS('#c9a43a'), cx, 1.3, cz); part(g, B(1.0, 0.06, 0.6), toonNS('#f4e0a0'), cx, 0.73, cz);
-  const wh = new THREE.Group(); wh.position.set(cx + 0.15, 0.98, cz); g.add(wh); for (const zz of [-0.13, 0.13]) { wh.add(new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.02, 6, 18), toonNS('#7fe8ff'))).position.z = zz; for (let i = 0; i < 3; i++) { const sp = part(wh, B(0.015, 0.44, 0.015), toonNS('#7fe8ff'), 0, 0, zz); sp.rotation.z = i * Math.PI / 3; } }
+  const wh = new THREE.Group(); wh.position.set(cx + 0.15, 0.98, cz); g.add(wh); for (const zz of [-0.13, 0.13]) { part(wh, new THREE.TorusGeometry(0.22, 0.02, 6, 18), toonNS('#7fe8ff'), 0, 0, zz); for (let i = 0; i < 3; i++) { const sp = part(wh, B(0.015, 0.44, 0.015), toonNS('#7fe8ff'), 0, 0, zz); sp.rotation.z = i * Math.PI / 3; } }
   for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; part(wh, Cy(0.008, 0.008, 0.26, 4), toonNS('#c8f4ff'), Math.cos(a) * 0.22, Math.sin(a) * 0.22, 0, Math.PI / 2); } part(g, Cy(0.02, 0.02, 0.36, 6), toonNS('#9aa1aa'), cx + 0.15, 0.98, cz, Math.PI / 2); for (const zz of [-0.17, 0.17]) part(g, B(0.03, 0.26, 0.03), toonNS('#9aa1aa'), cx + 0.15, 0.86, cz + zz);
   const pea = bubHamster(); pea.scale.setScalar(0.75); pea.position.set(cx + 0.15, 0.775, cz); pea.rotation.y = -Math.PI / 2; g.add(pea);
   levelAnims.push(t => { wh.rotation.z = -t * 6; pea.position.y = 0.775 + Math.abs(Math.sin(t * 12)) * 0.025; lava.material.color.setHSL(0.02 + Math.sin(t * 0.7) * 0.03, 1, 0.55); tv.material.color.setHSL(0.6 + Math.sin(t * 1.3) * 0.08, 0.6, 0.45 + Math.sin(t * 5) * 0.05); });
@@ -96,7 +96,8 @@ function mariIn() { SFX.door && SFX.door(); bubFade('Marisol\'s place · 4B', ()
 function mariTalk() { const s = bubS();
   openDlg('Coral Heights · 4B', 'Marisol Puddleby');
   $('dlgLine').textContent = ['"So what do you actually DO? Like, for a job? Is it the shooting? It\'s the shooting, isn\'t it."', '"Peanut likes you. He bit you, which means he likes you."', '"I\'ve never been outside the dome. Is space big? It looks big."'][(s.night || 0) % 3];
-  acts([['Ask her to sell for you', mariJoin, true], ['Get high together', mariHaze], ['Stay the night', () => { closeDlg(); bubStayOver(true); }], ['Leave', closeDlg]]); }
+  const marshal = typeof mOn === 'function' && mOn(); // a Marshal can party with her, not put her to work dealing
+  acts([...(marshal ? [] : [['Ask her to sell for you', mariJoin, true]]), ['Get high together', mariHaze, marshal], ['Stay the night', () => { closeDlg(); bubStayOver(true); }], ['Leave', closeDlg]]); }
 function mariJoin() { const C = crewS(), m = C.dealer, on = m && m.mari;
   if (on) { $('dlgLine').textContent = '"I\'m already slinging for you, boss. Your Lab, your shelf, my charm. Pays better than the fish counter."'; return acts([['Good', closeDlg, true]]); }
   const used = Object.keys(C).filter(k => C[k]).length;

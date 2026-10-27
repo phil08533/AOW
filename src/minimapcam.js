@@ -33,7 +33,7 @@ function mmcRender(R) {
 window.addEventListener('keydown', e => { if (state !== 'play' || dlgOpen || e.repeat || (typeof chatOpen === 'function' && chatOpen())) return;
   if (e.code === 'Equal') mmcSet(mmcMode() + 1); else if (e.code === 'Minus') mmcSet(mmcMode() - 1); });
 // your character from above, in place of the arrow (toggle with the little button on the map, or \\)
-const mmcMe = () => !!(S.flags && S.flags.mmMe);
+const mmcMe = () => false; // the minimap always shows the arrow now
 function mmcBody(R) {
   const key = JSON.stringify(myLook()) + S.col;
   if (!MMC.me || MMC.meKey !== key) { MMC.me = buildChar(() => makePlayerChar(myLook(), S.col), 'trooper'); MMC.meKey = key; MMC.meSt = {}; }
@@ -44,7 +44,7 @@ function mmcToggleMe() { S.flags = S.flags || {}; S.flags.mmMe = !mmcMe(); markD
 const mmcBtn = document.createElement('button'); mmcBtn.id = 'mmcMe'; mmcBtn.title = 'Arrow or character'; mmcBtn.textContent = '🧍';
 { const st = document.createElement('style'); st.textContent = '#mmcMe { position: absolute; right: 4px; top: calc(env(safe-area-inset-top, 0px) + 112px); z-index: 5; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #7fe9ff; background: rgba(5,12,24,.85); color: #fff; font: 13px sans-serif; padding: 0; cursor: pointer; pointer-events: auto; } body.menuopen #mmcMe, body.photo #mmcMe, body.decor #mmcMe { visibility: hidden; }'; document.head.appendChild(st);
   $('map').parentNode.appendChild(mmcBtn); mmcBtn.addEventListener('click', e => { e.stopPropagation(); mmcToggleMe(); });
-  setInterval(() => { mmcBtn.hidden = !LEVEL || LEVEL.fly; mmcBtn.textContent = mmcMe() ? '➤' : '🧍'; }, 500); }
+  setInterval(() => { mmcBtn.hidden = true; mmcBtn.textContent = mmcMe() ? '➤' : '🧍'; }, 500); }
 window.addEventListener('keydown', e => { if (e.code === 'Backslash' && state === 'play' && !dlgOpen && !e.repeat) mmcToggleMe(); });
 // the character token: a small 3/4 view of you, rendered on its own and stamped in the middle of the map
 function mmcToken() {

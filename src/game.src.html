@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.47</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.48</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1004,7 +1004,7 @@ function drawMap() {
 // you: an orange chevron with a dark edge, pointing where you face
 function mapArrow(cx, cy) { mctx.save(); mctx.translate(cx, cy); mctx.rotate(-player.yaw); mctx.lineJoin = 'round';
   mctx.beginPath(); mctx.moveTo(0, -7); mctx.lineTo(5, 5); mctx.lineTo(0, 2.5); mctx.lineTo(-5, 5); mctx.closePath(); mctx.fillStyle = 'rgba(0,0,0,.4)'; mctx.save(); mctx.translate(0.8, 0.8); mctx.fill(); mctx.restore();
-  mctx.strokeStyle = '#1a0c00'; mctx.lineWidth = 1.6; mctx.stroke(); mctx.fillStyle = '#ff9a3c'; mctx.fill(); mctx.fillStyle = '#ffd9a8'; mctx.beginPath(); mctx.moveTo(0, -5); mctx.lineTo(1.6, -1); mctx.lineTo(-1.6, -1); mctx.closePath(); mctx.fill(); mctx.restore(); }
+  mctx.shadowColor = '#b6ff3a'; mctx.shadowBlur = 9; mctx.strokeStyle = '#0c2a00'; mctx.lineWidth = 1.6; mctx.stroke(); mctx.fillStyle = '#b6ff3a'; mctx.fill(); mctx.shadowBlur = 0; mctx.fillStyle = '#f0ffc0'; mctx.beginPath(); mctx.moveTo(0, -5); mctx.lineTo(1.6, -1); mctx.lineTo(-1.6, -1); mctx.closePath(); mctx.fill(); mctx.restore(); }
 function updateHud() {
   const g = gun(); refreshGunModel();
   $('hpN').textContent = Math.ceil(player.hp) + ' / ' + maxHp();

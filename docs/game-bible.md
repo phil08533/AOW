@@ -81,6 +81,9 @@ Asymmetric PvP proposed by Phil. FPS players fight on the ground in first person
 
 ---
 
+### House rule: downed people (Phil, Oct 27, 2026)
+Any person lying on the ground can be peed on, using the Vixen-quest animation (`peeable(obj, name, lines, after)` in src/pee.js). The one exception is the passed-out drunk in the Undercroft bar. New downed characters should call `peeable` when they are built.
+
 ## 3. Tech stack — AS BUILT
 
 The playable game is a single self-contained web page (Three.js r128, WebAudio, Gamepad API) published at https://claude.ai/artifact/QqkTEtwnYcbGdQr5TrzSpf, built from source modules by build_game.py. Multiplayer presence and per-player cloud saves run on the artifact's room and database. The original plan (TypeScript + Rapier + Colyseus) remains the path if the game outgrows a single page; Godot 4 is the fallback for a Steam desktop build.

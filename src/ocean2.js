@@ -310,11 +310,12 @@ function ocBoats() { OCB.length = 0; OCSIT.g = null; const spots = []; for (let 
     part(g, B(0.5, 0.3, 0.4), toon('#4fd2ff'), -0.35, 0.25, -1.4); part(g, Cy(0.22, 0.2, 0.3, 8), wood, 0.4, 0.25, 1.3);
     const lan = part(g, new THREE.SphereGeometry(0.09, 6, 4), glow('#ffd36a'), -0.55, 1.0, -1.7); part(g, Cy(0.02, 0.02, 0.6, 4), toon('#2b2a2c'), -0.55, 0.7, -1.7);
     // the fisher sits on the back bench facing over the side, rod gripped in both hands
-    const npc = makeCivilian(shirts[i], '#2c2a28', ['#c58a64', '#8a5a3a', '#e0b892', '#6a4a2a', '#f0c8a8'][i], '#1e1a18', i % 2 ? '#e8e4dc' : null); npc.scale.setScalar(0.9); npc.position.set(0, 0.1, -1.0); npc.rotation.y = Math.PI / 2; g.add(npc);
-    // the rod is held up at chest height in both hands (2.23.48: it used to poke out from the lap)
+    const npc = buildChar(() => makeCivilian(shirts[i], '#2c2a28', ['#c58a64', '#8a5a3a', '#e0b892', '#6a4a2a', '#f0c8a8'][i], '#1e1a18', i % 2 ? '#e8e4dc' : null), 'civ'), NR = npc.userData.rig, nh = NR ? NR.spec.hip : 0.95;
+    npc.scale.setScalar(0.9); npc.position.set(0, 0.6 - nh * 0.9, -1.0); npc.rotation.y = Math.PI / 2; sitChar(npc, 0.38 / 0.9); g.add(npc);
+    // 2.23.49: he really sits on the bench now, and the rod is in his own hands (the old extra arm boxes stuck out of his lap)
     const rod = new THREE.Group(); part(rod, Cy(0.012, 0.03, 2.6, 5), toon('#2b2a2c'), 0, 0.85, 0); part(rod, Cy(0.05, 0.05, 0.08, 8), toon('#c9a43a'), 0.05, -0.12, 0, 0, 0, Math.PI / 2);
-    rod.position.set(0.05, 1.22, 0.42); rod.rotation.x = 0.95; npc.add(rod);
-    for (const s of [-1, 1]) part(npc, B(0.1, 0.1, 0.36), toon(shirts[i]), 0.16 * s, 1.2, 0.26, -0.15, s * -0.25, 0);
+    if (NR && NR.armR) { for (const [arm, z] of [[NR.armL, 0.22], [NR.armR, -0.22]]) { arm.rotation.x = -1.1; arm.rotation.z = z; } rod.position.set(0, -(NR.spec.sh - NR.spec.hip) * 0.95, 0.04); rod.rotation.x = 1.71; NR.armR.add(rod); }
+    else { rod.position.set(0.05, 1.22, 0.42); rod.rotation.x = 0.95; npc.add(rod); }
     const tip = new THREE.Object3D(); tip.position.set(0, 2.15, 0); rod.add(tip);
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: '#e8e4dc' })); levelGroup.add(line);
     const bob = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), toon('#ff3b2a')); levelGroup.add(bob);

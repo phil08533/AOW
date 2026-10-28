@@ -70,30 +70,40 @@ function talkMouthStep(m, a, now) {
 // every quest NPC gets its mouth as it is built
 { const _mk = makeNpc; makeNpc = function (n, base) { const r = _mk.apply(this, arguments); try { const N = npcObjs[n.id]; if (N && !TALK_NO_MOUTH.has(n.id)) addMouth(N.obj, n.name); } catch (e) { console.warn('mouth', n.id, e); } return r; }; }
 // who is talking: the named quest NPC if there is one nearby, else the closest rigged character in front of you
-function talkFind(name) {
+// only boxes titled with a character's name get the talk view (not the Codex, terminals or shop signs): a quest NPC, or anyone with lines in the voice script
+const talkCastNames = (() => { let set = null; return () => set || (set = new Set(Object.values(CAST_LINES).map(id => id.replace(/_\d+$/, '')))); })();
+const talkIsChar = name => !!name && (Object.values(npcObjs).some(N => N.def.name === name) || talkCastNames().has(String(name).toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_|_$/g, '')));
+function talkFind(name) { if (!talkIsChar(name)) return null;
   for (const id in npcObjs) { const N = npcObjs[id]; if (N.def.name === name && N.obj.visible && N.obj.parent && N.obj.position.distanceTo(player.pos) < 9) return { obj: N.obj, id }; }
   const fw = V(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)); let best = null, bd = 1e9;
   const look = root => { for (const o of root.children) { if (!o.visible) continue; const R = o.userData.rig; if (R && R.head && o.userData.talkMouth !== false) { o.getWorldPosition(_tw); const dx = _tw.x - player.pos.x, dz = _tw.z - player.pos.z, d = Math.hypot(dx, dz); if (d < 6 && d > 0.3) { const dot = (dx * fw.x + dz * fw.z) / d, sc = d * (1.6 - dot); if (dot > 0.2 && sc < bd) { bd = sc; best = o; } } } } };
   look(levelGroup); look(scene); return best ? { obj: best, id: null } : null;
 }
-function talkLayoutOk() { const d = $('dlg'); return dlgOpen && !d.hidden && !$('shopRows') && !d.querySelector('.prevWrap, canvas') && !d.classList.contains('galaxy') && state === 'play' && !(typeof CUT !== 'undefined' && CUT.on); }
+// the camera stays on the speaker for the whole conversation (lists and shop rows included); only the galaxy map, previews and cutscenes take it back
+function talkCamOk() { const d = $('dlg'); return dlgOpen && !d.hidden && !d.querySelector('.prevWrap, canvas') && !d.classList.contains('galaxy') && state === 'play' && !(typeof CUT !== 'undefined' && CUT.on); }
+function talkLayoutOk() { return talkCamOk() && !$('shopRows'); }
 function talkStart(role, name) {
-  talkEnd(true); const f = talkFind(name); if (!f) return; const o = f.obj; if (!(f.id && TALK_NO_MOUTH.has(f.id))) addMouth(o, name);
-  TALK.who = o; TALK.name = name; TALK.on = true; TALK.rot = null; TALK.turnTo = null;
+  // the same person again (or a follow-up box right after closing one, like 'One more thing') keeps the shot without a cut
+  const prev = TALK.who, recent = prev && prev.parent && performance.now() - (TALK.closedAt || 0) < 900;
+  let f = talkFind(name) || talkFind(role); if (!f && (TALK.on || recent)) f = { obj: prev, id: TALK.id };
+  if (!f) { talkEnd(true); return; } if (f.obj !== prev) talkEnd(true); const o = f.obj; TALK.id = f.id; if (!(f.id && TALK_NO_MOUTH.has(f.id))) addMouth(o, name);
+  const same = o === prev; TALK.who = o; TALK.name = name; TALK.on = true; if (!same) { TALK.rot = null; TALK.turnTo = null; }
   // quest NPCs already turn to face you; anyone else turns for the talk and turns back after
-  if (!f.id) { TALK.rot = o.rotation.y; o.getWorldPosition(_tw); TALK.turnTo = Math.atan2(player.pos.x - _tw.x, player.pos.z - _tw.z); }
+  if (!f.id && !same) { TALK.rot = o.rotation.y; o.getWorldPosition(_tw); TALK.turnTo = Math.atan2(player.pos.x - _tw.x, player.pos.z - _tw.z); }
   TALK.until = 0; TALK.speak = null;
 }
-function talkEnd(quick) { if (TALK.who && TALK.rot != null) TALK.who.rotation.y = TALK.rot; if (TALK.who && TALK.who.userData.talkMouth) talkMouthStep(TALK.who.userData.talkMouth, 0, 0); TALK.who = null; TALK.on = false; TALK.rot = null; if (quick) TALK.b = 0; document.body.classList.remove('talkview'); }
+function talkEnd(quick) { if (TALK.who && TALK.rot != null) TALK.who.rotation.y = TALK.rot; if (TALK.who && TALK.who.userData.talkMouth) talkMouthStep(TALK.who.userData.talkMouth, 0, 0); TALK.who = null; TALK.on = false; TALK.rot = null; TALK.turnTo = null; if (quick) TALK.b = 0; document.body.classList.remove('talkview'); }
+// closing keeps the speaker for the ease back out, so a box that reopens straight away doesn't pull the camera out and in
+function talkClose() { if (!TALK.on) return; TALK.on = false; TALK.closedAt = performance.now(); document.body.classList.remove('talkview'); }
 { const _o = openDlg; openDlg = function (role, name) { const r = _o.apply(this, arguments); try { talkStart(role, name); } catch (e) { console.warn('talk', e); } return r; }; }
-{ const _c = closeDlg; closeDlg = function () { try { talkEnd(false); } catch (_) {} return _c.apply(this, arguments); }; }
+{ const _c = closeDlg; closeDlg = function () { try { talkClose(); } catch (_) {} return _c.apply(this, arguments); }; }
 // a new line: the mouth runs for the length of the babble unless a recording takes over
 new MutationObserver(() => { if (!TALK.on) return; const t = $('dlgLine').textContent || ''; TALK.until = performance.now() + (4 + Math.min(10, t.length >> 4)) * 65 + 60; }).observe($('dlgLine'), { childList: true, characterData: true, subtree: true });
 // called every frame after the player camera is placed: blend toward a shot of the speaker
 function talkCamFrame(dt) {
-  const now = performance.now(), ok = TALK.on && TALK.who && TALK.who.parent && talkLayoutOk();
-  document.body.classList.toggle('talkview', !!ok);
-  TALK.b += ((ok ? 1 : 0) - TALK.b) * (1 - Math.exp(-dt * 5)); if (TALK.b < 0.002 && !ok) { TALK.b = 0; return; }
+  const now = performance.now(), live = TALK.who && TALK.who.parent, ok = TALK.on && live && talkCamOk(), hold = !TALK.on && live && now - (TALK.closedAt || 0) < 450;
+  document.body.classList.toggle('talkview', !!(ok && talkLayoutOk()));
+  TALK.b += ((ok || hold ? 1 : 0) - TALK.b) * (1 - Math.exp(-dt * 5)); if (TALK.b < 0.002 && !ok && !hold) { TALK.b = 0; if (!TALK.on && TALK.who) talkEnd(true); return; }
   const o = TALK.who; if (!o || !o.parent) return;
   if (TALK.turnTo != null) { let d = TALK.turnTo - o.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); o.rotation.y += d * (1 - Math.exp(-dt * 6)); }
   const m = o.userData.talkMouth; talkMouthStep(m, ok ? talkAmp(now) : 0, now);

@@ -199,7 +199,7 @@ LEVELS.earth = {
   ],
   build() {
     buildJamestown();
-    scatterNature(320, 7, (i, x, z, r) => { if (i % 6 === 0) cane(x, z, 3); else if (i % 7 === 0) rock(x, z, 0.8 + r() * 1.2); else tree(x, z, 0.8 + r() * 0.6); });
+    scatterNature(320, 7, (i, x, z, r) => { if (i % 6 === 0) cane(x, z, 3); else if (i % 7 === 0) rock(x, z, 0.8 + r() * 1.2); else if (typeof earthTree === 'function') { const h = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453; earthTree(x, z, 0.8 + r() * 0.6, h - Math.floor(h)); } else tree(x, z, 0.8 + r() * 0.6); });
     bridgeOn(PATHS[2]);
     // scrapyard
     { const zx = Z.scrap.x, zz = Z.scrap.z;

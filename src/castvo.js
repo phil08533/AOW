@@ -36,19 +36,30 @@ function radioPlay(ac, buf, dest, vol, preset, amt) {
   const g = ng.gain; g.setValueAtTime(0, ac.currentTime); g.linearRampToValueAtTime(sq, ac.currentTime + 0.01); g.linearRampToValueAtTime(st, t0); g.setValueAtTime(st, end); g.linearRampToValueAtTime(sq, end + 0.02); g.linearRampToValueAtTime(0, end + 0.1);
   nz.start(); nz.stop(end + 0.12); s.start(t0); s.onended = () => { try { nz.stop(); } catch (_) {} };
   return s; }
-function castStop() { try { if (CASTVO.src) CASTVO.src.stop(); } catch (_) {} CASTVO.src = null; try { TALK.speak = null; } catch (_) {} }
+function castStop() { try { if (CASTVO.src) CASTVO.src.stop(); } catch (_) {} CASTVO.src = null; try { TALK.speak = null; } catch (_) {} castGate(0); }
+// a recorded line in a dialogue box: the words wait for the audio to start, and the options wait for it to finish (click the words or press Space to skip ahead)
+function castGate(mode, dur) { const d = $('dlg'); clearTimeout(CASTVO.gt); if (!d) return; d.classList.toggle('vo-wait', mode === 1); d.classList.toggle('vo-play', mode === 2);
+  if (mode === 1) CASTVO.gt = setTimeout(() => castGate(0), 1800); else if (mode === 2) CASTVO.gt = setTimeout(() => castGate(0), dur * 1000 + 250); }
+function castFetch(id) { const ac = SFX.ctx && SFX.ctx(); if (!ac || CASTVO.buf.has(id)) return Promise.resolve(CASTVO.buf.get(id)); if (CASTVO.pf && CASTVO.pf.has(id)) return CASTVO.pf.get(id); CASTVO.pf = CASTVO.pf || new Map();
+  const pr = fetch('voice/cast/' + id + '.mp3?v=' + CASTVO.v).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(a => ac.decodeAudioData(a)).then(buf => { CASTVO.buf.set(id, buf); CASTVO.pf.delete(id); return buf; }, e => { CASTVO.pf.delete(id); throw e; }); CASTVO.pf.set(id, pr); return pr; }
 function castPlay(id) { const ac = SFX.ctx && SFX.ctx(); if (!ac || !PREFS.voice || !PREFS.sfx) return false;
   const now = performance.now(); if (id === CASTVO.last && now - CASTVO.lastT < 1500) return true; CASTVO.last = id; CASTVO.lastT = now; castStop();
   try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (_) {} try { if (typeof burpSrc !== 'undefined' && burpSrc) burpSrc.stop(); } catch (_) {}
-  const go = buf => { if (CASTVO.last !== id) return; if (ac.state !== 'running') { try { ac.resume(); } catch (_) {} } const rf = CASTVO.radio.get(id); try { TALK.speak = { env: buf._env || (buf._env = talkEnv(buf)), t0: ac.currentTime + (rf ? 0.06 : 0), dur: buf.duration }; } catch (_) {} if (rf) { CASTVO.src = radioPlay(ac, buf, SFX.voiceOut(), 1.5, rf[0], rf[1]); return; } const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = buf; g.gain.value = 1.4; s.connect(g); g.connect(SFX.voiceOut()); s.start(); CASTVO.src = s; };
+  const fromDlg = dlgOpen && !$('dlg').hidden; if (fromDlg) castGate(1);
+  const go = buf => { if (CASTVO.last !== id) return; if (fromDlg) castGate(2, buf.duration + (CASTVO.radio.get(id) ? 0.06 : 0)); if (ac.state !== 'running') { try { ac.resume(); } catch (_) {} } const rf = CASTVO.radio.get(id); try { TALK.speak = { env: buf._env || (buf._env = talkEnv(buf)), t0: ac.currentTime + (rf ? 0.06 : 0), dur: buf.duration }; } catch (_) {} if (rf) { CASTVO.src = radioPlay(ac, buf, SFX.voiceOut(), 1.5, rf[0], rf[1]); return; } const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = buf; g.gain.value = 1.4; s.connect(g); g.connect(SFX.voiceOut()); s.start(); CASTVO.src = s; };
   const b = CASTVO.buf.get(id); if (b) { go(b); return true; }
-  fetch('voice/cast/' + id + '.mp3?v=' + CASTVO.v).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(a => ac.decodeAudioData(a)).then(buf => { CASTVO.buf.set(id, buf); if (performance.now() - now < 5000) go(buf); }).catch(() => {});
+  castFetch(id).then(buf => { if (buf && performance.now() - now < 5000) go(buf); else if (fromDlg) castGate(0); }).catch(() => { if (fromDlg) castGate(0); });
   return true; }
 function castSay(t) { const id = castId(t); if (id) return castPlay(id); castStop(); CASTVO.last = ''; return false; }
 castLoad();
 // dialogue boxes
 { const el = $('dlgLine'); if (el) new MutationObserver(() => { const e = castEdit(el.textContent); if (e && e !== el.textContent) { el.textContent = e; return; } if (dlgOpen) { castLoad(); castSay(el.textContent); } }).observe(el, { childList: true, characterData: true, subtree: true }); }
 { const _c = closeDlg; closeDlg = function () { castStop(); CASTVO.last = ''; return _c.apply(this, arguments); }; }
+// a conversation's next lines load while the first one plays, so each starts on time
+{ const _s = say; say = function (lines) { try { castLoad(); (lines || []).forEach(t => { const id = castId(typeof t === 'string' ? t : ''); if (id) castFetch(id).catch(() => {}); }); } catch (_) {} return _s.apply(this, arguments); }; }
+{ const skip = () => { const d = $('dlg'); if (d && d.classList.contains('vo-play')) { castGate(0); const f = $('dlgActs').querySelector('.pbtn:not(:disabled)'); if (f && !TOUCH) f.focus(); return true; } return false; };
+  $('dlgLine').addEventListener('click', skip); window.addEventListener('keydown', e => { if (!dlgOpen || !/^(Space|Enter|NumpadEnter|Digit[1-9])$/.test(e.code)) return; const d = $('dlg'); if (d.classList.contains('vo-wait') || skip()) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+  const st = document.createElement('style'); st.textContent = '#dlg.vo-wait .line { visibility: hidden; } #dlg.vo-wait .acts, #dlg.vo-play .acts { visibility: hidden; } #dlg.vo-play .line { cursor: pointer; }'; document.head.appendChild(st); }
 // the gibberish babble steps aside when a real recording is about to play
 { const _b = SFX.babble; SFX.babble = function () { const el = $('dlgLine'); if (el && dlgOpen && castId(el.textContent)) return; return _b.apply(this, arguments); }; }
 // cutscene captions (the overlay is added to <body> when a cutscene starts)

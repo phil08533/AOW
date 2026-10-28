@@ -18,8 +18,8 @@ body { text-shadow: 0 1px 2px rgba(0,0,0,.9); }
 .dlg .line { font-size: 18px; font-weight: 500; }
 .pbtn { font-family: var(--hud); font-weight: 700; letter-spacing: .04em; background: rgba(8,20,36,.75); border: 1px solid var(--hl2); border-radius: 2px; color: #e6f6ff; padding: 7px 14px; text-transform: uppercase; font-size: 14px; }
 .pbtn:hover:not(:disabled) { color: #fff; border-color: var(--hl); background: rgba(30,70,100,.6); }
-.pbtn.go { color: #1a0f00; background: linear-gradient(180deg, #ffd27a, #ff9a3c); border-color: #ffd27a; }
-.pbtn.go:hover:not(:disabled) { color: #000; background: linear-gradient(180deg, #ffe3a8, #ffb347); }
+.pbtn.go { color: #f2f8ff; background: linear-gradient(180deg, #4a95c4, #2f6f9a); border-color: #7fc4e8; }
+.pbtn.go:hover:not(:disabled) { color: #fff; background: linear-gradient(180deg, #6ab0dc, #3a86b8); }
 .cta::before, .pbtn:hover::before, .pbtn:focus-visible::before { content: none; }
 .rowi { border-bottom: 1px solid rgba(127,233,255,.12); font-family: var(--hud); font-weight: 500; }
 .rowi .meta { font-family: var(--mono); font-size: 15px; color: #9fd8ea; }

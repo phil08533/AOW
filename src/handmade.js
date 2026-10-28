@@ -20,8 +20,8 @@ if (!UI_THEMES[PREFS.uiTheme]) PREFS.uiTheme = 'Steel';
 function uiThemeCss(T) {
   const PANEL = hmFrame(T.body, T.lite, T.dark, '#b8862e');
   const BTN = hmFrame(T.btn, T.btnLite, T.dark), BTN_HI = hmFrame(T.btnLite, T.hiLite, T.dark), BTN_DN = hmFrame(T.dark, T.dark, T.btnLite);
-  const GO = hmFrame('#d08a2a', '#ffd27a', '#7a4a10'), GO_HI = hmFrame('#e8a03a', '#ffe6a8', '#8a5414');
-  const TAB_ON = hmFrame('#d08a2a', '#ffd27a', '#7a4a10');
+  const GO = hmFrame('#2f6f9a', '#7fc4e8', '#123a55'), GO_HI = hmFrame('#3a86b8', '#a8dcf5', '#16466a'); // Phil: no orange/yellow buttons, steel blue instead
+  const TAB_ON = hmFrame('#2f6f9a', '#7fc4e8', '#123a55');
   const hmBi = u => `border-style: solid !important; border-width: 8px !important; border-image: url(${u}) 8 fill stretch !important; border-radius: 0 !important; background: none !important;`;
   return `
 html:root { --ui: "Pixelify Sans", "Courier New", monospace; --hud: "Pixelify Sans", "Courier New", monospace; --mono: "Pixelify Sans", "Courier New", monospace; --num: "Pixelify Sans", "Courier New", monospace;
@@ -35,8 +35,8 @@ body { text-shadow: 2px 2px 0 #07060a !important; }
 .pbtn, .tbtn, #menuDrop button, body #tabWrap #menuDrop .hbtn { ${hmBi(BTN)} color: #f2e8d0 !important; font-weight: 600 !important; letter-spacing: .04em !important; text-shadow: 2px 2px 0 #07060a !important; padding: 2px 8px !important; box-shadow: none !important; transition: none !important; }
 .pbtn:hover:not(:disabled), .tbtn:hover, #menuDrop button:hover, body #tabWrap #menuDrop .hbtn:hover { border-image: url(${BTN_HI}) 8 fill stretch !important; color: #fff !important; }
 .pbtn:active:not(:disabled), .tbtn:active, #menuDrop button:active { border-image: url(${BTN_DN}) 8 fill stretch !important; transform: translateY(2px); }
-.pbtn.go, .pbtn.on, .pbtn.sel { border-image: url(${GO}) 8 fill stretch !important; color: #1a0f04 !important; text-shadow: 1px 1px 0 #ffe6a8 !important; }
-.pbtn.go:hover:not(:disabled) { border-image: url(${GO_HI}) 8 fill stretch !important; color: #000 !important; }
+.pbtn.go, .pbtn.on, .pbtn.sel { border-image: url(${GO}) 8 fill stretch !important; color: #f2f8ff !important; text-shadow: 1px 1px 0 #0b2233 !important; }
+.pbtn.go:hover:not(:disabled) { border-image: url(${GO_HI}) 8 fill stretch !important; color: #fff !important; }
 .pbtn:disabled { opacity: .45 !important; filter: grayscale(.6); }
 .pbtn kbd, .pbtn .k { border: 0 !important; background: rgba(0,0,0,.35) !important; color: inherit !important; border-radius: 0 !important; }
 .rowi { border-bottom: 2px dashed ${T.lite} !important; }

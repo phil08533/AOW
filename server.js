@@ -533,6 +533,32 @@ const server = http.createServer((req, res) => {
       if (req.method === 'POST' && pathname === '/api/castvo/fx') { let b = ''; req.on('data', c => { b += c; if (b.length > 1e5) req.destroy(); }); req.on('end', () => { try { const j = JSON.parse(b), F = fx(), ch = String(j.character || '');
         if (!lines().some(l => l.character === ch)) return send(400, { error: 'unknown character' }); const pr = j.p ? String(j.p) : null, am = Math.max(0, Math.min(1.5, +j.a || 0));
         if (pr) F.chars[ch] = { p: pr, a: Math.round(am * 100) / 100 }; else delete F.chars[ch]; fs.writeFileSync(FXP, JSON.stringify(F, null, 2) + '\n'); writeIndex(); send(200, { ok: true, fx: F, radio: radioIds() }); } catch (e) { send(400, { error: e.message }); } }); return; }
+      // voice actor credits: docs/voice_credits.json {chars:{character:{name,contact}}}; docs/voice_credits.md is the readable list for the credits check; build.py puts it in the game credits
+      const CRP = path.join(ROOT_DIR, 'docs', 'voice_credits.json'), credits = () => { try { const c = JSON.parse(fs.readFileSync(CRP, 'utf8')); c.chars = c.chars || {}; return c; } catch (_) { return { chars: {} }; } };
+      const cleanCr = (n, c) => ({ name: String(n || '').replace(/\s+/g, ' ').trim().slice(0, 80), contact: String(c || '').replace(/\s+/g, '').trim().slice(0, 160) });
+      const saveCredits = C => { const out = { chars: {} }; for (const k of Object.keys(C.chars).sort()) if (C.chars[k] && C.chars[k].name) out.chars[k] = C.chars[k]; fs.writeFileSync(CRP, JSON.stringify(out, null, 2) + '\n');
+        const by = new Map(); for (const [ch, v] of Object.entries(out.chars)) { const k = v.name.toLowerCase(), e = by.get(k) || { name: v.name, contact: '', roles: [] }; e.roles.push(ch); if (v.contact && !e.contact) e.contact = v.contact; by.set(k, e); }
+        const all = [...new Set(lines().map(l => l.character))], miss = all.filter(c => !out.chars[c]);
+        let md = '# Voice cast credits\n\nWritten by Cast Voices (/cast). Check names and contacts before release.\n\n| Voice actor | Contact | Characters |\n|---|---|---|\n';
+        for (const e of [...by.values()].sort((a, b) => a.name.localeCompare(b.name))) md += `| ${e.name.replace(/\|/g, '/')} | ${(e.contact || '').replace(/\|/g, '/')} | ${e.roles.join(', ').replace(/\|/g, '/')} |\n`;
+        md += `\n## Characters with no voice actor yet (${miss.length})\n\n${miss.join(', ') || 'None'}\n`; fs.writeFileSync(path.join(ROOT_DIR, 'docs', 'voice_credits.md'), md); return out; };
+      const rebuild = () => { const py = process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3'); try { return execSync(py + ' tools/build.py', { cwd: ROOT_DIR, encoding: 'utf8' }).trim(); } catch (e) { return 'rebuild failed: ' + e.message; } };
+      if (req.method === 'GET' && pathname === '/api/castvo/credits') return send(200, credits());
+      if (req.method === 'POST' && pathname === '/api/castvo/credit') { let b = ''; req.on('data', c => { b += c; if (b.length > 1e5) req.destroy(); }); req.on('end', () => { try { const j = JSON.parse(b), ch = String(j.character || ''), C = credits();
+        if (!lines().some(l => l.character === ch)) return send(400, { error: 'unknown character' }); const v = cleanCr(j.name, j.contact); if (v.name) C.chars[ch] = v; else delete C.chars[ch];
+        const out = saveCredits(C); send(200, { ok: true, credits: out, build: rebuild() }); } catch (e) { send(400, { error: e.message }); } }); return; }
+      // batch: one per line, any order, split by tab | , ; or " - ". A field matching a character name (or a line ID) picks the character, a field with @ or a web address is the contact, the other is the actor
+      if (req.method === 'POST' && pathname === '/api/castvo/credits') { let b = ''; req.on('data', c => { b += c; if (b.length > 2e5) req.destroy(); }); req.on('end', () => { try { const j = JSON.parse(b), C = credits(), L = lines();
+        const nk = t => String(t).toLowerCase().replace(/[^a-z0-9]/g, ''), chars = new Map(); for (const l of L) { chars.set(nk(l.character), l.character); }
+        const idChar = f => { const u = f.trim().toUpperCase(); const l = L.find(x => x.line_id === u) || L.find(x => u.length > 2 && x.line_id.startsWith(u.replace(/_?\d*$/, '') + '_')); return l ? l.character : null; };
+        const isContact = f => /@/.test(f) || /^(https?:\/\/|www\.)/i.test(f) || /^[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i.test(f);
+        const done = [], skipped = [];
+        for (const raw of String(j.text || '').split(/\r?\n/)) { const ln = raw.trim(); if (!ln) continue;
+          let fs2 = ln.includes('\t') ? ln.split('\t') : ln.includes('|') ? ln.split('|') : /\s[-–—]\s/.test(ln) ? ln.split(/\s[-–—]\s/) : ln.includes(';') ? ln.split(';') : ln.split(',');
+          fs2 = fs2.map(f => f.trim()).filter(Boolean); let ch = null, contact = '', name = [];
+          for (const f of fs2) { if (!ch && (chars.get(nk(f)) || idChar(f))) { ch = chars.get(nk(f)) || idChar(f); continue; } if (!contact && isContact(f)) { contact = f; continue; } name.push(f); }
+          if (!ch || !name.length) { skipped.push(ln.slice(0, 80)); continue; } const old = C.chars[ch], v = cleanCr(name.join(' '), contact); if (!v.contact && old && old.name === v.name) v.contact = old.contact; C.chars[ch] = v; done.push(ch + ' → ' + C.chars[ch].name); }
+        const out = saveCredits(C); send(200, { ok: true, credits: out, assigned: done, skipped, build: done.length ? rebuild() : '' }); } catch (e) { send(400, { error: e.message }); } }); return; }
       const id = urlObj.searchParams.get('id');
       if (req.method === 'POST' && pathname === '/api/castvo/upload') {
         if (!idOk(id)) return send(400, { error: 'unknown line id ' + id });

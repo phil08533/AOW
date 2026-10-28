@@ -77,20 +77,23 @@ input[type=search] { background: #0c1528; border: 1px solid var(--line); border-
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-let FX = { chars: {} }, RADIO = new Map(), AC = null, SRC = null, L = [], HAVE = {}, who = null, audio = null, ver = Date.now();
+let CR = { chars: {} }, FX = { chars: {} }, RADIO = new Map(), AC = null, SRC = null, L = [], HAVE = {}, who = null, audio = null, ver = Date.now();
 const toast = (t, err) => { const e = $('toast'); e.textContent = t; e.className = err ? 'err' : ''; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => { e.style.display = 'none'; }, 3500); };
-async function load() { const r = await fetch('/api/castvo'); const j = await r.json(); L = j.lines; HAVE = j.have; FX = j.fx || { chars: {} }; RADIO = new Map(Object.entries(j.radio || {})); if (!who && L.length) who = L[0].character; render(); }
+async function load() { const r = await fetch('/api/castvo'); const j = await r.json(); L = j.lines; HAVE = j.have; FX = j.fx || { chars: {} }; RADIO = new Map(Object.entries(j.radio || {})); try { CR = await (await fetch('/api/castvo/credits')).json(); } catch (_) {} if (!who && L.length) who = L[0].character; render(); }
 const chars = () => { const m = new Map(); for (const l of L) { const c = m.get(l.character) || { n: 0, h: 0 }; c.n++; if (HAVE[l.line_id]) c.h++; m.set(l.character, c); } return m; };
 function render() {
   const C = chars(), done = L.filter(l => HAVE[l.line_id]).length; $('total').textContent = `${done} of ${L.length} lines recorded · ${C.size} characters`;
-  let nav = '<h4>Characters</h4>'; for (const [c, v] of C) nav += `<a class="${c === who ? 'on' : ''}" data-c="${esc(c)}"><span>${v.h === v.n ? '✅ ' : ''}${esc(c)}</span><small>${v.h}/${v.n}</small></a>`;
+  let nav = '<h4>Characters</h4>'; for (const [c, v] of C) nav += `<a class="${c === who ? 'on' : ''}" data-c="${esc(c)}"><span>${v.h === v.n ? '✅ ' : ''}${esc(c)}${CR.chars[c] ? ' 🎙' : ''}</span><small>${v.h}/${v.n}</small></a>`;
   $('nav').innerHTML = nav; $('nav').querySelectorAll('a').forEach(a => a.onclick = () => { who = a.dataset.c; $('q').value = ''; render(); $('main').scrollTop = 0; });
   const q = $('q').value.trim().toLowerCase(), miss = $('miss').checked;
   const rows = L.filter(l => (q ? (l.line + ' ' + l.line_id + ' ' + l.character).toLowerCase().includes(q) : l.character === who) && (!miss || !HAVE[l.line_id]));
   const lead = q ? `Search: “${esc(q)}”` : esc(who || ''), first = L.find(l => l.character === who);
   let h = `<h2>${lead}</h2>${!q && first ? `<div class="when">${esc(first.actor || '')} · 📻 Radio <select id="rp"><option value="">Off (normal voice)</option>${Object.entries(RADIO_FX).map(([k, v]) => `<option value="${k}" ${cf().p === k ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select>
       Strength <input type="range" id="ra" min="0" max="150" step="5" value="${Math.round((cf().a == null ? 1 : cf().a) * 100)}" style="vertical-align:middle;accent-color:var(--gold)"> <span id="rav">${Math.round((cf().a == null ? 1 : cf().a) * 100)}%</span>
-      <button class="sm" id="rprev">▶ Preview</button></div>` : ''}
+      <button class="sm" id="rprev">▶ Preview</button></div>
+    <div class="when">🎙 Voice actor <input type="text" id="vn" placeholder="Name for the credits" value="${esc((CR.chars[who] || {}).name || '')}" style="width:190px"> Email or website <input type="text" id="vc" placeholder="optional, so people can hire them" value="${esc((CR.chars[who] || {}).contact || '')}" style="width:230px"> <button class="sm pri" id="vsave">💾 Save credit</button></div>` : ''}
+    <div class="tools"><button class="sm" id="crbatch">📝 Paste a batch of credits</button><button class="sm" id="pickmany">📂 Choose mp3 files</button></div>
+    <div id="crbox" style="display:none;margin-bottom:12px"><textarea id="crtext" rows="6" style="width:100%" placeholder="One per line, in any order: character (or a line ID), actor name, email or website&#10;Lt. Sela, Jane Doe, jane@example.com&#10;SERGEANT_ROCCO_001	John Smith	johnsmith.com"></textarea><div class="tools" style="margin:6px 0 0"><button class="sm pri" id="crgo">Assign</button><span class="note">Lines that don't name a character are skipped. Saving rebuilds the game and updates docs/voice_credits.md.</span></div></div>
     <div class="drop" id="drop">Drop mp3 files here, named by line ID (like <b>${esc((rows[0] || L[0] || {}).line_id || 'B_U_R_P_001')}.mp3</b>). Any number at once, from any character.<br>Or drop one file onto a single line below.</div>
     <div class="tools"><button id="playall">▶ Play every recorded line here</button><button id="stop">■ Stop</button><span class="note">To test in the game: press Play, go to the character and talk. Recorded lines play instead of the babble (Settings → Sound → Voice must be on).</span></div>`;
   for (const l of rows) { const has = HAVE[l.line_id];
@@ -128,10 +131,11 @@ function stopAll() { if (audio) audio.pause(); try { if (SRC) SRC.stop(); } catc
 function playId(id, over) { stopAll(); const rf = over !== undefined ? over : RADIO.get(id); if (!rf) return new Promise(ok => { audio = new Audio('/voice/cast/' + id + '.mp3?v=' + ver); audio.onended = audio.onerror = ok; audio.play().catch(ok); });
   AC = AC || new AudioContext(); return fetch('/voice/cast/' + id + '.mp3?v=' + ver).then(r => r.arrayBuffer()).then(a => AC.decodeAudioData(a)).then(buf => new Promise(ok => { SRC = radioPlay(AC, buf, AC.destination, 1, rf[0], rf[1]); SRC.onended = ok; })).catch(() => {}); }
 async function upload(id, file) { const r = await fetch('/api/castvo/upload?id=' + encodeURIComponent(id), { method: 'POST', headers: { 'Content-Type': 'audio/mpeg' }, body: file }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'upload failed'); HAVE[id] = j.size; ver = Date.now(); }
-const idFromName = n => { const base = n.replace(/\.mp3$/i, ''), ids = new Set(L.map(l => l.line_id)); if (ids.has(base)) return base; const m = base.match(/^[A-Za-z0-9_]+?_\d{3}/); return m && ids.has(m[0]) ? m[0] : null; };
+// finds a line ID anywhere in the file name, so Audacity's '01-LT_SELA_001.mp3' or 'LT_SELA_001 take2.mp3' still match
+const idFromName = n => { const base = n.replace(/\.mp3$/i, '').toUpperCase(), ids = new Set(L.map(l => l.line_id)); if (ids.has(base)) return base; for (const m of base.matchAll(/[A-Z0-9][A-Z0-9_]*?_\d{3}(?!\d)/g)) { let t = m[0]; while (t) { if (ids.has(t)) return t; const k = t.indexOf('_'); if (k < 0) break; t = t.slice(k + 1); } } return null; };
 async function bulk(files) { let ok = 0; const bad = [];
   for (const f of files) { const id = idFromName(f.name); if (!id || !/\.mp3$/i.test(f.name)) { bad.push(f.name); continue; } try { toast(`Uploading ${f.name}…`); await upload(id, f); ok++; } catch (e) { bad.push(f.name + ' (' + e.message + ')'); } }
-  render(); toast(`${ok} uploaded` + (bad.length ? ` · skipped: ${bad.slice(0, 6).join(', ')}${bad.length > 6 ? '…' : ''}` : ''), bad.length && !ok); }
+  render(); toast(`${ok} uploaded` + (bad.length ? ` · ${bad.length} skipped (no line ID in the name): ${bad.slice(0, 4).join(', ')}${bad.length > 4 ? '…' : ''}` : ''), !ok); }
 function pick(cb) { const i = document.createElement('input'); i.type = 'file'; i.accept = '.mp3,audio/mpeg'; i.onchange = () => i.files[0] && cb(i.files[0]); i.click(); }
 function wire(rows) {
   const d = $('drop'); ['dragenter', 'dragover'].forEach(e => d.addEventListener(e, ev => { ev.preventDefault(); d.classList.add('over'); }));
@@ -151,6 +155,12 @@ function wire(rows) {
       if (a === 'play') playId(id);
       if (a === 'up') pick(async f => { try { await upload(id, f); render(); toast('Saved ' + id); } catch (e) { toast(e.message, 1); } });
       if (a === 'del' && confirm('Delete the recording for ' + id + '?')) { await fetch('/api/castvo/delete?id=' + encodeURIComponent(id), { method: 'POST' }); delete HAVE[id]; render(); toast('Deleted ' + id); } }); });
+  $('pickmany').onclick = () => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.accept = '.mp3,audio/mpeg'; i.onchange = () => i.files.length && bulk([...i.files]); i.click(); };
+  $('crbatch').onclick = () => { const b = $('crbox'); b.style.display = b.style.display === 'none' ? 'block' : 'none'; if (b.style.display === 'block') $('crtext').focus(); };
+  $('crgo').onclick = async () => { toast('Saving credits and rebuilding…'); const r = await fetch('/api/castvo/credits', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: $('crtext').value }) }); const j = await r.json().catch(() => ({})); if (!r.ok) return toast(j.error || 'could not save', 1);
+    CR = j.credits; render(); toast(`${j.assigned.length} assigned` + (j.skipped.length ? ` · ${j.skipped.length} skipped: ${j.skipped.slice(0, 3).join(' / ')}${j.skipped.length > 3 ? '…' : ''}` : ''), !j.assigned.length); };
+  if ($('vsave')) $('vsave').onclick = async () => { toast('Saving credit and rebuilding…'); const r = await fetch('/api/castvo/credit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ character: who, name: $('vn').value, contact: $('vc').value }) }); const j = await r.json().catch(() => ({})); if (!r.ok) return toast(j.error || 'could not save', 1);
+    CR = j.credits; render(); toast(CR.chars[who] ? `${who}: voiced by ${CR.chars[who].name}. It's in the game credits and docs/voice_credits.md` : `${who}: credit removed`); };
   $('playall').onclick = async () => { const ids = rows.filter(l => HAVE[l.line_id]).map(l => l.line_id); window._stop = false; for (const id of ids) { if (window._stop) break; document.querySelectorAll('.row').forEach(r => r.style.borderColor = r.dataset.id === id ? 'var(--gold)' : ''); await playId(id); } };
   $('stop').onclick = () => { window._stop = true; stopAll(); };
   const rp = $('rp'), ra = $('ra'); if (rp) { let tm = 0;

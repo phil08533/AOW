@@ -3,6 +3,7 @@
 // Whenever a line shows in a dialogue box, a cutscene caption or B.U.R.P.'s speech and a recording exists, the recording plays.
 // No index.json (the published build today) means nothing changes.
 const CAST_LINES = {};
+const VOICE_CREDITS = []; // filled by build.py from docs/voice_credits.json (Cast Voices → Voice actor)
 const CASTVO = { radio: new Map(), have: new Set(), v: 0, t: 0, buf: new Map(), src: null, last: '', lastT: 0 };
 const castNorm = t => String(t || '').replace(/\s+/g, ' ').trim().replace(/^["“”]+|["“”]+$/g, '').trim();
 // lines Phil rewrote in Cast Voices (SCRIPT.say, keyed by the original line's hash): the new words show in dialogue boxes and still find their recording
@@ -54,3 +55,13 @@ castLoad();
 new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) { const cc = n.querySelector && n.querySelector('.cc'); if (cc) { castLoad(); new MutationObserver(() => castSay(cc.textContent)).observe(cc, { childList: true, characterData: true, subtree: true }); } } }).observe(document.body, { childList: true });
 // B.U.R.P.: a cast recording wins over his voice packs and the browser voice
 { const _bs = burpSay; burpSay = function (text) { const id = castId(typeof scr === 'function' ? scr(text) : text) || castId(text); if (id && castPlay(id)) return; return _bs.apply(this, arguments); }; }
+
+// ---- voice cast in the credits: the end roll gets a Voices section, the Codex credits tab lists each actor with a link to reach them ----
+const vcEsc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const vcHref = c => { c = String(c || '').trim(); if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)) return 'mailto:' + c; if (/^https?:\/\/\S+$/i.test(c)) return c; if (/^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i.test(c)) return 'https://' + c; return null; };
+function voiceCreditLines() { if (!VOICE_CREDITS.length) return []; return ['<b style="color:#ffd36a">Voices</b>', ...VOICE_CREDITS.map(e => `${vcEsc(e.name)} <span style="opacity:.7">as ${vcEsc(e.roles.join(', '))}</span>${e.contact ? `<br><small style="opacity:.6">${vcEsc(e.contact)}</small>` : ''}`), '<br>']; }
+{ const _o = openCodex; openCodex = function (tab) { const r = _o.apply(this, arguments); try { const rows = tab === 'credits' && VOICE_CREDITS.length && $('shopRows'); if (rows) {
+  const hd = document.createElement('div'); hd.className = 'rowi nodot'; hd.innerHTML = '<b>Voices</b><span></span>'; rows.appendChild(hd);
+  for (const e of VOICE_CREDITS) { const d = document.createElement('div'); d.className = 'rowi nodot'; const b = document.createElement('b'); b.textContent = e.name; const sp = document.createElement('span'); sp.textContent = e.roles.join(', '); d.append(b, sp);
+    const h = vcHref(e.contact); if (h) { const a = document.createElement('a'); a.href = h; a.target = '_blank'; a.rel = 'noopener'; a.className = 'pbtn'; a.textContent = /^mailto:/.test(h) ? 'Email' : 'Website'; a.title = e.contact; a.style.textDecoration = 'none'; a.addEventListener('click', ev => ev.stopPropagation()); d.appendChild(a); } rows.appendChild(d); }
+  if (typeof pageRows === 'function') pageRows(); } } catch (e) { console.warn('voice credits', e); } return r; }; }

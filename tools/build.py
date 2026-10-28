@@ -23,6 +23,15 @@ _vp=os.path.join(ROOT,'docs','voice_lines.csv')
 if os.path.exists(_vp):
     for r in csv.DictReader(open(_vp, encoding='utf-8')): _cl.setdefault(_vhash(_vnorm(r['line'])), r['line_id'])
 parts['FEATURES']=parts['FEATURES'].replace('const CAST_LINES = {};', 'const CAST_LINES = '+json.dumps(_cl)+';', 1)
+# voice actor credits from Cast Voices (docs/voice_credits.json) -> grouped by actor for the game credits
+_vc={}
+_vcp=os.path.join(ROOT,'docs','voice_credits.json')
+if os.path.exists(_vcp):
+    for _ch,_v in sorted(json.load(open(_vcp, encoding='utf-8')).get('chars',{}).items()):
+        if not _v.get('name'): continue
+        _e=_vc.setdefault(_v['name'].lower(), {'name':_v['name'],'contact':'','roles':[]}); _e['roles'].append(_ch)
+        if _v.get('contact') and not _e['contact']: _e['contact']=_v['contact']
+parts['FEATURES']=parts['FEATURES'].replace('const VOICE_CREDITS = [];', 'const VOICE_CREDITS = '+json.dumps(sorted(_vc.values(), key=lambda e:e['name'].lower()))+';', 1)
 h=open(os.path.join(SRC,'game.src.html'), encoding='utf-8').read()
 for k,v in parts.items():
     assert '{{'+k+'}}' in h, k

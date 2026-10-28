@@ -512,9 +512,12 @@ const server = http.createServer((req, res) => {
         if (f || row.length) { row.push(f); if (row.length > 1) rows.push(row); }
         const H = rows.shift() || []; return rows.map(r => Object.fromEntries(H.map((h, k) => [h, r[k] || '']))); } catch (_) { return []; } };
       const have = () => { const o = {}; try { for (const f of fs.readdirSync(CDIR)) if (f.endsWith('.mp3')) o[f.slice(0, -4)] = fs.statSync(path.join(CDIR, f)).size; } catch (_) {} return o; };
-      const writeIndex = () => { fs.mkdirSync(CDIR, { recursive: true }); fs.writeFileSync(path.join(CDIR, 'index.json'), JSON.stringify({ v: Date.now(), ids: Object.keys(have()).sort() })); };
+      const FXP = path.join(ROOT_DIR, 'docs', 'cast_fx.json'), fx = () => { try { return JSON.parse(fs.readFileSync(FXP, 'utf8')); } catch (_) { return { radio: [] }; } };
+      const radioIds = () => { const F = fx(), who = new Set(F.radio || []), re = F.radioLines ? new RegExp(F.radioLines, 'i') : null; return lines().filter(l => who.has(l.character) || (re && re.test(l.when_it_plays || ''))).map(l => l.line_id); };
+      const writeIndex = () => { fs.mkdirSync(CDIR, { recursive: true }); const h = have(); fs.writeFileSync(path.join(CDIR, 'index.json'), JSON.stringify({ v: Date.now(), ids: Object.keys(h).sort(), radio: radioIds().filter(id => h[id]) })); };
       const idOk = id => /^[A-Za-z0-9_]{2,60}$/.test(id || '') && lines().some(l => l.line_id === id);
-      if (req.method === 'GET' && pathname === '/api/castvo') return send(200, { lines: lines(), have: have() });
+      if (req.method === 'GET' && pathname === '/api/castvo') return send(200, { lines: lines(), have: have(), fx: fx(), radio: radioIds() });
+      if (req.method === 'POST' && pathname === '/api/castvo/fx') { let b = ''; req.on('data', c => { b += c; if (b.length > 1e5) req.destroy(); }); req.on('end', () => { try { const j = JSON.parse(b), F = fx(); F.radio = (j.radio || []).filter(x => typeof x === 'string').slice(0, 400); fs.writeFileSync(FXP, JSON.stringify(F, null, 2) + '\n'); writeIndex(); send(200, { ok: true, radio: radioIds() }); } catch (e) { send(400, { error: e.message }); } }); return; }
       const id = urlObj.searchParams.get('id');
       if (req.method === 'POST' && pathname === '/api/castvo/upload') {
         if (!idOk(id)) return send(400, { error: 'unknown line id ' + id });

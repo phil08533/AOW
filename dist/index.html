@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.65</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.66</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19642,6 +19642,7 @@ const UPDATES = [
   { id: 315, title: '2.23.50 · Cleaner minimap', items: ['The live minimap no longer shows fireflies, rain, sparks or other effects', 'Removed the little winding crown on the minimap watch (the pill-shaped thing)'] },
   { id: 316, title: '2.23.51 · Ready for the cast', items: ['The game can now play real voice-actor recordings for every character line, as they get recorded'] },
   { id: 317, title: '2.23.52 · Helmet radio', items: ['Recorded voices for helmeted characters and battle radio play through a light comms filter'] },
+  { id: 331, title: '2.23.66 · Thruster trails, Lulu\'s hair', items: ['Every thruster on your ship now leaves its own light trail, starting right at the nozzle. Change engines in the shipyard and the trails change with them', 'Lulu Sprinkles has a real hairstyle: a hairline, a side-swept fringe and a high ponytail that falls in a soft S, with a pink scrunchie'] },
   { id: 330, title: '2.23.65 · New trees on Earth', items: ['Earth\'s trees are replaced with proper low-poly trees: two leafy kinds with real branching trunks, plus a few bare dead trees for the war-torn look'] },
   { id: 329, title: '2.23.64 · Into the volcano', items: ['Capitone\'s Volcano Base has a Drome blast door in the cone now. Inside is the Volcano Forge: a tunnel, a huge cavern and a lava pit', 'Commander Vask fights from an island in the middle of the pit. His magma lifters rip lava out of the pit and throw it at you. A red circle marks where each one lands and fills up as it comes down, so keep moving', 'Grass sways in the wind on every grassy world', 'Lulu Sprinkles has a high blonde ponytail with a pink scrunchie', 'Trees no longer grow into the volcano base walls'] },
   { id: 328, title: '2.23.63 · Real sounds, arcade prizes, engine trails', items: ['Recorded room sound: McKlunkies, the mall food court, the Undercroft party and its muffled back room, Grub\'s Bar chatter, the New Jamestown park and the Neon Arcade', 'New recorded sounds for the pee break, the bar laughing at the end of the Mile Down, and the Greater Maw charging its big blast (now a long charge, a beat of silence, then a deep gut-blast)', 'Neon Arcade: Skee-Ball, claw machines, hoop shot and Whack-a-Blork, all paying tickets. Trade tickets at the prize counter for plushies and new ship furniture', 'Ships leave glowing light trails that fade out behind you', 'New engine sound: a heavy atomic jet, and the Miner chugs like a space diesel'] },
@@ -26014,13 +26015,7 @@ function mckRoom() {
 function mckLight(k) { MCKR.lit = MCKR.lit || new Map(); scene.traverse(o => { if (!o.isLight || o.isPointLight || o.isSpotLight) return; if (!MCKR.lit.has(o)) MCKR.lit.set(o, o.intensity); o.intensity = MCKR.lit.get(o) * k; });
   if (k > 0.99) { MCKR.lit.forEach((v, o) => { o.intensity = v; }); MCKR.lit = null; MCKR.dim = 1; } }
 { const _ll = loadLevel; loadLevel = function () { if (MCKR.lit) mckLight(1); return _ll.apply(this, arguments); }; }
-ROMANCE.lulu = { name: 'Lulu Sprinkles', role: 'McKlunkies play place attendant', away: 1, make: () => { const g = makeCivilian('#ff6aa8', '#f4f0e8', '#e0b892', '#ffd36a', '#c8402f'), hair = toon('#ffd36a');
-    // a high, bouncy blonde ponytail with a pink scrunchie
-    const tie = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.028, 6, 12), toon('#ff6aa8')); tie.position.set(0, 1.8, -0.17); tie.rotation.x = 0.5; g.add(tie);
-    const knot = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), hair); knot.position.set(0, 1.81, -0.2); g.add(knot);
-    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.02, 0.38, 8), hair); tail.position.set(0, 1.64, -0.3); tail.rotation.x = -0.45; g.add(tail);
-    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 6), hair); tip.scale.set(1, 1.5, 1); tip.position.set(0, 1.74, -0.25); g.add(tip);
-    return g; }, x: 0, z: 0, face: 0,
+ROMANCE.lulu = { name: 'Lulu Sprinkles', role: 'McKlunkies play place attendant', away: 1, make: () => luluHair(makeCivilian('#ff6aa8', '#f4f0e8', '#e0b892', '#ffd36a', '#c8402f')), x: 0, z: 0, face: 0,
   likes: ['klunkfries', 'klunkburger', 'megaklunk'], loves: 'megaklunk', perk: { txt: '+10% max HP', k: 'hp' },
   lines: { 0: ["Hi! Shoes off in the ball pit. Not you, you're too big. Gary, OFF.", "I've pulled forty-one socks out of that pit today. None of them match."], 1: ["Oh, it's you! The only grown-up here who doesn't try the slide.", "If a kid bites you, it's a compliment. Mostly."],
     2: ["I saved you a Klunk Fry. It fell on the floor but only for a second.", "Sometimes I hide in the tube on my break. It's very peaceful. It smells like feet."], 3: ["You're the best part of my shift. The second best is when they close the pit for cleaning.", "Wanna see the secret tube? There's no secret tube. I just wanted you to follow me."],
@@ -26126,6 +26121,29 @@ function openMobTank() { mobS();
   const done = () => { SFX.ui(); markDirty(); mobTankFill(); levelGroup.children.forEach(o => { const p = o.geometry && o.geometry.parameters; if (p && p.width === 0.5 && p.height === 0.25 && p.depth === 0.12) o.visible = !S.tank2.length; }); render(); };
   $('dlgActs').before(rows); acts([['Done', closeDlg, true]]); render();
 }
+
+// ---- Lulu's hair (2.23.66): a real hairstyle instead of blobs. A cap that hugs the head with a hairline, a swept fringe,
+// and a high ponytail built as a curved, tapered tube that lifts off the crown and falls in an S down her back ----
+function hairTube(pts, r0, r1, rMax, mat) {
+  const curve = new THREE.CatmullRomCurve3(pts.map(p => V(...p))), TS = 24, RS = 10, geo = new THREE.TubeGeometry(curve, TS, 1, RS, false), P = geo.attributes.position;
+  for (let i = 0; i <= TS; i++) { const t = i / TS, c = curve.getPointAt(t), r = (t < 0.3 ? r0 + (rMax - r0) * Math.sin(t / 0.3 * Math.PI / 2) : r1 + (rMax - r1) * Math.cos((t - 0.3) / 0.7 * Math.PI / 2)) * (t > 0.92 ? 1 - (t - 0.92) / 0.08 * 0.85 : 1);
+    for (let j = 0; j <= RS; j++) { const k = i * (RS + 1) + j; P.setXYZ(k, c.x + (P.getX(k) - c.x) * r, c.y + (P.getY(k) - c.y) * r, c.z + (P.getZ(k) - c.z) * r); } }
+  geo.computeVertexNormals(); geo.computeBoundingBox(); const c = geo.boundingBox.getCenter(V(0, 0, 0)); geo.translate(-c.x, -c.y, -c.z);
+  const m = new THREE.Mesh(geo, mat); m.position.copy(c); return m; }   // centred, so the rig puts it on the head bone by its height
+function luluHair(g) {
+  const hair = toon('#ffd36a'), deep = toon('#e8b048'), H = V(0, 1.76, 0);
+  // the cap over the crown, and the back of the head down to the nape
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(1, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.42), hair); cap.scale.set(0.148, 0.168, 0.152); cap.position.copy(H); cap.rotation.x = -0.32; g.add(cap);
+  const back = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12, Math.PI, Math.PI, 0, Math.PI * 0.7), deep); back.scale.set(0.15, 0.17, 0.152); back.position.copy(H); g.add(back);
+  // a side-swept fringe
+  for (const [x, y, z, rz, sx] of [[-0.06, 1.86, 0.11, 0.7, 0.07], [0.0, 1.875, 0.12, 0.45, 0.065], [0.06, 1.87, 0.105, 0.2, 0.055]]) {
+    const f = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), hair); f.scale.set(sx, 0.03, 0.04); f.position.set(x, y, z); f.rotation.set(0.35, 0, rz); g.add(f); }
+  for (const s of [-1, 1]) { const sb = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), hair); sb.scale.set(0.018, 0.06, 0.025); sb.position.set(0.128 * s, 1.74, 0.05); sb.rotation.z = -0.15 * s; g.add(sb); } // strands by the ears
+  // the ponytail: lifts up and back off the crown, then falls in a soft S, with a second darker lock under it for volume
+  g.add(hairTube([[0, 1.89, -0.1], [0, 1.93, -0.18], [0, 1.9, -0.25], [0.01, 1.8, -0.28], [0.025, 1.67, -0.26], [0.0, 1.56, -0.22], [-0.02, 1.48, -0.22]], 0.04, 0.008, 0.052, hair));
+  g.add(hairTube([[0.01, 1.88, -0.12], [0.01, 1.91, -0.19], [0.02, 1.87, -0.25], [0.035, 1.76, -0.26], [0.03, 1.63, -0.23], [0.015, 1.55, -0.2]], 0.03, 0.008, 0.038, deep));
+  const tie = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.017, 8, 16), toon('#ff6aa8')); tie.position.set(0, 1.905, -0.14); tie.rotation.x = 1.1; g.add(tie);
+  return g; }
 
 // stand still and look at the view: after a few quiet seconds the HUD and buttons fade away, and any movement or input brings them back
 const HIDLE = { t: performance.now(), p: null, off: false };
@@ -30638,34 +30656,45 @@ function gameWhack(G) { const { x } = G; let t = 0, left = 30, sc = 0, nextT = 0
 { const _c = arcOpen; arcOpen = window.arcOpen = window.openArcade = function (g) { const c0 = S.cr; _c(g); const iv = setInterval(() => { if (ARC.on) { if (S.cr > c0 + 0) { arcTix(Math.floor((S.cr - c0) / 40)); clearInterval(iv); } return; } clearInterval(iv); }, 300); }; }
 
 // =================== SHIP ENGINES (2.23.63): light-ribbon exhaust trails + engine voices ===================
-// Trails: two glowing ribbons (one per nozzle) that stream off the stern, taper and fade out over ~0.9 s.
+// Trails: one glowing ribbon per thruster, starting right at the nozzle, taper and fade out over ~0.9 s.
 // Engine: most ships run an "atomic jet" (sub throb, rumble, roaring wash, turbine whine); the miner runs a space diesel (chugging low saw + clatter).
-const SENG = { rib: null, eng: null, tickT: 0 };
+const SENG = { rib: [], eng: null, tickT: 0, ship: null };
 const RIB_N = 64, RIB_LIFE = 0.9;
-function ribMake() {
-  const mk = () => { const g = new THREE.BufferGeometry(), pos = new Float32Array(RIB_N * 2 * 3), col = new Float32Array(RIB_N * 2 * 3), idx = [];
-    for (let i = 0; i < RIB_N - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
-    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.setIndex(idx);
-    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
-    m.frustumCulled = false; m.renderOrder = 5; return { m, pts: [] }; };
-  return [mk(), mk()];
-}
+function ribMake() { const g = new THREE.BufferGeometry(), pos = new Float32Array(RIB_N * 2 * 3), col = new Float32Array(RIB_N * 2 * 3), idx = [];
+  for (let i = 0; i < RIB_N - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.setIndex(idx);
+  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+  m.frustumCulled = false; m.renderOrder = 5; return { m, pts: [], head: new THREE.Vector3() }; }
+// one trail per thruster: the glowing engine faces the ship was built with (ship.userData.engines), read in the ship's own space,
+// so swapping parts in the shipbuilder changes how many trails there are and where they come from
+function shipNozzles(ship) {
+  if (ship.userData.nozz && ship.userData.nozzOf === ship.userData.engines) return ship.userData.nozz;
+  const bb = new THREE.Box3(), out = [];
+  for (const m of ship.userData.engines || []) { if (!m.geometry) continue; m.geometry.computeBoundingBox(); m.updateMatrix();
+    // the matrix up to the ship (engines can sit inside sub-groups)
+    const M = m.matrix.clone(); for (let p = m.parent; p && p !== ship; p = p.parent) { p.updateMatrix(); M.premultiply(p.matrix); }
+    bb.copy(m.geometry.boundingBox).applyMatrix4(M); const c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3());
+    out.push({ p: V(c.x, c.y, bb.max.z + 0.02), r: Math.max(0.12, Math.min(sz.x, sz.y) / 2) }); }   // the back face of the glow plate (ships fly toward -z)
+  ship.userData.nozz = out; ship.userData.nozzOf = ship.userData.engines; return out; }
 const _rA = new THREE.Vector3(), _rB = new THREE.Vector3(), _rC = new THREE.Vector3(), _rCol = new THREE.Color(), _rW = new THREE.Color(1, 1, 1);
 // F = space flight state, power = throttle * boost (0..1.8), hex = exhaust color or 'rainbow'
 function shipTrailTick(F, dt, power, hex, t) {
-  if (!SENG.rib || SENG.rib[0].m.parent !== levelGroup) { SENG.rib = ribMake(); SENG.rib.forEach(R => levelGroup.add(R.m)); }
-  const on = power > 0.05, w = 0.07 + power * 0.1;
+  const ship = F.ship; if (!ship) return; ship.updateMatrixWorld(true);
+  const N = shipNozzles(ship), sc = ship.scale.x;
+  if (SENG.ship !== ship || SENG.rib.length !== N.length || (SENG.rib[0] && SENG.rib[0].m.parent !== levelGroup)) {
+    SENG.rib.forEach(R => { if (R.m.parent) R.m.parent.remove(R.m); R.m.geometry.dispose(); }); SENG.rib = N.map(() => ribMake()); SENG.rib.forEach(R => levelGroup.add(R.m)); SENG.ship = ship; }
+  const on = power > 0.05;
   SENG.rib.forEach((R, s) => {
+    const Nz = N[s], np = R.head.copy(Nz.p).applyMatrix4(ship.matrixWorld).clone(), w = Nz.r * sc * (0.75 + power * 0.35);
     for (const p of R.pts) p.a += dt;
     while (R.pts.length && R.pts[0].a > RIB_LIFE) R.pts.shift();
-    if (on) { const c = hex === 'rainbow' ? new THREE.Color().setHSL((t * 0.4 + s * 0.5) % 1, 1, 0.6) : new THREE.Color(hex);
-      c.convertSRGBToLinear(); const np = player.pos.clone().addScaledVector(shipFwd, -F.sternD).addScaledVector(shipRight, s ? 1.4 : -1.4).addScaledVector(shipUp, -0.2), L = R.pts[R.pts.length - 1];
-      // at low frame rates the ship jumps far between frames: fill the last 8 units with in-between points so the fade stays smooth
+    if (on) { const c = hex === 'rainbow' ? new THREE.Color().setHSL((t * 0.4 + s / N.length) % 1, 1, 0.6) : new THREE.Color(hex); c.convertSRGBToLinear();
+      const L = R.pts[R.pts.length - 1];
+      // at low frame rates the ship jumps far between frames: fill the gap with in-between points so the trail stays smooth
       if (L) { const d = L.p.distanceTo(np), k = Math.min(12, Math.ceil(Math.min(d, 8) / 0.7)); for (let j = k - 1; j >= 1; j--) { const u = j / k * Math.min(d, 8) / Math.max(d, 1e-6); R.pts.push({ p: np.clone().lerp(L.p, u), a: L.a * u, c, w }); } }
       R.pts.push({ p: np, a: 0, c, w });
-      // only the last 8 units can ever show (the fade-out length), so drop the rest
       while (R.pts.length > 1 && (R.pts.length > RIB_N || R.pts[0].p.distanceTo(np) > 8)) R.pts.shift(); }
-    R.head = (R.head || new THREE.Vector3()).copy(player.pos).addScaledVector(shipFwd, -F.sternD).addScaledVector(shipRight, s ? 1.4 : -1.4).addScaledVector(shipUp, -0.2);
+    else if (R.pts.length) R.pts[R.pts.length - 1].p.copy(np);   // idling: the trail still starts at the nozzle
     const n = R.pts.length, pos = R.m.geometry.attributes.position.array, col = R.m.geometry.attributes.color.array;
     for (let i = 0; i < RIB_N; i++) {
       const P = R.pts[Math.min(i, n - 1)], o = i * 6;
@@ -30674,11 +30703,11 @@ function shipTrailTick(F, dt, power, hex, t) {
       const Q = R.pts[Math.min(n - 1, i + 1)], Pp = R.pts[Math.max(0, i - 1)];
       _rA.subVectors(Q.p, Pp.p); if (_rA.lengthSq() < 1e-6) _rA.copy(shipFwd);
       _rB.subVectors(camera.position, P.p); _rC.crossVectors(_rA, _rB).normalize();
-      const dc = _rB.length(), k = 1 - P.a / RIB_LIFE, ds = P.p.distanceTo(R.head), hw = P.w * (0.25 + 0.75 * k) * (i === n - 1 ? 0.6 : 1) * Math.min(1, dc / 22), f = 0.7 * k * k * Math.max(0, 1 - ds / 7) ** 1.3 * Math.min(1, Math.max(0, (dc - 5) / 5)); // thinner close to the camera so it reads as a streak, never a wall
+      const dc = _rB.length(), k = 1 - P.a / RIB_LIFE, ds = P.p.distanceTo(R.head), hw = P.w * (0.2 + 0.8 * k) * Math.min(1, dc / 22), f = 0.8 * k * k * Math.max(0, 1 - ds / 7) ** 1.3 * Math.min(1, Math.max(0, (dc - 5) / 5));
       pos[o] = P.p.x + _rC.x * hw; pos[o + 1] = P.p.y + _rC.y * hw; pos[o + 2] = P.p.z + _rC.z * hw;
       pos[o + 3] = P.p.x - _rC.x * hw; pos[o + 4] = P.p.y - _rC.y * hw; pos[o + 5] = P.p.z - _rC.z * hw;
-      // hot white near the nozzle, the exhaust color as it cools
-      _rCol.copy(P.c).lerp(_rW, 0.3 * k * k * k);
+      // hot white at the nozzle, the exhaust color as it cools
+      _rCol.copy(P.c).lerp(_rW, 0.45 * k * k * k);
       col[o] = col[o + 3] = _rCol.r * f; col[o + 1] = col[o + 4] = _rCol.g * f; col[o + 2] = col[o + 5] = _rCol.b * f;
     }
     R.m.geometry.attributes.position.needsUpdate = true; R.m.geometry.attributes.color.needsUpdate = true; R.m.visible = n > 1;

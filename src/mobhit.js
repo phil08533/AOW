@@ -155,13 +155,7 @@ function mckRoom() {
 function mckLight(k) { MCKR.lit = MCKR.lit || new Map(); scene.traverse(o => { if (!o.isLight || o.isPointLight || o.isSpotLight) return; if (!MCKR.lit.has(o)) MCKR.lit.set(o, o.intensity); o.intensity = MCKR.lit.get(o) * k; });
   if (k > 0.99) { MCKR.lit.forEach((v, o) => { o.intensity = v; }); MCKR.lit = null; MCKR.dim = 1; } }
 { const _ll = loadLevel; loadLevel = function () { if (MCKR.lit) mckLight(1); return _ll.apply(this, arguments); }; }
-ROMANCE.lulu = { name: 'Lulu Sprinkles', role: 'McKlunkies play place attendant', away: 1, make: () => { const g = makeCivilian('#ff6aa8', '#f4f0e8', '#e0b892', '#ffd36a', '#c8402f'), hair = toon('#ffd36a');
-    // a high, bouncy blonde ponytail with a pink scrunchie
-    const tie = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.028, 6, 12), toon('#ff6aa8')); tie.position.set(0, 1.8, -0.17); tie.rotation.x = 0.5; g.add(tie);
-    const knot = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), hair); knot.position.set(0, 1.81, -0.2); g.add(knot);
-    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.02, 0.38, 8), hair); tail.position.set(0, 1.64, -0.3); tail.rotation.x = -0.45; g.add(tail);
-    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 6), hair); tip.scale.set(1, 1.5, 1); tip.position.set(0, 1.74, -0.25); g.add(tip);
-    return g; }, x: 0, z: 0, face: 0,
+ROMANCE.lulu = { name: 'Lulu Sprinkles', role: 'McKlunkies play place attendant', away: 1, make: () => luluHair(makeCivilian('#ff6aa8', '#f4f0e8', '#e0b892', '#ffd36a', '#c8402f')), x: 0, z: 0, face: 0,
   likes: ['klunkfries', 'klunkburger', 'megaklunk'], loves: 'megaklunk', perk: { txt: '+10% max HP', k: 'hp' },
   lines: { 0: ["Hi! Shoes off in the ball pit. Not you, you're too big. Gary, OFF.", "I've pulled forty-one socks out of that pit today. None of them match."], 1: ["Oh, it's you! The only grown-up here who doesn't try the slide.", "If a kid bites you, it's a compliment. Mostly."],
     2: ["I saved you a Klunk Fry. It fell on the floor but only for a second.", "Sometimes I hide in the tube on my break. It's very peaceful. It smells like feet."], 3: ["You're the best part of my shift. The second best is when they close the pit for cleaning.", "Wanna see the secret tube? There's no secret tube. I just wanted you to follow me."],
@@ -267,3 +261,26 @@ function openMobTank() { mobS();
   const done = () => { SFX.ui(); markDirty(); mobTankFill(); levelGroup.children.forEach(o => { const p = o.geometry && o.geometry.parameters; if (p && p.width === 0.5 && p.height === 0.25 && p.depth === 0.12) o.visible = !S.tank2.length; }); render(); };
   $('dlgActs').before(rows); acts([['Done', closeDlg, true]]); render();
 }
+
+// ---- Lulu's hair (2.23.66): a real hairstyle instead of blobs. A cap that hugs the head with a hairline, a swept fringe,
+// and a high ponytail built as a curved, tapered tube that lifts off the crown and falls in an S down her back ----
+function hairTube(pts, r0, r1, rMax, mat) {
+  const curve = new THREE.CatmullRomCurve3(pts.map(p => V(...p))), TS = 24, RS = 10, geo = new THREE.TubeGeometry(curve, TS, 1, RS, false), P = geo.attributes.position;
+  for (let i = 0; i <= TS; i++) { const t = i / TS, c = curve.getPointAt(t), r = (t < 0.3 ? r0 + (rMax - r0) * Math.sin(t / 0.3 * Math.PI / 2) : r1 + (rMax - r1) * Math.cos((t - 0.3) / 0.7 * Math.PI / 2)) * (t > 0.92 ? 1 - (t - 0.92) / 0.08 * 0.85 : 1);
+    for (let j = 0; j <= RS; j++) { const k = i * (RS + 1) + j; P.setXYZ(k, c.x + (P.getX(k) - c.x) * r, c.y + (P.getY(k) - c.y) * r, c.z + (P.getZ(k) - c.z) * r); } }
+  geo.computeVertexNormals(); geo.computeBoundingBox(); const c = geo.boundingBox.getCenter(V(0, 0, 0)); geo.translate(-c.x, -c.y, -c.z);
+  const m = new THREE.Mesh(geo, mat); m.position.copy(c); return m; }   // centred, so the rig puts it on the head bone by its height
+function luluHair(g) {
+  const hair = toon('#ffd36a'), deep = toon('#e8b048'), H = V(0, 1.76, 0);
+  // the cap over the crown, and the back of the head down to the nape
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(1, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.42), hair); cap.scale.set(0.148, 0.168, 0.152); cap.position.copy(H); cap.rotation.x = -0.32; g.add(cap);
+  const back = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12, Math.PI, Math.PI, 0, Math.PI * 0.7), deep); back.scale.set(0.15, 0.17, 0.152); back.position.copy(H); g.add(back);
+  // a side-swept fringe
+  for (const [x, y, z, rz, sx] of [[-0.06, 1.86, 0.11, 0.7, 0.07], [0.0, 1.875, 0.12, 0.45, 0.065], [0.06, 1.87, 0.105, 0.2, 0.055]]) {
+    const f = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), hair); f.scale.set(sx, 0.03, 0.04); f.position.set(x, y, z); f.rotation.set(0.35, 0, rz); g.add(f); }
+  for (const s of [-1, 1]) { const sb = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), hair); sb.scale.set(0.018, 0.06, 0.025); sb.position.set(0.128 * s, 1.74, 0.05); sb.rotation.z = -0.15 * s; g.add(sb); } // strands by the ears
+  // the ponytail: lifts up and back off the crown, then falls in a soft S, with a second darker lock under it for volume
+  g.add(hairTube([[0, 1.89, -0.1], [0, 1.93, -0.18], [0, 1.9, -0.25], [0.01, 1.8, -0.28], [0.025, 1.67, -0.26], [0.0, 1.56, -0.22], [-0.02, 1.48, -0.22]], 0.04, 0.008, 0.052, hair));
+  g.add(hairTube([[0.01, 1.88, -0.12], [0.01, 1.91, -0.19], [0.02, 1.87, -0.25], [0.035, 1.76, -0.26], [0.03, 1.63, -0.23], [0.015, 1.55, -0.2]], 0.03, 0.008, 0.038, deep));
+  const tie = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.017, 8, 16), toon('#ff6aa8')); tie.position.set(0, 1.905, -0.14); tie.rotation.x = 1.1; g.add(tie);
+  return g; }

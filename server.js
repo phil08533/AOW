@@ -512,12 +512,17 @@ const server = http.createServer((req, res) => {
         if (f || row.length) { row.push(f); if (row.length > 1) rows.push(row); }
         const H = rows.shift() || []; return rows.map(r => Object.fromEntries(H.map((h, k) => [h, r[k] || '']))); } catch (_) { return []; } };
       const have = () => { const o = {}; try { for (const f of fs.readdirSync(CDIR)) if (f.endsWith('.mp3')) o[f.slice(0, -4)] = fs.statSync(path.join(CDIR, f)).size; } catch (_) {} return o; };
-      const FXP = path.join(ROOT_DIR, 'docs', 'cast_fx.json'), fx = () => { try { return JSON.parse(fs.readFileSync(FXP, 'utf8')); } catch (_) { return { radio: [] }; } };
-      const radioIds = () => { const F = fx(), who = new Set(F.radio || []), re = F.radioLines ? new RegExp(F.radioLines, 'i') : null; return lines().filter(l => who.has(l.character) || (re && re.test(l.when_it_plays || ''))).map(l => l.line_id); };
-      const writeIndex = () => { fs.mkdirSync(CDIR, { recursive: true }); const h = have(); fs.writeFileSync(path.join(CDIR, 'index.json'), JSON.stringify({ v: Date.now(), ids: Object.keys(h).sort(), radio: radioIds().filter(id => h[id]) })); };
+      const FXP = path.join(ROOT_DIR, 'docs', 'cast_fx.json'), fx = () => { let F = {}; try { F = JSON.parse(fs.readFileSync(FXP, 'utf8')); } catch (_) {}
+        F.chars = F.chars || {}; if (Array.isArray(F.radio)) { for (const c of F.radio) F.chars[c] = F.chars[c] || { p: 'helmet', a: 1 }; delete F.radio; }
+        if (typeof F.radioLines === 'string') { F.lines = { match: F.radioLines, p: 'comms', a: 1 }; delete F.radioLines; } return F; };
+      const radioIds = () => { const F = fx(), o = {}, L = F.lines, re = L && L.match ? new RegExp(L.match, 'i') : null;
+        for (const l of lines()) { const c = F.chars[l.character]; if (c && c.p) o[l.line_id] = [c.p, c.a == null ? 1 : c.a]; else if (re && re.test(l.when_it_plays || '')) o[l.line_id] = [L.p || 'comms', L.a == null ? 1 : L.a]; } return o; };
+      const writeIndex = () => { fs.mkdirSync(CDIR, { recursive: true }); const h = have(); fs.writeFileSync(path.join(CDIR, 'index.json'), JSON.stringify({ v: Date.now(), ids: Object.keys(h).sort(), radio: Object.fromEntries(Object.entries(radioIds()).filter(([id]) => h[id])) })); };
       const idOk = id => /^[A-Za-z0-9_]{2,60}$/.test(id || '') && lines().some(l => l.line_id === id);
       if (req.method === 'GET' && pathname === '/api/castvo') return send(200, { lines: lines(), have: have(), fx: fx(), radio: radioIds() });
-      if (req.method === 'POST' && pathname === '/api/castvo/fx') { let b = ''; req.on('data', c => { b += c; if (b.length > 1e5) req.destroy(); }); req.on('end', () => { try { const j = JSON.parse(b), F = fx(); F.radio = (j.radio || []).filter(x => typeof x === 'string').slice(0, 400); fs.writeFileSync(FXP, JSON.stringify(F, null, 2) + '\n'); writeIndex(); send(200, { ok: true, radio: radioIds() }); } catch (e) { send(400, { error: e.message }); } }); return; }
+      if (req.method === 'POST' && pathname === '/api/castvo/fx') { let b = ''; req.on('data', c => { b += c; if (b.length > 1e5) req.destroy(); }); req.on('end', () => { try { const j = JSON.parse(b), F = fx(), ch = String(j.character || '');
+        if (!lines().some(l => l.character === ch)) return send(400, { error: 'unknown character' }); const pr = j.p ? String(j.p) : null, am = Math.max(0, Math.min(1.5, +j.a || 0));
+        if (pr) F.chars[ch] = { p: pr, a: Math.round(am * 100) / 100 }; else delete F.chars[ch]; fs.writeFileSync(FXP, JSON.stringify(F, null, 2) + '\n'); writeIndex(); send(200, { ok: true, fx: F, radio: radioIds() }); } catch (e) { send(400, { error: e.message }); } }); return; }
       const id = urlObj.searchParams.get('id');
       if (req.method === 'POST' && pathname === '/api/castvo/upload') {
         if (!idOk(id)) return send(400, { error: 'unknown line id ' + id });

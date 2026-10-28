@@ -3,30 +3,40 @@
 // Whenever a line shows in a dialogue box, a cutscene caption or B.U.R.P.'s speech and a recording exists, the recording plays.
 // No index.json (the published build today) means nothing changes.
 const CAST_LINES = {};
-const CASTVO = { radio: new Set(), have: new Set(), v: 0, t: 0, buf: new Map(), src: null, last: '', lastT: 0 };
+const CASTVO = { radio: new Map(), have: new Set(), v: 0, t: 0, buf: new Map(), src: null, last: '', lastT: 0 };
 const castNorm = t => String(t || '').replace(/\s+/g, ' ').trim().replace(/^["“”]+|["“”]+$/g, '').trim();
 const castId = t => { const id = CAST_LINES[burpHash(castNorm(t))]; return id && CASTVO.have.has(id) ? id : null; };
 function castLoad() { if (performance.now() - CASTVO.t < 8000) return; CASTVO.t = performance.now();
-  fetch('voice/cast/index.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).then(j => { if (!j || !Array.isArray(j.ids)) return; if (j.v !== CASTVO.v) CASTVO.buf.clear(); CASTVO.v = j.v; CASTVO.have = new Set(j.ids); CASTVO.radio = new Set(j.radio || []); }).catch(() => {}); }
-// helmet radio: a light comms filter (telephone band, a little bite, faint static, a soft squelch at each end). Same code in cast.html and src/castvo.js
-function radioPlay(ac, buf, dest, vol) {
-  const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 300; hp.Q.value = 0.7;
-  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3600; lp.Q.value = 0.8;
-  const pk = ac.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 1800; pk.gain.value = 4; pk.Q.value = 1;
-  const sh = ac.createWaveShaper(), cv = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 511.5 - 1; cv[i] = Math.tanh(x * 2.2) / Math.tanh(2.2); } sh.curve = cv;
-  const wet = ac.createGain(), dry = ac.createGain(), out = ac.createGain(); wet.gain.value = 0.85; dry.gain.value = 0.18; out.gain.value = vol;
+  fetch('voice/cast/index.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).then(j => { if (!j || !Array.isArray(j.ids)) return; if (j.v !== CASTVO.v) CASTVO.buf.clear(); CASTVO.v = j.v; CASTVO.have = new Set(j.ids); CASTVO.radio = new Map(Array.isArray(j.radio) ? j.radio.map(id => [id, ['helmet', 1]]) : Object.entries(j.radio || {})); }).catch(() => {}); }
+// helmet radio presets (same code in cast.html and src/castvo.js). amt is the strength slider: 0 = clean, 1 = the preset, up to 1.5 = extra crunchy
+const RADIO_FX = {
+  helmet: { name: 'Helmet (light)', hp: 300, lp: 3600, pf: 1800, pg: 4, drive: 2.2, stat: 0.012, sq: 0.08, dry: 0.18, box: 0 },
+  comms: { name: 'Clean comms', hp: 250, lp: 5200, pf: 2500, pg: 2, drive: 1.3, stat: 0.004, sq: 0.05, dry: 0.3, box: 0 },
+  visor: { name: 'Closed visor', hp: 180, lp: 3000, pf: 900, pg: 3, drive: 1.6, stat: 0.005, sq: 0.04, dry: 0.25, box: 0.28 },
+  oldradio: { name: 'Old radio', hp: 500, lp: 2800, pf: 1500, pg: 6, drive: 4, stat: 0.03, sq: 0.12, dry: 0.05, box: 0 },
+  longrange: { name: 'Long range', hp: 650, lp: 2400, pf: 1600, pg: 7, drive: 5.5, stat: 0.05, sq: 0.15, dry: 0, box: 0 },
+  robot: { name: 'Robot speaker', hp: 350, lp: 4200, pf: 1200, pg: 5, drive: 3, stat: 0.006, sq: 0.03, dry: 0.15, box: 0.45 }
+};
+function radioPlay(ac, buf, dest, vol, preset, amt) {
+  const P = RADIO_FX[preset] || RADIO_FX.helmet, k = Math.max(0, Math.min(1.5, amt == null ? 1 : amt)), mix = Math.min(1, k);
+  const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 20 + (P.hp - 20) * mix; hp.Q.value = 0.7;
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 16000 - (16000 - P.lp) * mix; lp.Q.value = 0.8;
+  const pk = ac.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = P.pf; pk.gain.value = P.pg * k; pk.Q.value = 1;
+  const dr = 1 + (P.drive - 1) * k, sh = ac.createWaveShaper(), cv = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 511.5 - 1; cv[i] = Math.tanh(x * dr) / Math.tanh(dr); } sh.curve = cv;
+  const wet = ac.createGain(), dry = ac.createGain(), out = ac.createGain(); wet.gain.value = 0.85 * mix + 0.0; dry.gain.value = 1 - mix * (1 - P.dry); out.gain.value = vol;
   const s = ac.createBufferSource(); s.buffer = buf; s.connect(hp); hp.connect(lp); lp.connect(pk); pk.connect(sh); sh.connect(wet); s.connect(dry); wet.connect(out); dry.connect(out); out.connect(dest);
+  if (P.box) { const d = ac.createDelay(0.1), fb = ac.createGain(), bg = ac.createGain(); d.delayTime.value = 0.011; fb.gain.value = P.box * mix; bg.gain.value = 0.5 * mix; sh.connect(d); d.connect(fb); fb.connect(d); d.connect(bg); bg.connect(out); }
   const t0 = ac.currentTime + 0.06, end = t0 + buf.duration, nb = ac.createBuffer(1, ac.sampleRate, ac.sampleRate), nd = nb.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
   const nz = ac.createBufferSource(); nz.buffer = nb; nz.loop = true; const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = 0.6; const ng = ac.createGain(); ng.gain.value = 0;
-  nz.connect(bp); bp.connect(ng); ng.connect(out);
-  const g = ng.gain; g.setValueAtTime(0, ac.currentTime); g.linearRampToValueAtTime(0.09, ac.currentTime + 0.01); g.linearRampToValueAtTime(0.012, t0); g.setValueAtTime(0.012, end); g.linearRampToValueAtTime(0.08, end + 0.02); g.linearRampToValueAtTime(0, end + 0.1);
+  nz.connect(bp); bp.connect(ng); ng.connect(out); const st = P.stat * k, sq = P.sq * k;
+  const g = ng.gain; g.setValueAtTime(0, ac.currentTime); g.linearRampToValueAtTime(sq, ac.currentTime + 0.01); g.linearRampToValueAtTime(st, t0); g.setValueAtTime(st, end); g.linearRampToValueAtTime(sq, end + 0.02); g.linearRampToValueAtTime(0, end + 0.1);
   nz.start(); nz.stop(end + 0.12); s.start(t0); s.onended = () => { try { nz.stop(); } catch (_) {} };
   return s; }
 function castStop() { try { if (CASTVO.src) CASTVO.src.stop(); } catch (_) {} CASTVO.src = null; }
 function castPlay(id) { const ac = SFX.ctx && SFX.ctx(); if (!ac || !PREFS.voice || !PREFS.sfx) return false;
   const now = performance.now(); if (id === CASTVO.last && now - CASTVO.lastT < 1500) return true; CASTVO.last = id; CASTVO.lastT = now; castStop();
   try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (_) {} try { if (typeof burpSrc !== 'undefined' && burpSrc) burpSrc.stop(); } catch (_) {}
-  const go = buf => { if (CASTVO.last !== id) return; if (ac.state !== 'running') { try { ac.resume(); } catch (_) {} } if (CASTVO.radio.has(id)) { CASTVO.src = radioPlay(ac, buf, SFX.voiceOut(), 1.5); return; } const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = buf; g.gain.value = 1.4; s.connect(g); g.connect(SFX.voiceOut()); s.start(); CASTVO.src = s; };
+  const go = buf => { if (CASTVO.last !== id) return; if (ac.state !== 'running') { try { ac.resume(); } catch (_) {} } const rf = CASTVO.radio.get(id); if (rf) { CASTVO.src = radioPlay(ac, buf, SFX.voiceOut(), 1.5, rf[0], rf[1]); return; } const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = buf; g.gain.value = 1.4; s.connect(g); g.connect(SFX.voiceOut()); s.start(); CASTVO.src = s; };
   const b = CASTVO.buf.get(id); if (b) { go(b); return true; }
   fetch('voice/cast/' + id + '.mp3?v=' + CASTVO.v).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(a => ac.decodeAudioData(a)).then(buf => { CASTVO.buf.set(id, buf); if (performance.now() - now < 5000) go(buf); }).catch(() => {});
   return true; }

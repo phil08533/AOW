@@ -77,9 +77,9 @@ input[type=search] { background: #0c1528; border: 1px solid var(--line); border-
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-let FX = { radio: [] }, RADIO = new Set(), AC = null, SRC = null, L = [], HAVE = {}, who = null, audio = null, ver = Date.now();
+let FX = { chars: {} }, RADIO = new Map(), AC = null, SRC = null, L = [], HAVE = {}, who = null, audio = null, ver = Date.now();
 const toast = (t, err) => { const e = $('toast'); e.textContent = t; e.className = err ? 'err' : ''; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => { e.style.display = 'none'; }, 3500); };
-async function load() { const r = await fetch('/api/castvo'); const j = await r.json(); L = j.lines; HAVE = j.have; FX = j.fx || { radio: [] }; RADIO = new Set(j.radio || []); if (!who && L.length) who = L[0].character; render(); }
+async function load() { const r = await fetch('/api/castvo'); const j = await r.json(); L = j.lines; HAVE = j.have; FX = j.fx || { chars: {} }; RADIO = new Map(Object.entries(j.radio || {})); if (!who && L.length) who = L[0].character; render(); }
 const chars = () => { const m = new Map(); for (const l of L) { const c = m.get(l.character) || { n: 0, h: 0 }; c.n++; if (HAVE[l.line_id]) c.h++; m.set(l.character, c); } return m; };
 function render() {
   const C = chars(), done = L.filter(l => HAVE[l.line_id]).length; $('total').textContent = `${done} of ${L.length} lines recorded · ${C.size} characters`;
@@ -88,32 +88,45 @@ function render() {
   const q = $('q').value.trim().toLowerCase(), miss = $('miss').checked;
   const rows = L.filter(l => (q ? (l.line + ' ' + l.line_id + ' ' + l.character).toLowerCase().includes(q) : l.character === who) && (!miss || !HAVE[l.line_id]));
   const lead = q ? `Search: “${esc(q)}”` : esc(who || ''), first = L.find(l => l.character === who);
-  let h = `<h2>${lead}</h2>${!q && first ? `<div class="when">${esc(first.actor || '')} · <label><input type="checkbox" id="radio" ${(FX.radio || []).includes(who) ? 'checked' : ''}> 📻 Helmet radio (plays through the comms filter in game)</label></div>` : ''}
+  let h = `<h2>${lead}</h2>${!q && first ? `<div class="when">${esc(first.actor || '')} · 📻 Radio <select id="rp"><option value="">Off (normal voice)</option>${Object.entries(RADIO_FX).map(([k, v]) => `<option value="${k}" ${cf().p === k ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select>
+      Strength <input type="range" id="ra" min="0" max="150" step="5" value="${Math.round((cf().a == null ? 1 : cf().a) * 100)}" style="vertical-align:middle;accent-color:var(--gold)"> <span id="rav">${Math.round((cf().a == null ? 1 : cf().a) * 100)}%</span>
+      <button class="sm" id="rprev">▶ Preview</button></div>` : ''}
     <div class="drop" id="drop">Drop mp3 files here, named by line ID (like <b>${esc((rows[0] || L[0] || {}).line_id || 'B_U_R_P_001')}.mp3</b>). Any number at once, from any character.<br>Or drop one file onto a single line below.</div>
     <div class="tools"><button id="playall">▶ Play every recorded line here</button><button id="stop">■ Stop</button><span class="note">To test in the game: press Play, go to the character and talk. Recorded lines play instead of the babble (Settings → Sound → Voice must be on).</span></div>`;
   for (const l of rows) { const has = HAVE[l.line_id];
-    h += `<div class="row" data-id="${l.line_id}"><div><div class="id">${l.line_id} · ${esc(l.character)}${RADIO.has(l.line_id) ? ' · 📻' : ''}</div><div>${esc(l.line)}</div><div class="orig">${esc(l.when_it_plays || '')} · ${esc(l.source || '')}</div>
+    h += `<div class="row" data-id="${l.line_id}"><div><div class="id">${l.line_id} · ${esc(l.character)}${RADIO.has(l.line_id) ? ' · 📻 ' + esc((RADIO_FX[RADIO.get(l.line_id)[0]] || {}).name || '') : ''} <button class="sm" data-a="copy" title="Copy the line ID (for the file or label name)">📋 Copy ID</button></div><div>${esc(l.line)}</div><div class="orig">${esc(l.when_it_plays || '')} · ${esc(l.source || '')}</div>
       <div class="st ${has ? 'ok' : 'no'}">${has ? '● recorded · ' + Math.round(has / 1024) + ' KB' : '○ not recorded'}</div></div>
       <div class="btns">${has ? '<button class="sm" data-a="play">▶ Play</button>' : ''}<button class="sm" data-a="up">⬆ ${has ? 'Replace' : 'Upload'}</button>${has ? '<button class="sm warn" data-a="del">✕</button>' : ''}</div></div>`; }
   if (!rows.length) h += '<p class="note">Nothing here.</p>';
   $('main').innerHTML = h; wire(rows); }
-// helmet radio: a light comms filter (telephone band, a little bite, faint static, a soft squelch at each end). Same code in cast.html and src/castvo.js
-function radioPlay(ac, buf, dest, vol) {
-  const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 300; hp.Q.value = 0.7;
-  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3600; lp.Q.value = 0.8;
-  const pk = ac.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 1800; pk.gain.value = 4; pk.Q.value = 1;
-  const sh = ac.createWaveShaper(), cv = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 511.5 - 1; cv[i] = Math.tanh(x * 2.2) / Math.tanh(2.2); } sh.curve = cv;
-  const wet = ac.createGain(), dry = ac.createGain(), out = ac.createGain(); wet.gain.value = 0.85; dry.gain.value = 0.18; out.gain.value = vol;
+// helmet radio presets (same code in cast.html and src/castvo.js). amt is the strength slider: 0 = clean, 1 = the preset, up to 1.5 = extra crunchy
+const RADIO_FX = {
+  helmet: { name: 'Helmet (light)', hp: 300, lp: 3600, pf: 1800, pg: 4, drive: 2.2, stat: 0.012, sq: 0.08, dry: 0.18, box: 0 },
+  comms: { name: 'Clean comms', hp: 250, lp: 5200, pf: 2500, pg: 2, drive: 1.3, stat: 0.004, sq: 0.05, dry: 0.3, box: 0 },
+  visor: { name: 'Closed visor', hp: 180, lp: 3000, pf: 900, pg: 3, drive: 1.6, stat: 0.005, sq: 0.04, dry: 0.25, box: 0.28 },
+  oldradio: { name: 'Old radio', hp: 500, lp: 2800, pf: 1500, pg: 6, drive: 4, stat: 0.03, sq: 0.12, dry: 0.05, box: 0 },
+  longrange: { name: 'Long range', hp: 650, lp: 2400, pf: 1600, pg: 7, drive: 5.5, stat: 0.05, sq: 0.15, dry: 0, box: 0 },
+  robot: { name: 'Robot speaker', hp: 350, lp: 4200, pf: 1200, pg: 5, drive: 3, stat: 0.006, sq: 0.03, dry: 0.15, box: 0.45 }
+};
+function radioPlay(ac, buf, dest, vol, preset, amt) {
+  const P = RADIO_FX[preset] || RADIO_FX.helmet, k = Math.max(0, Math.min(1.5, amt == null ? 1 : amt)), mix = Math.min(1, k);
+  const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 20 + (P.hp - 20) * mix; hp.Q.value = 0.7;
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 16000 - (16000 - P.lp) * mix; lp.Q.value = 0.8;
+  const pk = ac.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = P.pf; pk.gain.value = P.pg * k; pk.Q.value = 1;
+  const dr = 1 + (P.drive - 1) * k, sh = ac.createWaveShaper(), cv = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 511.5 - 1; cv[i] = Math.tanh(x * dr) / Math.tanh(dr); } sh.curve = cv;
+  const wet = ac.createGain(), dry = ac.createGain(), out = ac.createGain(); wet.gain.value = 0.85 * mix + 0.0; dry.gain.value = 1 - mix * (1 - P.dry); out.gain.value = vol;
   const s = ac.createBufferSource(); s.buffer = buf; s.connect(hp); hp.connect(lp); lp.connect(pk); pk.connect(sh); sh.connect(wet); s.connect(dry); wet.connect(out); dry.connect(out); out.connect(dest);
+  if (P.box) { const d = ac.createDelay(0.1), fb = ac.createGain(), bg = ac.createGain(); d.delayTime.value = 0.011; fb.gain.value = P.box * mix; bg.gain.value = 0.5 * mix; sh.connect(d); d.connect(fb); fb.connect(d); d.connect(bg); bg.connect(out); }
   const t0 = ac.currentTime + 0.06, end = t0 + buf.duration, nb = ac.createBuffer(1, ac.sampleRate, ac.sampleRate), nd = nb.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
   const nz = ac.createBufferSource(); nz.buffer = nb; nz.loop = true; const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = 0.6; const ng = ac.createGain(); ng.gain.value = 0;
-  nz.connect(bp); bp.connect(ng); ng.connect(out);
-  const g = ng.gain; g.setValueAtTime(0, ac.currentTime); g.linearRampToValueAtTime(0.09, ac.currentTime + 0.01); g.linearRampToValueAtTime(0.012, t0); g.setValueAtTime(0.012, end); g.linearRampToValueAtTime(0.08, end + 0.02); g.linearRampToValueAtTime(0, end + 0.1);
+  nz.connect(bp); bp.connect(ng); ng.connect(out); const st = P.stat * k, sq = P.sq * k;
+  const g = ng.gain; g.setValueAtTime(0, ac.currentTime); g.linearRampToValueAtTime(sq, ac.currentTime + 0.01); g.linearRampToValueAtTime(st, t0); g.setValueAtTime(st, end); g.linearRampToValueAtTime(sq, end + 0.02); g.linearRampToValueAtTime(0, end + 0.1);
   nz.start(); nz.stop(end + 0.12); s.start(t0); s.onended = () => { try { nz.stop(); } catch (_) {} };
   return s; }
+const cf = () => (FX.chars && FX.chars[who]) || {};
 function stopAll() { if (audio) audio.pause(); try { if (SRC) SRC.stop(); } catch (_) {} SRC = null; }
-function playId(id) { stopAll(); if (!RADIO.has(id)) return new Promise(ok => { audio = new Audio('/voice/cast/' + id + '.mp3?v=' + ver); audio.onended = audio.onerror = ok; audio.play().catch(ok); });
-  AC = AC || new AudioContext(); return fetch('/voice/cast/' + id + '.mp3?v=' + ver).then(r => r.arrayBuffer()).then(a => AC.decodeAudioData(a)).then(buf => new Promise(ok => { SRC = radioPlay(AC, buf, AC.destination, 1); SRC.onended = ok; })).catch(() => {}); }
+function playId(id, over) { stopAll(); const rf = over !== undefined ? over : RADIO.get(id); if (!rf) return new Promise(ok => { audio = new Audio('/voice/cast/' + id + '.mp3?v=' + ver); audio.onended = audio.onerror = ok; audio.play().catch(ok); });
+  AC = AC || new AudioContext(); return fetch('/voice/cast/' + id + '.mp3?v=' + ver).then(r => r.arrayBuffer()).then(a => AC.decodeAudioData(a)).then(buf => new Promise(ok => { SRC = radioPlay(AC, buf, AC.destination, 1, rf[0], rf[1]); SRC.onended = ok; })).catch(() => {}); }
 async function upload(id, file) { const r = await fetch('/api/castvo/upload?id=' + encodeURIComponent(id), { method: 'POST', headers: { 'Content-Type': 'audio/mpeg' }, body: file }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'upload failed'); HAVE[id] = j.size; ver = Date.now(); }
 const idFromName = n => { const base = n.replace(/\.mp3$/i, ''), ids = new Set(L.map(l => l.line_id)); if (ids.has(base)) return base; const m = base.match(/^[A-Za-z0-9_]+?_\d{3}/); return m && ids.has(m[0]) ? m[0] : null; };
 async function bulk(files) { let ok = 0; const bad = [];
@@ -127,12 +140,19 @@ function wire(rows) {
     r.addEventListener('dragover', ev => { ev.preventDefault(); r.classList.add('over'); }); r.addEventListener('dragleave', () => r.classList.remove('over'));
     r.addEventListener('drop', async ev => { ev.preventDefault(); ev.stopPropagation(); r.classList.remove('over'); const f = ev.dataTransfer.files[0]; if (!f) return; try { await upload(id, f); render(); toast('Saved ' + id); } catch (e) { toast(e.message, 1); } });
     r.querySelectorAll('button').forEach(b => b.onclick = async () => { const a = b.dataset.a;
+      if (a === 'copy') { navigator.clipboard.writeText(id).then(() => toast('Copied ' + id), () => { const t = document.createElement('textarea'); t.value = id; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); toast('Copied ' + id); }); return; }
       if (a === 'play') playId(id);
       if (a === 'up') pick(async f => { try { await upload(id, f); render(); toast('Saved ' + id); } catch (e) { toast(e.message, 1); } });
       if (a === 'del' && confirm('Delete the recording for ' + id + '?')) { await fetch('/api/castvo/delete?id=' + encodeURIComponent(id), { method: 'POST' }); delete HAVE[id]; render(); toast('Deleted ' + id); } }); });
   $('playall').onclick = async () => { const ids = rows.filter(l => HAVE[l.line_id]).map(l => l.line_id); window._stop = false; for (const id of ids) { if (window._stop) break; document.querySelectorAll('.row').forEach(r => r.style.borderColor = r.dataset.id === id ? 'var(--gold)' : ''); await playId(id); } };
   $('stop').onclick = () => { window._stop = true; stopAll(); };
-  const rb = $('radio'); if (rb) rb.onchange = async () => { const set = new Set(FX.radio || []); rb.checked ? set.add(who) : set.delete(who); const r = await fetch('/api/castvo/fx', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ radio: [...set] }) }); const j = await r.json(); if (!r.ok) return toast(j.error || 'could not save', 1); FX.radio = [...set]; RADIO = new Set(j.radio || []); render(); toast(rb.checked ? who + ' now talks over helmet radio' : who + ' sounds normal again'); }; }
+  const rp = $('rp'), ra = $('ra'); if (rp) { let tm = 0;
+    const cur = () => rp.value ? [rp.value, ra.value / 100] : null;
+    const save = async () => { const r = await fetch('/api/castvo/fx', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ character: who, p: rp.value || null, a: ra.value / 100 }) }); const j = await r.json(); if (!r.ok) return toast(j.error || 'could not save', 1); FX = j.fx; RADIO = new Map(Object.entries(j.radio || {})); toast(rp.value ? `${who}: ${RADIO_FX[rp.value].name}, ${ra.value}%` : `${who} sounds normal`); };
+    const prev = () => { const l = rows.find(x => HAVE[x.line_id]); if (!l) return toast('Upload a line for this character first to hear it', 1); playId(l.line_id, cur()); };
+    rp.onchange = async () => { await save(); render(); prev(); };
+    ra.oninput = () => { $('rav').textContent = ra.value + '%'; clearTimeout(tm); tm = setTimeout(save, 500); };
+    ra.onchange = prev; $('rprev').onclick = prev; } }
 $('q').oninput = render; $('miss').onchange = render;
 document.addEventListener('dragover', e => e.preventDefault()); document.addEventListener('drop', e => e.preventDefault());
 load().catch(e => { $('main').innerHTML = '<p class="note">Could not reach the admin server. Start it with <b>node server.js</b> and open <b>localhost</b>/cast.</p>'; });

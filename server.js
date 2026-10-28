@@ -502,6 +502,37 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    // ---- Cast Voices (cast.html): upload the voice actors' mp3s, one per line_id from docs/voice_lines.csv ----
+    // Files go to dist/voice/cast/<line_id>.mp3 and dist/voice/cast/index.json lists them; the game plays them when that line shows.
+    if (pathname.startsWith('/api/castvo')) {
+      const send = (c, o) => { res.statusCode = c; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(o)); };
+      const CDIR = path.join(DIST_DIR, 'voice', 'cast');
+      const lines = () => { try { const t = fs.readFileSync(path.join(ROOT_DIR, 'docs', 'voice_lines.csv'), 'utf8'); const rows = []; let row = [], f = '', q = false;
+        for (let i = 0; i < t.length; i++) { const c = t[i]; if (q) { if (c === '"' && t[i + 1] === '"') { f += '"'; i++; } else if (c === '"') q = false; else f += c; } else if (c === '"') q = true; else if (c === ',') { row.push(f); f = ''; } else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(f); f = ''; if (row.length > 1) rows.push(row); row = []; } else f += c; }
+        if (f || row.length) { row.push(f); if (row.length > 1) rows.push(row); }
+        const H = rows.shift() || []; return rows.map(r => Object.fromEntries(H.map((h, k) => [h, r[k] || '']))); } catch (_) { return []; } };
+      const have = () => { const o = {}; try { for (const f of fs.readdirSync(CDIR)) if (f.endsWith('.mp3')) o[f.slice(0, -4)] = fs.statSync(path.join(CDIR, f)).size; } catch (_) {} return o; };
+      const writeIndex = () => { fs.mkdirSync(CDIR, { recursive: true }); fs.writeFileSync(path.join(CDIR, 'index.json'), JSON.stringify({ v: Date.now(), ids: Object.keys(have()).sort() })); };
+      const idOk = id => /^[A-Za-z0-9_]{2,60}$/.test(id || '') && lines().some(l => l.line_id === id);
+      if (req.method === 'GET' && pathname === '/api/castvo') return send(200, { lines: lines(), have: have() });
+      const id = urlObj.searchParams.get('id');
+      if (req.method === 'POST' && pathname === '/api/castvo/upload') {
+        if (!idOk(id)) return send(400, { error: 'unknown line id ' + id });
+        const chunks = []; let n = 0, over = false;
+        req.on('data', c => { n += c.length; if (n > 15 * 1024 * 1024) { over = true; req.destroy(); } else chunks.push(c); });
+        req.on('end', () => { if (over) return; const b = Buffer.concat(chunks);
+          const mp3 = b.length > 4 && ((b[0] === 0x49 && b[1] === 0x44 && b[2] === 0x33) || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0));
+          if (!mp3) return send(400, { error: 'that file is not an mp3' });
+          try { fs.mkdirSync(CDIR, { recursive: true }); fs.writeFileSync(path.join(CDIR, id + '.mp3'), b); writeIndex(); send(200, { ok: true, id, size: b.length }); } catch (e) { send(500, { error: e.message }); } });
+        return;
+      }
+      if (req.method === 'POST' && pathname === '/api/castvo/delete') {
+        if (!idOk(id)) return send(400, { error: 'unknown line id ' + id });
+        try { fs.unlinkSync(path.join(CDIR, id + '.mp3')); } catch (_) {} writeIndex(); return send(200, { ok: true });
+      }
+      return send(404, { error: 'not found' });
+    }
+
     // ---- Script Studio: B.U.R.P. lines, cutscene captions, battle radio and voice packs (script.html) ----
     if (pathname === '/api/script' || pathname.startsWith('/api/voice/')) {
       const SS = require('./tools/script_scan.js'), SJ = path.join(SRC_DIR, 'script.json');
@@ -974,6 +1005,10 @@ const server = http.createServer((req, res) => {
     cleanUrl = '/dev.html';
   }
 
+  if (cleanUrl === '/cast' || cleanUrl === '/cast.html' || cleanUrl === '/voices') {
+    if (!isLocal) { res.statusCode = 403; res.setHeader('Content-Type', 'text/plain'); res.end('Access Forbidden: Cast Voices is only accessible from the host PC'); return; }
+    cleanUrl = '/cast.html';
+  }
   if (cleanUrl === '/script' || cleanUrl === '/script.html' || cleanUrl === '/studio') {
     if (!isLocal) { res.statusCode = 403; res.setHeader('Content-Type', 'text/plain'); res.end('Access Forbidden: Script Studio is only accessible from the host PC'); return; }
     cleanUrl = '/script.html';

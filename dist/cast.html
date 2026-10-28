@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cast Voices · Art of War</title>
+<style>
+:root { --bg: #0b1220; --panel: #121c30; --panel2: #18243c; --line: #26365a; --text: #e6ecf8; --dim: #8fa0c0; --gold: #ffd36a; --blue: #6ad0ff; --green: #6fdc8c; --red: #ff6a6a; --mono: ui-monospace, Menlo, Consolas, monospace; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; height: 100vh; display: flex; flex-direction: column; }
+header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: #0e1628; flex-wrap: wrap; }
+header b { color: var(--gold); letter-spacing: .06em; }
+header .sp { flex: 1; }
+button, select, input, textarea { font: inherit; color: var(--text); }
+button { background: var(--panel2); border: 1px solid var(--line); border-radius: 7px; padding: 6px 12px; cursor: pointer; }
+button:hover { border-color: var(--blue); }
+button.pri { background: #1d5b3a; border-color: #2f8f5c; }
+button.warn { background: #5b1d1d; border-color: #8f2f2f; }
+button.sm { padding: 3px 8px; font-size: 12px; }
+button:disabled { opacity: .45; cursor: default; }
+select, input[type=text], input[type=number], textarea { background: #0c1528; border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+textarea { width: 100%; resize: vertical; min-height: 38px; }
+.layout { flex: 1; display: flex; min-height: 0; }
+nav { width: 290px; border-right: 1px solid var(--line); overflow-y: auto; padding: 8px; background: #0d1527; flex: none; }
+nav h4 { margin: 14px 6px 4px; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .1em; }
+nav a { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; border-radius: 6px; color: var(--text); text-decoration: none; cursor: pointer; }
+nav a:hover { background: var(--panel2); }
+nav a.on { background: #1b2d4d; color: var(--gold); }
+nav a small { color: var(--dim); font-family: var(--mono); }
+nav a.edited span::after { content: " ●"; color: var(--gold); font-size: 10px; }
+main { flex: 1; overflow-y: auto; padding: 18px 22px 60px; }
+h2 { margin: 0 0 4px; color: var(--gold); font-size: 20px; }
+.when { color: var(--blue); margin-bottom: 14px; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); margin-bottom: 8px; }
+.row .who { font: 700 11px var(--mono); color: var(--blue); margin-bottom: 3px; }
+.row .orig { font-size: 12px; color: var(--dim); margin-top: 4px; }
+.row .orig s { color: #6f7f9f; }
+.row .btns { display: flex; flex-direction: column; gap: 4px; }
+.row.changed { border-color: #6b5a2a; }
+.tools { display: flex; gap: 8px; margin: 10px 0 16px; flex-wrap: wrap; }
+.note { color: var(--dim); font-size: 13px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+.grid { display: grid; grid-template-columns: 150px 1fr 60px; gap: 8px 12px; align-items: center; }
+.grid label { color: var(--dim); }
+.grid input[type=range] { width: 100%; accent-color: var(--blue); }
+.grid .v { font-family: var(--mono); text-align: right; }
+.bar { height: 10px; background: #0c1528; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #2f8f5c, #6ad0ff); transition: width .3s; }
+.log { font: 12px var(--mono); color: var(--dim); white-space: pre-wrap; max-height: 160px; overflow: auto; background: #0a1222; border-radius: 6px; padding: 8px; margin-top: 8px; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 99px; background: #1b2d4d; font-size: 12px; color: var(--blue); }
+.packs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.packs button.on { border-color: var(--gold); color: var(--gold); }
+#toast { position: fixed; right: 16px; bottom: 16px; background: #1d5b3a; border: 1px solid #2f8f5c; padding: 10px 14px; border-radius: 8px; display: none; max-width: 420px; }
+#toast.err { background: #5b1d1d; border-color: #8f2f2f; }
+
+.drop { border: 2px dashed var(--line); border-radius: 10px; padding: 16px; text-align: center; color: var(--dim); margin-bottom: 14px; }
+.drop.over, .row.over { border-color: var(--gold); background: #1b2d4d; }
+.row .id { font: 700 11px var(--mono); color: var(--dim); }
+.row .st { font-size: 12px; margin-top: 4px; }
+.row .st.ok { color: var(--green); } .row .st.no { color: var(--red); }
+.btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+input[type=search] { background: #0c1528; border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; width: 220px; }
+</style>
+</head>
+<body>
+<header>
+  <b>🎤 CAST VOICES</b><span class="note" id="total">Loading…</span>
+  <span class="sp"></span>
+  <input type="search" id="q" placeholder="Search lines or IDs">
+  <label class="note"><input type="checkbox" id="miss"> Missing only</label>
+  <a href="/script"><button>🎙 Script Studio</button></a>
+  <a href="/dev.html"><button>📦 Asset Studio</button></a>
+  <a href="/" target="_blank"><button>🎮 Play</button></a>
+</header>
+<div class="layout"><nav id="nav"></nav><main id="main"><p class="note">Loading…</p></main></div>
+<div id="toast"></div>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let L = [], HAVE = {}, who = null, audio = null, ver = Date.now();
+const toast = (t, err) => { const e = $('toast'); e.textContent = t; e.className = err ? 'err' : ''; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => { e.style.display = 'none'; }, 3500); };
+async function load() { const r = await fetch('/api/castvo'); const j = await r.json(); L = j.lines; HAVE = j.have; if (!who && L.length) who = L[0].character; render(); }
+const chars = () => { const m = new Map(); for (const l of L) { const c = m.get(l.character) || { n: 0, h: 0 }; c.n++; if (HAVE[l.line_id]) c.h++; m.set(l.character, c); } return m; };
+function render() {
+  const C = chars(), done = L.filter(l => HAVE[l.line_id]).length; $('total').textContent = `${done} of ${L.length} lines recorded · ${C.size} characters`;
+  let nav = '<h4>Characters</h4>'; for (const [c, v] of C) nav += `<a class="${c === who ? 'on' : ''}" data-c="${esc(c)}"><span>${v.h === v.n ? '✅ ' : ''}${esc(c)}</span><small>${v.h}/${v.n}</small></a>`;
+  $('nav').innerHTML = nav; $('nav').querySelectorAll('a').forEach(a => a.onclick = () => { who = a.dataset.c; $('q').value = ''; render(); $('main').scrollTop = 0; });
+  const q = $('q').value.trim().toLowerCase(), miss = $('miss').checked;
+  const rows = L.filter(l => (q ? (l.line + ' ' + l.line_id + ' ' + l.character).toLowerCase().includes(q) : l.character === who) && (!miss || !HAVE[l.line_id]));
+  const lead = q ? `Search: “${esc(q)}”` : esc(who || ''), first = L.find(l => l.character === who);
+  let h = `<h2>${lead}</h2>${!q && first ? `<div class="when">${esc(first.actor || '')}</div>` : ''}
+    <div class="drop" id="drop">Drop mp3 files here, named by line ID (like <b>${esc((rows[0] || L[0] || {}).line_id || 'B_U_R_P_001')}.mp3</b>). Any number at once, from any character.<br>Or drop one file onto a single line below.</div>
+    <div class="tools"><button id="playall">▶ Play every recorded line here</button><button id="stop">■ Stop</button><span class="note">To test in the game: press Play, go to the character and talk. Recorded lines play instead of the babble (Settings → Sound → Voice must be on).</span></div>`;
+  for (const l of rows) { const has = HAVE[l.line_id];
+    h += `<div class="row" data-id="${l.line_id}"><div><div class="id">${l.line_id} · ${esc(l.character)}</div><div>${esc(l.line)}</div><div class="orig">${esc(l.when_it_plays || '')} · ${esc(l.source || '')}</div>
+      <div class="st ${has ? 'ok' : 'no'}">${has ? '● recorded · ' + Math.round(has / 1024) + ' KB' : '○ not recorded'}</div></div>
+      <div class="btns">${has ? '<button class="sm" data-a="play">▶ Play</button>' : ''}<button class="sm" data-a="up">⬆ ${has ? 'Replace' : 'Upload'}</button>${has ? '<button class="sm warn" data-a="del">✕</button>' : ''}</div></div>`; }
+  if (!rows.length) h += '<p class="note">Nothing here.</p>';
+  $('main').innerHTML = h; wire(rows); }
+function playId(id) { return new Promise(ok => { if (audio) audio.pause(); audio = new Audio('/voice/cast/' + id + '.mp3?v=' + ver); audio.onended = audio.onerror = ok; audio.play().catch(ok); }); }
+async function upload(id, file) { const r = await fetch('/api/castvo/upload?id=' + encodeURIComponent(id), { method: 'POST', headers: { 'Content-Type': 'audio/mpeg' }, body: file }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'upload failed'); HAVE[id] = j.size; ver = Date.now(); }
+const idFromName = n => { const base = n.replace(/\.mp3$/i, ''), ids = new Set(L.map(l => l.line_id)); if (ids.has(base)) return base; const m = base.match(/^[A-Za-z0-9_]+?_\d{3}/); return m && ids.has(m[0]) ? m[0] : null; };
+async function bulk(files) { let ok = 0; const bad = [];
+  for (const f of files) { const id = idFromName(f.name); if (!id || !/\.mp3$/i.test(f.name)) { bad.push(f.name); continue; } try { toast(`Uploading ${f.name}…`); await upload(id, f); ok++; } catch (e) { bad.push(f.name + ' (' + e.message + ')'); } }
+  render(); toast(`${ok} uploaded` + (bad.length ? ` · skipped: ${bad.slice(0, 6).join(', ')}${bad.length > 6 ? '…' : ''}` : ''), bad.length && !ok); }
+function pick(cb) { const i = document.createElement('input'); i.type = 'file'; i.accept = '.mp3,audio/mpeg'; i.onchange = () => i.files[0] && cb(i.files[0]); i.click(); }
+function wire(rows) {
+  const d = $('drop'); ['dragenter', 'dragover'].forEach(e => d.addEventListener(e, ev => { ev.preventDefault(); d.classList.add('over'); }));
+  d.addEventListener('dragleave', () => d.classList.remove('over')); d.addEventListener('drop', ev => { ev.preventDefault(); d.classList.remove('over'); bulk([...ev.dataTransfer.files]); });
+  document.querySelectorAll('.row').forEach(r => { const id = r.dataset.id;
+    r.addEventListener('dragover', ev => { ev.preventDefault(); r.classList.add('over'); }); r.addEventListener('dragleave', () => r.classList.remove('over'));
+    r.addEventListener('drop', async ev => { ev.preventDefault(); ev.stopPropagation(); r.classList.remove('over'); const f = ev.dataTransfer.files[0]; if (!f) return; try { await upload(id, f); render(); toast('Saved ' + id); } catch (e) { toast(e.message, 1); } });
+    r.querySelectorAll('button').forEach(b => b.onclick = async () => { const a = b.dataset.a;
+      if (a === 'play') playId(id);
+      if (a === 'up') pick(async f => { try { await upload(id, f); render(); toast('Saved ' + id); } catch (e) { toast(e.message, 1); } });
+      if (a === 'del' && confirm('Delete the recording for ' + id + '?')) { await fetch('/api/castvo/delete?id=' + encodeURIComponent(id), { method: 'POST' }); delete HAVE[id]; render(); toast('Deleted ' + id); } }); });
+  $('playall').onclick = async () => { const ids = rows.filter(l => HAVE[l.line_id]).map(l => l.line_id); window._stop = false; for (const id of ids) { if (window._stop) break; document.querySelectorAll('.row').forEach(r => r.style.borderColor = r.dataset.id === id ? 'var(--gold)' : ''); await playId(id); } };
+  $('stop').onclick = () => { window._stop = true; if (audio) audio.pause(); }; }
+$('q').oninput = render; $('miss').onchange = render;
+document.addEventListener('dragover', e => e.preventDefault()); document.addEventListener('drop', e => e.preventDefault());
+load().catch(e => { $('main').innerHTML = '<p class="note">Could not reach the admin server. Start it with <b>node server.js</b> and open <b>localhost</b>/cast.</p>'; });
+</script>
+</body>
+</html>

@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.49</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.50</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19604,6 +19604,7 @@ const UPDATES = [
   { id: 312, title: 'Shield fix', items: ['The shield no longer sits on screen while you drive in Velocity (or fish, or use the tablet) with a melee weapon out'] },
   { id: 313, title: "2.23.48 · Phil's big fix list", items: ['Minimap: always the arrow now, glowing uranium green', 'Fishing: a lure that lands on dry ground catches nothing', 'Velocity: the ramp down no longer stair-steps the car', 'Ship: 6 floor, wall and ceiling styles each for the flight deck and the hallway (Interior styles panel on the flight deck)', 'Starlight Lounge: the seated crowd sit properly on the couches facing the table, and the robot waiters carry a serving tray', 'Ocean world: Mayor Blub floats above the ground, the fishers hold their rods properly, and the Burbs murder scene has a chalk outline, evidence markers and crime tape', 'Marisol and Quartermaster Dax no longer offer drug jobs to Marshals, and Marisol\'s hamster wheel is back', 'Anyone lying on the ground can now be peed on (except the drunk in the Undercroft)', 'New song discovered pop-up', 'Mile Down: the bar music plays through the back rooms', 'Marshals: a 3D badge you flash from your wallet, a tougher office, informants you can hire, and the stolen TV case can end with three arrests and a medal'] },
   { id: 314, title: '2.23.49 · Boat fishers', items: ['The fishers in the ocean world boats really sit on the bench now and hold the rod in their own hands (no more stray arm sticking out of their lap)'] },
+  { id: 315, title: '2.23.50 · Cleaner minimap', items: ['The live minimap no longer shows fireflies, rain, sparks or other effects', 'Removed the little winding crown on the minimap watch (the pill-shaped thing)'] },
   { id: 311, title: 'Forge bench and swing styles', items: ['On PC and phones held sideways the saber now lies big across a glowing work bench, with each part\'s arrows right under it. Tall phones keep the standing view', 'All new handles: smooth machined metal, plus three new grips (Fluted, Open Cage with a core that glows your blade colour, and Carved Wood) and a Ribbon Cap end with two trailing ribbons', 'Sparks drift around the saber and parts flash when you change them. The arrows no longer move while the saber floats', '12 swing styles to pick in the forge: Figure Eight, Side Sweep, Overhead Chop, Windmill, Rising Slash, Cross Cut, Sideways Eight, Lightning, Spiral, Lunge, Clover and Twirl', 'The light trail now runs the full length of the blade, and fades when the blade points at you so it never blinds you'] },
   { id: 310, title: 'Forge, your way', items: ['The saber forge is now one floating sword pulled apart into its parts, like the sketch', 'Tap the arrows beside a part to scroll its options. Parts you have not unlocked show grayed out with their price and a Forge button, or where to find the crystal', 'Tap the colour dot by a part to change its colour. Pick Double-ended at the bottom and the lower emitter and blade get their own arrows', 'Swing speed and the other upgrades sit behind the Upgrades button'] },
   { id: 309, title: 'The saber forge', items: ['Build your laser sword from parts: blade, crystal, emitter, grip and pommel, each with several new designs and its own colour', 'Parts have small trade-offs in damage, swing speed, reach and blocking; forge a part once, then swap for free', 'Double-ended: swap the pommel for a second emitter and blade with their own picks and colours; swings hit all around you', 'Twelve crystals, one hidden on each world under a beam of light, each with its own shape, colour and perk', 'Swing Speed upgrade now goes to 5 tiers, and the swing animation speeds up to match', 'Laser swords leave a light trail when you swing', 'Juno is now a saber smith, and the Kyber Laser Sword is now the Prism Laser Sword'] },
@@ -29697,8 +29698,10 @@ function mmcRender(R) {
   // indoors the camera sits just under the ceiling so it sees the room, not the roof
   c.position.set(p.x, (p.y || 0) + (inside ? 3.0 : 90), p.z); c.far = inside ? 40 : 400; c.updateProjectionMatrix(); c.lookAt(p.x, (p.y || 0) - 10, p.z);
   const fog = scene.fog, su = renderer.shadowMap.autoUpdate, vmv = typeof vm !== 'undefined' && vm.visible; scene.fog = null; renderer.shadowMap.autoUpdate = false; if (typeof vm !== 'undefined') vm.visible = false;
+  // effects stay out of the map: fireflies, rain, clouds, stars, sparks and any other particles or sprites
+  const fxOff = []; scene.traverseVisible(o => { if (o.isPoints || o.isSprite || o.isLine || (typeof sparkGeo !== 'undefined' && o.geometry === sparkGeo) || (o.isMesh && o.material && o.material.blending === THREE.AdditiveBlending) || o === (typeof clouds !== 'undefined' && clouds)) fxOff.push(o); }); fxOff.forEach(o => { o.visible = false; });
   const prev = renderer.getRenderTarget(); renderer.setRenderTarget(MMC.rt); const cc = renderer.getClearColor(new THREE.Color()), ca = renderer.getClearAlpha(); renderer.setClearColor(inside ? 0x07060a : 0x1a2a3a, 1); renderer.clear(); renderer.render(scene, c); renderer.setClearColor(cc, ca); renderer.readRenderTargetPixels(MMC.rt, 0, 0, N, N, MMC.buf); renderer.setRenderTarget(prev);
-  scene.fog = fog; renderer.shadowMap.autoUpdate = su; if (typeof vm !== 'undefined') vm.visible = vmv;
+  fxOff.forEach(o => { o.visible = true; }); scene.fog = fog; renderer.shadowMap.autoUpdate = su; if (typeof vm !== 'undefined') vm.visible = vmv;
   const d = MMC.img.data, b = MMC.buf; for (let y = 0; y < N; y++) d.set(b.subarray((N - 1 - y) * N * 4, (N - y) * N * 4), y * N * 4);
   MMC.tmp.getContext('2d').putImageData(MMC.img, 0, 0);
 }
@@ -29754,6 +29757,7 @@ const MDOME = { k: 2, off: null, key: '', face: null };
 html body #map.win { border: 0 !important; background: transparent !important; box-shadow: none !important; filter: drop-shadow(3px 3px 0 rgba(0,0,0,.55)); overflow: visible !important; }
 html body #map.win canvas { image-rendering: auto !important; border-radius: 50% !important; }
 #mapCrown { position: absolute; width: 7px; height: 16px; border-radius: 2px; pointer-events: none; z-index: 4; box-shadow: 2px 2px 0 rgba(0,0,0,.55); }
+#mapCrown { display: none !important; }
 body.menuopen #mapCrown, body.photo #mapCrown, body.decor #mapCrown, body.flying #mapCrown { visibility: hidden; }`; document.head.appendChild(st); }
 const domeTheme = () => (typeof UI_THEMES !== 'undefined' && (UI_THEMES[PREFS.uiTheme] || UI_THEMES.Steel)) || { lite: '#4a5058', dark: '#0c0d10', hiLite: '#767e8a', body: '#1c1e22', accent: '#e8e8e8' };
 // the parts that never move (case, lume, glass) are painted once per theme into their own canvas

@@ -7,6 +7,7 @@ const MDOME = { k: 2, off: null, key: '', face: null };
 html body #map.win { border: 0 !important; background: transparent !important; box-shadow: none !important; filter: drop-shadow(3px 3px 0 rgba(0,0,0,.55)); overflow: visible !important; }
 html body #map.win canvas { image-rendering: auto !important; border-radius: 50% !important; }
 #mapCrown { position: absolute; width: 7px; height: 16px; border-radius: 2px; pointer-events: none; z-index: 4; box-shadow: 2px 2px 0 rgba(0,0,0,.55); }
+#mapCrown { display: none !important; }
 body.menuopen #mapCrown, body.photo #mapCrown, body.decor #mapCrown, body.flying #mapCrown { visibility: hidden; }`; document.head.appendChild(st); }
 const domeTheme = () => (typeof UI_THEMES !== 'undefined' && (UI_THEMES[PREFS.uiTheme] || UI_THEMES.Steel)) || { lite: '#4a5058', dark: '#0c0d10', hiLite: '#767e8a', body: '#1c1e22', accent: '#e8e8e8' };
 // the parts that never move (case, lume, glass) are painted once per theme into their own canvas

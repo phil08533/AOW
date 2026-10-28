@@ -13,8 +13,10 @@ function mmcRender(R) {
   // indoors the camera sits just under the ceiling so it sees the room, not the roof
   c.position.set(p.x, (p.y || 0) + (inside ? 3.0 : 90), p.z); c.far = inside ? 40 : 400; c.updateProjectionMatrix(); c.lookAt(p.x, (p.y || 0) - 10, p.z);
   const fog = scene.fog, su = renderer.shadowMap.autoUpdate, vmv = typeof vm !== 'undefined' && vm.visible; scene.fog = null; renderer.shadowMap.autoUpdate = false; if (typeof vm !== 'undefined') vm.visible = false;
+  // effects stay out of the map: fireflies, rain, clouds, stars, sparks and any other particles or sprites
+  const fxOff = []; scene.traverseVisible(o => { if (o.isPoints || o.isSprite || o.isLine || (typeof sparkGeo !== 'undefined' && o.geometry === sparkGeo) || (o.isMesh && o.material && o.material.blending === THREE.AdditiveBlending) || o === (typeof clouds !== 'undefined' && clouds)) fxOff.push(o); }); fxOff.forEach(o => { o.visible = false; });
   const prev = renderer.getRenderTarget(); renderer.setRenderTarget(MMC.rt); const cc = renderer.getClearColor(new THREE.Color()), ca = renderer.getClearAlpha(); renderer.setClearColor(inside ? 0x07060a : 0x1a2a3a, 1); renderer.clear(); renderer.render(scene, c); renderer.setClearColor(cc, ca); renderer.readRenderTargetPixels(MMC.rt, 0, 0, N, N, MMC.buf); renderer.setRenderTarget(prev);
-  scene.fog = fog; renderer.shadowMap.autoUpdate = su; if (typeof vm !== 'undefined') vm.visible = vmv;
+  fxOff.forEach(o => { o.visible = true; }); scene.fog = fog; renderer.shadowMap.autoUpdate = su; if (typeof vm !== 'undefined') vm.visible = vmv;
   const d = MMC.img.data, b = MMC.buf; for (let y = 0; y < N; y++) d.set(b.subarray((N - 1 - y) * N * 4, (N - y) * N * 4), y * N * 4);
   MMC.tmp.getContext('2d').putImageData(MMC.img, 0, 0);
 }

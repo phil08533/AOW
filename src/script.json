@@ -47,6 +47,21 @@
       "You won. I predicted this. I am saying so now so it counts.",
       "Track record smashed. Mostly the record. Some of the track.",
       "Victory. Gus will say it was his tuning. Gus says that about everything."
+    ],
+    "boss": [
+      "Take a picture to hang on the fridge.",
+      "You beat a boss! In my day, bosses just sent emails.",
+      "That thing might have had a family.",
+      "Target neutralized. That was good tactics. I am almost certain it was tactics.",
+      "Down goes the big guy! Quick, check its pockets before the physics engine de-spawns it.",
+      "Boss terminated. I am already calculating what its parts are worth.",
+      "Timber! That was the biggest health bar I've seen all week.",
+      "Status update: Giant ugly menace is now giant ugly floor decoration.",
+      "You took that thing down. I detected a feeling. I believe it was pride.",
+      "Target eliminated. I would rate that finishing blow very highly. A nine, at least.",
+      "Boss destroyed. For the record, I provided moral and telemetry support.",
+      "The big bad is down! Cue the heroic victory fanfare in my audio synth.",
+      "Health bar depleted. You really hammered that thing into spare scrap."
     ]
   },
   "say": {
@@ -55,7 +70,9 @@
     "e68a8db0": "The lights and sounds brought even more to life with every drink.. or hit.. you may take. ",
     "fd58e27f": "...the President of the New United States. Off duty - very off duty.",
     "d962c599": "Tanks, battle cars, machines built for destruction. If it rolls and shoots, they build it here.",
-    "314127fa": "The Halo Line. A magnet tube around the whole planet. Keep your hands inside the car the air-speed would remove them."
+    "314127fa": "The Halo Line. A magnet tube around the whole planet. Keep your hands inside the car the air-speed would remove them.",
+    "779b83eb": "Your partner got caught moving Illegal units to an off-duty mall cop. Bail their bail. They've been singing in the cell. Badly. For hours.",
+    "e03000d9": "You ain't got enough credits. The cell has a nice view of a wall. They'll be fine."
   },
   "voice": {
     "active": "burp",

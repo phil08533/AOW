@@ -37,7 +37,7 @@ function radioPlay(ac, buf, dest, vol, preset, amt) {
   nz.start(); nz.stop(end + 0.12); s.start(t0); s.onended = () => { try { nz.stop(); } catch (_) {} };
   return s; }
 function castStop() { try { if (CASTVO.src) CASTVO.src.stop(); } catch (_) {} CASTVO.src = null; try { TALK.speak = null; } catch (_) {} castGate(0); }
-// a recorded line in a dialogue box: the words wait for the audio to start, and the options wait for it to finish (click the words or press Space to skip ahead)
+// a recorded line in a dialogue box: the words wait for the audio to start; the options show while they talk, and picking one cuts the line off
 function castGate(mode, dur) { const d = $('dlg'); clearTimeout(CASTVO.gt); if (!d) return; d.classList.toggle('vo-wait', mode === 1); d.classList.toggle('vo-play', mode === 2);
   if (mode === 1) CASTVO.gt = setTimeout(() => castGate(0), 1800); else if (mode === 2) CASTVO.gt = setTimeout(() => castGate(0), dur * 1000 + 250); }
 function castFetch(id) { const ac = SFX.ctx && SFX.ctx(); if (!ac || CASTVO.buf.has(id)) return Promise.resolve(CASTVO.buf.get(id)); if (CASTVO.pf && CASTVO.pf.has(id)) return CASTVO.pf.get(id); CASTVO.pf = CASTVO.pf || new Map();
@@ -58,8 +58,9 @@ castLoad();
 // a conversation's next lines load while the first one plays, so each starts on time
 { const _s = say; say = function (lines) { try { castLoad(); (lines || []).forEach(t => { const id = castId(typeof t === 'string' ? t : ''); if (id) castFetch(id).catch(() => {}); }); } catch (_) {} return _s.apply(this, arguments); }; }
 { const skip = () => { const d = $('dlg'); if (d && d.classList.contains('vo-play')) { castGate(0); const f = $('dlgActs').querySelector('.pbtn:not(:disabled)'); if (f && !TOUCH) f.focus(); return true; } return false; };
-  $('dlgLine').addEventListener('click', skip); window.addEventListener('keydown', e => { if (!dlgOpen || !/^(Space|Enter|NumpadEnter|Digit[1-9])$/.test(e.code)) return; const d = $('dlg'); if (d.classList.contains('vo-wait') || skip()) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
-  const st = document.createElement('style'); st.textContent = '#dlg.vo-wait .line { visibility: hidden; } #dlg.vo-wait .acts, #dlg.vo-play .acts { visibility: hidden; } #dlg.vo-play .line { cursor: pointer; }'; document.head.appendChild(st); }
+  $('dlgLine').addEventListener('click', skip); window.addEventListener('keydown', e => { if (!dlgOpen || !/^(Space|Enter|NumpadEnter|Digit[1-9])$/.test(e.code)) return; const d = $('dlg'); if (d.classList.contains('vo-wait')) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+  $('dlgActs').addEventListener('click', e => { if (e.target.closest('.pbtn') && CASTVO.src) { castStop(); CASTVO.last = ''; } }, true);
+  const st = document.createElement('style'); st.textContent = '#dlg.vo-wait .line { visibility: hidden; } #dlg.vo-wait .acts { visibility: hidden; }'; document.head.appendChild(st); }
 // the gibberish babble steps aside when a real recording is about to play
 { const _b = SFX.babble; SFX.babble = function () { const el = $('dlgLine'); if (el && dlgOpen && castId(el.textContent)) return; return _b.apply(this, arguments); }; }
 // cutscene captions (the overlay is added to <body> when a cutscene starts)

@@ -103,7 +103,7 @@ setTimeout(() => { try { if (mOn()) mHuntSet(); } catch (_) {} }, 2000);
   const _ar = mawAlliesArrive; mawAlliesArrive = function (quick) {
     if (!MAW.alliesIn) { const side = SIDES[mOn() ? 'law' : 'out']; MAW_ALLIES.length = 0; base.forEach(a => MAW_ALLIES.push(a)); side.ships.forEach(a => MAW_ALLIES.push(a)); MAW_CHATTER.length = 0; chat0.concat(side.chat).forEach(c => MAW_CHATTER.push(c));
       const r = _ar.apply(this, arguments);
-      try { MAW.allies.forEach((A, i) => { const sh = side.ships.find(s => s[0] === A.name); if (!sh) return; const cfg = Object.assign({}, scS().cfg[side.cls] || {}, { cls: side.cls, p: i % SHIP_PAINTS.length }); const o = makeStarship(sh[1], cfg); o.scale.setScalar(1.1); o.position.copy(A.o.position); levelGroup.remove(A.o); levelGroup.add(o); A.o = o; }); } catch (err) { console.warn('maw side', err); }
+      try { MAW.allies.forEach((A, i) => { const sh = side.ships.find(s => s[0] === A.name); if (!sh) return; const o = mawAllyShip(A.name, sh[1], i, side.cls); o.scale.setScalar(1.1); o.position.copy(A.o.position); levelGroup.remove(A.o); levelGroup.add(o); A.o = o; }); } catch (err) { console.warn('maw side', err); }
       setTimeout(() => { try { mawComms(mOn() ? 'MARSHAL ROOK' : 'KADE', side.in, 6); } catch (_) {} }, 4000);
       return r; }
     return _ar.apply(this, arguments); }; }

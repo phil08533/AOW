@@ -104,7 +104,7 @@ function mawAnim(g, t, aim) {
   if (U.crackM) { const beat = Math.pow(Math.max(0, Math.sin(t * (2.4 + U.rage * 1.2))), 6); U.crackM.color.setRGB(0.6 + beat * 0.4 + U.rage * 0.1, 0.12 + beat * 0.35, 0.02 + beat * 0.1); }
   if (U.eyeTeeth) U.eyeTeeth.rotation.z = Math.sin(t * 0.7) * 0.06 + U.rage * Math.sin(t * 7) * 0.02;
   if (U.throat) U.throat.material.opacity = 0.6 + Math.sin(t * 4) * 0.3;
-  const o = Math.max(0.05, U.open); U.lidT.rotation.x = -0.2 - o * 1.15; U.lidB.rotation.x = Math.PI + 0.2 + o * 1.15;
+  const o = Math.max(0, U.open); U.lidT.rotation.x = 0.12 - o * 1.47; U.lidB.rotation.x = Math.PI - 0.12 + o * 1.47; // shut means shut (the Brood): the lids overlap over the iris
   const m = 0.5 + Math.sin(t * 2.2) * 0.5; U.jawT.position.y = m * 3; U.jawB.position.y = -m * 3;
   U.pus.forEach((q, i) => q.scale.setScalar(2 + Math.sin(t * 3 + i) * 0.8));
   U.aura.material.opacity = 0.7 + Math.sin(t * 2) * 0.25 + U.rage * 0.2;
@@ -206,8 +206,9 @@ LEVELS.maw = {
     // the Greater Maw
     const m = makeGreaterMaw(); m.position.copy(MAW_C); m.scale.setScalar(MAW_S); levelGroup.add(m);
     const asc = S.asc || 0, max = Math.round(360000 * (1 + 0.35 * asc)); /* doubled in 2.18.6: a maxed ship beat it in 30 s */
-    Object.assign(MAW, { obj: m, hp: max, max, t: 0, phase: 1, beam: null, beamT: 9, volT: 3, spawnT: 20, allies: [], alliesIn: false, dead: false, hurtAcc: 0, commsT: 6, said: 0, intro: false, ev: [], lost: [], nowSaid: false, shots: [], flashes: [], smoke: [], fxPool: null, final: 0, mega: false, megaCd: 0, blastT: 0, vegaT: 0 });
+    Object.assign(MAW, { obj: m, hp: max, max, t: 0, phase: 1, beam: null, beamT: 9, volT: 3, spawnT: 20, allies: [], alliesIn: false, dead: false, hurtAcc: 0, commsT: 6, said: 0, intro: false, ev: [], lost: [], nowSaid: false, shots: [], flashes: [], smoke: [], fxPool: null, final: 0, mega: false, megaCd: 0, blastT: 0, vegaT: 0, stage: 1, bulbs: [], stun: 0, booms: [], cine: null, ts: 1 });
     fly.ship = makeStarship(S.col); levelGroup.add(fly.ship);
+    mawTargets();
     fly.trail = []; for (let i = 0; i < 18; i++) { const tm = new THREE.Mesh(sparkGeo, glow('#ff9a3c')); tm.scale.setScalar(6); levelGroup.add(tm); fly.trail.push(tm); }
     levelAnims.push(t => { if (MAW.obj && !MAW.dead) mawAnim(MAW.obj, t, player.pos); });
     mawHud();
@@ -222,8 +223,9 @@ LEVELS.maw = {
 };
 function mawHud() {
   let bar = $('mawBar'); if (!bar) { bar = document.createElement('div'); bar.id = 'mawBar'; bar.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);width:min(520px,70vw);z-index:6;pointer-events:none;text-align:center;font:600 13px var(--hud,sans-serif);letter-spacing:.18em;color:#ffb0b8;text-shadow:0 1px 4px #000';
-    bar.innerHTML = '<div id="mawName">THE GREATER MAW</div><div style="height:10px;margin-top:4px;background:rgba(0,0,0,.6);border:1px solid #ff2a3a;border-radius:3px;overflow:hidden"><div id="mawFill" style="height:100%;width:100%;background:linear-gradient(90deg,#7a1020,#ff2a3a,#ff8a2a)"></div></div>'; document.body.appendChild(bar); }
+    bar.innerHTML = '<div id="mawName">THE GREATER MAW</div><div style="position:relative;height:10px;margin-top:4px;background:rgba(0,0,0,.6);border:1px solid #ff2a3a;border-radius:3px;overflow:hidden"><div id="mawFill" style="height:100%;width:100%;background:linear-gradient(90deg,#7a1020,#ff2a3a,#ff8a2a)"></div>' + [88, 58, 33, 12].map(x => `<i style="position:absolute;top:0;bottom:0;left:${x}%;width:2px;background:rgba(0,0,0,.75)"></i>`).join('') + '</div><div id="mawStage" style="margin-top:3px;font-size:10px;letter-spacing:.24em;color:#ff8a9a;opacity:.85"></div>'; document.body.appendChild(bar); }
   const f = $('mawFill'); if (f && MAW.max) f.style.width = Math.max(0, MAW.hp / MAW.max * 100) + '%';
+  const sl = $('mawStage'), st = MAW.final ? 5 : (MAW.stage || 1); if (sl && sl._st !== st + '' + (MAW.stun > 0)) { sl._st = st + '' + (MAW.stun > 0); sl.textContent = 'STAGE ' + Math.min(st, 5) + ' · ' + (MAW.stun > 0 ? 'EYE OPEN' : MAW_STAGE_NAME[st]); }
   bar.hidden = state !== 'play' || LEVEL.id !== 'maw' || MAW.dead;
 }
 function mawComms(who, line, dur) {
@@ -247,10 +249,38 @@ const MAW_CHATTER = [['CAPTAIN VEGA', 'Hit the big eye, rookie! Everything else 
 function mawAlliesArrive(quick) {
   if (MAW.alliesIn) return; MAW.alliesIn = true;
   MAW_ALLIES.forEach(([name, col], i) => { let o;
-    try { o = makeStarship(col, { p: i % SHIP_PAINTS.length, a: i % SHIP_ACCENTS.length, wing: 0, eng: i % 2, nose: 0, fin: 0, pod: 0 }); } catch (_) { o = makeStarship(col); }
-    o.scale.setScalar(1.1); o.position.copy(MAW.back.position).add(V((i - 6) * 12, (i % 3) * 8, 0)); levelGroup.add(o);
+    try { o = mawAllyShip(name, col, i); } catch (_) { o = makeStarship(col); }
+    o.scale.setScalar(name === 'Captain Vega' ? 1.3 : 1.1); o.position.copy(MAW.back.position).add(V((i - 6) * 12, (i % 3) * 8, 0)); levelGroup.add(o);
     MAW.allies.push({ o, name, a: i * 0.483, R: 150 + (i % 4) * 26, h: ((i % 5) - 2) * 26, sp: 0.16 + (i % 3) * 0.04, cd: 0.5 + i * 0.13, enter: quick ? 1 : 0 }); });
   if (quick) mawSquadIn();
+}
+// every ally flies their own ship: a hand-picked class, parts, paint job and exhaust for the named pilots (2.23.67, Phil)
+// p paint, a accent, st paint style, x exhaust; the rest are shipbuilder slots
+const MAW_ALLY_LOOK = {
+  'Captain Vega': { p: 3, a: 3, st: 2, x: 7, wing: 1, eng: 0, nose: 1, wpn: 1, kit: 1 },
+  'Captain Skye': { p: 1, a: 2, st: 1, x: 1, wing: 4, eng: 1, nose: 4, kit: 3 },
+  'Ada-9': { p: 0, a: 2, st: 8, x: 2, wing: 3, eng: 2, nose: 2, wpn: 2 },
+  'Harbor Master Rell': { cls: 'miner', p: 5, a: 3, st: 5, x: 0, drill: 2, armor: 2, eng: 1, hopper: 2, lights: 1 },
+  'General Hale': { p: 2, a: 6, st: 4, x: 6, wing: 2, eng: 2, nose: 5, wpn: 2, kit: 2 },
+  'Lumen': { p: 1, a: 6, st: 0, x: 5, wing: 5, eng: 1, nose: 4 },
+  'Elismas': { p: 0, a: 4, st: 7, x: 6, wing: 6, eng: 0, nose: 3, wpn: 1 },
+  'The Bug Master': { p: 9, a: 3, st: 7, x: 2, wing: 5, eng: 2, nose: 6 },
+  'Maxurge': { p: 3, a: 2, st: 3, x: 1, wing: 0, eng: 1, nose: 2, kit: 3 },
+  'Ramick': { p: 4, a: 1, st: 3, x: 0, wing: 6, eng: 0, nose: 1, wpn: 1, kit: 1 },
+  'Lt. Vance': { p: 0, a: 0, st: 1, x: 1, wing: 0, eng: 0, nose: 0 },
+  'Ensign Park': { p: 8, a: 5, st: 2, x: 3, wing: 1, eng: 1, nose: 4, kit: 3 },
+  'Sgt. Okafor': { p: 2, a: 1, st: 4, x: 0, wing: 2, eng: 2, nose: 5, wpn: 2, kit: 2 }
+};
+function mawAllyShip(name, col, i, cls) {
+  const L = MAW_ALLY_LOOK[name], c = cls || (L && L.cls) || 'fighter', D = typeof SHIP_CLASSES !== 'undefined' && SHIP_CLASSES[c];
+  if (!D) return makeStarship(col);
+  const C = { v: 2, p: 0, a: 0, st: 0, x: 0, own: {}, cls: c };
+  for (const k in D.slots) C[k] = 0;
+  if (L) Object.assign(C, L, { cls: c });
+  else { // everyone else: mix the parts by their place in the line, so no two match
+    let n = 0; for (const k in D.slots) { const opts = D.slots[k][1]; n++; if (k === 'lc' || k === 'bolt') continue; C[k] = (i * (n + 2) + n) % opts.length; if (k === 'lights' && C[k] === 2) C[k] = 1; }
+    C.st = (i * 3 + 1) % PAINT_STYLES.length; C.x = (i * 5 + 2) % 8; C.p = c === 'lawman' ? 3 : (i * 4 + 1) % SHIP_PAINTS.length; }
+  return makeStarship(col, C);
 }
 function mawSquadIn() {
   mawComms('CAPTAIN VEGA', 'Squadron, on the rookie. Let\'s finish this.');
@@ -293,6 +323,7 @@ function mawBlast(big) {
   if (big && player.pos.distanceTo(MAW_C) < 900) SFX.boom();
 }
 function mawFxStep(dt) {
+  mawBoomStep(dt);
   for (let i = MAW.shots.length - 1; i >= 0; i--) { const s = MAW.shots[i]; s.t += dt; const k = Math.min(1, s.t / s.dur);
     s.m.position.lerpVectors(s.from, s.to, k); if (k >= 1) { s.m.visible = false; MAW.shots.splice(i, 1); if (!s.miss) { mawFlash(s.to, s.col, (s.big ? 22 : 16) + Math.random() * 8, 0.28); if (Math.random() < (s.big ? 0.2 : 0.45)) burst(s.to, s.col, 3, 14); } } }
   for (let i = MAW.smoke.length - 1; i >= 0; i--) { const m = MAW.smoke[i]; m.t += dt; const k = m.t / m.life;
@@ -320,10 +351,13 @@ function mawAllyStep(dt, t) {
       continue; }
     A.a += A.sp * dt; const want = MAW_C.clone().add(V(Math.cos(A.a) * A.R, A.h + Math.sin(t * 0.5 + A.a) * 20, Math.sin(A.a) * A.R + 40));
     A.enter = Math.min(1, A.enter + dt * 0.35); A.o.position.lerp(want, A.enter < 1 ? dt * 1.2 : Math.min(1, dt * 3));
-    const ahead = MAW_C.clone().add(V(Math.cos(A.a + 0.2) * A.R, A.h, Math.sin(A.a + 0.2) * A.R + 40)); A.o.lookAt(ahead); A.o.rotateY(Math.PI);
+    // nose on the Maw (Phil): they strafe around it with their guns on it, banking a little into the turn
+    if (!A.doom) { A.o.lookAt(MAW_C); A.o.rotateY(Math.PI); A.o.rotateZ(0.28 + Math.sin(t * 0.8 + A.a * 3) * 0.12); }
     if (MAW.dead) continue;
     if (A.doom) continue;
-    A.cd -= dt; if (A.cd <= 0 && A.enter > 0.6) { A.cd = 0.35 + Math.random() * 0.5; const from = A.o.position.clone(), hit = mawHitPoint(from); mawAllyShot(from, hit, A.name === 'Captain Vega' ? '#ffd36a' : A.name === 'Ramick' ? '#ff7a5a' : '#8fe3ff'); }
+    A.cd -= dt; if (A.cd <= 0 && A.enter > 0.6) { A.cd = 0.35 + Math.random() * 0.5; const from = A.o.position.clone(), col = A.name === 'Captain Vega' ? '#ffd36a' : A.name === 'Ramick' ? '#ff7a5a' : '#8fe3ff';
+      const B = MAW.stage === 2 && Math.random() < 0.1 && (MAW.bulbs || []).filter(b => !b.dead && b.grow > 0.9); if (B && B.length) { const b = B[(Math.random() * B.length) | 0]; mawAllyShot(from, b.core.getWorldPosition(V(0, 0, 0)), col); mawBulbHit(b, b.max * 0.03); }
+      else mawAllyShot(from, mawHitPoint(from), col); }
     mawDamage(dt * 60 * (1 + 0.35 * (S.asc || 0)), false);
   }
 }
@@ -336,27 +370,167 @@ function mawDoom(L) {
 function mawDoomStep(A, dt) {
   const D = A.doom, L = D.L; D.t += dt; const eyeW = MAW.obj.userData.eye.getWorldPosition(V(0, 0, 0)), p = A.o.position;
   A.o.rotation.z += dt * (2 + D.t * 6); p.add(V(rand(-0.6, 0.6), rand(-0.6, 0.6), rand(-0.6, 0.6)));
+  if (D.t > 0.45 && !D.cined) { D.cined = 1; mawCineStart(A); }
   if (D.t > 0.5 && !D.beam) { D.beam = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: '#ff3a5a', transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); levelGroup.add(D.beam); }
   if (D.beam) { const d = p.clone().sub(eyeW), len = d.length(); D.beam.position.copy(eyeW).addScaledVector(d, 0.5); D.beam.quaternion.setFromUnitVectors(V(0, 1, 0), d.normalize()); D.beam.scale.set(1 + Math.sin(D.t * 40) * 0.3, len, 1 + Math.sin(D.t * 40) * 0.3);
     if (Math.random() < 0.4) burst(p, '#ff6a4a', 2, 12); }
   if (D.t < 1.4) return false;
   if (D.beam) levelGroup.remove(D.beam);
-  burst(p, '#ffd36a', 26, 46); burst(p, '#ff5a20', 18, 30); burst(p, '#c8c8d0', 10, 22); mawFlash(p, '#ffb060', 70, 0.9);
-  if (player.pos.distanceTo(p) < 900) SFX.boom();
+  mawShipBoom(A.o, 1.3);
+  if (MAW.cine && MAW.cine.A === A) { MAW.cine.p.copy(p); MAW.cine.boom = MAW.cine.t; }
   if (fly) fly.shake = Math.max(fly.shake || 0, 0.25);
-  levelGroup.remove(A.o);
   mawAt(1.0, () => mawComms(L[3], L[4], 3.4));
   MAW.ev.push({ at: MAW.t + 4.8, fn: () => mawBurp(L[5], 6.5), burp: 1 });
   return true;
 }
+// ---- a ship dies for real: it comes apart, burning pieces tumble away, a fireball rolls out and leaves smoke and a shockwave ----
+let mawFireTex = null;
+function mawFireSprite(col, size) {
+  if (!mawFireTex) { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const x = cv.getContext('2d');
+    for (let i = 0; i < 9; i++) { const cx = 40 + Math.random() * 48, cy = 40 + Math.random() * 48, r = 26 + Math.random() * 30, gr = x.createRadialGradient(cx, cy, 1, cx, cy, r);
+      gr.addColorStop(0, 'rgba(255,250,230,0.9)'); gr.addColorStop(0.3, 'rgba(255,190,90,0.6)'); gr.addColorStop(0.7, 'rgba(230,70,20,0.25)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128); }
+    mawFireTex = new THREE.CanvasTexture(cv); }
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: mawFireTex, color: col, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
+  sp.scale.setScalar(size); sp.material.rotation = Math.random() * 6.28; levelGroup.add(sp); return sp;
+}
+function mawShipBoom(o, sc) {
+  sc = sc || 1; o.updateMatrixWorld(true); const p = o.getWorldPosition(V(0, 0, 0)), X = { t: 0, p: p.clone(), parts: [], fire: [], sc, pops: [0.16, 0.34, 0.6, 0.85] };
+  // every piece of the ship flies off on its own, spinning
+  const ms = []; o.traverse(m => { if (m.isMesh && m.geometry) ms.push(m); });
+  ms.slice(0, 36).forEach((m, i) => { const wp = m.getWorldPosition(V(0, 0, 0)), piece = new THREE.Mesh(m.geometry, m.material);
+    piece.position.copy(wp); piece.quaternion.copy(m.getWorldQuaternion(new THREE.Quaternion())); piece.scale.copy(m.getWorldScale(V(0, 0, 0))); levelGroup.add(piece);
+    const out = wp.clone().sub(p); if (out.lengthSq() < 0.01) out.set(rand(-1, 1), rand(-1, 1), rand(-1, 1)); out.normalize();
+    const P = { m: piece, v: out.multiplyScalar(rand(12, 34) * sc).add(V(rand(-8, 8), rand(-8, 8), rand(-8, 8))), w: V(rand(-7, 7), rand(-7, 7), rand(-7, 7)), s0: piece.scale.clone(), life: rand(2.4, 3.6) };
+    if (i % 4 === 0) P.fl = mawFireSprite('#ff7a2a', 4 * sc); X.parts.push(P); });
+  levelGroup.remove(o);
+  // the fireball: a white-hot core, then rolling orange fire
+  X.fire.push({ sp: mawFireSprite('#ffffff', 6 * sc), t: 0, life: 0.4, s0: 6 * sc, s1: 46 * sc });
+  for (let k = 0; k < 7; k++) { const v = V(rand(-1, 1), rand(-1, 1), rand(-1, 1)).normalize().multiplyScalar(rand(6, 16) * sc);
+    X.fire.push({ sp: mawFireSprite(k % 3 ? '#ff8a3a' : '#ffd36a', 8 * sc), t: -k * 0.03, life: rand(0.9, 1.6), s0: 8 * sc, s1: rand(26, 40) * sc, v }); }
+  // a shockwave ring
+  X.ring = new THREE.Mesh(new THREE.RingGeometry(0.86, 1, 48), new THREE.MeshBasicMaterial({ color: '#ffc890', transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+  X.ring.position.copy(p); X.ring.lookAt(camera.position); levelGroup.add(X.ring);
+  // smoke that hangs after
+  for (let k = 0; k < 6; k++) { const sm = mawSmokeSprite(); sm.visible = true; sm.material.color.set('#3e3640'); sm.position.copy(p); sm.material.rotation = Math.random() * 6;
+    MAW.smoke.push({ sp: sm, t: -0.25 - k * 0.05, life: 3.2 + Math.random() * 1.5, size: (24 + Math.random() * 16) * sc, v: V(rand(-1, 1), rand(-1, 1), rand(-1, 1)).normalize().multiplyScalar(rand(4, 10) * sc), spin: rand(-0.5, 0.5) }); }
+  mawFlash(p, '#ffb060', 90 * sc, 0.7); burst(p, '#ffd36a', 22, 46); burst(p, '#ff5a20', 16, 30); burst(p, '#c8c8d0', 10, 22);
+  if (player.pos.distanceTo(p) < 1200) SFX.boom();
+  (MAW.booms = MAW.booms || []).push(X);
+}
+function mawBoomStep(dt) {
+  const L = MAW.booms || [];
+  for (let i = L.length - 1; i >= 0; i--) { const X = L[i]; X.t += dt;
+    for (const P of X.parts) { const k = X.t / P.life; P.m.position.addScaledVector(P.v, dt); P.v.multiplyScalar(1 - Math.min(1, dt * 0.3));
+      P.m.rotation.x += P.w.x * dt; P.m.rotation.y += P.w.y * dt; P.m.rotation.z += P.w.z * dt; P.m.scale.copy(P.s0).multiplyScalar(Math.max(0.001, Math.min(1, (1 - k) / 0.35)));
+      if (P.fl) { P.fl.position.copy(P.m.position); P.fl.material.opacity = Math.max(0, 1 - k) * (0.6 + Math.random() * 0.4); P.fl.scale.setScalar((3 + Math.random() * 2) * X.sc * Math.max(0.2, 1 - k));
+        if (Math.random() < dt * 14) burst(P.m.position, '#ff7a3a', 1, 5); } }
+    for (const f of X.fire) { f.t += dt; const k = f.t / f.life; if (k < 0) { f.sp.visible = false; continue; } if (k >= 1) { f.sp.visible = false; continue; } f.sp.visible = true;
+      if (f.at) f.sp.position.copy(f.at); else if (f.v) f.sp.position.copy(X.p).addScaledVector(f.v, f.t); else f.sp.position.copy(X.p); f.sp.scale.setScalar(f.s0 + (f.s1 - f.s0) * (1 - Math.pow(1 - k, 3))); f.sp.material.opacity = Math.pow(1 - k, 1.4); }
+    if (X.ring) { const k = Math.min(1, X.t / 0.9); X.ring.scale.setScalar(4 + k * 70 * X.sc); X.ring.material.opacity = 0.9 * (1 - k); X.ring.lookAt(camera.position); }
+    // a few smaller blasts as the fuel and ammo go up
+    if (X.pops.length && X.t > X.pops[0]) { X.pops.shift(); const P = X.parts[(Math.random() * X.parts.length) | 0], q = P ? P.m.position.clone() : X.p.clone();
+      X.fire.push({ sp: mawFireSprite('#ffb060', 5 * X.sc), t: 0, life: 0.6, s0: 5 * X.sc, s1: 18 * X.sc, at: q }); burst(q, '#ffd36a', 6, 18); }
+    if (X.t > 3.8) { X.parts.forEach(P => { levelGroup.remove(P.m); if (P.fl) levelGroup.remove(P.fl); }); X.fire.forEach(f => { levelGroup.remove(f.sp); f.sp.material.dispose(); }); X.parts.forEach(P => { if (P.fl) P.fl.material.dispose(); }); if (X.ring) { levelGroup.remove(X.ring); X.ring.geometry.dispose(); } L.splice(i, 1); } }
+}
+// ---- the death cam: when a wingman goes, the camera swings over to them, time all but stops for the blast, then it swings back to you ----
+const _cmQ = new THREE.Quaternion(), _cmM = new THREE.Matrix4(), _cmP = new THREE.Vector3(), _cmB = new THREE.Vector3(), _cmBQ = new THREE.Quaternion();
+const mawSm = x => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
+function mawCineStart(A) { if (MAW.cine || CUT.on || !fly || !player.alive || (typeof PREFS !== 'undefined' && PREFS.noDeathCam)) return; MAW.cine = { A, t: 0, boom: null, p: A.o.position.clone(), fov0: camera.fov }; }
+function mawCineCam(dt) {
+  const C = MAW.cine; if (!C) return;
+  if (!LEVEL || LEVEL.id !== 'maw' || CUT.on || state !== 'play') { camera.fov = C.fov0; camera.updateProjectionMatrix(); MAW.cine = null; MAW.ts = 1; return; }
+  C.t += Math.min(dt, 0.1); const b = C.boom == null ? -1 : C.t - C.boom;
+  if (C.boom == null && C.A.o && C.A.o.parent) C.p.copy(C.A.o.position);
+  // time: normal until the blast, then a near-freeze, then back up to speed
+  MAW.ts = b < 0 ? 1 : b < 0.12 ? 1 - 0.8 * (b / 0.12) : b < 1.45 ? 0.2 : b < 1.95 ? 0.2 + 0.8 * mawSm((b - 1.45) / 0.5) : 1;
+  // the camera: one smooth swing over, a hold on the blast, and one smooth swing back
+  let w = mawSm(C.t / 0.75); if (b > 1.3) w *= 1 - mawSm((b - 1.3) / 0.75);
+  if (b > 2.05 || C.t > 7) { camera.fov = C.fov0; camera.updateProjectionMatrix(); MAW.cine = null; MAW.ts = 1; return; }
+  // the camera stays with you and pans (wrecks and the Maw can't get between), zooming in so the blast fills the screen
+  _cmB.copy(camera.position); _cmBQ.copy(camera.quaternion);
+  _cmM.lookAt(_cmB, C.p, camera.up); _cmQ.setFromRotationMatrix(_cmM); camera.quaternion.copy(_cmBQ).slerp(_cmQ, w);
+  const dd = _cmB.distanceTo(C.p), want = Math.max(14, Math.min(C.fov0, (2 * Math.atan(40 / Math.max(1, dd)) * 180 / Math.PI) / 0.45));
+  camera.fov = C.fov0 + (want - C.fov0) * w; camera.updateProjectionMatrix();
+}
+// time runs slow while the death cam holds (the dt every system in the rift sees)
+{ const _st = step; step = function (dt) { if (LEVEL && LEVEL.id === 'maw' && MAW.cine && MAW.ts != null) dt *= MAW.ts; return _st.call(this, dt); }; }
+// the camera move goes on after everything else has placed the camera for the frame
+setTimeout(() => { if (typeof talkCamFrame !== 'function') return; const _tc = talkCamFrame; talkCamFrame = function (dt) { const r = _tc.apply(this, arguments); try { mawCineCam(dt); } catch (err) { console.warn('maw cam', err); MAW.cine = null; MAW.ts = 1; } return r; }; }, 0);
+
+// ---- stage two, the Brood: it shuts the great eye and grows armored sacs. Burst them all and the eye is forced open, stunned ----
+const MAW_SOLO_K = 5; // before the squadron arrives your hits land five times as hard, so you can see the bar move (Phil, 2.23.67)
+const mawStageOf = f => f > 0.88 ? 1 : f > 0.58 ? 2 : f > 0.33 ? 3 : 4;
+const MAW_STAGE_NAME = ['', 'ALONE', 'THE BROOD', 'IT SPAWNS', 'ENRAGED', 'ITS LAST FORM'];
+const MAW_BULB_DIRS = [[0.62, 0.45, 0.66], [-0.62, 0.45, 0.66], [0.72, -0.28, 0.62], [-0.72, -0.28, 0.62], [0, 0.88, 0.48]];
+function mawBulbsClear(pop) {
+  for (const b of MAW.bulbs || []) { if (!b.dead && pop) { const p = b.core.getWorldPosition(V(0, 0, 0)); burst(p, '#ff4ae0', 8, 20); } if (b.g.parent) b.g.parent.remove(b.g); }
+  MAW.bulbs = [];
+}
+function mawBulbsGrow() {
+  const U = MAW.obj.userData; mawBulbsClear(false);
+  const dmg = SHIP_SYS.laser.lv[sysLv('laser')].dmg * (1 + (S.lvl - 1) * 0.03) * (typeof shipMod === 'function' ? shipMod('laser') : 1), max = dmg * 14;
+  const bone = toon('#d8c8b0'), fl = toon('#5a2438'), gl = glow('#ff4ae0');
+  MAW.bulbs = MAW_BULB_DIRS.map((d, i) => { const n = V(d[0], d[1], d[2]).normalize(), g = new THREE.Group(); g.position.copy(n).multiplyScalar(45); g.quaternion.setFromUnitVectors(V(0, 1, 0), n); U.body.add(g);
+    const root = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), fl); root.scale.set(8, 3.5, 8); g.add(root);
+    const core = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), gl); core.position.y = 5.5; g.add(core);
+    // bone shards cage it, open at the top so the glow shows through
+    for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, sh = new THREE.Mesh(new THREE.ConeGeometry(1.9, 10, 5), bone); sh.position.set(Math.cos(a) * 5.2, 5, Math.sin(a) * 5.2); sh.lookAt(Math.cos(a) * 14, 14, Math.sin(a) * 14); sh.rotateX(Math.PI / 2); g.add(sh); }
+    for (let k = 0; k < 3; k++) { const v = new THREE.Mesh(new THREE.TorusGeometry(6.4 + k * 1.6, 0.5, 4, 18), toon('#7a1e30')); v.rotation.x = Math.PI / 2; v.position.y = 0.6 + k * 0.4; g.add(v); }
+    const halo = deadGlow('255,74,224', 30); halo.position.y = 6; g.add(halo);
+    g.scale.setScalar(0.01);
+    return { g, core, halo, hp: max, max, grow: 0, cd: 2.5 + i * 0.8, dead: false, hitT: 0 }; });
+  mawSacTargets();
+}
+function mawBulbHit(b, dmg) {
+  if (!b || b.dead || MAW.dead) return; b.hp -= dmg; b.hitT = 0.08;
+  if (b.hp > 0) return;
+  b.dead = true; const p = b.core.getWorldPosition(V(0, 0, 0));
+  mawFlash(p, '#ff6ae8', 90, 0.6); burst(p, '#ff4ae0', 20, 40); burst(p, '#9fe86a', 10, 24); burst(p, '#d8c8b0', 8, 20);
+  for (let k = 0; k < 3; k++) { const sm = mawSmokeSprite(); sm.visible = true; sm.material.color.set('#5a3a58'); sm.position.copy(p); MAW.smoke.push({ sp: sm, t: 0, life: 2.4, size: 30 + k * 10, v: p.clone().sub(MAW_C).normalize().multiplyScalar(14 + k * 6), spin: rand(-0.6, 0.6) }); }
+  if (b.g.parent) b.g.parent.remove(b.g); SFX.boom(); if (fly) fly.shake = Math.max(fly.shake || 0, 0.3);
+  mawDamage(MAW.max * 0.035, true, null, true);
+  const left = MAW.bulbs.filter(x => !x.dead).length;
+  if (!left) mawStun(); else toast('SAC BURST', left + ' left', 1.2);
+}
+function mawStun() {
+  if (MAW.dead || MAW.final) return; MAW.stun = 9;
+  toast('THE EYE IS OPEN', 'It\'s stunned. Hit the eye with everything!', 2.6); SFX.level && SFX.level();
+  mawComms('CAPTAIN VEGA', 'It\'s open! Everything on the eye, NOW!', 3.2);
+}
+function mawStageIn(st) {
+  const U = MAW.obj.userData; SFX.boom(); if (fly) fly.shake = 0.6;
+  if (st >= 3) { mawBulbsClear(true); MAW.stun = 0; }
+  if (st === 2) { U.rage = 0.5; mawBulbsGrow(); MAW.stun = 0;
+    if (MAW.beam) { if (MAW.beam.fire) levelGroup.remove(MAW.beam.fire); if (MAW.beam.tl) levelGroup.remove(MAW.beam.tl); MAW.beam = null; }
+    mawAt(0.6, () => toast('IT SHUTS ITS EYE', 'Burst the glowing sacs to force it open', 3));
+    mawAt(3.2, () => mawComms('CAPTAIN VEGA', 'It\'s hiding the eye! Pop those sacs, rookie, we\'ll cover you!', 4)); }
+  if (st === 3) { U.rage = 1; toast('IT SPAWNS', 'The Maw tears off pieces of itself', 2.5); }
+  if (st === 4) { U.rage = 2; toast('IT\'S ENRAGED', 'Every eye opens at once', 2.5); }
+}
+function mawBroodStep(dt, t) {
+  const U = MAW.obj.userData, brood = MAW.stage === 2 && !MAW.final;
+  // the eye shuts in the Brood (unless it's stunned open)
+  if (!MAW.final) { const want = brood && !(MAW.stun > 0) ? 0 : 1; U.open += (want - U.open) * Math.min(1, dt * 2.5); }
+  if (MAW.stun > 0) { MAW.stun -= dt; if (MAW.stun <= 0 && brood) { toast('IT SHUTS AGAIN', 'Burst the sacs to force it open', 2.2); mawBulbsGrow(); } }
+  if (brood) MAW.beamT = Math.max(MAW.beamT, 2.5);
+  for (const b of MAW.bulbs || []) { if (b.dead) continue;
+    b.grow = Math.min(1, b.grow + dt * 0.7); const pul = 1 + Math.sin(t * 4 + b.cd) * 0.08; b.g.scale.setScalar(Math.max(0.01, mawSm(b.grow)) * pul);
+    b.hitT -= dt; b.core.material = b.hitT > 0 ? glow('#ffffff') : glow('#ff4ae0'); b.halo.material.opacity = 0.65 + Math.sin(t * 5 + b.cd) * 0.3;
+    // they spit at you
+    if (b.grow >= 1 && player.alive) { b.cd -= dt; if (b.cd <= 0) { b.cd = rand(3.4, 5); mawBolt(b.core.getWorldPosition(V(0, 0, 0)), 18, 16); } } }
+}
 // ---- the fight ----
 const MAW_FINAL_TOUGH = 0.2, MAW_P1_K = 1.2; // Phil (2.23.35): the first stretch has about a sixth less health (hits land at 120%), the morphed last phase triple (hits land at 20%, was 60%)
-function mawDamage(n, byYou, at) {
-  if (MAW.dead || !MAW.obj) return; n *= MAW.final ? MAW_FINAL_TOUGH : MAW_P1_K; MAW.hp -= n;
-  const f = MAW.hp / MAW.max, ph = f > 0.66 ? 1 : f > 0.33 ? 2 : 3;
-  if (ph !== MAW.phase && !MAW.final) { MAW.phase = ph; MAW.obj.userData.rage = ph - 1; SFX.boom(); if (fly) fly.shake = 0.6;
-    toast(ph === 2 ? 'IT SPAWNS' : 'IT\'S ENRAGED', ph === 2 ? 'The Maw tears off pieces of itself' : 'Every eye opens at once', 2.5); }
-  if (!MAW.alliesIn && f < 0.86) mawAlliesCut();
+// stages (2.23.67, Phil): 1 alone (to 88%), 2 the Brood (to 58%), 3 it spawns and charges the big beam (to 33%), 4 enraged (to 12%), then its last form
+// MAW.phase keeps the old attack set: the Brood fights like the opening, stage 3 like the old phase 2, stage 4 like the old phase 3
+function mawDamage(n, byYou, at, raw) {
+  if (MAW.dead || !MAW.obj) return;
+  if (!raw) { n *= MAW.final ? MAW_FINAL_TOUGH : MAW_P1_K;
+    if (!MAW.final) { const st = MAW.stage || 1; if (st === 1 && byYou && !MAW.alliesIn) n *= MAW_SOLO_K; if (st === 2) n *= MAW.stun > 0 ? 2.5 : 0.3; if (st === 4) n *= 1.25; } }
+  MAW.hp -= n;
+  const f = MAW.hp / MAW.max, st = mawStageOf(f);
+  if (!MAW.final && st > (MAW.stage || 1)) { MAW.stage = st; MAW.phase = st <= 2 ? 1 : st - 1; mawStageIn(st); }
+  if (!MAW.alliesIn && f < 0.88) mawAlliesCut();
   if (MAW.alliesIn && MAW.intro && !CUT.on) { for (const L of MAW_LOSSES) if (f < L[0] && f > 0.03 && MAW.lost.indexOf(L[1]) < 0 && !MAW.allies.some(a => a.doom)) { mawDoom(L); break; } }
   if (!MAW.final && f < 0.12 && f > 0 && MAW.intro) mawFinal();
   if (MAW.final && !MAW.mega && MAW.hp < MAW.max * 0.09) MAW.hp = MAW.max * 0.09;
@@ -409,7 +583,8 @@ function mawStep(dt, t) {
       if (MAW.intro && !MAW.dead && player.alive) { r.cd -= dt; if (r.cd <= 0 && d < 650) { r.cd = rand(1.6, 2.8); const m = new THREE.Mesh(boltGeo, glow('#ff2a3a')); m.scale.setScalar(5); m.position.copy(o.position); levelGroup.add(m);
         const lead = player.pos.clone().addScaledVector(F.vel, d / 150); F.bolts.push({ m, v: lead.sub(o.position).normalize().multiplyScalar(150), life: 4, dmg: 6 + r.lv * 0.9 }); } } } }
   if (MAW.dead || !player.alive || !MAW.intro) return;
-  MAW.t += dt; const ph = MAW.phase, eyeW = MAW.obj.userData.eye.getWorldPosition(V(0, 0, 0));
+  for (const B of F.sbolts || []) if (!B.mawx) { B.mawx = 1; B.life *= 3.6; }   // bolts carry across the rift (the Maw is far bigger and farther than a raider)
+  MAW.t += dt; mawBroodStep(dt, t); const ph = MAW.phase, eyeW = MAW.obj.userData.eye.getWorldPosition(V(0, 0, 0));
   for (let i = MAW.ev.length - 1; i >= 0; i--) if (MAW.t >= MAW.ev[i].at) { const e = MAW.ev.splice(i, 1)[0]; try { e.fn(); } catch (err) { console.warn('maw beat', err); } }
   // turn to face you
   const want = Math.atan2(player.pos.x - MAW_C.x, player.pos.z - MAW_C.z); let dy = want - MAW.obj.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); MAW.obj.rotation.y += dy * Math.min(1, dt * 0.35);
@@ -449,17 +624,18 @@ function mawStep(dt, t) {
   const keep = {}; for (const k in SPACE_BODIES) { keep[k] = SPACE_BODIES[k]; delete SPACE_BODIES[k]; }
   try { _ss(dt, t); } finally { Object.assign(SPACE_BODIES, keep); }
   mawStep(dt, t); }; }
-// your lasers hit it (the big eye takes extra)
-{ const _sf = shipFire; shipFire = function () { const r = _sf.apply(this, arguments);
-  if (LEVEL && LEVEL.id === 'maw' && MAW.obj && !MAW.dead) {
-    const dmg = SHIP_SYS.laser.lv[sysLv('laser')].dmg * (1 + (S.lvl - 1) * 0.03) * (typeof shipMod === 'function' ? shipMod('laser') : 1);
-    _e.set(player.pitch, player.yaw, 0); _q.setFromEuler(_e); shipFwd.set(0, 0, -1).applyQuaternion(_q); shipRight.set(1, 0, 0).applyQuaternion(_q);
-    const eyeW = MAW.obj.userData.eye.getWorldPosition(V(0, 0, 0));
-    for (const side of [-1, 1]) { const from = player.pos.clone().addScaledVector(shipRight, 4.4 * side).addScaledVector(shipFwd, -1);
-      const te = raySphere(from, shipFwd, eyeW, MAW_EYE), tb = raySphere(from, shipFwd, MAW_C, MAW_R), tt = te > 0 ? te : tb;
-      if (tt > 0 && tt < 1600) { const end = from.clone().addScaledVector(shipFwd, tt); tracer(from, end, '#6fdc5a'); const crit = te > 0 && MAW.obj.userData.open > 0.5;
-        burst(end, crit ? '#ffd36a' : '#ff6a8a', crit ? 6 : 3, crit ? 24 : 14); hitmark(false); mawDamage(dmg / 2 * (crit ? 1.6 : 1), true); } } }
-  return r; }; }
+// your guns hit it (the big eye takes extra). shipguns.js fires real bolts and dropped the old shipFire hook, so the Maw's parts
+// are flight targets now (fly.extra): the sacs, the great eye and the body, nearest first along each bolt (2.23.67: before this only allies hurt it)
+function mawTargets() {
+  const F = fly; if (!F) return; F.extra = (F.extra || []).filter(X => !X.maw);
+  const shot = (end, crit) => { burst(end, crit ? '#ffd36a' : '#ff6a8a', crit ? 6 : 3, crit ? 24 : 14); hitmark(false); };
+  F.extra.push({ maw: 'body', r: MAW_R, get dead() { return !MAW.obj || MAW.dead; }, pos: () => MAW_C, hit: (d, end) => { shot(end, false); mawDamage(d, true); } });
+  F.extra.push({ maw: 'eye', r: MAW_EYE, get dead() { return !MAW.obj || MAW.dead || MAW.obj.userData.open < 0.5; }, pos: () => MAW.obj.userData.eye.getWorldPosition(V(0, 0, 0)), hit: (d, end) => { shot(end, true); mawDamage(d * 1.6, true); } });
+}
+function mawSacTargets() {
+  const F = fly; if (!F) return; F.extra = (F.extra || []).filter(X => X.maw !== 'sac');
+  for (const b of MAW.bulbs || []) F.extra.push({ maw: 'sac', r: 12, get dead() { return b.dead || b.grow < 0.5 || MAW.dead; }, pos: () => b.core.getWorldPosition(V(0, 0, 0)), hit: (d, end) => { burst(end, '#ff6ae8', 4, 16); hitmark(false); mawBulbHit(b, d); } });
+}
 { const _kr = killRaider; killRaider = function (r) { const res = _kr(r); if (r && r.maw) { const F = fly, i = F.raiders.indexOf(r); if (i >= 0) F.raiders.splice(i, 1); levelGroup.remove(r.obj); } return res; }; }
 // the last, morphed phase gets its own track (Orchestral Mayhem, Phil's pick), looping until the Maw dies
 TRACKS.mayhem = 'music/mayhem.mp3'; PLAYLISTS.mawfinal = ['mayhem'];
@@ -468,7 +644,7 @@ TRACKS.mayhem = 'music/mayhem.mp3'; PLAYLISTS.mawfinal = ['mayhem'];
 // ---- the last phase: it morphs, the squadron forms up on you, and B.U.R.P. offers fight mode ----
 const MAW_FM_ASK = 'Captain, want me to activate fight mode?', MAW_FM_ON = 'Fight mode, activated.';
 function mawFinal() {
-  if (MAW.final) return; MAW.final = 1; MAW.ev = MAW.ev.filter(e => !e.burp);
+  if (MAW.final) return; MAW.final = 1; MAW.ev = MAW.ev.filter(e => !e.burp); mawBulbsClear(true); MAW.stun = 0; MAW.obj.userData.open = 1;
   if (MAW.beam) { if (MAW.beam.fire) levelGroup.remove(MAW.beam.fire); if (MAW.beam.tl) levelGroup.remove(MAW.beam.tl); MAW.beam = null; }
   fly.bolts.forEach(b => levelGroup.remove(b.m)); fly.bolts.length = 0;
   if (!MAW.alliesIn) mawAlliesArrive(true);
@@ -554,7 +730,7 @@ function mawAlliesCut() {
   ], onEnd: () => { MAW.back.scale.setScalar(1); S.flags = S.flags || {}; S.flags.mawAllies = 1; markDirty(); mawSquadIn(); } });
 }
 function mawDeath() {
-  if (MAW.dead) return; MAW.dead = true; if (MAW.fmCancel) { MAW.fmCancel(); MAW.fmCancel = null; } const m = MAW.obj, U = m.userData, first = !(S.flags && S.flags.mawDead), t0 = performance.now() / 1000;
+  if (MAW.dead) return; MAW.dead = true; mawBulbsClear(true); if (MAW.fmCancel) { MAW.fmCancel(); MAW.fmCancel = null; } const m = MAW.obj, U = m.userData, first = !(S.flags && S.flags.mawDead), t0 = performance.now() / 1000;
   if (MAW.beam) { if (MAW.beam.fire) levelGroup.remove(MAW.beam.fire); if (MAW.beam.tl) levelGroup.remove(MAW.beam.tl); MAW.beam = null; }
   fly.raiders.slice().forEach(r => { if (!r.dead) killRaider(r); }); fly.bolts.forEach(b => levelGroup.remove(b.m)); fly.bolts.length = 0;
   const bar = $('mawBar'); if (bar) bar.hidden = true;

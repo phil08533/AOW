@@ -94,7 +94,7 @@ function render() {
     <div class="drop" id="drop">Drop mp3 files here, named by line ID (like <b>${esc((rows[0] || L[0] || {}).line_id || 'B_U_R_P_001')}.mp3</b>). Any number at once, from any character.<br>Or drop one file onto a single line below.</div>
     <div class="tools"><button id="playall">▶ Play every recorded line here</button><button id="stop">■ Stop</button><span class="note">To test in the game: press Play, go to the character and talk. Recorded lines play instead of the babble (Settings → Sound → Voice must be on).</span></div>`;
   for (const l of rows) { const has = HAVE[l.line_id];
-    h += `<div class="row" data-id="${l.line_id}"><div><div class="id">${l.line_id} · ${esc(l.character)}${RADIO.has(l.line_id) ? ' · 📻 ' + esc((RADIO_FX[RADIO.get(l.line_id)[0]] || {}).name || '') : ''} <button class="sm" data-a="copy" title="Copy the line ID (for the file or label name)">📋 Copy ID</button></div><div>${esc(l.line)}</div><div class="orig">${esc(l.when_it_plays || '')} · ${esc(l.source || '')}</div>
+    h += `<div class="row" data-id="${l.line_id}"><div><div class="id">${l.line_id} · ${esc(l.character)}${RADIO.has(l.line_id) ? ' · 📻 ' + esc((RADIO_FX[RADIO.get(l.line_id)[0]] || {}).name || '') : ''} <button class="sm" data-a="copy" title="Copy the line ID (for the file or label name)">📋 Copy ID</button></div><div class="txt">${esc(l.line)} <button class="sm" data-a="edit" title="Change the words (the game shows the new text)">✏ Edit</button></div>${l.original ? `<div class="orig">Original: <s>${esc(l.original)}</s></div>` : ''}<div class="orig">${esc(l.when_it_plays || '')} · ${esc(l.source || '')}</div>
       <div class="st ${has ? 'ok' : 'no'}">${has ? '● recorded · ' + Math.round(has / 1024) + ' KB' : '○ not recorded'}</div></div>
       <div class="btns">${has ? '<button class="sm" data-a="play">▶ Play</button>' : ''}<button class="sm" data-a="up">⬆ ${has ? 'Replace' : 'Upload'}</button>${has ? '<button class="sm warn" data-a="del">✕</button>' : ''}</div></div>`; }
   if (!rows.length) h += '<p class="note">Nothing here.</p>';
@@ -141,6 +141,13 @@ function wire(rows) {
     r.addEventListener('drop', async ev => { ev.preventDefault(); ev.stopPropagation(); r.classList.remove('over'); const f = ev.dataTransfer.files[0]; if (!f) return; try { await upload(id, f); render(); toast('Saved ' + id); } catch (e) { toast(e.message, 1); } });
     r.querySelectorAll('button').forEach(b => b.onclick = async () => { const a = b.dataset.a;
       if (a === 'copy') { navigator.clipboard.writeText(id).then(() => toast('Copied ' + id), () => { const t = document.createElement('textarea'); t.value = id; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); toast('Copied ' + id); }); return; }
+      if (a === 'edit') { const l = L.find(x => x.line_id === id), box = r.querySelector('.txt');
+        box.innerHTML = `<textarea rows="2">${esc(l.line)}</textarea><div class="tools" style="margin:6px 0 0"><button class="sm pri" data-e="save">💾 Save</button><button class="sm" data-e="cancel">Cancel</button>${l.original ? '<button class="sm warn" data-e="reset">Back to original</button>' : ''}<span class="note">Saving rebuilds the game, so give it a few seconds.</span></div>`;
+        const ta = box.querySelector('textarea'); ta.focus();
+        const put = async text => { toast('Saving and rebuilding…'); const rr = await fetch('/api/castvo/text', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, text }) }); const j = await rr.json().catch(() => ({})); if (!rr.ok) return toast(j.error || 'could not save', 1);
+          l.line = j.line; if (j.original) l.original = j.original; else delete l.original; render(); toast(j.original ? 'Saved. The game shows the new words now (reload the game tab).' : 'Back to the original words.'); };
+        box.querySelector('[data-e=save]').onclick = () => put(ta.value); box.querySelector('[data-e=cancel]').onclick = render; const rs = box.querySelector('[data-e=reset]'); if (rs) rs.onclick = () => put('');
+        return; }
       if (a === 'play') playId(id);
       if (a === 'up') pick(async f => { try { await upload(id, f); render(); toast('Saved ' + id); } catch (e) { toast(e.message, 1); } });
       if (a === 'del' && confirm('Delete the recording for ' + id + '?')) { await fetch('/api/castvo/delete?id=' + encodeURIComponent(id), { method: 'POST' }); delete HAVE[id]; render(); toast('Deleted ' + id); } }); });

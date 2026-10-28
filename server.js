@@ -519,7 +519,17 @@ const server = http.createServer((req, res) => {
         for (const l of lines()) { const c = F.chars[l.character]; if (c && c.p) o[l.line_id] = [c.p, c.a == null ? 1 : c.a]; else if (re && re.test(l.when_it_plays || '')) o[l.line_id] = [L.p || 'comms', L.a == null ? 1 : L.a]; } return o; };
       const writeIndex = () => { fs.mkdirSync(CDIR, { recursive: true }); const h = have(); fs.writeFileSync(path.join(CDIR, 'index.json'), JSON.stringify({ v: Date.now(), ids: Object.keys(h).sort(), radio: Object.fromEntries(Object.entries(radioIds()).filter(([id]) => h[id])) })); };
       const idOk = id => /^[A-Za-z0-9_]{2,60}$/.test(id || '') && lines().some(l => l.line_id === id);
-      if (req.method === 'GET' && pathname === '/api/castvo') return send(200, { lines: lines(), have: have(), fx: fx(), radio: radioIds() });
+      // line text edits live in src/script.json under say[hash of the original line], the same place Script Studio keeps its edits
+      const SJ2 = path.join(SRC_DIR, 'script.json'), hsh = t => { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, '0'); };
+      const readSJ = () => { try { return JSON.parse(fs.readFileSync(SJ2, 'utf8')); } catch (_) { return { burp: {}, say: {}, voice: { active: 'burp', packs: {} } }; } };
+      const withEdits = () => { const say = readSJ().say || {}; return lines().map(l => { const n = say[hsh(l.line)]; return typeof n === 'string' && n.trim() && n !== l.line ? Object.assign({}, l, { original: l.line, line: n }) : l; }); };
+      if (req.method === 'GET' && pathname === '/api/castvo') return send(200, { lines: withEdits(), have: have(), fx: fx(), radio: radioIds() });
+      if (req.method === 'POST' && pathname === '/api/castvo/text') { let b = ''; req.on('data', c => { b += c; if (b.length > 1e5) req.destroy(); }); req.on('end', () => { try {
+        const j = JSON.parse(b), l = lines().find(x => x.line_id === j.id); if (!l) return send(400, { error: 'unknown line id' });
+        const t = String(j.text || '').replace(/\s+/g, ' ').trim().slice(0, 2000), sc = readSJ(); sc.say = sc.say || {}; sc.burp = sc.burp || {}; const k = hsh(l.line);
+        if (!t || t === l.line) delete sc.say[k]; else sc.say[k] = t; fs.writeFileSync(SJ2, JSON.stringify(sc, null, 2) + '\n');
+        const py = process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3'); let msg = ''; try { msg = execSync(py + ' tools/build.py', { cwd: ROOT_DIR, encoding: 'utf8' }).trim(); } catch (e) { return send(500, { error: 'saved, but the rebuild failed: ' + e.message }); }
+        send(200, { ok: true, line: t || l.line, original: t && t !== l.line ? l.line : null, build: msg }); } catch (e) { send(400, { error: e.message }); } }); return; }
       if (req.method === 'POST' && pathname === '/api/castvo/fx') { let b = ''; req.on('data', c => { b += c; if (b.length > 1e5) req.destroy(); }); req.on('end', () => { try { const j = JSON.parse(b), F = fx(), ch = String(j.character || '');
         if (!lines().some(l => l.character === ch)) return send(400, { error: 'unknown character' }); const pr = j.p ? String(j.p) : null, am = Math.max(0, Math.min(1.5, +j.a || 0));
         if (pr) F.chars[ch] = { p: pr, a: Math.round(am * 100) / 100 }; else delete F.chars[ch]; fs.writeFileSync(FXP, JSON.stringify(F, null, 2) + '\n'); writeIndex(); send(200, { ok: true, fx: F, radio: radioIds() }); } catch (e) { send(400, { error: e.message }); } }); return; }

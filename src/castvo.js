@@ -5,7 +5,10 @@
 const CAST_LINES = {};
 const CASTVO = { radio: new Map(), have: new Set(), v: 0, t: 0, buf: new Map(), src: null, last: '', lastT: 0 };
 const castNorm = t => String(t || '').replace(/\s+/g, ' ').trim().replace(/^["“”]+|["“”]+$/g, '').trim();
-const castId = t => { const id = CAST_LINES[burpHash(castNorm(t))]; return id && CASTVO.have.has(id) ? id : null; };
+// lines Phil rewrote in Cast Voices (SCRIPT.say, keyed by the original line's hash): the new words show in dialogue boxes and still find their recording
+const CAST_ALIAS = {}; { const say = (typeof SCRIPT !== 'undefined' && SCRIPT.say) || {}; for (const h in say) if (CAST_LINES[h] && typeof say[h] === 'string' && say[h].trim()) CAST_ALIAS[burpHash(castNorm(say[h]))] = CAST_LINES[h]; }
+const castEdit = t => { const say = (typeof SCRIPT !== 'undefined' && SCRIPT.say) || {}, n = say[burpHash(castNorm(t))]; if (typeof n !== 'string' || !n.trim()) return null; const m = /^(\s*["\u201c]?)[\s\S]*?(["\u201d]?\s*)$/.exec(t); return (m ? m[1] : '') + n + (m ? m[2] : ''); };
+const castId = t => { const h = burpHash(castNorm(t)), id = CAST_LINES[h] || CAST_ALIAS[h]; return id && CASTVO.have.has(id) ? id : null; };
 function castLoad() { if (performance.now() - CASTVO.t < 8000) return; CASTVO.t = performance.now();
   fetch('voice/cast/index.json?t=' + Date.now()).then(r => r.ok ? r.json() : null).then(j => { if (!j || !Array.isArray(j.ids)) return; if (j.v !== CASTVO.v) CASTVO.buf.clear(); CASTVO.v = j.v; CASTVO.have = new Set(j.ids); CASTVO.radio = new Map(Array.isArray(j.radio) ? j.radio.map(id => [id, ['helmet', 1]]) : Object.entries(j.radio || {})); }).catch(() => {}); }
 // helmet radio presets (same code in cast.html and src/castvo.js). amt is the strength slider: 0 = clean, 1 = the preset, up to 1.5 = extra crunchy
@@ -43,7 +46,7 @@ function castPlay(id) { const ac = SFX.ctx && SFX.ctx(); if (!ac || !PREFS.voice
 function castSay(t) { const id = castId(t); if (id) return castPlay(id); castStop(); CASTVO.last = ''; return false; }
 castLoad();
 // dialogue boxes
-{ const el = $('dlgLine'); if (el) new MutationObserver(() => { if (dlgOpen) { castLoad(); castSay(el.textContent); } }).observe(el, { childList: true, characterData: true, subtree: true }); }
+{ const el = $('dlgLine'); if (el) new MutationObserver(() => { const e = castEdit(el.textContent); if (e && e !== el.textContent) { el.textContent = e; return; } if (dlgOpen) { castLoad(); castSay(el.textContent); } }).observe(el, { childList: true, characterData: true, subtree: true }); }
 { const _c = closeDlg; closeDlg = function () { castStop(); CASTVO.last = ''; return _c.apply(this, arguments); }; }
 // the gibberish babble steps aside when a real recording is about to play
 { const _b = SFX.babble; SFX.babble = function () { const el = $('dlgLine'); if (el && dlgOpen && castId(el.textContent)) return; return _b.apply(this, arguments); }; }

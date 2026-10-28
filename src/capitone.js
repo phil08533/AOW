@@ -42,7 +42,7 @@ LEVELS.capitone = {
     dropshipPad(0, -14, 0, 'Return to your ship');
     bridgeOn(PATHS[2]);
     // wilds: pines everywhere, snowy in the north
-    scatterNature(150, 21, (i, x, z, r) => { const sn = groundH(x, z) > 5 || z > 36; if (i % 6 === 0) rock(x, z, 0.8 + r() * 1.2, '#6a7a80'); else { const p = makePine(0.9 + r() * 0.7, sn); at(p, x, z, x); solid(x, z, 0.35); } });
+    scatterNature(150, 21, (i, x, z, r) => { if (Math.hypot(x - Z.volcano.x, z - Z.volcano.z) < 22) return; const sn = groundH(x, z) > 5 || z > 36; if (i % 6 === 0) rock(x, z, 0.8 + r() * 1.2, '#6a7a80'); else { const p = makePine(0.9 + r() * 0.7, sn); at(p, x, z, x); solid(x, z, 0.35); } });
     // fern forest
     for (let i = 0; i < 30; i++) { const a = i * 2.4, d = 3 + (i * 7) % 15, x = Z.fern.x + Math.cos(a) * d, z = Z.fern.z + Math.sin(a) * d; at(makeFern(0.9 + (i % 4) * 0.25, i % 3 ? '#3f8a4a' : '#5fa04a'), x, z, a); }
     for (let i = 0; i < 8; i++) { const a = i * 0.8, x = Z.fern.x + Math.cos(a) * 13, z = Z.fern.z + Math.sin(a) * 13; tree(x, z, 1.6, '#2f7a4a'); }

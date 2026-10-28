@@ -155,7 +155,13 @@ function mckRoom() {
 function mckLight(k) { MCKR.lit = MCKR.lit || new Map(); scene.traverse(o => { if (!o.isLight || o.isPointLight || o.isSpotLight) return; if (!MCKR.lit.has(o)) MCKR.lit.set(o, o.intensity); o.intensity = MCKR.lit.get(o) * k; });
   if (k > 0.99) { MCKR.lit.forEach((v, o) => { o.intensity = v; }); MCKR.lit = null; MCKR.dim = 1; } }
 { const _ll = loadLevel; loadLevel = function () { if (MCKR.lit) mckLight(1); return _ll.apply(this, arguments); }; }
-ROMANCE.lulu = { name: 'Lulu Sprinkles', role: 'McKlunkies play place attendant', away: 1, make: () => makeCivilian('#ff6aa8', '#f4f0e8', '#e0b892', '#ffd36a', '#c8402f'), x: 0, z: 0, face: 0,
+ROMANCE.lulu = { name: 'Lulu Sprinkles', role: 'McKlunkies play place attendant', away: 1, make: () => { const g = makeCivilian('#ff6aa8', '#f4f0e8', '#e0b892', '#ffd36a', '#c8402f'), hair = toon('#ffd36a');
+    // a high, bouncy blonde ponytail with a pink scrunchie
+    const tie = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.028, 6, 12), toon('#ff6aa8')); tie.position.set(0, 1.8, -0.17); tie.rotation.x = 0.5; g.add(tie);
+    const knot = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), hair); knot.position.set(0, 1.81, -0.2); g.add(knot);
+    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.02, 0.38, 8), hair); tail.position.set(0, 1.64, -0.3); tail.rotation.x = -0.45; g.add(tail);
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 6), hair); tip.scale.set(1, 1.5, 1); tip.position.set(0, 1.74, -0.25); g.add(tip);
+    return g; }, x: 0, z: 0, face: 0,
   likes: ['klunkfries', 'klunkburger', 'megaklunk'], loves: 'megaklunk', perk: { txt: '+10% max HP', k: 'hp' },
   lines: { 0: ["Hi! Shoes off in the ball pit. Not you, you're too big. Gary, OFF.", "I've pulled forty-one socks out of that pit today. None of them match."], 1: ["Oh, it's you! The only grown-up here who doesn't try the slide.", "If a kid bites you, it's a compliment. Mostly."],
     2: ["I saved you a Klunk Fry. It fell on the floor but only for a second.", "Sometimes I hide in the tube on my break. It's very peaceful. It smells like feet."], 3: ["You're the best part of my shift. The second best is when they close the pit for cleaning.", "Wanna see the secret tube? There's no secret tube. I just wanted you to follow me."],

@@ -36,8 +36,22 @@ function cane(x, z, n) {
     at(st, ox, oz);
   }
 }
+// grass sways in the wind: the top of each tuft (uv.y = 1) leans with a slow wave that rolls across the ground, plus a little flutter
+const TUFT_T = { value: 0 };
+(function tick() { TUFT_T.value = performance.now() / 1000; requestAnimationFrame(tick); })();
+function tuftSway(mat) {
+  const prev = mat.onBeforeCompile;
+  mat.onBeforeCompile = sh => { if (prev) prev(sh); sh.uniforms.uSwayT = TUFT_T;
+    sh.vertexShader = 'uniform float uSwayT;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      { vec4 wp = modelMatrix * vec4(position, 1.0); float k = uv.y * uv.y, ph = wp.x * 0.23 + wp.z * 0.17;
+        float w = sin(uSwayT * 1.3 + ph) * 0.6 + sin(uSwayT * 2.9 + ph * 2.1) * 0.25 + sin(uSwayT * 7.0 + wp.x * 1.7 - wp.z * 1.3) * 0.08;
+        transformed.x += w * 0.16 * k; transformed.z += (w * 0.07 + sin(uSwayT * 1.7 + ph * 1.4) * 0.05) * k; }`); };
+  const key = mat.customProgramCacheKey ? mat.customProgramCacheKey() : '';
+  mat.customProgramCacheKey = () => key + 'sway';
+  return mat;
+}
 function tufts(n, tex, avoid) {
-  const mat = psx(new THREE.MeshLambertMaterial({ map: tex || TEX.tuft, alphaTest: 0.5, side: THREE.DoubleSide }));
+  const mat = tuftSway(psx(new THREE.MeshLambertMaterial({ map: tex || TEX.tuft, alphaTest: 0.5, side: THREE.DoubleSide })));
   const q1 = new THREE.PlaneGeometry(0.9, 0.75); q1.translate(0, 0.36, 0); const q2 = q1.clone(); q2.rotateY(Math.PI / 2);
   let seed = 99; const r = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
   for (let i = 0; i < n; i++) {

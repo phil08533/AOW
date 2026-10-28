@@ -1,13 +1,45 @@
 {
   "chars": {
-    "Lt. Sela": { "p": "helmet", "a": 1 },
-    "Sergeant Rocco": { "p": "helmet", "a": 1 },
-    "Sgt. Torque": { "p": "helmet", "a": 1 },
-    "Corporal Patch": { "p": "helmet", "a": 1 },
-    "Captain Skye": { "p": "helmet", "a": 1 },
-    "Aero Quartermaster": { "p": "helmet", "a": 1 },
-    "Quartermaster Brix": { "p": "helmet", "a": 1 },
-    "Race Marshal Vroom": { "p": "helmet", "a": 1 }
+    "Lt. Sela": {
+      "p": "helmet",
+      "a": 1
+    },
+    "Sergeant Rocco": {
+      "p": "helmet",
+      "a": 1
+    },
+    "Sgt. Torque": {
+      "p": "helmet",
+      "a": 1
+    },
+    "Corporal Patch": {
+      "p": "helmet",
+      "a": 1
+    },
+    "Captain Skye": {
+      "p": "helmet",
+      "a": 1
+    },
+    "Aero Quartermaster": {
+      "p": "helmet",
+      "a": 1
+    },
+    "Quartermaster Brix": {
+      "p": "helmet",
+      "a": 1
+    },
+    "Race Marshal Vroom": {
+      "p": "helmet",
+      "a": 1
+    },
+    "Marshal Rook": {
+      "p": "longrange",
+      "a": 1.05
+    }
   },
-  "lines": { "match": "radio|comms", "p": "comms", "a": 1 }
+  "lines": {
+    "match": "radio|comms",
+    "p": "comms",
+    "a": 1
+  }
 }

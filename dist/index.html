@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.59</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.60</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -7727,8 +7727,8 @@ LEVELS.zeltac = {
     // central hologram of the galaxy
     part(props, Cy(3, 3.4, 0.6, 16), '#3a3d44', 0, 0.3, 0); part(props, Cy(2.8, 2.8, 0.05, 20), glow('#2a6aa8'), 0, 0.62, 0); solid(0, 0, 3.4);
     const holo = new THREE.Group(); holo.position.set(0, 3.2, 0); levelGroup.add(holo);
-    for (const id of ['earth', 'mezar', 'capitone', 'robot']) { const P = SPACE_BODIES[id], m = new THREE.Mesh(new THREE.SphereGeometry(0.35 + P.r / 900, 10, 8), new THREE.MeshBasicMaterial({ map: planetTex(id) })); m.position.set(P.pos.x / 580, P.pos.y / 290, P.pos.z / 580); holo.add(m); }
-    const zs = new THREE.Mesh(B(0.5, 0.2, 1.4), glow('#8fe3ff')); zs.position.set(SPACE_BODIES.zeltac.pos.x / 580, 0, SPACE_BODIES.zeltac.pos.z / 580); holo.add(zs);
+    for (const id of ['earth', 'mezar', 'capitone', 'robot']) { const P = SPACE_BODIES[id], m = new THREE.Mesh(new THREE.SphereGeometry(0.35 + P.r / 900, 10, 8), new THREE.MeshBasicMaterial({ map: planetTex(id) })); m.position.set(P.pos.x / (580 * SPACE_SPREAD), P.pos.y / (290 * SPACE_SPREAD), P.pos.z / (580 * SPACE_SPREAD)); holo.add(m); } // undo the galaxy spread so the model fits over the table
+    const zs = new THREE.Mesh(B(0.5, 0.2, 1.4), glow('#8fe3ff')); zs.position.set(SPACE_BODIES.zeltac.pos.x / (580 * SPACE_SPREAD), 0, SPACE_BODIES.zeltac.pos.z / (580 * SPACE_SPREAD)); holo.add(zs);
     levelAnims.push(t => { holo.rotation.y = t * 0.15; });
     // shop fronts with signs
     const front = (x, z, ry, label, col) => { const g = new THREE.Group(); part(g, B(6, 4, 0.4), '#3a3d44', 0, 2, 0); part(g, B(5.6, 0.1, 1.4), toon(col), 0, 3.2, 0.7, 0.2);
@@ -14541,7 +14541,7 @@ function hudTick() {
 #tFire { background: radial-gradient(circle at 45% 38%, rgba(255,214,150,.45), rgba(255,140,60,.22)) !important; border-color: rgba(255,220,170,.85) !important; }
 #stick { background: radial-gradient(circle, rgba(255,255,255,.10), rgba(255,255,255,.04)) !important; border: 1px solid rgba(255,255,255,.45) !important; }
 #knob { background: radial-gradient(circle at 40% 35%, #fff, rgba(220,240,255,.75)) !important; box-shadow: 0 0 12px rgba(255,255,255,.5) !important; }
-.tq .cnt { background: #fff !important; color: #1a1a1a !important; }
+.tq .cnt { background: #fff !important; color: #1a1a1a !important; text-shadow: none !important; letter-spacing: 0 !important; font: 700 12px/18px "Share Tech Mono", ui-monospace, monospace !important; box-shadow: 0 1px 3px rgba(0,0,0,.5); } /* the button's chunky shadow was doubling the digits */
 #menuToggle { display: none !important; }
 #pullTab { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 2px); width: 132px; height: 22px; border-radius: 12px 12px 4px 4px; pointer-events: auto; cursor: pointer; z-index: 4;
   background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.5); border-bottom: 0; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: #fff; font: 700 11px var(--hud); letter-spacing: .22em; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
@@ -15226,7 +15226,7 @@ function openCinema() {
   openDlg('Codex', 'Cinema'); $('dlgLine').textContent = 'Every cutscene you have seen, ready to replay.';
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   for (const [, label, ok, play] of SCENES) { const r = document.createElement('div'); r.className = 'rowi nodot'; const a = document.createElement('span'); a.innerHTML = ok() ? `<b>${label}</b>` : '<b style="color:var(--dim)">??? </b><small style="color:var(--dim)">Not seen yet</small>'; const b = document.createElement('span'); const c = document.createElement('span');
-    if (ok()) { const bt = document.createElement('button'); bt.className = 'pbtn go'; bt.textContent = 'Play'; bt.addEventListener('click', () => { SFX.ui(); closeDlg(); play(); }); c.appendChild(bt); } r.append(a, b, c); rows.appendChild(r); }
+    if (ok()) { const bt = document.createElement('button'); bt.className = 'pbtn go'; bt.textContent = 'Play'; bt.addEventListener('click', () => { SFX.ui(); closeDlg(); cinemaPlay(play); }); c.appendChild(bt); } r.append(a, b, c); rows.appendChild(r); }
   $('dlgActs').before(rows); acts([['Back to Codex', () => openCodex('ach')], ['Close', closeDlg, true]]);
 }
 { const _oc = openCodex; openCodex = function (tab) { const r = _oc(tab); if (tab !== 'lore') { const a = $('dlgActs'), lore = [...a.children].find(b => b.textContent === 'Lore'); const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = '🎬 Cinema'; b.addEventListener('click', () => { SFX.ui(); openCinema(); }); a.insertBefore(b, lore || null); } return r; }; }
@@ -15248,6 +15248,20 @@ window.addEventListener('load', () => {
   }, 600);
 });
 
+
+// replaying a scene from the Cinema puts you back where you were watching from, on the same world and floor
+function cinemaPlay(play) {
+  const home = { lvl: LEVEL.id, floor: LEVEL.id === 'zfloor' && typeof ZF !== 'undefined' ? ZF.floor : null, at: { x: player.pos.x, z: player.pos.z, yaw: player.yaw }, y: player.pos.y };
+  play(); let calm = 0, seenBusy = false, tries = 0;
+  const busy = () => state !== 'play' || (typeof CUT !== 'undefined' && CUT.on) || !!document.getElementById('ending') || (typeof BTR !== 'undefined' && BTR.on);
+  const tick = () => { if (++tries > 2400) return; if (busy()) { seenBusy = true; calm = 0; return setTimeout(tick, 500); } if (++calm < (seenBusy ? 2 : 8)) return setTimeout(tick, 500);
+    const moved = LEVEL.id !== home.lvl || (home.floor != null && ZF.floor !== home.floor) || Math.hypot(player.pos.x - home.at.x, player.pos.z - home.at.z) > 2;
+    if (!moved) return;
+    if (home.floor != null) { if (LEVEL.id !== 'zfloor' || ZF.floor !== home.floor) goFloor(home.floor); setTimeout(() => { player.pos.set(home.at.x, home.y, home.at.z); player.yaw = home.at.yaw; }, 400); }
+    else if (LEVEL.id !== home.lvl) loadLevel(home.lvl, { at: home.at });
+    else { player.pos.set(home.at.x, home.y, home.at.z); player.yaw = home.at.yaw; } };
+  setTimeout(tick, 1200);
+}
 
 // =================== SHIP SOUND: speakers in the walls (the Music Drive is parked for now) ===================
 // ---- the ship's speakers: on the bridge, along the corridor and in each room ----
@@ -19607,6 +19621,7 @@ const UPDATES = [
   { id: 315, title: '2.23.50 · Cleaner minimap', items: ['The live minimap no longer shows fireflies, rain, sparks or other effects', 'Removed the little winding crown on the minimap watch (the pill-shaped thing)'] },
   { id: 316, title: '2.23.51 · Ready for the cast', items: ['The game can now play real voice-actor recordings for every character line, as they get recorded'] },
   { id: 317, title: '2.23.52 · Helmet radio', items: ['Recorded voices for helmeted characters and battle radio play through a light comms filter'] },
+  { id: 325, title: '2.23.60 · Fixes', items: ['Heal button count is readable again', 'Hex Plates ship floor tiles line up with no seams', 'Watching a Cinema scene puts you back where you were', 'The Zeltac hologram map fits over its table again', 'The badge shine only sweeps across the metal star'] },
   { id: 324, title: '2.23.59 · Answer any time', items: ['Options show while a character is talking; picking one cuts the line off'] },
   { id: 323, title: '2.23.58 · Steady talk camera', items: ['The camera stays on whoever you are talking to for the whole conversation, through lists and follow-up boxes, and eases back out at the end', 'The talk view only opens for characters, not the Codex, terminals or signs'] },
   { id: 322, title: '2.23.57 · Voiced lines play in full', items: ['A recorded line now shows its words when the voice starts, and the options wait until it finishes (click the words or press Space to skip ahead)', 'The next lines of a conversation load while the current one plays', 'Highlighted buttons are steel blue instead of orange'] },
@@ -29889,8 +29904,8 @@ const SHIP_STYLES = {
 const SHIP_AREAS = [['bridge', 'Flight deck'], ['hall', 'Hallway']], SHIP_KINDS = [['floor', 'Floor'], ['wall', 'Walls'], ['ceil', 'Ceiling']];
 // the new textures, drawn once on first use (grey, so the option's colour tints them)
 function shipTexInit() { if (TEX.hexplate) return;
-  TEX.hexplate = canvasTex(64, (x, s) => { x.fillStyle = g8(190); x.fillRect(0, 0, s, s); speckle(x, 0.15, s, 175, 205); x.strokeStyle = g8(110); x.lineWidth = 1.5; const r = 9, w = r * Math.sqrt(3);
-    for (let row = -1; row < 6; row++) for (let col = -1; col < 5; col++) { const cx = col * w + (row % 2 ? w / 2 : 0), cy = row * r * 1.5; x.beginPath(); for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; x.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); } x.closePath(); x.stroke(); x.fillStyle = g8(225); x.fillRect(cx - 1, cy - 1, 2, 2); } });
+  TEX.hexplate = canvasTex(64, (x, s) => { x.fillStyle = g8(190); x.fillRect(0, 0, s, s); speckle(x, 0.15, s, 175, 205); x.strokeStyle = g8(110); const r = 10, w = r * Math.sqrt(3), sx = s / (4 * w), sy = s / (6 * r); x.setTransform(sx, 0, 0, sy, 0, 0); x.lineWidth = 1.5 / ((sx + sy) / 2); // exactly 4 hexes across and 4 rows down, so the tile repeats without a seam
+    for (let row = -1; row < 6; row++) for (let col = -1; col < 6; col++) { const cx = col * w + (row % 2 ? w / 2 : 0), cy = row * r * 1.5; x.beginPath(); for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; x.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); } x.closePath(); x.stroke(); x.fillStyle = g8(225); x.fillRect(cx - 1, cy - 1, 2, 2); } });
   TEX.checker = canvasTex(32, (x, s) => { for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) { x.fillStyle = g8((i + j) % 2 ? 70 : 245); x.fillRect(i * 16, j * 16, 16, 16); } speckle(x, 0.08, s, 120, 200); });
   TEX.planks = canvasTex(64, (x, s) => { x.fillStyle = g8(200); x.fillRect(0, 0, s, s); for (let j = 0; j < 8; j++) { const y = j * 8, off = (j * 23) % 64; x.fillStyle = g8(170 + (j % 3) * 18); x.fillRect(0, y, s, 7); x.fillStyle = g8(95); x.fillRect(0, y + 7, s, 1); x.fillRect(off, y, 1, 7); x.fillRect((off + 32) % 64, y, 1, 7);
       for (let k = 0; k < 5; k++) { x.fillStyle = g8(150 + Math.floor(trnd() * 50)); x.fillRect(Math.floor(trnd() * s), y + 1 + Math.floor(trnd() * 5), 6 + Math.floor(trnd() * 10), 1); } } });
@@ -29960,9 +29975,15 @@ function mb3Build() {
   const face = new THREE.Mesh(new THREE.CircleGeometry(0.03, 28), new THREE.MeshBasicMaterial({ map: T })); face.position.set(0, 0.09, 0.0185); back.add(face);
   const flap = new THREE.Group(); g.add(flap); part(flap, B(0.13, 0.17, 0.012), lea, 0, 0.085, 0); part(flap, B(0.11, 0.07, 0.002), toon('#e8e4dc'), 0, 0.1, -0.007);
   part(flap, B(0.03, 0.036, 0.002), toon('#8a9aaa'), -0.03, 0.1, -0.0085); part(flap, B(0.05, 0.006, 0.002), toon('#3a3a44'), 0.02, 0.112, -0.0085); part(flap, B(0.05, 0.006, 0.002), toon('#3a3a44'), 0.02, 0.098, -0.0085);
-  const glint = new THREE.Mesh(new THREE.PlaneGeometry(0.008, 0.16), new THREE.MeshBasicMaterial({ color: 0xfff6d0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); glint.position.set(0, 0.09, 0.021); glint.rotation.z = -0.6; back.add(glint);
+  // the shine is drawn on the star's own shape, so it only sweeps across the metal (a band moving along a slanted axis)
+  const glint = new THREE.Mesh(star.geometry, new THREE.ShaderMaterial({ uniforms: { u: { value: -1 }, amt: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: 'varying vec2 vp; void main() { vp = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'uniform float u; uniform float amt; varying vec2 vp; void main() { float d = abs(dot(vp, vec2(0.83, 0.56)) - u); float k = 1.0 - smoothstep(0.0, 0.016, d); gl_FragColor = vec4(vec3(1.0, 0.96, 0.82) * k * amt, 1.0); }' }));
+  glint.position.copy(star.position); glint.position.z += 0.0004; back.add(glint);
+  // the glint has to draw after the star (everything here ignores depth so it sits on top of the world)
   const amb = new THREE.AmbientLight(0xffffff, 0.55), key = new THREE.DirectionalLight(0xfff0d0, 0.9); key.position.set(0.3, 0.5, 1); g.add(amb, key);
   g.traverse(o => { o.layers.set(1); o.renderOrder = 999; if (o.material) { o.material = o.material.clone(); o.material.depthTest = false; } });
+  glint.renderOrder = 1000;
   flap.position.z = 0.022; Object.assign(MB3, { g, flap, face, tex: T, cv, glint }); g.visible = false; camera.add(g); }
 function mb3Face(r) { if (MB3.rank === r) return; MB3.rank = r; const x = MB3.cv.getContext('2d');
   // the seal: navy disc, gold ring, GALACTIC MARSHALS around the edge, a ringed planet, and rank stars underneath
@@ -29980,7 +30001,7 @@ function mb3Tick() { if (!MB3.run) return; const t = (performance.now() - MB3.t0
   const up = mbEase(t / 0.35) - mbEase((t - (D - 0.35)) / 0.35), open = mbEase((t - 0.25) / 0.3) - mbEase((t - (D - 0.5)) / 0.25);
   G.position.set(-0.05, -0.34 + up * 0.24, -0.34); G.rotation.set(-0.15 + (1 - up) * 0.6, -0.12 + Math.sin(t * 2.5) * 0.03, 0.05);
   MB3.flap.rotation.x = open * Math.PI * 0.97; // the ID flap swings down on its bottom hinge
-  const gk = (t - 0.7) / 0.45; MB3.glint.material.opacity = gk > 0 && gk < 1 ? Math.sin(gk * Math.PI) * 0.55 : 0; MB3.glint.position.x = -0.07 + gk * 0.14; }
+  const gk = (t - 0.7) / 0.45; MB3.glint.material.uniforms.amt.value = gk > 0 && gk < 1 ? Math.sin(gk * Math.PI) * 0.9 : 0; MB3.glint.material.uniforms.u.value = -0.07 + gk * 0.14; }
 mBadgePop = function () { try { if (!MB3.g) mb3Build(); mb3Face(mRank()); MB3.t0 = performance.now(); MB3.g.visible = true; if (!MB3.run) { MB3.run = true; mb3Tick(); } } catch (e) { console.warn('badge3d', e); } };
 
 // =================== the stolen TV as a Marshal: play along, collect evidence, then arrest Rizzo, Dot and Crabby together ===================

@@ -466,8 +466,8 @@ LEVELS.zeltac = {
     // central hologram of the galaxy
     part(props, Cy(3, 3.4, 0.6, 16), '#3a3d44', 0, 0.3, 0); part(props, Cy(2.8, 2.8, 0.05, 20), glow('#2a6aa8'), 0, 0.62, 0); solid(0, 0, 3.4);
     const holo = new THREE.Group(); holo.position.set(0, 3.2, 0); levelGroup.add(holo);
-    for (const id of ['earth', 'mezar', 'capitone', 'robot']) { const P = SPACE_BODIES[id], m = new THREE.Mesh(new THREE.SphereGeometry(0.35 + P.r / 900, 10, 8), new THREE.MeshBasicMaterial({ map: planetTex(id) })); m.position.set(P.pos.x / 580, P.pos.y / 290, P.pos.z / 580); holo.add(m); }
-    const zs = new THREE.Mesh(B(0.5, 0.2, 1.4), glow('#8fe3ff')); zs.position.set(SPACE_BODIES.zeltac.pos.x / 580, 0, SPACE_BODIES.zeltac.pos.z / 580); holo.add(zs);
+    for (const id of ['earth', 'mezar', 'capitone', 'robot']) { const P = SPACE_BODIES[id], m = new THREE.Mesh(new THREE.SphereGeometry(0.35 + P.r / 900, 10, 8), new THREE.MeshBasicMaterial({ map: planetTex(id) })); m.position.set(P.pos.x / (580 * SPACE_SPREAD), P.pos.y / (290 * SPACE_SPREAD), P.pos.z / (580 * SPACE_SPREAD)); holo.add(m); } // undo the galaxy spread so the model fits over the table
+    const zs = new THREE.Mesh(B(0.5, 0.2, 1.4), glow('#8fe3ff')); zs.position.set(SPACE_BODIES.zeltac.pos.x / (580 * SPACE_SPREAD), 0, SPACE_BODIES.zeltac.pos.z / (580 * SPACE_SPREAD)); holo.add(zs);
     levelAnims.push(t => { holo.rotation.y = t * 0.15; });
     // shop fronts with signs
     const front = (x, z, ry, label, col) => { const g = new THREE.Group(); part(g, B(6, 4, 0.4), '#3a3d44', 0, 2, 0); part(g, B(5.6, 0.1, 1.4), toon(col), 0, 3.2, 0.7, 0.2);

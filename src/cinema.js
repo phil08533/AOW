@@ -41,7 +41,7 @@ function openCinema() {
   openDlg('Codex', 'Cinema'); $('dlgLine').textContent = 'Every cutscene you have seen, ready to replay.';
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   for (const [, label, ok, play] of SCENES) { const r = document.createElement('div'); r.className = 'rowi nodot'; const a = document.createElement('span'); a.innerHTML = ok() ? `<b>${label}</b>` : '<b style="color:var(--dim)">??? </b><small style="color:var(--dim)">Not seen yet</small>'; const b = document.createElement('span'); const c = document.createElement('span');
-    if (ok()) { const bt = document.createElement('button'); bt.className = 'pbtn go'; bt.textContent = 'Play'; bt.addEventListener('click', () => { SFX.ui(); closeDlg(); play(); }); c.appendChild(bt); } r.append(a, b, c); rows.appendChild(r); }
+    if (ok()) { const bt = document.createElement('button'); bt.className = 'pbtn go'; bt.textContent = 'Play'; bt.addEventListener('click', () => { SFX.ui(); closeDlg(); cinemaPlay(play); }); c.appendChild(bt); } r.append(a, b, c); rows.appendChild(r); }
   $('dlgActs').before(rows); acts([['Back to Codex', () => openCodex('ach')], ['Close', closeDlg, true]]);
 }
 { const _oc = openCodex; openCodex = function (tab) { const r = _oc(tab); if (tab !== 'lore') { const a = $('dlgActs'), lore = [...a.children].find(b => b.textContent === 'Lore'); const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = '🎬 Cinema'; b.addEventListener('click', () => { SFX.ui(); openCinema(); }); a.insertBefore(b, lore || null); } return r; }; }
@@ -63,3 +63,17 @@ window.addEventListener('load', () => {
   }, 600);
 });
 
+
+// replaying a scene from the Cinema puts you back where you were watching from, on the same world and floor
+function cinemaPlay(play) {
+  const home = { lvl: LEVEL.id, floor: LEVEL.id === 'zfloor' && typeof ZF !== 'undefined' ? ZF.floor : null, at: { x: player.pos.x, z: player.pos.z, yaw: player.yaw }, y: player.pos.y };
+  play(); let calm = 0, seenBusy = false, tries = 0;
+  const busy = () => state !== 'play' || (typeof CUT !== 'undefined' && CUT.on) || !!document.getElementById('ending') || (typeof BTR !== 'undefined' && BTR.on);
+  const tick = () => { if (++tries > 2400) return; if (busy()) { seenBusy = true; calm = 0; return setTimeout(tick, 500); } if (++calm < (seenBusy ? 2 : 8)) return setTimeout(tick, 500);
+    const moved = LEVEL.id !== home.lvl || (home.floor != null && ZF.floor !== home.floor) || Math.hypot(player.pos.x - home.at.x, player.pos.z - home.at.z) > 2;
+    if (!moved) return;
+    if (home.floor != null) { if (LEVEL.id !== 'zfloor' || ZF.floor !== home.floor) goFloor(home.floor); setTimeout(() => { player.pos.set(home.at.x, home.y, home.at.z); player.yaw = home.at.yaw; }, 400); }
+    else if (LEVEL.id !== home.lvl) loadLevel(home.lvl, { at: home.at });
+    else { player.pos.set(home.at.x, home.y, home.at.z); player.yaw = home.at.yaw; } };
+  setTimeout(tick, 1200);
+}

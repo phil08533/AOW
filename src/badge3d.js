@@ -13,9 +13,15 @@ function mb3Build() {
   const face = new THREE.Mesh(new THREE.CircleGeometry(0.03, 28), new THREE.MeshBasicMaterial({ map: T })); face.position.set(0, 0.09, 0.0185); back.add(face);
   const flap = new THREE.Group(); g.add(flap); part(flap, B(0.13, 0.17, 0.012), lea, 0, 0.085, 0); part(flap, B(0.11, 0.07, 0.002), toon('#e8e4dc'), 0, 0.1, -0.007);
   part(flap, B(0.03, 0.036, 0.002), toon('#8a9aaa'), -0.03, 0.1, -0.0085); part(flap, B(0.05, 0.006, 0.002), toon('#3a3a44'), 0.02, 0.112, -0.0085); part(flap, B(0.05, 0.006, 0.002), toon('#3a3a44'), 0.02, 0.098, -0.0085);
-  const glint = new THREE.Mesh(new THREE.PlaneGeometry(0.008, 0.16), new THREE.MeshBasicMaterial({ color: 0xfff6d0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); glint.position.set(0, 0.09, 0.021); glint.rotation.z = -0.6; back.add(glint);
+  // the shine is drawn on the star's own shape, so it only sweeps across the metal (a band moving along a slanted axis)
+  const glint = new THREE.Mesh(star.geometry, new THREE.ShaderMaterial({ uniforms: { u: { value: -1 }, amt: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: 'varying vec2 vp; void main() { vp = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'uniform float u; uniform float amt; varying vec2 vp; void main() { float d = abs(dot(vp, vec2(0.83, 0.56)) - u); float k = 1.0 - smoothstep(0.0, 0.016, d); gl_FragColor = vec4(vec3(1.0, 0.96, 0.82) * k * amt, 1.0); }' }));
+  glint.position.copy(star.position); glint.position.z += 0.0004; back.add(glint);
+  // the glint has to draw after the star (everything here ignores depth so it sits on top of the world)
   const amb = new THREE.AmbientLight(0xffffff, 0.55), key = new THREE.DirectionalLight(0xfff0d0, 0.9); key.position.set(0.3, 0.5, 1); g.add(amb, key);
   g.traverse(o => { o.layers.set(1); o.renderOrder = 999; if (o.material) { o.material = o.material.clone(); o.material.depthTest = false; } });
+  glint.renderOrder = 1000;
   flap.position.z = 0.022; Object.assign(MB3, { g, flap, face, tex: T, cv, glint }); g.visible = false; camera.add(g); }
 function mb3Face(r) { if (MB3.rank === r) return; MB3.rank = r; const x = MB3.cv.getContext('2d');
   // the seal: navy disc, gold ring, GALACTIC MARSHALS around the edge, a ringed planet, and rank stars underneath
@@ -33,5 +39,5 @@ function mb3Tick() { if (!MB3.run) return; const t = (performance.now() - MB3.t0
   const up = mbEase(t / 0.35) - mbEase((t - (D - 0.35)) / 0.35), open = mbEase((t - 0.25) / 0.3) - mbEase((t - (D - 0.5)) / 0.25);
   G.position.set(-0.05, -0.34 + up * 0.24, -0.34); G.rotation.set(-0.15 + (1 - up) * 0.6, -0.12 + Math.sin(t * 2.5) * 0.03, 0.05);
   MB3.flap.rotation.x = open * Math.PI * 0.97; // the ID flap swings down on its bottom hinge
-  const gk = (t - 0.7) / 0.45; MB3.glint.material.opacity = gk > 0 && gk < 1 ? Math.sin(gk * Math.PI) * 0.55 : 0; MB3.glint.position.x = -0.07 + gk * 0.14; }
+  const gk = (t - 0.7) / 0.45; MB3.glint.material.uniforms.amt.value = gk > 0 && gk < 1 ? Math.sin(gk * Math.PI) * 0.9 : 0; MB3.glint.material.uniforms.u.value = -0.07 + gk * 0.14; }
 mBadgePop = function () { try { if (!MB3.g) mb3Build(); mb3Face(mRank()); MB3.t0 = performance.now(); MB3.g.visible = true; if (!MB3.run) { MB3.run = true; mb3Tick(); } } catch (e) { console.warn('badge3d', e); } };

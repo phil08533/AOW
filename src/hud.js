@@ -198,7 +198,7 @@ function hudTick() {
 #tFire { background: radial-gradient(circle at 45% 38%, rgba(255,214,150,.45), rgba(255,140,60,.22)) !important; border-color: rgba(255,220,170,.85) !important; }
 #stick { background: radial-gradient(circle, rgba(255,255,255,.10), rgba(255,255,255,.04)) !important; border: 1px solid rgba(255,255,255,.45) !important; }
 #knob { background: radial-gradient(circle at 40% 35%, #fff, rgba(220,240,255,.75)) !important; box-shadow: 0 0 12px rgba(255,255,255,.5) !important; }
-.tq .cnt { background: #fff !important; color: #1a1a1a !important; }
+.tq .cnt { background: #fff !important; color: #1a1a1a !important; text-shadow: none !important; letter-spacing: 0 !important; font: 700 12px/18px "Share Tech Mono", ui-monospace, monospace !important; box-shadow: 0 1px 3px rgba(0,0,0,.5); } /* the button's chunky shadow was doubling the digits */
 #menuToggle { display: none !important; }
 #pullTab { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 2px); width: 132px; height: 22px; border-radius: 12px 12px 4px 4px; pointer-events: auto; cursor: pointer; z-index: 4;
   background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.5); border-bottom: 0; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: #fff; font: 700 11px var(--hud); letter-spacing: .22em; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0; text-shadow: 0 1px 2px rgba(0,0,0,.6); }

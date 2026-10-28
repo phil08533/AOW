@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.60</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.61</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -669,6 +669,9 @@ for (let i = 0; i < 12; i++) {
 // low-res render target + dithered upscale
 const low = new THREE.WebGLRenderTarget(320, 240, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter });
 low.texture.encoding = THREE.sRGBEncoding; low.texture.generateMipmaps = false;
+// render targets get a 16-bit depth buffer by default, which made anything past ~20 m flicker or vanish behind the wall it sits on; ask for 24-bit depth
+function depth24(rt) { try { if (!(renderer.capabilities.isWebGL2 || renderer.extensions.has('WEBGL_depth_texture'))) return; rt.depthTexture = new THREE.DepthTexture(rt.width, rt.height); rt.depthTexture.type = THREE.UnsignedIntType; } catch (e) { console.warn('depth24', e); } }
+depth24(low);
 const GFX = [
   { name: 'Classic PS1', bloom: 0, sat: 1.0, con: 1.0, warm: 0, dith: 1, q: 31, vig: 0.35, scan: 0, pixK: 1 },
   { name: 'PS1 Glow', bloom: 0.55, sat: 1.18, con: 1.06, warm: 0.04, dith: 1, q: 31, vig: 0.4, scan: 0, pixK: 1 },

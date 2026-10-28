@@ -39,10 +39,33 @@ function mdCheckTex() { const c = document.createElement('canvas'); c.width = c.
   for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { x.fillStyle = (i + j) % 2 ? '#e8e4d8' : '#1a1a1e'; x.fillRect(i * 16, j * 16, 16, 16); }
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(5, 4.5); t.magFilter = THREE.NearestFilter; t.encoding = THREE.sRGBEncoding; return t; }
 function mdBoardTex() { const c = document.createElement('canvas'); c.width = 512; c.height = 256; const x = c.getContext('2d'); x.fillStyle = '#1e2a22'; x.fillRect(0, 0, 512, 256);
-  x.fillStyle = 'rgba(240,240,230,.85)'; x.font = '26px "Courier New",monospace';
-  ['E = mc² + 🐸', 'BRAIN (m) → FROG (f)', 'f(x) = RIBBIT', 'Δ VOLTAGE ≥ 1.21 GW', 'DOCILE?? (yes)', 'Ψ_frog ⊗ Ψ_man'].forEach((s, i) => x.fillText(s, 20 + (i % 2) * 250, 50 + Math.floor(i / 2) * 70));
-  x.strokeStyle = 'rgba(240,240,230,.7)'; x.lineWidth = 3; x.beginPath(); x.arc(440, 200, 30, 0, 6); x.stroke(); x.beginPath(); x.moveTo(300, 230); x.lineTo(380, 180); x.stroke();
+  // chalk dust smudges, then every line sized to fit inside its half of the board (it used to run off the right edge)
+  for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(230,235,225,${0.02 + Math.random() * 0.04})`; x.beginPath(); x.ellipse(Math.random() * 512, Math.random() * 256, 20 + Math.random() * 60, 6 + Math.random() * 14, Math.random(), 0, 7); x.fill(); }
+  x.fillStyle = 'rgba(240,240,230,.88)'; x.font = '24px "Courier New",monospace'; x.textBaseline = 'middle';
+  ['E = mc² + FROG', 'BRAIN(m) → FROG(f)', 'f(x) = RIBBIT', 'ΔV ≥ 1.21 GW', 'DOCILE?? (yes)', 'Ψfrog ⊗ Ψman'].forEach((s, i) => x.fillText(s, 18 + (i % 2) * 250, 34 + Math.floor(i / 2) * 50, 222));
+  x.strokeStyle = 'rgba(240,240,230,.75)'; x.lineWidth = 3; x.lineCap = 'round';
+  // a brain doodle (bottom left) with an arrow to a frog doodle (bottom right)
+  x.beginPath(); x.ellipse(110, 205, 52, 34, 0, 0, 7); x.stroke(); x.beginPath(); x.moveTo(110, 172); x.bezierCurveTo(100, 195, 122, 210, 108, 238); x.stroke();
+  for (const [a, b, c, d] of [[72, 195, 92, 188], [128, 186, 148, 196], [80, 218, 98, 226], [124, 222, 146, 214]]) { x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo((a + c) / 2, b - 12, c, d); x.stroke(); }
+  x.beginPath(); x.moveTo(180, 205); x.lineTo(320, 205); x.lineTo(306, 195); x.moveTo(320, 205); x.lineTo(306, 215); x.stroke(); x.font = '18px "Courier New",monospace'; x.fillText('1.21 GW', 205, 188);
+  x.beginPath(); x.ellipse(410, 214, 46, 26, 0, 0, 7); x.stroke(); for (const ex of [388, 432]) { x.beginPath(); x.arc(ex, 188, 12, 0, 7); x.stroke(); x.beginPath(); x.arc(ex, 188, 3, 0, 7); x.fill(); }
+  x.beginPath(); x.moveTo(380, 222); x.quadraticCurveTo(410, 236, 440, 222); x.stroke();
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; }
+// a brain: two lumpy hemispheres with folds and a brain stem, sitting at y in a jar
+function mdBrain(g, col, y) { const m = toon(col), dk = toon(new THREE.Color(col).multiplyScalar(0.7).getStyle());
+  for (const sx of [-1, 1]) { const h = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), m); h.scale.set(0.62, 0.78, 1.05); h.position.set(sx * 0.055, y + 0.02, 0); g.add(h);
+    for (let k = 0; k < 3; k++) { const f = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.009, 4, 10, Math.PI * 1.2), dk); f.position.set(sx * 0.06, y + 0.02, -0.05 + k * 0.05); f.rotation.set(0, Math.PI / 2, -0.4 + k * 0.4); g.add(f); } }
+  const st = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.018, 0.08, 6), dk); st.position.set(0, y - 0.07, -0.02); st.rotation.x = 0.4; g.add(st); }
+// the lab wall: green-grey tiles up to the rail, painted block above, a worn hazard stripe at the floor, stains
+function mdLabWallMat(H) { const c = document.createElement('canvas'); c.width = 256; c.height = 448; const x = c.getContext('2d'), py = y => c.height - y / H * c.height;
+  x.fillStyle = '#5c6a60'; x.fillRect(0, 0, 256, 448);
+  for (let r = 0; r < 14; r++) for (let k = 0; k < 4; k++) { const by = r * 22, ox = r % 2 ? 32 : 0; x.fillStyle = `rgb(${88 + (r * 7 + k * 13) % 10},${100 + (r * 5 + k * 11) % 10},${92 + (r * 3 + k * 7) % 10})`; x.fillRect((k * 64 + ox) % 256, by, 62, 20); x.fillRect((k * 64 + ox) % 256 - 256, by, 62, 20); }
+  const tTop = py(1.2); x.fillStyle = '#c8d0c4'; x.fillRect(0, tTop, 256, 448 - tTop); x.fillStyle = '#7a8a80';
+  for (let yy = tTop; yy < 448; yy += 21) x.fillRect(0, yy, 256, 2); for (let xx = 0; xx < 256; xx += 32) x.fillRect(xx, tTop, 2, 448 - tTop);
+  x.fillStyle = '#2a3a32'; x.fillRect(0, tTop - 4, 256, 6);
+  const hz = py(0.18); for (let xx = -20; xx < 276; xx += 28) { x.fillStyle = '#e0b030'; x.beginPath(); x.moveTo(xx, 448); x.lineTo(xx + 14, 448); x.lineTo(xx + 28, hz); x.lineTo(xx + 14, hz); x.fill(); } x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(0, hz, 256, 448 - hz);
+  for (let i = 0; i < 18; i++) { x.fillStyle = `rgba(40,30,20,${0.05 + Math.random() * 0.08})`; const sx = Math.random() * 256; x.fillRect(sx, Math.random() * 200, 3 + Math.random() * 5, 30 + Math.random() * 120); }
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 4; return new THREE.MeshLambertMaterial({ map: t }); }
 function mdPosterTex(top, big, col) { const c = document.createElement('canvas'); c.width = 192; c.height = 280; const x = c.getContext('2d');
   x.fillStyle = '#1a1210'; x.fillRect(0, 0, 192, 280); x.fillStyle = col; x.beginPath(); x.moveTo(96, 40); for (let i = 0; i < 9; i++) x.lineTo(96 + Math.cos(i * 0.7 + 0.3) * 90, 150 + Math.sin(i * 0.7 + 0.3) * 70); x.fill();
   x.fillStyle = '#ffe9b0'; x.textAlign = 'center'; x.font = 'bold 18px Impact, sans-serif'; x.fillText(top, 96, 30); x.font = 'bold 34px Impact, sans-serif'; big.split('|').forEach((s, i) => x.fillText(s, 96, 215 + i * 34));
@@ -168,7 +191,15 @@ LEVELS.miledown = {
     MD.act = { x: 0, z: -1.6, r: 2.0, label: 'Open the lab door', fn: mdDoor }; INTERACTS.push(MD.act);
     // ---- DOC'S LAB: checkerboard floor, tesla coils, reel-to-reels, oscilloscopes and jars ----
     const lf = new THREE.Mesh(new THREE.PlaneGeometry(20, 18).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: mdCheckTex() })); lf.position.set(0, 0.01, -12); props.add(lf);
-    wall(-10, -12, 0.6, 18, toon('#4a5a52', 'panel')); wall(10, -12, 0.6, 18, toon('#4a5a52', 'panel')); wall(0, -21, 20, 0.6, toon('#4a5a52', 'panel'));
+    { const lm = mdLabWallMat(H), lw = (x, z, w, d) => { const g = B(w, H, d), uv = g.attributes.uv, n = g.attributes.normal; for (let i = 0; i < uv.count; i++) { const along = Math.abs(n.getX(i)) > 0.5 ? d : w; uv.setX(i, uv.getX(i) * along / 2.4); } const m = new THREE.Mesh(g, lm); m.position.set(x, H / 2, z); props.add(m); box(x, z, w / 2, d / 2); };
+      lw(-10, -12, 0.6, 18); lw(10, -12, 0.6, 18); lw(0, -21, 20, 0.6);
+      // pipes and conduit run along the walls just off the surface (inner faces sit at x ±9.7 and z -20.7), with brackets and a valve wheel
+      const pipe = toon('#8a6a4a'), cond = toon('#3a3d44');
+      for (const sx of [-1, 1]) { part(props, Cy(0.07, 0.07, 17.2, 8), pipe, sx * 9.58, 3.55, -12, Math.PI / 2); part(props, Cy(0.035, 0.035, 17.2, 6), cond, sx * 9.64, 3.25, -12, Math.PI / 2);
+        for (let z = -20; z <= -4; z += 2.6) part(props, B(0.1, 0.12, 0.06), cond, sx * 9.62, 3.55, z); }
+      part(props, Cy(0.07, 0.07, 19.2, 8), pipe, 0, 3.55, -20.58, 0, 0, Math.PI / 2); part(props, new THREE.TorusGeometry(0.16, 0.03, 6, 14), toon('#a8202a'), 3.2, 3.55, -20.44);
+      // caged wall lamps throwing a warm pool down each side
+      for (const sx of [-1, 1]) for (const z of [-16.5, -8.5]) { part(props, B(0.12, 0.22, 0.3), cond, sx * 9.62, 2.95, z); part(props, B(0.1, 0.12, 0.2), glow('#ffd9a0'), sx * 9.52, 2.92, z); } }
     part(props, B(19.4, 0.3, 0.1), toon('#2a3a32'), 0, 1.2, -20.68); part(props, B(0.1, 0.3, 17.4), toon('#2a3a32'), -9.68, 1.2, -12); part(props, B(0.1, 0.3, 17.4), toon('#2a3a32'), 9.68, 1.2, -12);
     const bd = new THREE.Mesh(new THREE.PlaneGeometry(4, 2), new THREE.MeshBasicMaterial({ map: mdBoardTex() })); bd.position.set(0, 2.5, -20.66); props.add(bd); part(props, B(4.2, 2.2, 0.06), wood, 0, 2.5, -20.72);
     // oscilloscopes (one live green trace) and reel-to-reel computers
@@ -182,7 +213,7 @@ LEVELS.miledown = {
     for (const y of [1.0, 1.9, 2.8]) part(props, B(0.6, 0.06, 7), wood, -9.4, y, -12);
     for (let i = 0; i < 15; i++) { const y = [1.0, 1.9, 2.8][i % 3], z = -15.2 + Math.floor(i / 3) * 1.6, g = new THREE.Group();
       g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.55, 10), new THREE.MeshPhongMaterial({ color: ['#8aff3a', '#4fd2ff', '#ffd36a'][i % 3], transparent: true, opacity: 0.35, emissive: ['#2a6a10', '#104a6a', '#6a4a10'][i % 3] }))); g.children[0].position.y = 0.28;
-      E(g, ['#c86a84', '#3fa860', '#e8d0a0', '#8a5a9a', '#3fa860'][i % 5], 0, 0.27, 0, 0.1, 0.09, 0.08); part(g, Cy(0.21, 0.21, 0.06, 10), toon('#8a8f99'), 0, 0.58, 0); g.position.set(-9.4, y + 0.03, z); props.add(g); }
+      mdBrain(g, ['#d88a9a', '#c87a8c', '#e09aa8', '#b86a7c'][i % 4], 0.27); part(g, Cy(0.21, 0.21, 0.06, 10), toon('#8a8f99'), 0, 0.58, 0); g.position.set(-9.4, y + 0.03, z); props.add(g); }
     // tesla coils, each one throwing a live arc
     for (const [x, z] of [[-7, -18], [7, -18], [-7, -5.5], [7, -5.5]]) { part(props, Cy(0.4, 0.55, 0.4, 10), toon('#3a3d44'), x, 0.2, z); part(props, Cy(0.16, 0.22, 2.6, 10), toon('#b87333'), x, 1.7, z); for (let k = 0; k < 6; k++) part(props, Cy(0.24, 0.24, 0.04, 10), toon('#cfcab8'), x, 0.7 + k * 0.4, z);
       part(props, new THREE.TorusGeometry(0.42, 0.14, 8, 18), chrome, x, 3.2, z, Math.PI / 2); solid(x, z, 0.6);
@@ -206,14 +237,14 @@ LEVELS.miledown = {
     MD.body = mdActor(buildChar(() => makeBigE(false), 'civ'), 0, -12.2, 0); MD.body.o.scale.setScalar(1.25); mdPose(MD.body, -Math.PI / 2, 0, 0, -12.2, 1.15); MD.body.h.visible = st === 0;
     MD.doc = mdActor(buildChar(makeDoc, 'civ'), -3.6, -14.9, -2.5); if (st >= 1) mdDocDown(); peeable(MD.doc.o, 'Doc', ["Ahhh. For Big E.", ['DOC', '(a faint gurgle)'], 'His goggles fog up. Good.'], () => toast('RELIEVED', 'Doc will wake up smelling like a decision he made.', 2.6));
     MD.pail = mdActor(buildChar(makePail, 'civ'), 0.6, -2.2, Math.PI); MD.pail.h.visible = false;
-    if (st >= 2) { const sh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 1.9), toon('#e8e8e0', 'cloth')); sh.position.set(MD.doc.h.position.x, 0.12, MD.doc.h.position.z); sh.rotation.y = MD.doc.h.rotation.y; props.add(sh); MD.doc.h.visible = false; frog.visible = false; }
+    if (st >= 2) frog.visible = false; // Doc stays where he fell (he used to turn into a white sheet box)
     // after: Big E's body on a stool, Big E the frog on the bar with a tiny glass
     MD.seat = mdActor(buildChar(() => makeBigE(false), 'civ'), -6.62, 4, -Math.PI / 2); { const o = MD.seat.o, R = o.userData.rig; o.scale.setScalar(1.25); o.position.y = 0.77 - (R ? R.spec.hip : 0.95) * 1.25 + 0.06; sitChar(o, 0.6); o.rotation.x = 0.12; if (R && R.head) R.head.rotation.x = 0.65; if (R && R.armL) { R.armL.rotation.x = -1.25; R.armR.rotation.x = -0.9; } }
     MD.barFrog = mdActor(buildChar(makeFrog), -7.9, 4.9, Math.PI / 2 - 0.3); MD.barFrog.h.position.y = 1.17;
     part(MD.barFrog.h, Cy(0.05, 0.04, 0.1, 8), new THREE.MeshPhongMaterial({ color: '#ffb03a', transparent: true, opacity: 0.7 }), 0.12, 0.06, 0.32);
     part(props, Cy(0.07, 0.06, 0.16, 8), new THREE.MeshPhongMaterial({ color: '#ffb03a', transparent: true, opacity: 0.7 }), -7.7, 1.25, 3.7);
     MD.seat.h.visible = MD.barFrog.h.visible = st >= 2;
-    if (st >= 2) { MD.act.label = 'Look into the lab'; MD.act.fn = () => toast('THE LAB', "Doc's under a sheet. The coils still hum.", 3); mdOpenDoor(); }
+    if (st >= 2) { MD.act.label = 'Look into the lab'; MD.act.fn = () => toast('THE LAB', "Doc's still out cold on the floor. The coils still hum.", 3); mdOpenDoor(); }
     else if (st === 1) { mdOpenDoor(); setTimeout(() => { if (LEVEL.id === 'miledown') mdSpawnBody(V(0.6, 0, -9.6)); }, 400); }
     // lights: neon pink and blue in the bar, cold green in the lab
     for (const [x, z, c, k] of [[-6, 5, 0xff3a8a, 1.4], [6, 8, 0x4fd2ff, 1.1], [0, 12, 0xffb03a, 0.9], [-2, 2, 0xffd9a0, 0.6], [-5, -9, 0x6aff9a, 0.9], [5, -15, 0x8ab0ff, 0.9], [0, -18, 0x6aff9a, 0.6]]) { const l = new THREE.PointLight(c, k, 16); l.position.set(x, H - 0.6, z); levelGroup.add(l); }
@@ -243,7 +274,7 @@ function mdTick(t, dt) {
   if (MD.smoke) MD.smoke.forEach((m, i) => { m.position.y += dt * 0.35; m.scale.multiplyScalar(1 + dt * 0.4); m.material.opacity = Math.max(0, m.material.opacity - dt * 0.07); if (m.material.opacity <= 0) { m.position.set(-7.4 + Math.random() * 0.4, 1.4, 4.6 + Math.random() * 0.6); m.scale.setScalar(0.3); m.material.opacity = 0.3; } });
 }
 function mdOpenDoor() { if (MD.door) MD.door.visible = false; const i = BOXES.indexOf(MD.doorBox); if (i >= 0) BOXES.splice(i, 1); }
-function mdDocDown() { const d = MD.doc; d.h.position.set(-3.1, 0, -13.4); d.h.rotation.y = -0.6; d.o.rotation.x = -Math.PI / 2; d.o.position.y = 0.15; }
+function mdDocDown() { const d = MD.doc; d.h.position.set(-3.1, 0, -13.4); d.h.rotation.y = -0.6; d.o.rotation.x = -Math.PI / 2; d.o.position.y = 0.15; const R = d.o.userData.rig; if (R) { if (R.armL) R.armL.rotation.set(0.3, 0, 1.3); if (R.armR) R.armR.rotation.set(-0.4, 0, -0.9); if (R.legL) R.legL.rotation.set(0, 0, 0.25); if (R.legR) R.legR.rotation.set(0.2, 0, -0.15); if (R.head) R.head.rotation.set(0, 0.5, 0.2); } }
 function mdSmoke() { if (MD.smoke) return; MD.smoke = []; for (let i = 0; i < 10; i++) { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: mdPuffTex(), transparent: true, opacity: 0.03 * i, depthWrite: false })); m.position.set(-7.4, 1.4 + i * 0.25, 4.8); m.scale.setScalar(0.3); MD.dyn.add(m); MD.smoke.push(m); } }
 
 // ---- the feral body ----
@@ -334,7 +365,7 @@ function mdFinale(replay) {
     { text: 'THE END ...?', dur: 4, cam: (t, k) => { fr.h.position.y = 1.17; if (N) { N.obj.position.y = 0; N.obj.rotation.z = 0; } const M = npcObjs.mags; if (M) M.obj.position.y = 0; mdCam(1 + k * 2, 2.6 + k * 0.6, 11, -7, 1.2, 5); } },
   ], onEnd: () => {
     if (!replay) { mdSet(2); if (S.qst.md1 && S.qst.md1.st !== 'done') { S.qst.md1.st = 'ready'; completeQuest('md1'); SFX.quest(); toast('QUEST COMPLETE', 'The Mile Down', 4); } }
-    MD.act.label = 'Look into the lab'; MD.act.fn = () => toast('THE LAB', "Doc's under a sheet. The coils still hum.", 3);
+    MD.act.label = 'Look into the lab'; MD.act.fn = () => toast('THE LAB', "Doc's still out cold on the floor. The coils still hum.", 3);
     const n = LEVELS.miledown.npcs[0]; n.idle = ["He's doing better than you'd think. Lighter, mostly.", "Doc's lab is yours if you want it. I'm never going back in there.", "Big E says thanks. I think. It was one ribbit, but a grateful one."];
     player.pos.set(-2, 0, 7); player.yaw = Math.PI / 2 + 0.6; } });
 }

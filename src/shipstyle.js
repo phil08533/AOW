@@ -39,3 +39,22 @@ function openShipStyle() { openDlg('Ship interior', 'Interior styles'); $('dlgLi
 { const _ll = loadLevel; loadLevel = function () { const r = _ll.apply(this, arguments); try { if (LEVEL && LEVEL.id === 'ship') { const g = new THREE.Group(); g.position.set(6.75, 0, -6); g.rotation.y = -Math.PI / 2; levelGroup.add(g);
     part(g, B(0.9, 0.6, 0.06), '#2a2c32', 0, 1.45, 0); for (let k = 0; k < 6; k++) part(g, B(0.12, 0.12, 0.02), glow(['#9a9ea6', '#a8744a', '#7a2a2a', '#4fd2ff', '#d0d8e4', '#9ab8ff'][k]), -0.3 + (k % 3) * 0.3, 1.55 - Math.floor(k / 3) * 0.2, 0.04); part(g, B(0.8, 0.03, 0.02), glow('#ffd36a'), 0, 1.18, 0.04);
     INTERACTS.push({ x: 6.2, z: -6, r: 1.8, label: '🎨 Interior styles', fn: openShipStyle }); } } catch (e) { console.warn('shipstyle', e); } return r; }; }
+// while the styles panel is open the camera rises to a cutaway over the flight deck that looks down the hallway, with the ceilings lifted off
+const SSV = { on: 0, k: 0, hid: [], cam: new THREE.PerspectiveCamera() };
+function ssvHide() { if (SSV.hid.length) return; const bb = new THREE.Box3(); levelGroup.updateMatrixWorld(true);
+  levelGroup.traverse(o => { if (!o.isMesh || !o.visible) return; bb.setFromObject(o); if (bb.min.y > 2.5 && bb.max.y < 4.5) { o.visible = false; SSV.hid.push(o); } }); }
+function ssvShow() { for (const o of SSV.hid) o.visible = true; SSV.hid.length = 0; }
+{ const _tc = talkCamFrame; talkCamFrame = function (dt) { _tc(dt); const want = (SSV.on && dlgOpen || performance.now() < (SSV.hold || 0)) && LEVEL && LEVEL.id === 'ship';
+    SSV.k = Math.max(0, Math.min(1, SSV.k + (want ? dt : -dt) * 1.6)); if (!want && SSV.k < 0.35 && SSV.hid.length) ssvShow(); if (!SSV.k) return;
+    if (want) ssvHide(); const C = SSV.cam, wide = camera.aspect >= 0.8; C.fov = camera.fov; C.aspect = camera.aspect; C.updateProjectionMatrix();
+    // the whole deck and hallway in one view from high off the port side, nudged clear of the panel (right column, or the bottom on a phone)
+    const T = V(0.6, 0, -3), D = wide ? 40 : 64; C.position.set(T.x - D * 0.5, D * 0.62, T.z + D * 0.18); C.lookAt(T); C.updateMatrixWorld();
+    const fovR = THREE.MathUtils.degToRad(C.fov) / 2, dist = C.position.distanceTo(T), hw = dist * Math.tan(fovR) * C.aspect, hh = dist * Math.tan(fovR);
+    const rgt = V(1, 0, 0).applyQuaternion(C.quaternion), up = V(0, 1, 0).applyQuaternion(C.quaternion); C.lookAt(wide ? T.clone().addScaledVector(rgt, hw * 0.36).addScaledVector(up, -hh * 0.14) : T.clone().addScaledVector(up, -hh * 0.45));
+    const k = SSV.k * SSV.k * (3 - 2 * SSV.k); camera.position.lerp(C.position, k); camera.quaternion.slerp(C.quaternion, k); if (k > 0.05) vm.visible = false; }; }
+{ const _o = openShipStyle; openShipStyle = function () { _o(); SSV.on = 1; document.body.classList.add('ssvdock'); }; }
+{ const st = document.createElement('style'); st.textContent = `body.ssvdock #dlg { left: auto; right: max(3vw, 16px); transform: none; width: min(40vw, 540px); bottom: max(7vh, 16px); max-height: 80vh; overflow-y: auto; }
+@media (max-aspect-ratio: 4/5) { body.ssvdock #dlg { left: 16px; right: 16px; width: auto; bottom: 16px; max-height: 50vh; } }`; document.head.appendChild(st); }
+{ const _c = closeDlg; closeDlg = function () { _c.apply(this, arguments); SSV.on = 0; document.body.classList.remove('ssvdock'); }; }
+// a style change reloads the ship: keep the cutaway up across the reload instead of dipping back to first person
+{ const _ll = loadLevel; loadLevel = function (id) { if (id === 'ship' && SSV.k > 0.5 && !SSV.on) { SSV.hold = performance.now() + 900; SSV.hid.length = 0; } else if (SSV.hid.length) ssvShow(); return _ll.apply(this, arguments); }; }

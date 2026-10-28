@@ -10,7 +10,7 @@ const HD = (() => {
       ' c = pow(max(c, 0.0), vec3(1.0/2.2)); c = (c - 0.5) * con + 0.5; vec2 q = vUv - 0.5; c.r += warm; c.b -= warm; c *= 1.0 - scan * step(0.5, fract(vUv.y * rows)); c *= 1.0 - dot(q,q) * vig; gl_FragColor = vec4(c, 1.0); }'].join('\n') };
   try {
     if (THREE.EffectComposer && THREE.UnrealBloomPass) {
-      comp = new THREE.EffectComposer(renderer); comp.renderTarget1.texture.encoding = comp.renderTarget2.texture.encoding = THREE.LinearEncoding;
+      comp = new THREE.EffectComposer(renderer); comp.renderTarget1.texture.encoding = comp.renderTarget2.texture.encoding = THREE.LinearEncoding; depth24(comp.renderTarget1); depth24(comp.renderTarget2);
       const rp = new THREE.RenderPass(scene, camera); rp.clearColor = HORIZON; rp.clearAlpha = 1; comp.addPass(rp);
       bloom = new THREE.UnrealBloomPass(new THREE.Vector2(512, 512), RSTYLE === 'real' ? 0.55 : 0.75, 0.55, 0.78); comp.addPass(bloom);
       grade = new THREE.ShaderPass(GradeShader); comp.addPass(grade);

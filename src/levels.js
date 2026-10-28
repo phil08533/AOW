@@ -110,13 +110,16 @@ function tessellate(pos, nor, uv, L) {
   for (let i = 0; i < pos.length / 9; i++) { const t = new Array(24); for (let k = 0; k < 3; k++) { const o = k * 8, pi = i * 9 + k * 3, ui = i * 6 + k * 2; t[o] = pos[pi]; t[o + 1] = pos[pi + 1]; t[o + 2] = pos[pi + 2]; t[o + 3] = nor[pi]; t[o + 4] = nor[pi + 1]; t[o + 5] = nor[pi + 2]; t[o + 6] = uv[ui]; t[o + 7] = uv[ui + 1]; } split(t, 0); }
   return [new Float32Array(P), new Float32Array(N), new Float32Array(U)];
 }
+const _msb = new THREE.Box3();
 function mergeStatic(root) {
   root.updateMatrixWorld(true);
   root.traverse(o => { if (o.isMesh) fitSign(o); });
-  const buckets = new Map();
+  const buckets = new Map(), hiKeys = new Map(), id_split = LEVEL && LEVEL.id === 'ship';
   root.traverse(o => {
     if (!o.isMesh || !o.visible) return;
-    let b = buckets.get(o.material); if (!b) { b = { pos: [], nor: [], uv: [] }; buckets.set(o.material, b); }
+    // on the ship, ceiling fittings merge apart from the rest so the style editor's cutaway can lift them off
+    let key = o.material; if (id_split) { _msb.setFromObject(o); if (_msb.min.y > 2.5) { key = hiKeys.get(o.material); if (!key) { key = { m: o.material }; hiKeys.set(o.material, key); } } }
+    let b = buckets.get(key); if (!b) { b = { pos: [], nor: [], uv: [], hi: key !== o.material }; buckets.set(key, b); }
     const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()); g.applyMatrix4(o.matrixWorld);
     let pa = g.attributes.position.array, na = g.attributes.normal.array, ua = g.attributes.uv ? g.attributes.uv.array : new Float32Array(g.attributes.position.count * 2);
     g.computeBoundingSphere(); if (g.boundingSphere.radius > 2.9) [pa, na, ua] = tessellate(pa, na, ua, 3.2);
@@ -127,7 +130,7 @@ function mergeStatic(root) {
   for (const [mat, b] of buckets) {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(cat(b.pos), 3)); g.setAttribute('normal', new THREE.BufferAttribute(cat(b.nor), 3)); g.setAttribute('uv', new THREE.BufferAttribute(cat(b.uv), 2));
-    g.computeBoundingSphere(); out.add(new THREE.Mesh(g, mat));
+    g.computeBoundingSphere(); out.add(new THREE.Mesh(g, b.hi ? mat.m : mat));
   }
   if (root.parent) root.parent.remove(root);
   levelGroup.add(out); return out;

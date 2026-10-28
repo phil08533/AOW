@@ -31,9 +31,21 @@ function uwBarDetail() {
   const sx = 12 * UW_K - 0.27; neon('ROT-GUT', '#6fdc5a', -sx, -4, Math.PI / 2); neon('NO MARSHALS', '#ff3b2a', sx, -4, -Math.PI / 2); neon('OPEN LATE', '#ff6aa8', -sx, 4.2, Math.PI / 2);
   // dartboard and a scatter of darts
   part(props, Cy(0.32, 0.32, 0.05, 16), toon('#1e1c22'), sx - 0.03, 1.7, 1.4, 0, 0, Math.PI / 2); part(props, Cy(0.2, 0.2, 0.06, 16), toon('#c8402f'), sx - 0.04, 1.7, 1.4, 0, 0, Math.PI / 2); part(props, Cy(0.06, 0.06, 0.07, 10), toon('#6fdc5a'), sx - 0.05, 1.7, 1.4, 0, 0, Math.PI / 2);
-  // pipes along the ceiling that leak a little steam
+  // pipes along the ceiling
   for (const x of [-5.6, 5.6]) { part(props, Cy(0.09, 0.09, 15, 6), toon('#5a4a3a'), x, 3.05, 0, Math.PI / 2); }
-  levelAnims.push(() => { if (Math.random() < 0.04) burst(V(5.6, 3.0, Math.random() * 10 - 5), '#b8b8c0', 1, 0.3); });
+  // water drips from wet spots on the ceiling (not the bar): a drop forms, falls, and splashes into a little puddle with a plink
+  { const H = 3.4, spots = [[3.6, -3.2], [-4.2, 1.6], [6.8, 4.4], [-7.6, -4.8], [1.2, 5.8]], dropM = new THREE.MeshBasicMaterial({ color: '#9fc8d8', transparent: true, opacity: 0.85 }), wet = new THREE.MeshPhongMaterial({ color: '#0d0f0c', shininess: 90, specular: '#5a6a5a', transparent: true, opacity: 0.8 });
+    const drops = spots.map(([x, z], i) => { const st = new THREE.Mesh(new THREE.CircleGeometry(0.28, 12), new THREE.MeshBasicMaterial({ color: '#141a12', transparent: true, opacity: 0.6, depthWrite: false })); st.rotation.x = Math.PI / 2; st.position.set(x, H - 0.015, z); levelGroup.add(st);
+      const pd = new THREE.Mesh(new THREE.CircleGeometry(0.34 + (i % 3) * 0.1, 14), wet); pd.rotation.x = -Math.PI / 2; pd.position.set(x, 0.012, z); levelGroup.add(pd);
+      const d = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 5), dropM); d.scale.y = 1.6; d.visible = false; levelGroup.add(d);
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.03, 0.05, 14), new THREE.MeshBasicMaterial({ color: '#cfe6f0', transparent: true, opacity: 0, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.set(x, 0.02, z); levelGroup.add(ring);
+      return { x, z, d, ring, t: 1 + i * 1.3, v: 0, y: H, rt: 9 }; });
+    let last = 0; levelAnims.push(t => { const dt = Math.min(0.1, t - last || 0.016); last = t;
+      for (const D of drops) { D.rt += dt; if (D.rt < 0.5) { const k = D.rt / 0.5; D.ring.scale.setScalar(1 + k * 5); D.ring.material.opacity = 0.6 * (1 - k); } else D.ring.material.opacity = 0;
+        if (D.t > 0) { D.t -= dt; if (D.t <= 0) { D.y = H - 0.03; D.v = 0; D.d.visible = true; D.d.scale.set(0.4, 0.6, 0.4); D.hang = 0.5; } continue; }
+        if (D.hang > 0) { D.hang -= dt; const k = 1 - D.hang / 0.5; D.d.scale.set(0.4 + k * 0.6, 0.6 + k * 1.0, 0.4 + k * 0.6); D.d.position.set(D.x, H - 0.03 - k * 0.02, D.z); continue; }
+        D.v += 9.8 * dt; D.y -= D.v * dt; D.d.position.set(D.x, D.y, D.z);
+        if (D.y <= 0.03) { D.d.visible = false; D.t = 2.5 + Math.random() * 4; D.rt = 0; const dist = Math.hypot(player.pos.x - D.x, player.pos.z - D.z); if (dist < 12 && typeof ambShot === 'function') ambShot('drip', Math.max(0.15, 1.2 - dist / 10)); } } }); }
   // crates of product and a sticky floor rug by the bar
   part(props, B(5.5, 0.02, 1.6), toon('#4a1e1e'), 0, 0.01, z0 + 1.1);
   for (const [x, z, s] of [[-7.6, 5.2, 0.7], [-7.0, 5.6, 0.5], [7.4, -6.6, 0.6]]) { part(props, B(s, s, s), toon('#6a4a30', 'wood'), x, s / 2, z, 0, x); box(x, z, s / 2, s / 2); }

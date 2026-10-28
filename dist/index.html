@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.61</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.62</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -19417,7 +19417,7 @@ function uwDress() {
       window.UW_SPK = [[sx + 1.6, sz - 1.9], [sx + 1.6, sz + 1.9]];
       const sl = new THREE.PointLight(0xc86aff, 0.9, 6, 1.8); sl.position.set(sx + 0.5, 2.6, sz); levelGroup.add(sl);
       const ry = Math.PI / 2 + 0.35, band = [];
-      const play = (mk, rig, x, z, fn) => { const o = buildChar(() => npcDisarm(mk()), rig); o.position.set(x, 0.3, z); o.rotation.y = ry; levelGroup.add(o); band.push([o, fn]); return o; };
+      const play = (mk, rig, x, z, fn) => { const o = buildChar(() => npcDisarm(mk()), rig); o.userData.uwOld = 1; o.position.set(x, 0.3, z); o.rotation.y = ry; levelGroup.add(o); band.push([o, fn]); return o; };
       const kt = play(() => recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a8a', '#3e5e26': '#2a3a6a' }), 'bughybrid', sx - 0.5, sz - 1.1, (o, R, t) => { R.armL.rotation.x = -1.0 + Math.sin(t * 9) * 0.25; R.armR.rotation.x = -1.0 - Math.sin(t * 9) * 0.25; });
       part(kt, B(0.9, 0.08, 0.25), toon('#1a1a2a'), 0, 1.15, 0.35, 0, 0, 0.25); part(kt, B(0.6, 0.02, 0.12), glow('#4fe0ff'), 0.05, 1.2, 0.38, 0, 0, 0.25);
       play(() => makeCivilian('#5a2a6a', '#1e1c22', '#8fae6a', '#cfcac0', '#c86aff'), 'civ', sx + 0.2, sz + 0.9, (o, R, t) => { R.armR.rotation.x = -1.2 + Math.sin(t * 2.3) * 0.4; R.armL.rotation.x = -0.6 + Math.sin(t * 3.1) * 0.3; });
@@ -19627,7 +19627,8 @@ const UPDATES = [
   { id: 315, title: '2.23.50 · Cleaner minimap', items: ['The live minimap no longer shows fireflies, rain, sparks or other effects', 'Removed the little winding crown on the minimap watch (the pill-shaped thing)'] },
   { id: 316, title: '2.23.51 · Ready for the cast', items: ['The game can now play real voice-actor recordings for every character line, as they get recorded'] },
   { id: 317, title: '2.23.52 · Helmet radio', items: ['Recorded voices for helmeted characters and battle radio play through a light comms filter'] },
-  { id: 326, title: '2.23.61 · Doc\'s lab, ship cutaway, draw distance', items: ['Doc\'s lab: the chalkboard fits, tiled lab walls with pipes, valves and caged lamps, every jar holds a brain, and Doc lies sprawled on the floor instead of a white box', 'Interior styles: the camera rises to a cutaway of the whole flight deck and hallway with the ceilings lifted off, and the panel moves to the side', 'Far-away things no longer flicker or vanish (sharper depth everywhere)', 'Grub\'s Bar: drips fall from wet spots on the ceiling into puddles, and the guitarist no longer stands in front of the drummer'] },
+  { id: 327, title: '2.23.62 · One drummer', items: ['Grub\'s Bar: the old drummer from before the band was rebuilt was still standing behind the new kit. He\'s gone, so the Glonk Quartet has one drummer again'] },
+  { id: 326, title: '2.23.61 · Doc\'s lab, ship cutaway, draw distance', items: ['Doc\'s lab: the chalkboard fits, tiled lab walls with pipes, valves and caged lamps, every jar holds a brain, and Doc lies sprawled on the floor instead of a white box', 'Interior styles: the camera rises to a cutaway of the whole flight deck and hallway with the ceilings lifted off, and the panel moves to the side', 'Far-away things no longer flicker or vanish (sharper depth everywhere)', 'Grub\'s Bar: drips fall from wet spots on the ceiling into puddles'] },
   { id: 325, title: '2.23.60 · Fixes', items: ['Heal button count is readable again', 'Hex Plates ship floor tiles line up with no seams', 'Watching a Cinema scene puts you back where you were', 'The Zeltac hologram map fits over its table again', 'The badge shine only sweeps across the metal star'] },
   { id: 324, title: '2.23.59 · Answer any time', items: ['Options show while a character is talking; picking one cuts the line off'] },
   { id: 323, title: '2.23.58 · Steady talk camera', items: ['The camera stays on whoever you are talking to for the whole conversation, through lists and follow-up boxes, and eases back out at the end', 'The talk view only opens for characters, not the Codex, terminals or signs'] },
@@ -25689,7 +25690,7 @@ function uwbBand() {
   const sx = -9.4, sz = 7.2, ry = Math.PI / 2 + 0.35;
   // clear the old players, the theremin, the drum pods and the old mic, keeping the stage, truss, backdrop and speakers
   const inS = o => Math.abs(o.position.x - sx) < 1.55 && Math.abs(o.position.z - sz) < 1.55;
-  for (const o of [...levelGroup.children]) if (o.userData && o.userData.rig && inS(o)) levelGroup.remove(o);
+  for (const o of [...levelGroup.children]) if (o.userData && (o.userData.uwOld || (o.userData.rig && inS(o)))) levelGroup.remove(o); // the old spearman drummer has no rig tag, so it used to stay behind the new kit
   for (const o of [...props.children]) if (inS(o) && o.position.y > 0.33) props.remove(o);
   const black = toon('#141218'), chrome = toon('#a8aeb8'), gold = toon('#c9a43a'), red = toon('#7a1020');
   // stage-local placement: +f toward the crowd, +s along the stage
@@ -25713,12 +25714,12 @@ function uwbBand() {
     part(g, B(0.06, L, 0.04), toon('#3a2414', 'wood'), 0, 0.2 + L / 2, 0.01); part(g, B(0.1, 0.16, 0.04), black, 0, 0.28 + L, 0.01); for (let k = 0; k < (bass ? 4 : 6); k++) part(g, B(0.004, L + 0.25, 0.004), glow('#e8f0ff'), -0.02 + k * 0.009, 0.1 + L / 2, 0.04);
     part(g, B(0.04, 0.6, 0.02), black, 0.1, 0.34, -0.06, 0, 0, -0.9); g.position.set(0.04, 1.08, 0.2); g.rotation.set(0, 0, -1.15); o.add(g); };
   const strum = (o, R, t) => { if (R.armR) { R.armR.rotation.x = -0.75 + Math.sin(t * 9.5) * 0.18; R.armR.rotation.z = 0.25; } if (R.armL) { R.armL.rotation.x = -1.05 + Math.sin(t * 2.1) * 0.06; R.armL.rotation.z = -0.55; } if (R.head) R.head.rotation.x = Math.max(0, Math.sin(t * 4.2)) * 0.18; };
-  axe(mus(() => npcDisarm(recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a8a', '#3e5e26': '#2a3a6a' })), 'bughybrid', 0.3, 0.62, strum), '#c8202a');
+  axe(mus(() => npcDisarm(recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a8a', '#3e5e26': '#2a3a6a' })), 'bughybrid', 0.25, -0.4, strum), '#c8202a');
   // the sax player: curved brass across the body, mouthpiece at the lips, both hands on the keys, leaning into the solos
   const saxPose = (o, R, t) => { const tw = Math.sin(t * 4.3) * 0.04;
     for (const arm of [R.armL, R.armR]) { if (!arm) continue; const inward = arm.position.x > 0 ? -1 : 1, hi = arm.position.x < 0; arm.rotation.x = (hi ? -1.05 : -0.55) + tw; arm.rotation.z = inward * (hi ? 0.55 : 0.35); }
     if (R.torso) R.torso.rotation.x = -0.08 - Math.max(0, Math.sin(t * 2.15)) * 0.14; if (R.head) R.head.rotation.x = 0.12; };
-  { const o = mus(() => makeCivilian('#2a2a30', '#14120f', '#8fae6a', '#1e1a18', '#4fd2ff'), 'civ', -0.25, 1.38, saxPose), g = new THREE.Group(), brass = toon('#d8b04a');
+  { const o = mus(() => makeCivilian('#2a2a30', '#14120f', '#8fae6a', '#1e1a18', '#4fd2ff'), 'civ', -0.1, 1.05, saxPose), g = new THREE.Group(), brass = toon('#d8b04a');
     part(g, Cy(0.06, 0.08, 0.7, 10), brass, 0, 0, 0); part(g, new THREE.TorusGeometry(0.14, 0.07, 8, 12, Math.PI), brass, 0.14, -0.35, 0, 0, 0, Math.PI); part(g, Cy(0.2, 0.08, 0.32, 12), brass, 0.3, -0.2, 0, 0, 0, -0.3);
     part(g, Cy(0.21, 0.21, 0.02, 12), glow('#4fd2ff'), 0.36, -0.04, 0, 0, 0, -0.3); for (let i = 0; i < 5; i++) part(g, new THREE.SphereGeometry(0.025, 6, 4), glow('#7fe8ff'), -0.06, 0.2 - i * 0.1, 0.04);
     part(g, Cy(0.02, 0.025, 0.25, 6), toon('#14120f'), -0.05, 0.45, 0.06, 0.8); g.position.set(0.12, 1.18, 0.36); g.rotation.set(-0.28, 0, 0.32); o.add(g); }

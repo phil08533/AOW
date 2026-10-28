@@ -89,7 +89,7 @@ function uwDress() {
       window.UW_SPK = [[sx + 1.6, sz - 1.9], [sx + 1.6, sz + 1.9]];
       const sl = new THREE.PointLight(0xc86aff, 0.9, 6, 1.8); sl.position.set(sx + 0.5, 2.6, sz); levelGroup.add(sl);
       const ry = Math.PI / 2 + 0.35, band = [];
-      const play = (mk, rig, x, z, fn) => { const o = buildChar(() => npcDisarm(mk()), rig); o.position.set(x, 0.3, z); o.rotation.y = ry; levelGroup.add(o); band.push([o, fn]); return o; };
+      const play = (mk, rig, x, z, fn) => { const o = buildChar(() => npcDisarm(mk()), rig); o.userData.uwOld = 1; o.position.set(x, 0.3, z); o.rotation.y = ry; levelGroup.add(o); band.push([o, fn]); return o; };
       const kt = play(() => recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a8a', '#3e5e26': '#2a3a6a' }), 'bughybrid', sx - 0.5, sz - 1.1, (o, R, t) => { R.armL.rotation.x = -1.0 + Math.sin(t * 9) * 0.25; R.armR.rotation.x = -1.0 - Math.sin(t * 9) * 0.25; });
       part(kt, B(0.9, 0.08, 0.25), toon('#1a1a2a'), 0, 1.15, 0.35, 0, 0, 0.25); part(kt, B(0.6, 0.02, 0.12), glow('#4fe0ff'), 0.05, 1.2, 0.38, 0, 0, 0.25);
       play(() => makeCivilian('#5a2a6a', '#1e1c22', '#8fae6a', '#cfcac0', '#c86aff'), 'civ', sx + 0.2, sz + 0.9, (o, R, t) => { R.armR.rotation.x = -1.2 + Math.sin(t * 2.3) * 0.4; R.armL.rotation.x = -0.6 + Math.sin(t * 3.1) * 0.3; });

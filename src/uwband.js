@@ -58,7 +58,7 @@ function uwbBand() {
   const sx = -9.4, sz = 7.2, ry = Math.PI / 2 + 0.35;
   // clear the old players, the theremin, the drum pods and the old mic, keeping the stage, truss, backdrop and speakers
   const inS = o => Math.abs(o.position.x - sx) < 1.55 && Math.abs(o.position.z - sz) < 1.55;
-  for (const o of [...levelGroup.children]) if (o.userData && o.userData.rig && inS(o)) levelGroup.remove(o);
+  for (const o of [...levelGroup.children]) if (o.userData && (o.userData.uwOld || (o.userData.rig && inS(o)))) levelGroup.remove(o); // the old spearman drummer has no rig tag, so it used to stay behind the new kit
   for (const o of [...props.children]) if (inS(o) && o.position.y > 0.33) props.remove(o);
   const black = toon('#141218'), chrome = toon('#a8aeb8'), gold = toon('#c9a43a'), red = toon('#7a1020');
   // stage-local placement: +f toward the crowd, +s along the stage
@@ -82,12 +82,12 @@ function uwbBand() {
     part(g, B(0.06, L, 0.04), toon('#3a2414', 'wood'), 0, 0.2 + L / 2, 0.01); part(g, B(0.1, 0.16, 0.04), black, 0, 0.28 + L, 0.01); for (let k = 0; k < (bass ? 4 : 6); k++) part(g, B(0.004, L + 0.25, 0.004), glow('#e8f0ff'), -0.02 + k * 0.009, 0.1 + L / 2, 0.04);
     part(g, B(0.04, 0.6, 0.02), black, 0.1, 0.34, -0.06, 0, 0, -0.9); g.position.set(0.04, 1.08, 0.2); g.rotation.set(0, 0, -1.15); o.add(g); };
   const strum = (o, R, t) => { if (R.armR) { R.armR.rotation.x = -0.75 + Math.sin(t * 9.5) * 0.18; R.armR.rotation.z = 0.25; } if (R.armL) { R.armL.rotation.x = -1.05 + Math.sin(t * 2.1) * 0.06; R.armL.rotation.z = -0.55; } if (R.head) R.head.rotation.x = Math.max(0, Math.sin(t * 4.2)) * 0.18; };
-  axe(mus(() => npcDisarm(recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a8a', '#3e5e26': '#2a3a6a' })), 'bughybrid', 0.3, 0.62, strum), '#c8202a');
+  axe(mus(() => npcDisarm(recolor(makeBugHybrid(), { '#5f8a3a': '#3a5a8a', '#3e5e26': '#2a3a6a' })), 'bughybrid', 0.25, -0.4, strum), '#c8202a');
   // the sax player: curved brass across the body, mouthpiece at the lips, both hands on the keys, leaning into the solos
   const saxPose = (o, R, t) => { const tw = Math.sin(t * 4.3) * 0.04;
     for (const arm of [R.armL, R.armR]) { if (!arm) continue; const inward = arm.position.x > 0 ? -1 : 1, hi = arm.position.x < 0; arm.rotation.x = (hi ? -1.05 : -0.55) + tw; arm.rotation.z = inward * (hi ? 0.55 : 0.35); }
     if (R.torso) R.torso.rotation.x = -0.08 - Math.max(0, Math.sin(t * 2.15)) * 0.14; if (R.head) R.head.rotation.x = 0.12; };
-  { const o = mus(() => makeCivilian('#2a2a30', '#14120f', '#8fae6a', '#1e1a18', '#4fd2ff'), 'civ', -0.25, 1.38, saxPose), g = new THREE.Group(), brass = toon('#d8b04a');
+  { const o = mus(() => makeCivilian('#2a2a30', '#14120f', '#8fae6a', '#1e1a18', '#4fd2ff'), 'civ', -0.1, 1.05, saxPose), g = new THREE.Group(), brass = toon('#d8b04a');
     part(g, Cy(0.06, 0.08, 0.7, 10), brass, 0, 0, 0); part(g, new THREE.TorusGeometry(0.14, 0.07, 8, 12, Math.PI), brass, 0.14, -0.35, 0, 0, 0, Math.PI); part(g, Cy(0.2, 0.08, 0.32, 12), brass, 0.3, -0.2, 0, 0, 0, -0.3);
     part(g, Cy(0.21, 0.21, 0.02, 12), glow('#4fd2ff'), 0.36, -0.04, 0, 0, 0, -0.3); for (let i = 0; i < 5; i++) part(g, new THREE.SphereGeometry(0.025, 6, 4), glow('#7fe8ff'), -0.06, 0.2 - i * 0.1, 0.04);
     part(g, Cy(0.02, 0.025, 0.25, 6), toon('#14120f'), -0.05, 0.45, 0.06, 0.8); g.position.set(0.12, 1.18, 0.36); g.rotation.set(-0.28, 0, 0.32); o.add(g); }

@@ -19,5 +19,5 @@ function peeOn(x, z, name, lines, after) { if (PEE.on) return; PEE.on = 1; lines
     const tx = x + Math.sin(performance.now() / 300) * 0.25, tz = z + Math.cos(performance.now() / 410) * 0.3;
     for (const [m, ph] of drops) { const u = ((performance.now() / 600) + ph) % 1; m.visible = flow > ph * 0.8; m.position.set(sx + (tx - sx) * u, sy + (0.35 - sy) * u + Math.sin(u * Math.PI) * 0.55, sz + (tz - sz) * u); }
     pud.scale.setScalar(0.1 + k * 0.9); player.pitch = -0.75;
-    if (performance.now() - hiss > 260) { hiss = performance.now(); if (typeof sfxHiss === 'function') sfxHiss(0.32, 0.12, 1800); if (Math.random() < 0.6) burst(V(tx, 0.4, tz), '#f2d33a', 2, 0.6); } };
+    if (performance.now() - hiss > 260) { hiss = performance.now(); if (typeof sfxHiss === 'function' && !PEE.clip) sfxHiss(0.32, 0.12, 1800); if (Math.random() < 0.6) burst(V(tx, 0.4, tz), '#f2d33a', 2, 0.6); } };
   anim(); }

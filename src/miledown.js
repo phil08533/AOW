@@ -349,7 +349,7 @@ function mdAfter() {
   ], onEnd: () => { MD.dyn.remove(dead.h); P.h.visible = false; f.visible = false; setTimeout(() => mdFinale(false), 300); } });
 }
 function mdFinale(replay) {
-  if (LEVEL.id !== 'miledown') return;
+  if (LEVEL.id !== 'miledown') return; MD.lol = 0;
   const seat = MD.seat, fr = MD.barFrog, N = npcObjs.pail_md; seat.h.visible = fr.h.visible = true; mdSmoke();
   if (N) { N.obj.visible = true; N.obj.position.set(-6.1, 0, 5.6); N.obj.rotation.y = -Math.PI / 2 + 0.4; }
   runCutscene({ title: 'LATER, AT THE MILE DOWN', lock: 4, shots: [
@@ -361,7 +361,7 @@ function mdFinale(replay) {
     { text: "Frog E: Wait. I've got something to say...", dur: 3.5, cam: (t, k) => { fr.h.rotation.z = 0; fr.h.position.y = 1.17 + Math.max(0, Math.sin(t * 2)) * 0.02; mdCam(-6.9, 1.4, 5.3, -7.9, 1.32, 4.9); } },
     { text: 'Pail: Huh?', dur: 2, cam: (t, k) => { mdCam(-4.7, 1.75, 5.0, -6.1, 1.6, 5.6); } },
     { text: 'Frog E: Ribbit.', dur: 2.5, cam: (t, k) => { mdCam(-7.0, 1.38, 5.1, -7.9, 1.32, 4.9); } },
-    { text: '(The whole bar loses it.)', dur: 4.5, cam: (t, k) => { const j2 = Math.abs(Math.sin(t * 13)); fr.h.position.y = 1.17 + j2 * 0.06; if (N) { N.obj.position.y = j2 * 0.05; N.obj.rotation.z = Math.sin(t * 7) * 0.06; } const M = npcObjs.mags; if (M) M.obj.position.y = Math.abs(Math.sin(t * 11 + 1)) * 0.05; const R = seat.o.userData.rig; if (R && R.head) R.head.rotation.x = 0.65 + Math.sin(t * 9) * 0.05; mdCam(-3.6, 2.0, 6.4, -7.6, 1.2, 4.8); } },
+    { text: '(The whole bar loses it.)', dur: 4.5, cam: (t, k) => { if (!MD.lol) { MD.lol = 1; if (typeof mdLaugh === 'function') mdLaugh(); } const j2 = Math.abs(Math.sin(t * 13)); fr.h.position.y = 1.17 + j2 * 0.06; if (N) { N.obj.position.y = j2 * 0.05; N.obj.rotation.z = Math.sin(t * 7) * 0.06; } const M = npcObjs.mags; if (M) M.obj.position.y = Math.abs(Math.sin(t * 11 + 1)) * 0.05; const R = seat.o.userData.rig; if (R && R.head) R.head.rotation.x = 0.65 + Math.sin(t * 9) * 0.05; mdCam(-3.6, 2.0, 6.4, -7.6, 1.2, 4.8); } },
     { text: 'THE END ...?', dur: 4, cam: (t, k) => { fr.h.position.y = 1.17; if (N) { N.obj.position.y = 0; N.obj.rotation.z = 0; } const M = npcObjs.mags; if (M) M.obj.position.y = 0; mdCam(1 + k * 2, 2.6 + k * 0.6, 11, -7, 1.2, 5); } },
   ], onEnd: () => {
     if (!replay) { mdSet(2); if (S.qst.md1 && S.qst.md1.st !== 'done') { S.qst.md1.st = 'ready'; completeQuest('md1'); SFX.quest(); toast('QUEST COMPLETE', 'The Mile Down', 4); } }

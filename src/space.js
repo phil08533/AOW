@@ -317,7 +317,7 @@ function spaceStep(dt, t) {
   const maxSp = SHIP_SYS.engine.lv[sysLv('engine')].sp * F.cruise * (typeof shipMod === 'function' ? shipMod('sp') : 1), boost = (keys.ShiftLeft || keys.ShiftRight) ? 1.8 : 1;
   const th = frozen ? 0 : clamp((keys.KeyW ? 1 : 0) - (keys.KeyS ? 0.6 : 0) + move.y, -0.6, 1), st = frozen ? 0 : clamp((keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x, -1, 1);
   const want = shipFwd.clone().multiplyScalar(th * maxSp * boost).addScaledVector(shipRight, st * maxSp * shipStrafe()).addScaledVector(shipUp, (frozen ? 0 : shipLift()) * maxSp * shipStrafe());
-  F.vel.lerp(want, Math.min(1, dt * shipGrip() * (gameTime - (F.rockBumpT || -9) < 0.45 ? 0.15 : 1))); SFX.engine(0.4 + Math.abs(th) * 0.6, F.vel.length() / 200);
+  F.vel.lerp(want, Math.min(1, dt * shipGrip() * (gameTime - (F.rockBumpT || -9) < 0.45 ? 0.15 : 1))); if (typeof shipEngTick === 'function') shipEngTick((0.15 + Math.max(0, th) * 0.85) * boost, F.vel.length() / 200, typeof shipCls === 'function' && shipCls() === 'miner'); else SFX.engine(0.4 + Math.abs(th) * 0.6, F.vel.length() / 200);
   player.pos.addScaledVector(F.vel, dt);
   // keep out of planets and rocks
   for (const id in SPACE_BODIES) { const P = SPACE_BODIES[id], d = player.pos.distanceTo(P.pos), m = P.r + (P.station ? 45 : 30);
@@ -341,6 +341,7 @@ function spaceStep(dt, t) {
   // exhaust comes out of the BACK of the ship, in the color picked in the ship customizer
   if (F.sternD == null && F.ship) { const bx = new THREE.Box3().setFromObject(F.ship), c = F.ship.position; let mn = 0; for (const x of [bx.min.x, bx.max.x]) for (const y of [bx.min.y, bx.max.y]) for (const z of [bx.min.z, bx.max.z]) mn = Math.min(mn, (x - c.x) * shipFwd.x + (y - c.y) * shipFwd.y + (z - c.z) * shipFwd.z); F.sternD = Math.max(1.5, -mn + 0.4); }
   { const ex = (SHIP_EXHAUST[(smS().x | 0)] || SHIP_EXHAUST[0])[1]; F.trail.forEach((m, i) => { const want = ex === 'rainbow' ? '#' + new THREE.Color().setHSL(((t * 0.4 + i / 18) % 1), 1, 0.6).getHexString() : ex; if (m.userData.ex !== want) { m.material = glow(want); m.userData.ex = want; } }); }
+  if (typeof shipTrailTick === 'function') { F.trail.forEach(m => m.visible = false); shipTrailTick(F, dt, Math.max(0, th) * boost, (SHIP_EXHAUST[(smS().x | 0)] || SHIP_EXHAUST[0])[1], t); } else
   F.trail.forEach((m, i) => { if ((Math.floor(t * 60) + i) % 18 === 0) { m.position.copy(player.pos).addScaledVector(shipFwd, -F.sternD).addScaledVector(shipRight, i % 2 ? 1.4 : -1.4).addScaledVector(shipUp, -0.2); } m.scale.setScalar(Math.max(0.5, 5 * th * boost)); m.visible = th > 0.05; });
   // chase camera
   F.shake = Math.max(0, F.shake - dt);

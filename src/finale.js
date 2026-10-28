@@ -424,15 +424,16 @@ function mawStep(dt, t) {
   MAW.beamT -= dt;
   if (!MAW.beam && MAW.beamT <= 0) { const dir = player.pos.clone().sub(eyeW).normalize();
     const tl = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 1, 6), new THREE.MeshBasicMaterial({ color: '#ff2a3a', transparent: true, opacity: 0.5, fog: false })); levelGroup.add(tl);
-    MAW.beam = { dir, st: 0, tl, len: 1400, fire: null }; toast('THE EYE LOCKS ON', 'Get out of the line!', 1.4); SFX.ui(); }
-  if (MAW.beam) { const Bm = MAW.beam; Bm.st += dt; const tgt = player.pos.clone().sub(eyeW).normalize();
-    if (Bm.st < 1.5) Bm.dir.lerp(tgt, Math.min(1, dt * 3)).normalize(); else Bm.dir.lerp(tgt, Math.min(1, dt * (ph === 3 ? 0.55 : 0.35))).normalize();
+    // phase 2 (Phil): the charge clip plays out (5.5 s) while it tracks you, the aim freezes for a 1 s held breath, then the deep blast
+    const lk = ph === 2 ? 6.5 : 1.5; MAW.beam = { dir, st: 0, tl, len: 1400, fire: null, lk }; toast('THE EYE LOCKS ON', ph === 2 ? 'It is charging something huge. Move when it goes quiet!' : 'Get out of the line!', ph === 2 ? 3 : 1.4); SFX.ui(); if (ph === 2 && typeof mawCharge === 'function') mawCharge(); }
+  if (MAW.beam) { const Bm = MAW.beam, lk = Bm.lk || 1.5; Bm.st += dt; const tgt = player.pos.clone().sub(eyeW).normalize();
+    if (Bm.st < lk - (lk > 2 ? 1 : 0)) Bm.dir.lerp(tgt, Math.min(1, dt * 3)).normalize(); else if (Bm.st >= lk) Bm.dir.lerp(tgt, Math.min(1, dt * (ph === 3 ? 0.55 : 0.35))).normalize();
     const mesh = Bm.fire || Bm.tl, mid = eyeW.clone().addScaledVector(Bm.dir, Bm.len / 2); mesh.position.copy(mid); mesh.quaternion.setFromUnitVectors(V(0, 1, 0), Bm.dir); mesh.scale.set(1, Bm.len, 1);
-    if (!Bm.fire) { Bm.tl.material.opacity = 0.25 + Math.abs(Math.sin(Bm.st * 12)) * 0.5; }
-    if (Bm.st > 1.5 && !Bm.fire) { levelGroup.remove(Bm.tl); Bm.fire = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 1, 10, 1, true), new THREE.MeshBasicMaterial({ color: '#ff5a5a', transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); levelGroup.add(Bm.fire); SFX.boom(); F.shake = 0.35; }
+    if (!Bm.fire) { const hold = lk > 2 && Bm.st > lk - 1; Bm.tl.material.opacity = hold ? 0.9 : 0.25 + Math.abs(Math.sin(Bm.st * (lk > 2 ? 4 + Bm.st * 2 : 12))) * 0.5; Bm.tl.scale.x = Bm.tl.scale.z = lk > 2 ? 1 + Bm.st * 0.5 : 1; }
+    if (Bm.st > lk && !Bm.fire) { levelGroup.remove(Bm.tl); Bm.fire = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 1, 10, 1, true), new THREE.MeshBasicMaterial({ color: '#ff5a5a', transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); levelGroup.add(Bm.fire); if (lk > 2 && typeof mawGutBlast === 'function') mawGutBlast(); else SFX.boom(); F.shake = lk > 2 ? 0.7 : 0.35; }
     if (Bm.fire) { Bm.fire.scale.x = Bm.fire.scale.z = 1 + Math.sin(Bm.st * 30) * 0.15; const rel = player.pos.clone().sub(eyeW), along = rel.dot(Bm.dir);
       if (along > 0 && rel.clone().addScaledVector(Bm.dir, -along).length() < 11) { MAW.hurtAcc += (60 + ph * 15) * dt; F.shake = 0.3; }
-      if (Bm.st > 1.5 + (ph === 3 ? 2.4 : 1.6)) { levelGroup.remove(Bm.fire); MAW.beam = null; MAW.beamT = ph === 3 ? 7 : ph === 2 ? 10 : 13; } } }
+      if (Bm.st > lk + (ph === 3 ? 2.4 : 1.6)) { levelGroup.remove(Bm.fire); MAW.beam = null; MAW.beamT = ph === 3 ? 7 : ph === 2 ? 10 : 13; } } }
   if (MAW.hurtAcc > 12) { hurt(MAW.hurtAcc); MAW.hurtAcc = 0; }
   // Maw spawn, from phase two
   if (ph >= 2) { MAW.spawnT -= dt; if (MAW.spawnT <= 0) { MAW.spawnT = ph === 3 ? 12 : 16; mawSpawn(); } }

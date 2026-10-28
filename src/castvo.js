@@ -36,11 +36,11 @@ function radioPlay(ac, buf, dest, vol, preset, amt) {
   const g = ng.gain; g.setValueAtTime(0, ac.currentTime); g.linearRampToValueAtTime(sq, ac.currentTime + 0.01); g.linearRampToValueAtTime(st, t0); g.setValueAtTime(st, end); g.linearRampToValueAtTime(sq, end + 0.02); g.linearRampToValueAtTime(0, end + 0.1);
   nz.start(); nz.stop(end + 0.12); s.start(t0); s.onended = () => { try { nz.stop(); } catch (_) {} };
   return s; }
-function castStop() { try { if (CASTVO.src) CASTVO.src.stop(); } catch (_) {} CASTVO.src = null; }
+function castStop() { try { if (CASTVO.src) CASTVO.src.stop(); } catch (_) {} CASTVO.src = null; try { TALK.speak = null; } catch (_) {} }
 function castPlay(id) { const ac = SFX.ctx && SFX.ctx(); if (!ac || !PREFS.voice || !PREFS.sfx) return false;
   const now = performance.now(); if (id === CASTVO.last && now - CASTVO.lastT < 1500) return true; CASTVO.last = id; CASTVO.lastT = now; castStop();
   try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (_) {} try { if (typeof burpSrc !== 'undefined' && burpSrc) burpSrc.stop(); } catch (_) {}
-  const go = buf => { if (CASTVO.last !== id) return; if (ac.state !== 'running') { try { ac.resume(); } catch (_) {} } const rf = CASTVO.radio.get(id); if (rf) { CASTVO.src = radioPlay(ac, buf, SFX.voiceOut(), 1.5, rf[0], rf[1]); return; } const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = buf; g.gain.value = 1.4; s.connect(g); g.connect(SFX.voiceOut()); s.start(); CASTVO.src = s; };
+  const go = buf => { if (CASTVO.last !== id) return; if (ac.state !== 'running') { try { ac.resume(); } catch (_) {} } const rf = CASTVO.radio.get(id); try { TALK.speak = { env: buf._env || (buf._env = talkEnv(buf)), t0: ac.currentTime + (rf ? 0.06 : 0), dur: buf.duration }; } catch (_) {} if (rf) { CASTVO.src = radioPlay(ac, buf, SFX.voiceOut(), 1.5, rf[0], rf[1]); return; } const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = buf; g.gain.value = 1.4; s.connect(g); g.connect(SFX.voiceOut()); s.start(); CASTVO.src = s; };
   const b = CASTVO.buf.get(id); if (b) { go(b); return true; }
   fetch('voice/cast/' + id + '.mp3?v=' + CASTVO.v).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(a => ac.decodeAudioData(a)).then(buf => { CASTVO.buf.set(id, buf); if (performance.now() - now < 5000) go(buf); }).catch(() => {});
   return true; }

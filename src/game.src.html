@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.55</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.56</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1733,7 +1733,7 @@ let last = performance.now(), hudT = 0, menuA = 0;
 function frame(now) {
   const dt = Math.min((now - last) / 1000, 0.05); last = now;
   pollPad(dt);
-  if (state === 'play') step(dt);
+  if (state === 'play') { step(dt); talkCamFrame(dt); }
   else if (state === 'menu') {
     menuA += dt * 0.05; const M = LEVEL.menu; camera.position.set(M.x + Math.sin(menuA) * M.r, M.h + floorAt(M.x, M.z), M.z + Math.cos(menuA) * M.r * 0.7); camera.lookAt(M.x, floorAt(M.x, M.z) + 2, M.z); if (LEVEL.id !== 'earth') for (const f of levelAnims) f(performance.now() / 1000);
   }

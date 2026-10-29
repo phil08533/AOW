@@ -192,8 +192,8 @@ function vehStep(dt, mx, mz) {
     if ((keys.Space || jetHeld) && VH.fuel > 0) { VH.vy = Math.min(VH.vy + 30 * dt, 7); VH.fuel -= dt; if (Math.random() < 0.5) burst(player.pos.clone(), '#ff9a3c', 2, 2); } else if (!air) VH.fuel = Math.min(2, VH.fuel + dt * 0.6);
     VH.step = (VH.step || 0) + dt * VH.v * 0.35; if (!air && VH.v > 1 && Math.floor(VH.step) !== Math.floor(VH.step - dt * VH.v * 0.35)) { SFX.land(); }
   } else {
-    const th = (keys.KeyW ? 1 : 0) + Math.max(0, move.y), br = (keys.KeyS ? 1 : 0) + Math.max(0, -move.y), st = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x;
-    if (!air && !VH.parkReq) { VH.v += (th * D.acc - br * 24 - (th ? 0 : 5)) * dt; VH.v = clamp(VH.v, -6, top); }
+    const dz = v => Math.max(0, (v - 0.15) / 0.85), th = (keys.KeyW ? 1 : 0) + dz(move.y), br = (keys.KeyS ? 1 : 0) + dz(-move.y), st = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x;
+    if (!air && !VH.parkReq) { const v0 = VH.v; VH.v += (th * D.acc - br * 24) * dt; if (!th && !br) VH.v = Math.sign(v0) * Math.max(0, Math.abs(v0) - 5 * dt); else if (br && !th && v0 > 0 && VH.v < 0) VH.v = 0; VH.v = clamp(VH.v, -6, top); } // coasting rolls to a stop instead of creeping into reverse; brake stops first, S brakes, then backs up
     player.yaw -= st * dt * (air ? 0.5 : 1.2 + Math.min(1, Math.abs(VH.v) / 20) * 0.5);
     const f = V(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)); player.pos.addScaledVector(f, VH.v * dt);
     SFX.engine && SFX.engine(0.25 + Math.abs(VH.v) / top * 0.6, Math.abs(VH.v) / 30);

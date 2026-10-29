@@ -676,7 +676,7 @@ const JT_BUILDINGS = [
   ['HOTEL', 14, 27, 10, 8, 12, -PI2, '#9a8a9a', '#3b4f7a', '#3b4f7a', 'commercial'],
   ['FISH MARKET', 28, -12, 10, 7, 6, 0, '#a8b8c8', '#2a5a7a', '#4fa8ff', 'commercial'],
   ['ARCADE', -28, -12, 10, 7, 7, 0, '#5a2a6a', '#ff6aa8', '#ff6aa8', 'entertainment'],
-  [null, -28, 12, 11, 8, 9, Math.PI, '#8a2a3a', '#ffd36a', '#c8402f', 'entertainment'],
+  [null, -28, 12, 11, 8, 9, Math.PI, '#8a2a3a', '#ffd36a', '#c8402f', 'cinema'],
   ['GARAGE', 28, 12, 11, 7, 6, Math.PI, '#5d636c', '#ff8a2a', '#ff8a2a', 'industrial'],
   ['APARTMENTS', 28.5, 22.5, 9, 9, 15, Math.PI, '#b8a088', '#5a3a22', null, 'residential'],
   ['APARTMENTS', -30.5, -21, 9, 9, 14, PI2, '#a8b0b8', '#3a4a5a', null, 'residential'],
@@ -1092,7 +1092,7 @@ function buildJamestown() {
 
   // 3. Buildings
   for (const [label, x, z, w, d, h, ry, col, trim, awn, bStyle] of JT_BUILDINGS) {
-    const b = makeJTBuilding(w, h, d, col, trim, label, awn, bStyle);
+    const b = bStyle === 'cinema' && typeof makeRoxy === 'function' ? makeRoxy(w, h, d) : makeJTBuilding(w, h, d, col, trim, label, awn, bStyle === 'cinema' ? 'entertainment' : bStyle);
     at(b, tx + x, tz + z, ry);
     const sw = Math.abs(Math.sin(ry)) > 0.7;
     box(tx + x, tz + z, (sw ? d : w) / 2 + 0.2, (sw ? w : d) / 2 + 0.2);
@@ -1101,49 +1101,7 @@ function buildJamestown() {
   // Cinema Marquee & Walk-In Entrance at [-28, 12]
   {
     const cx = tx - 28, cz = tz + 12;
-    const mq = new THREE.Group();
-    // Canopy roof
-    part(mq, B(8.8, 0.45, 3.2), toon('#2a1218'), 0, 3.4, 5.6);
-    part(mq, B(9.2, 0.15, 3.4), toon('#ffd36a'), 0, 3.65, 5.6);
-    // Support rods
-    for (const s of [-1, 1]) {
-      part(mq, Cy(0.04, 0.04, 2.2, 6), '#cfd3d8', 3.8 * s, 4.4, 4.9, -0.6, 0, 0);
-    }
-    // Illuminated neon main sign: "★ THE ROXY · CINEMA ★"
-    const mSign = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 1.1), psx(new THREE.MeshBasicMaterial({ map: signTex('★ THE ROXY · CINEMA ★', '#180810', '#ffd36a'), side: THREE.DoubleSide })));
-    mSign.position.set(0, 3.5, 7.42);
-    mq.add(mSign);
-
-    // Reader-board under canopy: "NOW SHOWING: 1. NIGHT OF THE LIVING DEAD · 2. SANTA CLAUS CONQUERS THE MARTIANS"
-    const rSign = new THREE.Mesh(new THREE.PlaneGeometry(8.0, 0.5), psx(new THREE.MeshBasicMaterial({ map: signTex('1. NIGHT OF THE LIVING DEAD · 2. SANTA CLAUS', '#0c0e14', '#4fe0d0'), side: THREE.DoubleSide })));
-    rSign.position.set(0, 2.55, 7.4);
-    mq.add(rSign);
-
-    // Glowing border chaser lights
-    const chaserL = new THREE.PointLight(0xffb84a, 0.8, 8);
-    chaserL.position.set(0, 2.8, 6.2);
-    mq.add(chaserL);
-
-    // Two movie poster display lightboxes flanking the entrance doors
-    const p1 = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.8), psx(new THREE.MeshBasicMaterial({ map: signTex('NIGHT OF THE\nLIVING DEAD\n(1968)', '#1a0808', '#ff4a3a'), side: THREE.DoubleSide })));
-    p1.position.set(-2.8, 1.7, 4.08);
-    mq.add(p1);
-
-    const p2 = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.8), psx(new THREE.MeshBasicMaterial({ map: signTex('SANTA CLAUS\nCONQUERS THE\nMARTIANS (1964)', '#081a18', '#40ffb0'), side: THREE.DoubleSide })));
-    p2.position.set(2.8, 1.7, 4.08);
-    mq.add(p2);
-
-    // Red carpet runner extending from the double doors out onto the sidewalk
-    part(mq, B(2.8, 0.05, 4.2), toon('#8a1524', 'cloth'), 0, 0.08, 6.2);
-
-    // Grand entrance double doors (glass & brass)
-    part(mq, B(2.4, 2.8, 0.12), toon('#1a1218'), 0, 1.4, 4.02);
-    part(mq, B(1.0, 2.2, 0.08), glow('#ffd890'), -0.55, 1.4, 4.08);
-    part(mq, B(1.0, 2.2, 0.08), glow('#ffd890'), 0.55, 1.4, 4.08);
-    part(mq, B(2.6, 0.15, 0.2), toon('#ffd36a'), 0, 2.85, 4.08);
-
-    at(mq, cx, cz - 0.15, Math.PI); // doors (local z 4) sit on the facade, canopy and carpet reach out over the sidewalk
-
+    // the marquee, doors and booth are part of the Roxy building now (roxy.js)
     // Interaction trigger to enter the Roxy Cinema
     INTERACTS.push({
       x: cx,

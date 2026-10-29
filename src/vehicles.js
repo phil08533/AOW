@@ -18,6 +18,23 @@ function makeTankModel(col) {
   part(tur, Cy(0.95, 1.1, 0.6, 8), c, 0, 0, 0); part(tur, Cy(0.13, 0.15, 2.8, 8), '#3a3d44', 0, 0.05, 1.9, Math.PI / 2); part(tur, Cy(0.2, 0.2, 0.4, 8), dk, 0, 0.05, 3.2, Math.PI / 2);
   part(tur, Cy(0.35, 0.35, 0.18, 8), '#3a3d44', 0.3, 0.38, -0.2); part(tur, B(0.5, 0.3, 0.06), glow('#ff8a2a'), 0, 0.12, 0.92);
   part(tur, Cy(0.02, 0.02, 1.4, 4), dk, -0.6, 0.9, -0.5); part(tur, B(0.3, 0.2, 0.02), toon('#b3262c', 'cloth'), -0.45, 1.5, -0.5);
+  // detail pass (2.23.72): skirts with bolts, track links, exhausts, tools, mantlet, muzzle brake, hatch, cupola MG, smoke launchers, lights
+  const st = '#3a3d44', bolt = '#22242a';
+  for (const s of [-1, 1]) { part(g, B(0.08, 0.42, 3.9), c, 1.62 * s, 0.62, 0); for (let k = 0; k < 7; k++) part(g, Cy(0.045, 0.045, 0.03, 6), bolt, 1.67 * s, 0.78, -1.7 + k * 0.57, 0, 0, Math.PI / 2);
+    for (let k = 0; k < 14; k++) part(g, B(0.72, 0.06, 0.16), bolt, 1.25 * s, 0.82, -2.05 + k * 0.315); part(g, B(0.72, 0.06, 4.1), bolt, 1.25 * s, 0.03, 0);
+    part(g, Cy(0.11, 0.13, 0.32, 8), '#26282c', 0.6 * s, 1.2, -1.95, Math.PI / 2); part(g, B(0.42, 0.06, 0.5), '#1a1b1e', 0.6 * s, 1.31, -1.55);
+    part(g, Cy(0.09, 0.09, 0.06, 8), glow('#fff1c8'), 0.75 * s, 1.08, 1.92, Math.PI / 2); part(g, B(0.22, 0.2, 0.08), st, 0.75 * s, 1.08, 1.86);
+    part(g, B(0.14, 0.1, 0.22), bolt, 0.55 * s, 0.7, 1.95); }
+  for (let k = 0; k < 4; k++) part(g, B(1.8, 0.03, 0.04), bolt, 0, 1.31, -1.1 + k * 0.9);
+  part(g, Cy(0.05, 0.05, 1.6, 6), '#6a5a40', -0.5, 1.33, 0.2, Math.PI / 2); part(g, B(0.28, 0.06, 0.4), '#8a8e94', -0.5, 1.33, 1.05); // shovel
+  part(g, B(1.2, 0.3, 0.5), '#4a4038', 0, 1.42, -1.75); for (let k = 0; k < 3; k++) part(g, B(0.38, 0.16, 0.08), bolt, -0.42 + k * 0.42, 1.2, -1.97); // stowage box, spare links
+  part(tur, B(1.1, 0.5, 0.35), c, 0, 0.05, 0.98); 
+  part(tur, Cy(0.17, 0.17, 0.7, 8), st, 0, 0.05, 1.6, Math.PI / 2); part(tur, B(0.36, 0.28, 0.28), st, 0, 0.05, 3.45); for (const s of [-1, 1]) part(tur, B(0.04, 0.2, 0.18), bolt, 0.19 * s, 0.05, 3.45);
+  part(tur, B(0.6, 0.06, 0.6), st, -0.35, 0.33, -0.25); part(tur, Cy(0.28, 0.28, 0.06, 10), c, -0.35, 0.37, -0.25);
+  part(tur, Cy(0.03, 0.03, 0.8, 6), '#1a1b1e', 0.3, 0.62, 0.15, Math.PI / 2); part(tur, B(0.1, 0.14, 0.3), '#1a1b1e', 0.3, 0.6, -0.25);
+  for (const s of [-1, 1]) for (let k = 0; k < 3; k++) part(tur, Cy(0.05, 0.05, 0.22, 6), '#1a1b1e', 0.82 * s, 0.12 + k * 0.1, 0.45, 0.6, 0, -0.4 * s);
+  for (const s of [-1, 1]) part(tur, B(0.04, 0.2, 0.08), '#1a1b1e', 0.5 * s, 0.34, 0.6);
+  for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; part(tur, Cy(0.035, 0.035, 0.03, 6), bolt, Math.cos(a) * 0.98, 0.31, Math.sin(a) * 0.98); }
   g.userData.turret = tur;
   return g;
 }
@@ -139,7 +156,7 @@ function makeMechModel(col) {
 }
 const VEH = {
   battlecar: { name: 'Battle Car', price: 6000, lvl: 10, top: 32, acc: 20, hp: 900, eye: 1.5, gun: { name: 'Twin MGs', dmg: 55, rate: 0.09, range: 70, col: '#ffd36a' }, ram: true, make: makeBattleCar, desc: 'Fast, spiked wheels, ram damage, twin machine guns.' },
-  tank: { name: 'Battle Tank', price: 15000, lvl: 18, top: 15, acc: 8, hp: 3200, eye: 2.4, gun: { name: 'Main cannon', dmg: 950, rate: 1.3, range: 95, splash: 6, col: '#ff8a2a' }, make: makeTankModel, desc: 'Slow, nearly unkillable, cannon with a big blast.' },
+  tank: { name: 'Battle Tank', price: 15000, lvl: 18, top: 7, acc: 2.5, tracked: true, turn: 0.61, trs: 0.7, hp: 3200, eye: 2.4, gun: { name: 'Main cannon', dmg: 950, rate: 1.3, range: 95, splash: 6, col: '#ff8a2a' }, make: makeTankModel, desc: 'Heavy and slow. Pivot steers, the turret follows your aim, and the cannon has a big blast.' },
   mech: { name: 'Battle Mech', price: 26000, lvl: 26, top: 8.5, hp: 4600, eye: 3.2, walk: true, gun: { name: 'Missile pods', dmg: 380, rate: 1.1, range: 85, splash: 4.5, salvo: 4, col: '#ff6a1a' }, make: makeMechModel, desc: 'Walks, strafes and jump-jets. Fires 4-missile salvos.' }
 };
 let VH = { on: false };
@@ -168,13 +185,14 @@ function toggleVehicle() {
   const w = (V0.wreck || {})[id]; if (w && Date.now() - w < 45000) { log(`${VEH[id].name} is still being repaired (${Math.ceil(45 - (Date.now() - w) / 1000)}s).`); return; }
   if (RC.on) return; if (S.riding) S.riding = false;
   VH = { on: true, id, v: 0, vy: 0, hp: vehMaxHp(id), cd: 0, fuel: 2 };
+  if (VEH[id].tracked) tankMount();
   SFX.door(); SFX.horn && SFX.horn(); toast(VEH[id].name.toUpperCase(), `${VEH[id].gun.name} · V to park`, 2.2);
-  log(`${VEH[id].name}: ${VEH[id].walk ? 'WASD walks, Space jump-jets' : 'W/S drive, A/D steer'}, FIRE shoots, V parks.`, 'loot');
+  log(`${VEH[id].name}: ${VEH[id].walk ? 'WASD walks, Space jump-jets' : VEH[id].tracked ? 'W/S drive, A/D turn the hull, the turret follows your aim (green ring = on target)' : 'W/S drive, A/D steer'}, FIRE shoots, V parks.`, 'loot');
   if (typeof burp === 'function') burp('veh');
 }
 function vehPark(force) {
   if (!VH.on) return; if (!force && Math.abs(VH.v) > 3 && !VEH[VH.id].walk) { if (!VH.parkReq) log('Braking to park…'); VH.parkReq = true; return; }
-  VH.on = false; for (const id in vmVeh) vmVeh[id].visible = false; SFX.door(); SFX.engine && SFX.engine(0, 0); if (!force) log('Parked.');
+  VH.on = false; tankDrop(); for (const id in vmVeh) vmVeh[id].visible = false; SFX.door(); SFX.engine && SFX.engine(0, 0); if (!force) log('Parked.');
 }
 function vehWreck() {
   const id = VH.id; vehS().wreck = vehS().wreck || {}; vehS().wreck[id] = Date.now();
@@ -183,7 +201,7 @@ function vehWreck() {
 }
 function vehStep(dt, mx, mz) {
   const D = VEH[VH.id], top = vehTop(VH.id) * ((keys.ShiftLeft || keys.ShiftRight) ? 1.25 : 1);
-  for (const id in vmVeh) vmVeh[id].visible = id === VH.id;
+  for (const id in vmVeh) vmVeh[id].visible = id === VH.id && !D.tracked;
   const g0 = floorAt(player.pos.x, player.pos.z), air = player.pos.y > g0 + 0.15;
   if (VH.parkReq) { VH.v *= Math.max(0, 1 - dt * 4); if (Math.abs(VH.v) < 2) { VH.parkReq = false; VH.v = 0; return vehPark(); } }
   if (D.walk) {
@@ -191,6 +209,7 @@ function vehStep(dt, mx, mz) {
     player.pos.addScaledVector(f, mz * top * dt).addScaledVector(r, mx * top * 0.7 * dt); VH.v = Math.hypot(mx, mz) * top;
     if ((keys.Space || jetHeld) && VH.fuel > 0) { VH.vy = Math.min(VH.vy + 30 * dt, 7); VH.fuel -= dt; if (Math.random() < 0.5) burst(player.pos.clone(), '#ff9a3c', 2, 2); } else if (!air) VH.fuel = Math.min(2, VH.fuel + dt * 0.6);
     VH.step = (VH.step || 0) + dt * VH.v * 0.35; if (!air && VH.v > 1 && Math.floor(VH.step) !== Math.floor(VH.step - dt * VH.v * 0.35)) { SFX.land(); }
+  } else if (D.tracked) { tankDrive(dt, D, top, air);
   } else {
     const dz = v => Math.max(0, (v - 0.15) / 0.85), th = (keys.KeyW ? 1 : 0) + dz(move.y), br = (keys.KeyS ? 1 : 0) + dz(-move.y), st = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x;
     if (!air && !VH.parkReq) { const v0 = VH.v; VH.v += (th * D.acc - br * 24) * dt; if (!th && !br) VH.v = Math.sign(v0) * Math.max(0, Math.abs(v0) - 5 * dt); else if (br && !th && v0 > 0 && VH.v < 0) VH.v = 0; VH.v = clamp(VH.v, -6, top); } // coasting rolls to a stop instead of creeping into reverse; brake stops first, S brakes, then backs up
@@ -206,19 +225,21 @@ function vehStep(dt, mx, mz) {
   // ramming with the battle car
   if (D.ram && Math.abs(VH.v) > 10) for (const e of enemies) { if (e.dead) continue; const d = e.obj.position.distanceTo(player.pos); if (d < 2.2 + e.def.r * e.sc && (!e.ramT || gameTime - e.ramT > 0.6)) { e.ramT = gameTime; vehHit(e, Math.abs(VH.v) * 22); VH.v *= 0.7; burst(e.obj.position.clone().add(V(0, 1, 0)), '#cfd3d8', 10, 5); SFX.hit(); } }
   VH.cd -= dt; if (firing && VH.cd <= 0 && !inSafe(player.pos)) vehFire();
+  if (D.tracked) tankPose(dt);
   const hpk = VH.hp / vehMaxHp(VH.id);
   $('zoneN').textContent = D.name.toUpperCase(); $('zoneL').textContent = `Armor ${Math.round(hpk * 100)}% · ${Math.round(Math.abs(VH.v) * 3.6)} km/h${D.walk ? ` · jets ${Math.round(VH.fuel / 2 * 100)}%` : ''} · V to park`; $('zone').style.opacity = 1; zoneT = 1;
 }
 function vehHit(e, dmg) { e.hp -= dmg; e.hitT = 0.12; e.aggro = true; e.lastHit = gameTime; if (e.anim) e.anim.hit = 0.14; if (e.hp <= 0) kill(e); else updatePlate(e); }
 function vehFire() {
   const D = VEH[VH.id], G = D.gun; VH.cd = G.rate; const o = camera.getWorldPosition(V(0, 0, 0)), d0 = V(0, 0, 0); camera.getWorldDirection(d0);
+  if (D.tracked && VH.body) { tankAimRay(o, d0); tankRecoil(); }
   const muz = vmVeh[VH.id].userData.muz, shots = G.salvo || 1; let any = false;
   for (let n = 0; n < shots; n++) {
     const d = d0.clone(); if (shots > 1 || !G.splash) d.add(V((Math.random() - 0.5) * 0.03, (Math.random() - 0.5) * 0.03, (Math.random() - 0.5) * 0.03)).normalize();
     let ht = rayClear(o, d, G.range), hit = null;
     for (const e of enemies) { if (e.dead) continue; const bp = e.obj.position; if (bp.distanceToSquared(o) > G.range * G.range) continue; for (const f of [0.55, 1.15, 1.75]) { const t = raySphere(o, d, V(bp.x, bp.y + e.def.hy * e.sc * f, bp.z), e.def.r * 1.4 * e.sc); if (t > 0 && t < ht) { ht = t; hit = e; } } }
     if (G.splash && !hit) for (let t = 1; t < ht; t += 0.6) { const q = o.clone().addScaledVector(d, t); if (q.y < groundH(q.x, q.z)) { ht = t; break; } }
-    const end = o.clone().addScaledVector(d, ht), from = vmVeh[VH.id].localToWorld(muz[n % muz.length].clone());
+    const end = o.clone().addScaledVector(d, ht), from = D.tracked && VH.body ? o.clone() : vmVeh[VH.id].localToWorld(muz[n % muz.length].clone());
     tracer(from, end, G.col);
     if (G.splash) { burst(end, G.col, 18, 7); burst(end, '#ffd36a', 8, 4);
       for (const e of enemies) { if (e.dead) continue; const dd = e.obj.position.distanceTo(end); if (dd < G.splash + e.def.r * e.sc) { vehHit(e, vehDmg(VH.id) * (1 - 0.5 * dd / (G.splash + 1))); any = true; } }
@@ -266,3 +287,51 @@ function openResearch(n) {
       r.append(nm, mt, b); rows.appendChild(r); } };
   $('dlgActs').before(rows); render(); acts([['Done', closeDlg]]);
 }
+// ---- Battle Tank handling (2.23.72): a real hull under you that pivot steers, a turret that swings after your aim, recoil, track marks ----
+const TK = { marks: null, mi: 0, dist: 0, aim: null };
+const angTo = (a, b, mx) => { let d = ((b - a + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; return a + clamp(d, -mx, mx); };
+function tankMount() {
+  VH.hy = VH.ty = player.yaw; VH.rk = 0; VH.shk = 0; VH.body = makeTankModel(); VH.body.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
+  levelGroup.add(VH.body); VH.tur = VH.body.userData.turret; VH.tur0 = VH.tur.position.clone();
+  VH.muz = new THREE.Object3D(); VH.muz.position.set(0, 0.05, 3.3); VH.tur.add(VH.muz);
+  if (!TK.aim) { const a = document.createElement('div'); a.id = 'tankAim'; a.style.cssText = 'position:fixed;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid rgba(255,90,60,.9);border-radius:50%;pointer-events:none;z-index:6;display:none;box-shadow:0 0 6px rgba(255,90,60,.6)'; a.innerHTML = '<div style="position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px;background:#ff5a3c;border-radius:50%"></div>'; document.body.appendChild(a); TK.aim = a; }
+  tankPose(0);
+}
+function tankDrop() { VH.shk = 0; if (VH.body) { if (VH.body.parent) VH.body.parent.remove(VH.body); disposeTree(VH.body); VH.body = null; } if (TK.aim) TK.aim.style.display = 'none'; }
+function tankDrive(dt, D, top, air) {
+  const dz = v => Math.max(0, (v - 0.15) / 0.85), th = (keys.KeyW ? 1 : 0) + dz(move.y), br = (keys.KeyS ? 1 : 0) + dz(-move.y), st = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x;
+  if (!air && !VH.parkReq) { const v0 = VH.v; // heavy: slow to get going, slow to stop
+    if (th) VH.v += D.acc * th * dt; else if (br) VH.v += (v0 > 0.2 ? -4.5 : -D.acc) * br * dt; else VH.v = Math.sign(v0) * Math.max(0, Math.abs(v0) - 1.6 * dt);
+    if (br && !th && v0 > 0 && VH.v < 0) VH.v = 0; VH.v = clamp(VH.v, -3, top); }
+  VH.hy -= st * D.turn * dt * (VH.v < -0.2 ? -1 : 1); // pivot steer, works standing still
+  VH.ty = angTo(VH.ty, player.yaw, D.trs * dt);
+  const f = V(-Math.sin(VH.hy), 0, -Math.cos(VH.hy)); player.pos.addScaledVector(f, VH.v * dt);
+  const work = Math.min(1, Math.abs(VH.v) / top + Math.abs(st) * 0.4);
+  SFX.engine && SFX.engine(0.55 + work * 0.45, -0.2 + work * 0.25);
+  // run over anything small
+  if (Math.abs(VH.v) > 1.5) for (const e of enemies) { if (e.dead || e.def.r * (e.sc || 1) > 1.0) continue; if (e.obj.position.distanceTo(player.pos) < 2.6 && (!e.ramT || gameTime - e.ramT > 0.6)) { e.ramT = gameTime; vehHit(e, 260); burst(e.obj.position.clone().add(V(0, 0.6, 0)), '#a08a70', 10, 4); SFX.hit(); } }
+  // track marks
+  TK.dist += Math.abs(VH.v) * dt; if (!air && TK.dist > 0.7) { TK.dist = 0; tankMark(f); }
+}
+function tankMark(f) {
+  if (!TK.marks || !TK.marks.parent) { const m = new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0.32, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    TK.marks = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.62, 0.55).rotateX(-Math.PI / 2), m, 240); TK.marks.count = 0; TK.marks.frustumCulled = false; levelGroup.add(TK.marks); TK.mi = 0; }
+  const r = V(f.z, 0, -f.x), M = new THREE.Matrix4(), q = new THREE.Quaternion().setFromAxisAngle(V(0, 1, 0), VH.hy);
+  for (const s of [-1, 1]) { const x = player.pos.x + r.x * 1.25 * s, z = player.pos.z + r.z * 1.25 * s; M.compose(V(x, floorAt(x, z) + 0.03, z), q, V(1, 1, 1)); TK.marks.setMatrixAt(TK.mi, M); TK.mi = (TK.mi + 1) % 240; TK.marks.count = Math.max(TK.marks.count, TK.mi || 240); }
+  TK.marks.instanceMatrix.needsUpdate = true;
+}
+function tankPose(dt) {
+  const B = VH.body; if (!B) return; if (!B.parent) levelGroup.add(B);
+  const p = player.pos, f = V(-Math.sin(VH.hy), 0, -Math.cos(VH.hy)), gF = floorAt(p.x + f.x * 1.8, p.z + f.z * 1.8), gB = floorAt(p.x - f.x * 1.8, p.z - f.z * 1.8);
+  VH.rk = Math.max(0, VH.rk - dt * 2.2); VH.shk = Math.max(0, VH.shk - dt * 2.5);
+  B.position.set(p.x, p.y, p.z); B.rotation.set(0, VH.hy + Math.PI, 0, 'YXZ'); B.rotation.x = Math.atan2(gB - gF, 3.6) - Math.sin(VH.rk * Math.PI) * 0.06;
+  VH.tur.rotation.y = VH.ty - VH.hy; VH.tur.position.copy(VH.tur0); VH.tur.position.z -= Math.sin(VH.rk * Math.PI) * 0.18;
+  if (TK.aim) { const o = V(0, 0, 0), d = V(0, 0, 0); tankAimRay(o, d); const t = rayClear(o, d, VEH.tank.gun.range), w = o.addScaledVector(d, t).project(camera);
+    const on = w.z < 1 && Math.abs(w.x) < 1.2 && Math.abs(w.y) < 1.2; TK.aim.style.display = on && !dlgOpen ? 'block' : 'none';
+    if (on) { TK.aim.style.left = ((w.x + 1) / 2 * innerWidth) + 'px'; TK.aim.style.top = ((1 - w.y) / 2 * innerHeight) + 'px'; TK.aim.style.borderColor = Math.abs(((player.yaw - VH.ty + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI) < 0.03 ? 'rgba(120,255,140,.9)' : 'rgba(255,90,60,.9)'; } }
+}
+// where the barrel actually points: the turret's yaw, your pitch
+function tankAimRay(o, d) { VH.body.updateMatrixWorld(true); VH.muz.getWorldPosition(o); const pt = clamp(player.pitch, -0.2, 0.35); d.set(-Math.sin(VH.ty) * Math.cos(pt), Math.sin(pt), -Math.cos(VH.ty) * Math.cos(pt)); }
+function tankRecoil() { VH.rk = 1; VH.shk = 0.35; VH.v -= 0.6;
+  for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; burst(player.pos.clone().add(V(Math.cos(a) * 2.4, 0.15, Math.sin(a) * 2.4)), (LEVEL.palette && (LEVEL.palette.sand || LEVEL.palette.dirt)) || '#a08a70', 2, 3); }
+  const m = V(0, 0, 0); VH.muz.getWorldPosition(m); burst(m, '#ffd36a', 10, 5); burst(m, '#5a5550', 8, 2); }

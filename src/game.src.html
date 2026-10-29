@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.71</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.72</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1623,7 +1623,7 @@ function step(dt) {
   const moving = Math.min(1, Math.hypot(mx, mz));
   const pb = Math.floor(bob / Math.PI); bob += dt * speed * 1.6 * moving; if (Math.floor(bob / Math.PI) !== pb && player.onGround && !S.riding && !VH.on) SFX.step(!LEVEL.terrain ? 'metal' : (LEVEL.palette.snowZ != null && player.pos.z > LEVEL.palette.snowZ) || LEVEL.weather === 'snow' && player.pos.y > 6 ? 'snow' : 'dirt');
   SFX.bike(S.riding ? moving * (player.onGround ? 1 : 0.6) : 0);
-  camera.position.set(player.pos.x, player.pos.y + (VH.on ? VEH[VH.id].eye : 1.6) + (player.onGround && !S.inSub ? Math.sin(bob * 2) * 0.03 * moving : 0), player.pos.z);
+  camera.position.set(player.pos.x + (VH.shk ? (Math.random() - 0.5) * VH.shk : 0), player.pos.y + (VH.on ? VEH[VH.id].eye : 1.6) + (player.onGround && !S.inSub ? Math.sin(bob * 2) * 0.03 * moving : 0) + (VH.shk ? (Math.random() - 0.5) * VH.shk : 0), player.pos.z);
   camera.rotation.set(player.pitch, player.yaw, 0);
   kick = Math.max(0, kick - dt * 9);
   vm.position.set(vmBase.x + Math.sin(bob) * 0.01 * moving, vmBase.y + Math.abs(Math.cos(bob)) * 0.01 * moving - (player.reloading > 0 ? 0.1 : 0) - (inSafe(player.pos) ? 0.08 : 0), vmBase.z + kick * 0.05);

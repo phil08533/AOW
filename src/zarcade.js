@@ -62,6 +62,8 @@ function zaTex(k) { if (zaTexCache[k]) return zaTexCache[k]; let t;
     for (let n = 1; n <= 36; n++) { const c = Math.floor((n - 1) / 3), r = 2 - (n - 1) % 3, X = 60 + c * 34, Y = 30 + r * 50; x.strokeRect(X, Y, 34, 50); x.fillStyle = RL_RED.includes(n) ? '#e0303a' : '#111'; x.beginPath(); x.ellipse(X + 17, Y + 25, 12, 15, 0, 0, 7); x.fill(); x.fillStyle = '#fff'; x.fillText(n, X + 17, Y + 31); }
     x.fillStyle = '#e8e2c8'; ['1st 12', '2nd 12', '3rd 12'].forEach((s, i) => { x.strokeRect(60 + i * 136, 180, 136, 34); x.fillText(s, 128 + i * 136, 203); });
     ['1-18', 'EVEN', 'RED', 'BLACK', 'ODD', '19-36'].forEach((s, i) => { x.strokeRect(60 + i * 68, 214, 68, 32); if (s === 'RED' || s === 'BLACK') { x.fillStyle = s === 'RED' ? '#e0303a' : '#111'; x.beginPath(); x.moveTo(94 + i * 68 - 18, 230); x.lineTo(94 + i * 68, 220); x.lineTo(94 + i * 68 + 18, 230); x.lineTo(94 + i * 68, 240); x.fill(); x.fillStyle = '#e8e2c8'; } else x.fillText(s, 94 + i * 68, 236); }); });
+  else if (k === 'hlFelt') t = zaCanvas(512, 256, (x) => { x.fillStyle = '#5a1a2a'; x.fillRect(0, 0, 512, 256); x.fillStyle = '#f0d8a8'; x.textAlign = 'center'; x.font = 'bold 30px Georgia'; x.fillText('HIGH  ·  LOW', 256, 92); x.font = '18px Georgia'; x.fillText('Ties go to the house', 256, 122);
+    x.strokeStyle = '#f0d8a8'; x.lineWidth = 2; x.strokeRect(256 - 30, 140, 60, 84); x.beginPath(); x.arc(256, 30, 205, 0.2, Math.PI - 0.2); x.stroke(); x.font = 'bold 22px Georgia'; x.fillText('▲', 150, 190); x.fillText('▼', 362, 190); });
   else if (k === 'bjFelt') t = zaCanvas(512, 256, (x) => { x.fillStyle = '#1a4a6a'; x.fillRect(0, 0, 512, 256); x.fillStyle = '#e8d8a0'; x.textAlign = 'center'; x.font = 'bold 26px Georgia'; x.fillText('BLACKJACK PAYS 3 TO 2', 256, 90); x.font = '18px Georgia'; x.fillText('Dealer must stand on 17', 256, 120);
     x.strokeStyle = '#e8d8a0'; x.lineWidth = 2; for (let i = 0; i < 5; i++) { const a = Math.PI * (0.15 + i * 0.175); x.strokeRect(256 + Math.cos(a) * 200 - 22, 30 + Math.sin(a) * 200 - 30, 44, 60); } });
   else if (k === 'screens') t = zaCanvas(512, 128, (x) => { // four attract screens side by side: snake, rocks, invaders, racer
@@ -101,21 +103,54 @@ function zaSlot(x, z, ry, i) { const g = new THREE.Group(); g.position.set(x, 0,
   const reels = []; for (let k = 0; k < 3; k++) { const geo = new THREE.CylinderGeometry(0.15, 0.15, 0.19, 24, 1, true); geo.rotateZ(Math.PI / 2); const r = new THREE.Mesh(geo, zaMat(zaTex('reel'))); r.position.set(-0.21 + k * 0.21, 1.52, -0.04); r.rotation.x = (randi(0, 4) + 0.5) / 5 * Math.PI * 2; lg.add(r); reels.push(r); }
   const dome = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff5a4a' })); dome.position.set(0, 2.32, -0.16); lg.add(dome);
   const strip = new THREE.Mesh(B(0.03, 0.9, 0.03), new THREE.MeshBasicMaterial({ color: fg })), strip2 = strip.clone(); strip.position.set(-0.445, 1.47, 0.1); strip2.position.set(0.445, 1.47, 0.1); strip2.material = strip.material; lg.add(strip, strip2);
-  const M = { reels, dome, strip, lv, spin: 0, ready: true, stop: [0, 0, 0], tgt: reels.map(r => r.rotation.x), win: 0, i };
+  const M = { reels, dome, strip, lv, spin: 0, ready: true, stop: [0, 0, 0], tgt: reels.map(r => r.rotation.x), win: 0, i, x, z, ry, nm, pay: null };
   ZA.mach.push(M); const [fx, fz] = zaRot(ry, 0, 0.95); const [bx, bz] = zaRot(ry, 0, -0.05); box(x + bx, z + bz, Math.abs(Math.cos(ry)) * 0.45 + Math.abs(Math.sin(ry)) * 0.4, Math.abs(Math.sin(ry)) * 0.45 + Math.abs(Math.cos(ry)) * 0.4);
-  INTERACTS.push({ x: x + fx, z: z + fz, r: 0.9, label: `🎰 ${nm[0] + nm.slice(1).toLowerCase()} slots`, fn: () => zaPlaySlot(M) }); }
-function zaPlaySlot(M) { ZA.cur = ZA.mach.indexOf(M); openSlots(); $('dlgTitle') && ($('dlgTitle').textContent = 'The Lucky Asteroid');
-  setTimeout(() => document.querySelectorAll('#dlgActs button').forEach(b => { if (!/^Spin/.test(b.textContent)) return; b.addEventListener('click', () => setTimeout(() => {
-    if (/You need/.test($('dlgLine').textContent) || M.spin > 0) return; M.spin = 0.001; M.lv.rotation.x = 0; M.win = 0;
-    M.ready = false; let tries = 0; const poll = () => { const els = [...document.querySelectorAll('.csreels span')], done = /You win|Nothing/.test($('dlgLine').textContent);
-      if (!done && tries++ < 40) return setTimeout(poll, 100); if (els.length === 3) M.tgt = els.map(e => { const j = Math.max(0, ZA_SYM.indexOf(e.textContent.trim())); return (j + 0.5) / 5 * Math.PI * 2; });
-      if (els.length === 3 && els[0].textContent === els[1].textContent && els[1].textContent === els[2].textContent) M.win = 3; M.ready = true; }; setTimeout(poll, 300); }, 20)); }), 0); }
+  INTERACTS.push({ x: x + fx, z: z + fz, r: 0.9, get label() { return ZS.M === M ? `🎰 Pull the lever (${ZS.bet} cr)` : `🎰 Sit at the ${nm[0] + nm.slice(1).toLowerCase()} slots`; }, fn: () => zaSit(M) }); }
 function zaSlotStep(t, dt) { for (const M of ZA.mach) {
   if (M.spin > 0) { M.spin += dt; M.lv.rotation.x = M.spin < 0.25 ? M.spin * 3 : Math.max(0, 0.75 - (M.spin - 0.25) * 2);
     M.reels.forEach((r, k) => { const stopAt = 1.05 + k * 0.28; if (M.spin < stopAt || !M.ready) r.rotation.x -= dt * 22; else { const tw = M.tgt[k] - Math.PI * 2 * Math.ceil(0.0001 + (M.tgt[k] - r.rotation.x) / (Math.PI * 2)); r.rotation.x += (tw + 0 - r.rotation.x) * 0; r.rotation.x = M.tgt[k]; } });
-    if (M.spin > 1.05 + 0.56 + 0.1 && M.ready) { M.spin = 0; if (M.win) M.win = 3; } }
+    if (M.spin > 1.05 + 0.56 + 0.1 && M.ready) { M.spin = 0; if (M.win) M.win = 3; if (M.pay != null) zaPaid(M); } }
   if (M.win > 0) M.win -= dt; M.dome.material.color.set(M.win > 0 ? (Math.sin(t * 20) > 0 ? '#ffffff' : '#ffd36a') : M.spin > 0 ? '#ffd36a' : '#a02a2a');
   M.strip.material.color.setHSL((t * 0.25 + M.i * 0.13) % 1, 0.9, 0.55); } }
+
+// ---------------- sitting at a slot: E sits you on the stool, then E, Space or the PULL button drops the crank and spins the reels ----------------
+const ZS = { M: null, bet: 50, ui: null };
+const zaIn = () => typeof LEVEL !== 'undefined' && LEVEL && LEVEL.id === 'zfloor' && typeof ZF !== 'undefined' && zTheme(ZF.floor) === 'arcade';
+function zaSlotUi() { if (ZS.ui) return ZS.ui; const st = document.createElement('style'); st.textContent = `#zaSlot { position: fixed; left: 50%; bottom: 7%; transform: translateX(-50%); z-index: 40; background: rgba(12,8,20,.86); border: 1px solid #6a3a8a; border-radius: 12px; padding: 10px 14px; color: #f0e8ff; font: 14px system-ui, sans-serif; text-align: center; min-width: 300px; }
+#zaSlot .t { font: bold 15px Georgia, serif; letter-spacing: .06em; margin-bottom: 4px; } #zaSlot .m { min-height: 20px; margin: 4px 0 8px; color: #cfe8ff; } #zaSlot .row { display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
+#zaSlot button { cursor: pointer; border-radius: 8px; border: 1px solid #5a5a7a; background: #1e1c2e; color: #e8e8ff; padding: 6px 10px; font: 13px system-ui, sans-serif; } #zaSlot button.on { background: #3a6ad8; border-color: #8ab0ff; }
+#zaSlot button.pull { background: #b0202e; border-color: #ff8a90; color: #fff; font-weight: bold; padding: 9px 22px; font-size: 15px; } #zaSlot button.pull:disabled { opacity: .5; } #zaSlot small { opacity: .7; }`; document.head.appendChild(st);
+  const d = document.createElement('div'); d.id = 'zaSlot'; d.hidden = true; d.innerHTML = '<div class="t"></div><div class="m"></div><div class="row"><span>Bet</span><button data-b="50">50</button><button data-b="250">250</button><button data-b="1000">1000</button><button class="pull">PULL</button><button class="up">Stand up</button></div><small>Three in a row pays 8×, three diamonds 20×, a pair next to each other 1.5× · Click, E or Space pulls · 1 2 3 set the bet · WASD stands</small>';
+  document.body.appendChild(d); d.querySelectorAll('[data-b]').forEach(b => b.addEventListener('click', () => { ZS.bet = +b.dataset.b; zaUiRefresh(); SFX.ui && SFX.ui(); }));
+  d.querySelector('.pull').addEventListener('click', () => zaPull()); d.querySelector('.up').addEventListener('click', () => zaStand()); ZS.ui = d; return d; }
+function zaUiRefresh(msg) { const d = zaSlotUi(); if (msg != null) d.querySelector('.m').textContent = msg; d.querySelectorAll('[data-b]').forEach(b => b.classList.toggle('on', +b.dataset.b === ZS.bet)); d.querySelector('.pull').disabled = !!(ZS.M && ZS.M.spin > 0); }
+const zaSeat = M => { const [fx, fz] = zaRot(M.ry, 0, 0.95); return [M.x + fx, M.z + fz]; };
+function zaSit(M) { if (ZS.M === M) return zaPull(); if (ZS.M) zaStand(true);
+  ZS.M = M; const [sx, sz] = zaSeat(M), [rx, rz] = zaRot(M.ry, 0, 0.95); player.pos.x = sx; player.pos.z = sz; player.yaw = Math.atan2(rx, rz); player.pitch = 0.12; firing = false;
+  const d = zaSlotUi(); d.hidden = false; d.querySelector('.t').textContent = '🎰 ' + M.nm; zaUiRefresh(`You have ${S.cr.toLocaleString()} cr. Pick a bet and pull.`); SFX.ui && SFX.ui(); }
+function zaStand(quiet) { const M = ZS.M; if (!M) return; ZS.M = null; if (ZS.ui) ZS.ui.hidden = true; const [ox, oz] = zaRot(M.ry, 0, 1.55); player.pos.x = M.x + ox; player.pos.z = M.z + oz; if (!quiet) SFX.ui && SFX.ui(); }
+function zaPull() { const M = ZS.M; if (!M || M.spin > 0) return; const bet = ZS.bet; if (S.cr < bet) { zaUiRefresh(`You need ${bet} cr for that bet.`); SFX.hit && SFX.hit(); return; }
+  S.cr -= bet; markDirty(); const r = [0, 0, 0].map(() => randi(0, ZA_SYM.length - 1)); M.tgt = r.map(j => (j + 0.5) / 5 * Math.PI * 2); M.win = 0; M.lv.rotation.x = 0; M.ready = true; M.spin = 0.001;
+  const mult = r[0] === r[1] && r[1] === r[2] ? (r[0] === 4 ? 20 : 8) : (r[0] === r[1] || r[1] === r[2]) ? 1.5 : 0; M.pay = Math.round(bet * mult); M.roll = r.map(j => ZA_SYM[j]).join(' ');
+  try { const c = SFX.ctx(), o = c.createOscillator(), g = c.createGain(); o.type = 'square'; o.frequency.setValueAtTime(140, c.currentTime); o.frequency.exponentialRampToValueAtTime(60, c.currentTime + 0.18); g.gain.setValueAtTime(0.12, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.2); o.connect(g); g.connect(SFX.voiceOut ? SFX.voiceOut() : c.destination); o.start(); o.stop(c.currentTime + 0.22); } catch (_) {}
+  zaUiRefresh('Ka-chunk. The reels spin…'); }
+function zaPaid(M) { const p = M.pay; M.pay = null; S.cr += p; markDirty(); if (p) { M.win = 3; SFX.coin && SFX.coin(); } else SFX.ui && SFX.ui();
+  if (ZS.M === M) zaUiRefresh(p ? `${M.roll} · You win ${p.toLocaleString()} cr!` : `${M.roll} · Nothing. The machine hums smugly.`);
+  if (p >= 1000) toast('🎰 JACKPOT', `+${p.toLocaleString()} cr`, 2.5); }
+// sitting: hold the seat, sit low, WASD stands you up; and no guns anywhere on the arcade deck
+{ const _st = step; step = function (dt) { const M = ZS.M;
+  if (M && !zaIn()) zaStand(true);
+  if (ZS.M && state === 'play' && !dlgOpen && (keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD || (typeof move !== 'undefined' && Math.hypot(move.x, move.y) > 0.3))) zaStand();
+  _st(dt); const A = zaIn(); document.body.classList.toggle('unarmed', A);
+  if (A) { vm.visible = false; vmMelee.visible = false; if (typeof vmOff !== 'undefined' && vmOff) vmOff.visible = false; firing = false; }
+  if (ZS.M) { const [sx, sz] = zaSeat(ZS.M); player.pos.x = sx; player.pos.z = sz; player.vy = 0; camera.position.set(sx, player.pos.y + 1.3, sz); zaUiRefresh(); } }; }
+{ const _f = fire; fire = function () { if (zaIn()) return; return _f.apply(this, arguments); }; }
+{ const _sw = swapHand; swapHand = function () { if (zaIn()) return; return _sw.apply(this, arguments); }; }
+{ const _to = throwOrd; throwOrd = function () { if (zaIn()) return; return _to.apply(this, arguments); }; }
+window.addEventListener('keydown', e => { if (!ZS.M || state !== 'play' || dlgOpen) return; const b = { Digit1: 50, Digit2: 250, Digit3: 1000 }[e.code];
+  if (e.code === 'Space') zaPull(); else if (b) { ZS.bet = b; zaUiRefresh(); SFX.ui && SFX.ui(); } else return; e.preventDefault(); e.stopImmediatePropagation(); }, true);
+window.addEventListener('mousedown', e => { if (ZS.M && e.button === 0 && document.pointerLockElement && state === 'play' && !dlgOpen) zaPull(); });
+{ const st = document.createElement('style'); st.textContent = 'body.unarmed #tFire, body.unarmed .tq, body.unarmed #ammo, body.unarmed #cross, body.unarmed #tReload { display: none !important; }'; document.head.appendChild(st); }
 
 // an upright arcade cabinet facing local +z with a lit marquee, a screen, a control panel and side art
 function zaCabinet(x, z, ry, game) { const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; props.add(g);
@@ -190,18 +225,19 @@ function zaCasino() { const gold = toon('#c9a43a'), wood = toon('#4a2418', 'wood
   // poker: an oval felt table under its own lamp
   { const tb = new THREE.Group(); tb.position.set(-15, 0, -9.5); props.add(tb); part(tb, Cy(1.5, 1.5, 0.1, 28), felt, 0, 0.88, 0).scale.set(1.45, 1, 1); part(tb, new THREE.TorusGeometry(1.5, 0.12, 6, 30), rail, 0, 0.92, 0, Math.PI / 2).scale.set(1.45, 1, 1); part(tb, Cy(0.35, 0.55, 0.85, 12), toon('#2a1a14', 'wood'), 0, 0.42, 0);
     [[-1.4, 0.4], [1.4, 0.4], [0, 0.8], [-0.7, -0.6], [0.7, -0.6]].forEach(([cx, cz], k) => { for (let i = 0; i < 4; i++) part(tb, Cy(0.08, 0.08, 0.035, 10), toon(['#c8402f', '#3b4f7a', '#e8e4dc', '#1e1c22'][i]), cx * 0.75 + (i % 2) * 0.17, 0.96 + Math.floor(i / 2) * 0.035, cz * 0.75); for (let i = 0; i < 2; i++) part(tb, B(0.13, 0.008, 0.19), toon('#f4f8ff'), cx * 0.45 + i * 0.15, 0.94, cz * 0.45, 0, 0.3 * (i ? 1 : -1)); });
-    for (const [cx, cz] of [[-2.6, 0], [2.6, 0], [-1.3, 1.7], [1.3, 1.7], [0, 1.9]]) { part(tb, Cy(0.26, 0.26, 0.1, 12), toon('#6a1a24', 'cloth'), cx, 0.55, cz); part(tb, B(0.5, 0.5, 0.08), toon('#6a1a24', 'cloth'), cx * 1.12, 0.85, cz * 1.12 + (cz > 0 ? 0.0 : 0), 0, Math.atan2(cx, cz)); part(tb, Cy(0.04, 0.04, 0.5, 5), gold, cx, 0.25, cz); }
+    for (const [cx, cz] of [[-1.3, -1.7], [1.3, -1.7]]) { part(tb, Cy(0.26, 0.26, 0.1, 12), toon('#6a1a24', 'cloth'), cx, 0.55, cz); part(tb, B(0.5, 0.5, 0.08), toon('#6a1a24', 'cloth'), cx * 1.12, 0.85, cz * 1.12 + (cz > 0 ? 0.0 : 0), 0, Math.atan2(cx, cz)); part(tb, Cy(0.04, 0.04, 0.5, 5), gold, cx, 0.25, cz); }
     part(props, Cy(0.02, 0.02, 0.9, 4), toon('#1e1c22'), -15, ZA.H - 0.15, -9.5); part(props, Cy(0.35, 0.8, 0.4, 14, 1, true), toon('#1a4a2a'), -15, ZA.H - 0.8, -9.5); part(props, Cy(0.3, 0.3, 0.02, 12), glow('#fff1c8'), -15, ZA.H - 0.99, -9.5);
     box(-15, -9.5, 2.3, 1.6); INTERACTS.push({ x: -15, z: -11.6, r: 1.5, label: '🃏 Space poker with Dealer Vex', fn: () => openPoker() }); }
   // blackjack: a half-moon table, the dealer on the flat side with a shoe and a chip rack
   const halfMoon = (X, Z, ry, ftex) => { const tb = new THREE.Group(); tb.position.set(X, 0, Z); tb.rotation.y = ry; props.add(tb); const half = (r, h, y, m) => part(tb, new THREE.CylinderGeometry(r, r, h, 28, 1, false, -Math.PI / 2, Math.PI), m, 0, y, 0);
-    half(1.35, 0.82, 0.41, rail); half(1.48, 0.1, 0.86, rail); const top = new THREE.Mesh(new THREE.CircleGeometry(1.4, 28, 0, Math.PI), (ftex.isMaterial ? ftex : zaMat(ftex))); top.rotation.x = -Math.PI / 2; top.rotation.z = -Math.PI / 2; top.position.y = 0.915; tb.add(top);
+    half(1.35, 0.82, 0.41, rail); half(1.48, 0.1, 0.86, rail); const fg = new THREE.CircleGeometry(1.4, 28, Math.PI, Math.PI), fp = fg.attributes.position, fu = fg.attributes.uv; for (let i = 0; i < fp.count; i++) fu.setXY(i, (fp.getX(i) / 1.4 + 1) / 2, 1 + fp.getY(i) / 1.4); fu.needsUpdate = true;
+    const top = new THREE.Mesh(fg, (ftex.isMaterial ? ftex : zaMat(ftex))); top.rotation.x = -Math.PI / 2; top.position.y = 0.915; tb.add(top);
     part(tb, new THREE.TorusGeometry(1.44, 0.07, 6, 24, Math.PI), toon('#2a1410', 'cloth'), 0, 0.93, 0, Math.PI / 2); part(tb, B(2.96, 0.92, 0.14), rail, 0, 0.46, 0.0);
     part(tb, B(0.9, 0.1, 0.24), toon('#1e1c22'), 0, 0.97, 0.18); for (let i = 0; i < 7; i++) part(tb, Cy(0.05, 0.05, 0.06, 10), toon(['#c8402f', '#e8e4dc', '#3b4f7a', '#ffd36a', '#1f6a3a', '#c8402f', '#1e1c22'][i]), -0.36 + i * 0.12, 1.05, 0.18);
     part(tb, B(0.24, 0.16, 0.36), toon('#3a1a10', 'wood'), 0.9, 1.0, 0.35, 0, -0.3); for (let i = 0; i < 4; i++) { const a = -Math.PI / 2 + (i + 0.5) * Math.PI / 4; part(tb, Cy(0.25, 0.25, 0.08, 12), toon('#6a1a24', 'cloth'), Math.sin(a) * 1.9, 0.72, Math.cos(a) * 1.9); part(tb, Cy(0.04, 0.04, 0.7, 5), gold, Math.sin(a) * 1.9, 0.36, Math.cos(a) * 1.9); }
     return tb; };
   halfMoon(-7.5, -10.4, 0, zaTex('bjFelt')); box(-7.5, -10, 1.5, 0.9); INTERACTS.push({ x: -7.5, z: -8.4, r: 1.5, label: '🂡 Blackjack with Dealer Marlo', fn: openBlackjack });
-  halfMoon(-7.5, 4.6, Math.PI, felt); box(-7.5, 4.4, 1.5, 0.9); INTERACTS.push({ x: -7.5, z: 2.6, r: 1.5, label: '🂠 High-low with Dealer Pip', fn: openHighLow });
+  halfMoon(-7.5, 4.6, Math.PI, zaTex('hlFelt')); box(-7.5, 4.4, 1.5, 0.9); INTERACTS.push({ x: -7.5, z: 2.6, r: 1.5, label: '🂠 High-low with Dealer Pip', fn: openHighLow });
   // roulette: a long felt layout with a wheel in a wooden bowl at the west end
   { const X = -14, Z = 2.8, tb = new THREE.Group(); tb.position.set(X, 0, Z); props.add(tb);
     part(tb, B(4.6, 0.84, 1.9), rail, 0, 0.42, 0); part(tb, B(4.7, 0.08, 2.0), toon('#2a1410', 'cloth'), 0, 0.88, 0); const lay = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.6), zaMat(zaTex('rlFelt'))); lay.rotation.x = -Math.PI / 2; lay.position.set(0.6, 0.925, 0); tb.add(lay);
@@ -338,8 +374,9 @@ function zaArcade() { const chrome = toon('#a8aeb8'), dark = toon('#1e1c22'), wo
   poster(23.83, -17.8, -Math.PI / 2, 'BLORK INVADERS', 'THEY CAME FOR THE TICKETS', '#c83a8a', '#1a0420'); poster(23.83, 8.6, -Math.PI / 2, 'STAR RACER', 'TOP SPEED: YES', '#d8a020', '#120408');
   poster(17, 19.83, Math.PI, 'NEON STEP', 'DANCE OR DIE TRYING', '#ff4fa0', '#1a0420'); poster(-1.75, -8, Math.PI / 2, 'PINBALL WIZARD', 'TILT AT YOUR OWN RISK', '#3fd8ff', '#04101a');
   // regulars: a few people playing machines, swaying a little
-  const ppl = []; for (const [x, z, f, col] of [[0.8 + 2 * 1.0, -18.6, Math.PI, '#3b4f7a'], [0.8 + 5 * 1.0, -18.6, Math.PI, '#8a6fc4'], [11.6, -11, -Math.PI / 2, '#c8402f'], [4.2, 9.9, 0, '#5a6a3a'], [17.4, -13.1, -Math.PI / 2, '#c9a43a']]) {
-    const o = buildChar(() => makeCivilian(col, '#2c2a28', ['#e0b892', '#8a5a3a', '#9fe8ff', '#c58a64'][ppl.length % 4], '#1e1a18'), 'civ'); o.position.set(x, 0, z); o.rotation.y = f; blob(o, 0.45); levelGroup.add(o); ppl.push(o); solid(x, z, 0.35); }
+  const ppl = []; for (const [x, z, f, col] of [[0.8 + 2 * 1.0, -18.6, Math.PI, '#3b4f7a'], [0.8 + 5 * 1.0, -18.6, Math.PI, '#8a6fc4'], [11, -12.75, 0, '#c8402f'], [4.2, 10.1, 0, '#5a6a3a'], [16.75, -13.1, -Math.PI / 2, '#c9a43a']]) {
+    const o = buildChar(() => makeCivilian(col, '#2c2a28', ['#e0b892', '#8a5a3a', '#9fe8ff', '#c58a64'][ppl.length % 4], '#1e1a18'), 'civ'); o.position.set(x, 0, z); o.rotation.y = f; blob(o, 0.45); levelGroup.add(o); ppl.push(o); solid(x, z, 0.35);
+    if (Math.abs(z - 10.1) < 0.01) { const R = o.userData.rig; o.position.y = 0.625 - (R ? R.spec.hip : 0.95) + 0.05; sitChar(o, 0.55); } }
   const sts = ppl.map(() => ({})); levelAnims.push(t => ppl.forEach((o, i) => { try { animRig(o, sts[i], 1 / 60, t); } catch (_) {} o.rotation.z = Math.sin(t * 1.5 + i) * 0.03; }));
 }
 

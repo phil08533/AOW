@@ -5,7 +5,7 @@ ITEMS.plush_klunky = { name: 'Klunky plush', v: 40, col: '#c8402f', note: 'A squ
 ITEMS.plush_blork = { name: 'Blork plush', v: 60, col: '#6fdc5a', note: 'A green Blork with felt teeth. Won at the Neon Arcade.' };
 ITEMS.plush_frog = { name: 'Frog E plush', v: 90, col: '#7fae63', note: 'He looks like he has something to say. He does not.' };
 ITEMS.plush_maw = { name: 'Tiny Maw plush', v: 150, col: '#8a3a8a', note: 'One big stitched eye. Somehow still staring at you.' };
-const ARC_PRIZES = [['plush_klunky', 'item', 60], ['plush_blork', 'item', 90], ['plush_frog', 'item', 140], ['plush_maw', 'item', 220],
+const ARC_PRIZES = [['pl_klunky', 'furn', 60], ['pl_blork', 'furn', 90], ['pl_frog', 'furn', 140], ['pl_maw', 'furn', 220], ['pl_giant', 'furn', 600],
   ['lavalamp', 'furn', 180], ['beanbag', 'furn', 260], ['neon', 'furn', 480], ['disco', 'furn', 650], ['arcade', 'furn', 900], ['jukebox', 'furn', 1100]];
 const tix = () => (S.tix | 0);
 function arcTix(n) { if (n <= 0) return; S.tix = tix() + n; markDirty(); SFX.coin && SFX.coin(); }
@@ -13,7 +13,7 @@ function openPrizes() { openDlg('Prize counter', `🎟 ${tix()} tickets`); $('dl
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   for (const [id, kind, cost] of ARC_PRIZES) { const r = document.createElement('div'), nm = document.createElement('span'); r.className = 'rowi';
     const owned = kind === 'furn' && typeof furnOwned === 'function' && furnOwned(id), name = kind === 'item' ? ITEMS[id].name : (FURN[id] ? FURN[id][0] : id);
-    nm.innerHTML = `<b>${name}</b><br><small style="opacity:.8">${kind === 'item' ? 'Plush · goes in your bag' : owned ? 'Ship furniture · you already have it' : 'Ship furniture · unlocks in the decorator'}</small>`;
+    nm.innerHTML = `<b>${name}</b><br><small style="opacity:.8">${kind === 'item' ? 'Goes in your bag' : owned ? 'You already have it · place it from Decorate' : /^pl_/.test(id) ? 'Plush · place it in your ship from Decorate' : 'Ship furniture · unlocks in the decorator'}</small>`;
     const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = `${cost} 🎟`; b.disabled = tix() < cost || owned;
     b.addEventListener('click', () => { if (tix() < cost) return; if (kind === 'item') { if (!invAdd(id, 1)) return; } else { S.furn = S.furn || {}; S.furn[id] = 1; }
       S.tix = tix() - cost; markDirty(); SFX.item(); toast('PRIZE', name, 2.2); log(`Traded ${cost} tickets for ${name}.`, 'loot'); openPrizes(); });

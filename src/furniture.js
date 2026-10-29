@@ -86,7 +86,7 @@ canBuild = function (type, gx, gz) {
   if (!SHIP_ROOMS.some(r => x - h >= r.x0 + 0.3 && x + h <= r.x1 - 0.3 && z - h >= r.z0 + 0.3 && z + h <= r.z1 - 0.3)) return 'Place it inside one of your ship’s rooms';
   if (myBase().some(p => p[1] === gx && p[2] === gz && PIECES[p[0]] && PIECES[p[0]].layer === def.layer)) return 'Something is already there';
   if (myBase().length >= MAX_PIECES) return 'Your ship is full of stuff';
-  if (!furnOwned(type)) return 'Not found yet. Furniture turns up in salvage crates';
+  if (!furnOwned(type)) return FURN[type] && FURN[type][6] ? 'Win this at the Neon Arcade prize counter' : 'Not found yet. Furniture turns up in salvage crates';
   return null;
 };
 placePiece = function () {
@@ -130,7 +130,7 @@ renderBuildBar = function () {
   Object.entries(PIECES).filter(([, p]) => p.cat === baseState.cat).forEach(([id, p]) => {
     const b = document.createElement('button'); b.className = 'pbtn' + (baseState.type === id && !baseState.remove ? ' go' : '');
     const n = document.createElement('span'); n.textContent = p.name; const c = document.createElement('small');
-    c.textContent = furnOwned(id) ? (p.price ? 'Found' : 'Free') : 'Crate find'; c.style.color = furnOwned(id) ? 'var(--dim)' : '#ff8a80';
+    c.textContent = furnOwned(id) ? (FURN[id] && FURN[id][6] ? 'Won' : p.price ? 'Found' : 'Free') : FURN[id] && FURN[id][6] ? 'Arcade prize' : 'Crate find'; c.style.color = furnOwned(id) ? 'var(--dim)' : '#ff8a80';
     b.append(n, c); b.addEventListener('click', () => { baseState.type = id; baseState.remove = false; SFX.ui(); renderBuildBar(); }); bar.appendChild(b); });
   $('bRemove').classList.toggle('go', baseState.remove);
   $('buildCount').textContent = `${myBase().length}/${MAX_PIECES} pieces · ${S.cr} cr`;
@@ -191,3 +191,19 @@ function decorAimPiece() {
   if (p) { DECOR_RM.x = p[1] * CELL; DECOR_RM.z = p[2] * CELL; DECOR_RM.r = 6; DECOR_RM.label = 'Remove ' + ((PIECES[p[0]] || {}).name || 'piece'); if (i < 0) INTERACTS.push(DECOR_RM); }
   else if (i >= 0) INTERACTS.splice(i, 1); }; }
 { const _pp = placePiece; placePiece = function () { if (baseState.remove && onShip()) { if (DECOR_RM.piece) DECOR_RM.fn(); else { SFX.hurt(); log('Look at the piece you want to remove'); } return; } return _pp.apply(this, arguments); }; }
+// ---- arcade plushies (2.23.77): prize-counter only, placed like any other piece. Old bag plushies unlock the matching piece. ----
+const PLUSH = { pl_klunky: ['Klunky plush', 'plush_klunky'], pl_blork: ['Blork plush', 'plush_blork'], pl_frog: ['Frog E plush', 'plush_frog'], pl_maw: ['Tiny Maw plush', 'plush_maw'], pl_giant: ['Giant Blork plush', null] };
+for (const id in PLUSH) { const big = id === 'pl_giant', d = big ? [1.0, 1.3, 1.0] : [0.5, 0.55, 0.5];
+  FURN[id] = [PLUSH[id][0], 'Fun', 999, d, 1, big ? 1 : 0, 1]; PIECES[id] = { name: PLUSH[id][0], cost: {}, price: 999, cat: 'Fun', layer: 1, dim: d, solid: big ? 1 : 0, prize: 1 }; }
+{ const _pm = pieceModel; pieceModel = function (type, col) { if (!PLUSH[type]) return _pm(type, col); const g = new THREE.Group(), c = x => toon(x, 'cloth'), eye = (x, y, z, r) => { part(g, new THREE.SphereGeometry(r, 10, 8), toon('#f4f4f0'), x, y, z); part(g, new THREE.SphereGeometry(r * 0.55, 8, 6), toon('#141218'), x, y, z + r * 0.6); };
+  if (type === 'pl_klunky') { E(g, c('#c8402f'), 0, 0.17, 0, 0.17, 0.17, 0.15); for (const s of [-1, 1]) { E(g, c('#c8402f'), s * 0.15, 0.16, 0.04, 0.05, 0.1, 0.05, 0, 0, s * 0.6); E(g, c('#e8e4dc'), s * 0.08, 0.04, 0.08, 0.06, 0.04, 0.08); }
+    E(g, c('#d89a4a'), 0, 0.33, 0, 0.17, 0.07, 0.16); E(g, c('#5a2e1a'), 0, 0.395, 0, 0.18, 0.03, 0.17); E(g, c('#6fdc5a'), 0, 0.425, 0, 0.19, 0.012, 0.18); E(g, c('#e8a84a'), 0, 0.47, 0, 0.17, 0.08, 0.16); eye(-0.06, 0.34, 0.14, 0.035); eye(0.06, 0.34, 0.14, 0.035); }
+  else if (type === 'pl_blork' || type === 'pl_giant') { const k = type === 'pl_giant' ? 2.4 : 1, h = new THREE.Group(); h.scale.setScalar(k); g.add(h); const add = (geo, m, x, y, z) => part(h, geo, m, x, y, z);
+    const m = h, body = new THREE.Mesh(SPH, c('#6fdc5a')); body.scale.set(0.2, 0.18, 0.18); body.position.y = 0.19; m.add(body); for (const s of [-1, 1]) { const f = new THREE.Mesh(SPH, c('#4fb83a')); f.scale.set(0.07, 0.05, 0.09); f.position.set(s * 0.1, 0.04, 0.04); m.add(f); const a = new THREE.Mesh(SPH, c('#6fdc5a')); a.scale.set(0.05, 0.09, 0.05); a.position.set(s * 0.2, 0.17, 0.03); a.rotation.z = s * 0.7; m.add(a); }
+    for (const s of [-1, 1]) { add(new THREE.SphereGeometry(0.045, 10, 8), toon('#f4f4f0'), s * 0.07, 0.29, 0.13); add(new THREE.SphereGeometry(0.025, 8, 6), toon('#141218'), s * 0.07, 0.29, 0.165); add(Cy(0.008, 0.008, 0.08, 4), c('#4fb83a'), s * 0.06, 0.4, 0); add(new THREE.SphereGeometry(0.02, 6, 4), c('#ffd36a'), s * 0.06, 0.445, 0); }
+    add(B(0.16, 0.02, 0.02), toon('#2a0a10'), 0, 0.17, 0.17); for (let i = 0; i < 4; i++) add(B(0.025, 0.03, 0.01), toon('#f4f4f0'), -0.06 + i * 0.04, 0.155, 0.178); }
+  else if (type === 'pl_frog') { E(g, c('#7fae63'), 0, 0.15, 0, 0.17, 0.15, 0.15); E(g, c('#e8e8c8'), 0, 0.13, 0.08, 0.12, 0.1, 0.08); for (const s of [-1, 1]) { E(g, c('#7fae63'), s * 0.13, 0.05, 0.08, 0.07, 0.04, 0.1); eye(s * 0.08, 0.31, 0.06, 0.05); } part(g, B(0.12, 0.012, 0.01), toon('#2a1a10'), 0, 0.22, 0.145); }
+  else if (type === 'pl_maw') { E(g, c('#8a3a8a'), 0, 0.2, 0, 0.2, 0.2, 0.2); eye(0, 0.24, 0.13, 0.09); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; E(g, c('#6a2a6a'), Math.cos(a) * 0.17, 0.05, Math.sin(a) * 0.17, 0.04, 0.05, 0.04); } for (let i = 0; i < 5; i++) part(g, B(0.03, 0.04, 0.01), toon('#f4f4f0'), -0.08 + i * 0.04, 0.11, 0.18); }
+  return g; }; }
+// a plush won before 2.23.77 went in your bag: it unlocks the placeable piece too
+{ const _st = step; let done = 0; step = function (dt) { _st(dt); if (done || !S || !S.inv) return; done = 1; for (const id in PLUSH) { const it = PLUSH[id][1]; if (it && S.inv[it]) { S.furn = S.furn || {}; S.furn[id] = 1; } } }; }

@@ -4,7 +4,7 @@
 { const _zb = LEVELS.zfloor.build; LEVELS.zfloor.build = function () { _zb.apply(this, arguments); try { zfDress(); } catch (e) { console.warn('zfloors', e); } }; }
 function zfDress() {
   const n = ZF.floor, th = zTheme(n); if (th === 'bar' || th === 'homes' || th === 'under') return;
-  const T = ZTHEMES[th] || { col: '#c9a43a', floor: '#2c2f36', neon: '#8fe3ff' }, W = 26, D = 24, H = 7, rnd = i => (Math.sin(n * 47.3 + i * 11.9) + 1) / 2;
+  const T = ZTHEMES[th] || { col: '#c9a43a', floor: '#2c2f36', neon: '#8fe3ff' }, W = 26, D = 24, H = (ZDECK[th] && ZDECK[th].H) || 7, rnd = i => (Math.sin(n * 47.3 + i * 11.9) + 1) / 2;
   // structure: pillars with lit caps, wall sconces, a base trim and a floor border
   for (const s of [-1, 1]) for (let z = -D + 4; z <= D - 6; z += 8) { part(props, B(1.0, H, 1.0), '#3a3d44', s * (W - 0.8), H / 2, z); part(props, B(1.1, 0.2, 1.1), glow(T.neon), s * (W - 0.8), H - 0.6, z); part(props, B(0.3, 0.5, 0.3), glow('#fff1c8'), s * (W - 1.4), 3, z + 4); }
   for (const s of [-1, 1]) { part(props, B(W * 2, 0.5, 0.15), toon(T.col), 0, 0.25, s * (D - 0.4)); part(props, B(0.15, 0.5, D * 2), toon(T.col), s * (W - 0.4), 0.25, 0); }
@@ -12,7 +12,7 @@ function zfDress() {
   for (let x = -W + 4; x < W; x += 10) { part(props, B(0.4, 0.5, D * 2), '#2c2f36', x, H - 0.4, 0); }
   for (let i = 0; i < 6; i++) { const x = -W + 6 + i * 8.5; part(props, Cy(0.03, 0.03, 1.2, 4), '#5d636c', x, H - 0.6, 0); part(props, Cy(0.5, 0.7, 0.4, 10), toon('#2c2f36'), x, H - 1.3, 0); part(props, Cy(0.45, 0.45, 0.04, 10), glow('#fff1c8'), x, H - 1.52, 0); }
   // a deck directory by the elevator
-  const sg = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.0), new THREE.MeshBasicMaterial({ map: signTex(ZTHEMES[th] ? ZTHEMES[th].name.toUpperCase() : "CAPTAIN'S BRIDGE", '#0c0d14', T.neon) })); sg.position.set(16, 2.4, D - 0.5); sg.rotation.y = Math.PI; props.add(sg);
+  zaLightbox(props, zaSignTex(ZTHEMES[th] ? ZTHEMES[th].name.toUpperCase() : "CAPTAIN'S BRIDGE", { fg: '#ffffff', glow: T.neon, bg: '#0c0d14', w: 512, h: 128, font: 'Impact, sans-serif' }), 3.0, 0.75, 0.16, 16, 2.6, D - 0.45, Math.PI, T.neon);
   const benches = pts => pts.forEach(([x, z, r]) => { part(props, B(2.2, 0.12, 0.6), toon('#8a6a44', 'wood'), x, 0.5, z, 0, r || 0); part(props, B(2.2, 0.5, 0.1), toon('#8a6a44', 'wood'), x - Math.sin(r || 0) * 0.3, 0.8, z - Math.cos(r || 0) * 0.3, 0, r || 0); box(x, z, 1.1, 0.4); });
   const plant = (x, z) => { part(props, B(1.0, 0.7, 1.0), toon('#5d636c', 'panel'), x, 0.35, z); part(props, new THREE.IcosahedronGeometry(0.6, 0), toon('#4f8a3a', 'leaves'), x, 1.2, z); solid(x, z, 0.6); };
   if (th === 'market') { // hanging lanterns over the aisles, produce crates and a rest area

@@ -8,6 +8,15 @@ const ZTHEMES = {
   aliens: { name: 'Alien Quarter', col: '#7a2a2a', floor: '#3a2a2a', neon: '#ff3b2a', safe: false }
 };
 ZTHEMES.bar = { name: 'Starlight Lounge', col: '#5a2a4a', floor: '#2a1a24', neon: '#ff6aa8', safe: true };
+// each working deck has its own floor, walls, ceiling and height (2.23.70) so no two neighbours feel the same
+const ZDECK = {
+  market: { H: 5.5, floor: ['#6a5a48', 'stone'], wall: ['#7a4a34', 'brick'], ceil: ['#3a2a1e', 'wood'] },
+  hydro: { H: 6, floor: ['#2a4a3a', 'panel'], wall: ['#4a6a5a', 'hull'], ceil: ['#1e2a24', 'panel'] },
+  engine: { H: 7, floor: ['#3a3430', 'panel'], wall: ['#5a5048', 'hull'], ceil: ['#24201c', 'hull'] },
+  aliens: { H: 6, floor: ['#4a3a2a', 'stone'], wall: ['#5a4a3a', 'stone'], ceil: ['#2a2018', 'stone'] },
+  archive: { H: 5.5, floor: ['#5a3a24', 'wood'], wall: ['#4a3424', 'wood'], ceil: ['#d8ccb0', 'stucco'] },
+  bridge: { H: 6.5, floor: ['#2c3440', 'panel'], wall: ['#5a6470', 'hull'], ceil: ['#1e2430', 'panel'] },
+};
 const ZLIST = [null, 'plaza', 'market', 'homes', 'hydro', 'bar', 'arcade', 'engine', 'aliens', 'under', 'archive', 'bridge'], ZTOP = ZLIST.length - 1;
 const zTheme = n => ZLIST[n] || 'market';
 const ZF = { floor: 1 };
@@ -58,14 +67,14 @@ LEVELS.zfloor = {
   terrain: null, palette: { grass: '#3a3d44' }, zones: [], paths: [], river: [], pools: [], lava: [],
   safes: [], spawn: { x: 22, z: 20, yaw: -Math.PI / 2 }, pad: { x: 22, z: 24 }, menu: { x: 0, z: 10, r: 16, h: 6 }, npcBase: [0, 0], npcs: [], spawns: [],
   build() {
-    const n = ZF.floor, th = zTheme(n), T = ZTHEMES[th] || { col: '#c9a43a', floor: '#2c2f36', neon: '#8fe3ff' }, H = 7, big = th === 'bar' || th === 'homes' || th === 'under', W = big ? 30 : 26, D = big ? 28 : 24; // working decks are a little tighter so they feel full
+    const n = ZF.floor, th = zTheme(n), T = ZTHEMES[th] || { col: '#c9a43a', floor: '#2c2f36', neon: '#8fe3ff' }, K = ZDECK[th] || {}, H = K.H || 7, big = th === 'bar' || th === 'homes' || th === 'under', W = big ? 30 : 26, D = big ? 28 : 24; // working decks are a little tighter so they feel full
     const fl = new THREE.PlaneGeometry(W * 2, D * 2, 12, 12); fl.rotateX(-Math.PI / 2); const uv = fl.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * W, uv.getY(i) * D);
-    props.add(new THREE.Mesh(fl, toon(T.floor, 'panel'))); const ce = new THREE.Mesh(fl.clone(), toon('#24262c', 'panel')); ce.rotation.x = Math.PI; ce.position.y = H; props.add(ce);
-    for (const [x, z, w, d] of [[0, -D, W * 2, 0.6], [0, D, W * 2, 0.6], [-W, 0, 0.6, D * 2], [W, 0, 0.6, D * 2]]) { part(props, B(w, H, d), '#4a4e56', x, H / 2, z); box(x, z, w / 2, d / 2); }
+    props.add(new THREE.Mesh(fl, toon(...(K.floor || [T.floor, 'panel'])))); const ce = new THREE.Mesh(fl.clone(), toon(...(K.ceil || ['#24262c', 'panel']))); ce.rotation.x = Math.PI; ce.position.y = H; props.add(ce);
+    for (const [x, z, w, d] of [[0, -D, W * 2, 0.6], [0, D, W * 2, 0.6], [-W, 0, 0.6, D * 2], [W, 0, 0.6, D * 2]]) { part(props, K.wall ? tileBox(B(w, H, d), 2) : B(w, H, d), K.wall ? toon(...K.wall) : '#4a4e56', x, H / 2, z); box(x, z, w / 2, d / 2); }
     for (let z = -D + 4; z < D; z += 7) part(props, B(W * 2 - 2, 0.1, 0.3), glow(T.neon), 0, H - 0.1, z);
     // elevator
     part(props, B(5, 5, 0.4), '#3a3d44', 22, 2.5, D - 0.2); part(props, B(3.6, 4.4, 0.2), glow(T.neon), 22, 2.2, D - 0.45);
-    const sg = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 0.8), new THREE.MeshBasicMaterial({ map: signTex(`FLOOR ${n}`, '#0f1757', '#ffd75e') })); sg.position.set(22, 5.6, D - 0.5); sg.rotation.y = Math.PI; props.add(sg);
+    zaLightbox(props, zaSignTex(`DECK ${n}`, { fg: '#ffd75e', glow: '#ffb347', bg: '#0f1757', bg2: '#1a2470', w: 512, h: 112, font: 'Impact, sans-serif' }), 2.4, 0.5, 0.14, 22, Math.min(H - 0.6, 5.6), D - 0.45, Math.PI, T.neon);
     INTERACTS.push({ x: 22, z: D - 3, r: 3.5, label: 'Elevator', fn: openElevator });
     const rnd = (i) => (Math.sin(n * 91.7 + i * 13.3) + 1) / 2;
     if (th === 'bridge') {

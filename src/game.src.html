@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.72</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.73</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -724,6 +724,7 @@ function collide(p, r, keepOutTown) {
     const dx = p.x - cx, dz = p.z - cz, ox = hx + r - Math.abs(dx), oz = hz + r - Math.abs(dz);
     if (ox > 0 && oz > 0) { if (ox < oz) p.x += Math.sign(dx) * ox; else p.z += Math.sign(dz) * oz; }
   }
+  if (FRONT && FRONT.on && p === player.pos) FRONT.block(p);
   for (const [cx, cz, hx, hz] of BASE_BOXES) {
     const dx = p.x - cx, dz = p.z - cz, ox = hx + r - Math.abs(dx), oz = hz + r - Math.abs(dz);
     if (ox > 0 && oz > 0) { if (ox < oz) p.x += Math.sign(dx) * ox; else p.z += Math.sign(dz) * oz; }
@@ -1661,6 +1662,7 @@ function step(dt) {
       continue;
     }
     const d2p = o.position.distanceTo(player.pos);
+    if (e.front) { o.visible = d2p < 140; e.plate.visible = d2p < 36 && d2p > 2.4; frontEnemyStep(e, dt, t); continue; }
     o.visible = d2p < 64; e.plate.visible = d2p < 36 && d2p > 2.4;
     if (d2p > 75) continue;
     if (o.userData.anim && d2p < 45) o.userData.anim(t + e.seed);

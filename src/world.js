@@ -37,6 +37,7 @@ function heightExact(x, z) {
   return h;
 }
 const HG = { x0: 0, z0: 0, n: 2, a: new Float32Array(4) };
+let FRONT = null; // the Fort Ironrock trench field (front.js) takes over the ground inside its patch
 function buildHeightGrid() {
   const size = LEVEL.size || 280; HG.n = size + 1; HG.x0 = WORLD_C.x - size / 2; HG.z0 = WORLD_C.z - size / 2;
   // the ground never changes for a given world, so the grid is computed once per visit and reused after that
@@ -47,6 +48,7 @@ function buildHeightGrid() {
   HG.cache[key] = HG.a;
 }
 function groundH(x, z) {
+  if (FRONT && FRONT.on && x > FRONT.x0 && x < FRONT.x1 && z > FRONT.z0 && z < FRONT.z1) return FRONT.h(x, z);
   const fx = clamp(x - HG.x0, 0, HG.n - 1.001), fz = clamp(z - HG.z0, 0, HG.n - 1.001), i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, n = HG.n, a = HG.a;
   return (a[j * n + i] * (1 - u) + a[j * n + i + 1] * u) * (1 - v) + (a[(j + 1) * n + i] * (1 - u) + a[(j + 1) * n + i + 1] * u) * v;
 }

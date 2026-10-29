@@ -568,7 +568,7 @@ let DEV_ALL = false; // tester unlock, read from the player's private data/users
 function shipUnlocked() { return DEV_ALL || !!(S.ship && S.ship.unlocked); }
 function loadLevel(id, opts) {
   opts = opts || {};
-  const L = LEVELS[id] || LEVELS.earth; LEVEL = L;
+  const L = LEVELS[id] || LEVELS.earth; LEVEL = L; if (FRONT) FRONT.on = false;
   if (levelGroup) { scene.remove(levelGroup); disposeTree(levelGroup); }
   levelGroup = new THREE.Group(); scene.add(levelGroup); levelAnims.length = 0;
   for (const e of enemies) { scene.remove(e.obj); disposeTree(e.obj); } enemies.length = 0;

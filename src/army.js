@@ -202,18 +202,18 @@ function makeSiegeBot() {
 function makeKragMech() { const g = makeMechModel('#3a1416'); g.traverse(o => { if (o.isMesh && o.material.isMeshBasicMaterial) o.material = glow('#ff2a3a'); }); for (const s of [-1, 1]) chain(g, [[0.6 * s, 3.2, 0], [0.9 * s, 3.8, -0.1], [0.8 * s, 4.3, -0.3]], 0.1, '#b3262c', 0.02); return g; }
 const FORT = [0, -10];
 LEVELS.fort = {
-  id: 'fort', name: 'Fort Ironrock', tag: 'Asteroid army base', lvls: 'Lv 12–30 · vehicles', size: 300, center: [0, 20], radius: 115, water: -99, sky: 'space', weather: 'none', gravity: 0.6, hourOffset: 0,
+  id: 'fort', name: 'Fort Ironrock', tag: 'Asteroid army base', lvls: 'Lv 12–30 · vehicles', size: 380, center: [0, 20], radius: 150, water: -99, sky: 'space', weather: 'none', gravity: 0.6, hourOffset: 0,
   terrain: { a1: 2.0, f1: 0.045, a2: 1.1, f2: 0.1, a3: 0.4, f3: 0.22, base: 1.0, min: -5, edge: 26, step: 2.4 },
   palette: { grass: '#7a6a5a', patch: '#6a5a4a', dirt: '#4a4440', sand: '#8a7a68', wet: '#3a3430', rockA: '#6a5a4a', rockB: '#4a4038' },
-  carve: (x, z, h) => { const d = Math.hypot(x - FORT[0], z - FORT[1]); if (d < 30) h = h * smooth(d, 24, 30); const dr = Math.hypot(x - 50, z - 20); if (dr < 26) h *= 0.25 + 0.75 * smooth(dr, 18, 26); return h; },
+  carve: (x, z, h) => { const d = Math.hypot(x - FORT[0], z - FORT[1]); if (d < 30) h = h * smooth(d, 24, 30); const dr = Math.hypot(x - 50, z - 20); if (dr < 26) h *= 0.25 + 0.75 * smooth(dr, 18, 26); if (FRONT && !FRONT.raw && x > FRONT.x0 && x < FRONT.x1 && z > FRONT.z0 && z < FRONT.z1) h -= 8; return h; }, // the Front's own ground covers its patch
   zones: [
     { id: 'base', name: 'Fort Ironrock', lvl: 'Safe · army base', x: FORT[0], z: FORT[1], r: 24, fr: 25, col: '#5d636c', safe: true, h: 0.5 },
     { id: 'range', name: 'Vehicle Range', lvl: 'Lv 12–16 · training', x: 50, z: 20, r: 22, col: '#8a7a50', h: 0 },
-    { id: 'siege', name: 'Siege Lines', lvl: 'Lv 18–24', x: -46, z: 34, r: 22, col: '#6a3a30', h: 0 },
+    { id: 'siege', name: 'The Front', lvl: 'Lv 18–24 · war zone', x: -81, z: 26, r: 30, fr: 60, col: '#5a4a3c', h: 0 },
     { id: 'tankyard', name: 'Drome Tank Yard', lvl: 'Lv 22–28', x: 20, z: 72, r: 20, col: '#4a3030', h: -0.5 },
     { id: 'kragpit', name: "Krag's Crater", lvl: 'Lv 30 · boss', x: -30, z: 86, r: 16, fr: 12, col: '#3a1416', h: -2 }
   ],
-  paths: [[[0, 12], [50, 20]], [[0, 12], [-46, 34]], [[0, 12], [20, 72]], [[-46, 34], [-30, 86]]], river: [], pools: [], lava: [],
+  paths: [[[0, 12], [50, 20]], [[0, 12], [-15, 25]], [[0, 12], [20, 72]], [[-46, 34], [-30, 86]]], river: [], pools: [], lava: [],
   safes: [{ x: FORT[0], z: FORT[1], r: 23 }], spawn: { x: 0, z: -18, yaw: Math.PI }, pad: { x: -10, z: -20 }, menu: { x: 0, z: 0, r: 40, h: 14 }, npcBase: FORT,
   npcs: [
     { id: 'hale', name: 'General Hale', role: 'Fort commander', rig: 'trooper', make: () => recolor(makeTrooper(), { '#6f7a3e': '#3a4a2a', '#c9b27c': '#ffd36a' }), x: 0, z: 2, face: Math.PI, idle: ["Fort Ironrock. Carved out of a rock, held together by spite and duct tape.", "Drome's tanks hit us every night. We hit back every morning. It's a schedule."] },
@@ -256,9 +256,8 @@ LEVELS.fort = {
     // training range: target boards, cones, ramps
     for (let i = 0; i < 10; i++) { const a = i * 0.63, x = Z.range.x + Math.cos(a) * 15, z = Z.range.z + Math.sin(a) * 15, t = new THREE.Group(); part(t, B(0.15, 2, 0.15), '#3a3d44', 0, 1, 0); part(t, Cy(0.9, 0.9, 0.1, 12), '#ffffff', 0, 2.4, 0, Math.PI / 2); part(t, Cy(0.6, 0.6, 0.12, 12), '#c8402f', 0, 2.4, 0, Math.PI / 2); part(t, Cy(0.3, 0.3, 0.14, 12), '#ffffff', 0, 2.4, 0, Math.PI / 2); at(t, x, z, a); }
     for (let i = 0; i < 16; i++) part(props, new THREE.ConeGeometry(0.3, 0.8, 6), '#ff8a2a', Z.range.x - 12 + i * 1.6, groundH(Z.range.x - 12 + i * 1.6, Z.range.z - 6) + 0.4, Z.range.z - 6);
-    // siege lines: trenches, sandbags and wrecks
-    for (let i = 0; i < 14; i++) { const x = Z.siege.x - 18 + i * 2.8, z = Z.siege.z + Math.sin(i) * 4; part(props, B(2.4, 0.9, 1), toon('#8a7a58', 'cloth'), x, groundH(x, z) + 0.45, z, 0, Math.sin(i) * 0.3, 0); box(x, z, 1.2, 0.5); }
-    for (let i = 0; i < 4; i++) { const w = makeTankModel('#3a3430'); w.scale.setScalar(0.7); at(w, Z.siege.x + Math.cos(i * 1.6) * 12, Z.siege.z + Math.sin(i * 1.6) * 12, i, -0.3); w.rotation.z = 0.25; solid(Z.siege.x + Math.cos(i * 1.6) * 12, Z.siege.z + Math.sin(i * 1.6) * 12, 1.6); }
+    // the Front (replaces the old Siege Lines)
+    frontBuild(); // the Front: trenches, wire, our line and the Drome line (front.js)
     // tank yard: Drome banners and fuel tanks
     for (let i = 0; i < 6; i++) { const a = i * 1.05, x = Z.tankyard.x + Math.cos(a) * 16, z = Z.tankyard.z + Math.sin(a) * 16; part(props, Cy(1.2, 1.2, 3, 10), '#3a1416', x, groundH(x, z) + 1.5, z); part(props, B(1.6, 0.12, 0.12), glow('#ff2a3a'), x, groundH(x, z) + 2.4, z + 1.2); solid(x, z, 1.3); }
     // the sky: the asteroid belt all around you
@@ -285,8 +284,8 @@ defQuest('a1', { ch: 'Fort Ironrock', title: "Learner's Permit", giver: 'torque'
   obj: [{ kind: 'kill', t: 'tdrone', n: 6, text: 'Shoot down training drones on the Vehicle Range', zone: 'range' }],
   outro: ["Not bad. Here's your Battle Car. Press V on any open planet to drive it. Try not to run me over. Again."], reward: { cr: 1500, xp: 6000, fn: () => { const V0 = vehS(); if (!V0.owned.includes('battlecar')) { V0.owned.push('battlecar'); V0.sel = 'battlecar'; } log('New vehicle: Battle Car. Press V (or Menu → Vehicle) to drive it.', 'loot'); } } });
 defQuest('a2', { ch: 'Fort Ironrock', title: 'Heavy Metal', giver: 'hale', turnIn: 'hale', req: ['a1'],
-  intro: ["Drome's Siege Bots are shelling our west wall. Every night. It's rude.", "Go to the Siege Lines and break them. Vehicles strongly recommended."],
-  obj: [{ kind: 'kill', t: 'siegebot', n: 5, text: 'Destroy Siege Bots at the Siege Lines', zone: 'siege' }],
+  intro: ["Drome's Siege Bots are shelling our west wall. Every night. It's rude.", "They hide behind the Drome trench at the Front, west of the gate. Go break them. Vehicles strongly recommended."],
+  obj: [{ kind: 'kill', t: 'siegebot', n: 5, text: 'Destroy Siege Bots at the Front', zone: 'siege' }],
   outro: ["The wall's quiet. I almost miss it. No I don't. Volta wants to talk to you about upgrades."], reward: { cr: 3500, xp: 11000, items: { scrap: 15, ore: 8 } } });
 defQuest('a3', { ch: 'Fort Ironrock', title: 'Tank Buster', giver: 'hale', turnIn: 'hale', req: ['a2'],
   intro: ["Drome has a whole tank yard to the north. Tanks. Plural. Somebody gave that man a budget.", "Bust five of them. If you don't have a tank yet, Brix sells them. Fight fire with fire. Or tank with tank."],

@@ -10,6 +10,7 @@ function initJamestownLate() {
   if (typeof ITEMS !== 'undefined') {
     ITEMS.aranus_comic = { name: 'Aranus Man #1', v: 50, col: '#ff9a2a', use: true, comic: true, note: 'The Astonishing Aranus Man #1 by Arthur Vance. Use to read.' };
     ITEMS.aranus_gold = { name: 'Signed Aranus Man #1', v: 250, col: '#ffd700', use: true, comic: true, note: 'Gold-embossed author-signed collector copy. Use to read.' };
+    ITEMS.twotired_comic = { name: 'Pail & Big E #1: Two Tired', v: 40, col: '#1a7a82', use: true, comic: true, note: 'A Mile Down comic. Pail and Big E, five jokes, zero apologies. Use to read.' };
     ITEMS.bbq_burger = { name: 'Bobby Burger', v: 15, col: '#d86822', heal: 9999, food: true, use: true, note: 'Fresh off Bobby\'s kettle grill. Restores full health.' };
     ITEMS.diner_meatloaf = { name: 'Space Meatloaf', v: 25, col: '#8a402f', heal: 9999, food: true, note: 'Savory meatloaf with mystery gravy. Full heal + 10% damage.' };
     ITEMS.diner_coffee = { name: 'Diner Coffee', v: 15, col: '#4a2a1a', heal: 50, food: true, note: 'Piping hot black coffee. +50 HP & +15% move speed.' };
@@ -26,8 +27,8 @@ function initJamestownLate() {
     const _origInvUse = invUse;
     invUse = function (key) {
       const [t, id] = String(key).split(':');
-      if (t === 'i' && (id === 'aranus_comic' || id === 'aranus_gold')) {
-        openComicReader();
+      if (t === 'i' && ITEMS[id] && ITEMS[id].comic) {
+        openComicReader(1, id === 'twotired_comic' ? 'twotired' : 'aranus');
         return;
       }
       return _origInvUse.apply(this, arguments);
@@ -87,8 +88,16 @@ function initJamestownLate() {
 setTimeout(initJamestownLate, 0);
 
 // ---- Comic Reader Modal ----
-function openComicReader(startPage = 1) {
-  let page = startPage;
+// vo: the cast line ids (docs/voice_lines.csv) spoken on each page, in reading order; Read aloud plays the ones that have been recorded
+const COMICS = {
+  aranus: { title: '⚡ THE ASTONISHING ARANUS MAN #1', dir: 'shots/aranus', pages: 10, price: 50, item: 'aranus_comic' },
+  twotired: { title: '🚲 PAIL & BIG E #1: TWO TIRED', dir: 'shots/twotired', pages: 6, price: 40, item: 'twotired_comic',
+    vo: [[], ['BIG_E_001', 'PAIL_023', 'BIG_E_002', 'PAIL_024', 'BIG_E_003'], ['BIG_E_004', 'PAIL_025', 'BIG_E_005', 'BIG_E_006'],
+      ['BIG_E_007', 'PAIL_026', 'BIG_E_007', 'PAIL_026', 'BIG_E_007', 'PAIL_027', 'BIG_E_008'], ['BIG_E_009', 'PAIL_028', 'BIG_E_010'], ['DOC_004', 'BIG_E_011']] }
+};
+function openComicReader(startPage = 1, comicId = 'aranus') {
+  const C = COMICS[comicId] || COMICS.aranus, N = C.pages;
+  let page = startPage, voRun = 0;
   const old = document.getElementById('comicModal');
   if (old) old.remove();
 
@@ -101,7 +110,7 @@ function openComicReader(startPage = 1) {
 
   const title = document.createElement('div');
   title.style.cssText = 'font-weight:bold;font-size:17px;letter-spacing:1px;display:flex;align-items:center;gap:12px;';
-  title.innerHTML = '<span style="color:#ff9a2a">⚡ THE ASTONISHING ARANUS MAN #1</span> <span id="comicPageNum" style="color:#a0b8d0;font-size:14px;font-weight:normal;">Page 1 of 10</span>';
+  title.innerHTML = `<span style="color:#ff9a2a">${C.title}</span> <span id="comicPageNum" style="color:#a0b8d0;font-size:14px;font-weight:normal;">Page 1 of ${N}</span>`;
 
   const closeBtn = document.createElement('button');
   closeBtn.textContent = '✕ Close (Esc)';
@@ -133,21 +142,45 @@ function openComicReader(startPage = 1) {
 
   nav.appendChild(prevBtn);
   nav.appendChild(nextBtn);
+  const voBtn = document.createElement('button');
+  voBtn.textContent = '🔊 Read aloud';
+  voBtn.style.cssText = prevBtn.style.cssText;
+  voBtn.hidden = true;
+  if (C.vo) nav.appendChild(voBtn);
   wrap.appendChild(nav);
 
+  // only the lines a voice actor has recorded (Cast Voices); the button hides when a page has none
+  const voIds = () => C.vo && typeof CASTVO !== 'undefined' ? (C.vo[page - 1] || []).filter(id => CASTVO.have.has(id)) : [];
+  function voStop() { voRun++; if (typeof castStop === 'function') castStop(); }
+  async function voPlay() {
+    const run = ++voRun;
+    for (const id of voIds()) {
+      let buf; try { buf = await castFetch(id); } catch (_) { continue; }
+      if (run !== voRun || !buf) return;
+      CASTVO.last = ''; castPlay(id);
+      await new Promise(r => setTimeout(r, buf.duration * 1000 + 450));
+      if (run !== voRun) return;
+    }
+  }
+  voBtn.onclick = () => { if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui(); voPlay(); };
+
   function update() {
-    img.src = `shots/aranus/${page}.jpg`;
+    voStop();
+    img.src = `${C.dir}/${page}.jpg`;
     const numEl = document.getElementById('comicPageNum');
-    if (numEl) numEl.textContent = `Page ${page} of 10`;
+    if (numEl) numEl.textContent = `Page ${page} of ${N}`;
     prevBtn.disabled = (page <= 1);
     prevBtn.style.opacity = page <= 1 ? '0.4' : '1';
-    nextBtn.disabled = (page >= 10);
-    nextBtn.style.opacity = page >= 10 ? '0.4' : '1';
+    nextBtn.disabled = (page >= N);
+    nextBtn.style.opacity = page >= N ? '0.4' : '1';
+    if (typeof castLoad === 'function') castLoad();
+    voBtn.hidden = !voIds().length;
   }
 
   function goPrev() { if (page > 1) { page--; update(); if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui(); } }
-  function goNext() { if (page < 10) { page++; update(); if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui(); } }
+  function goNext() { if (page < N) { page++; update(); if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui(); } }
   function close() {
+    voStop();
     window.removeEventListener('keydown', keyHandler);
     wrap.remove();
     if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui();
@@ -301,19 +334,20 @@ setInterval(() => {
 }, 10000);
 
 // ---- Actions for Arthur, Bobby, and Barnaby ----
-function buyComic() {
-  if (S.cr < 50) {
-    toast('NOT ENOUGH CREDITS', 'Need 50 cr to buy Aranus Man #1', 2.5);
+function buyComic(comicId = 'aranus') {
+  const C = COMICS[comicId] || COMICS.aranus, name = ITEMS[C.item].name;
+  if (S.cr < C.price) {
+    toast('NOT ENOUGH CREDITS', `Need ${C.price} cr to buy ${name}`, 2.5);
     if (typeof SFX !== 'undefined' && SFX.hit) SFX.hit();
     return;
   }
-  S.cr -= 50;
+  S.cr -= C.price;
   S.inv = S.inv || {};
-  S.inv.aranus_comic = (S.inv.aranus_comic || 0) + 1;
+  S.inv[C.item] = (S.inv[C.item] || 0) + 1;
   markDirty();
   if (typeof SFX !== 'undefined' && SFX.coin) SFX.coin();
-  toast('COMIC PURCHASED', 'Aranus Man #1 added to bag! Read it anytime.', 3);
-  log('Bought "The Astonishing Aranus Man #1" from Arthur Vance for 50 cr. Open your bag to read!', 'loot');
+  toast('COMIC PURCHASED', `${name} added to bag! Read it anytime.`, 3);
+  log(comicId === 'aranus' ? 'Bought "The Astonishing Aranus Man #1" from Arthur Vance for 50 cr. Open your bag to read!' : `Bought "${name}" for ${C.price} cr. Open your bag to read!`, 'loot');
   closeDlg();
 }
 

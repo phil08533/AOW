@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.93</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.94</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -20832,6 +20832,7 @@ const UPDATES = [
   { id: 315, title: '2.23.50 · Cleaner minimap', items: ['The live minimap no longer shows fireflies, rain, sparks or other effects', 'Removed the little winding crown on the minimap watch (the pill-shaped thing)'] },
   { id: 316, title: '2.23.51 · Ready for the cast', items: ['The game can now play real voice-actor recordings for every character line, as they get recorded'] },
   { id: 317, title: '2.23.52 · Helmet radio', items: ['Recorded voices for helmeted characters and battle radio play through a light comms filter'] },
+  { id: 359, title: '2.23.94 · The Other Shoe', items: ["New side quest in New Jamestown: Lonnie, by the south gate, is standing around in one shoe and one sock. He lost the other one. Maybe you'll find it someday."] },
   { id: 358, title: '2.23.93 · Nobody walks outside your ship', items: ['Crew and other characters can no longer appear outside the Setting Sun and walk in through the hull; anyone outside the ship is kept out of sight until they are back inside', 'Your pet arrives next to you on every trip instead of walking in from where it was on the last world'] },
   { id: 357, title: '2.23.92 · The battlefield doubles, the walker rains rockets', items: ['The Ironrock battlefield is twice as deep with five sectors to hold, plus bunkers, wrecks, craters, wire and roaming Drome tanks', 'Gunners and a flak gun now fire from the Ironrock ramparts', 'The siege walker raises shoulder rocket pods and rains rockets on red circles; step outside the circle and you take no damage', 'The sky battle flies real ships: Drome Raiders, Drome Cutters and The Eclipse against our cruisers and Setting Sun fighters', 'New battle sounds: crunching blasts, far rumbles, lasers, fighter flybys and wrecks hitting the ground', 'Mile Down: the bar has crowd chatter, and you can hear a drill and screams behind the lab door until it opens'] },
   { id: 356, title: '2.23.91 · Ironrock fixes, big explosions, the sky battle', items: ['Walking through the gate no longer throws you up onto the wall walk.', 'No more invisible walls: hidden enemies were still pushing you around.', 'Each lift has steel doors with a lit frame, and a lift house up on the tower top so the way down is easy to spot.', 'Windows, the Med Bay cross and the Med Bay shelf no longer flicker.', 'The second lab computer faces its chair, and the mess hall soldiers hold their mugs.', 'Grenades, shells and barrages now go up in big fireballs with smoke, debris and a shock ring, like the Maw battle.', 'The fleet battle overhead now shows through the haze, with flashes in the sky, burning wrecks crashing into the field and distant booms.', 'Drome units stay out on the battlefield instead of piling up at the fort.', 'The fort intro shots were re-aimed so nothing blocks the view.'] },
@@ -33186,6 +33187,45 @@ ARRESTABLE.vixen = { obj: 'velma', her: 1, crime: 'soliciting S-grade drugs', xp
   sold: "You're the one who brought it to me! ...Fine. Cuff me. But I'm writing a song about this, and you're the villain." };
 { const _vt = vixTalk; vixTalk = function () { _vt.apply(this, arguments); const V = vixS(); if (!mOn() || V.st === 2 || !dlgOpen || !npcObjs.velma) return;
   const b = document.createElement('button'); b.className = 'pbtn'; b.textContent = '🚔 Arrest Vixen for soliciting S-grade drugs'; b.addEventListener('click', () => { (S.flags = S.flags || {}).sold_vixen = V.st === 1 ? 1 : 0; V.st = 0; arrestNpc('vixen'); }); $('dlgActs').prepend(b); }; }
+
+// =================== THE OTHER SHOE (2.23.94) ===================
+// Lonnie stands by the south gate of New Jamestown in one black shoe and one white sock. He lost the left one.
+// The quest opens on day one and sits in the journal the whole game: the shoe only turns up when the Greater Maw dies.
+// It drops on any Maw kill while the quest is active, so picking the quest up after the ending still works (the fight replays).
+ITEMS.lostshoe = { name: "Lonnie's Left Shoe", v: 0, col: '#1a1a1e', quest: true, note: 'A black, left shoe. It came out of the Greater Maw. It is still warm.' };
+ITEMS.lonniesock = { name: "Lonnie's Spare Sock", v: 1, col: '#e8e4dc', note: "You didn't ask for it. He insisted." };
+
+// one shoe, one sock: recolor the left shoe white and flatten it into a sock until the quest is done
+function makeLonnie() { const g = makeCivilian('#7a6a8a', '#3a5a8a', '#e0b892', '#6a4a2a'), done = qDone('shoe');
+  for (const m of g.children) if (m.isMesh && Math.abs(m.position.y - 0.06) < 0.001 && Math.abs(m.position.z - 0.03) < 0.001) {
+    if (m.position.x > 0 && !done) { m.material = toon('#e8e4dc', 'cloth'); m.scale.set(0.9, 1.1, 0.9); m.position.y = 0.066; } else m.material = toon('#111114'); }
+  return g; }
+LEVELS.earth.npcs.push({ id: 'lonnie', name: 'Lonnie', role: 'Lost a shoe', rig: 'civ', make: makeLonnie, x: -7, z: 35, face: 0.5,
+  idle: ["Thanks again for the shoe. I walk in circles less now.", "Two shoes. Like a king."] });
+
+defQuest('shoe', { ch: 'Earth · Side job', title: 'The Other Shoe', giver: 'lonnie', turnIn: 'lonnie', req: [],
+  intro: ["Hey. Hey, you. Don't look at my feet.", "...Okay, you looked. Yes. One shoe. I lost the other one. Black, left foot. Real leather. Well, real something.",
+    "I was standing right here and then it was just gone. If you see it out there, anywhere, could you bring it back? I've been hopping since Tuesday."],
+  obj: [{ kind: 'item', t: 'lostshoe', n: 1, text: "Find Lonnie's other shoe" }],
+  outro: ["Is that... MY SHOE! Where was it?", "Inside the WHAT?", "...It's warm. Why is it warm.", "You know what, I don't need to know. Here. It's all I've got. And take my spare sock, I won't need it anymore."],
+  reward: { cr: 12, xp: 150, take: { lostshoe: 1 }, items: { lonniesock: 1 } } });
+
+// taking the quest doesn't steal the compass from whatever you were actually doing
+{ const _sq = startQuest; startQuest = function (id) { const tr = S.track, r = _sq.apply(this, arguments); if (id === 'shoe') { S.track = tr; renderQuest(); } return r; }; }
+
+// while you look, he gets more desperate
+const SHOE_WAIT = ["Any luck? Black. Left foot. Smells like a left foot.", "I've checked the fountain four times. It's not in the fountain.",
+  "It's been weeks. My left foot has started making decisions without me.", "Someone said they saw it on Mezar. That doesn't make any sense. Unless it does.",
+  "Vega says I should just buy new shoes. She doesn't understand. Those were my shoes.", "Out there saving the galaxy, huh? Great. Keep an eye out for the shoe though."];
+{ const _t = talk; talk = function (id) { const s = S.qst.shoe;
+  if (id === 'lonnie' && s && s.st === 'active' && npcObjs.lonnie) { const n = npcObjs.lonnie.def; openDlg(n.role, n.name); SFX.talk(); $('dlgLine').textContent = SHOE_WAIT[Math.floor(Math.random() * SHOE_WAIT.length)]; return menuFor(n); }
+  return _t.apply(this, arguments); }; }
+
+// the payoff: the Greater Maw coughs it up
+{ const _qk = questProgressKill; questProgressKill = function (type) { const r = _qk.apply(this, arguments), s = S.qst.shoe;
+  if (type === 'greatermaw' && s && s.st === 'active' && !S.inv.lostshoe) { S.inv.lostshoe = 1; markDirty();
+    log("Something falls out of the Greater Maw. It's a shoe. A black, left shoe. Lonnie is going to be thrilled.", 'loot'); }
+  return r; }; }
 
 
 // =================== STATE + SAVE ===================

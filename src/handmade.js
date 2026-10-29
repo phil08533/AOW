@@ -57,8 +57,8 @@ function applyUiTheme() { const T = UI_THEMES[PREFS.uiTheme] || UI_THEMES.Steel;
 applyUiTheme();
 // emoji in buttons, titles and menus read as machine-made; strip them as UI appears (keeps game symbols like stars and hearts)
 { const EMO = /(?![★☆♥♦♠♣✓✔✕✖·•→←↑↓⚔])[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}][\u{FE0F}\u{200D}\p{Extended_Pictographic}]*\s?/gu;
-  const scrub = root => { if (!root || root.nodeType !== 1) return; if (root.closest && root.closest('#chatLog,#chatBox,input,textarea')) return;
-    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { const t = n.nodeValue; if (EMO.test(t)) { EMO.lastIndex = 0; n.nodeValue = t.replace(EMO, '').replace(/^\s+/, ''); } EMO.lastIndex = 0; } };
+  const scrub = root => { if (!root || root.nodeType !== 1) return; if (root.closest && root.closest('#chatLog,#chatBox,input,textarea,.csreels')) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { const t = n.nodeValue; if (n.parentElement && n.parentElement.closest('.csreels')) continue; if (EMO.test(t)) { EMO.lastIndex = 0; n.nodeValue = t.replace(EMO, '').replace(/^\s+/, ''); } EMO.lastIndex = 0; } };
   const roots = () => ['dlg', 'pause', 'menuDrop', 'tablet'].map(id => document.getElementById(id)).filter(Boolean);
   roots().forEach(scrub);
   new MutationObserver(ms => { for (const m of ms) { const t = m.target.nodeType === 1 ? m.target : m.target.parentElement; if (t && roots().some(r => r.contains(t))) scrub(t); } })

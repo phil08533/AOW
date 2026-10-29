@@ -224,6 +224,7 @@ function frManStep(m, dt, t) {
   const o = m.o, s = m.slot;
   if (m.dead) { if (m.dead < 1) { m.dead += dt; o.rotation.z = Math.min(1, m.dead * 2.5) * (Math.PI / 2 - 0.1); o.position.x = s.x + Math.min(1, m.dead * 2) * 1.0; o.position.y = Math.max(FRONT.h(o.position.x, o.position.z), o.position.y - dt * 3); }
     else { m.dead += dt; if (m.dead > 16 && !(FB.on && FB.reserve <= 0)) { o.parent && o.parent.remove(o); disposeTree(o); FRONT.men.splice(FRONT.men.indexOf(m), 1); if (FB.on) FB.reserve--; frNewMan(s, true); } } return; }
+  if (m.charge) return frChargeStep(m, dt, t);
   if (m.path) { const tg = m.path[m.pi], dx = tg.x - o.position.x, dz = tg.z - o.position.z, d = Math.hypot(dx, dz);
     if (d < 0.3) { m.pi++; if (m.pi >= m.path.length) { m.path = null; o.rotation.y = -Math.PI / 2; } }
     else { const sp = 3.4 * dt / d; o.position.x += dx * sp; o.position.z += dz * sp; o.rotation.y = Math.atan2(dx, dz); }
@@ -311,7 +312,7 @@ let FR_LT = 0;
 function frontStep(t) {
   const dt = Math.min(0.1, Math.max(0, t - FR_LT)); FR_LT = t; if (!dt || LEVEL.id !== 'fort') return; const F = FRONT; F.t += dt;
   for (const m of F.men.slice()) frManStep(m, dt, t);
-  F.gT = (F.gT || 0) - dt; if (F.gT <= 0) { F.gT = 25; frGarrison(); }
+  F.gT = (F.gT || 0) - dt; if (F.gT <= 0) { F.gT = 25; if (!(FB.on && (FB.phase === 'push' || FB.phase === 'boss'))) frGarrison(); }
   const near = player.pos.x < -8 && player.pos.x > -150 && player.pos.z > -40 && player.pos.z < 95;
   frBattleStep(dt); frHud(); frSkyStep(dt, t);
   if (near && !FB.on) { F.waveT -= dt; if (F.waveT <= 0) { F.waveT = 55 + Math.random() * 20; if (frAlive().filter(e => e.front.mode === 'advance').length < 4) frSkirmish(); } }
@@ -333,7 +334,7 @@ function frHud() {
   if (!FB.hud) { const d = document.createElement('div'); d.id = 'frontHud'; d.style.cssText = 'position:fixed;top:112px;left:50%;transform:translateX(-50%);background:rgba(16,18,22,.82);border:1px solid #5a4a3c;border-radius:6px;padding:6px 14px;color:#e8dcc0;font:600 13px/1.35 ui-monospace,monospace;letter-spacing:.06em;text-align:center;pointer-events:none;z-index:5;display:none;min-width:280px'; document.body.appendChild(d); FB.hud = d; }
   const show = FB.on && LEVEL.id === 'fort' && state === 'play'; FB.hud.style.display = show ? 'block' : 'none'; if (!show) return;
   const left = frAlive().filter(e => e.front.wave).length, W = FR_WAVES[FB.wave - 1];
-  FB.hud.innerHTML = `HOLD THE LINE · WAVE ${Math.max(1, FB.wave)}/6<br><span style="color:#c9b28a;font-weight:500">${FB.phase === 'lull' ? (FB.wave ? `Next wave in ${Math.ceil(FB.t)}s · restock at the crates` : `First wave in ${Math.ceil(FB.t)}s`) : FB.phase === 'whistle' ? 'Hold until the whistle!' : (W ? W.name : '') + ` · Drome left ${left + FB.queue.length}`} · Reserve ${FB.reserve}${FB.mark > 0 ? ' · AIM AND FIRE TO MARK THE BARRAGE' : FB.phoneCd > 0 ? ` · Guns ready in ${Math.ceil(FB.phoneCd)}s` : ' · Guns ready'}</span>`;
+  FB.hud.innerHTML = `HOLD THE LINE · WAVE ${Math.max(1, FB.wave)}/6<br><span style="color:#c9b28a;font-weight:500">${FB.phase === 'lull' ? (FB.wave ? `Next wave in ${Math.ceil(FB.t)}s · restock at the crates` : `First wave in ${Math.ceil(FB.t)}s`) : FB.phase === 'whistle' ? 'Hold until the whistle!' : FB.phase === 'push' ? 'OVER THE TOP: take their trench' : FB.phase === 'boss' ? 'Bring down the siege walker' : (W ? W.name : '') + ` · Drome left ${left + FB.queue.length}`} · Reserve ${FB.reserve}${FB.mark > 0 ? ' · AIM AND FIRE TO MARK THE BARRAGE' : FB.phoneCd > 0 ? ` · Guns ready in ${Math.ceil(FB.phoneCd)}s` : ' · Guns ready'}</span>`;
 }
 function frontStart() {
   if (FB.on) return; Object.assign(FB, { on: true, wave: 0, phase: 'lull', t: 15, reserve: 40, queue: [], mark: 0, phoneCd: 0, won: 0 });
@@ -342,7 +343,7 @@ function frontStart() {
 }
 function frontEnd(won) {
   FB.on = false; FB.phase = 'idle'; frHud(); FB.queue.length = 0;
-  if (won) { FB.won++; SFX.level(); toast('THE LINE HELD', 'Six waves beaten', 4); const cr = 4000, xp = 15000; S.cr += cr; gainXp(xp); log(`The line held! +${cr} cr, +${xp} XP.`, 'loot'); S.flags = S.flags || {}; S.flags.frontHeld = (S.flags.frontHeld || 0) + 1; markDirty(); }
+  if (won) { FB.won++; SFX.level(); frRewards(); S.flags.frontHeld = (S.flags.frontHeld || 0) + 1; for (const m of FRONT.men) { m.o.parent && m.o.parent.remove(m.o); disposeTree(m.o); } FRONT.men.length = 0; frMen(); }
   else { SFX.hurt(); toast('THE LINE BROKE', FB.reserve <= 0 ? 'The reserve ran out' : 'Drome overran the trench', 4); log('The line broke. Talk to the field phone in the HQ dugout to try again.'); }
   for (const e of FRONT.foes) if (!e.dead && e.front.mode !== 'hold') frKillQuiet(e);
 }
@@ -398,6 +399,7 @@ function frInteracts() {
   for (const k of [1, 4, 8]) { const b = FRONT.bays[k], x = b.x1 - 0.45, z = b.z0 + 0.8; const g = new THREE.Group(); part(g, B(0.8, 0.45, 0.5), toon('#4a5229', 'wood'), 0, 0.23, 0); part(g, B(0.82, 0.06, 0.52), toon('#3a4020', 'wood'), 0, 0.47, 0); part(g, B(0.3, 0.08, 0.02), toon('#e8dcc0'), 0, 0.3, 0.26);
     g.position.set(x, FRONT.h(x, z), z); g.rotation.y = Math.PI / 2; levelGroup.add(g);
     INTERACTS.push({ x, z, r: 1.6, label: '📦 Grenades and ammo: restock', fn: () => { ordCharges = ORD_MAX; player.ammo = gun().mag; player.reloading = 0; SFX.item ? SFX.item() : SFX.ui(); toast('RESTOCKED', `${ORD_MAX} grenades, full magazine`, 1.5); } }); }
+  INTERACTS.push({ x: -21, z: 4, r: 3.2, get label() { return FB.on && (FB.phase === 'push' || FB.phase === 'boss') ? '🛡 Take the motor pool tank' : vehS().owned.includes('tank') ? '🛡 Motor pool: your tank is in the bay (press V)' : '🛡 Motor pool tank (only for the push)'; }, fn: () => { if (!(FB.on && (FB.phase === 'push' || FB.phase === 'boss'))) { log('The motor pool tank is for the Big Push. Buy your own from Quartermaster Brix.'); return; } if (VH.on) return; player.pos.set(-24, groundH(-24, 4), 4); player.yaw = Math.PI / 2; VH = { on: true, id: 'tank', v: 0, vy: 0, hp: vehMaxHp('tank'), cd: 0, fuel: 2, loan: 1 }; tankMount(); SFX.door(); toast('BATTLE TANK', 'Drive around the end of our trench', 2.5); } });
   FRONT.mgs.forEach((p, i) => { const b = FRONT.bays[i ? 7 : 2]; INTERACTS.push({ x: b.x0 + 1.0, z: (b.z0 + b.z1) / 2, r: 1.6, label: '🔫 Man the MG nest', fn: () => frMountMG(i) }); });
 }
 function frMountMG(i) { if (VH.on) return; const p = FRONT.mgs[i]; player.pos.set(p.x + 1.55, groundH(p.x + 1.55, p.z), p.z); player.yaw = Math.PI / 2; player.pitch = -0.05;
@@ -417,7 +419,8 @@ function frBattleStep(dt) {
   if (FB.phase === 'wave') { FB.spT = (FB.spT || 0) - dt;
     if (FB.queue.length && FB.spT <= 0) { const kind = FB.queue[0]; if ((kind !== 'drop' || (FB.ship && FB.ship.userData.t > 9)) && frAlive().filter(e => e.front.wave).length < 30) { FB.queue.shift(); frSpawnKind(kind); } FB.spT = kind === 'drop' ? 0.6 : 0.35; }
     if (!FB.queue.length && !frAlive().some(e => e.front.wave)) { if (FB.wave >= 6) { FB.phase = 'whistle'; FB.t = 4; } else { FB.phase = 'lull'; FB.t = 20; toast(`WAVE ${FB.wave} BEATEN`, 'Restock at the crates', 2.5); SFX.level(); } } }
-  if (FB.phase === 'whistle' && FB.t <= 0) { SFX.horn && SFX.horn(); frontEnd(true); return; }
+  if (FB.phase === 'whistle' && FB.t <= 0) { frPushStart(); return; }
+  if (FB.phase === 'push' || FB.phase === 'boss') { frPushStep(dt); return; }
   // losing: the reserve is gone and the step is nearly empty, or they're in the trench in numbers
   const onLine = FRONT.men.filter(m => !m.dead).length; FB.inTrench = frAlive().filter(e => { const r = FRONT.inTrench(e.obj.position.x, e.obj.position.z); return r && r.ours; }).length;
   if ((FB.reserve <= 0 && onLine < 5) || FB.inTrench >= 7) frontEnd(false);
@@ -508,3 +511,40 @@ function frSkyStep(dt, t) {
 }
 function frStrafe(ours) { if (FS.strafe) return; FS.strafe = { t: 0, ours, x: ours ? -121 : -41 }; if (!ours) { frSiren(); toast('STRAFING RUN!', 'Get off the fire step and duck', 2.4); } }
 function frScorch(p) { const m = new THREE.Mesh(new THREE.CircleGeometry(2.2 + Math.random(), 10), new THREE.MeshBasicMaterial({ color: '#1a1410', transparent: true, opacity: 0.6, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 })); m.rotation.x = -Math.PI / 2; m.position.set(p.x, groundH(p.x, p.z) + 0.04, p.z); levelGroup.add(m); FS.scorch.push(m); if (FS.scorch.length > 30) levelGroup.remove(FS.scorch.shift()); }
+
+// =================== THE BIG PUSH (2.23.76): over the top, their trench, the siege walker, rewards, Hale's mission ===================
+ENEMY.dwalker = { name: 'Drome Siege Walker', make: () => { const g = makeMechModel('#3a1416'); g.traverse(o => { if (o.isMesh && o.material.isMeshBasicMaterial) o.material = glow('#ff2a3a'); }); for (const s of [-1, 1]) part(g, B(0.5, 0.5, 1.6), '#1e1c22', 1.4 * s, 3.4, 0.2); return g; }, scale: 1.9, hp: 5000, speed: 1.7, r: 2.2, hy: 2.6, xp: 12000, cr: [900, 1300], boss: true,
+  melee: { dmg: 80, rate: 1.8, reach: 4.2 }, lob: { dmg: 55, rate: 1.6, speed: 15, range: 40, keep: 10, col: '#ff2a3a' }, drops: [['scrap', 1], ['circuit', 0.8]] };
+ARMORS.trench = { name: 'Ironrock Trench Coat', lvl: 1, flag: 'trenchCoat', def: 0.15, body: '#5a5a3a', trim: '#4a3c28', visor: '#ffd36a', note: 'Earned by holding the Front' };
+ARMOR_KITS.trench = function (g, A) { const coat = '#5a5a3a', dk = '#3a3020';
+  part(g, B(0.56, 0.5, 0.36), coat, 0, 1.32, 0); part(g, B(0.58, 0.08, 0.38), dk, 0, 1.06, 0); part(g, B(0.1, 0.07, 0.04), '#c9a43a', 0, 1.06, 0.2);
+  for (const s of [-1, 1]) { part(g, B(0.26, 0.52, 0.06), coat, 0.15 * s, 0.76, -0.19, 0.12); part(g, B(0.06, 0.52, 0.32), coat, 0.29 * s, 0.76, 0, 0, 0, 0.08 * s); part(g, B(0.16, 0.18, 0.04), dk, 0.17 * s, 1.58, 0.15, -0.3); for (let k = 0; k < 3; k++) part(g, Cy(0.022, 0.022, 0.02, 6), '#c9a43a', 0.11 * s, 1.42 - k * 0.12, 0.185, Math.PI / 2); }
+};
+function frCharge() { // everyone over the top
+  for (const m of FRONT.men) { if (m.dead) continue; m.path = null; m.charge = { x: -100 - Math.random() * 18, t: Math.random() * 0.8 }; m.st = 'up'; }
+}
+function frChargeStep(m, dt, t) { const o = m.o, C = m.charge; if (C.t > 0) { C.t -= dt; return; }
+  const tg = frPickFoe(o.position); let tx = C.x; if (o.position.x - tx > 0.5) { o.position.x -= 3.6 * dt; o.rotation.y = -Math.PI / 2; } else if (tg) { const q = tg.obj.position; tx = q.x + 3; o.rotation.y = Math.atan2(q.x - o.position.x, q.z - o.position.z); if (Math.abs(o.position.x - tx) > 4) o.position.x += Math.sign(tx - o.position.x) * 3 * dt; }
+  o.position.y = FRONT.h(o.position.x, o.position.z); m.cd -= dt;
+  if (tg && m.cd <= 0) { m.cd = 0.5 + Math.random() * 0.6; o.updateMatrixWorld(); const from = o.localToWorld(V(0.13, 1.25, 1.0)), aim = tg.obj.position.clone().add(V(0, 1.1, 0)), hit = Math.random() < 0.22; tracer(from, hit ? aim : aim.clone().add(V((Math.random() - 0.5) * 3, Math.random(), (Math.random() - 0.5) * 3)), '#ffd36a'); frShotSound(from);
+    if (hit && !tg.def.boss) { tg.hp -= 40; tg.hitT = 0.1; if (tg.hp <= 0) frKillQuiet(tg); else updatePlate(tg); } }
+  if (o.position.distanceTo(player.pos) < 60) animRig(o, m.anim, dt, t + m.seed);
+}
+function frPushStep(dt) {
+  if (FB.phase === 'push') { FB.t -= dt; if (FB.t < 26 && !FB.strafed) { FB.strafed = 1; frStrafe(true); toast('OUR FIGHTERS ARE IN', 'Strafing their trench', 2); }
+    const left = frAlive().filter(e => e.front.mode === 'hold' || e.front.wave).length;
+    if (!left && FB.t < 24) { FB.phase = 'boss'; const e = makeEnemy({ zone: 'siege', type: 'dwalker', n: 1, lv: [30, 30], once: true }); e.obj.position.set(-134, groundH(-134, 60), 60); e.aggro = true; FB.boss = e; frSiren(); toast('SIEGE WALKER!', 'It came down at the drop zone. Bring it down.', 3); log('A Drome siege walker landed at the drop zone behind their trench. The guns can hit it: use the field phone, or grab the motor pool tank.', 'loot'); } }
+  else if (FB.phase === 'boss' && FB.boss && FB.boss.dead) { FB.boss = null; frontEnd(true); }
+}
+function frPushStart() { FB.phase = 'push'; FB.t = 30; FB.strafed = 0; frTone('square', 2600, 2400, 0.25, 0.06); setTimeout(() => frTone('square', 2600, 2300, 0.6, 0.06), 320);
+  toast('OVER THE TOP!', 'Take their trench', 3); log('The whistle! Everyone goes over the top. Take the Drome trench. The motor pool tank is yours for this.', 'loot'); frCharge(); }
+// rewards: the first win unlocks the coat and the tank paint; repeats pay raid tokens
+function frRewards() { S.flags = S.flags || {}; const first = !S.flags.trenchCoat; let msg;
+  if (first) { S.flags.trenchCoat = true; S.flags.tankCamo = true; S.cr += 8000; gainXp(25000); msg = '+8,000 cr, +25,000 XP. Unlocked: the Ironrock Trench Coat (Wardrobe) and the Ironrock Veteran tank paint.'; }
+  else { S.cr += 3000; gainXp(10000); S.inv.raidtoken = (S.inv.raidtoken || 0) + 6; msg = '+3,000 cr, +10,000 XP, +6 Raid Tokens.'; }
+  if (typeof mGain === 'function') mGain(first ? 400 : 120, 'Held the Front'); log('The Front is ours. ' + msg, 'loot'); toast('THE FRONT IS OURS', first ? 'Trench coat and tank paint unlocked' : '+6 Raid Tokens', 4); markDirty(); }
+// Hale's story mission: Hold the Line once, then it is a repeatable event on the field phone
+defQuest('a5', { ch: 'Fort Ironrock', title: 'Hold the Line', giver: 'hale', turnIn: 'hale', req: ['a2'],
+  intro: ["Drome is massing every rifle it has at the Front. Six waves, by our count. Maybe seven. Counting is hard under shellfire.", "Get down to the trench. When you're ready, pick up the field phone in the HQ dugout and we'll hold. Then we go over the top and take their line."],
+  obj: [{ kind: 'kill', t: 'dwalker', n: 1, text: 'Hold the Front (field phone in the HQ dugout), then bring down the siege walker', zone: 'siege' }],
+  outro: ["You held. Then you took their trench. Then you took their walker. I'm putting you in for a medal. We don't have medals. I'm putting you in for a sandwich.", "The phone's yours whenever Drome tries again. They will."], reward: { cr: 5000, xp: 20000 } });

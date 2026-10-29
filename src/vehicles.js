@@ -296,7 +296,7 @@ function openResearch(n) {
 const TK = { marks: null, mi: 0, dist: 0, aim: null };
 const angTo = (a, b, mx) => { let d = ((b - a + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; return a + clamp(d, -mx, mx); };
 function tankMount() {
-  VH.hy = VH.ty = player.yaw; VH.rk = 0; VH.shk = 0; VH.body = makeTankModel(); VH.body.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
+  VH.hy = VH.ty = player.yaw; VH.rk = 0; VH.shk = 0; VH.body = makeTankModel(S.flags && S.flags.tankCamo ? '#7a6e4c' : undefined); VH.body.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
   levelGroup.add(VH.body); VH.tur = VH.body.userData.turret; VH.tur0 = VH.tur.position.clone();
   VH.muz = new THREE.Object3D(); VH.muz.position.set(0, 0.05, 3.3); VH.tur.add(VH.muz);
   if (!TK.aim) { const a = document.createElement('div'); a.id = 'tankAim'; a.style.cssText = 'position:fixed;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid rgba(255,90,60,.9);border-radius:50%;pointer-events:none;z-index:6;display:none;box-shadow:0 0 6px rgba(255,90,60,.6)'; a.innerHTML = '<div style="position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px;background:#ff5a3c;border-radius:50%"></div>'; document.body.appendChild(a); TK.aim = a; }

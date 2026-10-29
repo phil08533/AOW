@@ -232,7 +232,7 @@ function openWardrobe() {
       const nm = document.createElement('span'); nm.textContent = it.name + (tab === 'a' && it.def ? ` · −${Math.round(it.def * 100)}% dmg` : '');
       const mt = document.createElement('span'); mt.className = 'meta'; mt.style.fontSize = '14px';
       const buyable = it.cost && !(S.ownA && S.ownA[id]) && S.lvl >= it.lvl;
-      mt.textContent = un ? (on ? 'Wearing' : 'Unlocked') : buyable ? `${it.cost} cr` : it.q ? `Finish “${QDEFS[it.q].title}”` : it.gear ? 'Master gear reward' : it.flag ? (it.flag.startsWith('marshal') ? 'Bounty rank reward' : 'Fishing reward') : `Reach Lv ${it.lvl}`;
+      mt.textContent = un ? (on ? 'Wearing' : 'Unlocked') : buyable ? `${it.cost} cr` : it.q ? `Finish “${QDEFS[it.q].title}”` : it.gear ? 'Master gear reward' : it.flag ? (it.flag.startsWith('marshal') ? 'Bounty rank reward' : it.flag === 'trenchCoat' ? 'Hold the Front at Fort Ironrock' : 'Fishing reward') : `Reach Lv ${it.lvl}`;
       if (it.note) nm.title = it.note;
       r.style.cursor = 'pointer'; r.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') return; tryOn = Object.assign({}, myLook(), { [tab]: id }); pvTry(it.name); });
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = on ? '✓' : buyable ? 'Buy' : 'Wear'; b.disabled = buyable ? S.cr < it.cost : (!un || on);

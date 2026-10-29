@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.85</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.87</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -10104,27 +10104,25 @@ function openGunMods(who) {
 // station on the ship next to the saber mods
 { const orig = LEVELS.ship.build;
   LEVELS.ship.build = function () { orig.call(this);
-    // the display (2.23.77): a steel workbench cabinet with drawers, a glass case on top where your gun turns on a lit turntable, a pegboard of tools behind and a plaque on the front
+    // the display (2.23.77): a steel workbench cabinet with drawers, an open lit plinth where your gun rests on two cradles, a pegboard of tools behind and a plaque on the front
     const st = new THREE.Group(), steel = toon('#3a3d44', 'hull'), dk = toon('#1e2128'), chrome = toon('#a8aeb8'), cy = '#4fd2ff';
     part(st, B(1.7, 0.86, 0.85), steel, 0, 0.43, 0); part(st, B(1.76, 0.05, 0.9), toon('#2a2d34'), 0, 0.885, 0); part(st, B(1.7, 0.08, 0.85), dk, 0, 0.04, 0);
     for (let r = 0; r < 2; r++) for (const sx of [-0.43, 0.43]) { part(st, B(0.76, 0.3, 0.02), toon('#30333a'), sx, 0.27 + r * 0.34, 0.43); part(st, B(0.3, 0.03, 0.03), chrome, sx, 0.33 + r * 0.34, 0.45); }
     { const c = document.createElement('canvas'); c.width = 256; c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#0a1420'; x.fillRect(0, 0, 256, 64); x.strokeStyle = cy; x.lineWidth = 3; x.strokeRect(3, 3, 250, 58); x.fillStyle = '#cfefff'; x.font = 'bold 30px Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('GUNSMITH', 128, 34);
       const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.155), new THREE.MeshBasicMaterial({ map: t })); pl.position.set(0, 0.79, 0.433); st.add(pl); part(st, B(0.66, 0.19, 0.01), chrome, 0, 0.79, 0.427); }
-    // glass case: a dark plinth, a cyan-lit turntable, four chrome posts, a lid and see-through panes
+    // open display (2.23.87): a dark plinth with a lit ring and two padded cradles the gun rests on; no glass
     part(st, B(1.5, 0.08, 0.7), dk, 0, 0.95, 0); part(st, Cy(0.34, 0.36, 0.04, 24), toon('#24282f'), 0, 1.01, 0); part(st, new THREE.TorusGeometry(0.35, 0.012, 4, 32), glow(cy), 0, 1.035, 0, Math.PI / 2);
-    for (const sx of [-0.73, 0.73]) for (const sz of [-0.33, 0.33]) part(st, B(0.04, 0.72, 0.04), chrome, sx, 1.35, sz);
-    part(st, B(1.5, 0.05, 0.7), dk, 0, 1.73, 0); part(st, B(1.4, 0.015, 0.6), glow('#dff4ff'), 0, 1.70, 0);
-    const glass = new THREE.MeshPhongMaterial({ color: '#cfe8ff', transparent: true, opacity: 0.13, shininess: 120, depthWrite: false, side: THREE.DoubleSide });
-    for (const [w, d, x, z] of [[1.42, 0.01, 0, 0.33], [1.42, 0.01, 0, -0.33], [0.01, 0.62, 0.73, 0], [0.01, 0.62, -0.73, 0]]) { const m = new THREE.Mesh(B(w, 0.7, d), glass); m.position.set(x, 1.34, z); st.add(m); }
+    for (const sx of [-0.3, 0.3]) { part(st, B(0.06, 0.2, 0.16), chrome, sx, 1.13, 0); part(st, B(0.1, 0.05, 0.2), toon('#5a1e22', 'cloth'), sx, 1.24, 0); }
+    part(st, B(0.06, 0.9, 0.06), chrome, 0, 1.9, -0.4); part(st, B(1.0, 0.05, 0.3), dk, 0, 2.33, -0.27); part(st, B(0.9, 0.015, 0.2), glow('#dff4ff'), 0, 2.30, -0.24);
     // pegboard behind with tools
     part(st, B(1.7, 1.1, 0.05), toon('#2a2d34', 'panel'), 0, 1.5, -0.47); for (let k = 0; k < 4; k++) part(st, B(0.04, 0.24 + (k % 2) * 0.1, 0.03), toon(['#c9733a', '#a8aeb8', '#6a6e78', '#a8aeb8'][k]), -0.66 + k * 0.08, 1.75, -0.43);
     part(st, Cy(0.05, 0.05, 0.03, 10), chrome, 0.62, 1.8, -0.43, Math.PI / 2); part(st, B(0.26, 0.05, 0.03), toon('#c8402f'), 0.6, 1.6, -0.43); part(st, B(1.6, 0.03, 0.03), glow(cy), 0, 2.03, -0.44);
-    const tt = new THREE.Group(); tt.position.set(0, 1.04, 0); st.add(tt); const gm = makeGunModel(S.gun); const gb = new THREE.Box3().setFromObject(gm), gs = gb.getSize(V(0, 0, 0)); gm.scale.setScalar(Math.min(2.2, 1.1 / Math.max(gs.z, 0.01), 0.5 / Math.max(gs.y, 0.01), 0.45 / Math.max(gs.x, 0.01)));
-    gm.rotation.y = Math.PI / 2; tt.add(gm); const gb2 = new THREE.Box3().setFromObject(gm); gm.position.y = 0.3 - (gb2.min.y + gb2.max.y) / 2;
+    const tt = new THREE.Group(); tt.position.set(0, 1.0, 0); st.add(tt); const gm = makeGunModel(S.gun); const gb = new THREE.Box3().setFromObject(gm), gs = gb.getSize(V(0, 0, 0)); gm.scale.setScalar(Math.min(2.2, 1.1 / Math.max(gs.z, 0.01), 0.5 / Math.max(gs.y, 0.01), 0.45 / Math.max(gs.x, 0.01)));
+    gm.rotation.y = Math.PI / 2; tt.add(gm); const gb2 = new THREE.Box3().setFromObject(gm); gm.position.y = 0.27 - gb2.min.y;
     const lt = new THREE.PointLight(0x8fe3ff, 0.6, 2.4, 1.6); lt.position.set(0, 1.6, 0.3); st.add(lt);
-    st.position.set(-5, 0, -3.5); levelGroup.add(st); box(-5, -3.5, 0.88, 0.5);
-    levelAnims.push(t => { tt.rotation.y = Math.sin(t * 0.5) * 0.22; }); // the gun lies along the case and sways a little, so it never pokes through the glass
-    INTERACTS.push({ x: -5, z: -2.6, r: 2, label: 'Gun mod bench', fn: () => openGunMods() });
+    st.position.set(-5.4, 0, -3.5); st.rotation.y = Math.PI / 2; levelGroup.add(st); box(-5.4, -3.5, 0.5, 0.88); // back to the wall, facing into the room
+    levelAnims.push(t => { tt.rotation.y = Math.sin(t * 0.5) * 0.3; }); // the gun lies on the cradles along the bench and sways a little
+    INTERACTS.push({ x: -4.4, z: -3.5, r: 2, label: 'Gun mod bench', fn: () => openGunMods() });
   };
 }
 // launch your ship from anywhere with L
@@ -11910,8 +11908,28 @@ const FW = { sec: [{ n: 'SOUTH', z0: -14, z1: 10, line: -81 }, { n: 'CENTRE', z0
 const fwSecOf = z => z < 10 ? 0 : z < 42 ? 1 : 2, fwBays = s => s === 0 ? [0, 1] : s === 1 ? [3, 4, 5, 6] : [8, 9]; // bays 2 and 7 hold the MG nests, so squads climb out elsewhere
 const fwLive = (side, s) => side ? FRONT.men.filter(m => m.field && !m.dead && (s == null || m.field.sec === s)) : frAlive().filter(e => e.front.mode === 'field' && (s == null || e.front.sec === s));
 const fwY = (x, z) => FRONT.inPatch(x, z) ? FRONT.h(x, z) : 0.1;
-// a shell hole in the sector inside the band behind the line, or a spot in the open if none is free
-function fwCover(s, ours) { const S = FW.sec[s], a = ours ? S.line + 3 : S.line - 15, b = ours ? S.line + 15 : S.line - 3;
+// ---------- cover (2.23.87): sandbag walls, concrete blocks, burnt-out tanks and log barricades across no-man's-land ----------
+// Squads take the side of a piece that faces their own trench, sit with their backs to it, then stand to fire over the top.
+function fwCoverBuild() {
+  FW.cov = []; let sd = 31; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+  const g = new THREE.Group(), bag = toon('#8a7a58', 'cloth'), con = toon('#7a7c80', 'panel'), rust = toon('#3a2a22', 'hull'), dk = toon('#22201e'), lg = toon('#5a4430', 'wood'), reb = toon('#5a3a2a');
+  for (let i = 0; i < 10; i++) { const x0 = -104 + i * 5.6;
+    for (let s = 0; s < 3; s++) { const S = FW.sec[s], n = s === 1 ? 2 : 1;
+      for (let j = 0; j < n; j++) { const z = S.z0 + 3 + (S.z1 - S.z0 - 6) * ((j + rnd()) / n), x = x0 + (rnd() - 0.5) * 2.4, type = Math.floor(rnd() * 4), ry = (rnd() - 0.5) * 0.25;
+        if (FRONT.craters.some(c => Math.hypot(c[0] - x, c[1] - z) < c[2] + 1.6)) continue;
+        const p = new THREE.Group(); p.position.set(x, FRONT.baseH(x, z), z); p.rotation.y = ry; g.add(p); const L = type === 2 ? 2.8 : 2.4;
+        if (type === 0) { for (let l = 0; l < 4; l++) for (let k = 0; k < 5 - (l % 2); k++) part(p, frBagGeo(), bag, 0, 0.1 + l * 0.2, (k - 2) * 0.52 + (l % 2) * 0.26, 0, Math.PI / 2 + Math.sin(k * 7 + l) * 0.06, 0); }
+        else if (type === 1) { part(p, B(0.5, 1.0, 2.2), con, 0, 0.5, 0); part(p, B(0.7, 0.12, 2.3), con, 0, 0.06, 0); part(p, B(0.52, 0.3, 0.5), con, 0.03, 1.05, -0.85, 0, 0, 0.3); part(p, Cy(0.02, 0.02, 0.5, 4), reb, 0, 1.15, 0.5, 0.3); part(p, Cy(0.02, 0.02, 0.4, 4), reb, 0.05, 1.1, 0.1, -0.4); }
+        else if (type === 2) { part(p, B(1.6, 0.8, 2.8), rust, 0, 0.5, 0, 0, 0, 0.06); for (const sx of [-1, 1]) part(p, B(0.35, 0.55, 3.0), dk, sx * 0.95, 0.3, 0); part(p, B(1.0, 0.45, 1.1), rust, 0.15, 1.05, -0.3, 0.15, 0.6, 0.25); part(p, Cy(0.07, 0.07, 1.6, 6), dk, 0.5, 1.15, 0.5, 1.3, 0, 0.3); }
+        else { for (let k = 0; k < 3; k++) part(p, Cy(0.17, 0.17, 2.5, 8), lg, 0, 0.2 + k * 0.32, (k - 1) * 0.06, Math.PI / 2); for (const sz of [-1.05, 1.05]) for (const r of [-0.45, 0.45]) part(p, B(0.1, 1.3, 0.1), lg, 0, 0.55, sz, r, 0, 0); }
+        box(x, z, type === 2 ? 0.95 : 0.35, L / 2); FW.cov.push({ x, z, L, occ: [0, 0] });
+      } } }
+  levelGroup.add(frMerge(g));
+}
+const fwFree = (F, side) => { if (F && F.cov) { F.cov.occ[side] = Math.max(0, F.cov.occ[side] - 1); F.cov = null; } };
+function fwCover(s, ours, F) { const S = FW.sec[s], a = ours ? S.line + 3 : S.line - 15, b = ours ? S.line + 15 : S.line - 3, side = ours ? 1 : 0; fwFree(F, side);
+  const list = (FW.cov || []).filter(c => c.x > a && c.x < b && c.z > S.z0 && c.z < S.z1 && c.occ[side] < 2), cv = list[Math.floor(Math.random() * list.length)];
+  if (cv && F) { cv.occ[side]++; F.cov = cv; F.slot = cv.occ[side] === 1 ? -1 : 1; return V(cv.x + (ours ? 0.7 : -0.7) + (cv.L > 2.6 ? (ours ? 0.6 : -0.6) : 0), 0, cv.z + F.slot * cv.L * 0.25); }
   const c = FRONT.craters.filter(c => c[0] > a && c[0] < b && c[1] > S.z0 + 1 && c[1] < S.z1 - 1), k = c[Math.floor(Math.random() * c.length)];
   return k && Math.random() < 0.7 ? V(k[0] + (Math.random() - 0.5) * k[2], 0, k[1] + (Math.random() - 0.5) * k[2]) : V(a + Math.random() * (b - a), 0, S.z0 + 2 + Math.random() * (S.z1 - S.z0 - 4)); }
 // ---------- our side ----------
@@ -11926,7 +11944,7 @@ function fwNewMan(s, delay) {
 }
 function fwManStep(m, dt, t) {
   const o = m.o, F = m.field;
-  if (m.dead) { if (!F.counted) { F.counted = 1; const S = FW.sec[F.sec]; S.line += 2; }
+  if (m.dead) { if (!F.counted) { F.counted = 1; const S = FW.sec[F.sec]; S.line += 2; fwPose(o, 0); fwFree(F, 1); }
     m.dead += dt; o.rotation.x = 0; o.rotation.z = Math.min(1, m.dead * 2.5) * (Math.PI / 2 - 0.1); o.position.y = Math.max(fwY(o.position.x, o.position.z), o.position.y - dt * 3);
     if (m.dead > 12) { o.parent && o.parent.remove(o); disposeTree(o); FRONT.men.splice(FRONT.men.indexOf(m), 1); } return; }
   if (F.wait > 0) { F.wait -= dt; return; } o.visible = true;
@@ -11938,18 +11956,22 @@ function fwManStep(m, dt, t) {
     else { const sp = (F.st === 'back' ? 3.0 : 3.8) * dt / d; o.position.x += dx * sp; o.position.z += dz * sp; o.rotation.y = Math.atan2(dx, dz); }
     F.rx += (0 - F.rx) * Math.min(1, dt * 8); o.rotation.order = 'YXZ'; o.rotation.x = F.rx; o.position.y = fwY(o.position.x, o.position.z);
     if (o.position.distanceTo(player.pos) < 70) animRig(o, m.anim, dt, t + m.seed); return; }
-  if (F.st === 'go') { F.path = [fwCover(F.sec, 1)]; F.pi = 0; F.st = 'move'; m.st = 'up'; return; }
-  if (F.st === 'rest') { F.t -= dt; m.hp = Math.min(100, m.hp + dt * 12); if (F.t <= 0) { F.path = [V(FRONT.bays[F.k].x0 - 1.6, 0, o.position.z), fwCover(F.sec, 1)]; F.pi = 0; F.st = 'move'; m.st = 'up'; } return; }
+  if (F.st === 'go') { F.path = [fwCover(F.sec, 1, F)]; F.pi = 0; F.st = 'move'; m.st = 'up'; return; }
+  if (F.st === 'rest') { F.t -= dt; m.hp = Math.min(100, m.hp + dt * 12); if (F.t <= 0) { F.path = [V(FRONT.bays[F.k].x0 - 1.6, 0, o.position.z), fwCover(F.sec, 1, F)]; F.pi = 0; F.st = 'move'; m.st = 'up'; } return; }
   // in cover: prone in a shell hole, firing at the nearest Drome; move up or fall back as the line shifts
   F.chk -= dt;
   if (F.chk <= 0) { F.chk = 2 + Math.random() * 2;
-    if (m.hp < 30 && Math.random() < 0.6) { const b = FRONT.bays[F.k]; F.path = [V(b.x0 - 1.6, 0, (b.z0 + b.z1) / 2), V(b.cx + 0.4, 0, (b.z0 + b.z1) / 2)]; F.pi = 0; F.st = 'back'; return; }
-    if (o.position.x < S.line + 1 || o.position.x > S.line + 18) { F.path = [fwCover(F.sec, 1)]; F.pi = 0; F.st = 'move'; return; } }
-  F.rx += (1.15 - F.rx) * Math.min(1, dt * 6); o.rotation.order = 'YXZ'; o.rotation.x = F.rx; o.position.y = fwY(o.position.x, o.position.z) + 0.22;
+    if (m.hp < 30 && Math.random() < 0.6) { fwPose(o, 0); fwFree(F, 1); const b = FRONT.bays[F.k]; F.path = [V(b.x0 - 1.6, 0, (b.z0 + b.z1) / 2), V(b.cx + 0.4, 0, (b.z0 + b.z1) / 2)]; F.pi = 0; F.st = 'back'; return; }
+    if (o.position.x < S.line + 1 || o.position.x > S.line + 18) { fwPose(o, 0); F.path = [fwCover(F.sec, 1, F)]; F.pi = 0; F.st = 'move'; return; } }
+  // behind cover: sit with your back to it, then stand and fire a few bursts over the top
+  F.pt = (F.pt == null ? Math.random() * 2 : F.pt) - dt; if (F.pt <= 0) { F.up = !F.up; F.pt = F.up ? 1.8 + Math.random() * 1.8 : 1.4 + Math.random() * 2.2; }
+  o.rotation.order = 'YXZ'; o.rotation.x = 0;
+  if (F.cov && !F.up) { m.st = 'in'; fwPose(o, 1); o.rotation.y = Math.PI / 2; o.position.y = fwY(o.position.x, o.position.z) - fwHip(o) + 0.12; return; }
+  fwPose(o, 0); o.position.y = fwY(o.position.x, o.position.z); if (o.position.distanceTo(player.pos) < 70) animRig(o, m.anim, dt, t + m.seed);
   m.cd -= dt; const tg = m.tg && !m.tg.dead ? m.tg : (m.tg = frPickFoe(o.position, 1));
   if (tg && tg.obj.position.distanceTo(o.position) < 60) { const q = tg.obj.position; o.rotation.y = Math.atan2(q.x - o.position.x, q.z - o.position.z);
     if (m.cd <= 0) { if (m.burst <= 0) m.burst = 3; m.burst--; m.cd = m.burst > 0 ? 0.14 : 0.9 + Math.random() * 0.8;
-      o.updateMatrixWorld(); const from = o.localToWorld(V(0.13, 0.45, 1.1)), aim = q.clone().add(V(0, 1.0, 0)), hit = Math.random() < 0.07;
+      o.updateMatrixWorld(); const from = o.localToWorld(V(0.13, 1.25, 1.0)), aim = q.clone().add(V(0, 1.0, 0)), hit = !tg.front.duck && Math.random() < 0.09;
       tracer(from, hit ? aim : aim.clone().add(V((Math.random() - 0.5) * 3, (Math.random() - 0.4) * 1.5, (Math.random() - 0.5) * 3)), '#ffd36a'); frShotSound(from);
       if (hit) { tg.hp -= tg.max * 0.16; tg.hitT = 0.1; if (tg.hp <= 0) frKillQuiet(tg); else updatePlate(tg); } } }
   else o.rotation.y = -Math.PI / 2;
@@ -11965,18 +11987,24 @@ function fwFoeMove(e, dt) {
   if (F.mode === 'runner') { const g = F.goal, dx = g.x - o.position.x, dz = g.z - o.position.z, d = Math.hypot(dx, dz);
     if (d > 1.2) { const w = Math.sin(o.position.x * 0.35 + e.seed) * 0.35; F.vx = dx / d; F.vz = dz / d + w; e.cd = Math.max(e.cd, 0.5); } F.tg = 'player'; F.tt = 1; }
   else if (F.fst === 'rest') { F.t -= dt; e.hp = Math.min(e.max, e.hp + e.max * 0.08 * dt); if (F.t <= 0) { F.fst = 'go'; } }
-  else if (F.fst === 'go') { F.goal = fwCover(F.sec, 0); F.fst = 'move'; }
+  else if (F.fst === 'go') { F.goal = fwCover(F.sec, 0, F); F.fst = 'move'; }
   else if (F.fst === 'move' || F.fst === 'back') { const g = F.goal, dx = g.x - o.position.x, dz = g.z - o.position.z, d = Math.hypot(dx, dz);
     if (d < 0.5) { if (F.fst === 'back') { F.fst = 'rest'; F.t = 7 + Math.random() * 5; } else { F.fst = 'cover'; F.chk = 3; } } else { F.vx = dx / d; F.vz = dz / d; e.cd = Math.max(e.cd, 0.35); } }
-  else if (F.fst === 'cover') { F.chk -= dt;
+  else if (F.fst === 'cover') { F.chk -= dt; F.pt = (F.pt == null ? Math.random() * 2 : F.pt) - dt; if (F.pt <= 0) { F.up = !F.up; F.pt = F.up ? 1.8 + Math.random() * 1.8 : 1.4 + Math.random() * 2.2; }
+    F.duck = !!(F.cov && !F.up); if (F.duck) e.cd = Math.max(e.cd, 0.3);
     if (F.chk <= 0) { F.chk = 2 + Math.random() * 2;
-      if (e.hp < e.max * 0.35) { const b = FRONT.ebays[F.k]; F.goal = V(b.x1 - 0.8, 0, (b.z0 + b.z1) / 2); F.fst = 'back'; }
+      if (e.hp < e.max * 0.35) { fwFree(F, 0); const b = FRONT.ebays[F.k]; F.goal = V(b.x1 - 0.8, 0, (b.z0 + b.z1) / 2); F.fst = 'back'; }
       else if (o.position.x > S.line - 1 || o.position.x < S.line - 18) F.fst = 'go'; } }
   if (F.vx || F.vz) { const sp = e.def.speed * (F.mode === 'runner' ? 1 : 1.25) * (e.slow > 0 ? 0.45 : 1) * dt; o.position.x += F.vx * sp; o.position.z += F.vz * sp; }
 }
 { const _fes = frontEnemyStep; frontEnemyStep = function (e, dt, t) { const F = e.front; if (F.mode !== 'field' && F.mode !== 'runner') return _fes(e, dt, t);
   if (!e.dead) fwFoeMove(e, dt); _fes(e, dt, t); const o = e.obj;
-  if (F.vx || F.vz) { o.rotation.y = Math.atan2(F.vx, F.vz); F.rx = 0; } else if (F.fst === 'cover' && F.mode === 'field') { F.rx = (F.rx || 0) + (1.1 - (F.rx || 0)) * Math.min(1, dt * 6); o.rotation.x = F.rx; o.position.y += 0.25; } }; }
+  if (F.fst !== 'cover') F.duck = false;
+  if (F.vx || F.vz) o.rotation.y = Math.atan2(F.vx, F.vz);
+  if (F.duck) { o.userData.sitting = 0; fwPose(o, 1); /* the walk cycle ran this frame, so set the legs again */ o.rotation.x = 0; o.rotation.y = -Math.PI / 2; o.position.y = groundH(o.position.x, o.position.z) - fwHip(o) + 0.12; } else fwPose(o, 0); }; }
+// sitting against cover: both legs straight out in front, hips on the ground
+const fwHip = o => (o.userData.rig && o.userData.rig.spec.hip || 0.9) * (o.scale.y || 1);
+function fwPose(o, sit) { const R = o.userData.rig; if (!R || !R.legL || !!o.userData.sitting === !!sit) return; o.userData.sitting = sit ? 1 : 0; R.legL.rotation.x = R.legR.rotation.x = sit ? -Math.PI / 2 : 0; if (R.torso) { R.torso.position.y = R.spec.hip; R.torso.rotation.x = sit ? -0.08 : 0; } }
 // the fire step only reaches the near half of no-man's-land; the far half is the field squads' fight
 { const _pf = frPickFoe; frPickFoe = function (p, field) { if (field) return _pf(p); let best = null, bd = 95; for (const e of FRONT.foes) { if (e.dead) continue; const q = e.obj.position; if (q.x > p.x - 2) continue; const d = q.distanceTo(p); if (d < bd && (e.front.mode === 'field' ? d < 40 : e.front.mode === 'runner' ? d < 18 : 1)) { bd = d; best = e; } } return best; }; }
 { const _kq = frKillQuiet; frKillQuiet = function (e) { if (e.front) e.front.ai = 1; return _kq(e); }; } // AI kills don't count toward your MG tally
@@ -11984,12 +12012,12 @@ function fwFoeMove(e, dt) {
 // a big event clears the field: our squads go home, the Drome go back to their trench
 { const _fs = frontStart; frontStart = function () { fwClear(); return _fs.apply(this, arguments); }; }
 function fwClear() { for (const m of FRONT.men.filter(m => m.field)) { m.o.parent && m.o.parent.remove(m.o); disposeTree(m.o); FRONT.men.splice(FRONT.men.indexOf(m), 1); }
-  for (const e of FRONT.foes) if (!e.dead && (e.front.mode === 'field' || e.front.mode === 'runner')) { e.front.counted = 1; frKillQuiet(e); } for (const S of FW.sec) S.line = -81; FW.mg = null; }
+  for (const e of FRONT.foes) if (!e.dead && (e.front.mode === 'field' || e.front.mode === 'runner')) { e.front.counted = 1; frKillQuiet(e); } for (const S of FW.sec) S.line = -81; FW.mg = null; for (const c of FW.cov || []) c.occ = [0, 0]; }
 // ---------- the tug of war ----------
 function fwTick(dt) {
   const near = player.pos.x < -12 || player.pos.y > 7;
   // deaths push the line: a dead Drome moves it west, a dead trooper (counted in fwManStep) moves it east
-  for (const e of FRONT.foes) if (e.dead && !e.front.counted && (e.front.mode === 'field' || e.front.mode === 'runner')) { e.front.counted = 1;
+  for (const e of FRONT.foes) if (e.dead && !e.front.counted && (e.front.mode === 'field' || e.front.mode === 'runner')) { e.front.counted = 1; fwPose(e.obj, 0); fwFree(e.front, 0); e.front.duck = false;
     const s = e.front.mode === 'field' ? e.front.sec : fwSecOf(e.obj.position.z); FW.sec[s].line -= e.front.mode === 'field' ? 2 : 0.5; if (FW.mg && e.front.mode === 'runner' && !e.front.ai) fwMgKill(); }
   for (let s = 0; s < 3; s++) { const S = FW.sec[s], us = fwLive(1, s).filter(m => m.field.st === 'cover').length, them = fwLive(0, s).filter(e => e.front.fst === 'cover').length;
     S.line = clamp(S.line + ((them - us) * 0.12 + (-81 - S.line) * 0.01) * dt, -106, -56);
@@ -12029,8 +12057,17 @@ function fwHud() {
 }
 function fwStep(t) { const dt = Math.min(0.1, Math.max(0, t - FW.lt)); FW.lt = t; if (!dt || LEVEL.id !== 'fort') return;
   if (!FB.on) { fwTick(dt); fwMgStep(dt); } else if (FW.mg) FW.mg = null; fwHud(); }
-{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); for (const S of FW.sec) { S.line = -81; S.won = S.lost = 0; } FW.mg = null; FW.ourT = 1; FW.theirT = 3; levelAnims.push(fwStep); return r; }; }
+{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); for (const S of FW.sec) { S.line = -81; S.won = S.lost = 0; } FW.mg = null; fwCoverBuild(); FW.ourT = 1; FW.theirT = 3; levelAnims.push(fwStep); return r; }; }
 setInterval(() => { if (FW.hud && (!LEVEL || LEVEL.id !== 'fort' || state !== 'play')) FW.hud.style.display = 'none'; }, 400);
+// ---------- battlefield haze (2.23.87): dust and smoke thicken as you head out to the Front, thinner inside the walls ----------
+{ const _ue = updateEnv; updateEnv = function (dt, t) { _ue(dt, t); if (!LEVEL || LEVEL.id !== 'fort') return;
+  const out = player.pos.x < -14 && player.pos.y < 7, k = FW.fogK = (FW.fogK == null ? (out ? 1 : 0.45) : FW.fogK + ((out ? 1 : 0.45) - FW.fogK) * Math.min(1, (dt || 0.016) * 0.8));
+  scene.fog.color.set('#3e3832').convertSRGBToLinear(); scene.fog.near = 30 - 22 * k; scene.fog.far = 160 - 75 * k; }; }
+function fwHaze(dt) { FW.hzT = (FW.hzT || 0) - dt; if (FW.hzT > 0) return; FW.hzT = 3;
+  if (FB.smoke.length >= 12) return; if (!FW.hzMat) FW.hzMat = new THREE.MeshLambertMaterial({ color: '#4e4844', transparent: true, opacity: 0.3, depthWrite: false });
+  for (let i = 0; i < 2; i++) { const x = -112 + Math.random() * 60, z = -12 + Math.random() * 80, m = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), FW.hzMat.clone());
+    m.position.set(x, FRONT.baseH(x, z) + 1.8 + Math.random() * 1.5, z); m.scale.set(7 + Math.random() * 5, 1.2 + Math.random() * 0.8, 7 + Math.random() * 5); levelGroup.add(m); FB.smoke.push({ s: m, t: 40 + Math.random() * 25 }); } }
+{ const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.hzLt || t))); FW.hzLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort' && !FB.on) fwHaze(dt); }; }
 
 // =================== FORT IRONROCK, THE FORTRESS (2.23.83) ===================
 // Ironrock is one walled citadel now: a 60 x 60 m curtain wall with bastions, a gatehouse on the south side, roofed wings round an open courtyard.
@@ -12210,6 +12247,63 @@ function irDress() {
   for (const z of [17, 35.5]) irBox(props, 18, 0.4, 0.4, toon('#c8a020'), 34, 6.0, z, 2); const crane = new THREE.Group(); levelGroup.add(crane); part(crane, B(0.5, 0.5, 18.9), toon('#c8a020'), 0, 0, 0); part(crane, Cy(0.02, 0.02, 3, 4), steel, 0, -1.5, 0); part(crane, B(0.5, 0.3, 0.3), dk, 0, -3.1, 0); levelAnims.push(t => crane.position.set(34 + Math.sin(t * 0.1) * 6, 5.75, 26.25));
   for (const [x, z] of [[27, 19], [27, 21.5]]) { irBox(props, 1.2, 0.9, 0.6, toon('#c8402f', 'hull'), x, 0.6, z, 1); for (let k = 0; k < 3; k++) part(props, B(1.1, 0.04, 0.5), dk, x, 0.5 + k * 0.25, z); box(x, z, 0.6, 0.3); }
   irMan(34, 34, Math.PI / 2, { civ: ['#3a4a5a', '#2c2a28', '#8a5a3a', '#1e1a18', '#ffd36a'] });
+  irDecor();
+}
+// 2.23.87: a second dressing pass so every room reads lived-in: hanging lamps, wall pipes, furniture and clutter that fits each room's job
+function irDecor() {
+  const { RH } = IR, trim = toon('#3a3d44'), steel = toon('#5d636c', 'hull'), dk = toon('#22252c'), wood = toon('#6a4a30', 'wood'), white = toon('#e8e4dc'), chrome = toon('#a8aeb8'), olive = toon('#4a5a32', 'cloth');
+  const lamp = (x, z, h, col) => { part(props, Cy(0.015, 0.015, 1.1, 4), dk, x, h - 0.55, z); part(props, Cy(0.08, 0.38, 0.28, 10, 1, true), trim, x, h - 1.2, z); part(props, Cy(0.3, 0.3, 0.02, 10), glow(col || '#fff1c8'), x, h - 1.33, z); };
+  const pipe = (x0, x1, z0, z1, y, col) => { const along = Math.abs(x1 - x0) > Math.abs(z1 - z0), L = along ? x1 - x0 : z1 - z0; part(props, Cy(0.09, 0.09, L, 8), toon(col || '#6a6e76', 'hull'), (x0 + x1) / 2, y, (z0 + z1) / 2, along ? 0 : Math.PI / 2, 0, along ? Math.PI / 2 : 0);
+    for (let k = 1; k < L / 2; k++) part(props, B(along ? 0.06 : 0.3, 0.24, along ? 0.3 : 0.06), dk, along ? x0 + k * 2 : (x0 + x1) / 2, y, along ? (z0 + z1) / 2 : z0 + k * 2); };
+  const chair = (x, z, ry) => { const g = new THREE.Group(); g.position.set(x, 0.1, z); g.rotation.y = ry; props.add(g); part(g, B(0.45, 0.06, 0.45), dk, 0, 0.45, 0); part(g, B(0.45, 0.5, 0.06), dk, 0, 0.72, -0.2); part(g, Cy(0.03, 0.03, 0.42, 6), chrome, 0, 0.22, 0); part(g, B(0.4, 0.03, 0.4), chrome, 0, 0.03, 0); };
+  const drum = (x, z, c) => { part(props, Cy(0.3, 0.3, 0.9, 12), toon(c || '#4a5a32', 'hull'), x, 0.55, z); for (const y of [0.3, 0.8]) part(props, Cy(0.31, 0.31, 0.04, 12), dk, x, 0.1 + y, z); solid(x, z, 0.32); };
+  // hanging lamps in every roofed room, warm in the living rooms and cold white in the work rooms
+  for (const z of [-14, -9, -4, 0]) for (const x of [-7, -1]) lamp(x, z, RH, '#e8f4ff');
+  for (const z of [6, 9.6, 13.2]) for (const x of [-5.5, -1.5]) lamp(x, z, RH, '#ffd9a0');
+  for (const z of [21, 26, 31]) for (const x of [-6, 0]) lamp(x, z, RH, '#fff1c8');
+  for (const z of [-13, -7, -2]) for (const x of [30, 38]) lamp(x, z, RH, '#fff1c8');
+  for (const z of [4, 10]) for (const x of [31, 38]) lamp(x, z, RH, '#dff4ff');
+  // service pipes along the outer walls, one run per room so nothing passes through a wall
+  for (const [z0, z1] of [[-16.6, 2.4], [3.6, 16.4], [17.6, 36.6]]) { pipe(-10.6, -10.6, z0, z1, RH - 0.5); pipe(-10.6, -10.6, z0, z1, RH - 0.85, '#7a3a2a'); }
+  for (const [z0, z1] of [[-16.6, 0.4], [1.6, 14.4]]) { pipe(42.6, 42.6, z0, z1, RH - 0.5); pipe(42.6, 42.6, z0, z1, RH - 0.85, '#2a5a7a'); }
+  // Med Bay: drip stands by the beds, a supply shelf, the doctor's desk and a lit red-cross plaque
+  for (let k = 0; k < 3; k++) { const z = -15 + k * 3 + 0.55; part(props, Cy(0.02, 0.02, 1.8, 6), chrome, -7.2, 1.0, z); part(props, B(0.25, 0.03, 0.03), chrome, -7.2, 1.85, z); part(props, B(0.12, 0.2, 0.05), toon('#cfe8ff'), -7.12, 1.7, z); part(props, Cy(0.18, 0.2, 0.04, 8), dk, -7.2, 0.12, z); }
+  irBox(props, 2.6, 2.0, 0.5, white, -2, 1.1, -16.6, 1); for (let r = 0; r < 3; r++) { part(props, B(2.5, 0.04, 0.45), chrome, -2, 0.6 + r * 0.6, -16.55); for (let k = 0; k < 5; k++) part(props, B(0.3, 0.25, 0.3), toon(['#e8e4dc', '#c8402f', '#8ab8d8'][(k + r) % 3]), -3 + k * 0.5, 0.75 + r * 0.6, -16.5); } box(-2, -16.6, 1.3, 0.3);
+  irBox(props, 1.8, 0.08, 0.9, wood, 1.5, 0.85, -15.9, 1); for (const s of [-1, 1]) part(props, B(0.06, 0.75, 0.8), trim, 1.5 + s * 0.85, 0.45, -15.9); part(props, B(0.6, 0.4, 0.05), dk, 1.5, 1.15, -16.2); part(props, B(0.55, 0.34, 0.02), glow('#6fdc5a'), 1.5, 1.15, -16.17); chair(1.5, -15.1, Math.PI); box(1.5, -15.9, 0.9, 0.45);
+  irPlaque(-6, 3.2, -16.84, 0, 'MED BAY', 'CPL. PATCH ON DUTY', '#c8402f');
+  // Barracks: footlockers at the bunks, a card table with two chairs, a rug
+  for (let k = 0; k < 4; k++) { const z = -5 + k * 2.2; irBox(props, 0.5, 0.4, 0.8, olive, -8.2, 0.3, z, 1); part(props, B(0.1, 0.06, 0.04), chrome, -7.94, 0.42, z); } box(-8.2, -1.7, 0.25, 3.7);
+  part(props, B(3, 0.012, 2.2), toon('#6a2a20', 'carpet'), -1.5, 0.106, -1.5); irBox(props, 1.0, 0.06, 1.0, wood, -1.5, 0.8, -1.5, 1); part(props, Cy(0.06, 0.06, 0.7, 6), trim, -1.5, 0.45, -1.5); for (let k = 0; k < 6; k++) part(props, B(0.09, 0.005, 0.13), white, -1.75 + k * 0.1, 0.835, -1.5 + (k % 2) * 0.1, 0, k * 0.4, 0);
+  chair(-1.5, -0.7, Math.PI); chair(-1.5, -2.3, 0); box(-1.5, -1.5, 0.5, 1.1);
+  // Mess Hall: a drinks cooler, a water cooler, a wall TV and bins
+  irBox(props, 1.1, 2.0, 0.7, toon('#c8402f', 'panel'), 3.4, 1.1, 16.2, 1); part(props, B(0.8, 1.2, 0.02), glow('#dff4ff'), 3.4, 1.3, 15.84); box(3.4, 16.2, 0.55, 0.35);
+  part(props, B(0.4, 0.9, 0.4), white, 4.4, 0.55, 4.2); part(props, Cy(0.16, 0.16, 0.45, 10), toon('#8ab8e8'), 4.4, 1.25, 4.2); solid(4.4, 4.2, 0.25);
+  { const g = new THREE.Group(); g.position.set(4.68, 3.0, 10); g.rotation.y = -Math.PI / 2; props.add(g); part(g, B(2.0, 1.15, 0.1), dk, 0, 0, 0); part(g, B(1.85, 1.0, 0.02), glow('#3a6aa8'), 0, 0, 0.06); part(g, B(0.15, 0.6, 0.15), dk, 0, 0.8, -0.05); }
+  for (const z of [5, 15.5]) { part(props, Cy(0.25, 0.22, 0.7, 10), steel, 2.6, 0.45, z); solid(2.6, z, 0.26); }
+  // Muster Hall: ready benches either side of the walkway, a row of kit lockers, ammo boxes
+  for (const z of [19.6, 30.4]) for (const x0 of [-5, 0]) { irBox(props, 3.2, 0.08, 0.45, wood, x0, 0.5, z, 1); for (const s of [-1, 1]) part(props, B(0.08, 0.4, 0.4), trim, x0 + s * 1.5, 0.3, z); box(x0, z, 1.6, 0.25); }
+  for (let k = 0; k < 6; k++) { const z = 19.2 + k * 0.7; irBox(props, 0.6, 2.0, 0.65, toon('#4a5a3a', 'panel'), 4.4, 1.1, z, 1); part(props, B(0.02, 0.25, 0.05), chrome, 4.08, 1.25, z + 0.2); } box(4.4, 20.95, 0.3, 2.1);
+  for (const [x, z] of [[2.2, 33.5], [2.2, 34.2], [-6, 33.8]]) { irBox(props, 0.6, 0.35, 0.4, olive, x, 0.28, z, 1); part(props, B(0.5, 0.06, 0.06), chrome, x, 0.47, z); }
+  // Command Hall: chairs at the consoles
+  for (let k = 0; k < 5; k++) chair(8 + k * 3.5, 35.3, Math.PI);
+  // Armory: a gunsmith's workbench, a training dummy, an ammo stack and a QUARTERMASTER plaque
+  irBox(props, 2.4, 0.08, 1.0, wood, 29, 0.95, -8, 1); for (const s of [-1, 1]) part(props, B(0.08, 0.85, 0.9), trim, 29 + s * 1.1, 0.5, -8); part(props, B(0.25, 0.2, 0.2), steel, 28.2, 1.1, -8.2); { const gm = makeGunModel('g70'); gm.position.set(29.3, 1.05, -7.9); gm.rotation.set(0, 0.4, Math.PI / 2); props.add(gm); } box(29, -8, 1.2, 0.5);
+  { const d = makeTrooper({ noGun: true }); d.traverse(c => { if (c.isMesh) c.material = toon('#a88a5a', 'cloth'); }); d.position.set(32, 0.1, -5); d.rotation.y = Math.PI; props.add(d); part(props, Cy(0.05, 0.05, 0.8, 6), wood, 32, 0.4, -5); solid(32, -5, 0.4); }
+  for (let k = 0; k < 6; k++) irBox(props, 0.6, 0.35, 0.4, olive, 26.4 + (k % 2) * 0.65, 0.28 + Math.floor(k / 2) * 0.36, -11, 1); box(26.7, -11, 0.65, 0.25);
+  irPlaque(39.5, 3.0, -16.84, 0, 'QUARTERMASTER', 'SGT. BRIX', '#ff8a2a');
+  // Research Lab: a specimen tank with a Drome bug, a robot arm, chairs, a wall display, cable runs
+  { const X = 38, Z = 12.8; part(props, B(1.6, 0.3, 1.2), trim, X, 0.25, Z); part(props, B(1.6, 0.15, 1.2), trim, X, 2.1, Z); const gl = new THREE.Mesh(B(1.5, 1.6, 1.1), new THREE.MeshPhongMaterial({ color: '#9fff6a', transparent: true, opacity: 0.16, depthWrite: false })); gl.position.set(X, 1.2, Z); levelGroup.add(gl);
+    const bug = new THREE.Group(); bug.position.set(X, 1.1, Z); levelGroup.add(bug); part(bug, new THREE.SphereGeometry(0.28, 10, 8), toon('#3a1416'), 0, 0, 0); part(bug, new THREE.SphereGeometry(0.18, 8, 6), toon('#5a2024'), 0.3, 0.05, 0); for (let k = 0; k < 6; k++) part(bug, B(0.03, 0.03, 0.4), dk, -0.1 + (k % 3) * 0.15, -0.15, (k < 3 ? 1 : -1) * 0.25, 0.5 * (k < 3 ? 1 : -1), 0, 0);
+    levelAnims.push(t => { bug.rotation.y = Math.sin(t * 0.3) * 0.8; bug.position.y = 1.1 + Math.sin(t * 0.9) * 0.08; }); box(X, Z, 0.8, 0.6); }
+  { const X = 38.5, Z = 6.5, base = new THREE.Group(); base.position.set(X, 0.1, Z); props.add(base); part(base, Cy(0.4, 0.5, 0.3, 12), toon('#ff8a2a', 'hull'), 0, 0.15, 0); const arm = new THREE.Group(); arm.position.y = 0.3; base.add(arm); part(arm, B(0.2, 1.2, 0.2), toon('#ff8a2a', 'hull'), 0, 0.6, 0); const fore = new THREE.Group(); fore.position.y = 1.2; arm.add(fore); part(fore, B(0.16, 0.16, 0.9), toon('#ff8a2a', 'hull'), 0, 0, 0.45); part(fore, B(0.24, 0.12, 0.12), dk, 0, 0, 0.92);
+    levelAnims.push(t => { arm.rotation.y = Math.sin(t * 0.4) * 0.9; fore.rotation.x = 0.4 + Math.sin(t * 0.7) * 0.25; }); solid(X, Z, 0.5); }
+  for (const [x, z] of [[29, 5], [29, 9.7]]) chair(x - 0.6, z, z < 7 ? Math.PI : 0);
+  { const g = new THREE.Group(); g.position.set(34, 3.0, 14.7); g.rotation.y = Math.PI; props.add(g); part(g, B(4.0, 1.6, 0.1), dk, 0, 0, 0); part(g, B(3.8, 1.45, 0.02), glow('#0e2a3a'), 0, 0, 0.06); for (let k = 0; k < 6; k++) part(g, B(0.4, 0.1 + (k % 3) * 0.25, 0.01), glow('#4fd2ff'), -1.5 + k * 0.6, -0.5 + (0.1 + (k % 3) * 0.25) / 2, 0.075); }
+  for (const z of [3.4, 4.6]) part(props, B(10, 0.04, 0.08), dk, 36.5, 0.12, z);
+  // courtyard: benches, fuel drums by the jeep, planters by the Command doors
+  for (const x of [9, 21]) { irBox(props, 2.4, 0.08, 0.5, wood, x, 0.55, 13.4, 1); for (const s of [-1, 1]) part(props, B(0.08, 0.45, 0.45), trim, x + s * 1.1, 0.32, 13.4); box(x, 13.4, 1.2, 0.25); }
+  for (const [x, z] of [[22.6, 6.6], [23.3, 6.9], [22.9, 7.6]]) drum(x, z, '#5a3a2a');
+  for (const x of [10.2, 19.8]) { irBox(props, 1.0, 0.7, 1.0, trim, x, 0.45, 14.0, 1); part(props, new THREE.IcosahedronGeometry(0.5, 0), toon('#3a5a2a'), x, 1.1, 14.0); solid(x, 14.0, 0.55); }
 }
 
 // =================== EARTH SKY: floating islands, the Floating City, the Air Base and Drome's real base ===================
@@ -15845,6 +15939,7 @@ PLAYLISTS.cutscene = ['hymn'];
 // Audio files live next to the page (podcast/*.mp3). Which quest unlocks each episode, and which intro plays first, is set in
 // the owner's editor (Podcast tab) and saved to the shared world/podcast doc, so it changes for everyone without a rebuild.
 // def: what unlocks it until the owner picks something else in the editor ('@allmain' = every main quest done, '@maw' = the Greater Maw is dead)
+const POD_OFF = true; // shows are off for now (Phil may record new ones); the files stay in the repo, the radio plays songs only
 const POD_EPS = [
   { id: 'vector', file: 'podcast/vector_before.mp3', title: 'Why Everyone Avoided Vector Before Drome', def: 'q1' },
   { id: 'earth', file: 'podcast/earth_against.mp3', title: 'How Drome Turned Earth Against Itself', def: 'q5' },
@@ -15865,7 +15960,7 @@ setTimeout(() => { // after inventory.js has loaded
   const _ii = itemIcon; itemIcon = function (id) { return id === 'radio88' ? 'radio' : _ii(id); }; }, 0);
 const podHasRadio = () => !!(S.inv && S.inv.radio88);
 function podGiveRadio() { if (podHasRadio() || !qDone('q1')) return; S.inv.radio88 = 1; if (typeof markDirty === 'function') markDirty(); log('+1 Nebula 88.8 Radio', 'loot'); toast('NEBULA 88.8 RADIO', 'A pocket radio. ' + (TOUCH ? 'Menu → Journal → Radio' : 'Press O') + ' to tune in.', 3.5); }
-const podList = () => POD_EPS.filter(podOpen);
+const podList = () => POD_OFF ? [] : POD_EPS.filter(podOpen);
 // shared config: the owner's picks, loaded once the cloud is up (local copy when offline)
 { let tries = 0; const iv = setInterval(async () => { tries++; if (!db && tries < 20) return; clearInterval(iv);
   try { if (db) { const s = await db.doc('world/podcast').get(); if (s.exists && s.data() && s.data().data) POD.cfg = JSON.parse(s.data().data) || {}; }
@@ -15943,17 +16038,16 @@ const POD_SONG_TITLES = { risingsun: 'Art of War: Rising Sun', overture: 'Veloci
 const POD_SONGS = {}; // song items, made once so the player can tell them apart
 function podSongList() { S.songs = S.songs || {}; return Object.keys(S.songs).filter(k => TRACKS[k]).map(k => POD_SONGS[k] || (POD_SONGS[k] = { id: 'song_' + k, key: k, file: TRACKS[k], title: POD_SONG_TITLES[k] || k[0].toUpperCase() + k.slice(1), song: true })); }
 { const _ms = musStart; musStart = function (list, idx) { const r = _ms.apply(this, arguments); try { const k = PLAYLISTS[list][idx % PLAYLISTS[list].length]; S.songs = S.songs || {}; if (k && TRACKS[k] && !S.songs[k]) { S.songs[k] = 1; if (typeof markDirty === 'function') markDirty(); if (musVol() > 0 && state !== 'menu') toast('♪ NEW SONG DISCOVERED', (POD_SONG_TITLES[k] || (typeof RADIO_TITLES !== 'undefined' && RADIO_TITLES[k]) || k[0].toUpperCase() + k.slice(1)) + ' · added to your radio', 3); } } catch (_) {} return r; }; }
-const RDEV_MODES = ['shows', 'songs', 'favs'], RDEV_NAMES = { shows: 'NEBULA 88.8', songs: 'ALL SONGS', favs: 'FAVORITES' };
+const RDEV_MODES = POD_OFF ? ['songs', 'favs'] : ['shows', 'songs', 'favs'], RDEV_NAMES = { shows: 'NEBULA 88.8', songs: 'ALL SONGS', favs: 'FAVORITES' };
 const podFavs = () => (S.favSongs = S.favSongs || {});
 const rdevList = () => RDEV.mode === 'songs' ? podSongList() : RDEV.mode === 'favs' ? podSongList().filter(e => podFavs()[e.key]) : podList();
 function rdevPress(k) { const K = RDEV.keys[k]; if (K) { K.position.z = -0.06; setTimeout(() => { K.position.z = 0; }, 120); } try { SFX.ui(); } catch (_) {}
   if (RDEV.ask && k !== 'mid') { RDEV.ask = null; rdevDraw(); return; }
   if (k === 'fav') { const L = rdevList(), ep = L.length ? L[RDEV.sel % L.length] : null; if (!ep || !ep.song) { toast('FAVORITES', ep ? 'Only songs go in Favorites' : 'Pick a song first', 1.4); return; }
     const F = podFavs(); if (F[ep.key]) delete F[ep.key]; else F[ep.key] = 1; RDEV.heartT = performance.now(); markDirty(); if (RDEV.mode === 'favs') RDEV.sel = Math.min(RDEV.sel, Math.max(0, rdevList().length - 1)); rdevDraw(); return; }
-  if (k === 'up' || k === 'down') { RDEV.mode = RDEV_MODES[(RDEV_MODES.indexOf(RDEV.mode) + (k === 'up' ? 2 : 1)) % 3]; RDEV.sel = 0; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); rdevDraw(); return; }
+  if (k === 'up' || k === 'down') { RDEV.mode = RDEV_MODES[(RDEV_MODES.indexOf(RDEV.mode) + (k === 'up' ? RDEV_MODES.length - 1 : 1)) % RDEV_MODES.length]; RDEV.sel = 0; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); rdevDraw(); return; }
   const L = rdevList(); if (!L.length) { rdevDraw(); return; }
-  if (k === 'left') RDEV.sel = (RDEV.sel + L.length - 1) % L.length;
-  else if (k === 'right') RDEV.sel = (RDEV.sel + 1) % L.length;
+  if (k === 'left' || k === 'right') { RDEV.sel = (RDEV.sel + (k === 'left' ? L.length - 1 : 1)) % L.length; const ep = L[RDEV.sel]; if (POD.ep !== ep) { if (POD.ep) podPause(); podStart(ep); } } // skipping plays what you land on
   else if (k === 'mid') { const ep = L[RDEV.sel % L.length]; RDEV.ask = null; if (POD.ep === ep) { POD.playing ? podPause() : podResume(); } else { if (POD.ep) podPause(); podStart(ep); } }
   rdevDraw(); }
 function rdevWrap(x, text, maxW) { const w = String(text).split(' '), out = []; let line = ''; for (const s of w) { const t = line ? line + ' ' + s : s; if (x.measureText(t).width > maxW && line) { out.push(line); line = s; } else line = t; } if (line) out.push(line); return out; }
@@ -15965,7 +16059,7 @@ function rdevDraw() { const x = RDEV.sx; if (!x) return; const W = 512, H = 400,
   x.font = 'bold 30px "Courier New",monospace'; x.textBaseline = 'middle'; x.fillText(RDEV_NAMES[RDEV.mode] || 'NEBULA 88.8', 100, 46); x.font = '20px "Courier New",monospace'; x.fillStyle = dim; x.fillText(RDEV.mode === 'songs' ? 'Songs from the galaxy' : RDEV.mode === 'favs' ? 'Your hearted songs' : 'Drome War Radio', 100, 76); x.fillStyle = fg;
   x.lineWidth = 3; x.strokeRect(440, 24, 44, 20); x.fillRect(484, 29, 5, 10); x.fillRect(444, 28, 30, 12);
   const songs = RDEV.mode !== 'shows', L = rdevList(), ep = L.length ? L[RDEV.sel % L.length] : null;
-  x.font = 'bold 17px "Courier New",monospace'; [['shows', 'RADIO', 40], ['songs', 'ALL SONGS', 150], ['favs', '♥ FAVS', 300]].forEach(([m, t, tx]) => { x.fillStyle = RDEV.mode === m ? fg : dim; x.fillText(t, tx, 108); if (RDEV.mode === m) x.fillRect(tx, 120, x.measureText(t).width, 3); }); x.fillStyle = dim; x.fillText('▲▼', 440, 108); x.fillStyle = fg;
+  x.font = 'bold 17px "Courier New",monospace'; (POD_OFF ? [['songs', 'ALL SONGS', 40], ['favs', '♥ FAVS', 190]] : [['shows', 'RADIO', 40], ['songs', 'ALL SONGS', 150], ['favs', '♥ FAVS', 300]]).forEach(([m, t, tx]) => { x.fillStyle = RDEV.mode === m ? fg : dim; x.fillText(t, tx, 108); if (RDEV.mode === m) x.fillRect(tx, 120, x.measureText(t).width, 3); }); x.fillStyle = dim; x.fillText('▲▼', 440, 108); x.fillStyle = fg;
   if (!ep) { x.font = 'bold 30px "Courier New",monospace'; x.fillText(RDEV.mode === 'favs' ? 'No favorites yet' : songs ? 'No songs yet' : 'Nothing on air yet', 40, 190); x.font = '22px "Courier New",monospace'; x.fillStyle = dim; (RDEV.mode === 'favs' ? ['Pick a song in ALL SONGS', 'and press the heart key.'] : songs ? ['Songs you hear around the', 'galaxy show up here.'] : ['Shows come on as the', 'story moves on.']).forEach((l, i) => x.fillText(l, 40, 236 + i * 28)); RDEV.stex.needsUpdate = true; return; }
   if (RDEV.ask) { x.font = 'bold 22px "Courier New",monospace'; x.fillText('★ NEW SHOW ON AIR', 40, 130); }
   if (ep.song) { const on = podFavs()[ep.key], pop = RDEV.heartT ? Math.max(0, 1 - (performance.now() - RDEV.heartT) / 400) : 0; x.save(); x.translate(460, 150); x.scale(1 + pop * 0.5, 1 + pop * 0.5); x.beginPath(); x.moveTo(0, 14); x.bezierCurveTo(-4, 8, -18, 2, -18, -7); x.bezierCurveTo(-18, -16, -6, -19, 0, -10); x.bezierCurveTo(6, -19, 18, -16, 18, -7); x.bezierCurveTo(18, 2, 4, 8, 0, 14);
@@ -15992,8 +16086,8 @@ document.body.appendChild(rdevWrapEl); $('radioX').addEventListener('pointerdown
 function rdevClose() { RDEV.open = false; RDEV.ask = null; rdevWrapEl.hidden = true; }
 function openPodcast(askEp) { if (!podHasRadio()) { toast('NO RADIO', 'Finish your first job for Captain Vega', 2); return; }
   if (!RDEV.r) { rdevBuild(); rdevWrapEl.prepend(RDEV.cv); }
-  if (askEp) { RDEV.mode = 'shows'; const L = podList(); RDEV.ask = askEp; RDEV.sel = Math.max(0, L.indexOf(askEp)); }
-  else { RDEV.ask = null; RDEV.mode = RDEV.mode || 'shows'; if (POD.ep && POD.ep.song && RDEV.mode === 'shows') RDEV.mode = 'songs'; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); }
+  if (askEp && !POD_OFF) { RDEV.mode = 'shows'; const L = podList(); RDEV.ask = askEp; RDEV.sel = Math.max(0, L.indexOf(askEp)); }
+  else { RDEV.ask = null; RDEV.mode = RDEV.mode || RDEV_MODES[0]; if ((POD.ep && POD.ep.song || POD_OFF) && RDEV.mode === 'shows') RDEV.mode = 'songs'; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); }
   $('radioHint').textContent = TOUCH ? 'Tap the keys' : 'Click the keys, or arrows · Enter · H for ♥ · O puts it away';
   rdevWrapEl.style.scale = String(Math.min(1, innerHeight * 0.8 / 590, innerWidth * 0.94 / 420)); rdevWrapEl.hidden = false; firing = false;
   if (document.pointerLockElement) document.exitPointerLock();
@@ -20558,6 +20652,7 @@ const UPDATES = [
   { id: 315, title: '2.23.50 · Cleaner minimap', items: ['The live minimap no longer shows fireflies, rain, sparks or other effects', 'Removed the little winding crown on the minimap watch (the pill-shaped thing)'] },
   { id: 316, title: '2.23.51 · Ready for the cast', items: ['The game can now play real voice-actor recordings for every character line, as they get recorded'] },
   { id: 317, title: '2.23.52 · Helmet radio', items: ['Recorded voices for helmeted characters and battle radio play through a light comms filter'] },
+  { id: 352, title: '2.23.87 · Cover, fog and a fuller fortress', items: ['Squads on the Front take cover behind sandbag walls, concrete blocks, burnt-out tanks and log barricades. They sit with their backs to it, then stand up to fire over the top.', 'Dust and drifting smoke hang over the battlefield, thickest out at the Front and lighter inside the walls.', 'Every room in Fort Ironrock has more in it now: hanging lamps, pipes, a supply shelf and desk in the Med Bay, a card table in the Barracks, a drinks cooler and TV in the Mess Hall, ready benches and lockers in the Muster Hall, a workbench and dummy in the Armory, and a specimen tank and robot arm in the Lab.', 'The ship gun bench faces into the room and shows your gun on open cradles, with no glass case.', 'The slot machine buttons sit on their own ledge and are no longer covered by the screen housing.', 'The radio plays songs only for now, and skipping to the next or previous song starts playing it.'] },
   { id: 350, title: '2.23.85 · The Front fights back and forth', items: ['Our squads muster in the Muster Hall, march out through the Sally Port and go over the top. Drome squads come out from their side to meet them.', 'The Front has three sectors, south, centre and north, each with a line that moves as squads win or lose. A strip at the top of the screen shows who holds each one.', 'The wounded fall back to their trench, patch up and go out again, and reinforcements stream in for whichever side is losing.', 'Get on a heavy MG and the Drome send runner squads straight at your nest, with shield runners and lieutenants mixed in. Kill streaks pay bonus XP.'] },
   { id: 348, title: '2.23.83 · Fort Ironrock rebuilt as a fortress', items: ['Ironrock is now one walled citadel with corner bastions, a gatehouse and a rampart you reach by the lifts in the courtyard.', 'Every room has a job and its own look: Med Bay and Barracks, Mess Hall, Muster Hall, Command Hall with a live war table, Armory, Research Lab and the Motor Pool Hangar.', 'The Sally Port in the west wall leads to the Front, and the hangar door leads to the Vehicle Range.'] },
   { id: 346, title: '2.23.81 · Gunsmith case fix', items: ['The gun in the gunsmith case lies along the case and sways a little instead of spinning, so long rifles and staffs no longer poke through the glass.'] },
@@ -32523,7 +32618,8 @@ function zaSlot(x, z, ry, i) { const g = new THREE.Group(); g.position.set(x, 0,
   const strip = new THREE.Mesh(B(0.03, 0.9, 0.03), new THREE.MeshBasicMaterial({ color: fg })), strip2 = strip.clone(); strip.position.set(-0.445, 1.47, 0.1); strip2.position.set(0.445, 1.47, 0.1); strip2.material = strip.material; lg.add(strip, strip2);
   const M = { reels, dome, strip, lv, spin: 0, ready: true, stop: [0, 0, 0], tgt: reels.map(r => r.rotation.x), win: 0, i, x, z, ry, nm, pay: null, btns: [] };
   // the controls live on the machine: a tilted button deck (three bet buttons and a big SPIN) and a credit display over the reels
-  const deck = new THREE.Group(); deck.position.set(0, 1.03, 0.36); deck.rotation.x = 0.35; lg.add(deck); part(deck, B(0.8, 0.035, 0.17), dark, 0, 0, 0); part(deck, B(0.82, 0.02, 0.19), chrome, 0, -0.025, 0);
+  const deck = new THREE.Group(); deck.position.set(0, 0.98, 0.52); deck.rotation.x = 0.35; lg.add(deck); part(deck, B(0.8, 0.035, 0.17), dark, 0, 0, 0); part(deck, B(0.82, 0.02, 0.19), chrome, 0, -0.025, 0);
+  part(deck, B(0.82, 0.14, 0.24), dark, 0, -0.1, -0.06); // the deck stands proud of the display housing on its own bracket, so nothing hangs over the buttons
   for (const [bx, val, col, rad] of [[-0.29, 50, '#6a8ad8', 0.045], [-0.17, 250, '#6a8ad8', 0.045], [-0.05, 1000, '#6a8ad8', 0.045], [0.2, 0, '#e0404a', 0.075]]) {
     part(deck, Cy(rad + 0.012, rad + 0.012, 0.02, 16), chrome, bx, 0.025, 0); const b = new THREE.Mesh(Cy(rad, rad, 0.03, 16), new THREE.MeshBasicMaterial({ color: col })); b.position.set(bx, 0.045, 0); deck.add(b);
     const lab = new THREE.Mesh(new THREE.PlaneGeometry(rad * 1.7, rad * 1.7), new THREE.MeshBasicMaterial({ map: zaBtnTex(val ? String(val) : 'SPIN'), transparent: true })); lab.rotation.x = -Math.PI / 2; lab.position.set(bx, 0.062, 0); deck.add(lab);

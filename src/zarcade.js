@@ -105,7 +105,8 @@ function zaSlot(x, z, ry, i) { const g = new THREE.Group(); g.position.set(x, 0,
   const strip = new THREE.Mesh(B(0.03, 0.9, 0.03), new THREE.MeshBasicMaterial({ color: fg })), strip2 = strip.clone(); strip.position.set(-0.445, 1.47, 0.1); strip2.position.set(0.445, 1.47, 0.1); strip2.material = strip.material; lg.add(strip, strip2);
   const M = { reels, dome, strip, lv, spin: 0, ready: true, stop: [0, 0, 0], tgt: reels.map(r => r.rotation.x), win: 0, i, x, z, ry, nm, pay: null, btns: [] };
   // the controls live on the machine: a tilted button deck (three bet buttons and a big SPIN) and a credit display over the reels
-  const deck = new THREE.Group(); deck.position.set(0, 1.03, 0.36); deck.rotation.x = 0.35; lg.add(deck); part(deck, B(0.8, 0.035, 0.17), dark, 0, 0, 0); part(deck, B(0.82, 0.02, 0.19), chrome, 0, -0.025, 0);
+  const deck = new THREE.Group(); deck.position.set(0, 0.98, 0.52); deck.rotation.x = 0.35; lg.add(deck); part(deck, B(0.8, 0.035, 0.17), dark, 0, 0, 0); part(deck, B(0.82, 0.02, 0.19), chrome, 0, -0.025, 0);
+  part(deck, B(0.82, 0.14, 0.24), dark, 0, -0.1, -0.06); // the deck stands proud of the display housing on its own bracket, so nothing hangs over the buttons
   for (const [bx, val, col, rad] of [[-0.29, 50, '#6a8ad8', 0.045], [-0.17, 250, '#6a8ad8', 0.045], [-0.05, 1000, '#6a8ad8', 0.045], [0.2, 0, '#e0404a', 0.075]]) {
     part(deck, Cy(rad + 0.012, rad + 0.012, 0.02, 16), chrome, bx, 0.025, 0); const b = new THREE.Mesh(Cy(rad, rad, 0.03, 16), new THREE.MeshBasicMaterial({ color: col })); b.position.set(bx, 0.045, 0); deck.add(b);
     const lab = new THREE.Mesh(new THREE.PlaneGeometry(rad * 1.7, rad * 1.7), new THREE.MeshBasicMaterial({ map: zaBtnTex(val ? String(val) : 'SPIN'), transparent: true })); lab.rotation.x = -Math.PI / 2; lab.position.set(bx, 0.062, 0); deck.add(lab);

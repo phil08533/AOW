@@ -13,8 +13,28 @@ const FW = { sec: [{ n: 'SOUTH', z0: -14, z1: 10, line: -81 }, { n: 'CENTRE', z0
 const fwSecOf = z => z < 10 ? 0 : z < 42 ? 1 : 2, fwBays = s => s === 0 ? [0, 1] : s === 1 ? [3, 4, 5, 6] : [8, 9]; // bays 2 and 7 hold the MG nests, so squads climb out elsewhere
 const fwLive = (side, s) => side ? FRONT.men.filter(m => m.field && !m.dead && (s == null || m.field.sec === s)) : frAlive().filter(e => e.front.mode === 'field' && (s == null || e.front.sec === s));
 const fwY = (x, z) => FRONT.inPatch(x, z) ? FRONT.h(x, z) : 0.1;
-// a shell hole in the sector inside the band behind the line, or a spot in the open if none is free
-function fwCover(s, ours) { const S = FW.sec[s], a = ours ? S.line + 3 : S.line - 15, b = ours ? S.line + 15 : S.line - 3;
+// ---------- cover (2.23.87): sandbag walls, concrete blocks, burnt-out tanks and log barricades across no-man's-land ----------
+// Squads take the side of a piece that faces their own trench, sit with their backs to it, then stand to fire over the top.
+function fwCoverBuild() {
+  FW.cov = []; let sd = 31; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+  const g = new THREE.Group(), bag = toon('#8a7a58', 'cloth'), con = toon('#7a7c80', 'panel'), rust = toon('#3a2a22', 'hull'), dk = toon('#22201e'), lg = toon('#5a4430', 'wood'), reb = toon('#5a3a2a');
+  for (let i = 0; i < 10; i++) { const x0 = -104 + i * 5.6;
+    for (let s = 0; s < 3; s++) { const S = FW.sec[s], n = s === 1 ? 2 : 1;
+      for (let j = 0; j < n; j++) { const z = S.z0 + 3 + (S.z1 - S.z0 - 6) * ((j + rnd()) / n), x = x0 + (rnd() - 0.5) * 2.4, type = Math.floor(rnd() * 4), ry = (rnd() - 0.5) * 0.25;
+        if (FRONT.craters.some(c => Math.hypot(c[0] - x, c[1] - z) < c[2] + 1.6)) continue;
+        const p = new THREE.Group(); p.position.set(x, FRONT.baseH(x, z), z); p.rotation.y = ry; g.add(p); const L = type === 2 ? 2.8 : 2.4;
+        if (type === 0) { for (let l = 0; l < 4; l++) for (let k = 0; k < 5 - (l % 2); k++) part(p, frBagGeo(), bag, 0, 0.1 + l * 0.2, (k - 2) * 0.52 + (l % 2) * 0.26, 0, Math.PI / 2 + Math.sin(k * 7 + l) * 0.06, 0); }
+        else if (type === 1) { part(p, B(0.5, 1.0, 2.2), con, 0, 0.5, 0); part(p, B(0.7, 0.12, 2.3), con, 0, 0.06, 0); part(p, B(0.52, 0.3, 0.5), con, 0.03, 1.05, -0.85, 0, 0, 0.3); part(p, Cy(0.02, 0.02, 0.5, 4), reb, 0, 1.15, 0.5, 0.3); part(p, Cy(0.02, 0.02, 0.4, 4), reb, 0.05, 1.1, 0.1, -0.4); }
+        else if (type === 2) { part(p, B(1.6, 0.8, 2.8), rust, 0, 0.5, 0, 0, 0, 0.06); for (const sx of [-1, 1]) part(p, B(0.35, 0.55, 3.0), dk, sx * 0.95, 0.3, 0); part(p, B(1.0, 0.45, 1.1), rust, 0.15, 1.05, -0.3, 0.15, 0.6, 0.25); part(p, Cy(0.07, 0.07, 1.6, 6), dk, 0.5, 1.15, 0.5, 1.3, 0, 0.3); }
+        else { for (let k = 0; k < 3; k++) part(p, Cy(0.17, 0.17, 2.5, 8), lg, 0, 0.2 + k * 0.32, (k - 1) * 0.06, Math.PI / 2); for (const sz of [-1.05, 1.05]) for (const r of [-0.45, 0.45]) part(p, B(0.1, 1.3, 0.1), lg, 0, 0.55, sz, r, 0, 0); }
+        box(x, z, type === 2 ? 0.95 : 0.35, L / 2); FW.cov.push({ x, z, L, occ: [0, 0] });
+      } } }
+  levelGroup.add(frMerge(g));
+}
+const fwFree = (F, side) => { if (F && F.cov) { F.cov.occ[side] = Math.max(0, F.cov.occ[side] - 1); F.cov = null; } };
+function fwCover(s, ours, F) { const S = FW.sec[s], a = ours ? S.line + 3 : S.line - 15, b = ours ? S.line + 15 : S.line - 3, side = ours ? 1 : 0; fwFree(F, side);
+  const list = (FW.cov || []).filter(c => c.x > a && c.x < b && c.z > S.z0 && c.z < S.z1 && c.occ[side] < 2), cv = list[Math.floor(Math.random() * list.length)];
+  if (cv && F) { cv.occ[side]++; F.cov = cv; F.slot = cv.occ[side] === 1 ? -1 : 1; return V(cv.x + (ours ? 0.7 : -0.7) + (cv.L > 2.6 ? (ours ? 0.6 : -0.6) : 0), 0, cv.z + F.slot * cv.L * 0.25); }
   const c = FRONT.craters.filter(c => c[0] > a && c[0] < b && c[1] > S.z0 + 1 && c[1] < S.z1 - 1), k = c[Math.floor(Math.random() * c.length)];
   return k && Math.random() < 0.7 ? V(k[0] + (Math.random() - 0.5) * k[2], 0, k[1] + (Math.random() - 0.5) * k[2]) : V(a + Math.random() * (b - a), 0, S.z0 + 2 + Math.random() * (S.z1 - S.z0 - 4)); }
 // ---------- our side ----------
@@ -29,7 +49,7 @@ function fwNewMan(s, delay) {
 }
 function fwManStep(m, dt, t) {
   const o = m.o, F = m.field;
-  if (m.dead) { if (!F.counted) { F.counted = 1; const S = FW.sec[F.sec]; S.line += 2; }
+  if (m.dead) { if (!F.counted) { F.counted = 1; const S = FW.sec[F.sec]; S.line += 2; fwPose(o, 0); fwFree(F, 1); }
     m.dead += dt; o.rotation.x = 0; o.rotation.z = Math.min(1, m.dead * 2.5) * (Math.PI / 2 - 0.1); o.position.y = Math.max(fwY(o.position.x, o.position.z), o.position.y - dt * 3);
     if (m.dead > 12) { o.parent && o.parent.remove(o); disposeTree(o); FRONT.men.splice(FRONT.men.indexOf(m), 1); } return; }
   if (F.wait > 0) { F.wait -= dt; return; } o.visible = true;
@@ -41,18 +61,22 @@ function fwManStep(m, dt, t) {
     else { const sp = (F.st === 'back' ? 3.0 : 3.8) * dt / d; o.position.x += dx * sp; o.position.z += dz * sp; o.rotation.y = Math.atan2(dx, dz); }
     F.rx += (0 - F.rx) * Math.min(1, dt * 8); o.rotation.order = 'YXZ'; o.rotation.x = F.rx; o.position.y = fwY(o.position.x, o.position.z);
     if (o.position.distanceTo(player.pos) < 70) animRig(o, m.anim, dt, t + m.seed); return; }
-  if (F.st === 'go') { F.path = [fwCover(F.sec, 1)]; F.pi = 0; F.st = 'move'; m.st = 'up'; return; }
-  if (F.st === 'rest') { F.t -= dt; m.hp = Math.min(100, m.hp + dt * 12); if (F.t <= 0) { F.path = [V(FRONT.bays[F.k].x0 - 1.6, 0, o.position.z), fwCover(F.sec, 1)]; F.pi = 0; F.st = 'move'; m.st = 'up'; } return; }
+  if (F.st === 'go') { F.path = [fwCover(F.sec, 1, F)]; F.pi = 0; F.st = 'move'; m.st = 'up'; return; }
+  if (F.st === 'rest') { F.t -= dt; m.hp = Math.min(100, m.hp + dt * 12); if (F.t <= 0) { F.path = [V(FRONT.bays[F.k].x0 - 1.6, 0, o.position.z), fwCover(F.sec, 1, F)]; F.pi = 0; F.st = 'move'; m.st = 'up'; } return; }
   // in cover: prone in a shell hole, firing at the nearest Drome; move up or fall back as the line shifts
   F.chk -= dt;
   if (F.chk <= 0) { F.chk = 2 + Math.random() * 2;
-    if (m.hp < 30 && Math.random() < 0.6) { const b = FRONT.bays[F.k]; F.path = [V(b.x0 - 1.6, 0, (b.z0 + b.z1) / 2), V(b.cx + 0.4, 0, (b.z0 + b.z1) / 2)]; F.pi = 0; F.st = 'back'; return; }
-    if (o.position.x < S.line + 1 || o.position.x > S.line + 18) { F.path = [fwCover(F.sec, 1)]; F.pi = 0; F.st = 'move'; return; } }
-  F.rx += (1.15 - F.rx) * Math.min(1, dt * 6); o.rotation.order = 'YXZ'; o.rotation.x = F.rx; o.position.y = fwY(o.position.x, o.position.z) + 0.22;
+    if (m.hp < 30 && Math.random() < 0.6) { fwPose(o, 0); fwFree(F, 1); const b = FRONT.bays[F.k]; F.path = [V(b.x0 - 1.6, 0, (b.z0 + b.z1) / 2), V(b.cx + 0.4, 0, (b.z0 + b.z1) / 2)]; F.pi = 0; F.st = 'back'; return; }
+    if (o.position.x < S.line + 1 || o.position.x > S.line + 18) { fwPose(o, 0); F.path = [fwCover(F.sec, 1, F)]; F.pi = 0; F.st = 'move'; return; } }
+  // behind cover: sit with your back to it, then stand and fire a few bursts over the top
+  F.pt = (F.pt == null ? Math.random() * 2 : F.pt) - dt; if (F.pt <= 0) { F.up = !F.up; F.pt = F.up ? 1.8 + Math.random() * 1.8 : 1.4 + Math.random() * 2.2; }
+  o.rotation.order = 'YXZ'; o.rotation.x = 0;
+  if (F.cov && !F.up) { m.st = 'in'; fwPose(o, 1); o.rotation.y = Math.PI / 2; o.position.y = fwY(o.position.x, o.position.z) - fwHip(o) + 0.12; return; }
+  fwPose(o, 0); o.position.y = fwY(o.position.x, o.position.z); if (o.position.distanceTo(player.pos) < 70) animRig(o, m.anim, dt, t + m.seed);
   m.cd -= dt; const tg = m.tg && !m.tg.dead ? m.tg : (m.tg = frPickFoe(o.position, 1));
   if (tg && tg.obj.position.distanceTo(o.position) < 60) { const q = tg.obj.position; o.rotation.y = Math.atan2(q.x - o.position.x, q.z - o.position.z);
     if (m.cd <= 0) { if (m.burst <= 0) m.burst = 3; m.burst--; m.cd = m.burst > 0 ? 0.14 : 0.9 + Math.random() * 0.8;
-      o.updateMatrixWorld(); const from = o.localToWorld(V(0.13, 0.45, 1.1)), aim = q.clone().add(V(0, 1.0, 0)), hit = Math.random() < 0.07;
+      o.updateMatrixWorld(); const from = o.localToWorld(V(0.13, 1.25, 1.0)), aim = q.clone().add(V(0, 1.0, 0)), hit = !tg.front.duck && Math.random() < 0.09;
       tracer(from, hit ? aim : aim.clone().add(V((Math.random() - 0.5) * 3, (Math.random() - 0.4) * 1.5, (Math.random() - 0.5) * 3)), '#ffd36a'); frShotSound(from);
       if (hit) { tg.hp -= tg.max * 0.16; tg.hitT = 0.1; if (tg.hp <= 0) frKillQuiet(tg); else updatePlate(tg); } } }
   else o.rotation.y = -Math.PI / 2;
@@ -68,18 +92,24 @@ function fwFoeMove(e, dt) {
   if (F.mode === 'runner') { const g = F.goal, dx = g.x - o.position.x, dz = g.z - o.position.z, d = Math.hypot(dx, dz);
     if (d > 1.2) { const w = Math.sin(o.position.x * 0.35 + e.seed) * 0.35; F.vx = dx / d; F.vz = dz / d + w; e.cd = Math.max(e.cd, 0.5); } F.tg = 'player'; F.tt = 1; }
   else if (F.fst === 'rest') { F.t -= dt; e.hp = Math.min(e.max, e.hp + e.max * 0.08 * dt); if (F.t <= 0) { F.fst = 'go'; } }
-  else if (F.fst === 'go') { F.goal = fwCover(F.sec, 0); F.fst = 'move'; }
+  else if (F.fst === 'go') { F.goal = fwCover(F.sec, 0, F); F.fst = 'move'; }
   else if (F.fst === 'move' || F.fst === 'back') { const g = F.goal, dx = g.x - o.position.x, dz = g.z - o.position.z, d = Math.hypot(dx, dz);
     if (d < 0.5) { if (F.fst === 'back') { F.fst = 'rest'; F.t = 7 + Math.random() * 5; } else { F.fst = 'cover'; F.chk = 3; } } else { F.vx = dx / d; F.vz = dz / d; e.cd = Math.max(e.cd, 0.35); } }
-  else if (F.fst === 'cover') { F.chk -= dt;
+  else if (F.fst === 'cover') { F.chk -= dt; F.pt = (F.pt == null ? Math.random() * 2 : F.pt) - dt; if (F.pt <= 0) { F.up = !F.up; F.pt = F.up ? 1.8 + Math.random() * 1.8 : 1.4 + Math.random() * 2.2; }
+    F.duck = !!(F.cov && !F.up); if (F.duck) e.cd = Math.max(e.cd, 0.3);
     if (F.chk <= 0) { F.chk = 2 + Math.random() * 2;
-      if (e.hp < e.max * 0.35) { const b = FRONT.ebays[F.k]; F.goal = V(b.x1 - 0.8, 0, (b.z0 + b.z1) / 2); F.fst = 'back'; }
+      if (e.hp < e.max * 0.35) { fwFree(F, 0); const b = FRONT.ebays[F.k]; F.goal = V(b.x1 - 0.8, 0, (b.z0 + b.z1) / 2); F.fst = 'back'; }
       else if (o.position.x > S.line - 1 || o.position.x < S.line - 18) F.fst = 'go'; } }
   if (F.vx || F.vz) { const sp = e.def.speed * (F.mode === 'runner' ? 1 : 1.25) * (e.slow > 0 ? 0.45 : 1) * dt; o.position.x += F.vx * sp; o.position.z += F.vz * sp; }
 }
 { const _fes = frontEnemyStep; frontEnemyStep = function (e, dt, t) { const F = e.front; if (F.mode !== 'field' && F.mode !== 'runner') return _fes(e, dt, t);
   if (!e.dead) fwFoeMove(e, dt); _fes(e, dt, t); const o = e.obj;
-  if (F.vx || F.vz) { o.rotation.y = Math.atan2(F.vx, F.vz); F.rx = 0; } else if (F.fst === 'cover' && F.mode === 'field') { F.rx = (F.rx || 0) + (1.1 - (F.rx || 0)) * Math.min(1, dt * 6); o.rotation.x = F.rx; o.position.y += 0.25; } }; }
+  if (F.fst !== 'cover') F.duck = false;
+  if (F.vx || F.vz) o.rotation.y = Math.atan2(F.vx, F.vz);
+  if (F.duck) { o.userData.sitting = 0; fwPose(o, 1); /* the walk cycle ran this frame, so set the legs again */ o.rotation.x = 0; o.rotation.y = -Math.PI / 2; o.position.y = groundH(o.position.x, o.position.z) - fwHip(o) + 0.12; } else fwPose(o, 0); }; }
+// sitting against cover: both legs straight out in front, hips on the ground
+const fwHip = o => (o.userData.rig && o.userData.rig.spec.hip || 0.9) * (o.scale.y || 1);
+function fwPose(o, sit) { const R = o.userData.rig; if (!R || !R.legL || !!o.userData.sitting === !!sit) return; o.userData.sitting = sit ? 1 : 0; R.legL.rotation.x = R.legR.rotation.x = sit ? -Math.PI / 2 : 0; if (R.torso) { R.torso.position.y = R.spec.hip; R.torso.rotation.x = sit ? -0.08 : 0; } }
 // the fire step only reaches the near half of no-man's-land; the far half is the field squads' fight
 { const _pf = frPickFoe; frPickFoe = function (p, field) { if (field) return _pf(p); let best = null, bd = 95; for (const e of FRONT.foes) { if (e.dead) continue; const q = e.obj.position; if (q.x > p.x - 2) continue; const d = q.distanceTo(p); if (d < bd && (e.front.mode === 'field' ? d < 40 : e.front.mode === 'runner' ? d < 18 : 1)) { bd = d; best = e; } } return best; }; }
 { const _kq = frKillQuiet; frKillQuiet = function (e) { if (e.front) e.front.ai = 1; return _kq(e); }; } // AI kills don't count toward your MG tally
@@ -87,12 +117,12 @@ function fwFoeMove(e, dt) {
 // a big event clears the field: our squads go home, the Drome go back to their trench
 { const _fs = frontStart; frontStart = function () { fwClear(); return _fs.apply(this, arguments); }; }
 function fwClear() { for (const m of FRONT.men.filter(m => m.field)) { m.o.parent && m.o.parent.remove(m.o); disposeTree(m.o); FRONT.men.splice(FRONT.men.indexOf(m), 1); }
-  for (const e of FRONT.foes) if (!e.dead && (e.front.mode === 'field' || e.front.mode === 'runner')) { e.front.counted = 1; frKillQuiet(e); } for (const S of FW.sec) S.line = -81; FW.mg = null; }
+  for (const e of FRONT.foes) if (!e.dead && (e.front.mode === 'field' || e.front.mode === 'runner')) { e.front.counted = 1; frKillQuiet(e); } for (const S of FW.sec) S.line = -81; FW.mg = null; for (const c of FW.cov || []) c.occ = [0, 0]; }
 // ---------- the tug of war ----------
 function fwTick(dt) {
   const near = player.pos.x < -12 || player.pos.y > 7;
   // deaths push the line: a dead Drome moves it west, a dead trooper (counted in fwManStep) moves it east
-  for (const e of FRONT.foes) if (e.dead && !e.front.counted && (e.front.mode === 'field' || e.front.mode === 'runner')) { e.front.counted = 1;
+  for (const e of FRONT.foes) if (e.dead && !e.front.counted && (e.front.mode === 'field' || e.front.mode === 'runner')) { e.front.counted = 1; fwPose(e.obj, 0); fwFree(e.front, 0); e.front.duck = false;
     const s = e.front.mode === 'field' ? e.front.sec : fwSecOf(e.obj.position.z); FW.sec[s].line -= e.front.mode === 'field' ? 2 : 0.5; if (FW.mg && e.front.mode === 'runner' && !e.front.ai) fwMgKill(); }
   for (let s = 0; s < 3; s++) { const S = FW.sec[s], us = fwLive(1, s).filter(m => m.field.st === 'cover').length, them = fwLive(0, s).filter(e => e.front.fst === 'cover').length;
     S.line = clamp(S.line + ((them - us) * 0.12 + (-81 - S.line) * 0.01) * dt, -106, -56);
@@ -132,5 +162,14 @@ function fwHud() {
 }
 function fwStep(t) { const dt = Math.min(0.1, Math.max(0, t - FW.lt)); FW.lt = t; if (!dt || LEVEL.id !== 'fort') return;
   if (!FB.on) { fwTick(dt); fwMgStep(dt); } else if (FW.mg) FW.mg = null; fwHud(); }
-{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); for (const S of FW.sec) { S.line = -81; S.won = S.lost = 0; } FW.mg = null; FW.ourT = 1; FW.theirT = 3; levelAnims.push(fwStep); return r; }; }
+{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); for (const S of FW.sec) { S.line = -81; S.won = S.lost = 0; } FW.mg = null; fwCoverBuild(); FW.ourT = 1; FW.theirT = 3; levelAnims.push(fwStep); return r; }; }
 setInterval(() => { if (FW.hud && (!LEVEL || LEVEL.id !== 'fort' || state !== 'play')) FW.hud.style.display = 'none'; }, 400);
+// ---------- battlefield haze (2.23.87): dust and smoke thicken as you head out to the Front, thinner inside the walls ----------
+{ const _ue = updateEnv; updateEnv = function (dt, t) { _ue(dt, t); if (!LEVEL || LEVEL.id !== 'fort') return;
+  const out = player.pos.x < -14 && player.pos.y < 7, k = FW.fogK = (FW.fogK == null ? (out ? 1 : 0.45) : FW.fogK + ((out ? 1 : 0.45) - FW.fogK) * Math.min(1, (dt || 0.016) * 0.8));
+  scene.fog.color.set('#3e3832').convertSRGBToLinear(); scene.fog.near = 30 - 22 * k; scene.fog.far = 160 - 75 * k; }; }
+function fwHaze(dt) { FW.hzT = (FW.hzT || 0) - dt; if (FW.hzT > 0) return; FW.hzT = 3;
+  if (FB.smoke.length >= 12) return; if (!FW.hzMat) FW.hzMat = new THREE.MeshLambertMaterial({ color: '#4e4844', transparent: true, opacity: 0.3, depthWrite: false });
+  for (let i = 0; i < 2; i++) { const x = -112 + Math.random() * 60, z = -12 + Math.random() * 80, m = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), FW.hzMat.clone());
+    m.position.set(x, FRONT.baseH(x, z) + 1.8 + Math.random() * 1.5, z); m.scale.set(7 + Math.random() * 5, 1.2 + Math.random() * 0.8, 7 + Math.random() * 5); levelGroup.add(m); FB.smoke.push({ s: m, t: 40 + Math.random() * 25 }); } }
+{ const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.hzLt || t))); FW.hzLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort' && !FB.on) fwHaze(dt); }; }

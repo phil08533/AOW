@@ -2,6 +2,7 @@
 // Audio files live next to the page (podcast/*.mp3). Which quest unlocks each episode, and which intro plays first, is set in
 // the owner's editor (Podcast tab) and saved to the shared world/podcast doc, so it changes for everyone without a rebuild.
 // def: what unlocks it until the owner picks something else in the editor ('@allmain' = every main quest done, '@maw' = the Greater Maw is dead)
+const POD_OFF = true; // shows are off for now (Phil may record new ones); the files stay in the repo, the radio plays songs only
 const POD_EPS = [
   { id: 'vector', file: 'podcast/vector_before.mp3', title: 'Why Everyone Avoided Vector Before Drome', def: 'q1' },
   { id: 'earth', file: 'podcast/earth_against.mp3', title: 'How Drome Turned Earth Against Itself', def: 'q5' },
@@ -22,7 +23,7 @@ setTimeout(() => { // after inventory.js has loaded
   const _ii = itemIcon; itemIcon = function (id) { return id === 'radio88' ? 'radio' : _ii(id); }; }, 0);
 const podHasRadio = () => !!(S.inv && S.inv.radio88);
 function podGiveRadio() { if (podHasRadio() || !qDone('q1')) return; S.inv.radio88 = 1; if (typeof markDirty === 'function') markDirty(); log('+1 Nebula 88.8 Radio', 'loot'); toast('NEBULA 88.8 RADIO', 'A pocket radio. ' + (TOUCH ? 'Menu → Journal → Radio' : 'Press O') + ' to tune in.', 3.5); }
-const podList = () => POD_EPS.filter(podOpen);
+const podList = () => POD_OFF ? [] : POD_EPS.filter(podOpen);
 // shared config: the owner's picks, loaded once the cloud is up (local copy when offline)
 { let tries = 0; const iv = setInterval(async () => { tries++; if (!db && tries < 20) return; clearInterval(iv);
   try { if (db) { const s = await db.doc('world/podcast').get(); if (s.exists && s.data() && s.data().data) POD.cfg = JSON.parse(s.data().data) || {}; }
@@ -100,17 +101,16 @@ const POD_SONG_TITLES = { risingsun: 'Art of War: Rising Sun', overture: 'Veloci
 const POD_SONGS = {}; // song items, made once so the player can tell them apart
 function podSongList() { S.songs = S.songs || {}; return Object.keys(S.songs).filter(k => TRACKS[k]).map(k => POD_SONGS[k] || (POD_SONGS[k] = { id: 'song_' + k, key: k, file: TRACKS[k], title: POD_SONG_TITLES[k] || k[0].toUpperCase() + k.slice(1), song: true })); }
 { const _ms = musStart; musStart = function (list, idx) { const r = _ms.apply(this, arguments); try { const k = PLAYLISTS[list][idx % PLAYLISTS[list].length]; S.songs = S.songs || {}; if (k && TRACKS[k] && !S.songs[k]) { S.songs[k] = 1; if (typeof markDirty === 'function') markDirty(); if (musVol() > 0 && state !== 'menu') toast('♪ NEW SONG DISCOVERED', (POD_SONG_TITLES[k] || (typeof RADIO_TITLES !== 'undefined' && RADIO_TITLES[k]) || k[0].toUpperCase() + k.slice(1)) + ' · added to your radio', 3); } } catch (_) {} return r; }; }
-const RDEV_MODES = ['shows', 'songs', 'favs'], RDEV_NAMES = { shows: 'NEBULA 88.8', songs: 'ALL SONGS', favs: 'FAVORITES' };
+const RDEV_MODES = POD_OFF ? ['songs', 'favs'] : ['shows', 'songs', 'favs'], RDEV_NAMES = { shows: 'NEBULA 88.8', songs: 'ALL SONGS', favs: 'FAVORITES' };
 const podFavs = () => (S.favSongs = S.favSongs || {});
 const rdevList = () => RDEV.mode === 'songs' ? podSongList() : RDEV.mode === 'favs' ? podSongList().filter(e => podFavs()[e.key]) : podList();
 function rdevPress(k) { const K = RDEV.keys[k]; if (K) { K.position.z = -0.06; setTimeout(() => { K.position.z = 0; }, 120); } try { SFX.ui(); } catch (_) {}
   if (RDEV.ask && k !== 'mid') { RDEV.ask = null; rdevDraw(); return; }
   if (k === 'fav') { const L = rdevList(), ep = L.length ? L[RDEV.sel % L.length] : null; if (!ep || !ep.song) { toast('FAVORITES', ep ? 'Only songs go in Favorites' : 'Pick a song first', 1.4); return; }
     const F = podFavs(); if (F[ep.key]) delete F[ep.key]; else F[ep.key] = 1; RDEV.heartT = performance.now(); markDirty(); if (RDEV.mode === 'favs') RDEV.sel = Math.min(RDEV.sel, Math.max(0, rdevList().length - 1)); rdevDraw(); return; }
-  if (k === 'up' || k === 'down') { RDEV.mode = RDEV_MODES[(RDEV_MODES.indexOf(RDEV.mode) + (k === 'up' ? 2 : 1)) % 3]; RDEV.sel = 0; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); rdevDraw(); return; }
+  if (k === 'up' || k === 'down') { RDEV.mode = RDEV_MODES[(RDEV_MODES.indexOf(RDEV.mode) + (k === 'up' ? RDEV_MODES.length - 1 : 1)) % RDEV_MODES.length]; RDEV.sel = 0; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); rdevDraw(); return; }
   const L = rdevList(); if (!L.length) { rdevDraw(); return; }
-  if (k === 'left') RDEV.sel = (RDEV.sel + L.length - 1) % L.length;
-  else if (k === 'right') RDEV.sel = (RDEV.sel + 1) % L.length;
+  if (k === 'left' || k === 'right') { RDEV.sel = (RDEV.sel + (k === 'left' ? L.length - 1 : 1)) % L.length; const ep = L[RDEV.sel]; if (POD.ep !== ep) { if (POD.ep) podPause(); podStart(ep); } } // skipping plays what you land on
   else if (k === 'mid') { const ep = L[RDEV.sel % L.length]; RDEV.ask = null; if (POD.ep === ep) { POD.playing ? podPause() : podResume(); } else { if (POD.ep) podPause(); podStart(ep); } }
   rdevDraw(); }
 function rdevWrap(x, text, maxW) { const w = String(text).split(' '), out = []; let line = ''; for (const s of w) { const t = line ? line + ' ' + s : s; if (x.measureText(t).width > maxW && line) { out.push(line); line = s; } else line = t; } if (line) out.push(line); return out; }
@@ -122,7 +122,7 @@ function rdevDraw() { const x = RDEV.sx; if (!x) return; const W = 512, H = 400,
   x.font = 'bold 30px "Courier New",monospace'; x.textBaseline = 'middle'; x.fillText(RDEV_NAMES[RDEV.mode] || 'NEBULA 88.8', 100, 46); x.font = '20px "Courier New",monospace'; x.fillStyle = dim; x.fillText(RDEV.mode === 'songs' ? 'Songs from the galaxy' : RDEV.mode === 'favs' ? 'Your hearted songs' : 'Drome War Radio', 100, 76); x.fillStyle = fg;
   x.lineWidth = 3; x.strokeRect(440, 24, 44, 20); x.fillRect(484, 29, 5, 10); x.fillRect(444, 28, 30, 12);
   const songs = RDEV.mode !== 'shows', L = rdevList(), ep = L.length ? L[RDEV.sel % L.length] : null;
-  x.font = 'bold 17px "Courier New",monospace'; [['shows', 'RADIO', 40], ['songs', 'ALL SONGS', 150], ['favs', '♥ FAVS', 300]].forEach(([m, t, tx]) => { x.fillStyle = RDEV.mode === m ? fg : dim; x.fillText(t, tx, 108); if (RDEV.mode === m) x.fillRect(tx, 120, x.measureText(t).width, 3); }); x.fillStyle = dim; x.fillText('▲▼', 440, 108); x.fillStyle = fg;
+  x.font = 'bold 17px "Courier New",monospace'; (POD_OFF ? [['songs', 'ALL SONGS', 40], ['favs', '♥ FAVS', 190]] : [['shows', 'RADIO', 40], ['songs', 'ALL SONGS', 150], ['favs', '♥ FAVS', 300]]).forEach(([m, t, tx]) => { x.fillStyle = RDEV.mode === m ? fg : dim; x.fillText(t, tx, 108); if (RDEV.mode === m) x.fillRect(tx, 120, x.measureText(t).width, 3); }); x.fillStyle = dim; x.fillText('▲▼', 440, 108); x.fillStyle = fg;
   if (!ep) { x.font = 'bold 30px "Courier New",monospace'; x.fillText(RDEV.mode === 'favs' ? 'No favorites yet' : songs ? 'No songs yet' : 'Nothing on air yet', 40, 190); x.font = '22px "Courier New",monospace'; x.fillStyle = dim; (RDEV.mode === 'favs' ? ['Pick a song in ALL SONGS', 'and press the heart key.'] : songs ? ['Songs you hear around the', 'galaxy show up here.'] : ['Shows come on as the', 'story moves on.']).forEach((l, i) => x.fillText(l, 40, 236 + i * 28)); RDEV.stex.needsUpdate = true; return; }
   if (RDEV.ask) { x.font = 'bold 22px "Courier New",monospace'; x.fillText('★ NEW SHOW ON AIR', 40, 130); }
   if (ep.song) { const on = podFavs()[ep.key], pop = RDEV.heartT ? Math.max(0, 1 - (performance.now() - RDEV.heartT) / 400) : 0; x.save(); x.translate(460, 150); x.scale(1 + pop * 0.5, 1 + pop * 0.5); x.beginPath(); x.moveTo(0, 14); x.bezierCurveTo(-4, 8, -18, 2, -18, -7); x.bezierCurveTo(-18, -16, -6, -19, 0, -10); x.bezierCurveTo(6, -19, 18, -16, 18, -7); x.bezierCurveTo(18, 2, 4, 8, 0, 14);
@@ -149,8 +149,8 @@ document.body.appendChild(rdevWrapEl); $('radioX').addEventListener('pointerdown
 function rdevClose() { RDEV.open = false; RDEV.ask = null; rdevWrapEl.hidden = true; }
 function openPodcast(askEp) { if (!podHasRadio()) { toast('NO RADIO', 'Finish your first job for Captain Vega', 2); return; }
   if (!RDEV.r) { rdevBuild(); rdevWrapEl.prepend(RDEV.cv); }
-  if (askEp) { RDEV.mode = 'shows'; const L = podList(); RDEV.ask = askEp; RDEV.sel = Math.max(0, L.indexOf(askEp)); }
-  else { RDEV.ask = null; RDEV.mode = RDEV.mode || 'shows'; if (POD.ep && POD.ep.song && RDEV.mode === 'shows') RDEV.mode = 'songs'; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); }
+  if (askEp && !POD_OFF) { RDEV.mode = 'shows'; const L = podList(); RDEV.ask = askEp; RDEV.sel = Math.max(0, L.indexOf(askEp)); }
+  else { RDEV.ask = null; RDEV.mode = RDEV.mode || RDEV_MODES[0]; if ((POD.ep && POD.ep.song || POD_OFF) && RDEV.mode === 'shows') RDEV.mode = 'songs'; const L = rdevList(); if (POD.ep && L.includes(POD.ep)) RDEV.sel = L.indexOf(POD.ep); }
   $('radioHint').textContent = TOUCH ? 'Tap the keys' : 'Click the keys, or arrows · Enter · H for ♥ · O puts it away';
   rdevWrapEl.style.scale = String(Math.min(1, innerHeight * 0.8 / 590, innerWidth * 0.94 / 420)); rdevWrapEl.hidden = false; firing = false;
   if (document.pointerLockElement) document.exitPointerLock();

@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.87</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.89</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -10104,12 +10104,11 @@ function openGunMods(who) {
 // station on the ship next to the saber mods
 { const orig = LEVELS.ship.build;
   LEVELS.ship.build = function () { orig.call(this);
-    // the display (2.23.77): a steel workbench cabinet with drawers, an open lit plinth where your gun rests on two cradles, a pegboard of tools behind and a plaque on the front
+    // the display (2.23.77): a steel workbench cabinet with drawers, an open lit plinth where your gun rests on two cradles, a pegboard of tools behind
     const st = new THREE.Group(), steel = toon('#3a3d44', 'hull'), dk = toon('#1e2128'), chrome = toon('#a8aeb8'), cy = '#4fd2ff';
     part(st, B(1.7, 0.86, 0.85), steel, 0, 0.43, 0); part(st, B(1.76, 0.05, 0.9), toon('#2a2d34'), 0, 0.885, 0); part(st, B(1.7, 0.08, 0.85), dk, 0, 0.04, 0);
     for (let r = 0; r < 2; r++) for (const sx of [-0.43, 0.43]) { part(st, B(0.76, 0.3, 0.02), toon('#30333a'), sx, 0.27 + r * 0.34, 0.43); part(st, B(0.3, 0.03, 0.03), chrome, sx, 0.33 + r * 0.34, 0.45); }
-    { const c = document.createElement('canvas'); c.width = 256; c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#0a1420'; x.fillRect(0, 0, 256, 64); x.strokeStyle = cy; x.lineWidth = 3; x.strokeRect(3, 3, 250, 58); x.fillStyle = '#cfefff'; x.font = 'bold 30px Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('GUNSMITH', 128, 34);
-      const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.155), new THREE.MeshBasicMaterial({ map: t })); pl.position.set(0, 0.79, 0.433); st.add(pl); part(st, B(0.66, 0.19, 0.01), chrome, 0, 0.79, 0.427); }
+    part(st, B(0.66, 0.19, 0.01), toon('#30333a'), 0, 0.79, 0.427); // a plain drawer front where the old name plate was
     // open display (2.23.87): a dark plinth with a lit ring and two padded cradles the gun rests on; no glass
     part(st, B(1.5, 0.08, 0.7), dk, 0, 0.95, 0); part(st, Cy(0.34, 0.36, 0.04, 24), toon('#24282f'), 0, 1.01, 0); part(st, new THREE.TorusGeometry(0.35, 0.012, 4, 32), glow(cy), 0, 1.035, 0, Math.PI / 2);
     for (const sx of [-0.3, 0.3]) { part(st, B(0.06, 0.2, 0.16), chrome, sx, 1.13, 0); part(st, B(0.1, 0.05, 0.2), toon('#5a1e22', 'cloth'), sx, 1.24, 0); }
@@ -12057,17 +12056,25 @@ function fwHud() {
 }
 function fwStep(t) { const dt = Math.min(0.1, Math.max(0, t - FW.lt)); FW.lt = t; if (!dt || LEVEL.id !== 'fort') return;
   if (!FB.on) { fwTick(dt); fwMgStep(dt); } else if (FW.mg) FW.mg = null; fwHud(); }
-{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); for (const S of FW.sec) { S.line = -81; S.won = S.lost = 0; } FW.mg = null; fwCoverBuild(); FW.ourT = 1; FW.theirT = 3; levelAnims.push(fwStep); return r; }; }
+{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); for (const S of FW.sec) { S.line = -81; S.won = S.lost = 0; } FW.mg = null; fwCoverBuild(); fwHazeBuild(); FW.ourT = 1; FW.theirT = 3; levelAnims.push(fwStep); return r; }; }
 setInterval(() => { if (FW.hud && (!LEVEL || LEVEL.id !== 'fort' || state !== 'play')) FW.hud.style.display = 'none'; }, 400);
 // ---------- battlefield haze (2.23.87): dust and smoke thicken as you head out to the Front, thinner inside the walls ----------
 { const _ue = updateEnv; updateEnv = function (dt, t) { _ue(dt, t); if (!LEVEL || LEVEL.id !== 'fort') return;
   const out = player.pos.x < -14 && player.pos.y < 7, k = FW.fogK = (FW.fogK == null ? (out ? 1 : 0.45) : FW.fogK + ((out ? 1 : 0.45) - FW.fogK) * Math.min(1, (dt || 0.016) * 0.8));
-  scene.fog.color.set('#3e3832').convertSRGBToLinear(); scene.fog.near = 30 - 22 * k; scene.fog.far = 160 - 75 * k; }; }
-function fwHaze(dt) { FW.hzT = (FW.hzT || 0) - dt; if (FW.hzT > 0) return; FW.hzT = 3;
-  if (FB.smoke.length >= 12) return; if (!FW.hzMat) FW.hzMat = new THREE.MeshLambertMaterial({ color: '#4e4844', transparent: true, opacity: 0.3, depthWrite: false });
-  for (let i = 0; i < 2; i++) { const x = -112 + Math.random() * 60, z = -12 + Math.random() * 80, m = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), FW.hzMat.clone());
-    m.position.set(x, FRONT.baseH(x, z) + 1.8 + Math.random() * 1.5, z); m.scale.set(7 + Math.random() * 5, 1.2 + Math.random() * 0.8, 7 + Math.random() * 5); levelGroup.add(m); FB.smoke.push({ s: m, t: 40 + Math.random() * 25 }); } }
-{ const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.hzLt || t))); FW.hzLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort' && !FB.on) fwHaze(dt); }; }
+  scene.fog.color.set('#2c2824').convertSRGBToLinear(); scene.fog.near = 30 - 18 * k; scene.fog.far = 170 - 70 * k; }; }
+// soft haze: camera-facing puffs with a feathered edge drift across no-man's-land on the wind and wrap round, fading near the camera
+function fwPuffTex() { if (FW.puffTex) return FW.puffTex; const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+  for (let k = 0; k < 7; k++) { const cx = 40 + Math.random() * 48, cy = 44 + Math.random() * 40, r = 26 + Math.random() * 22, g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, 'rgba(255,255,255,0.32)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); }
+  return (FW.puffTex = new THREE.CanvasTexture(c)); }
+function fwHazeBuild() { FW.puffs = []; const tex = fwPuffTex();
+  for (let i = 0; i < 46; i++) { const m = new THREE.SpriteMaterial({ map: tex, color: i % 3 ? '#8a8078' : '#6a625c', transparent: true, opacity: 0, depthWrite: false, fog: true }), s = new THREE.Sprite(m);
+    const x = -128 + Math.random() * 92, z = -18 + Math.random() * 96, sc = 12 + Math.random() * 14; s.scale.set(sc, sc * 0.45, 1); s.position.set(x, FRONT.baseH(x, z) + 1.2 + Math.random() * 2.2, z); s.renderOrder = 2; levelGroup.add(s);
+    FW.puffs.push({ s, a: 0.22 + Math.random() * 0.2, v: 0.5 + Math.random() * 0.6, ph: Math.random() * 6 }); } }
+function fwHaze(dt) { if (!FW.puffs) return; const cam = camera.position, t = performance.now() / 1000;
+  for (const P of FW.puffs) { const s = P.s; s.position.x += P.v * dt; s.position.z += Math.sin(t * 0.05 + P.ph) * 0.15 * dt; if (s.position.x > -34) { s.position.x = -128; s.position.y = FRONT.baseH(-128, s.position.z) + 1.2 + Math.random() * 2.2; }
+    const edge = Math.min(1, (s.position.x + 128) / 12, (-34 - s.position.x) / 12), near = clamp((s.position.distanceTo(cam) - 5) / 14, 0, 1);
+    s.material.opacity = P.a * edge * near * (0.85 + Math.sin(t * 0.3 + P.ph) * 0.15); } }
+{ const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.hzLt || t))); FW.hzLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort') fwHaze(dt); }; }
 
 // =================== FORT IRONROCK, THE FORTRESS (2.23.83) ===================
 // Ironrock is one walled citadel now: a 60 x 60 m curtain wall with bastions, a gatehouse on the south side, roofed wings round an open courtyard.
@@ -12115,19 +12122,17 @@ function irBuild() {
   for (const [cx, cz] of [[X0, Z0], [X1, Z0], [X0, Z1], [X1, Z1]]) { const sx = Math.sign(cx - 16), sz = Math.sign(cz - 10); irBox(props, 6, WH, 6, wallMat, cx + sx, WH / 2, cz + sz, 4); IR.walls.push([cx + sx - 3, cx + sx + 3, cz + sz - 3, cz + sz + 3]);
     irBox(props, 6.4, 0.3, 6.4, trim, cx + sx, WH + 0.15, cz + sz, 2); const tur = new THREE.Group(); tur.position.set(cx + sx * 2.6, WH + 0.3, cz + sz * 2.6); props.add(tur); part(tur, Cy(1.3, 1.5, 2.4, 10), steel, 0, 1.2, 0); part(tur, Cy(1.5, 1.5, 0.3, 10), trim, 0, 2.5, 0); for (let k = 0; k < 4; k++) part(tur, B(0.3, 0.6, 0.12), glow('#ffd36a'), Math.cos(k * 1.57) * 1.3, 1.4, Math.sin(k * 1.57) * 1.3, 0, -k * 1.57 + 1.57, 0);
     part(tur, Cy(0.18, 0.18, 0.4, 8), glow('#ff3a2a'), 0, 2.9, 0); }
-  // ---- the gatehouse: two towers outside the south wall, a lintel with the FORT IRONROCK lightbox, blast doors parked open ----
+  // ---- the gatehouse: two towers outside the south wall, a lintel and a raised portcullis ----
   for (const gx of [9, 21]) { irBox(props, 4, WH + 3, 5, wallMat, gx, (WH + 3) / 2, Z0 - 1.5, 4); IR.walls.push([gx - 2, gx + 2, Z0 - 4, Z0 + 1]); irBox(props, 4.4, 0.4, 5.4, trim, gx, WH + 3.2, Z0 - 1.5, 2); for (let k = -1; k <= 1; k++) irBox(props, 0.9, 1, 0.4, wallMat, gx + k * 1.4, WH + 3.9, Z0 - 4, 2);
     part(props, B(0.5, 1.6, 0.1), glow('#ffd36a'), gx, 6.5, Z0 - 4.05); }
   irBox(props, 8, WH - 5.5, T, wallMat, 15, 5.5 + (WH - 5.5) / 2, Z0 + T / 2, 4); irBox(props, 8.4, 0.5, 0.5, haz, 15, 5.3, Z0 - 0.1, 1);
   for (const s of [-1, 1]) irBox(props, 0.5, 5.5, 0.6, haz, 15 + s * 4.15, 2.75, Z0 - 0.1, 1);
   for (let k = 0; k < 9; k++) part(props, B(0.12, 0.7, 0.12), steel, 11.4 + k * 0.9, 5.1, Z0 + 1.5); part(props, B(8, 0.14, 0.14), steel, 15, 4.75, Z0 + 1.5); // the portcullis, raised
-  { const c = document.createElement('canvas'); c.width = 1024; c.height = 160; const x = c.getContext('2d'); const gr = x.createLinearGradient(0, 0, 0, 160); gr.addColorStop(0, '#1e2128'); gr.addColorStop(1, '#0e1014'); x.fillStyle = gr; x.fillRect(0, 0, 1024, 160); x.strokeStyle = '#ff8a2a'; x.lineWidth = 6; x.strokeRect(8, 8, 1008, 144);
-    x.font = 'bold 92px Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = '#ff8a2a'; x.shadowBlur = 18; x.fillStyle = '#ffe2c0'; x.fillText('FORT IRONROCK', 512, 84); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
-    const lb = new THREE.Group(); lb.position.set(15, 7.3, Z0 - 0.45); props.add(lb); part(lb, B(7.4, 1.3, 0.3), trim, 0, 0, 0); const f = new THREE.Mesh(new THREE.PlaneGeometry(7.1, 1.1), new THREE.MeshBasicMaterial({ map: t })); f.position.z = -0.16; f.rotation.y = Math.PI; lb.add(f); for (const s of [-1, 1]) part(lb, B(0.12, 0.12, 0.5), steel, s * 3.2, 0.7, 0.2); }
-  // ---- the Sally Port: a tunnel through the west wall to the Front, with a hazard frame and a lit plaque inside ----
+  // no name board on the gate: the zone banner already says where you are
+  // ---- the Sally Port: a tunnel through the west wall to the Front, with a hazard frame ----
   irBox(props, T, WH - 4.5, 8, wallMat, X0 + T / 2, 4.5 + (WH - 4.5) / 2, 25, 4); for (const s of [-1, 1]) irBox(props, T + 0.2, 4.5, 0.5, haz, X0 + T / 2, 2.25, 25 + s * 4.1, 1); irBox(props, T + 0.2, 0.5, 8.6, haz, X0 + T / 2, 4.35, 25, 1);
   for (let k = 0; k < 3; k++) part(props, B(T, 0.1, 0.25), glow('#fff1c8'), X0 + T / 2, 4.05, 22.5 + k * 2.5);
-  irPlaque(X0 + T + 0.05, 5.6, 25, Math.PI / 2, 'SALLY PORT', 'TO THE FRONT', '#ff8a2a');
+
   // ---- the hangar door: a tall opening in the east wall with a raised roller door ----
   irBox(props, T, WH - 7, 10, wallMat, X1 - T / 2, 7 + (WH - 7) / 2, 26, 4); irBox(props, T - 0.4, 0.9, 10, toon('#6a6e76', 'ribbed'), X1 - T / 2, 6.5, 26, 1); for (const s of [-1, 1]) irBox(props, T + 0.2, 7, 0.5, haz, X1 - T / 2, 3.5, 26 + s * 5.1, 1);
   // ---- floors: paving in the courtyard, a different floor in every room ----
@@ -12184,7 +12189,7 @@ function irDress() {
   const win = (x, z, ry) => { const g = new THREE.Group(); g.position.set(x, 2.1, z); g.rotation.y = ry; props.add(g); part(g, B(2.0, 1.3, 0.12), trim, 0, 0, 0); part(g, B(1.8, 1.1, 0.02), glow('#a8c8e8'), 0, 0, 0.07); part(g, B(0.08, 1.1, 0.06), trim, 0, 0, 0.09); part(g, B(2.1, 0.1, 0.25), trim, 0, -0.68, 0.1); };
   for (const z of [-14, -2, 2, 12]) { win(5.56, z, Math.PI / 2); win(24.44, z, -Math.PI / 2); } for (const x of [7.5, 22.5]) win(x, 14.69, Math.PI);
   const door = (x, z, ry, w, title, col) => { const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; props.add(g); for (const s of [-1, 1]) part(g, B(0.3, 3.5, 0.3), trim, s * (w / 2 + 0.1), 1.75, 0.2); part(g, B(w + 0.5, 0.35, 0.3), trim, 0, 3.55, 0.2);
-    part(g, B(0.3, 0.3, 0.12), glow('#fff1c8'), w / 2 + 0.6, 2.6, 0.12); irPlaque(x + Math.sin(ry) * 0.02, 4.4, z + Math.cos(ry) * 0.02, ry, title, '', col); };
+    part(g, B(0.3, 0.3, 0.12), glow('#fff1c8'), w / 2 + 0.6, 2.6, 0.12); };
   door(5.5, -7.5, Math.PI / 2, 3, 'MED BAY', '#c8402f'); door(5.5, 8.5, Math.PI / 2, 3, 'MESS HALL', '#ffd36a'); door(24.5, -7.5, -Math.PI / 2, 3, 'ARMORY', '#ff8a2a'); door(24.5, 7.5, -Math.PI / 2, 3, 'RESEARCH', '#4fd2ff'); door(15, 14.75, Math.PI, 8, 'COMMAND', '#6fdc5a');
   for (const [x0, z0, x1, z1] of [[7, -11, 23, -11], [7, -1, 23, -1], [7, -11, 7, -1], [23, -11, 23, -1]]) part(props, B(Math.abs(x1 - x0) || 0.12, 0.012, Math.abs(z1 - z0) || 0.12), toon('#e8e2c8'), (x0 + x1) / 2, 0.106, (z0 + z1) / 2);
   { const f = new THREE.Group(); f.position.set(15, 0.1, -6); props.add(f); part(f, Cy(0.6, 0.8, 0.4, 10), trim, 0, 0.2, 0); part(f, Cy(0.07, 0.09, 11, 8), chrome, 0, 5.9, 0); part(f, new THREE.SphereGeometry(0.16, 8, 6), toon('#ffd36a'), 0, 11.5, 0); solid(15, -6, 0.6);
@@ -12209,7 +12214,6 @@ function irDress() {
   irBox(props, 1.0, 1.0, 9, steel, -9.0, 0.6, 10, 2); irBox(props, 1.1, 0.06, 9.2, chrome, -9.0, 1.12, 10, 1); for (let k = 0; k < 5; k++) { part(props, B(0.7, 0.12, 1.2), chrome, -9.0, 1.18, 6.5 + k * 1.8); part(props, B(0.6, 0.06, 1.0), toon(['#c86a2a', '#6fdc5a', '#e8d8a0', '#8a4a2a', '#c8402f'][k]), -9.0, 1.24, 6.5 + k * 1.8); } box(-9.0, 10, 0.5, 4.5);
   irMan(-10.3, 12, Math.PI / 2, { civ: ['#e8e4dc', '#2c2a28', '#c58a64', '#1e1a18', '#e8e4dc'] });
   for (const [x, z, f] of [[-5.6, 5.15, 0], [-2, 5.15, 0], [-4.2, 6.85, Math.PI], [-0.6, 12.35, 0], [-6.5, 10.45, Math.PI], [-3, 8.75, 0]]) irMan(x, z, f, { sit: 0.54, eat: 1, col: ['#5a6a3a', '#3a4a2a', '#6f7a3e'][Math.floor(x * 7) & 1 ? 1 : 0] });
-  irPlaque(-10.85, 2.8, 14.5, Math.PI / 2, "TODAY: SLOP", 'SAME AS YESTERDAY', '#ffd36a');
   // ---- Muster Hall by the Sally Port: weapon racks, ammo, a briefing board, troopers waiting to go ----
   for (let k = 0; k < 3; k++) { const z = 31 + k * 2; irBox(props, 0.4, 1.8, 1.6, trim, 4.4, 1.0, z, 1); for (let g = 0; g < 4; g++) part(props, B(0.1, 1.1, 0.06), dk, 4.15, 1.2, z - 0.6 + g * 0.4); } box(4.4, 33, 0.3, 2.9);
   for (const [x, z] of [[-9.5, 34.5], [-8.3, 34.5], [-9.5, 35.6], [0.5, 19], [1.6, 19]]) crate(x, z, 0.9, '#4a5a32');
@@ -12270,7 +12274,6 @@ function irDecor() {
   for (let k = 0; k < 3; k++) { const z = -15 + k * 3 + 0.55; part(props, Cy(0.02, 0.02, 1.8, 6), chrome, -7.2, 1.0, z); part(props, B(0.25, 0.03, 0.03), chrome, -7.2, 1.85, z); part(props, B(0.12, 0.2, 0.05), toon('#cfe8ff'), -7.12, 1.7, z); part(props, Cy(0.18, 0.2, 0.04, 8), dk, -7.2, 0.12, z); }
   irBox(props, 2.6, 2.0, 0.5, white, -2, 1.1, -16.6, 1); for (let r = 0; r < 3; r++) { part(props, B(2.5, 0.04, 0.45), chrome, -2, 0.6 + r * 0.6, -16.55); for (let k = 0; k < 5; k++) part(props, B(0.3, 0.25, 0.3), toon(['#e8e4dc', '#c8402f', '#8ab8d8'][(k + r) % 3]), -3 + k * 0.5, 0.75 + r * 0.6, -16.5); } box(-2, -16.6, 1.3, 0.3);
   irBox(props, 1.8, 0.08, 0.9, wood, 1.5, 0.85, -15.9, 1); for (const s of [-1, 1]) part(props, B(0.06, 0.75, 0.8), trim, 1.5 + s * 0.85, 0.45, -15.9); part(props, B(0.6, 0.4, 0.05), dk, 1.5, 1.15, -16.2); part(props, B(0.55, 0.34, 0.02), glow('#6fdc5a'), 1.5, 1.15, -16.17); chair(1.5, -15.1, Math.PI); box(1.5, -15.9, 0.9, 0.45);
-  irPlaque(-6, 3.2, -16.84, 0, 'MED BAY', 'CPL. PATCH ON DUTY', '#c8402f');
   // Barracks: footlockers at the bunks, a card table with two chairs, a rug
   for (let k = 0; k < 4; k++) { const z = -5 + k * 2.2; irBox(props, 0.5, 0.4, 0.8, olive, -8.2, 0.3, z, 1); part(props, B(0.1, 0.06, 0.04), chrome, -7.94, 0.42, z); } box(-8.2, -1.7, 0.25, 3.7);
   part(props, B(3, 0.012, 2.2), toon('#6a2a20', 'carpet'), -1.5, 0.106, -1.5); irBox(props, 1.0, 0.06, 1.0, wood, -1.5, 0.8, -1.5, 1); part(props, Cy(0.06, 0.06, 0.7, 6), trim, -1.5, 0.45, -1.5); for (let k = 0; k < 6; k++) part(props, B(0.09, 0.005, 0.13), white, -1.75 + k * 0.1, 0.835, -1.5 + (k % 2) * 0.1, 0, k * 0.4, 0);
@@ -12290,7 +12293,6 @@ function irDecor() {
   irBox(props, 2.4, 0.08, 1.0, wood, 29, 0.95, -8, 1); for (const s of [-1, 1]) part(props, B(0.08, 0.85, 0.9), trim, 29 + s * 1.1, 0.5, -8); part(props, B(0.25, 0.2, 0.2), steel, 28.2, 1.1, -8.2); { const gm = makeGunModel('g70'); gm.position.set(29.3, 1.05, -7.9); gm.rotation.set(0, 0.4, Math.PI / 2); props.add(gm); } box(29, -8, 1.2, 0.5);
   { const d = makeTrooper({ noGun: true }); d.traverse(c => { if (c.isMesh) c.material = toon('#a88a5a', 'cloth'); }); d.position.set(32, 0.1, -5); d.rotation.y = Math.PI; props.add(d); part(props, Cy(0.05, 0.05, 0.8, 6), wood, 32, 0.4, -5); solid(32, -5, 0.4); }
   for (let k = 0; k < 6; k++) irBox(props, 0.6, 0.35, 0.4, olive, 26.4 + (k % 2) * 0.65, 0.28 + Math.floor(k / 2) * 0.36, -11, 1); box(26.7, -11, 0.65, 0.25);
-  irPlaque(39.5, 3.0, -16.84, 0, 'QUARTERMASTER', 'SGT. BRIX', '#ff8a2a');
   // Research Lab: a specimen tank with a Drome bug, a robot arm, chairs, a wall display, cable runs
   { const X = 38, Z = 12.8; part(props, B(1.6, 0.3, 1.2), trim, X, 0.25, Z); part(props, B(1.6, 0.15, 1.2), trim, X, 2.1, Z); const gl = new THREE.Mesh(B(1.5, 1.6, 1.1), new THREE.MeshPhongMaterial({ color: '#9fff6a', transparent: true, opacity: 0.16, depthWrite: false })); gl.position.set(X, 1.2, Z); levelGroup.add(gl);
     const bug = new THREE.Group(); bug.position.set(X, 1.1, Z); levelGroup.add(bug); part(bug, new THREE.SphereGeometry(0.28, 10, 8), toon('#3a1416'), 0, 0, 0); part(bug, new THREE.SphereGeometry(0.18, 8, 6), toon('#5a2024'), 0.3, 0.05, 0); for (let k = 0; k < 6; k++) part(bug, B(0.03, 0.03, 0.4), dk, -0.1 + (k % 3) * 0.15, -0.15, (k < 3 ? 1 : -1) * 0.25, 0.5 * (k < 3 ? 1 : -1), 0, 0);
@@ -20652,6 +20654,7 @@ const UPDATES = [
   { id: 315, title: '2.23.50 · Cleaner minimap', items: ['The live minimap no longer shows fireflies, rain, sparks or other effects', 'Removed the little winding crown on the minimap watch (the pill-shaped thing)'] },
   { id: 316, title: '2.23.51 · Ready for the cast', items: ['The game can now play real voice-actor recordings for every character line, as they get recorded'] },
   { id: 317, title: '2.23.52 · Helmet radio', items: ['Recorded voices for helmeted characters and battle radio play through a light comms filter'] },
+  { id: 354, title: '2.23.89 · Softer haze, no labels', items: ['The haze over the Front is now soft drifting dust that rolls in on the wind and thins out as you walk into it, instead of solid smoke blobs.', 'Took down the GUNSMITH plate on the ship gun bench and the name plaques around Fort Ironrock.'] },
   { id: 352, title: '2.23.87 · Cover, fog and a fuller fortress', items: ['Squads on the Front take cover behind sandbag walls, concrete blocks, burnt-out tanks and log barricades. They sit with their backs to it, then stand up to fire over the top.', 'Dust and drifting smoke hang over the battlefield, thickest out at the Front and lighter inside the walls.', 'Every room in Fort Ironrock has more in it now: hanging lamps, pipes, a supply shelf and desk in the Med Bay, a card table in the Barracks, a drinks cooler and TV in the Mess Hall, ready benches and lockers in the Muster Hall, a workbench and dummy in the Armory, and a specimen tank and robot arm in the Lab.', 'The ship gun bench faces into the room and shows your gun on open cradles, with no glass case.', 'The slot machine buttons sit on their own ledge and are no longer covered by the screen housing.', 'The radio plays songs only for now, and skipping to the next or previous song starts playing it.'] },
   { id: 350, title: '2.23.85 · The Front fights back and forth', items: ['Our squads muster in the Muster Hall, march out through the Sally Port and go over the top. Drome squads come out from their side to meet them.', 'The Front has three sectors, south, centre and north, each with a line that moves as squads win or lose. A strip at the top of the screen shows who holds each one.', 'The wounded fall back to their trench, patch up and go out again, and reinforcements stream in for whichever side is losing.', 'Get on a heavy MG and the Drome send runner squads straight at your nest, with shield runners and lieutenants mixed in. Kill streaks pay bonus XP.'] },
   { id: 348, title: '2.23.83 · Fort Ironrock rebuilt as a fortress', items: ['Ironrock is now one walled citadel with corner bastions, a gatehouse and a rampart you reach by the lifts in the courtyard.', 'Every room has a job and its own look: Med Bay and Barracks, Mess Hall, Muster Hall, Command Hall with a live war table, Armory, Research Lab and the Motor Pool Hangar.', 'The Sally Port in the west wall leads to the Front, and the hangar door leads to the Vehicle Range.'] },

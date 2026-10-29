@@ -44,19 +44,17 @@ function irBuild() {
   for (const [cx, cz] of [[X0, Z0], [X1, Z0], [X0, Z1], [X1, Z1]]) { const sx = Math.sign(cx - 16), sz = Math.sign(cz - 10); irBox(props, 6, WH, 6, wallMat, cx + sx, WH / 2, cz + sz, 4); IR.walls.push([cx + sx - 3, cx + sx + 3, cz + sz - 3, cz + sz + 3]);
     irBox(props, 6.4, 0.3, 6.4, trim, cx + sx, WH + 0.15, cz + sz, 2); const tur = new THREE.Group(); tur.position.set(cx + sx * 2.6, WH + 0.3, cz + sz * 2.6); props.add(tur); part(tur, Cy(1.3, 1.5, 2.4, 10), steel, 0, 1.2, 0); part(tur, Cy(1.5, 1.5, 0.3, 10), trim, 0, 2.5, 0); for (let k = 0; k < 4; k++) part(tur, B(0.3, 0.6, 0.12), glow('#ffd36a'), Math.cos(k * 1.57) * 1.3, 1.4, Math.sin(k * 1.57) * 1.3, 0, -k * 1.57 + 1.57, 0);
     part(tur, Cy(0.18, 0.18, 0.4, 8), glow('#ff3a2a'), 0, 2.9, 0); }
-  // ---- the gatehouse: two towers outside the south wall, a lintel with the FORT IRONROCK lightbox, blast doors parked open ----
+  // ---- the gatehouse: two towers outside the south wall, a lintel and a raised portcullis ----
   for (const gx of [9, 21]) { irBox(props, 4, WH + 3, 5, wallMat, gx, (WH + 3) / 2, Z0 - 1.5, 4); IR.walls.push([gx - 2, gx + 2, Z0 - 4, Z0 + 1]); irBox(props, 4.4, 0.4, 5.4, trim, gx, WH + 3.2, Z0 - 1.5, 2); for (let k = -1; k <= 1; k++) irBox(props, 0.9, 1, 0.4, wallMat, gx + k * 1.4, WH + 3.9, Z0 - 4, 2);
     part(props, B(0.5, 1.6, 0.1), glow('#ffd36a'), gx, 6.5, Z0 - 4.05); }
   irBox(props, 8, WH - 5.5, T, wallMat, 15, 5.5 + (WH - 5.5) / 2, Z0 + T / 2, 4); irBox(props, 8.4, 0.5, 0.5, haz, 15, 5.3, Z0 - 0.1, 1);
   for (const s of [-1, 1]) irBox(props, 0.5, 5.5, 0.6, haz, 15 + s * 4.15, 2.75, Z0 - 0.1, 1);
   for (let k = 0; k < 9; k++) part(props, B(0.12, 0.7, 0.12), steel, 11.4 + k * 0.9, 5.1, Z0 + 1.5); part(props, B(8, 0.14, 0.14), steel, 15, 4.75, Z0 + 1.5); // the portcullis, raised
-  { const c = document.createElement('canvas'); c.width = 1024; c.height = 160; const x = c.getContext('2d'); const gr = x.createLinearGradient(0, 0, 0, 160); gr.addColorStop(0, '#1e2128'); gr.addColorStop(1, '#0e1014'); x.fillStyle = gr; x.fillRect(0, 0, 1024, 160); x.strokeStyle = '#ff8a2a'; x.lineWidth = 6; x.strokeRect(8, 8, 1008, 144);
-    x.font = 'bold 92px Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = '#ff8a2a'; x.shadowBlur = 18; x.fillStyle = '#ffe2c0'; x.fillText('FORT IRONROCK', 512, 84); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
-    const lb = new THREE.Group(); lb.position.set(15, 7.3, Z0 - 0.45); props.add(lb); part(lb, B(7.4, 1.3, 0.3), trim, 0, 0, 0); const f = new THREE.Mesh(new THREE.PlaneGeometry(7.1, 1.1), new THREE.MeshBasicMaterial({ map: t })); f.position.z = -0.16; f.rotation.y = Math.PI; lb.add(f); for (const s of [-1, 1]) part(lb, B(0.12, 0.12, 0.5), steel, s * 3.2, 0.7, 0.2); }
-  // ---- the Sally Port: a tunnel through the west wall to the Front, with a hazard frame and a lit plaque inside ----
+  // no name board on the gate: the zone banner already says where you are
+  // ---- the Sally Port: a tunnel through the west wall to the Front, with a hazard frame ----
   irBox(props, T, WH - 4.5, 8, wallMat, X0 + T / 2, 4.5 + (WH - 4.5) / 2, 25, 4); for (const s of [-1, 1]) irBox(props, T + 0.2, 4.5, 0.5, haz, X0 + T / 2, 2.25, 25 + s * 4.1, 1); irBox(props, T + 0.2, 0.5, 8.6, haz, X0 + T / 2, 4.35, 25, 1);
   for (let k = 0; k < 3; k++) part(props, B(T, 0.1, 0.25), glow('#fff1c8'), X0 + T / 2, 4.05, 22.5 + k * 2.5);
-  irPlaque(X0 + T + 0.05, 5.6, 25, Math.PI / 2, 'SALLY PORT', 'TO THE FRONT', '#ff8a2a');
+
   // ---- the hangar door: a tall opening in the east wall with a raised roller door ----
   irBox(props, T, WH - 7, 10, wallMat, X1 - T / 2, 7 + (WH - 7) / 2, 26, 4); irBox(props, T - 0.4, 0.9, 10, toon('#6a6e76', 'ribbed'), X1 - T / 2, 6.5, 26, 1); for (const s of [-1, 1]) irBox(props, T + 0.2, 7, 0.5, haz, X1 - T / 2, 3.5, 26 + s * 5.1, 1);
   // ---- floors: paving in the courtyard, a different floor in every room ----
@@ -113,7 +111,7 @@ function irDress() {
   const win = (x, z, ry) => { const g = new THREE.Group(); g.position.set(x, 2.1, z); g.rotation.y = ry; props.add(g); part(g, B(2.0, 1.3, 0.12), trim, 0, 0, 0); part(g, B(1.8, 1.1, 0.02), glow('#a8c8e8'), 0, 0, 0.07); part(g, B(0.08, 1.1, 0.06), trim, 0, 0, 0.09); part(g, B(2.1, 0.1, 0.25), trim, 0, -0.68, 0.1); };
   for (const z of [-14, -2, 2, 12]) { win(5.56, z, Math.PI / 2); win(24.44, z, -Math.PI / 2); } for (const x of [7.5, 22.5]) win(x, 14.69, Math.PI);
   const door = (x, z, ry, w, title, col) => { const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; props.add(g); for (const s of [-1, 1]) part(g, B(0.3, 3.5, 0.3), trim, s * (w / 2 + 0.1), 1.75, 0.2); part(g, B(w + 0.5, 0.35, 0.3), trim, 0, 3.55, 0.2);
-    part(g, B(0.3, 0.3, 0.12), glow('#fff1c8'), w / 2 + 0.6, 2.6, 0.12); irPlaque(x + Math.sin(ry) * 0.02, 4.4, z + Math.cos(ry) * 0.02, ry, title, '', col); };
+    part(g, B(0.3, 0.3, 0.12), glow('#fff1c8'), w / 2 + 0.6, 2.6, 0.12); };
   door(5.5, -7.5, Math.PI / 2, 3, 'MED BAY', '#c8402f'); door(5.5, 8.5, Math.PI / 2, 3, 'MESS HALL', '#ffd36a'); door(24.5, -7.5, -Math.PI / 2, 3, 'ARMORY', '#ff8a2a'); door(24.5, 7.5, -Math.PI / 2, 3, 'RESEARCH', '#4fd2ff'); door(15, 14.75, Math.PI, 8, 'COMMAND', '#6fdc5a');
   for (const [x0, z0, x1, z1] of [[7, -11, 23, -11], [7, -1, 23, -1], [7, -11, 7, -1], [23, -11, 23, -1]]) part(props, B(Math.abs(x1 - x0) || 0.12, 0.012, Math.abs(z1 - z0) || 0.12), toon('#e8e2c8'), (x0 + x1) / 2, 0.106, (z0 + z1) / 2);
   { const f = new THREE.Group(); f.position.set(15, 0.1, -6); props.add(f); part(f, Cy(0.6, 0.8, 0.4, 10), trim, 0, 0.2, 0); part(f, Cy(0.07, 0.09, 11, 8), chrome, 0, 5.9, 0); part(f, new THREE.SphereGeometry(0.16, 8, 6), toon('#ffd36a'), 0, 11.5, 0); solid(15, -6, 0.6);
@@ -138,7 +136,6 @@ function irDress() {
   irBox(props, 1.0, 1.0, 9, steel, -9.0, 0.6, 10, 2); irBox(props, 1.1, 0.06, 9.2, chrome, -9.0, 1.12, 10, 1); for (let k = 0; k < 5; k++) { part(props, B(0.7, 0.12, 1.2), chrome, -9.0, 1.18, 6.5 + k * 1.8); part(props, B(0.6, 0.06, 1.0), toon(['#c86a2a', '#6fdc5a', '#e8d8a0', '#8a4a2a', '#c8402f'][k]), -9.0, 1.24, 6.5 + k * 1.8); } box(-9.0, 10, 0.5, 4.5);
   irMan(-10.3, 12, Math.PI / 2, { civ: ['#e8e4dc', '#2c2a28', '#c58a64', '#1e1a18', '#e8e4dc'] });
   for (const [x, z, f] of [[-5.6, 5.15, 0], [-2, 5.15, 0], [-4.2, 6.85, Math.PI], [-0.6, 12.35, 0], [-6.5, 10.45, Math.PI], [-3, 8.75, 0]]) irMan(x, z, f, { sit: 0.54, eat: 1, col: ['#5a6a3a', '#3a4a2a', '#6f7a3e'][Math.floor(x * 7) & 1 ? 1 : 0] });
-  irPlaque(-10.85, 2.8, 14.5, Math.PI / 2, "TODAY: SLOP", 'SAME AS YESTERDAY', '#ffd36a');
   // ---- Muster Hall by the Sally Port: weapon racks, ammo, a briefing board, troopers waiting to go ----
   for (let k = 0; k < 3; k++) { const z = 31 + k * 2; irBox(props, 0.4, 1.8, 1.6, trim, 4.4, 1.0, z, 1); for (let g = 0; g < 4; g++) part(props, B(0.1, 1.1, 0.06), dk, 4.15, 1.2, z - 0.6 + g * 0.4); } box(4.4, 33, 0.3, 2.9);
   for (const [x, z] of [[-9.5, 34.5], [-8.3, 34.5], [-9.5, 35.6], [0.5, 19], [1.6, 19]]) crate(x, z, 0.9, '#4a5a32');
@@ -199,7 +196,6 @@ function irDecor() {
   for (let k = 0; k < 3; k++) { const z = -15 + k * 3 + 0.55; part(props, Cy(0.02, 0.02, 1.8, 6), chrome, -7.2, 1.0, z); part(props, B(0.25, 0.03, 0.03), chrome, -7.2, 1.85, z); part(props, B(0.12, 0.2, 0.05), toon('#cfe8ff'), -7.12, 1.7, z); part(props, Cy(0.18, 0.2, 0.04, 8), dk, -7.2, 0.12, z); }
   irBox(props, 2.6, 2.0, 0.5, white, -2, 1.1, -16.6, 1); for (let r = 0; r < 3; r++) { part(props, B(2.5, 0.04, 0.45), chrome, -2, 0.6 + r * 0.6, -16.55); for (let k = 0; k < 5; k++) part(props, B(0.3, 0.25, 0.3), toon(['#e8e4dc', '#c8402f', '#8ab8d8'][(k + r) % 3]), -3 + k * 0.5, 0.75 + r * 0.6, -16.5); } box(-2, -16.6, 1.3, 0.3);
   irBox(props, 1.8, 0.08, 0.9, wood, 1.5, 0.85, -15.9, 1); for (const s of [-1, 1]) part(props, B(0.06, 0.75, 0.8), trim, 1.5 + s * 0.85, 0.45, -15.9); part(props, B(0.6, 0.4, 0.05), dk, 1.5, 1.15, -16.2); part(props, B(0.55, 0.34, 0.02), glow('#6fdc5a'), 1.5, 1.15, -16.17); chair(1.5, -15.1, Math.PI); box(1.5, -15.9, 0.9, 0.45);
-  irPlaque(-6, 3.2, -16.84, 0, 'MED BAY', 'CPL. PATCH ON DUTY', '#c8402f');
   // Barracks: footlockers at the bunks, a card table with two chairs, a rug
   for (let k = 0; k < 4; k++) { const z = -5 + k * 2.2; irBox(props, 0.5, 0.4, 0.8, olive, -8.2, 0.3, z, 1); part(props, B(0.1, 0.06, 0.04), chrome, -7.94, 0.42, z); } box(-8.2, -1.7, 0.25, 3.7);
   part(props, B(3, 0.012, 2.2), toon('#6a2a20', 'carpet'), -1.5, 0.106, -1.5); irBox(props, 1.0, 0.06, 1.0, wood, -1.5, 0.8, -1.5, 1); part(props, Cy(0.06, 0.06, 0.7, 6), trim, -1.5, 0.45, -1.5); for (let k = 0; k < 6; k++) part(props, B(0.09, 0.005, 0.13), white, -1.75 + k * 0.1, 0.835, -1.5 + (k % 2) * 0.1, 0, k * 0.4, 0);
@@ -219,7 +215,6 @@ function irDecor() {
   irBox(props, 2.4, 0.08, 1.0, wood, 29, 0.95, -8, 1); for (const s of [-1, 1]) part(props, B(0.08, 0.85, 0.9), trim, 29 + s * 1.1, 0.5, -8); part(props, B(0.25, 0.2, 0.2), steel, 28.2, 1.1, -8.2); { const gm = makeGunModel('g70'); gm.position.set(29.3, 1.05, -7.9); gm.rotation.set(0, 0.4, Math.PI / 2); props.add(gm); } box(29, -8, 1.2, 0.5);
   { const d = makeTrooper({ noGun: true }); d.traverse(c => { if (c.isMesh) c.material = toon('#a88a5a', 'cloth'); }); d.position.set(32, 0.1, -5); d.rotation.y = Math.PI; props.add(d); part(props, Cy(0.05, 0.05, 0.8, 6), wood, 32, 0.4, -5); solid(32, -5, 0.4); }
   for (let k = 0; k < 6; k++) irBox(props, 0.6, 0.35, 0.4, olive, 26.4 + (k % 2) * 0.65, 0.28 + Math.floor(k / 2) * 0.36, -11, 1); box(26.7, -11, 0.65, 0.25);
-  irPlaque(39.5, 3.0, -16.84, 0, 'QUARTERMASTER', 'SGT. BRIX', '#ff8a2a');
   // Research Lab: a specimen tank with a Drome bug, a robot arm, chairs, a wall display, cable runs
   { const X = 38, Z = 12.8; part(props, B(1.6, 0.3, 1.2), trim, X, 0.25, Z); part(props, B(1.6, 0.15, 1.2), trim, X, 2.1, Z); const gl = new THREE.Mesh(B(1.5, 1.6, 1.1), new THREE.MeshPhongMaterial({ color: '#9fff6a', transparent: true, opacity: 0.16, depthWrite: false })); gl.position.set(X, 1.2, Z); levelGroup.add(gl);
     const bug = new THREE.Group(); bug.position.set(X, 1.1, Z); levelGroup.add(bug); part(bug, new THREE.SphereGeometry(0.28, 10, 8), toon('#3a1416'), 0, 0, 0); part(bug, new THREE.SphereGeometry(0.18, 8, 6), toon('#5a2024'), 0.3, 0.05, 0); for (let k = 0; k < 6; k++) part(bug, B(0.03, 0.03, 0.4), dk, -0.1 + (k % 3) * 0.15, -0.15, (k < 3 ? 1 : -1) * 0.25, 0.5 * (k < 3 ? 1 : -1), 0, 0);

@@ -162,14 +162,22 @@ function fwHud() {
 }
 function fwStep(t) { const dt = Math.min(0.1, Math.max(0, t - FW.lt)); FW.lt = t; if (!dt || LEVEL.id !== 'fort') return;
   if (!FB.on) { fwTick(dt); fwMgStep(dt); } else if (FW.mg) FW.mg = null; fwHud(); }
-{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); for (const S of FW.sec) { S.line = -81; S.won = S.lost = 0; } FW.mg = null; fwCoverBuild(); FW.ourT = 1; FW.theirT = 3; levelAnims.push(fwStep); return r; }; }
+{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); for (const S of FW.sec) { S.line = -81; S.won = S.lost = 0; } FW.mg = null; fwCoverBuild(); fwHazeBuild(); FW.ourT = 1; FW.theirT = 3; levelAnims.push(fwStep); return r; }; }
 setInterval(() => { if (FW.hud && (!LEVEL || LEVEL.id !== 'fort' || state !== 'play')) FW.hud.style.display = 'none'; }, 400);
 // ---------- battlefield haze (2.23.87): dust and smoke thicken as you head out to the Front, thinner inside the walls ----------
 { const _ue = updateEnv; updateEnv = function (dt, t) { _ue(dt, t); if (!LEVEL || LEVEL.id !== 'fort') return;
   const out = player.pos.x < -14 && player.pos.y < 7, k = FW.fogK = (FW.fogK == null ? (out ? 1 : 0.45) : FW.fogK + ((out ? 1 : 0.45) - FW.fogK) * Math.min(1, (dt || 0.016) * 0.8));
-  scene.fog.color.set('#3e3832').convertSRGBToLinear(); scene.fog.near = 30 - 22 * k; scene.fog.far = 160 - 75 * k; }; }
-function fwHaze(dt) { FW.hzT = (FW.hzT || 0) - dt; if (FW.hzT > 0) return; FW.hzT = 3;
-  if (FB.smoke.length >= 12) return; if (!FW.hzMat) FW.hzMat = new THREE.MeshLambertMaterial({ color: '#4e4844', transparent: true, opacity: 0.3, depthWrite: false });
-  for (let i = 0; i < 2; i++) { const x = -112 + Math.random() * 60, z = -12 + Math.random() * 80, m = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), FW.hzMat.clone());
-    m.position.set(x, FRONT.baseH(x, z) + 1.8 + Math.random() * 1.5, z); m.scale.set(7 + Math.random() * 5, 1.2 + Math.random() * 0.8, 7 + Math.random() * 5); levelGroup.add(m); FB.smoke.push({ s: m, t: 40 + Math.random() * 25 }); } }
-{ const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.hzLt || t))); FW.hzLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort' && !FB.on) fwHaze(dt); }; }
+  scene.fog.color.set('#2c2824').convertSRGBToLinear(); scene.fog.near = 30 - 18 * k; scene.fog.far = 170 - 70 * k; }; }
+// soft haze: camera-facing puffs with a feathered edge drift across no-man's-land on the wind and wrap round, fading near the camera
+function fwPuffTex() { if (FW.puffTex) return FW.puffTex; const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+  for (let k = 0; k < 7; k++) { const cx = 40 + Math.random() * 48, cy = 44 + Math.random() * 40, r = 26 + Math.random() * 22, g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, 'rgba(255,255,255,0.32)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); }
+  return (FW.puffTex = new THREE.CanvasTexture(c)); }
+function fwHazeBuild() { FW.puffs = []; const tex = fwPuffTex();
+  for (let i = 0; i < 46; i++) { const m = new THREE.SpriteMaterial({ map: tex, color: i % 3 ? '#8a8078' : '#6a625c', transparent: true, opacity: 0, depthWrite: false, fog: true }), s = new THREE.Sprite(m);
+    const x = -128 + Math.random() * 92, z = -18 + Math.random() * 96, sc = 12 + Math.random() * 14; s.scale.set(sc, sc * 0.45, 1); s.position.set(x, FRONT.baseH(x, z) + 1.2 + Math.random() * 2.2, z); s.renderOrder = 2; levelGroup.add(s);
+    FW.puffs.push({ s, a: 0.22 + Math.random() * 0.2, v: 0.5 + Math.random() * 0.6, ph: Math.random() * 6 }); } }
+function fwHaze(dt) { if (!FW.puffs) return; const cam = camera.position, t = performance.now() / 1000;
+  for (const P of FW.puffs) { const s = P.s; s.position.x += P.v * dt; s.position.z += Math.sin(t * 0.05 + P.ph) * 0.15 * dt; if (s.position.x > -34) { s.position.x = -128; s.position.y = FRONT.baseH(-128, s.position.z) + 1.2 + Math.random() * 2.2; }
+    const edge = Math.min(1, (s.position.x + 128) / 12, (-34 - s.position.x) / 12), near = clamp((s.position.distanceTo(cam) - 5) / 14, 0, 1);
+    s.material.opacity = P.a * edge * near * (0.85 + Math.sin(t * 0.3 + P.ph) * 0.15); } }
+{ const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.hzLt || t))); FW.hzLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort') fwHaze(dt); }; }

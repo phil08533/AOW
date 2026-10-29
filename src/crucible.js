@@ -103,13 +103,16 @@ for (const id of ['w_25', 'w_75']) GUNS[id].name = `${GUNS[id].name} · ${GUNS[i
     log(`Mending Light → ${targets.length} friend${targets.length > 1 ? 's' : ''}`, 'loot'); return; }
   const r = _f(); if (player.hp < maxHp()) player.hp = Math.min(maxHp(), player.hp + amt * 0.15); return r; }; }
 // ---- Fort Ironrock's introduction, the first time you land ----
+// shots are framed so nothing stands between the camera and what the line is about (checked frame by frame, 2.23.91)
+function fortIntroShots() { const P = LEVELS.fort.spawn, I = INTERACTS.find(i => /Raid Command/.test(typeof i.label === 'string' ? i.label : '')), T = I ? { x: I.x, z: I.z + 1.4 } : { x: 22, z: 9 };
+  return [
+    { text: 'Fort Ironrock. An army base carved into a drifting asteroid, the last line between the Fleet and Earth.', dur: 7, cam: (t, k) => { camera.position.set(P.x - 50 + k * 25, 44 - k * 10, P.z - 56 + k * 8); camera.lookAt(P.x + 1, 0, P.z + 12); } },
+    { text: 'Tanks, battle cars, mechs. If it rolls and shoots, they build it here.', dur: 6, cam: (t, k) => { camera.position.set(P.x + 13 + k * 2, 3.6, P.z + 21 + k * 1); camera.lookAt(P.x + 20, 1.2, P.z + 32); } },
+    { text: "And at the heart of the rock: the Crucible. A live-fire raid arena where troopers prove they're the deadliest in the galaxy.", dur: 7, cam: (t, k) => { camera.position.set(T.x - 8 + k * 0.6, 3.3, T.z - 8 + k * 0.6); camera.lookAt(T.x, 1.5 + k * 5, T.z); } },
+    { text: 'Set the danger yourself. The deadlier the raid, the bigger the payday. See Raid Command.', dur: 6, cam: (t, k) => { camera.position.set(T.x - 2.5 + k * 0.7, 2.3 - k * 0.2, T.z - 3.8 + k * 0.8); camera.lookAt(T.x, 1.5, T.z); } },
+  ]; }
 function fortIntro(replay) {
-  const P = LEVELS.fort.spawn;
-  runCutscene({ title: 'FORT IRONROCK', music: 'fort', lock: 6, shots: [
-    { text: 'Fort Ironrock. An army base carved into a drifting asteroid, the last line between the Fleet and Earth.', dur: 7, cam: (t, k) => { camera.position.set(P.x - 40 + k * 20, 30 - k * 8, P.z + 40 - k * 10); camera.lookAt(P.x, 2, P.z - 10); } },
-    { text: 'Tanks, battle cars, mechs. If it rolls and shoots, they build it here.', dur: 6, cam: (t, k) => { const a = t * 0.2; camera.position.set(P.x + Math.cos(a) * 18, 6, P.z - 8 + Math.sin(a) * 18); camera.lookAt(P.x, 1.5, P.z - 8); } },
-    { text: "And at the heart of the rock: the Crucible. A live-fire raid arena where troopers prove they're the deadliest in the galaxy.", dur: 7, cam: (t, k) => { camera.position.set(P.x + 12, 4 + k * 3, P.z + 6); camera.lookAt(P.x + 7, 2, P.z + 2); } },
-    { text: 'Set the danger yourself. The deadlier the raid, the bigger the payday. See Raid Command.', dur: 6, cam: (t, k) => { camera.position.set(P.x + 4 - k * 2, 2.2, P.z + 8); camera.lookAt(P.x + 7, 1.6, P.z + 2); } },
+  runCutscene({ title: 'FORT IRONROCK', music: 'fort', lock: 6, shots: [ ...fortIntroShots(),
   ], onEnd: () => { if (!replay) { S.flags = S.flags || {}; S.flags.fortIntro = 1; markDirty(); } } });
 }
 { const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); if (id === 'fort' && state === 'play' && !(S.flags && S.flags.fortIntro)) setTimeout(() => { if (LEVEL.id === 'fort' && state === 'play' && !CUT.on) fortIntro(); }, 900); return r; }; }

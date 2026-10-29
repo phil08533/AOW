@@ -181,3 +181,55 @@ function fwHaze(dt) { if (!FW.puffs) return; const cam = camera.position, t = pe
     const edge = Math.min(1, (s.position.x + 128) / 12, (-34 - s.position.x) / 12), near = clamp((s.position.distanceTo(cam) - 5) / 14, 0, 1);
     s.material.opacity = P.a * edge * near * (0.85 + Math.sin(t * 0.3 + P.ph) * 0.15); } }
 { const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.hzLt || t))); FW.hzLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort') fwHaze(dt); }; }
+// ---------- big explosions (2.23.91): a Maw-style fireball, smoke, debris and a shock ring; a sky battle you can see and hear ----------
+FW.booms = []; FW.wrecks = []; FW.skyT = 2; FW.wreckT = 6;
+const fwMat = k => FW['m' + k] || (FW['m' + k] = toon(k ? '#3a3634' : '#2a2622'));
+function fwRumble(vol, delay) { try { const ac = SFX.ctx && SFX.ctx(); if (!ac || !SFX.voiceOut || vol < 0.01) return; const t = ac.currentTime + (delay || 0), n = Math.floor(ac.sampleRate * 2.2);
+  if (!FW.noise) { const b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0); let l = 0; for (let i = 0; i < n; i++) { l = l * 0.97 + (Math.random() * 2 - 1) * 0.03; d[i] = l * 6; } FW.noise = b; }
+  const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = FW.noise; f.type = 'lowpass'; f.frequency.value = 140 + Math.random() * 120;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.04); g.gain.exponentialRampToValueAtTime(0.001, t + 1.6 + Math.random() * 0.6); s.connect(f); f.connect(g); g.connect(SFX.voiceOut()); s.start(t); s.stop(t + 2.3); } catch (_) {} }
+// sc scales the blast; sky = a flash in the air (no ground ring, smoke or debris)
+function fwBoom(p, sc, sky) { if (!LEVEL || LEVEL.id !== 'fort') return; sc = sc || 1; while (FW.booms.length > 16) fwBoomEnd(FW.booms.shift());
+  const B = { t: 0, sc, sky, fire: [], smoke: [], deb: [], ring: null, p: p.clone() };
+  B.core = mawFireSprite('#ffffff', 2.5 * sc); B.core.position.copy(p).add(V(0, sky ? 0 : 0.8 * sc, 0));
+  for (let i = 0; i < (sky ? 4 : 6); i++) { const s = mawFireSprite(['#ffb060', '#ff7a2a', '#ffd36a'][i % 3], 1.5 * sc); s.position.copy(p).add(V((Math.random() - 0.5) * 1.6 * sc, (sky ? 0 : 0.6 * sc) + Math.random() * sc, (Math.random() - 0.5) * 1.6 * sc)); B.fire.push({ s, vy: (0.8 + Math.random()) * sc, g: 2.5 + Math.random() * 2 }); }
+  if (!sky) { const tex = fwPuffTex();
+    for (let i = 0; i < 4; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: i % 2 ? '#3a3430' : '#24201e', transparent: true, opacity: 0, depthWrite: false })); s.position.copy(p).add(V((Math.random() - 0.5) * sc, 0.8 * sc, (Math.random() - 0.5) * sc)); s.scale.setScalar(2 * sc); levelGroup.add(s); B.smoke.push({ s, vy: 1 + Math.random() * 0.8, life: 4 + Math.random() * 2 }); }
+    for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(B_DEB(), fwMat(0)); m.position.copy(p).add(V(0, 0.4, 0)); m.scale.setScalar(0.6 + Math.random() * sc * 0.8); levelGroup.add(m); const a = Math.random() * 6.28, v = (4 + Math.random() * 6) * Math.sqrt(sc); B.deb.push({ m, v: V(Math.cos(a) * v * 0.5, 5 + Math.random() * 6 * sc, Math.sin(a) * v * 0.5), r: V(Math.random() * 9, Math.random() * 9, 0) }); }
+    B.ring = new THREE.Mesh(FW.ringGeo || (FW.ringGeo = new THREE.RingGeometry(0.8, 1.15, 28)), new THREE.MeshBasicMaterial({ color: '#ffd8a0', transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+    B.ring.rotation.x = -Math.PI / 2; B.ring.position.set(p.x, groundH(p.x, p.z) + 0.25, p.z); levelGroup.add(B.ring); }
+  const d = p.distanceTo(player.pos); if (!sky && d < 60) { SFX.boom(); if (d < 16) VH.shk = Math.max(VH.shk || 0, 0.35 * sc * (1 - d / 16) + 0.1); } else fwRumble(Math.min(0.4, (sky ? 6 : 40) * sc / Math.max(20, d)), Math.min(1.6, d / 340));
+  FW.booms.push(B); return B; }
+function B_DEB() { return FW.debGeo || (FW.debGeo = new THREE.BoxGeometry(0.22, 0.14, 0.18)); }
+function fwBoomEnd(B) { for (const o of [B.core, B.ring, ...B.fire.map(f => f.s), ...B.smoke.map(f => f.s)]) if (o) { o.parent && o.parent.remove(o); o.material.dispose(); } for (const D of B.deb) D.m.parent && D.m.parent.remove(D.m); }
+function fwBoomStep(dt) { for (let i = FW.booms.length - 1; i >= 0; i--) { const B = FW.booms[i], sc = B.sc; B.t += dt; const t = B.t;
+    if (B.core.parent) { B.core.scale.setScalar((2.5 + t * 22) * sc); B.core.material.opacity = Math.max(0, 1 - t / 0.28); if (t > 0.3) { B.core.parent.remove(B.core); } }
+    for (const f of B.fire) { const k = t / 1.1; f.s.position.y += f.vy * dt; f.s.scale.setScalar((1.5 + k * f.g) * sc); f.s.material.opacity = Math.max(0, 1 - k); }
+    for (const s of B.smoke) { s.s.position.y += s.vy * dt; s.s.position.x += 0.6 * dt; s.s.scale.setScalar((2 + t * 1.6) * sc); s.s.material.opacity = Math.min(0.6, t * 1.5) * Math.max(0, 1 - t / s.life); }
+    for (const D of B.deb) { if (!D.m.parent) continue; D.v.y -= 18 * dt; D.m.position.addScaledVector(D.v, dt); D.m.rotation.x += D.r.x * dt; D.m.rotation.y += D.r.y * dt; const g = groundH(D.m.position.x, D.m.position.z) + 0.07; if (D.m.position.y < g) { D.m.position.y = g; D.v.set(0, 0, 0); D.r.set(0, 0, 0); } if (t > 2.5) D.m.parent.remove(D.m); }
+    if (B.ring) { const k = Math.min(1, t / 0.55); B.ring.scale.setScalar(1 + k * 4.5 * sc); B.ring.material.opacity = 0.45 * (1 - k); }
+    if (t > (B.sky ? 1.3 : 6.5)) { fwBoomEnd(B); FW.booms.splice(i, 1); } } }
+// grenades, tank shells and barrage rounds all go up as real explosions
+{ const _b = frBoom; frBoom = function (p, ours) { _b.apply(this, arguments); FW.lastBoom = { p: p.clone(), t: performance.now() }; fwBoom(p, 1); }; }
+{ const _s = frScorch; frScorch = function (p) { _s.apply(this, arguments); const L = FW.lastBoom; if (!(L && performance.now() - L.t < 300 && L.p.distanceTo(p) < 2)) fwBoom(p, 1.4); }; }
+// the fleet fight overhead shows through the battlefield haze
+function fwNoFog(o) { o.traverse(c => { if (!c.material) return; const ms = Array.isArray(c.material) ? c.material : [c.material]; const nm = ms.map(m => { if (m.fog === false) return m; FW.nf = FW.nf || new Map(); let n = FW.nf.get(m); if (!n) { n = m.clone(); n.fog = false; FW.nf.set(m, n); } return n; }); c.material = Array.isArray(c.material) ? nm : nm[0]; }); }
+{ const _sb = frSkyBuild; frSkyBuild = function () { const r = _sb.apply(this, arguments); for (const C of FS.caps) fwNoFog(C.g); if (FS.fighters) for (const k of ['ours', 'them']) FS.fighters[k].forEach(fwNoFog); for (const f of FS.flak) f.s.material.fog = false; FW.wrecks.length = 0; FW.booms.length = 0; return r; }; }
+{ const _fb = frBeam; frBeam = function (a, b, col) { const r = _fb.apply(this, arguments); const B0 = FS.beams[FS.beams.length - 1]; if (B0) B0.m.material.fog = false; return r; }; }
+// flashes in the sky, and now and then a burning wreck comes down into the field
+function fwSky(dt) { FW.skyT -= dt; if (FW.skyT <= 0) { FW.skyT = 0.6 + Math.random() * 1.8; fwBoom(V(-150 + Math.random() * 210, 70 + Math.random() * 90, -40 + Math.random() * 140), 4 + Math.random() * 5, true); }
+  FW.wreckT -= dt; if (FW.wreckT <= 0 && FW.wrecks.length < 3) { FW.wreckT = 9 + Math.random() * 10;
+    let tx = -115 + Math.random() * 70, tz = -10 + Math.random() * 80; if (Math.hypot(tx - player.pos.x, tz - player.pos.z) < 14) tx -= 20;
+    const big = Math.random() < 0.3, g = new THREE.Group(); if (big) { for (let k = 0; k < 4; k++) part(g, B(2 + Math.random() * 3, 1.2 + Math.random() * 2, 3 + Math.random() * 5), fwMat(1), (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 4, Math.random(), Math.random(), Math.random()); } else g.add(new THREE.Mesh(frFighterGeo(), fwMat(1))); fwNoFog(g);
+    const from = V(tx - 60 - Math.random() * 60, 140 + Math.random() * 40, tz + (Math.random() - 0.5) * 80); g.position.copy(from); levelGroup.add(g);
+    FW.wrecks.push({ g, from, to: V(tx, groundH(tx, tz), tz), t: 0, T: big ? 9 : 5.5, big, trail: 0 }); }
+  for (let i = FW.wrecks.length - 1; i >= 0; i--) { const W = FW.wrecks[i]; W.t += dt; const k = Math.min(1, W.t / W.T), e = k * k; W.g.position.lerpVectors(W.from, W.to, e); W.g.position.y = W.from.y + (W.to.y - W.from.y) * e;
+    W.g.lookAt(W.to); W.g.rotateZ(W.t * (W.big ? 0.4 : 3)); W.trail -= dt; if (W.trail <= 0) { W.trail = 0.12; const f = mawFireSprite(Math.random() < 0.5 ? '#ff7a2a' : '#ffb060', W.big ? 6 : 3.5); f.position.copy(W.g.position); FW.booms.push({ t: 0.5, sc: W.big ? 2 : 1, sky: true, fire: [{ s: f, vy: 0, g: 3 }], smoke: [], deb: [], ring: null, core: { parent: null, scale: { setScalar() {} }, material: { dispose() {} } } }); }
+    if (k >= 1) { levelGroup.remove(W.g); FW.wrecks.splice(i, 1); fwBoom(W.to, W.big ? 3 : 2); FW.lastBoom = { p: W.to.clone(), t: performance.now() }; frScorch(W.to); } } }
+{ const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.bmLt || t))); FW.bmLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort' && dt) { fwBoomStep(dt); fwSky(dt); } }; }
+// the Drome never reach the walls: field units stop at the edge of no-man's-land, roamers from the tank yard turn back short of the fort
+function fwKeepOut() { for (const e of enemies) { if (e.dead || e.gone || !e.obj) continue; const p = e.obj.position;
+  if (e.front) { if (p.x > -34) p.x = -34; continue; }
+  if (irInFort(p.x, p.z, 10)) { const dx = Math.min(p.x - (IR.X0 - 10), IR.X1 + 10 - p.x), dz = Math.min(p.z - (IR.Z0 - 10), IR.Z1 + 10 - p.z);
+    if (dx < dz) p.x = p.x - (IR.X0 - 10) < IR.X1 + 10 - p.x ? IR.X0 - 10 : IR.X1 + 10; else p.z = p.z - (IR.Z0 - 10) < IR.Z1 + 10 - p.z ? IR.Z0 - 10 : IR.Z1 + 10; e.aggro = false; e.wander = V(e.zone.x, 0, e.zone.z); } } }
+{ const _st = fwStep; fwStep = function (t) { _st(t); if (LEVEL && LEVEL.id === 'fort') fwKeepOut(); }; }

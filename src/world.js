@@ -56,6 +56,7 @@ function floorAt(x, z) {
   let h = groundH(x, z);
   for (const s of SURFACES) {
     const dx = x - s.x, dz = z - s.z, a = dx * s.ux + dz * s.uz, b = -dx * s.uz + dz * s.ux;
+    if (s.minY != null && player.pos.y < s.minY) continue; // raised walkways only catch you once you're up there
     if (Math.abs(a) <= s.hl && Math.abs(b) <= s.hw) h = Math.max(h, s.y + a * (s.slope || 0));
   }
   return h;

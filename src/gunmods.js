@@ -108,11 +108,11 @@ function openGunMods(who) {
     // pegboard behind with tools
     part(st, B(1.7, 1.1, 0.05), toon('#2a2d34', 'panel'), 0, 1.5, -0.47); for (let k = 0; k < 4; k++) part(st, B(0.04, 0.24 + (k % 2) * 0.1, 0.03), toon(['#c9733a', '#a8aeb8', '#6a6e78', '#a8aeb8'][k]), -0.66 + k * 0.08, 1.75, -0.43);
     part(st, Cy(0.05, 0.05, 0.03, 10), chrome, 0.62, 1.8, -0.43, Math.PI / 2); part(st, B(0.26, 0.05, 0.03), toon('#c8402f'), 0.6, 1.6, -0.43); part(st, B(1.6, 0.03, 0.03), glow(cy), 0, 2.03, -0.44);
-    const tt = new THREE.Group(); tt.position.set(0, 1.04, 0); st.add(tt); const gm = makeGunModel(S.gun); const gb = new THREE.Box3().setFromObject(gm), gs = gb.getSize(V(0, 0, 0)); gm.scale.setScalar(Math.min(2.2, 1.2 / Math.max(gs.x, gs.z, 0.01)));
-    tt.add(gm); const gb2 = new THREE.Box3().setFromObject(gm); gm.position.y = 0.3 - (gb2.min.y + gb2.max.y) / 2;
+    const tt = new THREE.Group(); tt.position.set(0, 1.04, 0); st.add(tt); const gm = makeGunModel(S.gun); const gb = new THREE.Box3().setFromObject(gm), gs = gb.getSize(V(0, 0, 0)); gm.scale.setScalar(Math.min(2.2, 1.1 / Math.max(gs.z, 0.01), 0.5 / Math.max(gs.y, 0.01), 0.45 / Math.max(gs.x, 0.01)));
+    gm.rotation.y = Math.PI / 2; tt.add(gm); const gb2 = new THREE.Box3().setFromObject(gm); gm.position.y = 0.3 - (gb2.min.y + gb2.max.y) / 2;
     const lt = new THREE.PointLight(0x8fe3ff, 0.6, 2.4, 1.6); lt.position.set(0, 1.6, 0.3); st.add(lt);
     st.position.set(-5, 0, -3.5); levelGroup.add(st); box(-5, -3.5, 0.88, 0.5);
-    levelAnims.push(t => { tt.rotation.y = t * 0.6; });
+    levelAnims.push(t => { tt.rotation.y = Math.sin(t * 0.5) * 0.22; }); // the gun lies along the case and sways a little, so it never pokes through the glass
     INTERACTS.push({ x: -5, z: -2.6, r: 2, label: 'Gun mod bench', fn: () => openGunMods() });
   };
 }

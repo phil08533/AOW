@@ -1,4 +1,4 @@
-// =================== THE OTHER SHOE (2.23.94) ===================
+// =================== THE OTHER SHOE (2.23.95) ===================
 // Lonnie stands by the south gate of New Jamestown in one black shoe and one white sock. He lost the left one.
 // The quest opens on day one and sits in the journal the whole game: the shoe only turns up when the Greater Maw dies.
 // It drops on any Maw kill while the quest is active, so picking the quest up after the ending still works (the fight replays).

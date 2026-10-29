@@ -176,3 +176,7 @@ function vcLand(G) {
 { const _ue = updateEnv; updateEnv = function (dt, t) { _ue(dt, t); if (!LEVEL || LEVEL.id !== 'volcave') { if (VC.starsOff) { VC.starsOff = 0; stars.visible = true; } return; }
   hemi.color.set('#ff7a4a'); hemi.intensity = 0.42; sun.color.set('#ff8a50'); sun.intensity = 0.25; fill.intensity = 0.12;
   scene.fog.color.set('#1e0a06'); scene.fog.near = 22; scene.fog.far = 80; stars.visible = false; VC.starsOff = 1; }; }
+// Vask dies on his island in the middle of the lava, so whatever he drops lands on the pit's edge on your side, where you can walk to it
+{ const _sd = spawnDrop; spawnDrop = function (p, kind, id, n) {
+  if (LEVEL && LEVEL.id === 'volcave' && Math.hypot(p.x, p.z) < VC_RP + 1.2) { const a = Math.atan2(player.pos.x, player.pos.z) + (Math.random() - 0.5) * 0.5, r = VC_RP + 2.2; p = V(Math.sin(a) * r, p.y, Math.cos(a) * r); }
+  return _sd.call(this, p, kind, id, n); }; }

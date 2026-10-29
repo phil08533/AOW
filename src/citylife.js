@@ -6,7 +6,7 @@ const CITY = {
   robot: { zone: 'store', style: 'robot', n: 36, walkers: 9 },
   ocean: { zone: 'port', style: 'ocean', n: 30, walkers: 7 },
   moon: { zone: 'dome', style: 'moon', n: 30, walkers: 7 },
-  fort: { zone: 'base', style: 'fort', n: 34, walkers: 8 },
+  fort: { zone: 'base', style: 'fort', n: 0, walkers: 0 }, // the fortress lays out its own rooms and people (ironrock.js)
   skycity: { zone: 'airbase', style: 'sky', n: 28, walkers: 7 },
   zarlich: { zone: 'rest', style: 'zarlich', n: 22, walkers: 5 },
   vector: { zone: 'lantern', style: 'vector', n: 18, walkers: 4 },

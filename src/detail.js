@@ -79,6 +79,7 @@ function detailLevel(L, id) {
     if (propBlocked(x, z, 0.8)) continue;
     const slope = Math.abs(groundH(x + 1, z) - groundH(x - 1, z)) + Math.abs(groundH(x, z + 1) - groundH(x, z - 1)); if (slope > 2.2) continue;
     let kind = K.kit[Math.floor(rnd() * K.kit.length)];
+    if (id === 'fort' && typeof irInFort === 'function' && irInFort(x, z, 3)) continue; // nothing scattered inside the fortress
     if (inSafe({ x, z }) && !['flower', 'bush', 'pebbles', 'fern', 'shell', 'crystalsm', 'glowshroom'].includes(kind)) continue; // keep towns walkable
     detailProp(kind, x, z, 0.8 + rnd() * 0.6, K.flowers, rnd); placed++;
   }

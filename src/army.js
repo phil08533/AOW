@@ -205,22 +205,22 @@ LEVELS.fort = {
   id: 'fort', name: 'Fort Ironrock', tag: 'Asteroid army base', lvls: 'Lv 12–30 · vehicles', size: 380, center: [0, 20], radius: 150, water: -99, sky: 'space', weather: 'none', gravity: 0.6, hourOffset: 0,
   terrain: { a1: 2.0, f1: 0.045, a2: 1.1, f2: 0.1, a3: 0.4, f3: 0.22, base: 1.0, min: -5, edge: 26, step: 2.4 },
   palette: { grass: '#7a6a5a', patch: '#6a5a4a', dirt: '#4a4440', sand: '#8a7a68', wet: '#3a3430', rockA: '#6a5a4a', rockB: '#4a4038' },
-  carve: (x, z, h) => { const d = Math.hypot(x - FORT[0], z - FORT[1]); if (d < 30) h = h * smooth(d, 24, 30); const dr = Math.hypot(x - 50, z - 20); if (dr < 26) h *= 0.25 + 0.75 * smooth(dr, 18, 26); if (FRONT && !FRONT.raw && x > FRONT.x0 && x < FRONT.x1 && z > FRONT.z0 && z < FRONT.z1) h -= 8; return h; }, // the Front's own ground covers its patch
+  carve: (x, z, h) => { const ex = Math.max(-14 - x, x - 54, 0), ez = Math.max(-28 - z, z - 40, 0), d = Math.hypot(ex, ez); if (d < 10) h = h * smooth(d, 2, 10); const dr = Math.hypot(x - 76, z - 26); if (dr < 26) h *= 0.25 + 0.75 * smooth(dr, 18, 26); if (FRONT && !FRONT.raw && x > FRONT.x0 && x < FRONT.x1 && z > FRONT.z0 && z < FRONT.z1) h -= 8; return h; }, // the Front's own ground covers its patch
   zones: [
-    { id: 'base', name: 'Fort Ironrock', lvl: 'Safe · army base', x: FORT[0], z: FORT[1], r: 24, fr: 25, col: '#5d636c', safe: true, h: 0.5 },
-    { id: 'range', name: 'Vehicle Range', lvl: 'Lv 12–16 · training', x: 50, z: 20, r: 22, col: '#8a7a50', h: 0 },
+    { id: 'base', name: 'Fort Ironrock', lvl: 'Safe · fortress', x: 16, z: 10, r: 32, fr: 36, col: '#5d636c', safe: true, h: 0.1 },
+    { id: 'range', name: 'Vehicle Range', lvl: 'Lv 12–16 · training', x: 76, z: 26, r: 20, col: '#8a7a50', h: 0 },
     { id: 'siege', name: 'The Front', lvl: 'Lv 18–24 · war zone', x: -81, z: 26, r: 30, fr: 60, col: '#5a4a3c', h: 0 },
     { id: 'tankyard', name: 'Drome Tank Yard', lvl: 'Lv 22–28', x: 20, z: 72, r: 20, col: '#4a3030', h: -0.5 },
     { id: 'kragpit', name: "Krag's Crater", lvl: 'Lv 30 · boss', x: -30, z: 86, r: 16, fr: 12, col: '#3a1416', h: -2 }
   ],
-  paths: [[[0, 12], [50, 20]], [[0, 12], [-15, 25]], [[0, 12], [20, 72]], [[-46, 34], [-30, 86]]], river: [], pools: [], lava: [],
-  safes: [{ x: FORT[0], z: FORT[1], r: 23 }], spawn: { x: 0, z: -18, yaw: Math.PI }, pad: { x: -10, z: -20 }, menu: { x: 0, z: 0, r: 40, h: 14 }, npcBase: FORT,
+  paths: [[[54, 26], [76, 26]], [[54, 30], [20, 72]], [[15, -28], [15, -40]], [[-46, 34], [-30, 86]]], river: [], pools: [], lava: [],
+  safes: [{ x: 16, z: 10, r: 31 }], spawn: { x: 15, z: -4, yaw: Math.PI }, pad: { x: 15, z: 7 }, menu: { x: 16, z: 10, r: 62, h: 30 }, npcBase: [0, 0],
   npcs: [
-    { id: 'hale', name: 'General Hale', role: 'Fort commander', rig: 'trooper', make: () => recolor(makeTrooper(), { '#6f7a3e': '#3a4a2a', '#c9b27c': '#ffd36a' }), x: 0, z: 2, face: Math.PI, idle: ["Fort Ironrock. Carved out of a rock, held together by spite and duct tape.", "Drome's tanks hit us every night. We hit back every morning. It's a schedule."] },
-    { id: 'brix', name: 'Quartermaster Brix', role: 'Army shop · war vehicles', rig: 'civ', make: () => makeCivilian('#5a6a3a', '#2c2a28', '#c58a64', '#1e1a18', '#ffd36a'), x: 9, z: -2, face: -1.3, custom: [['Vehicles', n => openVehicleShop(n)], ['Vehicle bay', () => openVehicleBay()]], shop: 'guns', guns: ['g70', 'g80'], idle: ["Tank? Car with spikes? Two-story robot? I've got a guy. I am the guy."] },
-    { id: 'volta', name: 'Dr. Volta', role: 'Military research', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#3b4f7a', '#e0b892', '#9aa1aa', '#4fd2ff'), x: -9, z: -2, face: 1.3, custom: [['Research', n => openResearch(n)]], idle: ["I made the tank 25% more tank. Peer review pending.", "Bring me scrap and ore. I turn rocks into armor. It's basically alchemy with a budget."] },
-    { id: 'torque', name: 'Sgt. Torque', role: 'Vehicle training', rig: 'trooper', make: () => recolor(makeTrooper(), { '#6f7a3e': '#8a6a3a', '#c9b27c': '#2b2a2c' }), x: 12, z: 10, face: -2.2, idle: ["Mirrors, signal, ram it. That's the whole driving course."] },
-    { id: 'medic', name: 'Corporal Patch', role: 'Field medic · heals', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#2c2a28', '#8a5a3a', '#1e1a18', '#c8402f'), x: -12, z: 10, face: 2.2, heal: true, idle: ["Hold still. This is going to hurt me more than you. Not really."] }
+    { id: 'hale', name: 'General Hale', role: 'Fort commander', rig: 'trooper', make: () => recolor(makeTrooper(), { '#6f7a3e': '#3a4a2a', '#c9b27c': '#ffd36a' }), x: 15, z: 30.5, face: Math.PI, idle: ["Fort Ironrock. Carved out of a rock, held together by spite and duct tape.", "Drome's tanks hit us every night. We hit back every morning. It's a schedule."] },
+    { id: 'brix', name: 'Quartermaster Brix', role: 'Army shop · war vehicles', rig: 'civ', make: () => makeCivilian('#5a6a3a', '#2c2a28', '#c58a64', '#1e1a18', '#ffd36a'), x: 38, z: -8, face: -Math.PI / 2, custom: [['Vehicles', n => openVehicleShop(n)], ['Vehicle bay', () => openVehicleBay()]], shop: 'guns', guns: ['g70', 'g80'], idle: ["Tank? Car with spikes? Two-story robot? I've got a guy. I am the guy."] },
+    { id: 'volta', name: 'Dr. Volta', role: 'Military research', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#3b4f7a', '#e0b892', '#9aa1aa', '#4fd2ff'), x: 36, z: 8, face: -Math.PI / 2, custom: [['Research', n => openResearch(n)]], idle: ["I made the tank 25% more tank. Peer review pending.", "Bring me scrap and ore. I turn rocks into armor. It's basically alchemy with a budget."] },
+    { id: 'torque', name: 'Sgt. Torque', role: 'Vehicle training', rig: 'trooper', make: () => recolor(makeTrooper(), { '#6f7a3e': '#8a6a3a', '#c9b27c': '#2b2a2c' }), x: 30, z: 24, face: Math.PI / 2, idle: ["Mirrors, signal, ram it. That's the whole driving course."] },
+    { id: 'medic', name: 'Corporal Patch', role: 'Field medic · heals', rig: 'civ', make: () => makeCivilian('#e8e4dc', '#2c2a28', '#8a5a3a', '#1e1a18', '#c8402f'), x: -4, z: -8, face: Math.PI / 2, heal: true, idle: ["Hold still. This is going to hurt me more than you. Not really."] }
   ],
   spawns: [
     { zone: 'range', type: 'tdrone', n: 8, lv: [12, 16] },
@@ -230,29 +230,8 @@ LEVELS.fort = {
   ],
   build() {
     const [fx, fz] = FORT;
-    // compound wall with a gate to the north
-    for (let i = 0; i < 40; i++) {
-      const a = i / 40 * Math.PI * 2;
-      if (Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2))) < 0.2) continue;
-      const x = fx + Math.cos(a) * 23.5, z = fz + Math.sin(a) * 23.5;
-      part(props, B(3.8, 3, 0.8), toon('#ffffff', 'ironwall'), x, groundH(x, z) + 1.5, z, 0, -a + Math.PI / 2, 0);
-      part(props, B(3.85, 0.12, 0.9), '#3a3d44', x, groundH(x, z) + 3.06, z, 0, -a + Math.PI / 2, 0);
-      if (i % 5 === 0) {
-        part(props, B(1.4, 5, 1.4), '#3a3d44', x, groundH(x, z) + 2.5, z);
-        part(props, B(0.6, 0.3, 0.6), glow('#ff8a2a'), x, groundH(x, z) + 5.2, z);
-      }
-    }
-    RINGS.push({ x: fx, z: fz, r: 23.5, gate: Math.PI / 2, half: 3, safe: true });
-    // hangar with the three vehicles on display
-    const hg = new THREE.Group(); part(hg, B(18, 0.3, 9), '#3a3d44', 0, 0.15, 0); part(hg, new THREE.CylinderGeometry(4.6, 4.6, 18, 12, 1, true, 0, Math.PI), toon('#6a6a70', 'panel'), 0, 0.2, 0, 0, 0, Math.PI / 2); hg.children[1].material.side = THREE.DoubleSide;
-    const s1 = new THREE.Mesh(new THREE.PlaneGeometry(9, 1.2), new THREE.MeshBasicMaterial({ map: signTex('MOTOR POOL', '#1e1c22', '#ffd36a') })); s1.position.set(0, 5, 4.6); hg.add(s1); at(hg, fx, fz - 14);
-    box(fx, fz - 18.4, 9, 0.4); box(fx - 9, fz - 14, 0.4, 4.6); box(fx + 9, fz - 14, 0.4, 4.6);
-    [[makeBattleCar, -5.5, 0.6], [makeTankModel, 0, 0.7], [makeMechModel, 5.5, 0.55]].forEach(([mk, ox, sc]) => { const v = mk(); v.scale.setScalar(sc); at(v, fx + ox, fz - 14.5, 0.3); if (v.userData.anim) levelAnims.push(t => v.userData.anim(t * 0.2)); });
-    // research lab dome, barracks, army shop, radar
-    const lab = makeDome(5, '#cfe6ff'); at(lab, fx - 15, fz + 2); solid(fx - 15, fz + 2, 4.6);
-    for (const [ox, oz, w, h, col] of [[15, 2, 7, 4, '#5a6a3a'], [-14, -14, 5, 3.6, '#5d636c'], [14, -14, 5, 3.6, '#5d636c']]) { const t = makeCityBlock(w, h, 4, col, '#ffd36a'); at(t, fx + ox, fz + oz); box(fx + ox, fz + oz, w / 2, 2); }
-    const radar = new THREE.Group(); part(radar, Cy(0.2, 0.3, 6, 6), '#3a3d44', 0, 3, 0); const dish = new THREE.Group(); dish.position.y = 6.2; radar.add(dish); part(dish, new THREE.SphereGeometry(1.6, 10, 6, 0, Math.PI * 2, 0, Math.PI / 3), '#9aa1aa', 0, 0, 0, Math.PI / 2.6); at(radar, fx + 18, fz + 12); solid(fx + 18, fz + 12, 0.5); levelAnims.push(t => { dish.rotation.y = t * 0.8; });
-    dropshipPad(-10, -20, 0, 'Return to your ship');
+    irBuild(); // the fortress (ironrock.js)
+    dropshipPad(15, 7, 0, 'Return to your ship');
     // training range: target boards, cones, ramps
     for (let i = 0; i < 10; i++) { const a = i * 0.63, x = Z.range.x + Math.cos(a) * 15, z = Z.range.z + Math.sin(a) * 15, t = new THREE.Group(); part(t, B(0.15, 2, 0.15), '#3a3d44', 0, 1, 0); part(t, Cy(0.9, 0.9, 0.1, 12), '#ffffff', 0, 2.4, 0, Math.PI / 2); part(t, Cy(0.6, 0.6, 0.12, 12), '#c8402f', 0, 2.4, 0, Math.PI / 2); part(t, Cy(0.3, 0.3, 0.14, 12), '#ffffff', 0, 2.4, 0, Math.PI / 2); at(t, x, z, a); }
     for (let i = 0; i < 16; i++) part(props, new THREE.ConeGeometry(0.3, 0.8, 6), '#ff8a2a', Z.range.x - 12 + i * 1.6, groundH(Z.range.x - 12 + i * 1.6, Z.range.z - 6) + 0.4, Z.range.z - 6);
@@ -280,11 +259,11 @@ PLANET_LOOK.fort = { seed: 61, ramp: [[0, '#2a2420'], [0.45, '#5a4a3a'], [0.62, 
 PLANET_ORDER.splice(PLANET_ORDER.indexOf('mezar'), 0, 'fort');
 { const _po = planetOpen; planetOpen = function (id) { if (id === 'fort') return shipUnlocked(); return _po(id); }; }
 defQuest('a1', { ch: 'Fort Ironrock', title: "Learner's Permit", giver: 'torque', turnIn: 'torque', req: [],
-  intro: ["Fresh meat! Welcome to vehicle training. Rule one: the car is a weapon. Rule two: so is the parking brake.", "Brix will issue you a Battle Car on the house when you finish. First, prove you can shoot. Clear the training drones on the Vehicle Range, east of the gate."],
+  intro: ["Fresh meat! Welcome to vehicle training. Rule one: the car is a weapon. Rule two: so is the parking brake.", "Brix will issue you a Battle Car on the house when you finish. First, prove you can shoot. Clear the training drones on the Vehicle Range, out through the hangar door on the east wall."],
   obj: [{ kind: 'kill', t: 'tdrone', n: 6, text: 'Shoot down training drones on the Vehicle Range', zone: 'range' }],
   outro: ["Not bad. Here's your Battle Car. Press V on any open planet to drive it. Try not to run me over. Again."], reward: { cr: 1500, xp: 6000, fn: () => { const V0 = vehS(); if (!V0.owned.includes('battlecar')) { V0.owned.push('battlecar'); V0.sel = 'battlecar'; } log('New vehicle: Battle Car. Press V (or Menu → Vehicle) to drive it.', 'loot'); } } });
 defQuest('a2', { ch: 'Fort Ironrock', title: 'Heavy Metal', giver: 'hale', turnIn: 'hale', req: ['a1'],
-  intro: ["Drome's Siege Bots are shelling our west wall. Every night. It's rude.", "They hide behind the Drome trench at the Front, west of the gate. Go break them. Vehicles strongly recommended."],
+  intro: ["Drome's Siege Bots are shelling our west wall. Every night. It's rude.", "They hide behind the Drome trench at the Front. Go out the Sally Port in the west wall. Go break them. Vehicles strongly recommended."],
   obj: [{ kind: 'kill', t: 'siegebot', n: 5, text: 'Destroy Siege Bots at the Front', zone: 'siege' }],
   outro: ["The wall's quiet. I almost miss it. No I don't. Volta wants to talk to you about upgrades."], reward: { cr: 3500, xp: 11000, items: { scrap: 15, ore: 8 } } });
 defQuest('a3', { ch: 'Fort Ironrock', title: 'Tank Buster', giver: 'hale', turnIn: 'hale', req: ['a2'],

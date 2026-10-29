@@ -157,6 +157,7 @@ function makeMechModel(col) {
 const VEH = {
   battlecar: { name: 'Battle Car', price: 6000, lvl: 10, top: 32, acc: 20, hp: 900, eye: 1.5, gun: { name: 'Twin MGs', dmg: 55, rate: 0.09, range: 70, col: '#ffd36a' }, ram: true, make: makeBattleCar, desc: 'Fast, spiked wheels, ram damage, twin machine guns.' },
   tank: { name: 'Battle Tank', price: 15000, lvl: 18, top: 7, acc: 2.5, tracked: true, turn: 0.61, trs: 0.7, hp: 3200, eye: 2.4, gun: { name: 'Main cannon', dmg: 950, rate: 1.3, range: 95, splash: 6, col: '#ff8a2a' }, make: makeTankModel, desc: 'Heavy and slow. Pivot steers, the turret follows your aim, and the cannon has a big blast.' },
+  mgnest: { name: 'Heavy MG', hidden: true, fixed: true, top: 0, hp: 900, eye: 1.25, gun: { name: 'Heavy MG', dmg: 60, rate: 0.085, range: 95, col: '#ffd36a' }, make: () => new THREE.Group(), desc: 'A sandbagged MG nest at the Front.' },
   mech: { name: 'Battle Mech', price: 26000, lvl: 26, top: 8.5, hp: 4600, eye: 3.2, walk: true, gun: { name: 'Missile pods', dmg: 380, rate: 1.1, range: 85, splash: 4.5, salvo: 4, col: '#ff6a1a' }, make: makeMechModel, desc: 'Walks, strafes and jump-jets. Fires 4-missile salvos.' }
 };
 let VH = { on: false };
@@ -175,6 +176,9 @@ const vmVeh = {}; for (const id in VEH) { const g = new THREE.Group(); camera.ad
 { const g = vmVeh.mech; for (const s of [-1, 1]) { part(g, B(0.08, 1.4, 0.08), '#3a3d44', 0.95 * s, 0, -0.9); part(g, B(0.4, 0.3, 0.6), '#5d636c', 0.75 * s, -0.6, -1.1); for (let k = 0; k < 2; k++) part(g, Cy(0.05, 0.05, 0.04, 8), glow('#ff8a2a'), (0.68 + k * 0.14) * s, -0.55, -1.42, Math.PI / 2); }
   part(g, B(2.0, 0.08, 0.08), '#3a3d44', 0, 0.62, -0.9); part(g, B(2.0, 0.1, 0.4), '#3a3d44', 0, -0.88, -1.0); part(g, B(0.5, 0.04, 0.02), glow('#4fd2ff'), 0, -0.8, -0.8);
   g.userData.muz = [V(0.68, -0.55, -1.45), V(-0.68, -0.55, -1.45), V(0.82, -0.55, -1.45), V(-0.82, -0.55, -1.45)]; }
+if (vmVeh.mgnest) { const g = vmVeh.mgnest, dk = '#2b2a2c', st = '#3a3d44'; part(g, B(0.22, 0.2, 0.7), dk, 0, -0.42, -0.85); part(g, Cy(0.05, 0.05, 1.1, 8), st, 0, -0.38, -1.7, Math.PI / 2); part(g, Cy(0.085, 0.085, 0.55, 8), st, 0, -0.38, -1.4, Math.PI / 2);
+  for (let k = 0; k < 6; k++) part(g, B(0.19, 0.012, 0.03), '#1a1b1e', 0, -0.3, -1.25 - k * 0.06); part(g, B(0.16, 0.14, 0.22), '#6a5a2a', 0.2, -0.5, -0.8); for (const s of [-1, 1]) part(g, Cy(0.025, 0.025, 0.22, 6), dk, 0.14 * s, -0.5, -0.5, 0, 0, Math.PI / 2);
+  part(g, B(0.03, 0.08, 0.03), '#ffd36a', 0, -0.27, -2.2); g.userData.muz = [V(0, -0.38, -2.27)]; }
 function vehOK() { return LEVEL && LEVEL.terrain && !LEVEL.fly && !['ship', 'zeltac', 'speedway', 'arena'].includes(LEVEL.id) && !S.inSub; }
 function toggleVehicle() {
   if (state !== 'play' || dlgOpen) return;
@@ -209,6 +213,7 @@ function vehStep(dt, mx, mz) {
     player.pos.addScaledVector(f, mz * top * dt).addScaledVector(r, mx * top * 0.7 * dt); VH.v = Math.hypot(mx, mz) * top;
     if ((keys.Space || jetHeld) && VH.fuel > 0) { VH.vy = Math.min(VH.vy + 30 * dt, 7); VH.fuel -= dt; if (Math.random() < 0.5) burst(player.pos.clone(), '#ff9a3c', 2, 2); } else if (!air) VH.fuel = Math.min(2, VH.fuel + dt * 0.6);
     VH.step = (VH.step || 0) + dt * VH.v * 0.35; if (!air && VH.v > 1 && Math.floor(VH.step) !== Math.floor(VH.step - dt * VH.v * 0.35)) { SFX.land(); }
+  } else if (D.fixed) { VH.v = 0; if (keys.KeyW || keys.KeyS || keys.KeyA || keys.KeyD) VH.leaveT = (VH.leaveT || 0) + dt; else VH.leaveT = 0; if (VH.leaveT > 0.6) return vehPark(true);
   } else if (D.tracked) { tankDrive(dt, D, top, air);
   } else {
     const dz = v => Math.max(0, (v - 0.15) / 0.85), th = (keys.KeyW ? 1 : 0) + dz(move.y), br = (keys.KeyS ? 1 : 0) + dz(-move.y), st = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + move.x;
@@ -217,7 +222,7 @@ function vehStep(dt, mx, mz) {
     const f = V(-Math.sin(player.yaw), 0, -Math.cos(player.yaw)); player.pos.addScaledVector(f, VH.v * dt);
     SFX.engine && SFX.engine(0.25 + Math.abs(VH.v) / top * 0.6, Math.abs(VH.v) / 30);
   }
-  const before = player.pos.clone(); collide(player.pos, D.walk ? 1.0 : 1.3, false); if (!D.walk && before.distanceTo(player.pos) > 0.05 && Math.abs(VH.v) > 6) { VH.v *= 0.5; SFX.hit(); }
+  const before = player.pos.clone(); if (!D.fixed) collide(player.pos, D.walk ? 1.0 : 1.3, false); if (!D.walk && before.distanceTo(player.pos) > 0.05 && Math.abs(VH.v) > 6) { VH.v *= 0.5; SFX.hit(); }
   const g1 = floorAt(player.pos.x, player.pos.z);
   VH.vy -= 20 * (LEVEL.gravity || 1) * dt; player.pos.y += VH.vy * dt;
   if (player.pos.y <= g1) { if (air && VH.vy < -9) { SFX.land(); burst(player.pos.clone(), '#a08a70', 10, 4); } player.pos.y = g1; VH.vy = D.walk ? 0 : Math.max(0, (g1 - g0) / Math.max(dt, 1e-3)) * 0.6; }
@@ -227,7 +232,7 @@ function vehStep(dt, mx, mz) {
   VH.cd -= dt; if (firing && VH.cd <= 0 && !inSafe(player.pos)) vehFire();
   if (D.tracked) tankPose(dt);
   const hpk = VH.hp / vehMaxHp(VH.id);
-  $('zoneN').textContent = D.name.toUpperCase(); $('zoneL').textContent = `Armor ${Math.round(hpk * 100)}% · ${Math.round(Math.abs(VH.v) * 3.6)} km/h${D.walk ? ` · jets ${Math.round(VH.fuel / 2 * 100)}%` : ''} · V to park`; $('zone').style.opacity = 1; zoneT = 1;
+  $('zoneN').textContent = D.name.toUpperCase(); $('zoneL').textContent = D.fixed ? `Cover ${Math.round(hpk * 100)}% · V or WASD to leave` : `Armor ${Math.round(hpk * 100)}% · ${Math.round(Math.abs(VH.v) * 3.6)} km/h${D.walk ? ` · jets ${Math.round(VH.fuel / 2 * 100)}%` : ''} · V to park`; $('zone').style.opacity = 1; zoneT = 1;
 }
 function vehHit(e, dmg) { e.hp -= dmg; e.hitT = 0.12; e.aggro = true; e.lastHit = gameTime; if (e.anim) e.anim.hit = 0.14; if (e.hp <= 0) kill(e); else updatePlate(e); }
 function vehFire() {
@@ -267,7 +272,7 @@ function openVehicleShop(n) {
   const V0 = vehS(); openDlg('Army Shop', n.name);
   const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
   const render = () => { rows.textContent = ''; $('dlgLine').textContent = 'War vehicles, fresh off the line. Tap one to inspect it. Credits only, no refunds, no test drives. OK, one test drive.';
-    Object.entries(VEH).forEach(([id, D]) => { const own = V0.owned.includes(id), r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.textContent = `${D.name} · ${D.desc}`; const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = own ? 'Owned' : S.lvl < D.lvl ? `Lv ${D.lvl}` : `${D.price} cr`;
+    Object.entries(VEH).filter(([, D]) => !D.hidden).forEach(([id, D]) => { const own = V0.owned.includes(id), r = document.createElement('div'); r.className = 'rowi nodot'; const nm = document.createElement('span'); nm.textContent = `${D.name} · ${D.desc}`; const mt = document.createElement('span'); mt.className = 'meta'; mt.textContent = own ? 'Owned' : S.lvl < D.lvl ? `Lv ${D.lvl}` : `${D.price} cr`;
       const b = document.createElement('button'); b.className = 'pbtn'; b.style.padding = '5px 10px'; b.textContent = own ? '✓' : 'Buy'; b.disabled = own || S.lvl < D.lvl || S.cr < D.price;
       b.addEventListener('click', () => { if (S.cr < D.price) return; S.cr -= D.price; V0.owned.push(id); V0.sel = id; SFX.coin(); log(`Bought the ${D.name}! Press V (or Menu → Vehicle) on any open planet to drive it.`, 'loot'); questProgressKill('buyveh_' + id); markDirty(); render(); });
       r.style.cursor = 'pointer'; r.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') setPreview(() => D.make(), D.name); }); r.append(nm, mt, b); rows.appendChild(r); }); };

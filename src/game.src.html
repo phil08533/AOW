@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.73</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.74</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -1491,7 +1491,7 @@ renderSettings();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { for (const id in npcObjs) npcObjs[id].drawn = false; refreshNpcs(); enemies.forEach(e => { e.plateHp = -1; updatePlate(e); }); });
 $('respawnBtn').addEventListener('click', () => { respawn(); setState('play'); lock(); });
 window.addEventListener('keydown', e => { if (e.code === 'Escape' && state === 'play' && !dlgOpen && !chatOpen() && !locked) setState('pause'); else if (e.code === 'Escape' && state === 'pause') { setState('play'); lock(); } });
-function respawn() { if (LEVEL.fly) { player.alive = true; player.groundHp = null; player.hp = maxHpGround(); loadLevel('ship'); return; } const sp = LEVEL.spawn; player.pos.set(sp.x, floorAt(sp.x, sp.z), sp.z); player.yaw = sp.yaw; player.pitch = 0; player.hp = maxHp(); player.alive = true; player.ammo = gun().mag; player.reloading = 0; }
+function respawn() { if (LEVEL.fly) { player.alive = true; player.groundHp = null; player.hp = maxHpGround(); loadLevel('ship'); return; } const sp = LEVEL.id === 'fort' && typeof FB !== 'undefined' && FB.on ? { x: FB.aid.x, z: FB.aid.z, yaw: Math.PI / 2 } : LEVEL.spawn; player.pos.set(sp.x, floorAt(sp.x, sp.z), sp.z); player.yaw = sp.yaw; player.pitch = 0; player.hp = maxHp(); player.alive = true; player.ammo = gun().mag; player.reloading = 0; }
 
 // =================== COMBAT ===================
 const tmp = V(0, 0, 0), dirV = V(0, 0, 0);

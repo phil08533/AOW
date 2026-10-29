@@ -90,7 +90,7 @@ function zaSlot(x, z, ry, i) { const g = new THREE.Group(); g.position.set(x, 0,
   for (const s of [-1, 1]) part(g, B(0.04, 0.46, 0.05), chrome, s * 0.35, 1.52, 0.14);
   const gl = new THREE.Mesh(new THREE.PlaneGeometry(0.64, 0.4), new THREE.MeshPhongMaterial({ color: '#cfe8ff', transparent: true, opacity: 0.12, shininess: 120, depthWrite: false })); gl.position.set(0, 1.52, 0.165); g.add(gl);
   part(g, B(0.66, 0.012, 0.02), glow('#ff3a3a'), 0, 1.52, 0.17); // the pay line
-  part(g, B(0.86, 0.3, 0.24), body, 0, 1.12, 0.22, -0.5); for (let k = 0; k < 3; k++) part(g, Cy(0.045, 0.045, 0.03, 10), glow(['#ff4a4a', '#ffd36a', '#4fd2ff'][k]), -0.2 + k * 0.2, 1.2, 0.31, Math.PI / 2 - 0.5);
+  part(g, B(0.86, 0.3, 0.24), body, 0, 1.12, 0.22, -0.5);
   part(g, B(0.5, 0.1, 0.14), chrome, 0, 0.72, 0.38); part(g, B(0.42, 0.05, 0.1), dark, 0, 0.76, 0.38); part(g, B(0.18, 0.08, 0.02), glow('#ffd36a'), 0.24, 1.02, 0.35);
   // topper: a lit name marquee with a dome light that flashes on wins
   part(g, B(0.9, 0.36, 0.4), body, 0, 2.13, -0.16); const mq = new THREE.Mesh(new THREE.PlaneGeometry(0.82, 0.28), zaLit(zaSignTex(nm, { fg, bg, bg2: '#000', w: 256, h: 88, font: 'Impact, sans-serif' }))); mq.position.set(0, 2.13, 0.045); g.add(mq);
@@ -103,7 +103,14 @@ function zaSlot(x, z, ry, i) { const g = new THREE.Group(); g.position.set(x, 0,
   const reels = []; for (let k = 0; k < 3; k++) { const geo = new THREE.CylinderGeometry(0.15, 0.15, 0.19, 24, 1, true); geo.rotateZ(Math.PI / 2); const r = new THREE.Mesh(geo, zaMat(zaTex('reel'))); r.position.set(-0.21 + k * 0.21, 1.52, -0.04); r.rotation.x = (randi(0, 4) + 0.5) / 5 * Math.PI * 2; lg.add(r); reels.push(r); }
   const dome = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff5a4a' })); dome.position.set(0, 2.32, -0.16); lg.add(dome);
   const strip = new THREE.Mesh(B(0.03, 0.9, 0.03), new THREE.MeshBasicMaterial({ color: fg })), strip2 = strip.clone(); strip.position.set(-0.445, 1.47, 0.1); strip2.position.set(0.445, 1.47, 0.1); strip2.material = strip.material; lg.add(strip, strip2);
-  const M = { reels, dome, strip, lv, spin: 0, ready: true, stop: [0, 0, 0], tgt: reels.map(r => r.rotation.x), win: 0, i, x, z, ry, nm, pay: null };
+  const M = { reels, dome, strip, lv, spin: 0, ready: true, stop: [0, 0, 0], tgt: reels.map(r => r.rotation.x), win: 0, i, x, z, ry, nm, pay: null, btns: [] };
+  // the controls live on the machine: a tilted button deck (three bet buttons and a big SPIN) and a credit display over the reels
+  const deck = new THREE.Group(); deck.position.set(0, 1.03, 0.36); deck.rotation.x = 0.35; lg.add(deck); part(deck, B(0.8, 0.035, 0.17), dark, 0, 0, 0); part(deck, B(0.82, 0.02, 0.19), chrome, 0, -0.025, 0);
+  for (const [bx, val, col, rad] of [[-0.29, 50, '#6a8ad8', 0.045], [-0.17, 250, '#6a8ad8', 0.045], [-0.05, 1000, '#6a8ad8', 0.045], [0.2, 0, '#e0404a', 0.075]]) {
+    part(deck, Cy(rad + 0.012, rad + 0.012, 0.02, 16), chrome, bx, 0.025, 0); const b = new THREE.Mesh(Cy(rad, rad, 0.03, 16), new THREE.MeshBasicMaterial({ color: col })); b.position.set(bx, 0.045, 0); deck.add(b);
+    const lab = new THREE.Mesh(new THREE.PlaneGeometry(rad * 1.7, rad * 1.7), new THREE.MeshBasicMaterial({ map: zaBtnTex(val ? String(val) : 'SPIN'), transparent: true })); lab.rotation.x = -Math.PI / 2; lab.position.set(bx, 0.062, 0); deck.add(lab);
+    M.btns.push({ mesh: b, lab, val, col, y0: 0.045 }); }
+  { const c = document.createElement('canvas'); c.width = 256; c.height = 56; const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; const lcd = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.136), new THREE.MeshBasicMaterial({ map: t })); lcd.position.set(0, 1.18, 0.33); lcd.rotation.x = -0.5; lg.add(lcd); M.lcd = { c, t, last: '' }; zaLcd(M, 'PULL OR PRESS SPIN'); }
   ZA.mach.push(M); const [fx, fz] = zaRot(ry, 0, 0.95); const [bx, bz] = zaRot(ry, 0, -0.05); box(x + bx, z + bz, Math.abs(Math.cos(ry)) * 0.45 + Math.abs(Math.sin(ry)) * 0.4, Math.abs(Math.sin(ry)) * 0.45 + Math.abs(Math.cos(ry)) * 0.4);
   INTERACTS.push({ x: x + fx, z: z + fz, r: 0.9, get label() { return ZS.M === M ? `🎰 Pull the lever (${ZS.bet} cr)` : `🎰 Sit at the ${nm[0] + nm.slice(1).toLowerCase()} slots`; }, fn: () => zaSit(M) }); }
 function zaSlotStep(t, dt) { for (const M of ZA.mach) {
@@ -114,29 +121,26 @@ function zaSlotStep(t, dt) { for (const M of ZA.mach) {
   M.strip.material.color.setHSL((t * 0.25 + M.i * 0.13) % 1, 0.9, 0.55); } }
 
 // ---------------- sitting at a slot: E sits you on the stool, then E, Space or the PULL button drops the crank and spins the reels ----------------
-const ZS = { M: null, bet: 50, ui: null };
+const ZS = { M: null, bet: 50, ray: new THREE.Raycaster() };
+const zaBtnTex = txt => { const k = 'btn' + txt; if (zaTexCache[k]) return zaTexCache[k]; const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#0c0c14'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.font = `bold ${txt.length > 3 ? 20 : 26}px Impact, sans-serif`; x.fillText(txt, 32, 34); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return (zaTexCache[k] = t); };
+function zaLcd(M, msg) { const L = M.lcd; if (!L) return; const txt = `CREDIT ${S.cr.toLocaleString()}  ·  BET ${ZS.M === M ? ZS.bet : 50}|${msg || L.msg || ''}`; L.msg = msg || L.msg; if (txt === L.last) return; L.last = txt; const x = L.c.getContext('2d');
+  x.fillStyle = '#100608'; x.fillRect(0, 0, 256, 56); x.fillStyle = '#ff6a4a'; x.textAlign = 'center'; x.font = 'bold 15px monospace'; const [a, b] = txt.split('|'); x.fillText(a, 128, 22); x.fillStyle = '#ffd38a'; x.fillText(b, 128, 44); L.t.needsUpdate = true; }
 const zaIn = () => typeof LEVEL !== 'undefined' && LEVEL && LEVEL.id === 'zfloor' && typeof ZF !== 'undefined' && zTheme(ZF.floor) === 'arcade';
-function zaSlotUi() { if (ZS.ui) return ZS.ui; const st = document.createElement('style'); st.textContent = `#zaSlot { position: fixed; left: 50%; bottom: 7%; transform: translateX(-50%); z-index: 40; background: rgba(12,8,20,.86); border: 1px solid #6a3a8a; border-radius: 12px; padding: 10px 14px; color: #f0e8ff; font: 14px system-ui, sans-serif; text-align: center; min-width: 300px; }
-#zaSlot .t { font: bold 15px Georgia, serif; letter-spacing: .06em; margin-bottom: 4px; } #zaSlot .m { min-height: 20px; margin: 4px 0 8px; color: #cfe8ff; } #zaSlot .row { display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
-#zaSlot button { cursor: pointer; border-radius: 8px; border: 1px solid #5a5a7a; background: #1e1c2e; color: #e8e8ff; padding: 6px 10px; font: 13px system-ui, sans-serif; } #zaSlot button.on { background: #3a6ad8; border-color: #8ab0ff; }
-#zaSlot button.pull { background: #b0202e; border-color: #ff8a90; color: #fff; font-weight: bold; padding: 9px 22px; font-size: 15px; } #zaSlot button.pull:disabled { opacity: .5; } #zaSlot small { opacity: .7; }`; document.head.appendChild(st);
-  const d = document.createElement('div'); d.id = 'zaSlot'; d.hidden = true; d.innerHTML = '<div class="t"></div><div class="m"></div><div class="row"><span>Bet</span><button data-b="50">50</button><button data-b="250">250</button><button data-b="1000">1000</button><button class="pull">PULL</button><button class="up">Stand up</button></div><small>Three in a row pays 8×, three diamonds 20×, a pair next to each other 1.5× · Click, E or Space pulls · 1 2 3 set the bet · WASD stands</small>';
-  document.body.appendChild(d); d.querySelectorAll('[data-b]').forEach(b => b.addEventListener('click', () => { ZS.bet = +b.dataset.b; zaUiRefresh(); SFX.ui && SFX.ui(); }));
-  d.querySelector('.pull').addEventListener('click', () => zaPull()); d.querySelector('.up').addEventListener('click', () => zaStand()); ZS.ui = d; return d; }
-function zaUiRefresh(msg) { const d = zaSlotUi(); if (msg != null) d.querySelector('.m').textContent = msg; d.querySelectorAll('[data-b]').forEach(b => b.classList.toggle('on', +b.dataset.b === ZS.bet)); d.querySelector('.pull').disabled = !!(ZS.M && ZS.M.spin > 0); }
+function zaUiRefresh(msg) { const M = ZS.M; if (!M) return; M.btns.forEach(b => { const on = b.val ? b.val === ZS.bet : M.spin <= 0; b.mesh.material.color.set(on ? (b.val ? '#bfe0ff' : '#ff5a6a') : (b.val ? '#4a6ab8' : '#8a3038')); }); zaLcd(M, msg); }
 const zaSeat = M => { const [fx, fz] = zaRot(M.ry, 0, 0.95); return [M.x + fx, M.z + fz]; };
 function zaSit(M) { if (ZS.M === M) return zaPull(); if (ZS.M) zaStand(true);
-  ZS.M = M; const [sx, sz] = zaSeat(M), [rx, rz] = zaRot(M.ry, 0, 0.95); player.pos.x = sx; player.pos.z = sz; player.yaw = Math.atan2(rx, rz); player.pitch = 0.12; firing = false;
-  const d = zaSlotUi(); d.hidden = false; d.querySelector('.t').textContent = '🎰 ' + M.nm; zaUiRefresh(`You have ${S.cr.toLocaleString()} cr. Pick a bet and pull.`); SFX.ui && SFX.ui(); }
-function zaStand(quiet) { const M = ZS.M; if (!M) return; ZS.M = null; if (ZS.ui) ZS.ui.hidden = true; const [ox, oz] = zaRot(M.ry, 0, 1.55); player.pos.x = M.x + ox; player.pos.z = M.z + oz; if (!quiet) SFX.ui && SFX.ui(); }
-function zaPull() { const M = ZS.M; if (!M || M.spin > 0) return; const bet = ZS.bet; if (S.cr < bet) { zaUiRefresh(`You need ${bet} cr for that bet.`); SFX.hit && SFX.hit(); return; }
+  ZS.M = M; const [sx, sz] = zaSeat(M), [rx, rz] = zaRot(M.ry, 0, 0.95); player.pos.x = sx; player.pos.z = sz; player.yaw = Math.atan2(rx, rz); player.pitch = -0.08; firing = false;
+  zaUiRefresh('PICK A BET · PRESS SPIN'); toast('🎰 ' + M.nm, TOUCH ? 'Tap the buttons on the machine · move to stand up' : 'Click the buttons on the machine, or E to pull the lever · WASD stands', 3); SFX.ui && SFX.ui(); }
+function zaStand(quiet) { const M = ZS.M; if (!M) return; ZS.M = null; M.btns.forEach(b => b.mesh.material.color.set(b.col)); zaLcd(M, 'PULL OR PRESS SPIN'); const [ox, oz] = zaRot(M.ry, 0, 1.55); player.pos.x = M.x + ox; player.pos.z = M.z + oz; if (!quiet) SFX.ui && SFX.ui(); }
+function zaPull() { const M = ZS.M; if (!M || M.spin > 0) return; const bet = ZS.bet; if (S.cr < bet) { zaUiRefresh('NOT ENOUGH CREDIT'); SFX.hit && SFX.hit(); return; }
   S.cr -= bet; markDirty(); const r = [0, 0, 0].map(() => randi(0, ZA_SYM.length - 1)); M.tgt = r.map(j => (j + 0.5) / 5 * Math.PI * 2); M.win = 0; M.lv.rotation.x = 0; M.ready = true; M.spin = 0.001;
   const mult = r[0] === r[1] && r[1] === r[2] ? (r[0] === 4 ? 20 : 8) : (r[0] === r[1] || r[1] === r[2]) ? 1.5 : 0; M.pay = Math.round(bet * mult); M.roll = r.map(j => ZA_SYM[j]).join(' ');
   try { const c = SFX.ctx(), o = c.createOscillator(), g = c.createGain(); o.type = 'square'; o.frequency.setValueAtTime(140, c.currentTime); o.frequency.exponentialRampToValueAtTime(60, c.currentTime + 0.18); g.gain.setValueAtTime(0.12, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.2); o.connect(g); g.connect(SFX.voiceOut ? SFX.voiceOut() : c.destination); o.start(); o.stop(c.currentTime + 0.22); } catch (_) {}
-  zaUiRefresh('Ka-chunk. The reels spin…'); }
+  zaUiRefresh('GOOD LUCK!'); }
 function zaPaid(M) { const p = M.pay; M.pay = null; S.cr += p; markDirty(); if (p) { M.win = 3; SFX.coin && SFX.coin(); } else SFX.ui && SFX.ui();
-  if (ZS.M === M) zaUiRefresh(p ? `${M.roll} · You win ${p.toLocaleString()} cr!` : `${M.roll} · Nothing. The machine hums smugly.`);
-  if (p >= 1000) toast('🎰 JACKPOT', `+${p.toLocaleString()} cr`, 2.5); }
+  zaLcd(M, p ? `WIN ${p.toLocaleString()}!` : 'NO WIN · TRY AGAIN'); if (p) toast('🎰 ' + M.roll, `You win ${p.toLocaleString()} cr`, 1.8);
+}
 // sitting: hold the seat, sit low, WASD stands you up; and no guns anywhere on the arcade deck
 { const _st = step; step = function (dt) { const M = ZS.M;
   if (M && !zaIn()) zaStand(true);
@@ -149,7 +153,10 @@ function zaPaid(M) { const p = M.pay; M.pay = null; S.cr += p; markDirty(); if (
 { const _to = throwOrd; throwOrd = function () { if (zaIn()) return; return _to.apply(this, arguments); }; }
 window.addEventListener('keydown', e => { if (!ZS.M || state !== 'play' || dlgOpen) return; const b = { Digit1: 50, Digit2: 250, Digit3: 1000 }[e.code];
   if (e.code === 'Space') zaPull(); else if (b) { ZS.bet = b; zaUiRefresh(); SFX.ui && SFX.ui(); } else return; e.preventDefault(); e.stopImmediatePropagation(); }, true);
-window.addEventListener('mousedown', e => { if (ZS.M && e.button === 0 && document.pointerLockElement && state === 'play' && !dlgOpen) zaPull(); });
+function zaPress(cx, cy) { const M = ZS.M; if (!M) return false; const R = ZS.ray; R.setFromCamera({ x: cx, y: cy }, camera); const hit = R.intersectObjects([...M.btns.map(b => b.mesh), M.lv], true)[0]; if (!hit) return false;
+  const b = M.btns.find(q => q.mesh === hit.object); if (b) { b.mesh.position.y = b.y0 - 0.015; setTimeout(() => { b.mesh.position.y = b.y0; }, 140); if (b.val) { ZS.bet = b.val; zaUiRefresh(); SFX.ui && SFX.ui(); } else zaPull(); } else zaPull(); return true; }
+window.addEventListener('mousedown', e => { if (!ZS.M || e.button !== 0 || state !== 'play' || dlgOpen) return; if (document.pointerLockElement) zaPress(0, 0); });
+renderer.domElement.addEventListener('pointerdown', e => { if (!ZS.M || document.pointerLockElement || state !== 'play' || dlgOpen) return; const r = renderer.domElement.getBoundingClientRect(); if (zaPress((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1)) { e.preventDefault(); e.stopPropagation(); } }, true);
 { const st = document.createElement('style'); st.textContent = 'body.unarmed #tFire, body.unarmed .tq, body.unarmed #ammo, body.unarmed #cross, body.unarmed #tReload { display: none !important; }'; document.head.appendChild(st); }
 
 // an upright arcade cabinet facing local +z with a lit marquee, a screen, a control panel and side art

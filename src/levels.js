@@ -366,10 +366,13 @@ LEVELS.ship = {
       for (const sx of [-1, 1]) part(g, B(0.05, 0.05, 0.05), glow(col), sx * (w / 2 + 0.01), tall - 0.15, 0.2);
       at(g, x, z, yaw); }; window.bridgeConsole = bridgeConsole;
     for (let i = -3; i <= 3; i++) { const a = i * 0.17, x = Math.sin(a) * 7.2, z = -6.4 - Math.cos(a) * 7.2; bridgeConsole(x, z, -a, i % 2 ? '#4fd2ff' : '#6fdc5a', 1.05); } box(0, -13.4, 4.2, 0.4);
-    part(props, Cy(0.9, 1.1, 0.9, 8), '#2a2c32', 0, 0.45, -10.5); part(props, Cy(0.95, 0.95, 0.05, 16), glow('#2a6aa8'), 0, 0.92, -10.5); solid(0, -10.5, 1.1);
+    { const Z = -10.5; part(props, Cy(0.55, 0.75, 0.12, 24), toon('#1e2128'), 0, 0.3, Z); part(props, Cy(0.38, 0.5, 0.55, 16), toon('#2a2d34', 'hull'), 0, 0.6, Z); for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; part(props, B(0.03, 0.42, 0.03), glow('#4fd2ff'), Math.cos(a) * 0.42, 0.6, Z + Math.sin(a) * 0.42); }
+      part(props, Cy(1.0, 0.85, 0.1, 32), toon('#1e2128', 'hull'), 0, 0.93, Z); part(props, new THREE.TorusGeometry(1.0, 0.04, 6, 48), toon('#a8aeb8'), 0, 0.98, Z, Math.PI / 2); part(props, Cy(0.94, 0.94, 0.01, 32), toon('#0a1624'), 0, 0.985, Z);
+      for (const r of [0.35, 0.6, 0.85]) part(props, new THREE.TorusGeometry(r, 0.006, 4, 48), glow('#2a8ad8'), 0, 0.993, Z, Math.PI / 2); for (let k = 0; k < 6; k++) part(props, B(1.7, 0.004, 0.012), glow('#1a5a8a'), 0, 0.992, Z, 0, k / 6 * Math.PI, 0);
+      part(props, Cy(0.16, 0.2, 0.06, 16), toon('#3a3f4a'), 0, 1.02, Z); part(props, Cy(0.11, 0.11, 0.02, 16), glow('#bff0ff'), 0, 1.06, Z); solid(0, Z, 1.05); }
     const holo = new THREE.Mesh(new THREE.IcosahedronGeometry(0.45, 1), glow('#8fe3ff')); holo.position.set(0, 1.6, -10.5); levelGroup.add(holo);
     levelAnims.push(t => { holo.rotation.y = t * 0.6; holo.position.y = 1.6 + Math.sin(t * 1.5) * 0.06; });
-    INTERACTS.push({ x: 0, z: -10.5, r: 2.4, label: 'Galaxy map', fn: openGalaxy });
+    INTERACTS.push({ x: 0, z: -10.5, r: 2.9, label: 'Galaxy map', fn: openGalaxy });
     // bridge polish (2.18.7): glowing floor trim, ceiling ribs and wall light bars
     for (const x of [-6.85, 6.85]) part(props, B(0.05, 0.04, 12.6), glow('#4fd2ff'), x, 0.06, -8.5);
     // ceiling: a raised center dome over the map with a glowing ring, cable runs and recessed light panels
@@ -379,10 +382,14 @@ LEVELS.ship = {
     for (const x of [-4.6, 4.6]) { part(props, B(0.12, 0.1, 12.4), '#1a1c22', x, H - 0.3, -8.5); part(props, B(0.05, 0.05, 12.4), '#c9733a', x + 0.12, H - 0.32, -8.5); }
     for (const [x, z] of [[-4.6, -5], [4.6, -5], [-4.6, -13], [4.6, -13]]) { part(props, B(1.6, 0.04, 1.1), '#1a1c22', x, H - 0.06, z); part(props, B(1.4, 0.02, 0.9), glow('#dff2ff'), x, H - 0.09, z); }
     // map area: a stepped platform, a rail ring, projector emitters and a layered hologram of planets
-    part(props, Cy(1.9, 2.0, 0.1, 24), '#2a2c32', 0, 0.05, -10.5); part(props, Cy(1.95, 1.95, 0.02, 24), glow('#2a6aa8'), 0, 0.11, -10.5);
-    for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; if (Math.abs(Math.sin(a)) > 0.95 && Math.cos(a) > -0.3 && Math.sin(a) > 0) continue; part(props, Cy(0.03, 0.03, 0.9, 6), '#5a606c', Math.cos(a) * 1.85, 0.55, -10.5 + Math.sin(a) * 1.85); }
-    for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2; if (Math.sin(a) > 0.9) continue; solid(Math.cos(a) * 1.85, -10.5 + Math.sin(a) * 1.85, 0.28); }
-    { const rr = new THREE.Mesh(new THREE.TorusGeometry(1.85, 0.035, 6, 40), toon('#5a606c')); rr.rotation.x = Math.PI / 2; rr.position.set(0, 1.0, -10.5); props.add(rr); }
+    // (2.23.77) a two-step dais with a lit edge, a closed railing all the way round (top rail, mid rail, 16 posts) that you can't walk through
+    { const Z = -10.5, dk = toon('#22252c', 'hull'), mid = toon('#2e323a', 'panel'), chrome = toon('#8a909c');
+      part(props, Cy(2.05, 2.1, 0.12, 32), dk, 0, 0.06, Z); part(props, new THREE.TorusGeometry(2.07, 0.02, 4, 48), glow('#2a8ad8'), 0, 0.12, Z, Math.PI / 2);
+      part(props, Cy(1.45, 1.5, 0.12, 32), mid, 0, 0.18, Z); part(props, new THREE.TorusGeometry(1.47, 0.015, 4, 40), glow('#4fd2ff'), 0, 0.245, Z, Math.PI / 2);
+      for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; part(props, B(0.03, 0.005, 0.5), toon('#14161c'), Math.cos(a) * 1.75, 0.123, Z + Math.sin(a) * 1.75, 0, -a + Math.PI / 2, 0); }
+      for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2, x = Math.cos(a) * 1.9, z = Z + Math.sin(a) * 1.9; part(props, Cy(0.035, 0.035, 0.92, 8), chrome, x, 0.58, z); part(props, Cy(0.06, 0.07, 0.04, 8), chrome, x, 0.14, z); part(props, B(0.05, 0.05, 0.02), glow('#4fd2ff'), x * 1.02, 0.85, Z + (z - Z) * 1.02, 0, -a + Math.PI / 2, 0); }
+      for (const [y, r] of [[1.04, 0.045], [0.6, 0.025]]) { const rr = new THREE.Mesh(new THREE.TorusGeometry(1.9, r, 8, 64), y > 1 ? chrome : toon('#5a606c')); rr.rotation.x = Math.PI / 2; rr.position.set(0, y, Z); props.add(rr); }
+      for (let k = 0; k < 32; k++) { const a = k / 32 * Math.PI * 2; solid(Math.cos(a) * 1.9, Z + Math.sin(a) * 1.9, 0.26); } }
     for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2; part(props, Cy(0.06, 0.1, 0.15, 8), glow('#8fe3ff'), Math.cos(a) * 0.75, 0.98, -10.5 + Math.sin(a) * 0.75); }
     { const hg = new THREE.Group(); hg.position.set(0, 1.6, -10.5); levelGroup.add(hg); const orb = []; const cols = ['#ffd36a', '#6fdc5a', '#c86aff', '#ff8a5a'];
       for (let k = 0; k < 4; k++) { const r = 0.45 + k * 0.17, o = new THREE.Mesh(new THREE.TorusGeometry(r, 0.006, 4, 48), new THREE.MeshBasicMaterial({ color: '#8fe3ff', transparent: true, opacity: 0.35 })); o.rotation.x = Math.PI / 2; hg.add(o);
@@ -395,7 +402,7 @@ LEVELS.ship = {
     part(props, B(0.04, 0.04, 12.6), glow('#8fd0ff'), 0, 0.03, -8.5);
 
     bridgeConsole(-5, -7, 0, '#6fdc5a', 1.3, 0.95); bridgeConsole(-3.7, -7.6, 0.35, '#4fd2ff', 0.9, 0.8); box(-5, -7, 0.7, 0.3); box(-3.7, -7.6, 0.5, 0.45);
-    INTERACTS.push({ x: -5, z: -6.4, r: 2, label: 'Ship upgrades', fn: openShipTerminal });
+    INTERACTS.push({ x: -5, z: -6.4, r: 1.4, label: 'Ship upgrades', fn: openShipTerminal });
     INTERACTS.push({ x: 0, z: -6.6, r: 1.6, label: 'Take the helm (fly)', fn: () => enterSpace(S.orbit || 'earth') });
     { const ch = new THREE.Group(), red = toon('#8a2e2a', 'cloth'), dk = '#22252c';
       part(ch, Cy(0.35, 0.45, 0.06, 16), dk, 0, 0.03, 0); part(ch, Cy(0.08, 0.1, 0.4, 10), '#5a606c', 0, 0.26, 0); part(ch, Cy(0.38, 0.38, 0.03, 20), glow('#4fd2ff'), 0, 0.07, 0);

@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.77</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.79</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -4182,10 +4182,13 @@ LEVELS.ship = {
       for (const sx of [-1, 1]) part(g, B(0.05, 0.05, 0.05), glow(col), sx * (w / 2 + 0.01), tall - 0.15, 0.2);
       at(g, x, z, yaw); }; window.bridgeConsole = bridgeConsole;
     for (let i = -3; i <= 3; i++) { const a = i * 0.17, x = Math.sin(a) * 7.2, z = -6.4 - Math.cos(a) * 7.2; bridgeConsole(x, z, -a, i % 2 ? '#4fd2ff' : '#6fdc5a', 1.05); } box(0, -13.4, 4.2, 0.4);
-    part(props, Cy(0.9, 1.1, 0.9, 8), '#2a2c32', 0, 0.45, -10.5); part(props, Cy(0.95, 0.95, 0.05, 16), glow('#2a6aa8'), 0, 0.92, -10.5); solid(0, -10.5, 1.1);
+    { const Z = -10.5; part(props, Cy(0.55, 0.75, 0.12, 24), toon('#1e2128'), 0, 0.3, Z); part(props, Cy(0.38, 0.5, 0.55, 16), toon('#2a2d34', 'hull'), 0, 0.6, Z); for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; part(props, B(0.03, 0.42, 0.03), glow('#4fd2ff'), Math.cos(a) * 0.42, 0.6, Z + Math.sin(a) * 0.42); }
+      part(props, Cy(1.0, 0.85, 0.1, 32), toon('#1e2128', 'hull'), 0, 0.93, Z); part(props, new THREE.TorusGeometry(1.0, 0.04, 6, 48), toon('#a8aeb8'), 0, 0.98, Z, Math.PI / 2); part(props, Cy(0.94, 0.94, 0.01, 32), toon('#0a1624'), 0, 0.985, Z);
+      for (const r of [0.35, 0.6, 0.85]) part(props, new THREE.TorusGeometry(r, 0.006, 4, 48), glow('#2a8ad8'), 0, 0.993, Z, Math.PI / 2); for (let k = 0; k < 6; k++) part(props, B(1.7, 0.004, 0.012), glow('#1a5a8a'), 0, 0.992, Z, 0, k / 6 * Math.PI, 0);
+      part(props, Cy(0.16, 0.2, 0.06, 16), toon('#3a3f4a'), 0, 1.02, Z); part(props, Cy(0.11, 0.11, 0.02, 16), glow('#bff0ff'), 0, 1.06, Z); solid(0, Z, 1.05); }
     const holo = new THREE.Mesh(new THREE.IcosahedronGeometry(0.45, 1), glow('#8fe3ff')); holo.position.set(0, 1.6, -10.5); levelGroup.add(holo);
     levelAnims.push(t => { holo.rotation.y = t * 0.6; holo.position.y = 1.6 + Math.sin(t * 1.5) * 0.06; });
-    INTERACTS.push({ x: 0, z: -10.5, r: 2.4, label: 'Galaxy map', fn: openGalaxy });
+    INTERACTS.push({ x: 0, z: -10.5, r: 2.9, label: 'Galaxy map', fn: openGalaxy });
     // bridge polish (2.18.7): glowing floor trim, ceiling ribs and wall light bars
     for (const x of [-6.85, 6.85]) part(props, B(0.05, 0.04, 12.6), glow('#4fd2ff'), x, 0.06, -8.5);
     // ceiling: a raised center dome over the map with a glowing ring, cable runs and recessed light panels
@@ -4195,10 +4198,14 @@ LEVELS.ship = {
     for (const x of [-4.6, 4.6]) { part(props, B(0.12, 0.1, 12.4), '#1a1c22', x, H - 0.3, -8.5); part(props, B(0.05, 0.05, 12.4), '#c9733a', x + 0.12, H - 0.32, -8.5); }
     for (const [x, z] of [[-4.6, -5], [4.6, -5], [-4.6, -13], [4.6, -13]]) { part(props, B(1.6, 0.04, 1.1), '#1a1c22', x, H - 0.06, z); part(props, B(1.4, 0.02, 0.9), glow('#dff2ff'), x, H - 0.09, z); }
     // map area: a stepped platform, a rail ring, projector emitters and a layered hologram of planets
-    part(props, Cy(1.9, 2.0, 0.1, 24), '#2a2c32', 0, 0.05, -10.5); part(props, Cy(1.95, 1.95, 0.02, 24), glow('#2a6aa8'), 0, 0.11, -10.5);
-    for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; if (Math.abs(Math.sin(a)) > 0.95 && Math.cos(a) > -0.3 && Math.sin(a) > 0) continue; part(props, Cy(0.03, 0.03, 0.9, 6), '#5a606c', Math.cos(a) * 1.85, 0.55, -10.5 + Math.sin(a) * 1.85); }
-    for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2; if (Math.sin(a) > 0.9) continue; solid(Math.cos(a) * 1.85, -10.5 + Math.sin(a) * 1.85, 0.28); }
-    { const rr = new THREE.Mesh(new THREE.TorusGeometry(1.85, 0.035, 6, 40), toon('#5a606c')); rr.rotation.x = Math.PI / 2; rr.position.set(0, 1.0, -10.5); props.add(rr); }
+    // (2.23.77) a two-step dais with a lit edge, a closed railing all the way round (top rail, mid rail, 16 posts) that you can't walk through
+    { const Z = -10.5, dk = toon('#22252c', 'hull'), mid = toon('#2e323a', 'panel'), chrome = toon('#8a909c');
+      part(props, Cy(2.05, 2.1, 0.12, 32), dk, 0, 0.06, Z); part(props, new THREE.TorusGeometry(2.07, 0.02, 4, 48), glow('#2a8ad8'), 0, 0.12, Z, Math.PI / 2);
+      part(props, Cy(1.45, 1.5, 0.12, 32), mid, 0, 0.18, Z); part(props, new THREE.TorusGeometry(1.47, 0.015, 4, 40), glow('#4fd2ff'), 0, 0.245, Z, Math.PI / 2);
+      for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; part(props, B(0.03, 0.005, 0.5), toon('#14161c'), Math.cos(a) * 1.75, 0.123, Z + Math.sin(a) * 1.75, 0, -a + Math.PI / 2, 0); }
+      for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2, x = Math.cos(a) * 1.9, z = Z + Math.sin(a) * 1.9; part(props, Cy(0.035, 0.035, 0.92, 8), chrome, x, 0.58, z); part(props, Cy(0.06, 0.07, 0.04, 8), chrome, x, 0.14, z); part(props, B(0.05, 0.05, 0.02), glow('#4fd2ff'), x * 1.02, 0.85, Z + (z - Z) * 1.02, 0, -a + Math.PI / 2, 0); }
+      for (const [y, r] of [[1.04, 0.045], [0.6, 0.025]]) { const rr = new THREE.Mesh(new THREE.TorusGeometry(1.9, r, 8, 64), y > 1 ? chrome : toon('#5a606c')); rr.rotation.x = Math.PI / 2; rr.position.set(0, y, Z); props.add(rr); }
+      for (let k = 0; k < 32; k++) { const a = k / 32 * Math.PI * 2; solid(Math.cos(a) * 1.9, Z + Math.sin(a) * 1.9, 0.26); } }
     for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2; part(props, Cy(0.06, 0.1, 0.15, 8), glow('#8fe3ff'), Math.cos(a) * 0.75, 0.98, -10.5 + Math.sin(a) * 0.75); }
     { const hg = new THREE.Group(); hg.position.set(0, 1.6, -10.5); levelGroup.add(hg); const orb = []; const cols = ['#ffd36a', '#6fdc5a', '#c86aff', '#ff8a5a'];
       for (let k = 0; k < 4; k++) { const r = 0.45 + k * 0.17, o = new THREE.Mesh(new THREE.TorusGeometry(r, 0.006, 4, 48), new THREE.MeshBasicMaterial({ color: '#8fe3ff', transparent: true, opacity: 0.35 })); o.rotation.x = Math.PI / 2; hg.add(o);
@@ -4211,7 +4218,7 @@ LEVELS.ship = {
     part(props, B(0.04, 0.04, 12.6), glow('#8fd0ff'), 0, 0.03, -8.5);
 
     bridgeConsole(-5, -7, 0, '#6fdc5a', 1.3, 0.95); bridgeConsole(-3.7, -7.6, 0.35, '#4fd2ff', 0.9, 0.8); box(-5, -7, 0.7, 0.3); box(-3.7, -7.6, 0.5, 0.45);
-    INTERACTS.push({ x: -5, z: -6.4, r: 2, label: 'Ship upgrades', fn: openShipTerminal });
+    INTERACTS.push({ x: -5, z: -6.4, r: 1.4, label: 'Ship upgrades', fn: openShipTerminal });
     INTERACTS.push({ x: 0, z: -6.6, r: 1.6, label: 'Take the helm (fly)', fn: () => enterSpace(S.orbit || 'earth') });
     { const ch = new THREE.Group(), red = toon('#8a2e2a', 'cloth'), dk = '#22252c';
       part(ch, Cy(0.35, 0.45, 0.06, 16), dk, 0, 0.03, 0); part(ch, Cy(0.08, 0.1, 0.4, 10), '#5a606c', 0, 0.26, 0); part(ch, Cy(0.38, 0.38, 0.03, 20), glow('#4fd2ff'), 0, 0.07, 0);
@@ -10096,8 +10103,26 @@ function openGunMods(who) {
 // station on the ship next to the saber mods
 { const orig = LEVELS.ship.build;
   LEVELS.ship.build = function () { orig.call(this);
-    const st = new THREE.Group(); part(st, B(1.6, 0.9, 0.8), '#3a3d44', 0, 0.45, 0); part(st, B(1.5, 0.05, 0.7), glow('#ff9a3c'), 0, 0.92, 0); const gm = makeGunModel(S.gun); gm.scale.setScalar(2.2); gm.position.set(0, 1.25, 0); st.add(gm); st.position.set(-5, 0, -3.5); levelGroup.add(st); box(-5, -3.5, 0.8, 0.4);
-    levelAnims.push(t => { gm.rotation.y = t * 0.7; });
+    // the display (2.23.77): a steel workbench cabinet with drawers, a glass case on top where your gun turns on a lit turntable, a pegboard of tools behind and a plaque on the front
+    const st = new THREE.Group(), steel = toon('#3a3d44', 'hull'), dk = toon('#1e2128'), chrome = toon('#a8aeb8'), cy = '#4fd2ff';
+    part(st, B(1.7, 0.86, 0.85), steel, 0, 0.43, 0); part(st, B(1.76, 0.05, 0.9), toon('#2a2d34'), 0, 0.885, 0); part(st, B(1.7, 0.08, 0.85), dk, 0, 0.04, 0);
+    for (let r = 0; r < 2; r++) for (const sx of [-0.43, 0.43]) { part(st, B(0.76, 0.3, 0.02), toon('#30333a'), sx, 0.27 + r * 0.34, 0.43); part(st, B(0.3, 0.03, 0.03), chrome, sx, 0.33 + r * 0.34, 0.45); }
+    { const c = document.createElement('canvas'); c.width = 256; c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#0a1420'; x.fillRect(0, 0, 256, 64); x.strokeStyle = cy; x.lineWidth = 3; x.strokeRect(3, 3, 250, 58); x.fillStyle = '#cfefff'; x.font = 'bold 30px Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('GUNSMITH', 128, 34);
+      const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.155), new THREE.MeshBasicMaterial({ map: t })); pl.position.set(0, 0.79, 0.433); st.add(pl); part(st, B(0.66, 0.19, 0.01), chrome, 0, 0.79, 0.427); }
+    // glass case: a dark plinth, a cyan-lit turntable, four chrome posts, a lid and see-through panes
+    part(st, B(1.5, 0.08, 0.7), dk, 0, 0.95, 0); part(st, Cy(0.34, 0.36, 0.04, 24), toon('#24282f'), 0, 1.01, 0); part(st, new THREE.TorusGeometry(0.35, 0.012, 4, 32), glow(cy), 0, 1.035, 0, Math.PI / 2);
+    for (const sx of [-0.73, 0.73]) for (const sz of [-0.33, 0.33]) part(st, B(0.04, 0.72, 0.04), chrome, sx, 1.35, sz);
+    part(st, B(1.5, 0.05, 0.7), dk, 0, 1.73, 0); part(st, B(1.4, 0.015, 0.6), glow('#dff4ff'), 0, 1.70, 0);
+    const glass = new THREE.MeshPhongMaterial({ color: '#cfe8ff', transparent: true, opacity: 0.13, shininess: 120, depthWrite: false, side: THREE.DoubleSide });
+    for (const [w, d, x, z] of [[1.42, 0.01, 0, 0.33], [1.42, 0.01, 0, -0.33], [0.01, 0.62, 0.73, 0], [0.01, 0.62, -0.73, 0]]) { const m = new THREE.Mesh(B(w, 0.7, d), glass); m.position.set(x, 1.34, z); st.add(m); }
+    // pegboard behind with tools
+    part(st, B(1.7, 1.1, 0.05), toon('#2a2d34', 'panel'), 0, 1.5, -0.47); for (let k = 0; k < 4; k++) part(st, B(0.04, 0.24 + (k % 2) * 0.1, 0.03), toon(['#c9733a', '#a8aeb8', '#6a6e78', '#a8aeb8'][k]), -0.66 + k * 0.08, 1.75, -0.43);
+    part(st, Cy(0.05, 0.05, 0.03, 10), chrome, 0.62, 1.8, -0.43, Math.PI / 2); part(st, B(0.26, 0.05, 0.03), toon('#c8402f'), 0.6, 1.6, -0.43); part(st, B(1.6, 0.03, 0.03), glow(cy), 0, 2.03, -0.44);
+    const tt = new THREE.Group(); tt.position.set(0, 1.04, 0); st.add(tt); const gm = makeGunModel(S.gun); const gb = new THREE.Box3().setFromObject(gm), gs = gb.getSize(V(0, 0, 0)); gm.scale.setScalar(Math.min(2.2, 1.2 / Math.max(gs.x, gs.z, 0.01)));
+    tt.add(gm); const gb2 = new THREE.Box3().setFromObject(gm); gm.position.y = 0.3 - (gb2.min.y + gb2.max.y) / 2;
+    const lt = new THREE.PointLight(0x8fe3ff, 0.6, 2.4, 1.6); lt.position.set(0, 1.6, 0.3); st.add(lt);
+    st.position.set(-5, 0, -3.5); levelGroup.add(st); box(-5, -3.5, 0.88, 0.5);
+    levelAnims.push(t => { tt.rotation.y = t * 0.6; });
     INTERACTS.push({ x: -5, z: -2.6, r: 2, label: 'Gun mod bench', fn: () => openGunMods() });
   };
 }
@@ -20236,6 +20261,7 @@ const UPDATES = [
   { id: 315, title: '2.23.50 · Cleaner minimap', items: ['The live minimap no longer shows fireflies, rain, sparks or other effects', 'Removed the little winding crown on the minimap watch (the pill-shaped thing)'] },
   { id: 316, title: '2.23.51 · Ready for the cast', items: ['The game can now play real voice-actor recordings for every character line, as they get recorded'] },
   { id: 317, title: '2.23.52 · Helmet radio', items: ['Recorded voices for helmeted characters and battle radio play through a light comms filter'] },
+  { id: 344, title: '2.23.79 · Slot buttons, gunsmith case, bridge map', items: ['Slots: the bet buttons (50, 250, 1000) and a big SPIN button are on the machine now, with a credit display. Click or tap them, or pull the lever with E. No more menu.', 'The gun mod bench is a gunsmith case: a steel cabinet with drawers, a glass case where your gun turns on a lit turntable, a tool pegboard and a GUNSMITH plaque. The Ship upgrades prompt no longer pops up when you stand at it.', 'The galaxy map on the bridge stands on a two-step lit dais with a holo table, and its railing goes all the way round. You can no longer walk through it.', 'The Interior styles camera stays inside the ship now, looking down the flight deck and the hallway with the ceiling in view.'] },
   { id: 342, title: '2.23.77 · Deck 6 fixes, a feud and an arrest', items: ['Slots: sit down at a machine with E, then click, press E or Space, or tap PULL. The crank drops and the reels spin. 1, 2 and 3 set the bet. WASD stands you up.', 'No guns on the arcade and casino deck. Your weapon is put away and firing is off.', 'The blackjack and high-low felts are the right way round now, and high-low has its own felt.', 'Poker players no longer stand inside chairs. The air hockey and skee-ball regulars stand beside their games, and the Star Racer kid sits in his seat.', 'Arcade plushies (Klunky, Blork, Frog E, Tiny Maw and a new Giant Blork) are prizes you can place in your ship from Decorate. Plushies you already won unlock too.', 'New quest: Gus Bitwhistle, the arcade manager, wants Lucky Lux poisoned. Outlaws spike his coffee, Marshals arrest Gus, and anyone else can do either or turn Gus in to Marshal Rook.', 'Marshals can arrest Vixen Glippo for soliciting S-grade drugs.', 'Anyone arrested or poisoned is gone for 3 in-game days, then comes back.'] },
   { id: 341, title: '2.23.76 · The Big Push', items: ['New story mission from General Hale at Fort Ironrock: Hold the Line. Pick up the field phone in the HQ dugout at the Front to begin.', 'Hold all six waves and the whistle blows: every trooper climbs the ladders and charges with you, and our fighters strafe the Drome trench.', 'The motor pool tank behind our line is yours for the push. Drive it around the end of our trench.', 'Clear their trench and a Drome Siege Walker drops in at their drop zone. Bring it down with the guns, the tank and everything you have.', 'First win: 8,000 cr, 25,000 XP, the Ironrock Trench Coat in the Wardrobe and the Ironrock Veteran paint on your Battle Tank. After that the field phone runs it as a repeatable event paying credits, XP and 6 Raid Tokens. Marshals also earn Marshal XP.'] },
   { id: 340, title: '2.23.75 · War in the sky over the Front', items: ['Fort Ironrock has no air, so the space battle overhead is in plain view: two of our cruisers and two Drome cruisers drift high above, trading laser broadsides with flashing hull hits and lit windows.', 'Fighter swarms chase each other in loops with tracers, flak bursts pop between them, and now and then a fighter spirals down trailing smoke and crashes.', 'In Hold the Line, a Drome cruiser breaks in two and falls during wave 5.', 'From wave 5 a siren warns of strafing runs: a Drome gunship dives along our trench and the dust walks down the line. Troopers on the fire step get cut down, and so do you unless you duck down onto the duckboards.', 'The Drome battery shells our line during waves (you hear the whistle first), and lobs the odd shell into no-man\'s-land the rest of the time. Every hit leaves a scorch mark.'] },
@@ -30858,18 +30884,16 @@ function openShipStyle() { openDlg('Ship interior', 'Interior styles'); $('dlgLi
 { const _ll = loadLevel; loadLevel = function () { const r = _ll.apply(this, arguments); try { if (LEVEL && LEVEL.id === 'ship') { const g = new THREE.Group(); g.position.set(6.75, 0, -6); g.rotation.y = -Math.PI / 2; levelGroup.add(g);
     part(g, B(0.9, 0.6, 0.06), '#2a2c32', 0, 1.45, 0); for (let k = 0; k < 6; k++) part(g, B(0.12, 0.12, 0.02), glow(['#9a9ea6', '#a8744a', '#7a2a2a', '#4fd2ff', '#d0d8e4', '#9ab8ff'][k]), -0.3 + (k % 3) * 0.3, 1.55 - Math.floor(k / 3) * 0.2, 0.04); part(g, B(0.8, 0.03, 0.02), glow('#ffd36a'), 0, 1.18, 0.04);
     INTERACTS.push({ x: 6.2, z: -6, r: 1.8, label: '🎨 Interior styles', fn: openShipStyle }); } } catch (e) { console.warn('shipstyle', e); } return r; }; }
-// while the styles panel is open the camera rises to a cutaway over the flight deck that looks down the hallway, with the ceilings lifted off
+// while the styles panel is open the camera moves to a spot inside the flight deck that looks down the deck and the hallway, ceiling and all
 const SSV = { on: 0, k: 0, hid: [], cam: new THREE.PerspectiveCamera() };
 function ssvHide() { if (SSV.hid.length) return; const bb = new THREE.Box3(); levelGroup.updateMatrixWorld(true);
   levelGroup.traverse(o => { if (!o.isMesh || !o.visible) return; bb.setFromObject(o); if (bb.min.y > 2.5 && bb.max.y < 4.5) { o.visible = false; SSV.hid.push(o); } }); }
 function ssvShow() { for (const o of SSV.hid) o.visible = true; SSV.hid.length = 0; }
 { const _tc = talkCamFrame; talkCamFrame = function (dt) { _tc(dt); const want = (SSV.on && dlgOpen || performance.now() < (SSV.hold || 0)) && LEVEL && LEVEL.id === 'ship';
     SSV.k = Math.max(0, Math.min(1, SSV.k + (want ? dt : -dt) * 1.6)); if (!want && SSV.k < 0.35 && SSV.hid.length) ssvShow(); if (!SSV.k) return;
-    if (want) ssvHide(); const C = SSV.cam, wide = camera.aspect >= 0.8; C.fov = camera.fov; C.aspect = camera.aspect; C.updateProjectionMatrix();
-    // the whole deck and hallway in one view from high off the port side, nudged clear of the panel (right column, or the bottom on a phone)
-    const T = V(0.6, 0, -3), D = wide ? 40 : 64; C.position.set(T.x - D * 0.5, D * 0.62, T.z + D * 0.18); C.lookAt(T); C.updateMatrixWorld();
-    const fovR = THREE.MathUtils.degToRad(C.fov) / 2, dist = C.position.distanceTo(T), hw = dist * Math.tan(fovR) * C.aspect, hh = dist * Math.tan(fovR);
-    const rgt = V(1, 0, 0).applyQuaternion(C.quaternion), up = V(0, 1, 0).applyQuaternion(C.quaternion); C.lookAt(wide ? T.clone().addScaledVector(rgt, hw * 0.36).addScaledVector(up, -hh * 0.14) : T.clone().addScaledVector(up, -hh * 0.45));
+    const C = SSV.cam, wide = camera.aspect >= 0.8; C.fov = camera.fov; C.aspect = camera.aspect; C.updateProjectionMatrix();
+    // inside the flight deck (2.23.77): stood back in the front corner by the consoles, looking aft down the deck and into the hallway, with the ceiling in view
+    C.position.set(3.0, 2.6, -11.6); C.lookAt(wide ? V(-1.8, 1.0, 2.5) : V(-0.6, 0.1, 2.5)); C.updateMatrixWorld();
     const k = SSV.k * SSV.k * (3 - 2 * SSV.k); camera.position.lerp(C.position, k); camera.quaternion.slerp(C.quaternion, k); if (k > 0.05) vm.visible = false; }; }
 { const _o = openShipStyle; openShipStyle = function () { _o(); SSV.on = 1; document.body.classList.add('ssvdock'); }; }
 { const st = document.createElement('style'); st.textContent = `body.ssvdock #dlg { left: auto; right: max(3vw, 16px); transform: none; width: min(40vw, 540px); bottom: max(7vh, 16px); max-height: 80vh; overflow-y: auto; }
@@ -32184,7 +32208,7 @@ function zaSlot(x, z, ry, i) { const g = new THREE.Group(); g.position.set(x, 0,
   for (const s of [-1, 1]) part(g, B(0.04, 0.46, 0.05), chrome, s * 0.35, 1.52, 0.14);
   const gl = new THREE.Mesh(new THREE.PlaneGeometry(0.64, 0.4), new THREE.MeshPhongMaterial({ color: '#cfe8ff', transparent: true, opacity: 0.12, shininess: 120, depthWrite: false })); gl.position.set(0, 1.52, 0.165); g.add(gl);
   part(g, B(0.66, 0.012, 0.02), glow('#ff3a3a'), 0, 1.52, 0.17); // the pay line
-  part(g, B(0.86, 0.3, 0.24), body, 0, 1.12, 0.22, -0.5); for (let k = 0; k < 3; k++) part(g, Cy(0.045, 0.045, 0.03, 10), glow(['#ff4a4a', '#ffd36a', '#4fd2ff'][k]), -0.2 + k * 0.2, 1.2, 0.31, Math.PI / 2 - 0.5);
+  part(g, B(0.86, 0.3, 0.24), body, 0, 1.12, 0.22, -0.5);
   part(g, B(0.5, 0.1, 0.14), chrome, 0, 0.72, 0.38); part(g, B(0.42, 0.05, 0.1), dark, 0, 0.76, 0.38); part(g, B(0.18, 0.08, 0.02), glow('#ffd36a'), 0.24, 1.02, 0.35);
   // topper: a lit name marquee with a dome light that flashes on wins
   part(g, B(0.9, 0.36, 0.4), body, 0, 2.13, -0.16); const mq = new THREE.Mesh(new THREE.PlaneGeometry(0.82, 0.28), zaLit(zaSignTex(nm, { fg, bg, bg2: '#000', w: 256, h: 88, font: 'Impact, sans-serif' }))); mq.position.set(0, 2.13, 0.045); g.add(mq);
@@ -32197,7 +32221,14 @@ function zaSlot(x, z, ry, i) { const g = new THREE.Group(); g.position.set(x, 0,
   const reels = []; for (let k = 0; k < 3; k++) { const geo = new THREE.CylinderGeometry(0.15, 0.15, 0.19, 24, 1, true); geo.rotateZ(Math.PI / 2); const r = new THREE.Mesh(geo, zaMat(zaTex('reel'))); r.position.set(-0.21 + k * 0.21, 1.52, -0.04); r.rotation.x = (randi(0, 4) + 0.5) / 5 * Math.PI * 2; lg.add(r); reels.push(r); }
   const dome = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff5a4a' })); dome.position.set(0, 2.32, -0.16); lg.add(dome);
   const strip = new THREE.Mesh(B(0.03, 0.9, 0.03), new THREE.MeshBasicMaterial({ color: fg })), strip2 = strip.clone(); strip.position.set(-0.445, 1.47, 0.1); strip2.position.set(0.445, 1.47, 0.1); strip2.material = strip.material; lg.add(strip, strip2);
-  const M = { reels, dome, strip, lv, spin: 0, ready: true, stop: [0, 0, 0], tgt: reels.map(r => r.rotation.x), win: 0, i, x, z, ry, nm, pay: null };
+  const M = { reels, dome, strip, lv, spin: 0, ready: true, stop: [0, 0, 0], tgt: reels.map(r => r.rotation.x), win: 0, i, x, z, ry, nm, pay: null, btns: [] };
+  // the controls live on the machine: a tilted button deck (three bet buttons and a big SPIN) and a credit display over the reels
+  const deck = new THREE.Group(); deck.position.set(0, 1.03, 0.36); deck.rotation.x = 0.35; lg.add(deck); part(deck, B(0.8, 0.035, 0.17), dark, 0, 0, 0); part(deck, B(0.82, 0.02, 0.19), chrome, 0, -0.025, 0);
+  for (const [bx, val, col, rad] of [[-0.29, 50, '#6a8ad8', 0.045], [-0.17, 250, '#6a8ad8', 0.045], [-0.05, 1000, '#6a8ad8', 0.045], [0.2, 0, '#e0404a', 0.075]]) {
+    part(deck, Cy(rad + 0.012, rad + 0.012, 0.02, 16), chrome, bx, 0.025, 0); const b = new THREE.Mesh(Cy(rad, rad, 0.03, 16), new THREE.MeshBasicMaterial({ color: col })); b.position.set(bx, 0.045, 0); deck.add(b);
+    const lab = new THREE.Mesh(new THREE.PlaneGeometry(rad * 1.7, rad * 1.7), new THREE.MeshBasicMaterial({ map: zaBtnTex(val ? String(val) : 'SPIN'), transparent: true })); lab.rotation.x = -Math.PI / 2; lab.position.set(bx, 0.062, 0); deck.add(lab);
+    M.btns.push({ mesh: b, lab, val, col, y0: 0.045 }); }
+  { const c = document.createElement('canvas'); c.width = 256; c.height = 56; const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; const lcd = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.136), new THREE.MeshBasicMaterial({ map: t })); lcd.position.set(0, 1.18, 0.33); lcd.rotation.x = -0.5; lg.add(lcd); M.lcd = { c, t, last: '' }; zaLcd(M, 'PULL OR PRESS SPIN'); }
   ZA.mach.push(M); const [fx, fz] = zaRot(ry, 0, 0.95); const [bx, bz] = zaRot(ry, 0, -0.05); box(x + bx, z + bz, Math.abs(Math.cos(ry)) * 0.45 + Math.abs(Math.sin(ry)) * 0.4, Math.abs(Math.sin(ry)) * 0.45 + Math.abs(Math.cos(ry)) * 0.4);
   INTERACTS.push({ x: x + fx, z: z + fz, r: 0.9, get label() { return ZS.M === M ? `🎰 Pull the lever (${ZS.bet} cr)` : `🎰 Sit at the ${nm[0] + nm.slice(1).toLowerCase()} slots`; }, fn: () => zaSit(M) }); }
 function zaSlotStep(t, dt) { for (const M of ZA.mach) {
@@ -32208,29 +32239,26 @@ function zaSlotStep(t, dt) { for (const M of ZA.mach) {
   M.strip.material.color.setHSL((t * 0.25 + M.i * 0.13) % 1, 0.9, 0.55); } }
 
 // ---------------- sitting at a slot: E sits you on the stool, then E, Space or the PULL button drops the crank and spins the reels ----------------
-const ZS = { M: null, bet: 50, ui: null };
+const ZS = { M: null, bet: 50, ray: new THREE.Raycaster() };
+const zaBtnTex = txt => { const k = 'btn' + txt; if (zaTexCache[k]) return zaTexCache[k]; const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#0c0c14'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.font = `bold ${txt.length > 3 ? 20 : 26}px Impact, sans-serif`; x.fillText(txt, 32, 34); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return (zaTexCache[k] = t); };
+function zaLcd(M, msg) { const L = M.lcd; if (!L) return; const txt = `CREDIT ${S.cr.toLocaleString()}  ·  BET ${ZS.M === M ? ZS.bet : 50}|${msg || L.msg || ''}`; L.msg = msg || L.msg; if (txt === L.last) return; L.last = txt; const x = L.c.getContext('2d');
+  x.fillStyle = '#100608'; x.fillRect(0, 0, 256, 56); x.fillStyle = '#ff6a4a'; x.textAlign = 'center'; x.font = 'bold 15px monospace'; const [a, b] = txt.split('|'); x.fillText(a, 128, 22); x.fillStyle = '#ffd38a'; x.fillText(b, 128, 44); L.t.needsUpdate = true; }
 const zaIn = () => typeof LEVEL !== 'undefined' && LEVEL && LEVEL.id === 'zfloor' && typeof ZF !== 'undefined' && zTheme(ZF.floor) === 'arcade';
-function zaSlotUi() { if (ZS.ui) return ZS.ui; const st = document.createElement('style'); st.textContent = `#zaSlot { position: fixed; left: 50%; bottom: 7%; transform: translateX(-50%); z-index: 40; background: rgba(12,8,20,.86); border: 1px solid #6a3a8a; border-radius: 12px; padding: 10px 14px; color: #f0e8ff; font: 14px system-ui, sans-serif; text-align: center; min-width: 300px; }
-#zaSlot .t { font: bold 15px Georgia, serif; letter-spacing: .06em; margin-bottom: 4px; } #zaSlot .m { min-height: 20px; margin: 4px 0 8px; color: #cfe8ff; } #zaSlot .row { display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
-#zaSlot button { cursor: pointer; border-radius: 8px; border: 1px solid #5a5a7a; background: #1e1c2e; color: #e8e8ff; padding: 6px 10px; font: 13px system-ui, sans-serif; } #zaSlot button.on { background: #3a6ad8; border-color: #8ab0ff; }
-#zaSlot button.pull { background: #b0202e; border-color: #ff8a90; color: #fff; font-weight: bold; padding: 9px 22px; font-size: 15px; } #zaSlot button.pull:disabled { opacity: .5; } #zaSlot small { opacity: .7; }`; document.head.appendChild(st);
-  const d = document.createElement('div'); d.id = 'zaSlot'; d.hidden = true; d.innerHTML = '<div class="t"></div><div class="m"></div><div class="row"><span>Bet</span><button data-b="50">50</button><button data-b="250">250</button><button data-b="1000">1000</button><button class="pull">PULL</button><button class="up">Stand up</button></div><small>Three in a row pays 8×, three diamonds 20×, a pair next to each other 1.5× · Click, E or Space pulls · 1 2 3 set the bet · WASD stands</small>';
-  document.body.appendChild(d); d.querySelectorAll('[data-b]').forEach(b => b.addEventListener('click', () => { ZS.bet = +b.dataset.b; zaUiRefresh(); SFX.ui && SFX.ui(); }));
-  d.querySelector('.pull').addEventListener('click', () => zaPull()); d.querySelector('.up').addEventListener('click', () => zaStand()); ZS.ui = d; return d; }
-function zaUiRefresh(msg) { const d = zaSlotUi(); if (msg != null) d.querySelector('.m').textContent = msg; d.querySelectorAll('[data-b]').forEach(b => b.classList.toggle('on', +b.dataset.b === ZS.bet)); d.querySelector('.pull').disabled = !!(ZS.M && ZS.M.spin > 0); }
+function zaUiRefresh(msg) { const M = ZS.M; if (!M) return; M.btns.forEach(b => { const on = b.val ? b.val === ZS.bet : M.spin <= 0; b.mesh.material.color.set(on ? (b.val ? '#bfe0ff' : '#ff5a6a') : (b.val ? '#4a6ab8' : '#8a3038')); }); zaLcd(M, msg); }
 const zaSeat = M => { const [fx, fz] = zaRot(M.ry, 0, 0.95); return [M.x + fx, M.z + fz]; };
 function zaSit(M) { if (ZS.M === M) return zaPull(); if (ZS.M) zaStand(true);
-  ZS.M = M; const [sx, sz] = zaSeat(M), [rx, rz] = zaRot(M.ry, 0, 0.95); player.pos.x = sx; player.pos.z = sz; player.yaw = Math.atan2(rx, rz); player.pitch = 0.12; firing = false;
-  const d = zaSlotUi(); d.hidden = false; d.querySelector('.t').textContent = '🎰 ' + M.nm; zaUiRefresh(`You have ${S.cr.toLocaleString()} cr. Pick a bet and pull.`); SFX.ui && SFX.ui(); }
-function zaStand(quiet) { const M = ZS.M; if (!M) return; ZS.M = null; if (ZS.ui) ZS.ui.hidden = true; const [ox, oz] = zaRot(M.ry, 0, 1.55); player.pos.x = M.x + ox; player.pos.z = M.z + oz; if (!quiet) SFX.ui && SFX.ui(); }
-function zaPull() { const M = ZS.M; if (!M || M.spin > 0) return; const bet = ZS.bet; if (S.cr < bet) { zaUiRefresh(`You need ${bet} cr for that bet.`); SFX.hit && SFX.hit(); return; }
+  ZS.M = M; const [sx, sz] = zaSeat(M), [rx, rz] = zaRot(M.ry, 0, 0.95); player.pos.x = sx; player.pos.z = sz; player.yaw = Math.atan2(rx, rz); player.pitch = -0.08; firing = false;
+  zaUiRefresh('PICK A BET · PRESS SPIN'); toast('🎰 ' + M.nm, TOUCH ? 'Tap the buttons on the machine · move to stand up' : 'Click the buttons on the machine, or E to pull the lever · WASD stands', 3); SFX.ui && SFX.ui(); }
+function zaStand(quiet) { const M = ZS.M; if (!M) return; ZS.M = null; M.btns.forEach(b => b.mesh.material.color.set(b.col)); zaLcd(M, 'PULL OR PRESS SPIN'); const [ox, oz] = zaRot(M.ry, 0, 1.55); player.pos.x = M.x + ox; player.pos.z = M.z + oz; if (!quiet) SFX.ui && SFX.ui(); }
+function zaPull() { const M = ZS.M; if (!M || M.spin > 0) return; const bet = ZS.bet; if (S.cr < bet) { zaUiRefresh('NOT ENOUGH CREDIT'); SFX.hit && SFX.hit(); return; }
   S.cr -= bet; markDirty(); const r = [0, 0, 0].map(() => randi(0, ZA_SYM.length - 1)); M.tgt = r.map(j => (j + 0.5) / 5 * Math.PI * 2); M.win = 0; M.lv.rotation.x = 0; M.ready = true; M.spin = 0.001;
   const mult = r[0] === r[1] && r[1] === r[2] ? (r[0] === 4 ? 20 : 8) : (r[0] === r[1] || r[1] === r[2]) ? 1.5 : 0; M.pay = Math.round(bet * mult); M.roll = r.map(j => ZA_SYM[j]).join(' ');
   try { const c = SFX.ctx(), o = c.createOscillator(), g = c.createGain(); o.type = 'square'; o.frequency.setValueAtTime(140, c.currentTime); o.frequency.exponentialRampToValueAtTime(60, c.currentTime + 0.18); g.gain.setValueAtTime(0.12, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.2); o.connect(g); g.connect(SFX.voiceOut ? SFX.voiceOut() : c.destination); o.start(); o.stop(c.currentTime + 0.22); } catch (_) {}
-  zaUiRefresh('Ka-chunk. The reels spin…'); }
+  zaUiRefresh('GOOD LUCK!'); }
 function zaPaid(M) { const p = M.pay; M.pay = null; S.cr += p; markDirty(); if (p) { M.win = 3; SFX.coin && SFX.coin(); } else SFX.ui && SFX.ui();
-  if (ZS.M === M) zaUiRefresh(p ? `${M.roll} · You win ${p.toLocaleString()} cr!` : `${M.roll} · Nothing. The machine hums smugly.`);
-  if (p >= 1000) toast('🎰 JACKPOT', `+${p.toLocaleString()} cr`, 2.5); }
+  zaLcd(M, p ? `WIN ${p.toLocaleString()}!` : 'NO WIN · TRY AGAIN'); if (p) toast('🎰 ' + M.roll, `You win ${p.toLocaleString()} cr`, 1.8);
+}
 // sitting: hold the seat, sit low, WASD stands you up; and no guns anywhere on the arcade deck
 { const _st = step; step = function (dt) { const M = ZS.M;
   if (M && !zaIn()) zaStand(true);
@@ -32243,7 +32271,10 @@ function zaPaid(M) { const p = M.pay; M.pay = null; S.cr += p; markDirty(); if (
 { const _to = throwOrd; throwOrd = function () { if (zaIn()) return; return _to.apply(this, arguments); }; }
 window.addEventListener('keydown', e => { if (!ZS.M || state !== 'play' || dlgOpen) return; const b = { Digit1: 50, Digit2: 250, Digit3: 1000 }[e.code];
   if (e.code === 'Space') zaPull(); else if (b) { ZS.bet = b; zaUiRefresh(); SFX.ui && SFX.ui(); } else return; e.preventDefault(); e.stopImmediatePropagation(); }, true);
-window.addEventListener('mousedown', e => { if (ZS.M && e.button === 0 && document.pointerLockElement && state === 'play' && !dlgOpen) zaPull(); });
+function zaPress(cx, cy) { const M = ZS.M; if (!M) return false; const R = ZS.ray; R.setFromCamera({ x: cx, y: cy }, camera); const hit = R.intersectObjects([...M.btns.map(b => b.mesh), M.lv], true)[0]; if (!hit) return false;
+  const b = M.btns.find(q => q.mesh === hit.object); if (b) { b.mesh.position.y = b.y0 - 0.015; setTimeout(() => { b.mesh.position.y = b.y0; }, 140); if (b.val) { ZS.bet = b.val; zaUiRefresh(); SFX.ui && SFX.ui(); } else zaPull(); } else zaPull(); return true; }
+window.addEventListener('mousedown', e => { if (!ZS.M || e.button !== 0 || state !== 'play' || dlgOpen) return; if (document.pointerLockElement) zaPress(0, 0); });
+renderer.domElement.addEventListener('pointerdown', e => { if (!ZS.M || document.pointerLockElement || state !== 'play' || dlgOpen) return; const r = renderer.domElement.getBoundingClientRect(); if (zaPress((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1)) { e.preventDefault(); e.stopPropagation(); } }, true);
 { const st = document.createElement('style'); st.textContent = 'body.unarmed #tFire, body.unarmed .tq, body.unarmed #ammo, body.unarmed #cross, body.unarmed #tReload { display: none !important; }'; document.head.appendChild(st); }
 
 // an upright arcade cabinet facing local +z with a lit marquee, a screen, a control panel and side art

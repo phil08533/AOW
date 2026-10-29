@@ -93,8 +93,26 @@ function openGunMods(who) {
 // station on the ship next to the saber mods
 { const orig = LEVELS.ship.build;
   LEVELS.ship.build = function () { orig.call(this);
-    const st = new THREE.Group(); part(st, B(1.6, 0.9, 0.8), '#3a3d44', 0, 0.45, 0); part(st, B(1.5, 0.05, 0.7), glow('#ff9a3c'), 0, 0.92, 0); const gm = makeGunModel(S.gun); gm.scale.setScalar(2.2); gm.position.set(0, 1.25, 0); st.add(gm); st.position.set(-5, 0, -3.5); levelGroup.add(st); box(-5, -3.5, 0.8, 0.4);
-    levelAnims.push(t => { gm.rotation.y = t * 0.7; });
+    // the display (2.23.77): a steel workbench cabinet with drawers, a glass case on top where your gun turns on a lit turntable, a pegboard of tools behind and a plaque on the front
+    const st = new THREE.Group(), steel = toon('#3a3d44', 'hull'), dk = toon('#1e2128'), chrome = toon('#a8aeb8'), cy = '#4fd2ff';
+    part(st, B(1.7, 0.86, 0.85), steel, 0, 0.43, 0); part(st, B(1.76, 0.05, 0.9), toon('#2a2d34'), 0, 0.885, 0); part(st, B(1.7, 0.08, 0.85), dk, 0, 0.04, 0);
+    for (let r = 0; r < 2; r++) for (const sx of [-0.43, 0.43]) { part(st, B(0.76, 0.3, 0.02), toon('#30333a'), sx, 0.27 + r * 0.34, 0.43); part(st, B(0.3, 0.03, 0.03), chrome, sx, 0.33 + r * 0.34, 0.45); }
+    { const c = document.createElement('canvas'); c.width = 256; c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#0a1420'; x.fillRect(0, 0, 256, 64); x.strokeStyle = cy; x.lineWidth = 3; x.strokeRect(3, 3, 250, 58); x.fillStyle = '#cfefff'; x.font = 'bold 30px Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('GUNSMITH', 128, 34);
+      const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.155), new THREE.MeshBasicMaterial({ map: t })); pl.position.set(0, 0.79, 0.433); st.add(pl); part(st, B(0.66, 0.19, 0.01), chrome, 0, 0.79, 0.427); }
+    // glass case: a dark plinth, a cyan-lit turntable, four chrome posts, a lid and see-through panes
+    part(st, B(1.5, 0.08, 0.7), dk, 0, 0.95, 0); part(st, Cy(0.34, 0.36, 0.04, 24), toon('#24282f'), 0, 1.01, 0); part(st, new THREE.TorusGeometry(0.35, 0.012, 4, 32), glow(cy), 0, 1.035, 0, Math.PI / 2);
+    for (const sx of [-0.73, 0.73]) for (const sz of [-0.33, 0.33]) part(st, B(0.04, 0.72, 0.04), chrome, sx, 1.35, sz);
+    part(st, B(1.5, 0.05, 0.7), dk, 0, 1.73, 0); part(st, B(1.4, 0.015, 0.6), glow('#dff4ff'), 0, 1.70, 0);
+    const glass = new THREE.MeshPhongMaterial({ color: '#cfe8ff', transparent: true, opacity: 0.13, shininess: 120, depthWrite: false, side: THREE.DoubleSide });
+    for (const [w, d, x, z] of [[1.42, 0.01, 0, 0.33], [1.42, 0.01, 0, -0.33], [0.01, 0.62, 0.73, 0], [0.01, 0.62, -0.73, 0]]) { const m = new THREE.Mesh(B(w, 0.7, d), glass); m.position.set(x, 1.34, z); st.add(m); }
+    // pegboard behind with tools
+    part(st, B(1.7, 1.1, 0.05), toon('#2a2d34', 'panel'), 0, 1.5, -0.47); for (let k = 0; k < 4; k++) part(st, B(0.04, 0.24 + (k % 2) * 0.1, 0.03), toon(['#c9733a', '#a8aeb8', '#6a6e78', '#a8aeb8'][k]), -0.66 + k * 0.08, 1.75, -0.43);
+    part(st, Cy(0.05, 0.05, 0.03, 10), chrome, 0.62, 1.8, -0.43, Math.PI / 2); part(st, B(0.26, 0.05, 0.03), toon('#c8402f'), 0.6, 1.6, -0.43); part(st, B(1.6, 0.03, 0.03), glow(cy), 0, 2.03, -0.44);
+    const tt = new THREE.Group(); tt.position.set(0, 1.04, 0); st.add(tt); const gm = makeGunModel(S.gun); const gb = new THREE.Box3().setFromObject(gm), gs = gb.getSize(V(0, 0, 0)); gm.scale.setScalar(Math.min(2.2, 1.2 / Math.max(gs.x, gs.z, 0.01)));
+    tt.add(gm); const gb2 = new THREE.Box3().setFromObject(gm); gm.position.y = 0.3 - (gb2.min.y + gb2.max.y) / 2;
+    const lt = new THREE.PointLight(0x8fe3ff, 0.6, 2.4, 1.6); lt.position.set(0, 1.6, 0.3); st.add(lt);
+    st.position.set(-5, 0, -3.5); levelGroup.add(st); box(-5, -3.5, 0.88, 0.5);
+    levelAnims.push(t => { tt.rotation.y = t * 0.6; });
     INTERACTS.push({ x: -5, z: -2.6, r: 2, label: 'Gun mod bench', fn: () => openGunMods() });
   };
 }

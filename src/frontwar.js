@@ -9,8 +9,9 @@ ENEMY.drunner = Object.assign({}, ENEMY.dtrooper, { name: 'Drome Runner', hp: 20
   ranged: Object.assign({}, ENEMY.dtrooper.ranged, { dmg: 6, rate: 1.6 }) });
 ENEMY.dshield = Object.assign({}, ENEMY.dtrooper, { name: 'Drome Shield Runner', hp: 70, speed: 3.0, xp: 60, cr: [4, 8], drops: [['scrap', 0.3]],
   make: () => { const g = recolor(makeTrooper(), { '#6f7a3e': '#1e1c22', '#4a5229': '#2a1416', '#c9b27c': '#b3262c' }); part(g, B(0.9, 1.3, 0.08), '#3a3d44', 0, 1.05, 0.5); part(g, B(0.6, 0.12, 0.09), glow('#ff2a3a'), 0, 1.4, 0.53); return g; } });
-const FW = { sec: [{ n: 'SOUTH', z0: -14, z1: 10, line: -81 }, { n: 'CENTRE', z0: 10, z1: 42, line: -81 }, { n: 'NORTH', z0: 42, z1: 72, line: -81 }], ourT: 2, theirT: 4, hud: null, mg: null, pruneT: 10, lt: 0 };
-const fwSecOf = z => z < 10 ? 0 : z < 42 ? 1 : 2, fwBays = s => s === 0 ? [0, 1] : s === 1 ? [3, 4, 5, 6] : [8, 9]; // bays 2 and 7 hold the MG nests, so squads climb out elsewhere
+// five sectors across the line (2.23.92); the line itself is the x where the two sides meet, -122 = the middle of no-man's-land
+const FW = { sec: [{ n: 'SOUTH', z0: -14, z1: 2 }, { n: 'SOUTH-CENTRE', z0: 2, z1: 18 }, { n: 'CENTRE', z0: 18, z1: 34 }, { n: 'NORTH-CENTRE', z0: 34, z1: 50 }, { n: 'NORTH', z0: 50, z1: 72 }].map(S => Object.assign(S, { line: -122 })), ourT: 2, theirT: 4, hud: null, mg: null, pruneT: 10, lt: 0 };
+const fwSecOf = z => clamp(Math.floor((z + 14) / 16), 0, 4), fwBays = s => [[0, 1], [3], [4, 5], [6], [8, 9]][s]; // bays 2 and 7 hold the MG nests, so squads climb out elsewhere
 const fwLive = (side, s) => side ? FRONT.men.filter(m => m.field && !m.dead && (s == null || m.field.sec === s)) : frAlive().filter(e => e.front.mode === 'field' && (s == null || e.front.sec === s));
 const fwY = (x, z) => FRONT.inPatch(x, z) ? FRONT.h(x, z) : 0.1;
 // ---------- cover (2.23.87): sandbag walls, concrete blocks, burnt-out tanks and log barricades across no-man's-land ----------
@@ -18,8 +19,8 @@ const fwY = (x, z) => FRONT.inPatch(x, z) ? FRONT.h(x, z) : 0.1;
 function fwCoverBuild() {
   FW.cov = []; let sd = 31; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
   const g = new THREE.Group(), bag = toon('#8a7a58', 'cloth'), con = toon('#7a7c80', 'panel'), rust = toon('#3a2a22', 'hull'), dk = toon('#22201e'), lg = toon('#5a4430', 'wood'), reb = toon('#5a3a2a');
-  for (let i = 0; i < 10; i++) { const x0 = -104 + i * 5.6;
-    for (let s = 0; s < 3; s++) { const S = FW.sec[s], n = s === 1 ? 2 : 1;
+  for (let i = 0; i < 18; i++) { const x0 = -168 + i * 5.6;
+    for (let s = 0; s < FW.sec.length; s++) { const S = FW.sec[s], n = 1;
       for (let j = 0; j < n; j++) { const z = S.z0 + 3 + (S.z1 - S.z0 - 6) * ((j + rnd()) / n), x = x0 + (rnd() - 0.5) * 2.4, type = Math.floor(rnd() * 4), ry = (rnd() - 0.5) * 0.25;
         if (FRONT.craters.some(c => Math.hypot(c[0] - x, c[1] - z) < c[2] + 1.6)) continue;
         const p = new THREE.Group(); p.position.set(x, FRONT.baseH(x, z), z); p.rotation.y = ry; g.add(p); const L = type === 2 ? 2.8 : 2.4;
@@ -117,24 +118,24 @@ function fwPose(o, sit) { const R = o.userData.rig; if (!R || !R.legL || !!o.use
 // a big event clears the field: our squads go home, the Drome go back to their trench
 { const _fs = frontStart; frontStart = function () { fwClear(); return _fs.apply(this, arguments); }; }
 function fwClear() { for (const m of FRONT.men.filter(m => m.field)) { m.o.parent && m.o.parent.remove(m.o); disposeTree(m.o); FRONT.men.splice(FRONT.men.indexOf(m), 1); }
-  for (const e of FRONT.foes) if (!e.dead && (e.front.mode === 'field' || e.front.mode === 'runner')) { e.front.counted = 1; frKillQuiet(e); } for (const S of FW.sec) S.line = -81; FW.mg = null; for (const c of FW.cov || []) c.occ = [0, 0]; }
+  for (const e of FRONT.foes) if (!e.dead && (e.front.mode === 'field' || e.front.mode === 'runner')) { e.front.counted = 1; frKillQuiet(e); } for (const S of FW.sec) S.line = -122; FW.mg = null; for (const c of FW.cov || []) c.occ = [0, 0]; }
 // ---------- the tug of war ----------
 function fwTick(dt) {
   const near = player.pos.x < -12 || player.pos.y > 7;
   // deaths push the line: a dead Drome moves it west, a dead trooper (counted in fwManStep) moves it east
   for (const e of FRONT.foes) if (e.dead && !e.front.counted && (e.front.mode === 'field' || e.front.mode === 'runner')) { e.front.counted = 1; fwPose(e.obj, 0); fwFree(e.front, 0); e.front.duck = false;
     const s = e.front.mode === 'field' ? e.front.sec : fwSecOf(e.obj.position.z); FW.sec[s].line -= e.front.mode === 'field' ? 2 : 0.5; if (FW.mg && e.front.mode === 'runner' && !e.front.ai) fwMgKill(); }
-  for (let s = 0; s < 3; s++) { const S = FW.sec[s], us = fwLive(1, s).filter(m => m.field.st === 'cover').length, them = fwLive(0, s).filter(e => e.front.fst === 'cover').length;
-    S.line = clamp(S.line + ((them - us) * 0.12 + (-81 - S.line) * 0.01) * dt, -106, -56);
-    if (S.line <= -104 && !S.won) { S.won = 1; if (near) toast(`${S.n} SECTOR: AT THEIR WIRE`, 'Drome are throwing everything back at it', 2.6); for (let i = 0; i < 6; i++) fwFoe(s); }
-    if (S.line > -96) S.won = 0;
-    if (S.line >= -58 && !S.lost) { S.lost = 1; if (near) toast(`${S.n} SECTOR: DROME AT OUR WIRE`, 'The reserve is going out', 2.6); for (let i = 0; i < 5; i++) fwNewMan(s, i * 0.7); }
-    if (S.line < -66) S.lost = 0; }
+  for (let s = 0; s < FW.sec.length; s++) { const S = FW.sec[s], us = fwLive(1, s).filter(m => m.field.st === 'cover').length, them = fwLive(0, s).filter(e => e.front.fst === 'cover').length;
+    S.line = clamp(S.line + ((them - us) * 0.15 + (-122 - S.line) * 0.012) * dt, -172, -72);
+    if (S.line <= -168 && !S.won) { S.won = 1; if (near) toast(`${S.n} SECTOR: AT THEIR WIRE`, 'Drome are throwing everything back at it', 2.6); for (let i = 0; i < 6; i++) fwFoe(s); }
+    if (S.line > -152) S.won = 0;
+    if (S.line >= -76 && !S.lost) { S.lost = 1; if (near) toast(`${S.n} SECTOR: DROME AT OUR WIRE`, 'The reserve is going out', 2.6); for (let i = 0; i < 5; i++) fwNewMan(s, i * 0.7); }
+    if (S.line < -92) S.lost = 0; }
   // reinforcements stream in on both sides, each to the sector that needs them most
-  const need = side => [0, 1, 2].map(s => [s, (side ? fwLive(1, s).length - fwLive(0, s).length : fwLive(0, s).length - fwLive(1, s).length) + Math.random()]).sort((a, b) => a[1] - b[1])[0][0];
-  const c = FW.sec.reduce((a, S) => a + clamp((-56 - S.line) / 50, 0, 1), 0) / 3; // how well we're doing overall: the side that's winning reinforces slower
-  FW.ourT -= dt; if (FW.ourT <= 0) { FW.ourT = 3 + 9 * c + Math.random() * 2; if (fwLive(1).length < 12) { const s = need(1), n = 2 + Math.floor(Math.random() * 2); for (let i = 0; i < n; i++) fwNewMan(s, i * 0.7); } }
-  FW.theirT -= dt; if (FW.theirT <= 0) { FW.theirT = 3 + 9 * (1 - c) + Math.random() * 2; if (fwLive(0).length < 14) { const s = need(0), n = 2 + Math.floor(Math.random() * 2); for (let i = 0; i < n; i++) fwFoe(s); } }
+  const need = side => FW.sec.map((_, s) => s).map(s => [s, (side ? fwLive(1, s).length - fwLive(0, s).length : fwLive(0, s).length - fwLive(1, s).length) + Math.random()]).sort((a, b) => a[1] - b[1])[0][0];
+  const c = FW.sec.reduce((a, S) => a + clamp((-72 - S.line) / 100, 0, 1), 0) / FW.sec.length; // how well we're doing overall: the side that's winning reinforces slower
+  FW.ourT -= dt; if (FW.ourT <= 0) { FW.ourT = 3 + 9 * c + Math.random() * 2; if (fwLive(1).length < 22) { const s = need(1), n = 2 + Math.floor(Math.random() * 2); for (let i = 0; i < n; i++) fwNewMan(s, i * 0.7); } }
+  FW.theirT -= dt; if (FW.theirT <= 0) { FW.theirT = 3 + 9 * (1 - c) + Math.random() * 2; if (fwLive(0).length < 20) { const s = need(0), n = 2 + Math.floor(Math.random() * 2); for (let i = 0; i < n; i++) fwFoe(s); } }
   FW.pruneT -= dt; if (FW.pruneT <= 0) { FW.pruneT = 10; for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i].gone && enemies[i].front) enemies.splice(i, 1); FRONT.foes = FRONT.foes.filter(e => !e.gone); }
 }
 // ---------- MG charges: while you're on a heavy MG, runner squads come straight at your nest ----------
@@ -150,19 +151,19 @@ function fwMgStep(dt) {
     if (frAlive().filter(e => e.front.mode === 'runner').length < 18) { const n = 4 + Math.floor(Math.random() * 3) + Math.min(4, Math.floor(M.n / 4));
       const near = FRONT.ebays.filter(b => Math.abs((b.z0 + b.z1) / 2 - p.z) < 18);
       for (let i = 0; i < n; i++) { const b = near[Math.floor(Math.random() * near.length)], z = b.z0 + 1 + Math.random() * 4, type = i === 0 && M.n % 4 === 0 ? (M.n % 8 === 0 ? 'dlt' : 'dshield') : 'drunner';
-        const e = fwSpawn(type, b.x1 + 0.6 - Math.random() * 2, z, { mode: 'runner', goal: V(p.x - 2.5 - Math.random() * 2, 0, p.z + (Math.random() - 0.5) * 5) }, type === 'drunner' ? [10, 12] : [18, 20]); if (e) e.cd = 1 + Math.random() * 2; }
+        const e = fwSpawn(type, -132 - Math.random() * 16, z, /* they break cover mid-field so a charge stays a charge on the longer field */ { mode: 'runner', goal: V(p.x - 2.5 - Math.random() * 2, 0, p.z + (Math.random() - 0.5) * 5) }, type === 'drunner' ? [10, 12] : [18, 20]); if (e) e.cd = 1 + Math.random() * 2; }
       if (M.n % 4 === 0) toast(M.n % 8 === 0 ? 'LIEUTENANT IN THE CHARGE' : 'SHIELD RUNNER', 'Focus it before it reaches the nest', 1.8); } }
 }
 // ---------- the sector strip on screen while you're at the Front or on the rampart ----------
 function fwHud() {
   if (!FW.hud) { const d = document.createElement('div'); d.id = 'fwHud'; d.style.cssText = 'position:fixed;top:112px;left:50%;transform:translateX(-50%);background:rgba(16,18,22,.8);border:1px solid #3a4a3c;border-radius:6px;padding:5px 12px;color:#dfe6dc;font:600 11px/1.5 ui-monospace,monospace;letter-spacing:.06em;pointer-events:none;z-index:5;display:none;min-width:260px'; document.body.appendChild(d); FW.hud = d; }
   const show = LEVEL.id === 'fort' && state === 'play' && !FB.on && (player.pos.x < -12 || player.pos.y > 7 || FW.mg); FW.hud.style.display = show ? 'block' : 'none'; if (!show) return;
-  const bar = S => { const c = clamp((-56 - S.line) / 50, 0, 1), w = Math.round(c * 100); return `<div style="display:flex;align-items:center;gap:8px"><span style="width:58px">${S.n}</span><span style="flex:1;height:7px;background:#5a2024;border-radius:3px;overflow:hidden"><span style="display:block;height:100%;width:${w}%;background:#6fbc5a"></span></span><span style="width:34px;text-align:right">${w}%</span></div>`; };
+  const bar = S => { const c = clamp((-72 - S.line) / 100, 0, 1), w = Math.round(c * 100); return `<div style="display:flex;align-items:center;gap:8px"><span style="width:96px">${S.n}</span><span style="flex:1;height:7px;background:#5a2024;border-radius:3px;overflow:hidden"><span style="display:block;height:100%;width:${w}%;background:#6fbc5a"></span></span><span style="width:34px;text-align:right">${w}%</span></div>`; };
   FW.hud.innerHTML = (FW.mg ? `<div style="text-align:center;color:#fff">MG NEST · KILLS ${FW.mg.kills}${FW.mg.streak > 1 ? ` · STREAK x${FW.mg.streak}` : ''}</div>` : '') + FW.sec.map(bar).join('');
 }
 function fwStep(t) { const dt = Math.min(0.1, Math.max(0, t - FW.lt)); FW.lt = t; if (!dt || LEVEL.id !== 'fort') return;
   if (!FB.on) { fwTick(dt); fwMgStep(dt); } else if (FW.mg) FW.mg = null; fwHud(); }
-{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); for (const S of FW.sec) { S.line = -81; S.won = S.lost = 0; } FW.mg = null; fwCoverBuild(); fwHazeBuild(); FW.ourT = 1; FW.theirT = 3; levelAnims.push(fwStep); return r; }; }
+{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); for (const S of FW.sec) { S.line = -122; S.won = S.lost = 0; } FW.mg = null; fwCoverBuild(); fwHazeBuild(); FW.ourT = 1; FW.theirT = 3; levelAnims.push(fwStep); return r; }; }
 setInterval(() => { if (FW.hud && (!LEVEL || LEVEL.id !== 'fort' || state !== 'play')) FW.hud.style.display = 'none'; }, 400);
 // ---------- battlefield haze (2.23.87): dust and smoke thicken as you head out to the Front, thinner inside the walls ----------
 { const _ue = updateEnv; updateEnv = function (dt, t) { _ue(dt, t); if (!LEVEL || LEVEL.id !== 'fort') return;
@@ -173,12 +174,12 @@ function fwPuffTex() { if (FW.puffTex) return FW.puffTex; const c = document.cre
   for (let k = 0; k < 7; k++) { const cx = 40 + Math.random() * 48, cy = 44 + Math.random() * 40, r = 26 + Math.random() * 22, g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, 'rgba(255,255,255,0.32)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); }
   return (FW.puffTex = new THREE.CanvasTexture(c)); }
 function fwHazeBuild() { FW.puffs = []; const tex = fwPuffTex();
-  for (let i = 0; i < 46; i++) { const m = new THREE.SpriteMaterial({ map: tex, color: i % 3 ? '#8a8078' : '#6a625c', transparent: true, opacity: 0, depthWrite: false, fog: true }), s = new THREE.Sprite(m);
-    const x = -128 + Math.random() * 92, z = -18 + Math.random() * 96, sc = 12 + Math.random() * 14; s.scale.set(sc, sc * 0.45, 1); s.position.set(x, FRONT.baseH(x, z) + 1.2 + Math.random() * 2.2, z); s.renderOrder = 2; levelGroup.add(s);
+  for (let i = 0; i < 80; i++) { const m = new THREE.SpriteMaterial({ map: tex, color: i % 3 ? '#8a8078' : '#6a625c', transparent: true, opacity: 0, depthWrite: false, fog: true }), s = new THREE.Sprite(m);
+    const x = -236 + Math.random() * 200, z = -18 + Math.random() * 96, sc = 12 + Math.random() * 14; s.scale.set(sc, sc * 0.45, 1); s.position.set(x, FRONT.baseH(x, z) + 1.2 + Math.random() * 2.2, z); s.renderOrder = 2; levelGroup.add(s);
     FW.puffs.push({ s, a: 0.22 + Math.random() * 0.2, v: 0.5 + Math.random() * 0.6, ph: Math.random() * 6 }); } }
 function fwHaze(dt) { if (!FW.puffs) return; const cam = camera.position, t = performance.now() / 1000;
-  for (const P of FW.puffs) { const s = P.s; s.position.x += P.v * dt; s.position.z += Math.sin(t * 0.05 + P.ph) * 0.15 * dt; if (s.position.x > -34) { s.position.x = -128; s.position.y = FRONT.baseH(-128, s.position.z) + 1.2 + Math.random() * 2.2; }
-    const edge = Math.min(1, (s.position.x + 128) / 12, (-34 - s.position.x) / 12), near = clamp((s.position.distanceTo(cam) - 5) / 14, 0, 1);
+  for (const P of FW.puffs) { const s = P.s; s.position.x += P.v * dt; s.position.z += Math.sin(t * 0.05 + P.ph) * 0.15 * dt; if (s.position.x > -34) { s.position.x = -236; s.position.y = FRONT.baseH(-236, s.position.z) + 1.2 + Math.random() * 2.2; }
+    const edge = Math.min(1, (s.position.x + 236) / 12, (-34 - s.position.x) / 12), near = clamp((s.position.distanceTo(cam) - 5) / 14, 0, 1);
     s.material.opacity = P.a * edge * near * (0.85 + Math.sin(t * 0.3 + P.ph) * 0.15); } }
 { const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.hzLt || t))); FW.hzLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort') fwHaze(dt); }; }
 // ---------- big explosions (2.23.91): a Maw-style fireball, smoke, debris and a shock ring; a sky battle you can see and hear ----------
@@ -191,20 +192,21 @@ function fwRumble(vol, delay) { try { const ac = SFX.ctx && SFX.ctx(); if (!ac |
 // sc scales the blast; sky = a flash in the air (no ground ring, smoke or debris)
 function fwBoom(p, sc, sky) { if (!LEVEL || LEVEL.id !== 'fort') return; sc = sc || 1; while (FW.booms.length > 16) fwBoomEnd(FW.booms.shift());
   const B = { t: 0, sc, sky, fire: [], smoke: [], deb: [], ring: null, p: p.clone() };
-  B.core = mawFireSprite('#ffffff', 2.5 * sc); B.core.position.copy(p).add(V(0, sky ? 0 : 0.8 * sc, 0));
-  for (let i = 0; i < (sky ? 4 : 6); i++) { const s = mawFireSprite(['#ffb060', '#ff7a2a', '#ffd36a'][i % 3], 1.5 * sc); s.position.copy(p).add(V((Math.random() - 0.5) * 1.6 * sc, (sky ? 0 : 0.6 * sc) + Math.random() * sc, (Math.random() - 0.5) * 1.6 * sc)); B.fire.push({ s, vy: (0.8 + Math.random()) * sc, g: 2.5 + Math.random() * 2 }); }
+  const near = sky ? 1 : clamp(p.distanceTo(player.pos) / 12, 0.3, 1), crowd = sky ? 0 : FW.booms.filter(o => !o.sky && o.t < 0.6 && o.p.distanceTo(player.pos) < 14).length; B.nk = near * (crowd > 1 ? 0.4 : 1); B.core = mawFireSprite('#ffffff', 2.5 * sc * B.nk); B.core.position.copy(p).add(V(0, sky ? 0 : 0.8 * sc, 0));
+  for (let i = 0; i < (sky ? 4 : 6); i++) { const s = mawFireSprite(['#ffb060', '#ff7a2a', '#ffd36a'][i % 3], 1.5 * sc * near); s.position.copy(p).add(V((Math.random() - 0.5) * 1.6 * sc, (sky ? 0 : 0.6 * sc) + Math.random() * sc, (Math.random() - 0.5) * 1.6 * sc)); B.fire.push({ s, vy: (0.8 + Math.random()) * sc, g: 2.5 + Math.random() * 2 }); }
   if (!sky) { const tex = fwPuffTex();
     for (let i = 0; i < 4; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: i % 2 ? '#3a3430' : '#24201e', transparent: true, opacity: 0, depthWrite: false })); s.position.copy(p).add(V((Math.random() - 0.5) * sc, 0.8 * sc, (Math.random() - 0.5) * sc)); s.scale.setScalar(2 * sc); levelGroup.add(s); B.smoke.push({ s, vy: 1 + Math.random() * 0.8, life: 4 + Math.random() * 2 }); }
     for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(B_DEB(), fwMat(0)); m.position.copy(p).add(V(0, 0.4, 0)); m.scale.setScalar(0.6 + Math.random() * sc * 0.8); levelGroup.add(m); const a = Math.random() * 6.28, v = (4 + Math.random() * 6) * Math.sqrt(sc); B.deb.push({ m, v: V(Math.cos(a) * v * 0.5, 5 + Math.random() * 6 * sc, Math.sin(a) * v * 0.5), r: V(Math.random() * 9, Math.random() * 9, 0) }); }
     B.ring = new THREE.Mesh(FW.ringGeo || (FW.ringGeo = new THREE.RingGeometry(0.8, 1.15, 28)), new THREE.MeshBasicMaterial({ color: '#ffd8a0', transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
     B.ring.rotation.x = -Math.PI / 2; B.ring.position.set(p.x, groundH(p.x, p.z) + 0.25, p.z); levelGroup.add(B.ring); }
-  const d = p.distanceTo(player.pos); if (!sky && d < 60) { SFX.boom(); if (d < 16) VH.shk = Math.max(VH.shk || 0, 0.35 * sc * (1 - d / 16) + 0.1); } else fwRumble(Math.min(0.4, (sky ? 6 : 40) * sc / Math.max(20, d)), Math.min(1.6, d / 340));
+  const d = p.distanceTo(player.pos); if (!sky && d < 60) { fwClip('crunch' + Math.floor(Math.random() * 5), 0.25 + 0.75 * (1 - d / 60), 0, {}, () => SFX.boom()); if (d < 16) VH.shk = Math.max(VH.shk || 0, 0.35 * sc * (1 - d / 16) + 0.1); }
+  else { const v = Math.min(sky ? 0.3 : 0.6, (sky ? 7 : 40) * sc / Math.max(20, d)), dl = Math.min(1.6, d / 340); fwClip('low' + (Math.random() < 0.5 ? 0 : 1), v, dl, { lp: sky ? 500 : 900, rate: 0.85 + Math.random() * 0.3 }, () => fwRumble(v, dl)); }
   FW.booms.push(B); return B; }
 function B_DEB() { return FW.debGeo || (FW.debGeo = new THREE.BoxGeometry(0.22, 0.14, 0.18)); }
 function fwBoomEnd(B) { for (const o of [B.core, B.ring, ...B.fire.map(f => f.s), ...B.smoke.map(f => f.s)]) if (o) { o.parent && o.parent.remove(o); o.material.dispose(); } for (const D of B.deb) D.m.parent && D.m.parent.remove(D.m); }
 function fwBoomStep(dt) { for (let i = FW.booms.length - 1; i >= 0; i--) { const B = FW.booms[i], sc = B.sc; B.t += dt; const t = B.t;
-    if (B.core.parent) { B.core.scale.setScalar((2.5 + t * 22) * sc); B.core.material.opacity = Math.max(0, 1 - t / 0.28); if (t > 0.3) { B.core.parent.remove(B.core); } }
-    for (const f of B.fire) { const k = t / 1.1; f.s.position.y += f.vy * dt; f.s.scale.setScalar((1.5 + k * f.g) * sc); f.s.material.opacity = Math.max(0, 1 - k); }
+    if (B.core.parent) { B.core.scale.setScalar((2.5 + t * 22) * sc * (B.nk || 1)); B.core.material.opacity = Math.max(0, 1 - t / 0.28); if (t > 0.3) { B.core.parent.remove(B.core); } }
+    for (const f of B.fire) { const k = t / 1.1; f.s.position.y += f.vy * dt; f.s.scale.setScalar((1.5 + k * f.g) * sc * (B.nk || 1)); f.s.material.opacity = Math.max(0, 1 - k); }
     for (const s of B.smoke) { s.s.position.y += s.vy * dt; s.s.position.x += 0.6 * dt; s.s.scale.setScalar((2 + t * 1.6) * sc); s.s.material.opacity = Math.min(0.6, t * 1.5) * Math.max(0, 1 - t / s.life); }
     for (const D of B.deb) { if (!D.m.parent) continue; D.v.y -= 18 * dt; D.m.position.addScaledVector(D.v, dt); D.m.rotation.x += D.r.x * dt; D.m.rotation.y += D.r.y * dt; const g = groundH(D.m.position.x, D.m.position.z) + 0.07; if (D.m.position.y < g) { D.m.position.y = g; D.v.set(0, 0, 0); D.r.set(0, 0, 0); } if (t > 2.5) D.m.parent.remove(D.m); }
     if (B.ring) { const k = Math.min(1, t / 0.55); B.ring.scale.setScalar(1 + k * 4.5 * sc); B.ring.material.opacity = 0.45 * (1 - k); }
@@ -216,16 +218,29 @@ function fwBoomStep(dt) { for (let i = FW.booms.length - 1; i >= 0; i--) { const
 function fwNoFog(o) { o.traverse(c => { if (!c.material) return; const ms = Array.isArray(c.material) ? c.material : [c.material]; const nm = ms.map(m => { if (m.fog === false) return m; FW.nf = FW.nf || new Map(); let n = FW.nf.get(m); if (!n) { n = m.clone(); n.fog = false; FW.nf.set(m, n); } return n; }); c.material = Array.isArray(c.material) ? nm : nm[0]; }); }
 { const _sb = frSkyBuild; frSkyBuild = function () { const r = _sb.apply(this, arguments); for (const C of FS.caps) fwNoFog(C.g); if (FS.fighters) for (const k of ['ours', 'them']) FS.fighters[k].forEach(fwNoFog); for (const f of FS.flak) f.s.material.fog = false; FW.wrecks.length = 0; FW.booms.length = 0; return r; }; }
 { const _fb = frBeam; frBeam = function (a, b, col) { const r = _fb.apply(this, arguments); const B0 = FS.beams[FS.beams.length - 1]; if (B0) B0.m.material.fog = false; return r; }; }
+// the sky battle flies the real fleets: Drome Cutters and The Eclipse against our cruisers, Raiders against Setting Sun fighters
+function fwHulkCap(type, len) { const h = makeHulk(type); const bb = new THREE.Box3().setFromObject(h), L = bb.max.z - bb.min.z, s = len / Math.max(1, L), cz = (bb.max.z + bb.min.z) / 2;
+  h.scale.setScalar(s); h.position.z = -cz * s; const w = new THREE.Group(); w.add(h); w.updateMatrixWorld(true); const fr = new THREE.Group(), bk = new THREE.Group();
+  h.traverse(o => { if (!o.isMesh) return; const p = new THREE.Vector3(); o.getWorldPosition(p); const m = new THREE.Mesh(o.geometry, o.material); m.matrixAutoUpdate = false; m.matrix.copy(o.matrixWorld); m.matrixWorld.copy(o.matrixWorld); (p.z >= 0 ? fr : bk).add(m); });
+  const g = new THREE.Group(), F = frMerge(fr), K = frMerge(bk); g.add(F); g.add(K); g.userData.back = K; return g; }
+function fwFleetShip(ours) { const g = ours ? makeClassShip('fighter', { v: 2, p: 10, a: 6, st: 0, x: 0, own: {}, wing: 0, eng: 0, nose: 0, lc: 0, bolt: 0, wpn: 0, kit: 0 }) : makeRaider();
+  g.traverse(o => { if (o.isSprite) o.visible = false; }); const bb = new THREE.Box3().setFromObject(g), L = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z), s = (ours ? 7 : 6.5) / Math.max(0.1, L);
+  g.scale.setScalar(s); g.rotation.y = Math.PI; const w = new THREE.Group(); w.add(g); const out = frMerge(w); out.matrixAutoUpdate = false; fwNoFog(out); return out; }
+{ const _sb = frSkyBuild; frSkyBuild = function () { const r = _sb.apply(this, arguments);
+  let k = 0; for (const C of FS.caps) { if (C.ours) continue; const old = C.g, g = fwHulkCap(k++ % 2 ? 'flagship' : 'drome', k === 2 ? 150 : 115); g.position.copy(old.position); g.rotation.copy(old.rotation); levelGroup.remove(old); levelGroup.add(g); fwNoFog(g); C.g = g; }
+  const F = FS.fighters; if (F) { F.models = { ours: [], them: [] }; for (const side of ['ours', 'them']) { F[side][0].visible = F[side][1].visible = false; for (let i = 0; i < F.N; i++) { const m = fwFleetShip(side === 'ours'); levelGroup.add(m); F.models[side].push(m); } } }
+  return r; }; }
+{ const _ss = frSkyStep; frSkyStep = function () { const r = _ss.apply(this, arguments); const F = FS.fighters; if (F && F.models) for (const side of ['ours', 'them']) { const I = F[side][0], L = F.models[side]; for (let i = 0; i < L.length; i++) { I.getMatrixAt(i, L[i].matrix); L[i].matrixWorldNeedsUpdate = true; } } return r; }; }
 // flashes in the sky, and now and then a burning wreck comes down into the field
-function fwSky(dt) { FW.skyT -= dt; if (FW.skyT <= 0) { FW.skyT = 0.6 + Math.random() * 1.8; fwBoom(V(-150 + Math.random() * 210, 70 + Math.random() * 90, -40 + Math.random() * 140), 4 + Math.random() * 5, true); }
+function fwSky(dt) { FW.skyT -= dt; if (FW.skyT <= 0) { FW.skyT = 0.6 + Math.random() * 1.8; fwBoom(V(-230 + Math.random() * 260, 70 + Math.random() * 90, -40 + Math.random() * 140), 4 + Math.random() * 5, true); }
   FW.wreckT -= dt; if (FW.wreckT <= 0 && FW.wrecks.length < 3) { FW.wreckT = 9 + Math.random() * 10;
-    let tx = -115 + Math.random() * 70, tz = -10 + Math.random() * 80; if (Math.hypot(tx - player.pos.x, tz - player.pos.z) < 14) tx -= 20;
-    const big = Math.random() < 0.3, g = new THREE.Group(); if (big) { for (let k = 0; k < 4; k++) part(g, B(2 + Math.random() * 3, 1.2 + Math.random() * 2, 3 + Math.random() * 5), fwMat(1), (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 4, Math.random(), Math.random(), Math.random()); } else g.add(new THREE.Mesh(frFighterGeo(), fwMat(1))); fwNoFog(g);
+    let tx = -190 + Math.random() * 140, tz = -10 + Math.random() * 80; if (Math.hypot(tx - player.pos.x, tz - player.pos.z) < 14) tx -= 20;
+    const big = Math.random() < 0.3, g = new THREE.Group(); if (big) { for (let k = 0; k < 4; k++) part(g, B(2 + Math.random() * 3, 1.2 + Math.random() * 2, 3 + Math.random() * 5), fwMat(1), (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 4, Math.random(), Math.random(), Math.random()); } else { const sh = fwFleetShip(Math.random() < 0.4); sh.matrixAutoUpdate = true; sh.rotation.z = Math.random() * 6; g.add(sh); } fwNoFog(g);
     const from = V(tx - 60 - Math.random() * 60, 140 + Math.random() * 40, tz + (Math.random() - 0.5) * 80); g.position.copy(from); levelGroup.add(g);
     FW.wrecks.push({ g, from, to: V(tx, groundH(tx, tz), tz), t: 0, T: big ? 9 : 5.5, big, trail: 0 }); }
   for (let i = FW.wrecks.length - 1; i >= 0; i--) { const W = FW.wrecks[i]; W.t += dt; const k = Math.min(1, W.t / W.T), e = k * k; W.g.position.lerpVectors(W.from, W.to, e); W.g.position.y = W.from.y + (W.to.y - W.from.y) * e;
     W.g.lookAt(W.to); W.g.rotateZ(W.t * (W.big ? 0.4 : 3)); W.trail -= dt; if (W.trail <= 0) { W.trail = 0.12; const f = mawFireSprite(Math.random() < 0.5 ? '#ff7a2a' : '#ffb060', W.big ? 6 : 3.5); f.position.copy(W.g.position); FW.booms.push({ t: 0.5, sc: W.big ? 2 : 1, sky: true, fire: [{ s: f, vy: 0, g: 3 }], smoke: [], deb: [], ring: null, core: { parent: null, scale: { setScalar() {} }, material: { dispose() {} } } }); }
-    if (k >= 1) { levelGroup.remove(W.g); FW.wrecks.splice(i, 1); fwBoom(W.to, W.big ? 3 : 2); FW.lastBoom = { p: W.to.clone(), t: performance.now() }; frScorch(W.to); } } }
+    if (k >= 1) { levelGroup.remove(W.g); FW.wrecks.splice(i, 1); fwBoom(W.to, W.big ? 3 : 2); fwClip('metal', Math.min(0.7, 30 / Math.max(15, W.to.distanceTo(player.pos))), 0.15, { rate: W.big ? 0.6 : 0.85 }); FW.lastBoom = { p: W.to.clone(), t: performance.now() }; frScorch(W.to); } } }
 { const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.bmLt || t))); FW.bmLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort' && dt) { fwBoomStep(dt); fwSky(dt); } }; }
 // the Drome never reach the walls: field units stop at the edge of no-man's-land, roamers from the tank yard turn back short of the fort
 function fwKeepOut() { for (const e of enemies) { if (e.dead || e.gone || !e.obj) continue; const p = e.obj.position;
@@ -233,3 +248,84 @@ function fwKeepOut() { for (const e of enemies) { if (e.dead || e.gone || !e.obj
   if (irInFort(p.x, p.z, 10)) { const dx = Math.min(p.x - (IR.X0 - 10), IR.X1 + 10 - p.x), dz = Math.min(p.z - (IR.Z0 - 10), IR.Z1 + 10 - p.z);
     if (dx < dz) p.x = p.x - (IR.X0 - 10) < IR.X1 + 10 - p.x ? IR.X0 - 10 : IR.X1 + 10; else p.z = p.z - (IR.Z0 - 10) < IR.Z1 + 10 - p.z ? IR.Z0 - 10 : IR.Z1 + 10; e.aggro = false; e.wander = V(e.zone.x, 0, e.zone.z); } } }
 { const _st = fwStep; fwStep = function (t) { _st(t); if (LEVEL && LEVEL.id === 'fort') fwKeepOut(); }; }
+// ---------- gunners on the west rampart (2.23.92): mounted MGs in the merlon gaps rake the field, a flak gun answers the sky ----------
+function fwGunnersBuild() { FW.guns = []; const y0 = IR.WH + 0.12, dk = toon('#2b2a2c'), st = toon('#5d636c', 'hull');
+  for (const z of [-11.8, -3.6, 4.6, 12.8, 32.7, 36.3]) {
+    const mg = new THREE.Group(); mg.position.set(-13.55, y0, z); levelGroup.add(mg);
+    part(mg, Cy(0.04, 0.04, 1.0, 6), dk, 0, 0.5, 0); for (const a of [0, 2.1, 4.2]) part(mg, Cy(0.025, 0.025, 1.05, 5), dk, Math.cos(a) * 0.22, 0.45, Math.sin(a) * 0.22, Math.sin(a) * 0.3, 0, -Math.cos(a) * 0.3);
+    const head = new THREE.Group(); head.position.y = 1.02; mg.add(head); part(head, B(0.55, 0.16, 0.16), st, 0.05, 0, 0); part(head, Cy(0.035, 0.035, 0.9, 6), dk, -0.6, 0.02, 0, 0, 0, Math.PI / 2); part(head, B(0.12, 0.1, 0.2), dk, 0.15, -0.12, 0.12);
+    const flash = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 4), glow('#ffd36a')); flash.position.set(-1.07, 0.02, 0); flash.visible = false; head.add(flash);
+    const o = buildChar(() => recolor(makeTrooper({ noGun: true }), { '#6f7a3e': '#4a5a32' }), 'trooper'); o.position.set(-12.55, y0, z); o.rotation.y = -Math.PI / 2; levelGroup.add(o);
+    const R = o.userData.rig; if (R) { R.armR.rotation.x = R.armL.rotation.x = -1.35; R.armL.rotation.z = 0.25; R.armR.rotation.z = -0.25; R.torso && (R.torso.rotation.x = 0.12); }
+    FW.guns.push({ head, flash, z, cd: Math.random() * 2, burst: 0, tg: null, ft: 0 }); }
+  // a twin flak gun on the south-west tower, tracking the fighters overhead
+  const fk = new THREE.Group(); fk.position.set(-12.2, y0, -18.4); levelGroup.add(fk); part(fk, Cy(0.5, 0.6, 0.5, 10), st, 0, 0.25, 0); const turret = new THREE.Group(); turret.position.y = 0.7; fk.add(turret);
+  part(turret, B(0.9, 0.5, 0.8), st, 0, 0, 0); for (const s of [-1, 1]) part(turret, Cy(0.06, 0.06, 1.8, 6), dk, s * 0.2, 0.2, 0.9, Math.PI / 2, 0, 0); FW.flak = { turret, cd: 2 }; }
+{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); try { fwGunnersBuild(); } catch (err) { console.warn(err); } return r; }; }
+function fwGunners(dt) { if (!FW.guns) return; const foes = FRONT.foes.filter(e => !e.dead && !e.gone && e.obj.position.x < -40);
+  for (const G of FW.guns) { G.cd -= dt; G.ft -= dt; if (G.ft <= 0) G.flash.visible = false;
+    if (!G.tg || G.tg.dead || G.tg.gone) { G.tg = null; if (foes.length && Math.random() < dt * 2) { let best = null, bd = 1e9; for (const e of foes) { const d = Math.abs(e.obj.position.z - G.z) + Math.random() * 30; if (d < bd) { bd = d; best = e; } } G.tg = best; } }
+    const T = G.tg; if (!T) continue; const hw = G.head.getWorldPosition(V(0, 0, 0)), tp = T.obj.position.clone().add(V(0, 1, 0));
+    const yaw = Math.atan2(tp.z - hw.z, -(tp.x - hw.x)), pit = Math.atan2(tp.y - hw.y, Math.hypot(tp.x - hw.x, tp.z - hw.z)); G.head.rotation.set(0, yaw, -pit);
+    if (G.cd <= 0) { if (G.burst <= 0) { G.burst = 5 + Math.floor(Math.random() * 6); G.cd = 0.08; } else { G.burst--; G.cd = G.burst ? 0.11 : 1.4 + Math.random() * 1.6;
+      const mz = G.flash.getWorldPosition(V(0, 0, 0)), miss = V((Math.random() - 0.5) * 3, Math.random() * 1.5, (Math.random() - 0.5) * 3); tracer(mz, tp.clone().add(miss), '#ffd36a'); G.flash.visible = true; G.ft = 0.05;
+      if (Math.random() < 0.25) { burst(tp.clone().add(miss).setY(groundH(tp.x, tp.z) + 0.1), '#8a7a60', 2, 2); }
+      if (Math.random() < 0.18) { T.hp -= 18; T.hitT = 0.1; if (T.hp <= 0) frKillQuiet(T); else updatePlate(T); }
+      if (hw.distanceTo(player.pos) < 22 && Math.random() < 0.5) frTone('square', 160, 60, 0.05, 0.03); } } }
+  const F = FW.flak; if (F && FS.fighters) { F.cd -= dt; const L = FS.fighters.list, f = L[Math.floor((performance.now() / 4000) % L.length)], t = performance.now() / 1000;
+    const a = t * f.sp + f.ph, tp = V(f.cx + Math.cos(a) * f.r, f.h + Math.sin(a * 2) * 12, f.cz + Math.sin(a) * f.r * 0.7), hw = F.turret.getWorldPosition(V(0, 0, 0));
+    F.turret.rotation.set(0, 0, 0); F.turret.lookAt(tp); if (F.cd <= 0) { F.cd = 0.9 + Math.random() * 0.8; for (const s of [-1, 1]) tracer(F.turret.localToWorld(V(s * 0.2, 0.2, 1.8)), tp.clone().add(V((Math.random() - 0.5) * 14, (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 14)), '#ffb060');
+      setTimeout(() => { if (LEVEL && LEVEL.id === 'fort') fwBoom(tp.clone().add(V((Math.random() - 0.5) * 16, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 16)), 2.2, true); }, 500); if (hw.distanceTo(player.pos) < 30) frTone('sawtooth', 90, 40, 0.18, 0.05); } } }
+{ const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.gnLt || t))); FW.gnLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort' && dt) fwGunners(dt); }; }
+// ---------- Drome bunkers and armour (2.23.92): pillboxes in front of their trench, and a tank now and then grinding up to shell from range ----------
+function fwBunkersBuild() { FW.bunk = []; const con = toon('#3a3638', 'panel'), dk = toon('#1e1c22'), red = glow('#ff2a3a');
+  for (const [x, z] of [[-192, 2], [-193, 26], [-192, 50], [-193, 66]]) { const g = new THREE.Group(), y = FRONT.baseH(x, z); g.position.set(x, y, z); levelGroup.add(g);
+    part(g, B(3.4, 1.9, 4.2), con, 0, 0.95, 0); part(g, B(3.8, 0.35, 4.6), con, 0, 2.05, 0); part(g, B(0.1, 0.22, 2.6), dk, 1.72, 1.3, 0); part(g, B(0.04, 0.12, 2.4), red, 1.76, 1.3, 0);
+    for (const sz of [-1, 1]) part(g, B(1.2, 1.2, 0.5), con, 1.4, 0.6, sz * 2.4, 0, sz * 0.4, 0); for (let k = 0; k < 6; k++) part(g, frBagGeo(), toon('#3a3034', 'cloth'), 2.1, 0.12 + (k % 2) * 0.2, -1.3 + Math.floor(k / 2) * 1.3, 0, Math.PI / 2, 0);
+    box(x, z, 1.8, 2.3); FW.bunk.push({ x: x + 1.8, y: y + 1.3, z, cd: Math.random() * 3, burst: 0 }); }
+  FW.tankT = 30; }
+{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); try { fwBunkersBuild(); } catch (err) { console.warn(err); } return r; }; }
+function fwBunkers(dt) { if (!FW.bunk) return; const men = FRONT.men.filter(m => m.field && !m.dead && m.o.visible && m.o.position.x < -60);
+  for (const K of FW.bunk) { K.cd -= dt; if (K.cd > 0) continue; if (K.burst <= 0) { K.burst = 4 + Math.floor(Math.random() * 5); K.tg = men.length ? men[Math.floor(Math.random() * men.length)] : null; K.cd = 0.1; continue; }
+    K.burst--; K.cd = K.burst ? 0.13 : 2 + Math.random() * 3; const from = V(K.x, K.y, K.z + (Math.random() - 0.5) * 2), to = K.tg ? K.tg.o.position.clone().add(V((Math.random() - 0.5) * 2, 1, (Math.random() - 0.5) * 2)) : V(-80 - Math.random() * 60, 1, K.z + (Math.random() - 0.5) * 30);
+    tracer(from, to, '#ff4a3a'); if (K.tg && Math.random() < 0.1 && !K.tg.dead) frHurtMan(K.tg, 14); }
+  if (!FB.on) { FW.tankT -= dt; if (FW.tankT <= 0) { FW.tankT = 45 + Math.random() * 40; if (frAlive().filter(e => e.front.mode === 'tank').length < 2) { const e = frSpawnKind('tank'); if (e) e.front.stopX = -150 - Math.random() * 20; } } } }
+{ const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.bkLt || t))); FW.bkLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort' && dt) fwBunkers(dt); }; }
+// ---------- the siege walker's rocket pods (2.23.92): the shoulder pods tilt up, rockets climb, red circles mark where they land; step out of the circle and you're safe ----------
+FW.rk = { t: 6, list: [], pods: null, tilt: 0 };
+function fwRocketStep(dt) { const R = FW.rk, e = FB.boss;
+  if (!e || e.dead || !e.obj.parent) { for (const r of R.list) fwRocketEnd(r); R.list.length = 0; R.pods = null; return; }
+  if (!R.pods || R.e !== e) { R.e = e; R.pods = []; /* rocket pods ride on top of the shoulder armour: stowed flat, they swing up to fire */
+    const sc = e.obj.scale.x || 1, pm = toon('#2a2024', 'panel'), tip = glow('#ff6a1a'); for (const sd of [-1, 1]) { const pod = new THREE.Group(); pod.position.set(1.4 * sd, 3.75, 0.5); e.obj.add(pod); const body = new THREE.Group(); body.position.z = -0.5; pod.add(body);
+      part(body, B(0.62, 0.42, 1.1), pm, 0, 0, 0); for (let i = 0; i < 6; i++) part(body, Cy(0.07, 0.07, 0.04, 8), tip, -0.18 + (i % 3) * 0.18, -0.09 + Math.floor(i / 3) * 0.18, 0.56, Math.PI / 2, 0, 0); R.pods.push(pod); } }
+  const d = e.obj.position.distanceTo(player.pos); R.t -= dt; const want = R.t < 1.2 || R.fire > 0 ? 1 : 0; R.tilt += (want - R.tilt) * Math.min(1, dt * 4); for (const o of R.pods) o.rotation.x = -1.0 * R.tilt;
+  if (R.t <= 0 && d < 95) { R.t = 8 + Math.random() * 4; R.fire = 7; R.ft = 0; toast('ROCKETS INCOMING', 'Get out of the red circles', 1.6); }
+  if (R.fire > 0) { R.ft -= dt; if (R.ft <= 0) { R.ft = 0.22; R.fire--; const first = R.fire === 6, a = Math.random() * 6.28, off = first ? 0 : 2 + Math.random() * 7;
+      const tg = V(player.pos.x + Math.cos(a) * off + (first ? 0 : player.vx || 0), 0, player.pos.z + Math.sin(a) * off); tg.y = groundH(tg.x, tg.z);
+      const pod = R.pods[R.fire % Math.max(1, R.pods.length)], from = pod ? pod.getWorldPosition(V(0, 0, 0)) : e.obj.position.clone().add(V(0, 4, 0));
+      const ring = new THREE.Mesh(new THREE.RingGeometry(2.6, 3.0, 32), new THREE.MeshBasicMaterial({ color: '#ff2a3a', transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(2.6, 32), new THREE.MeshBasicMaterial({ color: '#ff2a3a', transparent: true, opacity: 0.15, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+      for (const m of [ring, disc]) { m.rotation.x = -Math.PI / 2; m.position.set(tg.x, tg.y + 0.12, tg.z); m.renderOrder = 3; levelGroup.add(m); }
+      const rk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 0.9, 6), glow('#ffb060')); rk.position.copy(from); levelGroup.add(rk);
+      R.list.push({ ring, disc, rk, from, tg, t: 0, T: 2.0 + Math.random() * 0.3, trail: 0 }); SFX.shot ? SFX.shot() : 0; } }
+  for (let i = R.list.length - 1; i >= 0; i--) { const r = R.list[i]; r.t += dt; const k = r.t / r.T;
+    r.disc.material.opacity = 0.12 + 0.2 * k * (0.6 + 0.4 * Math.sin(r.t * 18)); r.ring.scale.setScalar(1 + 0.08 * Math.sin(r.t * 10));
+    let p; if (k < 0.4) { const u = k / 0.4; p = r.from.clone().add(V((r.tg.x - r.from.x) * 0.15 * u, 40 * u * (2 - u), (r.tg.z - r.from.z) * 0.15 * u)); } else { const u = (k - 0.4) / 0.6, top = r.from.clone().add(V((r.tg.x - r.from.x) * 0.15, 40, (r.tg.z - r.from.z) * 0.15)); p = top.lerp(r.tg, u * u); }
+    const prev = r.rk.position.clone(); r.rk.position.copy(p); r.rk.quaternion.setFromUnitVectors(V(0, 1, 0), p.clone().sub(prev).normalize()); r.trail -= dt;
+    if (r.trail <= 0) { r.trail = 0.06; const f = mawFireSprite('#ff9a3a', 1.6); f.position.copy(p); FW.booms.push({ t: 0.6, sc: 0.6, sky: true, fire: [{ s: f, vy: 0, g: 2 }], smoke: [], deb: [], ring: null, core: { parent: null, scale: { setScalar() {} }, material: { dispose() {} } } }); }
+    if (k >= 1) { fwBoom(r.tg, 1.3); const dp = Math.hypot(player.pos.x - r.tg.x, player.pos.z - r.tg.z); if (dp < 3.0 && player.pos.y - r.tg.y < 3) hurt(48, r.tg);
+      for (const m of FRONT.men) if (!m.dead && m.o.position.distanceTo(r.tg) < 3) frHurtMan(m, 120); fwRocketEnd(r); R.list.splice(i, 1); } } }
+function fwRocketEnd(r) { for (const m of [r.ring, r.disc, r.rk]) { m.parent && m.parent.remove(m); m.geometry.dispose(); if (m !== r.rk) m.material.dispose(); } }
+{ const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.rkLt || t))); FW.rkLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort' && dt) fwRocketStep(dt); }; }
+// ---------- recorded battle sounds (2.23.92): crunching blasts close by, low booms far off, fighter flybys, cruiser lasers, metal debris ----------
+function fwClip(name, vol, delay, o, fallback) { if (!PREFS.sfx || vol < 0.01) return; const c = clipCtx(); if (!c) { fallback && fallback(); return; } const f = 'war/' + name;
+  if (!CLIP.buf[f]) { clipLoad(f); fallback && fallback(); return; } const ac = c.ac, t = ac.currentTime + 0.01 + (delay || 0), src = ac.createBufferSource(), g = ac.createGain(); src.buffer = CLIP.buf[f]; src.playbackRate.value = o.rate || 1; let tail = g;
+  if (o.lp) { const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = o.lp; src.connect(lp); lp.connect(g); } else src.connect(g);
+  const len = o.len || CLIP.buf[f].duration / (o.rate || 1); if (o.swell) { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + len * 0.45); g.gain.linearRampToValueAtTime(0, t + len); } else g.gain.value = vol;
+  tail.connect(c.master); src.start(t); src.stop(t + len + 0.05); }
+// warm the cache when you arrive so the first blast isn't the synth one
+{ const _fb = frontBuild; frontBuild = function () { const r = _fb.apply(this, arguments); try { for (const n of ['crunch0', 'crunch1', 'crunch2', 'crunch3', 'crunch4', 'low0', 'low1', 'engine0', 'engine1', 'engine2', 'engine4', 'laser0', 'laser1', 'laser4', 'metal']) clipLoad('war/' + n); } catch (_) {} return r; }; }
+{ const _fb = frBeam; frBeam = function (a, b, col) { const r = _fb.apply(this, arguments); if (Math.random() < 0.5) fwClip('laser' + [0, 1, 4][Math.floor(Math.random() * 3)], Math.min(0.22, 30 / Math.max(60, a.distanceTo(player.pos))), 0, { lp: 2400, rate: 0.7 + Math.random() * 0.3 }); return r; }; }
+function fwFlyby(dt) { FW.flyT = (FW.flyT == null ? 3 : FW.flyT) - dt; if (FW.flyT > 0) return; FW.flyT = 2.5 + Math.random() * 4.5;
+  fwClip('engine' + [0, 1, 2, 4][Math.floor(Math.random() * 4)], 0.18 + Math.random() * 0.2, 0, { swell: 1, rate: 0.8 + Math.random() * 0.6, len: 2.6 + Math.random() * 1.6, lp: 3000 }); }
+{ const _st = fwStep; fwStep = function (t) { const dt = Math.min(0.1, Math.max(0, t - (FW.fyLt || t))); FW.fyLt = t; _st(t); if (LEVEL && LEVEL.id === 'fort' && dt && player.pos.y < 30) fwFlyby(dt); }; }

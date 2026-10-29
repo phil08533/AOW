@@ -1,26 +1,28 @@
 // =================== THE FRONT (2.23.73): the trench battlefield west of Fort Ironrock ===================
 // Owns the trench layout, its fine ground mesh (groundH reads FRONT.h inside the patch), wall blocking, ladders,
 // the dressing, our troopers on the fire step, the Drome garrison and the skirmish waves that test the line.
-// Our trench runs north-south at x = -40 and faces west; theirs is at x = -121 and faces east.
-FRONT = { on: false, raw: false, x0: -140, x1: -14, z0: -30, z1: 84, D: 1.9, STEP: 0.95, rects: [], ladders: [], craters: [], men: [], bays: [], ebays: [], base: null, bw: 0, last: null, foes: [], waveT: 20, t: 0 };
+// Our trench runs north-south at x = -40 and faces west; theirs is at x = -202 and faces east (2.23.92: no-man's-land twice as deep).
+// FRX maps the original layout's x onto the doubled field: our side of x = -40 stays put, everything west of it stretches 2x.
+const FRX = x => x < -40 ? -40 + (x + 40) * 2 : x;
+FRONT = { on: false, raw: false, x0: -240, x1: -14, z0: -30, z1: 84, D: 1.9, STEP: 0.95, rects: [], ladders: [], craters: [], men: [], bays: [], ebays: [], base: null, bw: 0, last: null, foes: [], waveT: 20, t: 0 };
 (function frontLayout() {
   const R = FRONT.rects, add = (x0, x1, z0, z1, o) => { const r = Object.assign({ x0, x1, z0, z1 }, o || {}); R.push(r); return r; };
   for (const side of [1, -1]) { // 1 = ours (east), -1 = Drome (west)
     const bays = side > 0 ? FRONT.bays : FRONT.ebays;
     for (let k = 0; k < 10; k++) {
-      const cx = side > 0 ? (k % 2 ? -42.5 : -40) : (k % 2 ? -119.5 : -122), z0 = -14 + k * 8;
+      const cx = side > 0 ? (k % 2 ? -42.5 : -40) : (k % 2 ? -199.5 : -202), z0 = -14 + k * 8;
       bays.push(add(cx - 1, cx + 1, z0, z0 + 6, { step: -side, bay: k, ours: side > 0, cx }));
-      if (k < 9) { const nx = side > 0 ? (k % 2 ? -40 : -42.5) : (k % 2 ? -122 : -119.5); add(Math.min(cx, nx) - 1, Math.max(cx, nx) + 1, z0 + 6, z0 + 8, { ours: side > 0 }); }
+      if (k < 9) { const nx = side > 0 ? (k % 2 ? -40 : -42.5) : (k % 2 ? -202 : -199.5); add(Math.min(cx, nx) - 1, Math.max(cx, nx) + 1, z0 + 6, z0 + 8, { ours: side > 0 }); }
     }
   }
   // communication trench from bay 4 back toward the fort, ending in a ramp
   add(-39, -31, 20, 22, { ours: true, comm: true }); add(-33, -31, 20, 26, { ours: true, comm: true }); add(-33, -25, 24, 26, { ours: true, comm: true });
   add(-25, -17, 24, 26, { ours: true, comm: true, ramp: 1 });
   // the Drome supply trench out the back of their bay 5
-  add(-131, -123, 27, 29, { ours: false, ramp: -1 });
+  add(-212, -203, 27, 29, { ours: false, ramp: -1 });
   // shell craters in no-man's-land (seeded so every visit matches)
   let sd = 7; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
-  for (let i = 0; i < 24; i++) FRONT.craters.push([-108 + rnd() * 54, -12 + rnd() * 76, 1.8 + rnd() * 2.6, 0.5 + rnd() * 0.8]);
+  for (let i = 0; i < 46; i++) FRONT.craters.push([FRX(-108 + rnd() * 54), -12 + rnd() * 76, 1.8 + rnd() * 3.4, 0.5 + rnd() * 1.1]);
   for (const b of FRONT.bays) FRONT.ladders.push([b.x0 + 0.2, (b.z0 + b.z1) / 2]);
   for (const b of FRONT.ebays) FRONT.ladders.push([b.x1 - 0.2, (b.z0 + b.z1) / 2]);
 })();
@@ -121,7 +123,7 @@ function frParapets() {
 function frWire() { // barbed-wire belts on X-frame pickets, with gaps to get through
   const post = toon('#4a3a2c', 'wood'), wire = toon('#7a7a78'), wm = new THREE.Group();
   const strand = (a, b) => { const d = b.clone().sub(a), L = d.length(), m = part(wm, Cy(0.012, 0.012, L, 3), wire, (a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2); m.quaternion.setFromUnitVectors(V(0, 1, 0), d.normalize()); };
-  for (const bx of [-50, -112]) {
+  for (const bx of [FRX(-50), FRX(-81), FRX(-112)]) {
     let prev = null;
     for (let z = -16; z <= 68; z += 3) {
       if (((z + 16) % 24) >= 18) { prev = null; continue; } // a gap every 24 m
@@ -138,15 +140,15 @@ function frDressing() {
   const Z0 = FRONT;
   // tank traps (hedgehogs) and shattered trees in no-man's-land
   const steel = toon('#4a4440', 'panel');
-  for (const [x, z] of [[-58, -6], [-60, 14], [-57, 40], [-61, 58], [-104, 0], [-102, 22], [-105, 46], [-101, 62]]) { const g = new THREE.Group(); for (const [rx, rz] of [[0.6, 0], [-0.6, 0], [0, 0.6]]) part(g, B(0.16, 0.16, 1.9), steel, 0, 0.55, 0, rx, rz ? 0 : 0.8, rz); at(g, x, z, x); solid(x, z, 0.9); }
+  for (const [x, z] of [[-58, -6], [-60, 14], [-57, 40], [-61, 58], [-104, 0], [-102, 22], [-105, 46], [-101, 62], [-70, 4], [-72, 50], [-92, 30], [-95, -8], [-88, 64]].map(([x, z]) => [FRX(x), z])) { const g = new THREE.Group(); for (const [rx, rz] of [[0.6, 0], [-0.6, 0], [0, 0.6]]) part(g, B(0.16, 0.16, 1.9), steel, 0, 0.55, 0, rx, rz ? 0 : 0.8, rz); at(g, x, z, x); solid(x, z, 0.9); }
   const bark = toon('#3a2c22', 'wood');
-  for (const [x, z, h, lean] of [[-70, -10, 4.5, 0.2], [-88, 6, 3.2, -0.35], [-66, 33, 5.2, 0.1], [-94, 47, 2.6, 0.5], [-78, 62, 3.8, -0.15], [-99, 24, 4.1, 0.25]]) {
+  for (const [x, z, h, lean] of [[-70, -10, 4.5, 0.2], [-88, 6, 3.2, -0.35], [-66, 33, 5.2, 0.1], [-94, 47, 2.6, 0.5], [-78, 62, 3.8, -0.15], [-99, 24, 4.1, 0.25], [-61, 20, 3.4, -0.2], [-84, 54, 4.6, 0.3], [-108, 12, 3.0, 0.15]].map(([x, z, h, l]) => [FRX(x), z, h, l])) {
     const g = new THREE.Group(); part(g, Cy(0.16, 0.26, h, 7), bark, 0, h / 2, 0, lean, 0, lean * 0.5); part(g, Cy(0.05, 0.09, 1.3, 5), bark, 0.2, h * 0.7, 0, 0, 0, -0.9); part(g, Cy(0.04, 0.07, 0.9, 5), bark, -0.15, h * 0.55, 0.1, 0.4, 0, 0.8);
     for (let k = 0; k < 4; k++) part(g, B(0.08, 0.3, 0.06), toon('#c9b28a', 'wood'), Math.sin(k) * 0.1, h + 0.05, Math.cos(k) * 0.1, 0.3 * k, k, 0.2); // splintered top
     at(g, x, z, x); solid(x, z, 0.35); }
   // burning Drome wrecks
   FRONT.fires = [];
-  for (const [x, z, r] of [[-82, -2, 0.6], [-74, 22, 2.2], [-90, 38, 4.0], [-68, 52, 1.2]]) { const w = makeTankModel('#2a2220'); at(w, x, z, r, -0.35); w.rotation.z = 0.18; w.rotation.x = -0.08; w.userData.turret.rotation.set(0.2, 1.1, 0.3); solid(x, z, 2.0); FRONT.fires.push(V(x, FRONT.baseH(x, z) + 1.6, z)); }
+  for (const [x, z, r] of [[-82, -2, 0.6], [-74, 22, 2.2], [-90, 38, 4.0], [-68, 52, 1.2], [-100, 10, 2.8], [-63, 2, 5.1], [-96, 58, 0.3]].map(([x, z, r]) => [FRX(x), z, r])) { const w = makeTankModel('#2a2220'); at(w, x, z, r, -0.35); w.rotation.z = 0.18; w.rotation.x = -0.08; w.userData.turret.rotation.set(0.2, 1.1, 0.3); solid(x, z, 2.0); FRONT.fires.push(V(x, FRONT.baseH(x, z) + 1.6, z)); }
   // signs: painted boards on posts
   frBoardSign('AID POST', -36.5, 17.2, -Math.PI / 2); frBoardSign('HQ', -36.2, 49, -Math.PI / 2); frBoardSign('KEEP YOUR HEAD DOWN', -45.6, 10.5, -Math.PI / 2, '#d8c8a0', '#6a1a14'); frBoardSign('TO THE FORT', -15.4, 27.4, Math.PI / 2);
   // dugouts in the back wall: aid post (bay 3) and HQ (bay 6)
@@ -168,7 +170,7 @@ function frDressing() {
   const gun = (x, z, ry, col) => { const g = new THREE.Group(); for (const s of [-1, 1]) { part(g, Cy(0.55, 0.55, 0.16, 12), toon('#2b2a2c'), 0.75 * s, 0.55, 0, 0, 0, Math.PI / 2); part(g, B(0.12, 0.12, 2.4), toon(col), 0.35 * s, 0.25, -1.3, 0, 0.18 * s, 0); }
     part(g, B(1.4, 1.0, 0.08), toon(col), 0, 1.0, 0.25, -0.15); part(g, B(0.5, 0.45, 0.9), toon(col), 0, 0.85, 0); const br = part(g, Cy(0.09, 0.12, 3.2, 8), toon('#3a3d44'), 0, 1.45, 1.4, Math.PI / 2 - 0.45); at(g, x, z, ry); solid(x, z, 1.3); return g; };
   FRONT.guns = [gun(-24, 40, -Math.PI / 2, '#5a6a3a'), gun(-24, 47, -Math.PI / 2, '#5a6a3a'), gun(-24, 54, -Math.PI / 2, '#5a6a3a')];
-  FRONT.eguns = [gun(-136, 18, Math.PI / 2, '#3a1416'), gun(-136, 30, Math.PI / 2, '#3a1416'), gun(-136, 42, Math.PI / 2, '#3a1416')];
+  FRONT.eguns = [gun(-232, 18, Math.PI / 2, '#3a1416'), gun(-232, 30, Math.PI / 2, '#3a1416'), gun(-232, 42, Math.PI / 2, '#3a1416')];
   for (let i = 0; i < 9; i++) { const x = -21 + (i % 3) * 0.9, z = 60 + Math.floor(i / 3) * 0.6; part(props, B(0.8, 0.45, 0.5), toon('#4a5229', 'wood'), x, FRONT.baseH(x, z) + 0.23 + (i % 2) * 0.0, z); }
   for (let i = 0; i < 4; i++) part(props, B(0.8, 0.45, 0.5), toon('#4a5229', 'wood'), -20.5 + i * 0.4, FRONT.baseH(-20.5, 61) + 0.68, 60.6 + (i % 2) * 0.3);
   box(-20, 60.6, 1.6, 1.0);
@@ -176,13 +178,13 @@ function frDressing() {
   // Drome drop zone behind their trench: a lit landing ring
   const dz = new THREE.Group(); part(dz, Cy(5, 5, 0.12, 24), toon('#1e1c22', 'panel'), 0, 0.06, 0); const ring = part(dz, new THREE.TorusGeometry(4.6, 0.08, 4, 32), glow('#ff2a3a'), 0, 0.14, 0, Math.PI / 2);
   for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; part(dz, B(0.25, 0.25, 0.25), glow('#ff6a1a'), Math.cos(a) * 5.3, 0.15, Math.sin(a) * 5.3); }
-  at(dz, -134, 60, 0);
+  at(dz, -226, 60, 0);
 }
 function frGround() {
   const F = FRONT, W = F.x1 - F.x0, Dd = F.z1 - F.z0, geo = new THREE.PlaneGeometry(W, Dd, W * 2, Dd * 2); geo.rotateX(-Math.PI / 2); geo.translate((F.x0 + F.x1) / 2, 0, (F.z0 + F.z1) / 2);
   const p = geo.attributes.position, cols = new Float32Array(p.count * 3), P = LEVEL.palette, c = new THREE.Color(), mud = new THREE.Color('#5a4a3c'), dirt = new THREE.Color(P.dirt), dark = new THREE.Color('#2e2622'), base = new THREE.Color(P.grass), wet = new THREE.Color(P.wet);
   for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i), cv = F.carve(x, z); p.setY(i, F.baseH(x, z) - cv);
-    c.copy(base); const nml = 1 - smooth(Math.abs(x + 81), 30, 42); c.lerp(mud, nml * 0.75 * (0.6 + 0.4 * Math.sin(x * 0.31) * Math.cos(z * 0.27)));
+    c.copy(base); const nml = 1 - smooth(Math.abs(x + 121), 60, 84); c.lerp(mud, nml * 0.75 * (0.6 + 0.4 * Math.sin(x * 0.31) * Math.cos(z * 0.27)));
     if (cv > 0.4) c.lerp(wet, 0.85); else if (cv > 0.05) c.lerp(dark, Math.min(1, cv * 1.4)); else if (cv < -0.02) c.lerp(dirt, 0.6);
     for (const r of F.rects) { const ex = Math.max(r.x0 - x, x - r.x1, 0), ez = Math.max(r.z0 - z, z - r.z1, 0); if (ex < 1.6 && ez < 1.6 && Math.max(ex, ez) > 0.01) { c.lerp(dirt, 0.5); break; } } // spoil along the edges
     c.offsetHSL(0, 0, (Math.sin(x * 0.9) * Math.cos(z * 0.8)) * 0.025);
@@ -261,8 +263,8 @@ function frSpawnFoe(x, z, mode, stopX) {
 function frGarrison() { FRONT.foes = FRONT.foes.filter(e => !e.dead || e.dead < 2); for (const b of FRONT.ebays) { const x = b.x1 - 0.38, z = (b.z0 + b.z1) / 2; if (!FRONT.foes.some(e => !e.dead && e.front.mode === 'hold' && Math.abs(e.front.home.z - z) < 1)) frSpawnFoe(x, z, 'hold'); } }
 function frSkirmish() { // a test wave: riflemen climb out of their trench and advance
   const n = 6 + Math.floor(Math.random() * 4);
-  for (let i = 0; i < n; i++) { const b = FRONT.ebays[Math.floor(Math.random() * 10)], z = b.z0 + 1 + Math.random() * 4; frSpawnFoe(b.x1 + 0.6, z, 'advance', -82 + Math.random() * 26); }
-  if (player.pos.x < -10 && player.pos.x > -150) toast('THEY\'RE COMING OVER', 'Drome riflemen in no-man\'s-land', 2.4);
+  for (let i = 0; i < n; i++) { const b = FRONT.ebays[Math.floor(Math.random() * FRONT.ebays.length)], z = b.z0 + 1 + Math.random() * 4; frSpawnFoe(b.x1 + 0.6, z, 'advance', FRX(-82 + Math.random() * 26)); }
+  if (player.pos.x < -10 && player.pos.x > -250) toast('THEY\'RE COMING OVER', 'Drome riflemen in no-man\'s-land', 2.4);
 }
 function frPickTarget(p) {
   const pd = player.pos.distanceTo(p); if (player.alive && pd < 60 && !inSafe(player.pos) && Math.random() < 0.5) return 'player';
@@ -276,7 +278,7 @@ function frontEnemyStep(e, dt, t) {
   let vx = 0, vz = 0, sp = e.def.speed, prone = 0;
   if (F.mode === 'advance') { if (o.position.x < F.stopX) { vx = 1; vz = Math.sin(t * 0.6 + e.seed) * 0.25; } else if (F.aT != null && (F.aT -= dt) <= 0) F.mode = 'assault'; }
   else if (F.mode === 'crawl') { prone = 1; sp = 1.5;
-    if (F.pause > 0) F.pause -= dt; else { const nx = (F.cr || []).find(c => c.x > o.position.x + 1.5 && c.x < -48); if (!nx) F.mode = 'assault'; else { const dx = nx.x - o.position.x, dz = nx.z - o.position.z, d = Math.hypot(dx, dz); if (d < 1) F.pause = 2 + Math.random() * 3; else { vx = dx / d; vz = dz / d; } } } }
+    if (F.pause > 0) F.pause -= dt; else { const nx = (F.cr || []).find(c => c.x > o.position.x + 1.5 && c.x < FRX(-48)); if (!nx) F.mode = 'assault'; else { const dx = nx.x - o.position.x, dz = nx.z - o.position.z, d = Math.hypot(dx, dz); if (d < 1) F.pause = 2 + Math.random() * 3; else { vx = dx / d; vz = dz / d; } } } }
   else if (F.mode === 'jump') { F.y -= dt * 5; o.position.y = F.y; if (Math.random() < 0.5) burst(o.position.clone().add(V(0, 0.3, 0)), '#ff6a1a', 1, 2); if (F.y <= groundH(o.position.x, o.position.z)) { F.mode = 'assault'; SFX.land && SFX.land(); } }
   else if (F.mode === 'assault') { if (!inOurs()) { vx = 1; vz = Math.sin(t * 0.8 + e.seed) * 0.2; sp *= 1.25; } }
   else if (F.mode === 'tank') { sp = 1.6; if (o.position.x < F.stopX) vx = 1; }
@@ -313,7 +315,7 @@ function frontStep(t) {
   const dt = Math.min(0.1, Math.max(0, t - FR_LT)); FR_LT = t; if (!dt || LEVEL.id !== 'fort') return; const F = FRONT; F.t += dt;
   for (const m of F.men.slice()) frManStep(m, dt, t);
   F.gT = (F.gT || 0) - dt; if (F.gT <= 0) { F.gT = 25; if (!(FB.on && (FB.phase === 'push' || FB.phase === 'boss'))) frGarrison(); }
-  const near = player.pos.x < -8 && player.pos.x > -150 && player.pos.z > -40 && player.pos.z < 95;
+  const near = player.pos.x < -8 && player.pos.x > -250 && player.pos.z > -40 && player.pos.z < 95;
   frBattleStep(dt); frHud(); frSkyStep(dt, t);
   if (near && !FB.on) { F.waveT -= dt; if (F.waveT <= 0) { F.waveT = 55 + Math.random() * 20; if (frAlive().filter(e => e.front.mode === 'advance').length < 4) frSkirmish(); } }
   if (F.fires) { F.fireT = (F.fireT || 0) - dt; if (F.fireT <= 0) { F.fireT = 0.25; const p = F.fires[Math.floor(Math.random() * F.fires.length)]; if (p.distanceTo(player.pos) < 90) { burst(p, '#ff8a2a', 2, 1.2); burst(p.clone().add(V(0, 0.6, 0)), '#3a3530', 2, 1.5); } } }
@@ -355,11 +357,11 @@ function frWaveSpawn(w) {
   toast(`WAVE ${w}: ${W.name.toUpperCase()}`, W.tip, 4); log(`Wave ${w}: ${W.tip}`); SFX.horn && SFX.horn();
 }
 function frSpawnKind(kind) {
-  const b = FRONT.ebays[Math.floor(Math.random() * 10)], z = b.z0 + 1 + Math.random() * 4, x = b.x1 + 0.6; let e;
-  if (kind === 'line') e = frSpawnFoe(x, z, 'advance', -84 + Math.random() * 18);
+  const b = FRONT.ebays[Math.floor(Math.random() * FRONT.ebays.length)], z = b.z0 + 1 + Math.random() * 4, x = b.x1 + 0.6; let e;
+  if (kind === 'line') e = frSpawnFoe(x, z, 'advance', FRX(-84 + Math.random() * 18));
   else if (kind === 'crawl') { e = frSpawnFoe(x, z, 'crawl'); if (e) e.front.cr = FRONT.craters.filter(c => Math.abs(c[1] - z) < 26).sort((a, b) => a[0] - b[0]).map(c => V(c[0], 0, c[1])); }
-  else if (kind === 'behind') e = frSpawnFoe(x - 4, z, 'advance', -80 + Math.random() * 10);
-  else if (kind === 'drop') { const p = FB.ship ? FB.ship.position : V(-96, 0, 26); e = frSpawnFoe(p.x + (Math.random() - 0.5) * 10, p.z + (Math.random() - 0.5) * 14, 'jump'); if (e) { e.front.y = 26 + Math.random() * 6; e.obj.position.y = e.front.y; } }
+  else if (kind === 'behind') e = frSpawnFoe(x - 4, z, 'advance', FRX(-80 + Math.random() * 10));
+  else if (kind === 'drop') { const p = FB.ship ? FB.ship.position : V(FRX(-96), 0, 26); e = frSpawnFoe(p.x + (Math.random() - 0.5) * 10, p.z + (Math.random() - 0.5) * 14, 'jump'); if (e) { e.front.y = 26 + Math.random() * 6; e.obj.position.y = e.front.y; } }
   else if (kind === 'tank') { e = makeEnemy({ zone: 'siege', type: 'dtank', n: 1, lv: [24, 26], once: true }); e.obj.position.set(x, groundH(x, z), z); e.front = { mode: 'tank', stopX: -66 + Math.random() * 6, home: V(x, 0, z), tt: 0, tg: null, st: 'up', t: 0 }; e.aggro = true; e.max *= 1.4; e.hp = e.max; FRONT.foes.push(e); }
   else if (kind === 'lt') { e = makeEnemy({ zone: 'siege', type: 'dlt', n: 1, lv: [26, 28], once: true }); e.obj.position.set(x, groundH(x, z), z); e.front = { mode: 'advance', stopX: -72, home: V(x, 0, z), tt: 0, tg: null, st: 'up', t: 0, lt: 1 }; e.aggro = true; FRONT.foes.push(e); }
   if (e) { e.front.wave = FB.wave; if (e.front.mode !== 'tank') e.front.aT = 18 + Math.random() * 14; }
@@ -367,8 +369,8 @@ function frSpawnKind(kind) {
 }
 // smoke banks drifting across no-man's-land
 function frSmoke() { const m = new THREE.MeshLambertMaterial({ color: '#8a847c', transparent: true, opacity: 0.55, depthWrite: false });
-  for (let i = 0; i < 14; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), m); const x = -110 + Math.random() * 50, z = -10 + Math.random() * 72; s.position.set(x, FRONT.baseH(x, z) + 1.2, z); s.scale.set(5 + Math.random() * 4, 2.2 + Math.random(), 5 + Math.random() * 4); levelGroup.add(s); FB.smoke.push({ s, t: 50 + Math.random() * 20 }); } }
-function frDropship() { if (FB.ship && FB.ship.parent) return; const g = makeDropship(); recolor(g, { '#7b8457': '#2a1416', '#3e4330': '#1e1c22' }); g.scale.setScalar(3); g.position.set(-150, 40, 26); levelGroup.add(g); FB.ship = g; g.userData.t = 0; }
+  for (let i = 0; i < 14; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), m); const x = FRX(-110 + Math.random() * 50), z = -10 + Math.random() * 72; s.position.set(x, FRONT.baseH(x, z) + 1.2, z); s.scale.set(5 + Math.random() * 4, 2.2 + Math.random(), 5 + Math.random() * 4); levelGroup.add(s); FB.smoke.push({ s, t: 50 + Math.random() * 20 }); } }
+function frDropship() { if (FB.ship && FB.ship.parent) return; const g = makeDropship(); recolor(g, { '#7b8457': '#2a1416', '#3e4330': '#1e1c22' }); g.scale.setScalar(3); g.position.set(-240, 40, 26); levelGroup.add(g); FB.ship = g; g.userData.t = 0; }
 // grenades thrown by troopers (at Drome) and by Drome (into our trench)
 function frThrow(from, to, ours) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(0.11, 0), toon(ours ? '#4a5229' : '#3a1416')); m.position.copy(from); levelGroup.add(m); FB.nades.push({ m, a: from.clone(), b: to.clone(), t: 0, T: 1.1 + from.distanceTo(to) * 0.02, ours }); }
 function frBoom(p, ours) {
@@ -411,7 +413,7 @@ function frBattleStep(dt) {
   for (let i = FB.nades.length - 1; i >= 0; i--) { const n = FB.nades[i]; n.t += dt; const k = Math.min(1, n.t / n.T); n.m.position.lerpVectors(n.a, n.b, k); n.m.position.y += Math.sin(k * Math.PI) * (2 + n.a.distanceTo(n.b) * 0.15); n.m.rotation.x += dt * 9;
     if (k >= 1) { n.m.parent && n.m.parent.remove(n.m); FB.nades.splice(i, 1); frBoom(n.b, n.ours); } }
   for (let i = FB.smoke.length - 1; i >= 0; i--) { const s = FB.smoke[i]; s.t -= dt; s.s.position.x += dt * 0.6; if (s.t < 6) s.s.material.opacity = Math.max(0, 0.55 * s.t / 6); if (s.t <= 0) { s.s.parent && s.s.parent.remove(s.s); FB.smoke.splice(i, 1); } }
-  if (FB.ship && FB.ship.parent) { const g = FB.ship, u = g.userData; u.t += dt; const x = u.t < 8 ? -150 + u.t * 7 : u.t < 22 ? -94 : -94 - (u.t - 22) * 9; g.position.set(x, 26 + Math.sin(u.t) * 0.6 + (u.t > 22 ? (u.t - 22) * 2 : 0), 26); g.rotation.y = Math.PI / 2; if (u.t > 40) { g.parent.remove(g); FB.ship = null; } }
+  if (FB.ship && FB.ship.parent) { const g = FB.ship, u = g.userData; u.t += dt; const x = u.t < 8 ? -240 + u.t * 11.5 : u.t < 22 ? -148 : -148 - (u.t - 22) * 9; g.position.set(x, 26 + Math.sin(u.t) * 0.6 + (u.t > 22 ? (u.t - 22) * 2 : 0), 26); g.rotation.y = Math.PI / 2; if (u.t > 40) { g.parent.remove(g); FB.ship = null; } }
   if (!FB.on) return;
   FB.t -= dt;
   if (FB.phase === 'lull' && FB.t <= 0) { FB.wave++; FB.phase = 'wave'; frWaveSpawn(FB.wave); }
@@ -453,13 +455,13 @@ function frCruiser(hull, trim, eng, win) {
 function frFighterGeo() { const g = new THREE.ConeGeometry(0.7, 5, 6); g.rotateX(Math.PI / 2); return g; }
 function frSkyBuild() {
   FS.caps.length = 0; FS.beams.length = 0; FS.flak.length = 0; FS.strafe = null; FS.dying = null; FS.scorch.length = 0;
-  for (const [x, y, z, ours, ph] of [[40, 170, -10, 1, 0], [15, 205, 70, 1, 2], [-190, 160, 0, 0, 1], [-168, 212, 72, 0, 3]]) {
+  for (const [x, y, z, ours, ph] of [[40, 170, -10, 1, 0], [15, 205, 70, 1, 2], [-260, 160, 0, 0, 1], [-238, 212, 72, 0, 3]]) {
     const g = ours ? frCruiser('#8a929c', '#4a5a3a', '#4fd2ff', '#fff1c8') : frCruiser('#4a3a42', '#6a1a22', '#ff2a3a', '#ff8a6a'); g.position.set(x, y, z); g.rotation.y = ours ? 0.08 : -0.06; levelGroup.add(g);
     FS.caps.push({ g, ours, ph, x0: x, z0: z, hp: 1, cd: Math.random() * 2 }); }
   // fighters: two instanced swarms, chaser and chased on shared loops
   const N = 14, mk = col => { const m = new THREE.InstancedMesh(frFighterGeo(), toon(col), N), w = new THREE.InstancedMesh(new THREE.BoxGeometry(5.5, 0.2, 1.4), toon(col), N); m.frustumCulled = w.frustumCulled = false; levelGroup.add(m); levelGroup.add(w); return [m, w]; };
   FS.fighters = { ours: mk('#9aa1aa'), them: mk('#3a1416'), N, list: [] };
-  for (let i = 0; i < N; i++) FS.fighters.list.push({ i, r: 70 + (i % 5) * 18, h: 70 + (i % 4) * 16, sp: 0.16 + (i % 3) * 0.03, ph: i * 0.9, cx: -60 + (i % 3) * 30, cz: 20 + (i % 2) * 30, fall: 0 });
+  for (let i = 0; i < N; i++) FS.fighters.list.push({ i, r: 70 + (i % 5) * 18, h: 70 + (i % 4) * 16, sp: 0.16 + (i % 3) * 0.03, ph: i * 0.9, cx: -100 + (i % 3) * 45, cz: 20 + (i % 2) * 30, fall: 0 });
   // flak puff pool
   const fm = new THREE.MeshBasicMaterial({ color: '#2a2622', transparent: true, opacity: 0.8, depthWrite: false });
   for (let i = 0; i < 14; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(1, 6, 4), fm.clone()); s.visible = false; levelGroup.add(s); FS.flak.push({ s, t: 0 }); }
@@ -490,11 +492,11 @@ function frSkyStep(dt, t) {
       if (side === 'ours' && !f.fall && Math.random() < dt * 0.8) { const tgt = at(f, 0); tracer(p.clone().addScaledVector(fw, 3), tgt, '#6fd0ff'); }
       if (side === 'them' && !f.fall && Math.random() < dt * 0.012) { f.fall = 0.001; f.fallSide = Math.random() < 0.6 ? 'them' : 'ours'; f.fp = (f.fallSide === 'them' ? at(f, 0) : at(f, 0.09)); f.fv = fw.clone().multiplyScalar(30).add(V(0, -4, 0)); } }
     for (const k of ['ours', 'them']) { F[k][0].instanceMatrix.needsUpdate = true; F[k][1].instanceMatrix.needsUpdate = true; } }
-  for (const fl of FS.flak) { if (fl.t > 0) { fl.t -= dt; fl.s.scale.setScalar(2 + (1.4 - fl.t) * 5); fl.s.material.opacity = Math.max(0, fl.t / 1.4 * 0.8); if (fl.t <= 0) fl.s.visible = false; } else if (Math.random() < dt * 0.35) { fl.t = 1.4; fl.s.visible = true; fl.s.position.set(-120 + Math.random() * 120, 60 + Math.random() * 70, -20 + Math.random() * 100); burst(fl.s.position.clone(), '#ffb060', 3, 8); } }
+  for (const fl of FS.flak) { if (fl.t > 0) { fl.t -= dt; fl.s.scale.setScalar(2 + (1.4 - fl.t) * 5); fl.s.material.opacity = Math.max(0, fl.t / 1.4 * 0.8); if (fl.t <= 0) fl.s.visible = false; } else if (Math.random() < dt * 0.35) { fl.t = 1.4; fl.s.visible = true; fl.s.position.set(-200 + Math.random() * 190, 60 + Math.random() * 70, -20 + Math.random() * 100); burst(fl.s.position.clone(), '#ffb060', 3, 8); } }
   // shelling from the Drome battery (only hurts during Hold the Line)
   FS.shellT -= dt; if (FS.shellT <= 0) { const live = FB.on && FB.phase === 'wave'; FS.shellT = live ? 9 + Math.random() * 7 : 16 + Math.random() * 14;
     const gun = FRONT.eguns[Math.floor(Math.random() * 3)]; if (gun && gun.parent) { const m = gun.localToWorld(V(0, 1.5, 3)); burst(m, '#ffd36a', 10, 5); burst(m, '#5a5550', 8, 3); }
-    const tgt = live ? V(-48 + Math.random() * 12, 0, -12 + Math.random() * 76) : V(-105 + Math.random() * 50, 0, -10 + Math.random() * 70);
+    const tgt = live ? V(-48 + Math.random() * 12, 0, -12 + Math.random() * 76) : V(FRX(-105 + Math.random() * 50), 0, -10 + Math.random() * 70);
     setTimeout(() => { if (LEVEL.id !== 'fort' || !FRONT.on) return; if (tgt.distanceTo(player.pos) < 70) frTone('sine', 1700, 500, 1.0, 0.04); setTimeout(() => { if (!FRONT.on) return; tgt.y = groundH(tgt.x, tgt.z); burst(tgt, '#ffb060', 20, 9); burst(tgt, '#4a3c30', 24, 6); if (tgt.distanceTo(player.pos) < 80) SFX.boom();
       if (live) frBoom(tgt, false); frScorch(tgt); }, 1000); }, 1500); }
   // strafing run
@@ -509,7 +511,7 @@ function frSkyStep(dt, t) {
         if (Math.random() < 0.15 && hit.distanceTo(player.pos) < 50) SFX.laser(); }
       if (k > 1.15) { levelGroup.remove(S0.ship); FS.strafe = null; } } }
 }
-function frStrafe(ours) { if (FS.strafe) return; FS.strafe = { t: 0, ours, x: ours ? -121 : -41 }; if (!ours) { frSiren(); toast('STRAFING RUN!', 'Get off the fire step and duck', 2.4); } }
+function frStrafe(ours) { if (FS.strafe) return; FS.strafe = { t: 0, ours, x: ours ? -202 : -41 }; if (!ours) { frSiren(); toast('STRAFING RUN!', 'Get off the fire step and duck', 2.4); } }
 function frScorch(p) { const m = new THREE.Mesh(new THREE.CircleGeometry(2.2 + Math.random(), 10), new THREE.MeshBasicMaterial({ color: '#1a1410', transparent: true, opacity: 0.6, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 })); m.rotation.x = -Math.PI / 2; m.position.set(p.x, groundH(p.x, p.z) + 0.04, p.z); levelGroup.add(m); FS.scorch.push(m); if (FS.scorch.length > 30) levelGroup.remove(FS.scorch.shift()); }
 
 // =================== THE BIG PUSH (2.23.76): over the top, their trench, the siege walker, rewards, Hale's mission ===================
@@ -521,7 +523,7 @@ ARMOR_KITS.trench = function (g, A) { const coat = '#5a5a3a', dk = '#3a3020';
   for (const s of [-1, 1]) { part(g, B(0.26, 0.52, 0.06), coat, 0.15 * s, 0.76, -0.19, 0.12); part(g, B(0.06, 0.52, 0.32), coat, 0.29 * s, 0.76, 0, 0, 0, 0.08 * s); part(g, B(0.16, 0.18, 0.04), dk, 0.17 * s, 1.58, 0.15, -0.3); for (let k = 0; k < 3; k++) part(g, Cy(0.022, 0.022, 0.02, 6), '#c9a43a', 0.11 * s, 1.42 - k * 0.12, 0.185, Math.PI / 2); }
 };
 function frCharge() { // everyone over the top
-  for (const m of FRONT.men) { if (m.dead) continue; m.path = null; m.charge = { x: -100 - Math.random() * 18, t: Math.random() * 0.8 }; m.st = 'up'; }
+  for (const m of FRONT.men) { if (m.dead) continue; m.path = null; m.charge = { x: FRX(-100 - Math.random() * 18), t: Math.random() * 0.8 }; m.st = 'up'; }
 }
 function frChargeStep(m, dt, t) { const o = m.o, C = m.charge; if (C.t > 0) { C.t -= dt; return; }
   const tg = frPickFoe(o.position); let tx = C.x; if (o.position.x - tx > 0.5) { o.position.x -= 3.6 * dt; o.rotation.y = -Math.PI / 2; } else if (tg) { const q = tg.obj.position; tx = q.x + 3; o.rotation.y = Math.atan2(q.x - o.position.x, q.z - o.position.z); if (Math.abs(o.position.x - tx) > 4) o.position.x += Math.sign(tx - o.position.x) * 3 * dt; }
@@ -533,7 +535,7 @@ function frChargeStep(m, dt, t) { const o = m.o, C = m.charge; if (C.t > 0) { C.
 function frPushStep(dt) {
   if (FB.phase === 'push') { FB.t -= dt; if (FB.t < 26 && !FB.strafed) { FB.strafed = 1; frStrafe(true); toast('OUR FIGHTERS ARE IN', 'Strafing their trench', 2); }
     const left = frAlive().filter(e => e.front.mode === 'hold' || e.front.wave).length;
-    if (!left && FB.t < 24) { FB.phase = 'boss'; const e = makeEnemy({ zone: 'siege', type: 'dwalker', n: 1, lv: [30, 30], once: true }); e.obj.position.set(-134, groundH(-134, 60), 60); e.aggro = true; FB.boss = e; frSiren(); toast('SIEGE WALKER!', 'It came down at the drop zone. Bring it down.', 3); log('A Drome siege walker landed at the drop zone behind their trench. The guns can hit it: use the field phone, or grab the motor pool tank.', 'loot'); } }
+    if (!left && FB.t < 24) { FB.phase = 'boss'; const e = makeEnemy({ zone: 'siege', type: 'dwalker', n: 1, lv: [30, 30], once: true }); e.obj.position.set(-226, groundH(-226, 60), 60); e.aggro = true; FB.boss = e; frSiren(); toast('SIEGE WALKER!', 'It came down at the drop zone. Bring it down.', 3); log('A Drome siege walker landed at the drop zone behind their trench. The guns can hit it: use the field phone, or grab the motor pool tank.', 'loot'); } }
   else if (FB.phase === 'boss' && FB.boss && FB.boss.dead) { FB.boss = null; frontEnd(true); }
 }
 function frPushStart() { FB.phase = 'push'; FB.t = 30; FB.strafed = 0; frTone('square', 2600, 2400, 0.25, 0.06); setTimeout(() => frTone('square', 2600, 2300, 0.6, 0.06), 320);

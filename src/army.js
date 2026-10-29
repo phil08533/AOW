@@ -202,14 +202,14 @@ function makeSiegeBot() {
 function makeKragMech() { const g = makeMechModel('#3a1416'); g.traverse(o => { if (o.isMesh && o.material.isMeshBasicMaterial) o.material = glow('#ff2a3a'); }); for (const s of [-1, 1]) chain(g, [[0.6 * s, 3.2, 0], [0.9 * s, 3.8, -0.1], [0.8 * s, 4.3, -0.3]], 0.1, '#b3262c', 0.02); return g; }
 const FORT = [0, -10];
 LEVELS.fort = {
-  id: 'fort', name: 'Fort Ironrock', tag: 'Asteroid army base', lvls: 'Lv 12–30 · vehicles', size: 380, center: [0, 20], radius: 150, water: -99, sky: 'space', weather: 'none', gravity: 0.6, hourOffset: 0,
+  id: 'fort', name: 'Fort Ironrock', tag: 'Asteroid army base', lvls: 'Lv 12–30 · vehicles', size: 520, center: [-50, 20], radius: 200, water: -99, sky: 'space', weather: 'none', gravity: 0.6, hourOffset: 0,
   terrain: { a1: 2.0, f1: 0.045, a2: 1.1, f2: 0.1, a3: 0.4, f3: 0.22, base: 1.0, min: -5, edge: 26, step: 2.4 },
   palette: { grass: '#7a6a5a', patch: '#6a5a4a', dirt: '#4a4440', sand: '#8a7a68', wet: '#3a3430', rockA: '#6a5a4a', rockB: '#4a4038' },
   carve: (x, z, h) => { const ex = Math.max(-14 - x, x - 54, 0), ez = Math.max(-28 - z, z - 40, 0), d = Math.hypot(ex, ez); if (d < 10) h = h * smooth(d, 2, 10); const dr = Math.hypot(x - 76, z - 26); if (dr < 26) h *= 0.25 + 0.75 * smooth(dr, 18, 26); if (FRONT && !FRONT.raw && x > FRONT.x0 && x < FRONT.x1 && z > FRONT.z0 && z < FRONT.z1) h -= 8; return h; }, // the Front's own ground covers its patch
   zones: [
     { id: 'base', name: 'Fort Ironrock', lvl: 'Safe · fortress', x: 16, z: 10, r: 32, fr: 36, col: '#5d636c', safe: true, h: 0.1 },
     { id: 'range', name: 'Vehicle Range', lvl: 'Lv 12–16 · training', x: 76, z: 26, r: 20, col: '#8a7a50', h: 0 },
-    { id: 'siege', name: 'The Front', lvl: 'Lv 18–24 · war zone', x: -81, z: 26, r: 30, fr: 60, col: '#5a4a3c', h: 0 },
+    { id: 'siege', name: 'The Front', lvl: 'Lv 18–24 · war zone', x: -122, z: 26, r: 60, fr: 100, col: '#5a4a3c', h: 0 },
     { id: 'tankyard', name: 'Drome Tank Yard', lvl: 'Lv 22–28', x: 20, z: 72, r: 20, col: '#4a3030', h: -0.5 },
     { id: 'kragpit', name: "Krag's Crater", lvl: 'Lv 30 · boss', x: -30, z: 86, r: 16, fr: 12, col: '#3a1416', h: -2 }
   ],

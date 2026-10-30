@@ -93,12 +93,11 @@ function openGunMods(who) {
 // station on the ship next to the saber mods
 { const orig = LEVELS.ship.build;
   LEVELS.ship.build = function () { orig.call(this);
-    // the display (2.23.77): a steel workbench cabinet with drawers, an open lit plinth where your gun rests on two cradles, a pegboard of tools behind and a plaque on the front
+    // the display (2.23.77): a steel workbench cabinet with drawers, an open lit plinth where your gun rests on two cradles, a pegboard of tools behind
     const st = new THREE.Group(), steel = toon('#3a3d44', 'hull'), dk = toon('#1e2128'), chrome = toon('#a8aeb8'), cy = '#4fd2ff';
     part(st, B(1.7, 0.86, 0.85), steel, 0, 0.43, 0); part(st, B(1.76, 0.05, 0.9), toon('#2a2d34'), 0, 0.885, 0); part(st, B(1.7, 0.08, 0.85), dk, 0, 0.04, 0);
     for (let r = 0; r < 2; r++) for (const sx of [-0.43, 0.43]) { part(st, B(0.76, 0.3, 0.02), toon('#30333a'), sx, 0.27 + r * 0.34, 0.43); part(st, B(0.3, 0.03, 0.03), chrome, sx, 0.33 + r * 0.34, 0.45); }
-    { const c = document.createElement('canvas'); c.width = 256; c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#0a1420'; x.fillRect(0, 0, 256, 64); x.strokeStyle = cy; x.lineWidth = 3; x.strokeRect(3, 3, 250, 58); x.fillStyle = '#cfefff'; x.font = 'bold 30px Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('GUNSMITH', 128, 34);
-      const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.155), new THREE.MeshBasicMaterial({ map: t })); pl.position.set(0, 0.79, 0.433); st.add(pl); part(st, B(0.66, 0.19, 0.01), chrome, 0, 0.79, 0.427); }
+    part(st, B(0.66, 0.19, 0.01), toon('#30333a'), 0, 0.79, 0.427); // a plain drawer front where the old name plate was
     // open display (2.23.87): a dark plinth with a lit ring and two padded cradles the gun rests on; no glass
     part(st, B(1.5, 0.08, 0.7), dk, 0, 0.95, 0); part(st, Cy(0.34, 0.36, 0.04, 24), toon('#24282f'), 0, 1.01, 0); part(st, new THREE.TorusGeometry(0.35, 0.012, 4, 32), glow(cy), 0, 1.035, 0, Math.PI / 2);
     for (const sx of [-0.3, 0.3]) { part(st, B(0.06, 0.2, 0.16), chrome, sx, 1.13, 0); part(st, B(0.1, 0.05, 0.2), toon('#5a1e22', 'cloth'), sx, 1.24, 0); }

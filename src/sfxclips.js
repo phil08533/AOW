@@ -21,6 +21,7 @@ const AMBREC = [
   { f: 'amb/muffled', v: 0.62, on: () => zfTheme() === 'under' && player.pos.x < -16 && player.pos.z > 12 },               // its members-only back room
   { f: 'amb/chatter', v: 0.45, on: () => LEVEL.id === 'underworld' },                                                      // Grub's Bar
   { f: 'amb/park', v: 0.42, on: () => LEVEL.id === 'earth' && Math.hypot(player.pos.x - TOWN.x, player.pos.z - TOWN.z) < (typeof JT_R !== 'undefined' ? JT_R : 44) + 6 && player.pos.y < 6 }, // New Jamestown, outdoors
+  { f: 'amb/barcrowd', v: 0.42, on: () => LEVEL.id === 'miledown' && player.pos.z > -3 },                                  // the Mile Down bar
   { f: 'amb/arcade', v: 0.5, on: () => zfTheme() === 'arcade' }                                                            // the Neon Arcade
 ];
 const AR = { live: {} };
@@ -42,6 +43,18 @@ setInterval(() => { try { ambRecTick(); } catch (e) { console.warn('ambrec', e);
 
 // ---- the Mile Down: the whole bar loses it on the last line ----
 function mdLaugh() { clipPlay('laugh', 0.9); }
+// behind Doc's locked door (2.23.92): a drill and screams, muffled through the wall, until the door is opened
+const MDB = { t: 4, h: null };
+function mdBehind() { const c = clipCtx(); const on = c && PREFS.sfx && state === 'play' && LEVEL && LEVEL.id === 'miledown' && mdF() === 0 && MD.door && MD.door.visible;
+  if (!on) { if (MDB.h) { clipFade(MDB.h, 0.4); MDB.h = null; } MDB.t = 3; return; }
+  const d = Math.hypot(player.pos.x, player.pos.z + 3), vol = 0.75 * clamp(1 - d / 26, 0.08, 1); if (MDB.h) { try { MDB.h.g.gain.setTargetAtTime(MDB.h.v * vol, c.ac.currentTime, 0.2); } catch (_) {} }
+  MDB.t -= 0.2; if (MDB.t > 0) return; MDB.t = 7 + Math.random() * 9;
+  const name = Math.random() < 0.5 ? 'drill' : Math.random() < 0.5 ? 'scream1' : 'scream2', drill = name === 'drill';
+  clipLoad(name).then(b => { if (!b || !c) return; const ac = c.ac, src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(), t = ac.currentTime + 0.02;
+    const len = drill ? b.duration : 3 + Math.random() * 3, at = drill ? 0 : Math.random() * Math.max(0, b.duration - len - 0.5), v = drill ? 0.8 : 0.65;
+    src.buffer = b; f.type = 'lowpass'; f.frequency.value = 650; f.Q.value = 0.7; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v * vol, t + 0.15); g.gain.setValueAtTime(v * vol, t + len - 0.4); g.gain.linearRampToValueAtTime(0, t + len);
+    src.connect(f); f.connect(g); g.connect(c.master); src.start(t, at); src.stop(t + len + 0.05); MDB.h = { src, g, ac, v }; src.onended = () => { if (MDB.h && MDB.h.src === src) MDB.h = null; }; }); }
+setInterval(() => { try { mdBehind(); } catch (e) { console.warn('mdbehind', e); } }, 200);
 
 // ---- the Greater Maw, phase 2: the charge-up clip, a held breath, then a deep guttural blast (synth) ----
 function mawCharge() { clipLoad('mawcharge'); return clipPlay('mawcharge', 1); }

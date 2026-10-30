@@ -22,7 +22,7 @@ function irBuild() {
   const seg = (x0, x1, z0, z1, walk) => { const w = x1 - x0, d = z1 - z0; if (w <= 0 || d <= 0) return; irBox(props, w, WH, d, wallMat, (x0 + x1) / 2, WH / 2, (z0 + z1) / 2, 4); IR.walls.push([x0, x1, z0, z1]);
     // walk on top, parapets with merlons on the outer edge and a low rail on the inner edge
     irBox(props, w, 0.12, d, toon('#6a6e76', 'grate'), (x0 + x1) / 2, WH + 0.06, (z0 + z1) / 2, 2);
-    if (walk) { IR.ramp.push([x0 + 0.35, x1 - 0.35, z0 + 0.35, z1 - 0.35]); SURFACES.push({ x: (x0 + x1) / 2, z: (z0 + z1) / 2, ux: 1, uz: 0, hl: w / 2, hw: d / 2, y: WH + 0.12 }); } };
+    if (walk) { IR.ramp.push([x0 + 0.35, x1 - 0.35, z0 + 0.35, z1 - 0.35]); SURFACES.push({ x: (x0 + x1) / 2, z: (z0 + z1) / 2, ux: 1, uz: 0, hl: w / 2, hw: d / 2, y: WH + 0.12, minY: WH - 2 }); } };
   const S1 = [X0, 11, Z0, Z0 + T], S2 = [19, X1, Z0, Z0 + T], N = [X0, X1, Z1 - T, Z1], W1 = [X0, X0 + T, Z0 + T, 21], W2 = [X0, X0 + T, 29, Z1 - T], E1 = [X1 - T, X1, Z0 + T, 21], E2 = [X1 - T, X1, 31, Z1 - T];
   for (const [s, walk] of [[S1, 1], [S2, 1], [N, 0], [W1, 1], [W2, 0], [E1, 1], [E2, 0]]) seg(...s, walk);
   // parapets: merlons along every outer edge, a rail along the inner edge, end rails where a walk stops at an opening
@@ -30,7 +30,7 @@ function irBuild() {
     irBox(props, Math.abs(bx - ax) > 0.1 ? L : 0.4, 0.4, Math.abs(bx - ax) > 0.1 ? 0.4 : L, wallMat, (ax + bx) / 2 + ox, WH + 0.32, (az + bz) / 2 + oz, 2); };
   merl(X0, Z0, X1, Z0, 0, 0.2);
   // the walk carries on over the gate lintel, so the south rampart is one run between the bastions
-  IR.ramp.push([10.5, 19.5, Z0 + 0.35, Z0 + T - 0.35]); SURFACES.push({ x: 15, z: Z0 + T / 2, ux: 1, uz: 0, hl: 4.2, hw: T / 2, y: WH + 0.12 }); merl(X0, Z1, X1, Z1, 0, -0.2); merl(X0, Z0, X0, 21, 0.2, 0); merl(X0, 29, X0, Z1, 0.2, 0); merl(X1, Z0, X1, 21, -0.2, 0); merl(X1, 31, X1, Z1, -0.2, 0);
+  IR.ramp.push([10.5, 19.5, Z0 + 0.35, Z0 + T - 0.35]); SURFACES.push({ x: 15, z: Z0 + T / 2, ux: 1, uz: 0, hl: 4.2, hw: T / 2, y: WH + 0.12, minY: WH - 2 }); merl(X0, Z1, X1, Z1, 0, -0.2); merl(X0, Z0, X0, 21, 0.2, 0); merl(X0, 29, X0, Z1, 0.2, 0); merl(X1, Z0, X1, 21, -0.2, 0); merl(X1, 31, X1, Z1, -0.2, 0);
   const rail = (ax, az, bx, bz) => { const L = Math.hypot(bx - ax, bz - az), along = Math.abs(bx - ax) > 0.1; part(props, B(along ? L : 0.06, 0.06, along ? 0.06 : L), steel, (ax + bx) / 2, WH + 1.1, (az + bz) / 2); part(props, B(along ? L : 0.05, 0.05, along ? 0.05 : L), steel, (ax + bx) / 2, WH + 0.6, (az + bz) / 2);
     const n = Math.max(1, Math.floor(L / 2)); for (let k = 0; k <= n; k++) { const u = k / n; part(props, B(0.07, 1.1, 0.07), steel, ax + (bx - ax) * u, WH + 0.55, az + (bz - az) * u); } };
   rail(X0 + T - 0.1, Z0 + T - 0.1, X1 - T + 0.1, Z0 + T - 0.1); rail(X0 + T - 0.1, Z0 + T, X0 + T - 0.1, 21); rail(X1 - T + 0.1, Z0 + T, X1 - T + 0.1, 21);
@@ -44,19 +44,17 @@ function irBuild() {
   for (const [cx, cz] of [[X0, Z0], [X1, Z0], [X0, Z1], [X1, Z1]]) { const sx = Math.sign(cx - 16), sz = Math.sign(cz - 10); irBox(props, 6, WH, 6, wallMat, cx + sx, WH / 2, cz + sz, 4); IR.walls.push([cx + sx - 3, cx + sx + 3, cz + sz - 3, cz + sz + 3]);
     irBox(props, 6.4, 0.3, 6.4, trim, cx + sx, WH + 0.15, cz + sz, 2); const tur = new THREE.Group(); tur.position.set(cx + sx * 2.6, WH + 0.3, cz + sz * 2.6); props.add(tur); part(tur, Cy(1.3, 1.5, 2.4, 10), steel, 0, 1.2, 0); part(tur, Cy(1.5, 1.5, 0.3, 10), trim, 0, 2.5, 0); for (let k = 0; k < 4; k++) part(tur, B(0.3, 0.6, 0.12), glow('#ffd36a'), Math.cos(k * 1.57) * 1.3, 1.4, Math.sin(k * 1.57) * 1.3, 0, -k * 1.57 + 1.57, 0);
     part(tur, Cy(0.18, 0.18, 0.4, 8), glow('#ff3a2a'), 0, 2.9, 0); }
-  // ---- the gatehouse: two towers outside the south wall, a lintel with the FORT IRONROCK lightbox, blast doors parked open ----
+  // ---- the gatehouse: two towers outside the south wall, a lintel and a raised portcullis ----
   for (const gx of [9, 21]) { irBox(props, 4, WH + 3, 5, wallMat, gx, (WH + 3) / 2, Z0 - 1.5, 4); IR.walls.push([gx - 2, gx + 2, Z0 - 4, Z0 + 1]); irBox(props, 4.4, 0.4, 5.4, trim, gx, WH + 3.2, Z0 - 1.5, 2); for (let k = -1; k <= 1; k++) irBox(props, 0.9, 1, 0.4, wallMat, gx + k * 1.4, WH + 3.9, Z0 - 4, 2);
     part(props, B(0.5, 1.6, 0.1), glow('#ffd36a'), gx, 6.5, Z0 - 4.05); }
   irBox(props, 8, WH - 5.5, T, wallMat, 15, 5.5 + (WH - 5.5) / 2, Z0 + T / 2, 4); irBox(props, 8.4, 0.5, 0.5, haz, 15, 5.3, Z0 - 0.1, 1);
   for (const s of [-1, 1]) irBox(props, 0.5, 5.5, 0.6, haz, 15 + s * 4.15, 2.75, Z0 - 0.1, 1);
   for (let k = 0; k < 9; k++) part(props, B(0.12, 0.7, 0.12), steel, 11.4 + k * 0.9, 5.1, Z0 + 1.5); part(props, B(8, 0.14, 0.14), steel, 15, 4.75, Z0 + 1.5); // the portcullis, raised
-  { const c = document.createElement('canvas'); c.width = 1024; c.height = 160; const x = c.getContext('2d'); const gr = x.createLinearGradient(0, 0, 0, 160); gr.addColorStop(0, '#1e2128'); gr.addColorStop(1, '#0e1014'); x.fillStyle = gr; x.fillRect(0, 0, 1024, 160); x.strokeStyle = '#ff8a2a'; x.lineWidth = 6; x.strokeRect(8, 8, 1008, 144);
-    x.font = 'bold 92px Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = '#ff8a2a'; x.shadowBlur = 18; x.fillStyle = '#ffe2c0'; x.fillText('FORT IRONROCK', 512, 84); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
-    const lb = new THREE.Group(); lb.position.set(15, 7.3, Z0 - 0.45); props.add(lb); part(lb, B(7.4, 1.3, 0.3), trim, 0, 0, 0); const f = new THREE.Mesh(new THREE.PlaneGeometry(7.1, 1.1), new THREE.MeshBasicMaterial({ map: t })); f.position.z = -0.16; f.rotation.y = Math.PI; lb.add(f); for (const s of [-1, 1]) part(lb, B(0.12, 0.12, 0.5), steel, s * 3.2, 0.7, 0.2); }
-  // ---- the Sally Port: a tunnel through the west wall to the Front, with a hazard frame and a lit plaque inside ----
+  // no name board on the gate: the zone banner already says where you are
+  // ---- the Sally Port: a tunnel through the west wall to the Front, with a hazard frame ----
   irBox(props, T, WH - 4.5, 8, wallMat, X0 + T / 2, 4.5 + (WH - 4.5) / 2, 25, 4); for (const s of [-1, 1]) irBox(props, T + 0.2, 4.5, 0.5, haz, X0 + T / 2, 2.25, 25 + s * 4.1, 1); irBox(props, T + 0.2, 0.5, 8.6, haz, X0 + T / 2, 4.35, 25, 1);
   for (let k = 0; k < 3; k++) part(props, B(T, 0.1, 0.25), glow('#fff1c8'), X0 + T / 2, 4.05, 22.5 + k * 2.5);
-  irPlaque(X0 + T + 0.05, 5.6, 25, Math.PI / 2, 'SALLY PORT', 'TO THE FRONT', '#ff8a2a');
+
   // ---- the hangar door: a tall opening in the east wall with a raised roller door ----
   irBox(props, T, WH - 7, 10, wallMat, X1 - T / 2, 7 + (WH - 7) / 2, 26, 4); irBox(props, T - 0.4, 0.9, 10, toon('#6a6e76', 'ribbed'), X1 - T / 2, 6.5, 26, 1); for (const s of [-1, 1]) irBox(props, T + 0.2, 7, 0.5, haz, X1 - T / 2, 3.5, 26 + s * 5.1, 1);
   // ---- floors: paving in the courtyard, a different floor in every room ----
@@ -82,6 +80,16 @@ function irBuild() {
   // ---- the gatehouse lift towers inside the courtyard: ride up to the rampart ----
   for (const [lx, side] of [[9, -1], [21, 1]]) { irBox(props, 3.6, WH + 0.2, 3.4, wallMat, lx, (WH + 0.2) / 2, J0 + 1.7, 3); box(lx, J0 + 1.7, 1.8, 1.7); irBox(props, 2.0, 2.8, 0.1, toon('#2a2c32', 'ribbed'), lx, 1.4, J0 + 3.42, 1);
     for (const s of [-1, 1]) part(props, B(0.2, 3.0, 0.2), haz, lx + s * 1.1, 1.5, J0 + 3.45); part(props, B(2.4, 0.2, 0.2), haz, lx, 3.0, J0 + 3.45); part(props, B(0.3, 0.3, 0.05), glow('#6fdc5a'), lx + 1.4, 1.5, J0 + 3.46);
+    { // steel lift doors with a lit frame and a floor light, plus a lift house up on the tower roof so the way down is easy to spot
+      const door = toon('#8a9098', 'panel'), lit = glow('#4fd2ff'), zf = J0 + 3.42;
+      for (const s of [-1, 1]) { part(props, B(0.95, 2.6, 0.08), door, lx + s * 0.49, 1.4, zf + 0.04); part(props, B(0.04, 2.7, 0.04), lit, lx + s * 0.96, 1.45, zf + 0.13); }
+      part(props, B(0.5, 0.18, 0.04), lit, lx, 3.3, zf - 0.0);
+      const y0 = WH + 0.2, zc = J0 + 1.25, wall = toon('#5a5e66', 'panel');
+      for (const s of [-1, 1]) { part(props, B(0.06, 2.6, 2.2), wall, lx + s * 1.17, y0 + 1.3, zc); for (const v of [-1, 1]) part(props, B(0.16, 2.6, 0.16), steel, lx + s * 1.25, y0 + 1.3, zc + v * 1.12); }
+      part(props, B(2.3, 2.6, 0.06), wall, lx, y0 + 1.3, zc + 1.1); part(props, B(2.7, 0.14, 2.5), steel, lx, y0 + 2.67, zc);
+      const zd = zc - 1.12; for (const s of [-1, 1]) { part(props, B(0.64, 2.3, 0.06), door, lx + s * 0.33, y0 + 1.15, zd); part(props, B(0.06, 2.3, 0.06), lit, lx + s * 0.64, y0 + 1.15, zd - 0.05); part(props, B(0.5, 2.6, 0.06), wall, lx + s * 0.92, y0 + 1.3, zd); }
+      part(props, B(1.34, 0.06, 0.06), lit, lx, y0 + 2.33, zd - 0.05); part(props, B(1.84, 0.3, 0.06), wall, lx, y0 + 2.45, zd);
+      part(props, Cy(0.12, 0.12, 0.2, 8), glow('#6fdc5a'), lx, y0 + 2.84, zc); }
     IR.lifts.push({ x: lx, zb: J0 + 4.2, zt: Z0 + 1.5 });
     INTERACTS.push({ x: lx, z: J0 + 4.2, r: 1.4, get label() { return player.pos.y < 4 ? '🛗 Lift up to the rampart' : ''; }, fn: () => { if (player.pos.y < 4) irLift(lx, Z0 + 1.5, WH + 0.12, 0); } });
     INTERACTS.push({ x: lx, z: Z0 + 1.5, r: 1.3, get label() { return player.pos.y > 4 ? '🛗 Lift down to the courtyard' : ''; }, fn: () => { if (player.pos.y > 4) irLift(lx, J0 + 4.4, 0, Math.PI); } }); }
@@ -98,6 +106,7 @@ function irLift(x, z, y, yaw) { SFX.ui && SFX.ui(); const f = document.createEle
 // =================== the rooms: every space reads by its furniture; plaques over the courtyard doors ===================
 function irMan(x, z, face, opt) { const o = opt || {}, m = buildChar(() => o.civ ? makeCivilian(...o.civ) : recolor(makeTrooper({ noGun: !o.gun }), { '#6f7a3e': o.col || '#5a6a3a' }), o.civ ? 'civ' : 'trooper');
   m.position.set(x, 0.1, z); m.rotation.y = face; levelGroup.add(m); blob(m, 0.4);
+  if (o.eat && m.userData.rig) { const R = m.userData.rig; part(R.armR, Cy(0.05, 0.045, 0.12, 8), toon('#e8e8e8'), 0, -(R.spec.sh - R.spec.hip) * 0.95, 0.07, 1.2); } // a mug in the hand, raised with the arm
   if (o.sit) { const R = m.userData.rig; m.position.y = o.sit + 0.1 - (R ? R.spec.hip : 0.95) + 0.05; sitChar(m, o.sit); if (R) R.torso.rotation.x = -0.05; } else solid(x, z, 0.35);
   const st = {}, ph = x * 1.7 + z; levelAnims.push(t => { if (!m.parent) return; try { animRig(m, st, 1 / 60, t); } catch (_) {} if (o.sway) m.rotation.y = face + Math.sin(t * 0.4 + ph) * o.sway; if (o.eat && m.userData.rig) m.userData.rig.armR.rotation.x = -0.9 - Math.max(0, Math.sin(t * 1.3 + ph)) * 0.6; }); return m; }
 function irDress() {
@@ -110,10 +119,10 @@ function irDress() {
   line(I1 - 0.1, I1, 15.25, 21, '#8a8a70', 'ribbed', 3.5); line(I1 - 0.1, I1, 31, J1, '#8a8a70', 'ribbed', 3.5); line(25, I1, J1 - 0.1, J1, '#8a8a70', 'ribbed', 3.5);
   const trim = toon('#3a3d44'), steel = toon('#5d636c', 'hull'), dk = toon('#22252c'), wood = toon('#6a4a30', 'wood'), olive = toon('#4a5a32', 'cloth'), white = toon('#e8e4dc'), chrome = toon('#a8aeb8');
   // ---- courtyard: facades with framed doors, lit windows and plaques; a flag, lamps, painted parade lines, crates, a jeep and gate guards ----
-  const win = (x, z, ry) => { const g = new THREE.Group(); g.position.set(x, 2.1, z); g.rotation.y = ry; props.add(g); part(g, B(2.0, 1.3, 0.12), trim, 0, 0, 0); part(g, B(1.8, 1.1, 0.02), glow('#a8c8e8'), 0, 0, 0.07); part(g, B(0.08, 1.1, 0.06), trim, 0, 0, 0.09); part(g, B(2.1, 0.1, 0.25), trim, 0, -0.68, 0.1); };
-  for (const z of [-14, -2, 2, 12]) { win(5.56, z, Math.PI / 2); win(24.44, z, -Math.PI / 2); } for (const x of [7.5, 22.5]) win(x, 14.69, Math.PI);
+  const win = (x, z, ry) => { const g = new THREE.Group(); g.position.set(x, 2.1, z); g.rotation.y = ry; props.add(g); for (const v of [-1, 1]) { part(g, B(2.0, 0.1, 0.12), trim, 0, v * 0.6, 0); part(g, B(0.1, 1.1, 0.12), trim, v * 0.95, 0, 0); } part(g, B(1.8, 1.1, 0.02), glow('#a8c8e8'), 0, 0, 0.0); /* frame is four bars round the pane, so no face sits on another */ part(g, B(0.08, 1.1, 0.06), trim, 0, 0, 0.09); part(g, B(2.1, 0.1, 0.25), trim, 0, -0.68, 0.1); };
+  for (const z of [-14, -2, 2, 12]) { win(5.58, z, Math.PI / 2); win(24.42, z, -Math.PI / 2); } for (const x of [7.5, 22.5]) win(x, 14.67, Math.PI);
   const door = (x, z, ry, w, title, col) => { const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; props.add(g); for (const s of [-1, 1]) part(g, B(0.3, 3.5, 0.3), trim, s * (w / 2 + 0.1), 1.75, 0.2); part(g, B(w + 0.5, 0.35, 0.3), trim, 0, 3.55, 0.2);
-    part(g, B(0.3, 0.3, 0.12), glow('#fff1c8'), w / 2 + 0.6, 2.6, 0.12); irPlaque(x + Math.sin(ry) * 0.02, 4.4, z + Math.cos(ry) * 0.02, ry, title, '', col); };
+    part(g, B(0.3, 0.3, 0.12), glow('#fff1c8'), w / 2 + 0.6, 2.6, 0.12); };
   door(5.5, -7.5, Math.PI / 2, 3, 'MED BAY', '#c8402f'); door(5.5, 8.5, Math.PI / 2, 3, 'MESS HALL', '#ffd36a'); door(24.5, -7.5, -Math.PI / 2, 3, 'ARMORY', '#ff8a2a'); door(24.5, 7.5, -Math.PI / 2, 3, 'RESEARCH', '#4fd2ff'); door(15, 14.75, Math.PI, 8, 'COMMAND', '#6fdc5a');
   for (const [x0, z0, x1, z1] of [[7, -11, 23, -11], [7, -1, 23, -1], [7, -11, 7, -1], [23, -11, 23, -1]]) part(props, B(Math.abs(x1 - x0) || 0.12, 0.012, Math.abs(z1 - z0) || 0.12), toon('#e8e2c8'), (x0 + x1) / 2, 0.106, (z0 + z1) / 2);
   { const f = new THREE.Group(); f.position.set(15, 0.1, -6); props.add(f); part(f, Cy(0.6, 0.8, 0.4, 10), trim, 0, 0.2, 0); part(f, Cy(0.07, 0.09, 11, 8), chrome, 0, 5.9, 0); part(f, new THREE.SphereGeometry(0.16, 8, 6), toon('#ffd36a'), 0, 11.5, 0); solid(15, -6, 0.6);
@@ -127,18 +136,17 @@ function irDress() {
   { const j = makeBattleCar(); j.scale.setScalar(0.6); j.position.set(20.5, 0.1, 4); j.rotation.y = -0.5; props.add(j); box(20.5, 4, 1.4, 1.4); }
   // ---- Med Bay (south half of the west wing): beds with curtains, a cabinet, a scanner arch ----
   for (let k = 0; k < 3; k++) { const z = -15 + k * 3; irBox(props, 2.0, 0.5, 0.9, white, -8.5, 0.35, z, 1); part(props, B(0.6, 0.15, 0.85), toon('#c8d8e8', 'cloth'), -9.2, 0.65, z); part(props, B(0.06, 1.0, 0.9), chrome, -9.55, 0.6, z); for (const s of [-1, 1]) part(props, B(2.0, 0.04, 0.04), chrome, -8.5, 2.2, z + s * 0.75); part(props, B(1.8, 1.6, 0.02), toon('#8ab8d8', 'cloth'), -8.5, 1.4, z + 0.76); box(-8.5, z, 1.0, 0.45); part(props, B(0.4, 0.6, 0.06), glow('#6fdc5a'), -10.4, 1.6, z); }
-  irBox(props, 0.6, 2.0, 2.4, white, 4.5, 1.1, -14, 1); part(props, B(0.02, 0.5, 0.5), toon('#c8402f'), 4.18, 1.6, -14); part(props, B(0.02, 0.16, 0.5), white, 4.17, 1.6, -14); box(4.5, -14, 0.3, 1.2);
+  irBox(props, 0.6, 2.0, 2.4, white, 4.5, 1.1, -14, 1); part(props, B(0.04, 0.5, 0.16), toon('#c8402f'), 4.15, 1.6, -14); part(props, B(0.04, 0.16, 0.5), toon('#c8402f'), 4.15, 1.6, -14); box(4.5, -14, 0.3, 1.2);
   irMan(-8.6, -12, Math.PI / 2, { sit: 0.6, col: '#6f7a3e' });
   // ---- Barracks (north half of the west wing): bunks and lockers ----
   for (let k = 0; k < 4; k++) { const z = -5 + k * 2.2; irBox(props, 2.0, 0.08, 0.9, wood, -9.6, 0.5, z, 1); irBox(props, 2.0, 0.08, 0.9, wood, -9.6, 1.6, z, 1); part(props, B(1.9, 0.14, 0.85), olive, -9.6, 0.62, z); part(props, B(1.9, 0.14, 0.85), olive, -9.6, 1.72, z); for (const sx of [-1, 1]) for (const sz of [-1, 1]) part(props, B(0.06, 1.9, 0.06), steel, -9.6 + sx * 0.97, 1.0, z + sz * 0.42); box(-9.6, z, 1.0, 0.45); }
   for (let k = 0; k < 6; k++) { const z = -5.5 + k * 1.3; irBox(props, 0.55, 1.9, 0.6, toon('#5a6a4a', 'panel'), 4.4, 1.05, z, 1); part(props, B(0.02, 0.3, 0.06), chrome, 4.1, 1.2, z + 0.2); } box(4.4, -2.25, 0.3, 3.9);
   // ---- Mess Hall: long tables and benches, a serving line, soldiers eating ----
   for (let r = 0; r < 3; r++) { const z = 6 + r * 3.6; irBox(props, 7, 0.1, 1.1, wood, -3.5, 0.85, z, 1.5); for (const sx of [-2.8, 0, 2.8]) part(props, B(0.12, 0.75, 0.9), trim, -3.5 + sx, 0.45, z); for (const s of [-1, 1]) { irBox(props, 7, 0.08, 0.35, wood, -3.5, 0.5, z + s * 0.85, 1.5); part(props, B(6.6, 0.4, 0.08), trim, -3.5, 0.3, z + s * 0.85); }
-    for (let k = 0; k < 5; k++) { part(props, B(0.35, 0.03, 0.25), toon('#9aa1aa'), -6.3 + k * 1.4, 0.92, z - 0.25); part(props, Cy(0.05, 0.05, 0.12, 8), white, -6.0 + k * 1.4, 0.97, z + 0.25); } box(-3.5, z, 3.6, 1.1); }
+    for (let k = 0; k < 5; k++) { part(props, B(0.35, 0.03, 0.25), toon('#9aa1aa'), -6.3 + k * 1.4, 0.92, z - 0.25); } box(-3.5, z, 3.6, 1.1); }
   irBox(props, 1.0, 1.0, 9, steel, -9.0, 0.6, 10, 2); irBox(props, 1.1, 0.06, 9.2, chrome, -9.0, 1.12, 10, 1); for (let k = 0; k < 5; k++) { part(props, B(0.7, 0.12, 1.2), chrome, -9.0, 1.18, 6.5 + k * 1.8); part(props, B(0.6, 0.06, 1.0), toon(['#c86a2a', '#6fdc5a', '#e8d8a0', '#8a4a2a', '#c8402f'][k]), -9.0, 1.24, 6.5 + k * 1.8); } box(-9.0, 10, 0.5, 4.5);
   irMan(-10.3, 12, Math.PI / 2, { civ: ['#e8e4dc', '#2c2a28', '#c58a64', '#1e1a18', '#e8e4dc'] });
   for (const [x, z, f] of [[-5.6, 5.15, 0], [-2, 5.15, 0], [-4.2, 6.85, Math.PI], [-0.6, 12.35, 0], [-6.5, 10.45, Math.PI], [-3, 8.75, 0]]) irMan(x, z, f, { sit: 0.54, eat: 1, col: ['#5a6a3a', '#3a4a2a', '#6f7a3e'][Math.floor(x * 7) & 1 ? 1 : 0] });
-  irPlaque(-10.85, 2.8, 14.5, Math.PI / 2, "TODAY: SLOP", 'SAME AS YESTERDAY', '#ffd36a');
   // ---- Muster Hall by the Sally Port: weapon racks, ammo, a briefing board, troopers waiting to go ----
   for (let k = 0; k < 3; k++) { const z = 31 + k * 2; irBox(props, 0.4, 1.8, 1.6, trim, 4.4, 1.0, z, 1); for (let g = 0; g < 4; g++) part(props, B(0.1, 1.1, 0.06), dk, 4.15, 1.2, z - 0.6 + g * 0.4); } box(4.4, 33, 0.3, 2.9);
   for (const [x, z] of [[-9.5, 34.5], [-8.3, 34.5], [-9.5, 35.6], [0.5, 19], [1.6, 19]]) crate(x, z, 0.9, '#4a5a32');
@@ -167,7 +175,7 @@ function irDress() {
   for (const [x, z] of [[28, -15], [31, -15], [34, -15]]) { const m = makeTrooper({ noGun: true }); m.position.set(x, 0.3, z); props.add(m); irBox(props, 0.9, 0.2, 0.9, trim, x, 0.2, z, 1); solid(x, z, 0.5); }
   for (const [x, z] of [[27, -1.5], [28.2, -1.5], [30.5, -1.5]]) crate(x, z, 0.8, '#4a5a32');
   // ---- Research Lab: benches with screens, a containment tube, server racks ----
-  for (const [x, z] of [[29, 4], [29, 10.5]]) { irBox(props, 3.2, 0.08, 1.2, white, x, 0.95, z, 1); for (const s of [-1, 1]) part(props, B(0.08, 0.85, 1.1), chrome, x + s * 1.5, 0.5, z); part(props, B(0.8, 0.5, 0.05), dk, x - 0.6, 1.3, z - 0.4, -0.2); part(props, B(0.7, 0.4, 0.02), glow('#4fd2ff'), x - 0.6, 1.3, z - 0.37, -0.2); for (let k = 0; k < 3; k++) part(props, Cy(0.05, 0.05, 0.2, 8), glow(['#6fdc5a', '#c86aff', '#ffd36a'][k]), x + 0.4 + k * 0.25, 1.09, z + 0.1); box(x, z, 1.6, 0.6); }
+  for (const [x, z] of [[29, 4], [29, 10.5]]) { irBox(props, 3.2, 0.08, 1.2, white, x, 0.95, z, 1); for (const s of [-1, 1]) part(props, B(0.08, 0.85, 1.1), chrome, x + s * 1.5, 0.5, z); { const f = z < 7 ? 1 : -1; part(props, B(0.8, 0.5, 0.05), dk, x - 0.6, 1.3, z - 0.4 * f, -0.2 * f); part(props, B(0.7, 0.4, 0.02), glow('#4fd2ff'), x - 0.6, 1.3, z - 0.37 * f, -0.2 * f); } /* screens face the chair on their side */ for (let k = 0; k < 3; k++) part(props, Cy(0.05, 0.05, 0.2, 8), glow(['#6fdc5a', '#c86aff', '#ffd36a'][k]), x + 0.4 + k * 0.25, 1.09, z + 0.1); box(x, z, 1.6, 0.6); }
   { const X = 33, Z = 12.5; part(props, Cy(1.0, 1.1, 0.3, 16), trim, X, 0.25, Z); part(props, Cy(1.0, 1.0, 0.3, 16), trim, X, 3.0, Z); const gl = new THREE.Mesh(Cy(0.9, 0.9, 2.5, 20, 1, true), new THREE.MeshPhongMaterial({ color: '#cfe8ff', transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false })); gl.position.set(X, 1.65, Z); levelGroup.add(gl);
     const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.4, 1), glow('#9fff6a')); core.position.set(X, 1.65, Z); levelGroup.add(core); levelAnims.push(t => { core.rotation.y = t; core.rotation.x = t * 0.7; core.position.y = 1.65 + Math.sin(t * 2) * 0.1; }); solid(X, Z, 1.1); }
   for (let k = 0; k < 4; k++) { const z = 3 + k * 1.1; irBox(props, 0.8, 2.2, 1.0, dk, 42.4, 1.2, z, 1); for (let r = 0; r < 6; r++) part(props, B(0.02, 0.05, 0.6), glow(r % 2 ? '#6fdc5a' : '#4fd2ff'), 41.99, 0.5 + r * 0.3, z); } box(42.4, 4.65, 0.4, 2.2);
@@ -197,15 +205,15 @@ function irDecor() {
   for (const [z0, z1] of [[-16.6, 0.4], [1.6, 14.4]]) { pipe(42.6, 42.6, z0, z1, RH - 0.5); pipe(42.6, 42.6, z0, z1, RH - 0.85, '#2a5a7a'); }
   // Med Bay: drip stands by the beds, a supply shelf, the doctor's desk and a lit red-cross plaque
   for (let k = 0; k < 3; k++) { const z = -15 + k * 3 + 0.55; part(props, Cy(0.02, 0.02, 1.8, 6), chrome, -7.2, 1.0, z); part(props, B(0.25, 0.03, 0.03), chrome, -7.2, 1.85, z); part(props, B(0.12, 0.2, 0.05), toon('#cfe8ff'), -7.12, 1.7, z); part(props, Cy(0.18, 0.2, 0.04, 8), dk, -7.2, 0.12, z); }
-  irBox(props, 2.6, 2.0, 0.5, white, -2, 1.1, -16.6, 1); for (let r = 0; r < 3; r++) { part(props, B(2.5, 0.04, 0.45), chrome, -2, 0.6 + r * 0.6, -16.55); for (let k = 0; k < 5; k++) part(props, B(0.3, 0.25, 0.3), toon(['#e8e4dc', '#c8402f', '#8ab8d8'][(k + r) % 3]), -3 + k * 0.5, 0.75 + r * 0.6, -16.5); } box(-2, -16.6, 1.3, 0.3);
+  irBox(props, 2.6, 2.0, 0.06, white, -2, 1.1, -16.82, 1); for (const sx of [-3.27, -0.73]) part(props, B(0.06, 2.0, 0.5), white, sx, 1.1, -16.6); part(props, B(2.6, 0.06, 0.5), white, -2, 2.13, -16.6); /* an open shelf: boxes sit on planks, not buried in a block */
+  for (let r = 0; r < 3; r++) { part(props, B(2.48, 0.04, 0.45), chrome, -2, 0.6 + r * 0.6, -16.57); for (let k = 0; k < 5; k++) part(props, B(0.3, 0.25, 0.3), toon(['#e8e4dc', '#c8402f', '#8ab8d8'][(k + r) % 3]), -3 + k * 0.5, 0.75 + r * 0.6, -16.55); } box(-2, -16.6, 1.3, 0.3);
   irBox(props, 1.8, 0.08, 0.9, wood, 1.5, 0.85, -15.9, 1); for (const s of [-1, 1]) part(props, B(0.06, 0.75, 0.8), trim, 1.5 + s * 0.85, 0.45, -15.9); part(props, B(0.6, 0.4, 0.05), dk, 1.5, 1.15, -16.2); part(props, B(0.55, 0.34, 0.02), glow('#6fdc5a'), 1.5, 1.15, -16.17); chair(1.5, -15.1, Math.PI); box(1.5, -15.9, 0.9, 0.45);
-  irPlaque(-6, 3.2, -16.84, 0, 'MED BAY', 'CPL. PATCH ON DUTY', '#c8402f');
   // Barracks: footlockers at the bunks, a card table with two chairs, a rug
   for (let k = 0; k < 4; k++) { const z = -5 + k * 2.2; irBox(props, 0.5, 0.4, 0.8, olive, -8.2, 0.3, z, 1); part(props, B(0.1, 0.06, 0.04), chrome, -7.94, 0.42, z); } box(-8.2, -1.7, 0.25, 3.7);
   part(props, B(3, 0.012, 2.2), toon('#6a2a20', 'carpet'), -1.5, 0.106, -1.5); irBox(props, 1.0, 0.06, 1.0, wood, -1.5, 0.8, -1.5, 1); part(props, Cy(0.06, 0.06, 0.7, 6), trim, -1.5, 0.45, -1.5); for (let k = 0; k < 6; k++) part(props, B(0.09, 0.005, 0.13), white, -1.75 + k * 0.1, 0.835, -1.5 + (k % 2) * 0.1, 0, k * 0.4, 0);
   chair(-1.5, -0.7, Math.PI); chair(-1.5, -2.3, 0); box(-1.5, -1.5, 0.5, 1.1);
   // Mess Hall: a drinks cooler, a water cooler, a wall TV and bins
-  irBox(props, 1.1, 2.0, 0.7, toon('#c8402f', 'panel'), 3.4, 1.1, 16.2, 1); part(props, B(0.8, 1.2, 0.02), glow('#dff4ff'), 3.4, 1.3, 15.84); box(3.4, 16.2, 0.55, 0.35);
+  irBox(props, 1.1, 2.0, 0.7, toon('#c8402f', 'panel'), 3.4, 1.1, 16.2, 1); part(props, B(0.8, 1.2, 0.02), glow('#dff4ff'), 3.4, 1.3, 15.82); box(3.4, 16.2, 0.55, 0.35);
   part(props, B(0.4, 0.9, 0.4), white, 4.4, 0.55, 4.2); part(props, Cy(0.16, 0.16, 0.45, 10), toon('#8ab8e8'), 4.4, 1.25, 4.2); solid(4.4, 4.2, 0.25);
   { const g = new THREE.Group(); g.position.set(4.68, 3.0, 10); g.rotation.y = -Math.PI / 2; props.add(g); part(g, B(2.0, 1.15, 0.1), dk, 0, 0, 0); part(g, B(1.85, 1.0, 0.02), glow('#3a6aa8'), 0, 0, 0.06); part(g, B(0.15, 0.6, 0.15), dk, 0, 0.8, -0.05); }
   for (const z of [5, 15.5]) { part(props, Cy(0.25, 0.22, 0.7, 10), steel, 2.6, 0.45, z); solid(2.6, z, 0.26); }
@@ -219,7 +227,6 @@ function irDecor() {
   irBox(props, 2.4, 0.08, 1.0, wood, 29, 0.95, -8, 1); for (const s of [-1, 1]) part(props, B(0.08, 0.85, 0.9), trim, 29 + s * 1.1, 0.5, -8); part(props, B(0.25, 0.2, 0.2), steel, 28.2, 1.1, -8.2); { const gm = makeGunModel('g70'); gm.position.set(29.3, 1.05, -7.9); gm.rotation.set(0, 0.4, Math.PI / 2); props.add(gm); } box(29, -8, 1.2, 0.5);
   { const d = makeTrooper({ noGun: true }); d.traverse(c => { if (c.isMesh) c.material = toon('#a88a5a', 'cloth'); }); d.position.set(32, 0.1, -5); d.rotation.y = Math.PI; props.add(d); part(props, Cy(0.05, 0.05, 0.8, 6), wood, 32, 0.4, -5); solid(32, -5, 0.4); }
   for (let k = 0; k < 6; k++) irBox(props, 0.6, 0.35, 0.4, olive, 26.4 + (k % 2) * 0.65, 0.28 + Math.floor(k / 2) * 0.36, -11, 1); box(26.7, -11, 0.65, 0.25);
-  irPlaque(39.5, 3.0, -16.84, 0, 'QUARTERMASTER', 'SGT. BRIX', '#ff8a2a');
   // Research Lab: a specimen tank with a Drome bug, a robot arm, chairs, a wall display, cable runs
   { const X = 38, Z = 12.8; part(props, B(1.6, 0.3, 1.2), trim, X, 0.25, Z); part(props, B(1.6, 0.15, 1.2), trim, X, 2.1, Z); const gl = new THREE.Mesh(B(1.5, 1.6, 1.1), new THREE.MeshPhongMaterial({ color: '#9fff6a', transparent: true, opacity: 0.16, depthWrite: false })); gl.position.set(X, 1.2, Z); levelGroup.add(gl);
     const bug = new THREE.Group(); bug.position.set(X, 1.1, Z); levelGroup.add(bug); part(bug, new THREE.SphereGeometry(0.28, 10, 8), toon('#3a1416'), 0, 0, 0); part(bug, new THREE.SphereGeometry(0.18, 8, 6), toon('#5a2024'), 0.3, 0.05, 0); for (let k = 0; k < 6; k++) part(bug, B(0.03, 0.03, 0.4), dk, -0.1 + (k % 3) * 0.15, -0.15, (k < 3 ? 1 : -1) * 0.25, 0.5 * (k < 3 ? 1 : -1), 0, 0);

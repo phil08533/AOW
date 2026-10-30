@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.88</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.96</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -371,6 +371,7 @@ html.ready #bootLoad { display: none; }
       <span>Field of view</span><button class="pbtn" id="setFov"></button>
       <span>Screen shake</span><button class="pbtn" id="setShake"></button>
       <span>Damage numbers</span><button class="pbtn" id="setNums"></button>
+      <span>Ironrock front tracker</span><button class="pbtn" id="setFront"></button>
     </div>
     <button class="cta win" id="resumeBtn">Resume</button>
     <button class="pbtn" id="logoutBtn" style="background:#5a1f28;margin-top:8px;width:100%;padding:9px">🚪 Logout / Switch Character</button>
@@ -1457,7 +1458,7 @@ $('bRemove').addEventListener('click', () => { baseState.remove = !baseState.rem
 $('bDone').addEventListener('click', () => setBuild(false));
 $('menuBtn').addEventListener('click', () => { if (!dlgOpen && !chatOpen()) setState('pause'); });
 function renderSettings() {
-  $('setPix').textContent = ['Chunky', 'Classic', 'Sharp'][PREFS.pix]; $('setGfx').textContent = gfxNow().name; $('setSens').textContent = ['Slowest', 'Slow', 'Normal', 'Fast', 'Fastest'][PREFS.sens == null ? 2 : PREFS.sens]; $('setInv').textContent = PREFS.inv ? 'On' : 'Off'; $('setFov').textContent = ['Narrow', 'Normal', 'Wide'][PREFS.fov == null ? 1 : PREFS.fov]; $('setShake').textContent = PREFS.shake === false ? 'Off' : 'On'; $('setNums').textContent = PREFS.dmgNums === false ? 'Off' : 'On'; $('setStyle').textContent = { retro: 'Retro PS1', stylized: 'HD Stylized', real: 'Semi-Realistic' }[RSTYLE];
+  $('setPix').textContent = ['Chunky', 'Classic', 'Sharp'][PREFS.pix]; $('setGfx').textContent = gfxNow().name; $('setSens').textContent = ['Slowest', 'Slow', 'Normal', 'Fast', 'Fastest'][PREFS.sens == null ? 2 : PREFS.sens]; $('setInv').textContent = PREFS.inv ? 'On' : 'Off'; $('setFov').textContent = ['Narrow', 'Normal', 'Wide'][PREFS.fov == null ? 1 : PREFS.fov]; $('setShake').textContent = PREFS.shake === false ? 'Off' : 'On'; $('setNums').textContent = PREFS.dmgNums === false ? 'Off' : 'On'; $('setFront').textContent = PREFS.frontHud ? 'On' : 'Off'; $('setStyle').textContent = { retro: 'Retro PS1', stylized: 'HD Stylized', real: 'Semi-Realistic' }[RSTYLE];
   $('setMusic').textContent = MUSIC_NAMES[PREFS.music] || 'Off';
   $('setSfx').textContent = PREFS.sfx ? 'On' : 'Off';
   const wPct = Math.round((PREFS.weatherVol == null ? 0.7 : PREFS.weatherVol) * 100);
@@ -1470,6 +1471,7 @@ $('setInv').addEventListener('click', () => { PREFS.inv = !PREFS.inv; savePrefs(
 $('setFov').addEventListener('click', () => { PREFS.fov = ((PREFS.fov == null ? 1 : PREFS.fov) + 1) % 3; savePrefs(); renderSettings(); resize(); SFX.ui(); });
 $('setShake').addEventListener('click', () => { PREFS.shake = PREFS.shake === false; savePrefs(); renderSettings(); SFX.ui(); });
 $('setNums').addEventListener('click', () => { PREFS.dmgNums = PREFS.dmgNums === false; savePrefs(); renderSettings(); SFX.ui(); });
+$('setFront').addEventListener('click', () => { PREFS.frontHud = !PREFS.frontHud; savePrefs(); renderSettings(); SFX.ui(); });
 $('setStyle').addEventListener('click', () => { const order = ['retro', 'stylized', 'real'], nx = order[(order.indexOf(RSTYLE) + 1) % 3]; PREFS.style = nx; savePrefs(); markDirty && markDirty(); toast('RENDER STYLE', 'Switching to ' + { retro: 'Retro PS1', stylized: 'HD Stylized', real: 'Semi-Realistic' }[nx] + '…', 1.5); setTimeout(() => { try { flushSave && flushSave(); } catch (_) {} location.reload(); }, 900); });
 $('setGfx').addEventListener('click', () => { PREFS.gfx = ((PREFS.gfx == null ? 1 : PREFS.gfx) + 1) % GFX.length; savePrefs(); applyGfx(); renderSettings(); resize(); SFX.ui(); });
 $('setPix').addEventListener('click', () => { PREFS.pix = (PREFS.pix + 1) % 3; savePrefs(); renderSettings(); resize(); SFX.ui(); });
@@ -1618,7 +1620,7 @@ function step(dt) {
   if (hover) { player.jet -= dt; player.vy = Math.max(player.vy, 1.2); if (Math.random() < 0.4) burst(player.pos.clone().add(V(0, 0.4, 0)), '#ff9a3c', 1, 1.5); }
   if (!S.inSub && !RC.on && !VH.on && !swimHere()) { player.vy -= 18 * (LEVEL.gravity || 1) * dt; player.pos.y += player.vy * dt; }
   if (player.pos.y <= ground) { if (!player.onGround && player.vy < -7) SFX.land(); player.pos.y = ground; player.vy = 0; player.onGround = true; }
-  if (!inSafe(player.pos)) for (const e of enemies) { if (e.dead) continue; const dx = player.pos.x - e.obj.position.x, dz = player.pos.z - e.obj.position.z; if (Math.abs(dx) > 3 || Math.abs(dz) > 3) continue; const d = Math.hypot(dx, dz), m = e.def.r * e.sc + 0.3; if (d < m && d > 1e-4) { player.pos.x = e.obj.position.x + dx / d * m; player.pos.z = e.obj.position.z + dz / d * m; } }
+  if (!inSafe(player.pos)) for (const e of enemies) { if (e.dead || e.gone || !e.obj.visible) continue; const dx = player.pos.x - e.obj.position.x, dz = player.pos.z - e.obj.position.z; if (Math.abs(dx) > 3 || Math.abs(dz) > 3) continue; const d = Math.hypot(dx, dz), m = e.def.r * e.sc + 0.3; if (d < m && d > 1e-4) { player.pos.x = e.obj.position.x + dx / d * m; player.pos.z = e.obj.position.z + dz / d * m; } }
   for (const [mo, mr] of MOVERS) { if (!mo.parent) continue; const dx = player.pos.x - mo.position.x, dz = player.pos.z - mo.position.z, d = Math.hypot(dx, dz), m = mr + 0.3; if (d < m && d > 1e-4) { player.pos.x = mo.position.x + dx / d * m; player.pos.z = mo.position.z + dz / d * m; } }
   for (const r of remotes.values()) { const dx = player.pos.x - r.obj.position.x, dz = player.pos.z - r.obj.position.z, d = Math.hypot(dx, dz); if (d < 0.7 && d > 1e-4) { player.pos.x = r.obj.position.x + dx / d * 0.7; player.pos.z = r.obj.position.z + dz / d * 0.7; } }
   const moving = Math.min(1, Math.hypot(mx, mz));
@@ -1670,12 +1672,12 @@ function step(dt) {
     const dx = player.pos.x - o.position.x, dz = player.pos.z - o.position.z, d = Math.hypot(dx, dz) || 1e-3;
     const home = Math.hypot(o.position.x - e.zone.x, o.position.z - e.zone.z);
     if (!e.aggro && !def.passive && d < (def.boss ? 16 : 12) && !pSafe && player.alive) { e.seeT = (e.seeT || 0) - dt; if (e.seeT <= 0) { e.seeT = 0.35; if (lineOfSight(o.position.clone().add(V(0, def.hy * e.sc * 1.2, 0)), player.pos.clone().add(V(0, 1.3, 0)))) e.aggro = true; } }
-    const leash = e.zone.r + (def.boss || def.elite ? 45 : 20);
+    const leash = e.zone.r + (def.boss || def.elite ? 45 : LEVEL.id === 'fort' ? 8 : 20); // at the fort the Drome stay out on their own ground
     if (e.aggro && (home > leash || !player.alive)) { e.aggro = false; e.wander = V(e.zone.x, 0, e.zone.z); }
     if (!e.aggro && e.hp < e.max && gameTime - e.lastHit > (def.boss || def.elite ? 45 : 15) && (d > 30 || !player.alive)) { e.hp = Math.min(e.max, e.hp + e.max * 0.02 * dt); updatePlate(e); }
     if (tickMystic(e, dt)) continue;
     let vx = 0, vz = 0, sp = def.speed * ((e.slow || 0) > 0 ? 0.45 : 1);
-    if (e.aggro && pSafe) { e.safeT = (e.safeT || 0) + dt; if (e.safeT > 2.5) { e.aggro = false; e.safeT = 0; e.wander = null; } } else e.safeT = 0;
+    if (e.aggro && pSafe) { e.safeT = (e.safeT || 0) + dt; if (e.safeT > 2.5) { e.aggro = false; e.safeT = 0; e.wander = V(e.zone.x, 0, e.zone.z); } } // give up and head home, never camp at a gate else e.safeT = 0;
     if (e.aggro) {
       const rng = def.ranged || def.lob, keep = rng ? rng.keep : def.melee.reach * 0.75;
       if (d > keep) { vx = dx / d; vz = dz / d; } else if (rng && d < keep * 0.6) { vx = -dx / d * 0.6; vz = -dz / d * 0.6; }

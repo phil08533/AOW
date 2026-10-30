@@ -86,3 +86,15 @@ function dressHall() {
   });
 }
 { const _b = LEVELS.ship.build; LEVELS.ship.build = function () { _b.apply(this, arguments); try { dressHall(); } catch (e) { console.warn('hall', e); } }; }
+// nobody walks around outside the hull: any character found outside the ship's rooms is pulled in (your pet) or hidden until it's back inside
+function shipInside(x, z) { const Lz = hallLayout().Lz; if (Math.abs(x) < 2.3 && z > -16.5 && z < Lz + 1.2) return true; if (Math.abs(x) < 12.6 && z > -16.5 && z < -1.2) return true;
+  return SHIP_ROOMS.some(r => x > Math.min(r.x0, r.x1) - 0.4 && x < Math.max(r.x0, r.x1) + 0.4 && z > r.z0 - 0.4 && z < r.z1 + 0.4); }
+{ const _b = LEVELS.ship.build; LEVELS.ship.build = function () { _b.apply(this, arguments);
+  const w = new THREE.Vector3(), out = new Set(); let tk = 0;
+  levelAnims.push(() => { if (LEVEL.id !== 'ship' || ++tk % 6) return;
+    if (typeof petObj !== 'undefined' && petObj && !shipInside(petObj.position.x, petObj.position.z)) petObj.position.set(player.pos.x + 0.8, player.pos.y, player.pos.z + 0.8);
+    for (const root of [scene, levelGroup]) for (const o of root.children) { if (!o.userData || !o.userData.rig || o === petObj) continue;
+      o.getWorldPosition(w); const ins = shipInside(w.x, w.z);
+      if (!ins && o.visible) { o.visible = false; out.add(o); if (!o.userData.outLog) { o.userData.outLog = 1; console.warn('ship: character outside the hull', o.name || o.userData.rig, w.toArray()); } }
+      else if (ins && out.has(o)) { o.visible = true; out.delete(o); } } }); }; }
+{ const _ll = loadLevel; loadLevel = function (id, o) { const r = _ll(id, o); try { if (typeof petObj !== 'undefined' && petObj) petObj.position.set(player.pos.x + 1.2, player.pos.y, player.pos.z + 1.2); } catch (_) {} return r; }; }

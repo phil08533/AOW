@@ -298,6 +298,7 @@ function openQuestLog() {
 // old saves (one linear quest) move into the new journal
 function migrateQuests() {
   if (!S.qst) S.qst = {};
+  if (S.inv && S.inv.aranus_comic) { S.inv.twotired_comic = (S.inv.twotired_comic || 0) + S.inv.aranus_comic; delete S.inv.aranus_comic; } // the Aranus Man comic became Two Tired
   if (S.q == null) return;
   const old = ['q1', 'q2', 'q3', 'q4', 'q5'];
   for (let i = 0; i < Math.min(S.q, 5); i++) S.qst[old[i]] = { st: 'done', p: [] };

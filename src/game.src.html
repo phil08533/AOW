@@ -257,7 +257,9 @@ body.flying #tBoost { display: grid; }
 html:not(.ready) #start .sheet > .win.sheet { display: none; }
 html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block; text-align: center; margin-top: 18px; color: #ffd36a; letter-spacing: .2em; font-size: 14px; }
 /* white "loading" with dots that count up and back (. .. ... .... ... ..) while the big game script parses and between worlds; opacity only so it keeps moving on phones */
-#bootLoad { position: fixed; left: 50%; bottom: 11%; transform: translateX(-50%); z-index: 10001; pointer-events: none; }
+#bootLoad { position: fixed; left: 50%; bottom: 11%; transform: translateX(-50%); z-index: 10001; pointer-events: none; opacity: 0; will-change: opacity; animation: ldShow .4s linear 7.3s forwards; }
+/* startup "loading" waits until the Blork intro is over (intro.js shows it early if the intro is skipped) */
+@keyframes ldShow { to { opacity: 1; } }
 #bootLoad, .ldTxt { font: 16px monospace; color: #fff; letter-spacing: .18em; white-space: nowrap; padding-left: calc(4ch + .72em); }
 .ldTxt { margin-top: 16px; display: inline-block; }
 .ld i { font-style: normal; }
@@ -268,7 +270,8 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
 html.ready #bootLoad { display: none; }
 /* Blork Studios intro: Phil's octopus rises out of the dark, the wordmark brushes on, studios fades up. Transforms and opacity only,
    so it plays smoothly from the first frame while the game script is still loading */
-#ic0{position:absolute;inset:0;overflow:hidden;background:#000;transition:opacity .9s}
+#ic0{position:absolute;inset:0;overflow:hidden;background:#000;transition:opacity .9s;animation:icOut .8s ease-in 6.6s forwards}
+@keyframes icOut{to{opacity:0}}
 #ic0 .bkLogo{position:absolute;left:50%;top:46%;height:min(62vh,86vw/1.051);aspect-ratio:1850/1760;transform:translate(-50%,-50%);animation:bkPush 7s cubic-bezier(.3,0,.3,1) forwards}
 #ic0 .bkLogo>div,#ic0 .bkBob,#ic0 .bkWipeIn,#ic0 svg{position:absolute;inset:0;width:100%;height:100%}
 #ic0 .bkOcto{opacity:0;animation:bkRise 2.6s cubic-bezier(.2,.7,.2,1) .35s forwards}

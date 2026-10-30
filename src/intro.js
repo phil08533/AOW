@@ -61,7 +61,7 @@ let showTitleRef = () => {};
   // card -> title -> (player input, once the game is ready) -> start screen. Each stage runs once, whatever calls it.
   const c1 = () => cov.querySelector('#ic1'), ready = () => document.documentElement.classList.contains('ready');
   let stage = 'card', inputAt = 0;
-  const showTitle = () => { if (stage !== 'card') return; stage = 'title'; inputAt = performance.now() + 900; const c = c1(); if (c) c.classList.remove('on');
+  const showTitle = () => { if (stage !== 'card') return; stage = 'title'; { const bl = document.getElementById('bootLoad'); if (bl) { bl.style.animation = 'none'; bl.style.opacity = 1; } } inputAt = performance.now() + 900; const c = c1(); if (c) c.classList.remove('on');
     setTimeout(() => { if (c) c.remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; g.style.cssText = 'position:relative;z-index:1'; cov.appendChild(g); try { titleCrest(cov, g.querySelector('.gs')); } catch (e) { console.warn('crest', e); }
       requestAnimationFrame(() => { g.classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); };
   const finish = () => { if (stage === 'done') return; stage = 'done'; const cr = cov.querySelector('.crest'); if (cr && cr.stop) cr.stop(); cov.style.opacity = 0; setTimeout(() => cov.remove(), 800); };

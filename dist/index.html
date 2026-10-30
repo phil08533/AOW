@@ -257,7 +257,9 @@ body.flying #tBoost { display: grid; }
 html:not(.ready) #start .sheet > .win.sheet { display: none; }
 html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block; text-align: center; margin-top: 18px; color: #ffd36a; letter-spacing: .2em; font-size: 14px; }
 /* white "loading" with dots that count up and back (. .. ... .... ... ..) while the big game script parses and between worlds; opacity only so it keeps moving on phones */
-#bootLoad { position: fixed; left: 50%; bottom: 11%; transform: translateX(-50%); z-index: 10001; pointer-events: none; }
+#bootLoad { position: fixed; left: 50%; bottom: 11%; transform: translateX(-50%); z-index: 10001; pointer-events: none; opacity: 0; will-change: opacity; animation: ldShow .4s linear 7.3s forwards; }
+/* startup "loading" waits until the Blork intro is over (intro.js shows it early if the intro is skipped) */
+@keyframes ldShow { to { opacity: 1; } }
 #bootLoad, .ldTxt { font: 16px monospace; color: #fff; letter-spacing: .18em; white-space: nowrap; padding-left: calc(4ch + .72em); }
 .ldTxt { margin-top: 16px; display: inline-block; }
 .ld i { font-style: normal; }
@@ -268,7 +270,8 @@ html:not(.ready) #start > .sheet::after { content: 'Loading…'; display: block;
 html.ready #bootLoad { display: none; }
 /* Blork Studios intro: Phil's octopus rises out of the dark, the wordmark brushes on, studios fades up. Transforms and opacity only,
    so it plays smoothly from the first frame while the game script is still loading */
-#ic0{position:absolute;inset:0;overflow:hidden;background:#000;transition:opacity .9s}
+#ic0{position:absolute;inset:0;overflow:hidden;background:#000;transition:opacity .9s;animation:icOut .8s ease-in 6.6s forwards}
+@keyframes icOut{to{opacity:0}}
 #ic0 .bkLogo{position:absolute;left:50%;top:46%;height:min(62vh,86vw/1.051);aspect-ratio:1850/1760;transform:translate(-50%,-50%);animation:bkPush 7s cubic-bezier(.3,0,.3,1) forwards}
 #ic0 .bkLogo>div,#ic0 .bkBob,#ic0 .bkWipeIn,#ic0 svg{position:absolute;inset:0;width:100%;height:100%}
 #ic0 .bkOcto{opacity:0;animation:bkRise 2.6s cubic-bezier(.2,.7,.2,1) .35s forwards}
@@ -20855,7 +20858,7 @@ const UPDATES = [
   { id: 315, title: '2.23.50 · Cleaner minimap', items: ['The live minimap no longer shows fireflies, rain, sparks or other effects', 'Removed the little winding crown on the minimap watch (the pill-shaped thing)'] },
   { id: 316, title: '2.23.51 · Ready for the cast', items: ['The game can now play real voice-actor recordings for every character line, as they get recorded'] },
   { id: 317, title: '2.23.52 · Helmet radio', items: ['Recorded voices for helmeted characters and battle radio play through a light comms filter'] },
-  { id: 361, title: '2.23.96 · New Blork Studios intro', items: ['The game opens with the new Blork Studios logo, drawn by Phil: the white-lined octopus rises out of the dark, Blork brushes on and studios fades up. Click or press a key to skip.', 'Loading bars are gone. A white loading with dots that count up and back down shows while the game starts and when you travel.'] },
+  { id: 361, title: '2.23.96 · New Blork Studios intro', items: ['The game opens with the new Blork Studios logo, drawn by Phil: the white-lined octopus rises out of the dark, Blork brushes on and studios fades up. Click or press a key to skip.', 'Loading bars are gone. A white loading with dots that count up and back down shows after the intro if the game is still starting, and when you travel.'] },
   { id: 360, title: '2.23.95 · Front tracker is off by default', items: ['The five-sector percentage panel at Ironrock is hidden unless you turn on Ironrock front tracker in Settings (Game tab)'] },
   { id: 359, title: '2.23.94 · Vask drops his loot where you can reach it', items: ['Commander Vask dies on his island in the lava, so his loot now lands on the edge of the pit on your side, where you can walk up and grab it'] },
   { id: 358, title: '2.23.93 · Nobody walks outside your ship', items: ['Crew and other characters can no longer appear outside the Setting Sun and walk in through the hull; anyone outside the ship is kept out of sight until they are back inside', 'Your pet arrives next to you on every trip instead of walking in from where it was on the last world'] },
@@ -30553,7 +30556,7 @@ let showTitleRef = () => {};
   // card -> title -> (player input, once the game is ready) -> start screen. Each stage runs once, whatever calls it.
   const c1 = () => cov.querySelector('#ic1'), ready = () => document.documentElement.classList.contains('ready');
   let stage = 'card', inputAt = 0;
-  const showTitle = () => { if (stage !== 'card') return; stage = 'title'; inputAt = performance.now() + 900; const c = c1(); if (c) c.classList.remove('on');
+  const showTitle = () => { if (stage !== 'card') return; stage = 'title'; { const bl = document.getElementById('bootLoad'); if (bl) { bl.style.animation = 'none'; bl.style.opacity = 1; } } inputAt = performance.now() + 900; const c = c1(); if (c) c.classList.remove('on');
     setTimeout(() => { if (c) c.remove(); const g = document.createElement('div'); g.className = 'ic'; g.innerHTML = `<div class="gt">ART <span>OF</span> WAR</div><div class="gs">SETTING SUN</div><div class="pk">PRESS ANY KEY</div>`; g.style.cssText = 'position:relative;z-index:1'; cov.appendChild(g); try { titleCrest(cov, g.querySelector('.gs')); } catch (e) { console.warn('crest', e); }
       requestAnimationFrame(() => { g.classList.add('on'); }); try { SFX.coin(); } catch (_) {} }, 700); };
   const finish = () => { if (stage === 'done') return; stage = 'done'; const cr = cov.querySelector('.crest'); if (cr && cr.stop) cr.stop(); cov.style.opacity = 0; setTimeout(() => cov.remove(), 800); };

@@ -246,7 +246,7 @@
   // shady locals in Pit Row
   const SHADY = [
     { id: 'vshade1', name: 'Slick Dez', role: 'Sells "spare parts"', rig: 'civ', make: () => makeCivilian('#1e1c22', '#2c2a28', '#c58a64', '#111', '#c86aff'), x: -19, z: -6, face: 1.6, idle: ["Need a magnet coil? Fell off a truck. A hover truck. It hovered off.", "Don't ask where the stripes came from. Stripes are stripes.", "I didn't see you. You didn't see me. We're both very bad at seeing."] },
-    { id: 'vshade2', name: 'Mags', role: 'Takes bets', rig: 'civ', make: () => makeCivilian('#3a2a1e', '#1e1c22', '#8a5a3c', '#2a1e18', '#ffd36a'), x: 20, z: -8, face: -1.6, idle: ["Five hundred says you clip a traffic car on the first turn. Easy money.", "The house always wins. I am the house. The house is soaking wet."] },
+    { id: 'vshade2', name: 'Shil', role: 'Takes bets', rig: 'civ', make: () => makeCivilian('#3a2a1e', '#1e1c22', '#8a5a3c', '#2a1e18', '#ffd36a'), x: 20, z: -8, face: -1.6, idle: ["Five hundred says you clip a traffic car on the first turn. Easy money.", "The house always wins. I am the house. The house is soaking wet."] },
     { id: 'vshade3', name: 'The Hood', role: '...', rig: 'civ', make: () => makeCivilian('#2b2a2c', '#1e1c22', '#e0b892', '#1e1c22', '#ff3b2a'), x: -12, z: -34, face: 0.4, idle: ["...", "The lightning here isn't natural. Somebody's charging something under the flats.", "Keep your engine running. Things go missing in Pit Row."] },
     { id: 'vshade4', name: 'Rusty', role: 'Junk racer', rig: 'xr17', make: () => recolor(makeXR17(), { '#9aa1aa': '#6a5a4a', '#5d636c': '#3a2e26' }), x: 14, z: -30, face: -0.5, idle: ["I RACED ONCE. I LOST ONCE. I AM STILL LOSING. PLEASE DO NOT LOOK AT MY TIRES.", "SPARE CHANGE FOR A BROKEN DRIVE BELT?"] }
   ];

@@ -89,7 +89,8 @@ LEVELS.miledown = {
   zones: [{ id: 'mdbar', name: 'The Mile Down', lvl: 'Safe', x: 0, z: 6, r: 9, col: '#1a141e', safe: true, h: 0 }, { id: 'mdlab', name: "Doc's Lab", lvl: 'Keep out', x: 0, z: -12, r: 9, col: '#0e1a14', h: 0 }],
   safes: [{ x: 0, z: 7, r: 7.5 }], spawn: { x: 0, z: 11, yaw: 0 }, menu: { x: 0, z: 6, r: 7, h: 2.6 }, npcBase: [0, 0], spawns: [],
   npcs: [
-    { id: 'pail_md', name: 'Pail', role: "Big E's buddy", rig: 'civ', make: makePail, x: -6.1, z: 7.4, face: Math.PI / 2,
+    { id: 'pail_md', name: 'Pail', role: "Big E's buddy · comics", rig: 'civ', make: makePail, x: -6.1, z: 7.4, face: Math.PI / 2,
+      custom: [['📖 Read "Two Tired"', () => { closeDlg(); openComicReader(1, 'twotired'); }], ['🚲 Buy "Two Tired" (40 cr)', () => buyComic('twotired')]],
       idle: ["Big E came down three days ago. Ask Mags, she sees everything from back there.", "That door's locked. Mags keeps the keys.", "I ain't going in first. I'm the moral support.", "You hear that hum? That's not the jukebox."] },
     { id: 'mags', name: 'Mags', role: 'Bartender', rig: 'civ', make: makeMags, x: -9.4, z: 5, face: Math.PI / 2, custom: [['Talk', () => mdMags()]],
       idle: ["Mile down, mile high prices. That's the joke. Nobody laughs.", "Doc pays his tab in favors. I don't ask what kind.", "The window? That's just clouds. Don't look too long, they look back."] },

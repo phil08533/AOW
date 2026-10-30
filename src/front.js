@@ -374,7 +374,7 @@ function frDropship() { if (FB.ship && FB.ship.parent) return; const g = makeDro
 // grenades thrown by troopers (at Drome) and by Drome (into our trench)
 function frThrow(from, to, ours) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(0.11, 0), toon(ours ? '#4a5229' : '#3a1416')); m.position.copy(from); levelGroup.add(m); FB.nades.push({ m, a: from.clone(), b: to.clone(), t: 0, T: 1.1 + from.distanceTo(to) * 0.02, ours }); }
 function frBoom(p, ours) {
-  burst(p, '#ffb060', 14, 7); burst(p, '#6a5a4a', 12, 4); if (p.distanceTo(player.pos) < 45) SFX.boom(); if (p.distanceTo(player.pos) < 14) VH.shk = Math.max(VH.shk || 0, 0.2);
+  burst(p, '#ffb060', 14, 7); burst(p, '#6a5a4a', 12, 4); if (p.distanceTo(player.pos) < 45) SFX.boom(); if (p.distanceTo(player.pos) < 14) shake(0.2);
   if (ours) { for (const e of FRONT.foes) { if (e.dead) continue; const d = e.obj.position.distanceTo(p); if (d < 4.5) { e.hp -= 300 * (1 - d / 6); e.hitT = 0.15; if (e.hp <= 0) frKillQuiet(e); else updatePlate(e); } } }
   else { for (const m of FRONT.men) { if (m.dead || m.path) continue; const d = m.o.position.distanceTo(p); if (d < 2.6) frHurtMan(m, 200); else if (d < 4) frHurtMan(m, 50); }
     const dp = Math.hypot(player.pos.x - p.x, player.pos.z - p.z); if (dp < 4 && Math.abs(player.pos.y - p.y) < 2.5) hurt(55 * (1 - dp / 5), p); }

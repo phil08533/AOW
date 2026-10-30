@@ -157,9 +157,9 @@ function fwMgStep(dt) {
 // ---------- the sector strip on screen while you're at the Front or on the rampart ----------
 function fwHud() {
   if (!FW.hud) { const d = document.createElement('div'); d.id = 'fwHud'; d.style.cssText = 'position:fixed;top:112px;left:50%;transform:translateX(-50%);background:rgba(16,18,22,.8);border:1px solid #3a4a3c;border-radius:6px;padding:5px 12px;color:#dfe6dc;font:600 11px/1.5 ui-monospace,monospace;letter-spacing:.06em;pointer-events:none;z-index:5;display:none;min-width:260px'; document.body.appendChild(d); FW.hud = d; }
-  const show = LEVEL.id === 'fort' && state === 'play' && !FB.on && (player.pos.x < -12 || player.pos.y > 7 || FW.mg); FW.hud.style.display = show ? 'block' : 'none'; if (!show) return;
+  const show = LEVEL.id === 'fort' && state === 'play' && !FB.on && (PREFS.frontHud && (player.pos.x < -12 || player.pos.y > 7) || FW.mg); FW.hud.style.display = show ? 'block' : 'none'; if (!show) return;
   const bar = S => { const c = clamp((-72 - S.line) / 100, 0, 1), w = Math.round(c * 100); return `<div style="display:flex;align-items:center;gap:8px"><span style="width:96px">${S.n}</span><span style="flex:1;height:7px;background:#5a2024;border-radius:3px;overflow:hidden"><span style="display:block;height:100%;width:${w}%;background:#6fbc5a"></span></span><span style="width:34px;text-align:right">${w}%</span></div>`; };
-  FW.hud.innerHTML = (FW.mg ? `<div style="text-align:center;color:#fff">MG NEST · KILLS ${FW.mg.kills}${FW.mg.streak > 1 ? ` · STREAK x${FW.mg.streak}` : ''}</div>` : '') + FW.sec.map(bar).join('');
+  FW.hud.innerHTML = (FW.mg ? `<div style="text-align:center;color:#fff">MG NEST · KILLS ${FW.mg.kills}${FW.mg.streak > 1 ? ` · STREAK x${FW.mg.streak}` : ''}</div>` : '') + (PREFS.frontHud ? FW.sec.map(bar).join('') : '');
 }
 function fwStep(t) { const dt = Math.min(0.1, Math.max(0, t - FW.lt)); FW.lt = t; if (!dt || LEVEL.id !== 'fort') return;
   if (!FB.on) { fwTick(dt); fwMgStep(dt); } else if (FW.mg) FW.mg = null; fwHud(); }

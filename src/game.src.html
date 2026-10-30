@@ -351,7 +351,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.94</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.23.95</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -371,6 +371,7 @@ html.ready #bootLoad { display: none; }
       <span>Field of view</span><button class="pbtn" id="setFov"></button>
       <span>Screen shake</span><button class="pbtn" id="setShake"></button>
       <span>Damage numbers</span><button class="pbtn" id="setNums"></button>
+      <span>Ironrock front tracker</span><button class="pbtn" id="setFront"></button>
     </div>
     <button class="cta win" id="resumeBtn">Resume</button>
     <button class="pbtn" id="logoutBtn" style="background:#5a1f28;margin-top:8px;width:100%;padding:9px">🚪 Logout / Switch Character</button>
@@ -1457,7 +1458,7 @@ $('bRemove').addEventListener('click', () => { baseState.remove = !baseState.rem
 $('bDone').addEventListener('click', () => setBuild(false));
 $('menuBtn').addEventListener('click', () => { if (!dlgOpen && !chatOpen()) setState('pause'); });
 function renderSettings() {
-  $('setPix').textContent = ['Chunky', 'Classic', 'Sharp'][PREFS.pix]; $('setGfx').textContent = gfxNow().name; $('setSens').textContent = ['Slowest', 'Slow', 'Normal', 'Fast', 'Fastest'][PREFS.sens == null ? 2 : PREFS.sens]; $('setInv').textContent = PREFS.inv ? 'On' : 'Off'; $('setFov').textContent = ['Narrow', 'Normal', 'Wide'][PREFS.fov == null ? 1 : PREFS.fov]; $('setShake').textContent = PREFS.shake === false ? 'Off' : 'On'; $('setNums').textContent = PREFS.dmgNums === false ? 'Off' : 'On'; $('setStyle').textContent = { retro: 'Retro PS1', stylized: 'HD Stylized', real: 'Semi-Realistic' }[RSTYLE];
+  $('setPix').textContent = ['Chunky', 'Classic', 'Sharp'][PREFS.pix]; $('setGfx').textContent = gfxNow().name; $('setSens').textContent = ['Slowest', 'Slow', 'Normal', 'Fast', 'Fastest'][PREFS.sens == null ? 2 : PREFS.sens]; $('setInv').textContent = PREFS.inv ? 'On' : 'Off'; $('setFov').textContent = ['Narrow', 'Normal', 'Wide'][PREFS.fov == null ? 1 : PREFS.fov]; $('setShake').textContent = PREFS.shake === false ? 'Off' : 'On'; $('setNums').textContent = PREFS.dmgNums === false ? 'Off' : 'On'; $('setFront').textContent = PREFS.frontHud ? 'On' : 'Off'; $('setStyle').textContent = { retro: 'Retro PS1', stylized: 'HD Stylized', real: 'Semi-Realistic' }[RSTYLE];
   $('setMusic').textContent = MUSIC_NAMES[PREFS.music] || 'Off';
   $('setSfx').textContent = PREFS.sfx ? 'On' : 'Off';
   const wPct = Math.round((PREFS.weatherVol == null ? 0.7 : PREFS.weatherVol) * 100);
@@ -1470,6 +1471,7 @@ $('setInv').addEventListener('click', () => { PREFS.inv = !PREFS.inv; savePrefs(
 $('setFov').addEventListener('click', () => { PREFS.fov = ((PREFS.fov == null ? 1 : PREFS.fov) + 1) % 3; savePrefs(); renderSettings(); resize(); SFX.ui(); });
 $('setShake').addEventListener('click', () => { PREFS.shake = PREFS.shake === false; savePrefs(); renderSettings(); SFX.ui(); });
 $('setNums').addEventListener('click', () => { PREFS.dmgNums = PREFS.dmgNums === false; savePrefs(); renderSettings(); SFX.ui(); });
+$('setFront').addEventListener('click', () => { PREFS.frontHud = !PREFS.frontHud; savePrefs(); renderSettings(); SFX.ui(); });
 $('setStyle').addEventListener('click', () => { const order = ['retro', 'stylized', 'real'], nx = order[(order.indexOf(RSTYLE) + 1) % 3]; PREFS.style = nx; savePrefs(); markDirty && markDirty(); toast('RENDER STYLE', 'Switching to ' + { retro: 'Retro PS1', stylized: 'HD Stylized', real: 'Semi-Realistic' }[nx] + '…', 1.5); setTimeout(() => { try { flushSave && flushSave(); } catch (_) {} location.reload(); }, 900); });
 $('setGfx').addEventListener('click', () => { PREFS.gfx = ((PREFS.gfx == null ? 1 : PREFS.gfx) + 1) % GFX.length; savePrefs(); applyGfx(); renderSettings(); resize(); SFX.ui(); });
 $('setPix').addEventListener('click', () => { PREFS.pix = (PREFS.pix + 1) % 3; savePrefs(); renderSettings(); resize(); SFX.ui(); });

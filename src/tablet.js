@@ -152,7 +152,7 @@ addEventListener('resize', () => { if (!$('menuDrop').hidden) tabLayout(); });
 
 // ---- Settings and the pause screen: four tabs that each fit on screen ----
 const SET_TABS = [['gfx', 'Graphics'], ['snd', 'Sound'], ['ctl', 'Controls'], ['game', 'Game']];
-const SET_OF = { setStyle: 'gfx', setGfx: 'gfx', setPix: 'gfx', setWeather: 'gfx', setFov: 'gfx', setShake: 'gfx', setNums: 'gfx',
+const SET_OF = { setStyle: 'gfx', setGfx: 'gfx', setPix: 'gfx', setWeather: 'gfx', setFov: 'gfx', setShake: 'gfx', setNums: 'gfx', setFront: 'game',
   setMusic: 'snd', setMusicVol: 'snd', setSfx: 'snd', setVoice: 'snd',
   setSens: 'ctl', setInv: 'ctl', nickEdit: 'game', setHud: 'game', setCompact: 'game', setFull: 'game' };
 let setTab = 'gfx';

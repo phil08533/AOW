@@ -209,7 +209,7 @@ async function run() {
       J.buyComic();
       return {
         cr: J.S.cr,
-        comicCount: J.S.inv ? J.S.inv.aranus_comic : 0
+        comicCount: J.S.inv ? J.S.inv.twotired_comic : 0
       };
     })()`);
 

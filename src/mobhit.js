@@ -1,4 +1,4 @@
-// Stardust Books sells Aranus Man comics. Don Klunkleone holds court in the McKlunkies booths in the mall: nobody fences contraband
+// Stardust Books sells Pail & Big E comics. Don Klunkleone holds court in the McKlunkies booths in the mall: nobody fences contraband
 // (drugs aside) on any world until you do his "little favour": a hit on Glorbo Fishwhistle, the gentle alien who keeps the hydroponics
 // fish tank. The Don's secret sauce, poured on a drug you made, makes a dose Glorbo won't walk away from. After that the tank is yours.
 ITEMS.mob_sauce = { name: "The Don's Secret Sauce", v: 0, col: '#c8402f', quest: true, use: true, note: 'Use it on a drug you made. "Trust me. It\'s the sauce."' };
@@ -12,10 +12,10 @@ function mobSay(lines, done, i) { i = i || 0; if (i >= lines.length) { closeDlg(
   acts([[i === lines.length - 1 ? 'Okay' : 'Next ▸', () => mobSay(lines, done, i + 1), true]]); }
 
 // ---- Stardust Books ----
-const STARDUST = [['aranus_comic', 120], ['aranus_gold', 600]];
+const STARDUST = [['twotired_comic', 120], ['aranus_gold', 600]];
 function openStardust() {
   openDlg('Stardust Books', 'Clerk Pemberly'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
-  const render = () => { $('dlgLine').textContent = `"Imported from Earth! The Astonishing Aranus Man. The tentacles are hand-inked." You have ${S.cr.toLocaleString()} cr.`;
+  const render = () => { $('dlgLine').textContent = `"Imported from Earth! Pail & Big E, Two Tired. The jokes are hand-inked. Sorry about the jokes." You have ${S.cr.toLocaleString()} cr.`;
     itemRows(rows, STARDUST.map(([k, p]) => [k, S.inv[k] || null, `${p} cr`, [['Buy', () => buy(k, p)]]])); };
   const buy = (k, p) => { if (S.cr < p) { SFX.hit(); log('Not enough credits.'); return; } if (invRoomFor(k) < 1) { invFullNote(k); return; } S.cr -= p; S.inv[k] = (S.inv[k] || 0) + 1; SFX.coin(); log(`+1 ${ITEMS[k].name}`, 'loot'); markDirty(); render(); };
   $('dlgActs').before(rows); acts([['Done', closeDlg, true]]); render();

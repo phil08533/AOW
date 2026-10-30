@@ -376,7 +376,7 @@ html.ready #bootLoad { display: none; }
         <b>Fire</b><span>Hold to shoot</span>
       </div>
     </div>
-    <span class="credit"><b style="color:var(--gold)">Version 2.23.99</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
+    <span class="credit"><b style="color:var(--gold)">Version 2.24.0</b> · Original game design and art by Philip Gonzales &amp; Caleb Dingus</span>
   </div>
 </div>
 <div class="screen" id="pause" hidden>
@@ -5329,6 +5329,7 @@ function openQuestLog() {
 // old saves (one linear quest) move into the new journal
 function migrateQuests() {
   if (!S.qst) S.qst = {};
+  if (S.inv && S.inv.aranus_comic) { S.inv.twotired_comic = (S.inv.twotired_comic || 0) + S.inv.aranus_comic; delete S.inv.aranus_comic; } // the Aranus Man comic became Two Tired
   if (S.q == null) return;
   const old = ['q1', 'q2', 'q3', 'q4', 'q5'];
   for (let i = 0; i < Math.min(S.q, 5); i++) S.qst[old[i]] = { st: 'done', p: [] };
@@ -5419,8 +5420,8 @@ const PI2 = Math.PI / 2;
 // Late registration helper for features defined in subsequent files (CAPES, ARMORS, QDEFS, invUse)
 function initJamestownLate() {
   if (typeof ITEMS !== 'undefined') {
-    ITEMS.aranus_comic = { name: 'Aranus Man #1', v: 50, col: '#ff9a2a', use: true, comic: true, note: 'The Astonishing Aranus Man #1 by Arthur Vance. Use to read.' };
-    ITEMS.aranus_gold = { name: 'Signed Aranus Man #1', v: 250, col: '#ffd700', use: true, comic: true, note: 'Gold-embossed author-signed collector copy. Use to read.' };
+    // aranus_gold keeps its old id so saved bags still hold it; it is now the signed Two Tired
+    ITEMS.aranus_gold = { name: 'Signed Pail & Big E #1', v: 250, col: '#ffd700', use: true, comic: true, note: 'Gold-embossed collector copy of Two Tired, signed on the cover. Use to read.' };
     ITEMS.twotired_comic = { name: 'Pail & Big E #1: Two Tired', v: 40, col: '#1a7a82', use: true, comic: true, note: 'A Mile Down comic. Pail and Big E, five jokes, zero apologies. Use to read.' };
     ITEMS.bbq_burger = { name: 'Bobby Burger', v: 15, col: '#d86822', heal: 9999, food: true, use: true, note: 'Fresh off Bobby\'s kettle grill. Restores full health.' };
     ITEMS.diner_meatloaf = { name: 'Space Meatloaf', v: 25, col: '#8a402f', heal: 9999, food: true, note: 'Savory meatloaf with mystery gravy. Full heal + 10% damage.' };
@@ -5439,7 +5440,7 @@ function initJamestownLate() {
     invUse = function (key) {
       const [t, id] = String(key).split(':');
       if (t === 'i' && ITEMS[id] && ITEMS[id].comic) {
-        openComicReader(1, id === 'twotired_comic' ? 'twotired' : 'aranus');
+        openComicReader(1, 'twotired');
         return;
       }
       return _origInvUse.apply(this, arguments);
@@ -5468,14 +5469,14 @@ function initJamestownLate() {
       req: ['q1'],
       intro: [
         "Psst, trooper! Over here! You look like someone who knows how to handle a blaster... and a delicate situation.",
-        "I'm Arthur Vance, author of The Astonishing Aranus Man! Only comic I ever wrote, but the kids and diner folks love it. Problem is, Issue #2 is stalled and I made a reckless wager at the Arena to fund the print run.",
+        "I'm Arthur Vance, I print Pail & Big E up here on Earth. Issue #1 sells out every week, the kids and diner folks love it. Problem is, Issue #2 is stalled and I made a reckless wager at the Arena to fund the print run.",
         "A rogue syndicate is rigging the exhibition bouts. Go out to the Scrapyard and destroy 4 rogue XR-17 patrol bots to gather their combat telemetry for me. With that data, my fighter wins the match clean!",
-        "Help me out, and I'll reward you with 1,000 credits, an author-signed gold collector edition of Aranus Man #1, and the exclusive Aranus Cape!"
+        "Help me out, and I'll reward you with 1,000 credits, a signed gold collector edition of Pail & Big E #1, and the exclusive Aranus Cape!"
       ],
       obj: [{ kind: 'kill', t: 'xr17', n: 4, text: 'Destroy 4 XR-17s in the Scrapyard for telemetry', zone: 'scrap' }],
       outro: [
         "You got the telemetry! Glorious! The bookie paid out every single credit, and Issue #2 is officially funded!",
-        "Here is your cut: 1,000 credits, a signed collector edition of Aranus Man, and my personal Aranus Cape. Wear it with pride, trooper—suburban justice never sleeps!"
+        "Here is your cut: 1,000 credits, a signed collector edition of Two Tired, and my personal Aranus Cape. Wear it with pride, trooper—suburban justice never sleeps!"
       ],
       reward: { cr: 1000, xp: 450, grant: 'c:aranus' }
     });
@@ -5498,70 +5499,144 @@ function initJamestownLate() {
 }
 setTimeout(initJamestownLate, 0);
 
-// ---- Comic Reader Modal ----
-// vo: the cast line ids (docs/voice_lines.csv) spoken on each page, in reading order; Read aloud plays the ones that have been recorded
+// ---- Comic book: a real paper comic you hold up and flip, page by page ----
+// vo: the cast line ids (docs/voice_lines.csv) spoken on each page, in reading order; the speaker plays the ones that have been recorded
 const COMICS = {
-  aranus: { title: '⚡ THE ASTONISHING ARANUS MAN #1', dir: 'shots/aranus', pages: 10, price: 50, item: 'aranus_comic' },
-  twotired: { title: '🚲 PAIL & BIG E #1: TWO TIRED', dir: 'shots/twotired', pages: 6, price: 40, item: 'twotired_comic',
+  twotired: { title: 'PAIL & BIG E #1: TWO TIRED', dir: 'shots/twotired', pages: 6, price: 40, item: 'twotired_comic', ink: '#1a7a82', pop: '#ff9a2a',
     vo: [[], ['BIG_E_001', 'PAIL_023', 'BIG_E_002', 'PAIL_024', 'BIG_E_003'], ['BIG_E_004', 'PAIL_025', 'BIG_E_005', 'BIG_E_006'],
       ['BIG_E_007', 'PAIL_026', 'BIG_E_007', 'PAIL_026', 'BIG_E_007', 'PAIL_027', 'BIG_E_008'], ['BIG_E_009', 'PAIL_028', 'BIG_E_010'], ['DOC_004', 'BIG_E_011']] }
 };
-function openComicReader(startPage = 1, comicId = 'aranus') {
-  const C = COMICS[comicId] || COMICS.aranus, N = C.pages;
-  let page = startPage, voRun = 0;
-  const old = document.getElementById('comicModal');
-  if (old) old.remove();
+// a short dry paper rustle for each page turn
+function comicRustle() {
+  try { const ac = SFX.ctx && SFX.ctx(); if (!ac || PREFS.sfx === false) return; const t = ac.currentTime, len = Math.floor(ac.sampleRate * 0.32), b = ac.createBuffer(1, len, ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < len; i++) { const k = i / len; d[i] = (Math.random() * 2 - 1) * Math.pow(Math.sin(Math.PI * Math.min(1, k * 1.6)), 1.5) * (0.6 + 0.4 * Math.random() * (Math.random() < 0.08)); }
+    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = b; f.type = 'bandpass'; f.frequency.setValueAtTime(2600, t); f.frequency.linearRampToValueAtTime(5200, t + 0.3); f.Q.value = 0.7;
+    g.gain.value = 0.22; s.connect(f); f.connect(g); g.connect(SFX.voiceOut()); s.start(t); } catch (_) {}
+}
+function openComicReader(startPage = 1, comicId = 'twotired') {
+  const C = COMICS[comicId] || COMICS.twotired, N = C.pages;
+  const old = document.getElementById('comicModal'); if (old) old.remove();
+  if (document.pointerLockElement) try { document.exitPointerLock(); } catch (_) {}
+  // faces in print order: cover, inside cover, the story pages, (a blank to keep it even), back cover. Leaf k carries faces 2k (front) and 2k+1 (back)
+  const faces = [1, 'in']; for (let p = 2; p <= N; p++) faces.push(p); if (faces.length % 2 === 0) faces.push('blank'); faces.push('back');
+  const L = faces.length / 2;
+  const wrap = document.createElement('div'); wrap.id = 'comicModal';
+  wrap.innerHTML = `<style>
+#comicModal{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:none;
+  background:radial-gradient(ellipse at 50% 55%,rgba(30,22,14,.55) 0%,rgba(6,6,10,.94) 70%);opacity:0;transition:opacity .25s}
+#comicModal.on{opacity:1}
+#comicModal .cb{--w:min(40vw,calc(84vh/1.2));--h:calc(var(--w)*1.2);position:relative;width:calc(var(--w)*2);height:var(--h);perspective:calc(var(--w)*4.5);
+  transition:transform .55s cubic-bezier(.3,.7,.3,1);transform:translateY(40px) scale(.94)}
+#comicModal.on .cb{transform:translateY(0) scale(1)}
+@media (max-aspect-ratio:1/1){#comicModal .cb{--w:min(47vw,calc(84vh/1.2))}}
+#comicModal .cb-pos{position:absolute;inset:0;transition:transform .6s cubic-bezier(.4,.1,.2,1)}
+#comicModal .cb-bed{position:absolute;top:0;height:100%;width:50%;background:#e9e1cf;border-radius:2px}
+#comicModal .cb-bed.l{left:0;transform-origin:right}#comicModal .cb-bed.r{left:50%}
+#comicModal .cb-leaf{position:absolute;left:50%;top:0;width:50%;height:100%;transform-origin:0 50%;transform-style:preserve-3d;will-change:transform;cursor:pointer}
+#comicModal .cb-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;background:#f3ecdc}
+#comicModal .cb-face.b{transform:rotateY(180deg)}
+#comicModal .cb-face img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+#comicModal .cb-face::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:linear-gradient(90deg,rgba(0,0,0,.34),rgba(0,0,0,.08) 5%,rgba(255,255,255,.05) 9%,transparent 16%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .45 0 0 0 0 .35 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
+#comicModal .cb-face.b::before{background:linear-gradient(270deg,rgba(0,0,0,.34),rgba(0,0,0,.08) 5%,rgba(255,255,255,.05) 9%,transparent 16%)}
+#comicModal .cb-face.cover::after,#comicModal .cb-face.bk::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:3;background:linear-gradient(115deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,0) 30%,rgba(255,255,255,0) 62%,rgba(255,255,255,.1) 72%,rgba(255,255,255,0) 82%)}
+#comicModal .cb-sh{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0}
+#comicModal .cb-face.f .cb-sh{background:linear-gradient(270deg,rgba(0,0,0,.55),rgba(0,0,0,.05) 70%)}
+#comicModal .cb-face.b .cb-sh{background:linear-gradient(90deg,rgba(0,0,0,.55),rgba(0,0,0,.05) 70%)}
+#comicModal .cb-cast{position:absolute;top:0;width:50%;height:100%;pointer-events:none;opacity:0;z-index:90}
+#comicModal .cb-cast.r{left:50%;background:linear-gradient(90deg,rgba(0,0,0,.6),rgba(0,0,0,0) 60%)}
+#comicModal .cb-cast.l{left:0;background:linear-gradient(270deg,rgba(0,0,0,.6),rgba(0,0,0,0) 60%)}
+#comicModal .cb-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10%;box-sizing:border-box;color:#2a2018;font-family:'Courier New',monospace;font-size:calc(var(--w)*.034);line-height:1.5;text-shadow:none}
+#comicModal .cb-txt b{font-family:Impact,'Arial Black',sans-serif;font-weight:900;letter-spacing:.04em;line-height:1}
+#comicModal .cb-tip{position:fixed;left:50%;bottom:3.5vh;transform:translateX(-50%);color:#d8cdb6;font:13px/1.2 var(--ui,sans-serif);letter-spacing:.06em;opacity:.8;transition:opacity 1s;pointer-events:none;text-shadow:0 1px 3px #000;white-space:nowrap}
+#comicModal .cb-btn{position:fixed;width:42px;height:42px;border-radius:50%;border:0;background:rgba(20,18,16,.55);color:#e9e1cf;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+#comicModal .cb-btn:hover{background:rgba(60,50,40,.8)}
+#comicModal .cb-x{top:18px;right:18px}#comicModal .cb-vo{bottom:calc(3.5vh + 26px);left:50%;transform:translateX(-50%)}
+</style>`;
+  const book = document.createElement('div'); book.className = 'cb'; wrap.appendChild(book);
+  const pos = document.createElement('div'); pos.className = 'cb-pos'; book.appendChild(pos);
+  const bedL = document.createElement('div'), bedR = document.createElement('div'); bedL.className = 'cb-bed l'; bedR.className = 'cb-bed r'; pos.append(bedL, bedR);
+  const castL = document.createElement('div'), castR = document.createElement('div'); castL.className = 'cb-cast l'; castR.className = 'cb-cast r'; pos.append(castL, castR);
+  const faceHTML = f => f === 'in' ? `<div class="cb-txt"><b style="font-size:2.3em;color:${C.ink}">A MILE DOWN<br>COMIC</b><br><br>${C.title.replace(': ', '<br>')}<br><br>Printed one mile under<br>the Floating City.<br><br>Read it at the bar.<br>Don't spill on it.</div>`
+    : f === 'blank' ? '' : f === 'back' ? `<div class="cb-txt" style="background:${C.ink};color:#f3ecdc"><b style="font-size:3em;color:${C.pop};-webkit-text-stroke:1px #111">PAIL &amp; BIG E</b><br><br>Five jokes. Zero apologies.<br><br><br><span style="display:inline-block;background:#f3ecdc;color:#111;padding:.6em .9em;font-size:.8em">${C.price} CR<br>||| || |||| | ||</span></div>`
+    : `<img src="${C.dir}/${f}.jpg" alt="Page ${f}" draggable="false">`;
+  const leaves = [];
+  for (let k = 0; k < L; k++) {
+    const el = document.createElement('div'); el.className = 'cb-leaf';
+    const fa = faces[2 * k], fb = faces[2 * k + 1];
+    el.innerHTML = `<div class="cb-face f${k === 0 ? ' cover' : ''}">${faceHTML(fa)}<div class="cb-sh"></div></div><div class="cb-face b${k === L - 1 ? ' bk' : ''}">${faceHTML(fb)}<div class="cb-sh"></div></div>`;
+    pos.appendChild(el); leaves.push({ el, a: 0, shF: el.querySelector('.f .cb-sh'), shB: el.querySelector('.b .cb-sh') });
+  }
+  const tip = document.createElement('div'); tip.className = 'cb-tip'; tip.textContent = TOUCH_HINT();
+  const xBtn = document.createElement('button'); xBtn.className = 'cb-btn cb-x'; xBtn.textContent = '✕'; xBtn.title = 'Put it down (Esc)';
+  const voBtn = document.createElement('button'); voBtn.className = 'cb-btn cb-vo'; voBtn.textContent = '🔊'; voBtn.title = 'Read aloud'; voBtn.hidden = true;
+  wrap.append(tip, xBtn, voBtn);
+  function TOUCH_HINT() { return (typeof TOUCH !== 'undefined' && TOUCH) ? 'Swipe or tap a page to turn it' : 'Click or drag a page to turn it  ·  ← →  ·  Esc to put it down'; }
 
-  const wrap = document.createElement('div');
-  wrap.id = 'comicModal';
-  wrap.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(8,10,16,0.92);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--ui);user-select:none;';
+  // spread s: leaves 0..s-1 are turned over. 0 = closed on the cover, L = closed on the back
+  let spread = 0, anim = null, drag = null, voRun = 0;
+  for (let p = 2; p <= Math.min(startPage, N); p++) spread = Math.ceil((faces.indexOf(p)) / 2);
+  function setAngle(k, a) {
+    const lf = leaves[k]; lf.a = a; const r = a / 180;
+    // a turning page lifts a little off the stack and bows; the far half darkens as it rolls away from the light
+    lf.el.style.transform = `rotateY(${-a}deg) translateZ(${Math.sin(r * Math.PI) * 6}px)`;
+    lf.shF.style.opacity = Math.min(1, r * 1.8); lf.shB.style.opacity = Math.min(1, (1 - r) * 1.8);
+    const moving = a > 0.5 && a < 179.5; lf.el.style.zIndex = moving ? 100 : a >= 90 ? 10 + k : 10 + L - k;
+    if (moving) { castR.style.opacity = r < .5 ? Math.sin(r * Math.PI) * .9 : 0; castL.style.opacity = r >= .5 ? Math.sin(r * Math.PI) * .9 : 0; }
+  }
+  function layout() {
+    const w = book.offsetWidth / 2, shift = spread === 0 ? -w / 2 : spread === L ? w / 2 : 0;
+    pos.style.transform = `translateX(${shift}px)`;
+    // page stacks: the paper edges under each side grow with the pages piled there
+    const edge = n => Array.from({ length: Math.min(n, 6) }, (_, i) => `${0}px ${i + 1}px 0 ${i % 2 ? '#cfc5ae' : '#e6dcc6'}`).join(',');
+    const sh = '0 18px 40px rgba(0,0,0,.6)';
+    bedL.style.visibility = spread > 0 ? 'visible' : 'hidden'; bedR.style.visibility = spread < L ? 'visible' : 'hidden';
+    bedL.style.boxShadow = [edge(spread * 2), sh].filter(Boolean).join(','); bedR.style.boxShadow = [edge((L - spread) * 2), sh].filter(Boolean).join(',');
+    castL.style.opacity = castR.style.opacity = 0;
+    const p = faces[2 * spread - 1], q = faces[2 * spread];
+    voBtn.hidden = !voIds().length;
+    if (typeof castLoad === 'function') castLoad();
+    return [p, q];
+  }
+  // turn one leaf to its new side with an eased swing; dir +1 forward, -1 back
+  function turn(dir, from) {
+    if (anim) return; const k = dir > 0 ? spread : spread - 1; if (k < 0 || k >= L) return;
+    voStop(); comicRustle();
+    const a0 = from != null ? from : leaves[k].a, a1 = dir > 0 ? 180 : 0, t0 = performance.now(), dur = 520 * Math.abs(a1 - a0) / 180 + 120;
+    spread += dir; layout();
+    const step = now => { const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3); setAngle(k, a0 + (a1 - a0) * e);
+      if (t < 1) anim = requestAnimationFrame(step); else { anim = null; setAngle(k, a1); castL.style.opacity = castR.style.opacity = 0; } };
+    anim = requestAnimationFrame(step);
+  }
+  function settle(k, a1) { // a drag let go short of the halfway mark: the page falls back where it was
+    const a0 = leaves[k].a, t0 = performance.now(), dur = 260;
+    const step = now => { const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3); setAngle(k, a0 + (a1 - a0) * e);
+      if (t < 1) anim = requestAnimationFrame(step); else { anim = null; setAngle(k, a1); castL.style.opacity = castR.style.opacity = 0; } };
+    anim = requestAnimationFrame(step);
+  }
+  // pointer: press on the right page to pull it over, on the left page to pull one back; a tap turns it; hovering lifts the corner
+  const sideAt = e => { const r = book.getBoundingClientRect(); return e.clientX > r.left + r.width / 2 ? 1 : -1; };
+  book.addEventListener('pointerdown', e => {
+    if (anim) return; const dir = sideAt(e), k = dir > 0 ? spread : spread - 1; if (k < 0 || k >= L) return;
+    drag = { dir, k, x: e.clientX, moved: 0, base: leaves[k].a }; try { book.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault();
+  });
+  book.addEventListener('pointermove', e => {
+    if (drag) { const w = book.offsetWidth / 2, dx = e.clientX - drag.x; drag.moved = Math.max(drag.moved, Math.abs(dx));
+      const a = drag.dir > 0 ? Math.max(0, Math.min(180, -dx / (w * 1.6) * 180)) : Math.max(0, Math.min(180, 180 - dx / (w * 1.6) * 180));
+      setAngle(drag.k, a); return; }
+    if (anim || e.pointerType !== 'mouse') return; // peek: the page corner under the mouse lifts a few degrees
+    const dir = sideAt(e), k = dir > 0 ? spread : spread - 1;
+    leaves.forEach((lf, i) => { if (i === spread || i === spread - 1) setAngle(i, i === k ? (dir > 0 ? 9 : 171) : i < spread ? 180 : 0); });
+  });
+  book.addEventListener('pointerleave', () => { if (drag || anim) return; leaves.forEach((lf, i) => setAngle(i, i < spread ? 180 : 0)); castL.style.opacity = castR.style.opacity = 0; });
+  const release = () => { if (!drag) return; const { dir, k, moved } = drag, a = leaves[k].a; drag = null;
+    if (moved < 6 || (dir > 0 ? a > 50 : a < 130)) turn(dir, a); else settle(k, dir > 0 ? 0 : 180); };
+  book.addEventListener('pointerup', release); book.addEventListener('pointercancel', release);
+  wrap.addEventListener('pointerdown', e => { if (e.target === wrap) close(); });
 
-  const bar = document.createElement('div');
-  bar.style.cssText = 'width:90%;max-width:920px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:#ffd36a;';
-
-  const title = document.createElement('div');
-  title.style.cssText = 'font-weight:bold;font-size:17px;letter-spacing:1px;display:flex;align-items:center;gap:12px;';
-  title.innerHTML = `<span style="color:#ff9a2a">${C.title}</span> <span id="comicPageNum" style="color:#a0b8d0;font-size:14px;font-weight:normal;">Page 1 of ${N}</span>`;
-
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = '✕ Close (Esc)';
-  closeBtn.style.cssText = 'background:#10142a;border:2px solid var(--ally);color:#fff;padding:6px 14px;cursor:pointer;font-weight:bold;';
-
-  bar.appendChild(title);
-  bar.appendChild(closeBtn);
-  wrap.appendChild(bar);
-
-  const imgContainer = document.createElement('div');
-  imgContainer.style.cssText = 'position:relative;width:90%;max-width:920px;height:74vh;display:flex;align-items:center;justify-content:center;background:#0b0e14;border:3px solid var(--edge);box-shadow:0 0 0 3px #10142a,0 0 0 5px var(--ally);box-shadow:0 0 30px rgba(255,154,42,0.35);overflow:hidden;';
-
-  const img = document.createElement('img');
-  img.id = 'comicImg';
-  img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;';
-  imgContainer.appendChild(img);
-  wrap.appendChild(imgContainer);
-
-  const nav = document.createElement('div');
-  nav.style.cssText = 'display:flex;gap:18px;margin-top:12px;align-items:center;';
-
-  const prevBtn = document.createElement('button');
-  prevBtn.textContent = '◀ Previous (←)';
-  prevBtn.style.cssText = 'background:#10142a;border:2px solid var(--ally);color:#fff;padding:8px 20px;cursor:pointer;font-weight:bold;font-size:14px;';
-
-  const nextBtn = document.createElement('button');
-  nextBtn.textContent = 'Next ▶ (→)';
-  nextBtn.style.cssText = 'background:#10142a;border:2px solid var(--ally);color:#fff;padding:8px 20px;cursor:pointer;font-weight:bold;font-size:14px;';
-
-  nav.appendChild(prevBtn);
-  nav.appendChild(nextBtn);
-  const voBtn = document.createElement('button');
-  voBtn.textContent = '🔊 Read aloud';
-  voBtn.style.cssText = prevBtn.style.cssText;
-  voBtn.hidden = true;
-  if (C.vo) nav.appendChild(voBtn);
-  wrap.appendChild(nav);
-
-  // only the lines a voice actor has recorded (Cast Voices); the button hides when a page has none
-  const voIds = () => C.vo && typeof CASTVO !== 'undefined' ? (C.vo[page - 1] || []).filter(id => CASTVO.have.has(id)) : [];
+  // only the lines a voice actor has recorded (Cast Voices); the speaker hides when the open pages have none
+  const voIds = () => { if (!C.vo || typeof CASTVO === 'undefined') return []; const ids = [];
+    for (const f of [faces[2 * spread - 1], faces[2 * spread]]) if (typeof f === 'number') ids.push(...(C.vo[f - 1] || [])); return ids.filter(id => CASTVO.have.has(id)); };
   function voStop() { voRun++; if (typeof castStop === 'function') castStop(); }
   async function voPlay() {
     const run = ++voRun;
@@ -5573,43 +5648,27 @@ function openComicReader(startPage = 1, comicId = 'aranus') {
       if (run !== voRun) return;
     }
   }
-  voBtn.onclick = () => { if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui(); voPlay(); };
-
-  function update() {
-    voStop();
-    img.src = `${C.dir}/${page}.jpg`;
-    const numEl = document.getElementById('comicPageNum');
-    if (numEl) numEl.textContent = `Page ${page} of ${N}`;
-    prevBtn.disabled = (page <= 1);
-    prevBtn.style.opacity = page <= 1 ? '0.4' : '1';
-    nextBtn.disabled = (page >= N);
-    nextBtn.style.opacity = page >= N ? '0.4' : '1';
-    if (typeof castLoad === 'function') castLoad();
-    voBtn.hidden = !voIds().length;
-  }
-
-  function goPrev() { if (page > 1) { page--; update(); if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui(); } }
-  function goNext() { if (page < N) { page++; update(); if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui(); } }
+  voBtn.onclick = () => voPlay();
+  xBtn.onclick = () => close();
   function close() {
-    voStop();
-    window.removeEventListener('keydown', keyHandler);
-    wrap.remove();
+    voStop(); cancelAnimationFrame(anim); window.removeEventListener('keydown', keyHandler, true); window.removeEventListener('resize', layout);
+    wrap.classList.remove('on'); setTimeout(() => wrap.remove(), 250);
     if (typeof SFX !== 'undefined' && SFX.ui) SFX.ui();
+    if (typeof state !== 'undefined' && state === 'play' && !(typeof dlgOpen !== 'undefined' && dlgOpen) && typeof lock === 'function') lock();
   }
-
-  prevBtn.onclick = goPrev;
-  nextBtn.onclick = goNext;
-  closeBtn.onclick = close;
-
   function keyHandler(e) {
-    if (e.key === 'ArrowLeft') goPrev();
-    else if (e.key === 'ArrowRight' || e.key === ' ') goNext();
-    else if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') turn(-1);
+    else if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'd' || e.key === 'D') turn(1);
+    else if (e.key === 'Escape' || e.key === 'e' || e.key === 'E') close();
+    else return;
+    e.preventDefault(); e.stopImmediatePropagation();
   }
-  window.addEventListener('keydown', keyHandler);
-
+  window.addEventListener('keydown', keyHandler, true); window.addEventListener('resize', layout);
+  leaves.forEach((lf, k) => setAngle(k, k < spread ? 180 : 0));
   document.body.appendChild(wrap);
-  update();
+  requestAnimationFrame(() => { wrap.classList.add('on'); layout(); });
+  setTimeout(() => { tip.style.opacity = 0; }, 5000);
+  comicRustle();
 }
 
 // ---- Street Runner Network (Outlaw Rep) ----
@@ -5745,8 +5804,8 @@ setInterval(() => {
 }, 10000);
 
 // ---- Actions for Arthur, Bobby, and Barnaby ----
-function buyComic(comicId = 'aranus') {
-  const C = COMICS[comicId] || COMICS.aranus, name = ITEMS[C.item].name;
+function buyComic(comicId = 'twotired') {
+  const C = COMICS[comicId] || COMICS.twotired, name = ITEMS[C.item].name;
   if (S.cr < C.price) {
     toast('NOT ENOUGH CREDITS', `Need ${C.price} cr to buy ${name}`, 2.5);
     if (typeof SFX !== 'undefined' && SFX.hit) SFX.hit();
@@ -5758,7 +5817,7 @@ function buyComic(comicId = 'aranus') {
   markDirty();
   if (typeof SFX !== 'undefined' && SFX.coin) SFX.coin();
   toast('COMIC PURCHASED', `${name} added to bag! Read it anytime.`, 3);
-  log(comicId === 'aranus' ? 'Bought "The Astonishing Aranus Man #1" from Arthur Vance for 50 cr. Open your bag to read!' : `Bought "${name}" for ${C.price} cr. Open your bag to read!`, 'loot');
+  log(`Bought "${name}" for ${C.price} cr. Open your bag to read!`, 'loot');
   closeDlg();
 }
 
@@ -5996,7 +6055,7 @@ function openNoticeBoard() {
         <b style="color:#ffd36a;">★ THE ROXY CINEMA IS OPEN:</b> Catch classic cinema on the giant silver screen! Free buttered popcorn at the concession stand. Now showing: <i>1. Night of the Living Dead</i> and <i>2. Santa Claus Conquers the Martians</i>. Press <b>[C]</b> to change channels.
       </div>
       <div style="margin-bottom:8px;">
-        <b style="color:#ff9a2a;">★ ARANUS MAN SIGNING & BOUNTY:</b> Arthur Vance is signing collector copies of <i>The Astonishing Aranus Man #1</i> at the West Pavilion. Arthur is also paying double for writing stimulants (especially Focus Fizz) to break his writer's block on Issue #2!
+        <b style="color:#ff9a2a;">★ PAIL &amp; BIG E HIT EARTH:</b> Arthur Vance is selling <i>Pail &amp; Big E #1: Two Tired</i> at the West Pavilion. Arthur is also paying double for writing stimulants (especially Focus Fizz) to break his writer's block on Issue #2!
       </div>
       <div style="margin-bottom:8px;">
         <b style="color:#d86822;">★ BOBBY'S BACKYARD BBQ:</b> Sizzling space burgers hot off the grill behind the West residential block. Fresh heals for all weary travelers!
@@ -6236,6 +6295,12 @@ function makeBBQGrill() {
 }
 
 // 3D Model: Arthur Vance's Book Signing Pavilion
+// the Two Tired cover as a texture, for the booth poster and the comic stacks (single-sided so it never reads backwards)
+let COMIC_COVER_MAT = null;
+function comicCoverMat() {
+  if (!COMIC_COVER_MAT) { const t = new THREE.TextureLoader().load(`${COMICS.twotired.dir}/1.jpg`); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; COMIC_COVER_MAT = new THREE.MeshBasicMaterial({ map: t }); }
+  return COMIC_COVER_MAT;
+}
 function makeBookSigningBooth() {
   const g = new THREE.Group();
   part(g, B(3.6, 0.1, 2.6), toon('#1a6b7c', 'cloth'), 0, 2.8, 0);
@@ -6245,24 +6310,25 @@ function makeBookSigningBooth() {
     part(g, Cy(0.04, 0.04, 2.8, 6), '#cfd3d8', 1.7 * s, 1.4, 1.2);
     part(g, Cy(0.04, 0.04, 2.8, 6), '#cfd3d8', 1.7 * s, 1.4, -1.2);
   }
-  const sg = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.65), psx(new THREE.MeshBasicMaterial({ map: signTex('ARANUS MAN · BOOK SIGNING', '#102830', '#ff9a2a'), side: THREE.DoubleSide })));
+  const sg = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.65), psx(new THREE.MeshBasicMaterial({ map: signTex('PAIL & BIG E · COMICS', '#102830', '#ff9a2a'), side: THREE.DoubleSide })));
   sg.position.set(0, 2.75, 1.35);
   g.add(sg);
 
   part(g, B(2.6, 0.1, 1.0), toon('#8a6a44', 'wood'), 0, 0.9, 0.3);
   for (const s of [-1, 1]) part(g, B(0.08, 0.9, 0.8), '#2b2a2c', 1.1 * s, 0.45, 0.3);
 
+  // stacks of Two Tired on the table, each topped with the real cover
+  const cover = comicCoverMat();
   for (const [cx, cz, rot] of [[-0.8, 0.3, 0.1], [-0.4, 0.35, -0.05], [0.4, 0.28, 0.2], [0.8, 0.32, -0.15]]) {
-    for (let k = 0; k < 6; k++) {
-      part(g, B(0.35, 0.025, 0.48), (k === 5 ? toon('#ff9a2a') : '#eeeeee'), cx, 0.96 + k * 0.025, cz, 0, rot);
-    }
+    for (let k = 0; k < 6; k++) part(g, B(0.35, 0.025, 0.42), k === 5 ? toon('#1a7a82') : '#eeeeee', cx, 0.96 + k * 0.025, cz, 0, rot);
+    const top = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.42), cover); top.rotation.set(-Math.PI / 2, 0, rot); top.position.set(cx, 0.96 + 5 * 0.025 + 0.014, cz); g.add(top);
   }
 
   const easel = new THREE.Group();
   part(easel, Cy(0.03, 0.03, 1.9, 5), toon('#6a4a2e', 'wood'), -0.4, 0.95, -0.2, 0.15, 0, -0.2);
   part(easel, Cy(0.03, 0.03, 1.9, 5), toon('#6a4a2e', 'wood'), 0.4, 0.95, -0.2, 0.15, 0, 0.2);
   part(easel, Cy(0.03, 0.03, 1.7, 5), toon('#6a4a2e', 'wood'), 0, 0.85, -0.6, -0.4, 0, 0);
-  const poster = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.3), psx(new THREE.MeshBasicMaterial({ map: signTex('ISSUE #1 · MEET ARANUS MAN', '#1e1c22', '#ff9a2a'), side: THREE.DoubleSide })));
+  const poster = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.08), cover);
   poster.position.set(0, 1.25, -0.15);
   poster.rotation.x = -0.15;
   easel.add(poster);
@@ -6421,11 +6487,11 @@ const JT_NPCS = [
   { id: 'hank', name: 'Hotel Hank', role: 'Hotel · rest', rig: 'civ', make: () => makeCivilian('#3b4f7a', '#2c2a28', '#e0b892', '#1e1a18', '#e8e4dc'), x: 9.2, z: 27, face: -PI2, heal: true, idle: ["Rooms are free for heroes. Heroes are anyone who pays. Kidding. Mostly."] },
   { id: 'pete', name: 'Pixel Pete', role: 'Arcade Champion', rig: 'civ', make: () => makeCivilian('#4a2a6b', '#1e1a24', '#e0b892', '#ff6aa8', '#4fe0d0'), x: -27.2, z: -8.2, face: 0.2, idle: ["My record on Space Snake is 34. Think you can beat it?", "Space Rocks is all about thruster feathering. Never hold down W too long!", "Got high scores on both cabinets. Press E to play!"] },
   // New Additions:
-  { id: 'arthur', name: 'Arthur Vance', role: 'Author · The Astonishing Aranus Man', rig: 'civ', make: () => makeCivilian('#2a6b7c', '#2c2a28', '#e0b892', '#5a3a22', '#ff9a2a'), x: -28, z: 0, face: PI2, custom: [
-    ['📖 Read Aranus Man #1', () => openComicReader()],
-    ['📘 Buy Aranus Man #1 (50 cr)', () => buyComic()],
+  { id: 'arthur', name: 'Arthur Vance', role: 'Comic printer · Pail & Big E', rig: 'civ', make: () => makeCivilian('#2a6b7c', '#2c2a28', '#e0b892', '#5a3a22', '#ff9a2a'), x: -28, z: 0, face: PI2, custom: [
+    ['📖 Read "Two Tired"', () => openComicReader()],
+    ['🚲 Buy "Two Tired" (40 cr)', () => buyComic()],
     ['💊 Sell writing stimulants', () => openArthurDealing()]
-  ], idle: ["The Astonishing Aranus Man! Earth's favorite lawn-mowing vigilante!", "Suburban justice never sleeps, trooper. Buy a signed copy!", "Writer's block is killing me. If you have any Focus Fizz, I'd pay double."] },
+  ], idle: ["Pail & Big E! Five jokes, zero apologies, forty credits!", "Big E thinks he's Aranus Man. Issue #2 might prove him right. Buy a copy!", "Writer's block is killing me. If you have any Focus Fizz, I'd pay double."] },
   { id: 'bobby', name: 'Bobby the Grillmaster', role: 'Backyard BBQ', rig: 'civ', make: () => makeCivilian('#c8402f', '#2c2a28', '#d9a77a', '#1e1a18', '#ffffff'), x: -21, z: 34, face: -0.6, heal: true, custom: [
     ['🍔 Grab a Bobby Burger', () => grabBurger()]
   ], idle: ["Low and slow, trooper. That's how you get real flavor into space patties.", "Grab a hot burger off the grate whenever you're hungry."] },
@@ -6592,7 +6658,7 @@ function buildJamestown() {
     solid(tx, tz, 3.1);
   }
 
-  // 6. Arthur Vance's Aranus Man Book Signing Pavilion
+  // 6. Arthur Vance's comic stand: Pail & Big E
   {
     const booth = makeBookSigningBooth();
     at(booth, tx - 36, tz - 9.6, 0);
@@ -20900,6 +20966,7 @@ const UPDATES = [
   { id: 315, title: '2.23.50 · Cleaner minimap', items: ['The live minimap no longer shows fireflies, rain, sparks or other effects', 'Removed the little winding crown on the minimap watch (the pill-shaped thing)'] },
   { id: 316, title: '2.23.51 · Ready for the cast', items: ['The game can now play real voice-actor recordings for every character line, as they get recorded'] },
   { id: 317, title: '2.23.52 · Helmet radio', items: ['Recorded voices for helmeted characters and battle radio play through a light comms filter'] },
+  { id: 365, title: '2.24.0 · Two Tired replaces Aranus Man', items: ['The old Aranus Man comic is gone. Pail & Big E #1: Two Tired takes its place everywhere: Arthur Vance\'s stand in New Jamestown, Stardust Books and Pail at the Mile Down', 'Comics are now a real paper comic you hold and flip: click, drag or swipe a page and it turns over, with paper sounds and page shadows. No more buttons', 'Arthur\'s stand shows the real Two Tired cover on the poster and on the stacks', 'Aranus Man comics in your bag turned into Two Tired. The signed copy from Arthur\'s quest is now a signed Two Tired'] },
   { id: 364, title: '2.23.99 · Ironrock: no endless shake, squads cross the field', items: ['Fixed the screen shake at Ironrock that started after a while and never stopped', 'Drome squads now spawn far out on the battlefield and march across toward the gate; the rampart gunners cut them down, and you can join in', 'The rampart gunners now fire on anything outside the wall, so nobody hangs around the entrance', 'Thicker fog and more drifting haze over the battlefield'] },
   { id: 363, title: '2.23.98 · New Blork Studios intro', items: ['The game opens with the new Blork Studios logo, drawn by Phil: the white-lined octopus rises out of the dark, Blork brushes on and studios fades up. Click or press a key to skip.', 'Loading bars are gone. A white loading with dots that count up and back down shows after the intro if the game is still starting, and when you travel.'] },
   { id: 362, title: '2.23.97 · The Other Shoe', items: ["New side quest in New Jamestown: Lonnie, by the south gate, is standing around in one shoe and one sock. He lost the other one. Maybe you'll find it someday."] },
@@ -27366,7 +27433,7 @@ function zAirlock() {
   const sg = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 0.7), new THREE.MeshBasicMaterial({ map: signTex('AIRLOCK · DOCK 7', '#0f1757', '#ffd75e') })); sg.position.set(0, 6.6, Zw - 0.75); sg.rotation.y = Math.PI; levelGroup.add(sg);
 }
 
-// Stardust Books sells Aranus Man comics. Don Klunkleone holds court in the McKlunkies booths in the mall: nobody fences contraband
+// Stardust Books sells Pail & Big E comics. Don Klunkleone holds court in the McKlunkies booths in the mall: nobody fences contraband
 // (drugs aside) on any world until you do his "little favour": a hit on Glorbo Fishwhistle, the gentle alien who keeps the hydroponics
 // fish tank. The Don's secret sauce, poured on a drug you made, makes a dose Glorbo won't walk away from. After that the tank is yours.
 ITEMS.mob_sauce = { name: "The Don's Secret Sauce", v: 0, col: '#c8402f', quest: true, use: true, note: 'Use it on a drug you made. "Trust me. It\'s the sauce."' };
@@ -27380,10 +27447,10 @@ function mobSay(lines, done, i) { i = i || 0; if (i >= lines.length) { closeDlg(
   acts([[i === lines.length - 1 ? 'Okay' : 'Next ▸', () => mobSay(lines, done, i + 1), true]]); }
 
 // ---- Stardust Books ----
-const STARDUST = [['aranus_comic', 120], ['aranus_gold', 600]];
+const STARDUST = [['twotired_comic', 120], ['aranus_gold', 600]];
 function openStardust() {
   openDlg('Stardust Books', 'Clerk Pemberly'); const rows = document.createElement('div'); rows.className = 'rows'; rows.id = 'shopRows';
-  const render = () => { $('dlgLine').textContent = `"Imported from Earth! The Astonishing Aranus Man. The tentacles are hand-inked." You have ${S.cr.toLocaleString()} cr.`;
+  const render = () => { $('dlgLine').textContent = `"Imported from Earth! Pail & Big E, Two Tired. The jokes are hand-inked. Sorry about the jokes." You have ${S.cr.toLocaleString()} cr.`;
     itemRows(rows, STARDUST.map(([k, p]) => [k, S.inv[k] || null, `${p} cr`, [['Buy', () => buy(k, p)]]])); };
   const buy = (k, p) => { if (S.cr < p) { SFX.hit(); log('Not enough credits.'); return; } if (invRoomFor(k) < 1) { invFullNote(k); return; } S.cr -= p; S.inv[k] = (S.inv[k] || 0) + 1; SFX.coin(); log(`+1 ${ITEMS[k].name}`, 'loot'); markDirty(); render(); };
   $('dlgActs').before(rows); acts([['Done', closeDlg, true]]); render();
